@@ -407,12 +407,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         /**
-         * Acquires the shared lock. 
+         * Acquires the read lock. 
          *
-         * <p>Acquires the lock if it is not held exclusively by
+         * <p>Acquires the read lock if the write lock is not held by
          * another thread and returns immediately.
          *
-         * <p>If the lock is held exclusively by another thread then
+         * <p>If the write lock is held by another thread then
          * the current thread becomes disabled for thread scheduling
          * purposes and lies dormant until the lock has been acquired.
          */
@@ -421,10 +421,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         /**
-         * Acquires the shared lock unless the current thread is 
+         * Acquires the read lock unless the current thread is 
          * {@link Thread#interrupt interrupted}.
          *
-         * <p>Acquires the shared lock if it is not held exclusively
+         * <p>Acquires the read lock if the write lock is not held
          * by another thread and returns immediately.
          *
          * <p>If the lock is held by another thread then the
@@ -466,10 +466,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         /**
-         * Acquires the shared lock only if it is not held exclusively by
+         * Acquires the read lock only if the write lock is not held by
          * another thread at the time of invocation.
          *
-         * <p>Acquires the lock if it is not held exclusively by
+         * <p>Acquires the read lock if the write lock is not held by
          * another thread and returns immediately with the value
          * <tt>true</tt>. Even when this lock has been set to use a
          * fair ordering policy, a call to <tt>tryLock()</tt>
@@ -482,7 +482,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * tryLock(0, TimeUnit.SECONDS) } which is almost equivalent
          * (it also detects interruption).
          *
-         * <p>If the lock is held exclusively by another thread then
+         * <p>If the write lock is held by another thread then
          * this method will return immediately with the value
          * <tt>false</tt>.
          *
@@ -493,12 +493,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         /**
-         * Acquires the shared lock if it is not held exclusively by
+         * Acquires the read lock if the write lock is not held by
          * another thread within the given waiting time and the
          * current thread has not been {@link Thread#interrupt
          * interrupted}.
          *
-         * <p>Acquires the lock if it is not held exclusively by
+         * <p>Acquires the lock if the write lock is not held by
          * another thread and returns immediately with the value
          * <tt>true</tt>. If this lock has been set to use a fair
          * ordering policy then an available lock <em>will not</em> be
@@ -511,7 +511,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * <pre>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
          * </pre>
          *
-         * <p>If the lock is held exclusively by another thread then the
+         * <p>If the write lock is held by another thread then the
          * current thread becomes disabled for thread scheduling 
          * purposes and lies dormant until one of three things happens:
          *
@@ -888,7 +888,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Returns the thread that currently owns the exclusive lock, or
+     * Returns the thread that currently owns the write lock, or
      * <tt>null</tt> if not owned. Note that the owner may be
      * momentarily <tt>null</tt> even if there are threads trying to
      * acquire the lock but have not yet done so.  This method is
@@ -971,10 +971,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Queries whether any threads are waiting to acquire. Note that
+     * Queries whether any threads are waiting to acquire this lock. Note that
      * because cancellations may occur at any time, a <tt>true</tt>
      * return does not guarantee that any other thread will ever
-     * acquire.  This method is designed primarily for use in
+     * acquire this lock.  This method is designed primarily for use in
      * monitoring of the system state.
      *
      * @return true if there may be other threads waiting to acquire
@@ -988,7 +988,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Queries whether the given thread is waiting to acquire this
      * lock. Note that because cancellations may occur at any time, a
      * <tt>true</tt> return does not guarantee that this thread
-     * will ever acquire.  This method is designed primarily for use
+     * will ever acquire this lock.  This method is designed primarily for use
      * in monitoring of the system state.
      *
      * @param thread the thread
@@ -1001,7 +1001,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Returns an estimate of the number of threads waiting to
-     * acquire.  The value is only an estimate because the number of
+     * acquire this lock.  The value is only an estimate because the number of
      * threads may change dynamically while this method traverses
      * internal data structures.  This method is designed for use in
      * monitoring of the system state, not for synchronization
@@ -1014,7 +1014,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Returns a collection containing threads that may be waiting to
-     * acquire.  Because the actual set of threads may change
+     * acquire this lock.  Because the actual set of threads may change
      * dynamically while constructing this result, the returned
      * collection is only a best-effort estimate.  The elements of the
      * returned collection are in no particular order.  This method is

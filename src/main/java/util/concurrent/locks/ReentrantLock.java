@@ -573,7 +573,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Returns the thread that currently owns the exclusive lock, or
+     * Returns the thread that currently owns this lock, or
      * <tt>null</tt> if not owned. Note that the owner may be
      * momentarily <tt>null</tt> even if there are threads trying to
      * acquire the lock but have not yet done so.  This method is
@@ -586,10 +586,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Queries whether any threads are waiting to acquire. Note that
+     * Queries whether any threads are waiting to acquire this lock. Note that
      * because cancellations may occur at any time, a <tt>true</tt>
      * return does not guarantee that any other thread will ever
-     * acquire.  This method is designed primarily for use in
+     * acquire this lock.  This method is designed primarily for use in
      * monitoring of the system state.
      *
      * @return true if there may be other threads waiting to acquire
@@ -604,7 +604,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * Queries whether the given thread is waiting to acquire this
      * lock. Note that because cancellations may occur at any time, a
      * <tt>true</tt> return does not guarantee that this thread
-     * will ever acquire.  This method is designed primarily for use
+     * will ever acquire this lock.  This method is designed primarily for use
      * in monitoring of the system state.
      *
      * @param thread the thread
@@ -618,7 +618,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Returns an estimate of the number of threads waiting to
-     * acquire.  The value is only an estimate because the number of
+     * acquire this lock.  The value is only an estimate because the number of
      * threads may change dynamically while this method traverses
      * internal data structures.  This method is designed for use in
      * monitoring of the system state, not for synchronization
@@ -631,7 +631,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Returns a collection containing threads that may be waiting to
-     * acquire.  Because the actual set of threads may change
+     * acquire this lock.  Because the actual set of threads may change
      * dynamically while constructing this result, the returned
      * collection is only a best-effort estimate.  The elements of the
      * returned collection are in no particular order.  This method is

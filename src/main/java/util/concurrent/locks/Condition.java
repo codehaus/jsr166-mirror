@@ -217,10 +217,10 @@ public interface Condition {
      * re-acquire the lock associated with this condition. When the
      * thread returns it is <em>guaranteed</em> to hold this lock.
      *
-     * <p>If the current thread's interrupt status is set when it enters
+     * <p>If the current thread's interrupted status is set when it enters
      * this method, or it is {@link Thread#interrupt interrupted} 
      * while waiting, it will continue to wait until signalled. When it finally
-     * returns from this method its <em>interrupted status</em> will still
+     * returns from this method its interrupted status will still
      * be set.
      * 
      * <p><b>Implementation Considerations</b>

@@ -1049,6 +1049,11 @@ public final class System {
 	// sun.misc.VM.isBooted() in order to avoid doing things that should
 	// wait until the application class loader has been set up.
 	sun.misc.VM.booted();
+
+        // The main thread is not added to its thread group in the same
+        // way as other threads; we must do it ourselves here.
+        Thread current = Thread.currentThread();
+        current.getThreadGroup().add(current);
     }
 
     /* returns the class of the caller. */

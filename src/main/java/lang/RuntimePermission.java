@@ -264,6 +264,7 @@ import java.util.StringTokenizer;
  *   uncaught exception handler that could interfere with termination
  *   of a thread</td>
  * </tr>
+ *
  * </table>
  *
  * @see java.security.BasicPermission

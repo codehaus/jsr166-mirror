@@ -114,6 +114,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     static final int MAX_SEGMENTS = 1 << 16; // slightly conservative
 
+    /**
+     * Number of unsynchronized retries in size and containsValue
+     * methods before resorting to locking. This is used to avoid
+     * unbounded retries if tables undergo continuous modification
+     * which would make it impossible to obtain an accurate result.
+     */
+    static final int RETRIES_BEFORE_LOCK = 2;
+
     /* ---------------- Fields -------------- */
 
     /**
@@ -163,6 +171,32 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /* ---------------- Inner Classes -------------- */
+
+    /**
+     * ConcurrentHashMap list entry. Note that this is never exported
+     * out as a user-visible Map.Entry. 
+     * 
+     * Because the value field is volatile, not final, it is legal wrt
+     * the Java Memory Model for an unsynchronized reader to see null
+     * instead of initial value when read via a data race.  Although a
+     * reordering leading to this is not likely to ever actually
+     * occur, the Segment.readValueUnderLock method is used as a
+     * backup in case a null (pre-initialized) value is ever seen in
+     * an unsynchronized access method.
+     */
+    static final class HashEntry<K,V> {
+        final K key;
+        final int hash;
+        volatile V value;
+        final HashEntry<K,V> next;
+
+        HashEntry(K key, int hash, HashEntry<K,V> next, V value) {
+            this.key = key;
+            this.hash = hash;
+            this.next = next;
+            this.value = value;
+        }
+    }
 
     /**
      * Segments are specialized versions of hash tables.  This
@@ -218,7 +252,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * Number of updates that alter the size of the table. This is
          * used during bulk-read methods to make sure they see a
          * consistent snapshot: If modCounts change during a traversal
-         * of segments computing size or checking contatinsValue, then
+         * of segments computing size or checking containsValue, then
          * we might have an inconsistent view of state so (usually)
          * must retry.
          */
@@ -517,23 +551,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    /**
-     * ConcurrentHashMap list entry. Note that this is never exported
-     * out as a user-visible Map.Entry
-     */
-    static final class HashEntry<K,V> {
-        final K key;
-        final int hash;
-        volatile V value;
-        final HashEntry<K,V> next;
-
-        HashEntry(K key, int hash, HashEntry<K,V> next, V value) {
-            this.key = key;
-            this.hash = hash;
-            this.next = next;
-            this.value = value;
-        }
-    }
 
 
     /* ---------------- Public operations -------------- */
@@ -657,9 +674,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         long sum = 0;
         long check = 0;
         int[] mc = new int[segments.length];
-        // Try at most twice to get accurate count. On failure due to
+        // Try a few times to get accurate count. On failure due to
         // continuous async changes in table, resort to locking.
-        for (int k = 0; k < 2; ++k) {
+        for (int k = 0; k < RETRIES_BEFORE_LOCK; ++k) {
             check = 0;
             sum = 0;
             int mcsum = 0;
@@ -745,8 +762,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         final Segment[] segments = this.segments;
         int[] mc = new int[segments.length];
 
-        // Try at most twice without locking
-        for (int k = 0; k < 2; ++k) {
+        // Try a few times without locking
+        for (int k = 0; k < RETRIES_BEFORE_LOCK; ++k) {
             int sum = 0;
             int mcsum = 0;
             for (int i = 0; i < segments.length; ++i) {

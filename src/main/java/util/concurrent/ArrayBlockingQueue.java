@@ -197,8 +197,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (capacity < c.size())
             throw new IllegalArgumentException();
 
-        for (Iterator<E> it = c.iterator(); it.hasNext();)
-            add(it.next());
+        for (Iterator it = c.iterator(); it.hasNext();)
+            add((E)it.next());
     }
 
     // Have to override just to update the javadoc for @throws

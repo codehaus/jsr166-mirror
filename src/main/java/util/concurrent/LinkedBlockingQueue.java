@@ -176,8 +176,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      */
     public LinkedBlockingQueue(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
-        for (Iterator<E> it = c.iterator(); it.hasNext();) 
-            add(it.next());
+        for (Iterator it = c.iterator(); it.hasNext();) 
+            add((E)it.next());
     }
 
 

@@ -87,7 +87,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/28 01:25:02 $
+ * @revised $Date: 2003/01/29 06:06:24 $
  * @editor $Author: dholmes $
  *
  */
@@ -105,7 +105,7 @@ public class Semaphore {
     }
 
     /**
-     * Acquire a permit from this semaphore, blocking until one is
+     * Acquires a permit from this semaphore, blocking until one is
      * available, or the thread is {@link Thread#interrupt interrupted}.
      *
      * <p>Acquires a permit, if one is available and returns immediately,
@@ -135,6 +135,28 @@ public class Semaphore {
      * @see Thread#interrupt
      */
     public void acquire() throws InterruptedException {}
+
+    /**
+     * Acquires a permit from this semaphore, blocking until one is
+     * available.
+     *
+     * <p>Acquires a permit, if one is available and returns immediately,
+     * reducing the number of available permits by one.
+     * <p>If no permit is available then the current thread becomes
+     * disabled for thread scheduling purposes and lies dormant until
+     * some other thread invokes the {@link #release} method for this
+     * semaphore and the current thread happens to be chosen as the
+     * thread to receive the permit.
+     *
+     * <p>If the current thread
+     * is {@link Thread#interrupt interrupted} while waiting
+     * for a permit then it will continue to wait, but the time at which
+     * the thread is assigned a permit may change compared to the time it
+     * would have received the permit had no interruption occurred. When the
+     * thread does return from this method its interrupt status will be set.
+     *
+     */
+    public void acquireUninterruptibly() {}
 
     /**
      * Acquires a permit only if one is available at the time of invocation.

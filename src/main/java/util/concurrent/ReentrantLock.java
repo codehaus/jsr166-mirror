@@ -57,7 +57,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/26 10:47:35 $
+ * @revised $Date: 2003/06/26 23:05:13 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -998,7 +998,6 @@ public class ReentrantLock extends ReentrantLockQueueNode
             beforeWait();
             int recs = recursions;
             unlock();
-
             boolean wasInterrupted = false;
             
             while (!isOffConditionQueue(w)) {
@@ -1032,7 +1031,6 @@ public class ReentrantLock extends ReentrantLockQueueNode
             Thread current = Thread.currentThread();
             if (current != owner) throw new IllegalMonitorStateException();
 
-
             ReentrantLockQueueNode w = addWaiter(current);
             beforeWait();
             int recs = recursions;
@@ -1057,7 +1055,6 @@ public class ReentrantLock extends ReentrantLockQueueNode
         public long awaitNanos(long nanos) throws InterruptedException {
             Thread current = Thread.currentThread();
             if (current != owner) throw new IllegalMonitorStateException();
-
 
             ReentrantLockQueueNode w = addWaiter(current);
             beforeWait();
@@ -1105,7 +1102,6 @@ public class ReentrantLock extends ReentrantLockQueueNode
         public boolean awaitUntil(Date deadline) throws InterruptedException {
             Thread current = Thread.currentThread();
             if (current != owner) throw new IllegalMonitorStateException();
-
 
             ReentrantLockQueueNode w = addWaiter(current);
             beforeWait();

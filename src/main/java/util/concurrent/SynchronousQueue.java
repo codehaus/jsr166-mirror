@@ -120,6 +120,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         abstract Node enq(Object x);
         /** Remove and return node, or null if empty */
         abstract Node deq();
+        /** Remove a cancelled node to avoid garbage retention. */
+        abstract void unlink(Node node);
+        /** Return true if a cancelled node might be on queue */
+        abstract boolean shouldUnlink(Node node);
     }
 
     /**
@@ -148,6 +152,30 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
             return p;
         }
+
+        boolean shouldUnlink(Node node) {
+            return (node == last || node.next != null);
+        }
+
+
+        void unlink(Node node) {
+            Node p = head;
+            Node trail = null;
+            while (p != null) {
+                if (p == node) {
+                    Node next = p.next;
+                    if (trail == null) 
+                        head = next;
+                    else
+                        trail.next = next;
+                    if (last == node)
+                        last = trail;
+                    break;
+                }
+                trail = p;
+                p = p.next;
+            }
+        }
     }
 
     /**
@@ -169,8 +197,67 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
             return p;
         }
+
+        boolean shouldUnlink(Node node) {
+            // Return false if already dequeued or is bottom node (in which
+            // case we might retain at most one garbage node)
+            return (node == head || node.next != null);
+        }
+
+        void unlink(Node node) {
+            Node p = head;
+            Node trail = null;
+            while (p != null) {
+                if (p == node) {
+                    Node next = p.next;
+                    if (trail == null) 
+                        head = next;
+                    else
+                        trail.next = next;
+                    break;
+                }
+                trail = p;
+                p = p.next;
+            }
+        }
     }
 
+    /*
+     * Unlink the given node from consumer queue.  Called by cancelled
+     * (timeout, interrupt) waiters to avoid garbage retention in the
+     * absence of producers. 
+     */
+    private void unlinkCancelledConsumer(Node node) {
+        // Use a form of double-check to avoid unnecessary locking and
+        // traversal. The first check outside lock might
+        // conservatively report true.
+        if (waitingConsumers.shouldUnlink(node)) {
+            qlock.lock();
+            try {
+                if (waitingConsumers.shouldUnlink(node)) 
+                    waitingConsumers.unlink(node);
+            } finally {
+                qlock.unlock();
+            }
+        }
+    }
+
+    /*
+     * Unlink the given node from producer queue.  Symmetric
+     * to unlinkCancelledConsumer.
+     */
+    private void unlinkCancelledProducer(Node node) {
+        if (waitingProducers.shouldUnlink(node)) {
+            qlock.lock();
+            try {
+                if (waitingProducers.shouldUnlink(node)) 
+                    waitingProducers.unlink(node);
+            } finally {
+                qlock.unlock();
+            }
+        }
+    }
+        
     /**
      * Nodes each maintain an item and handle waits and signals for
      * getting and setting it. The class extends
@@ -322,8 +409,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             if (mustWait) {
-                node.waitForTake();
-                return;
+                try {
+                    node.waitForTake();
+                    return;
+                } catch (InterruptedException ex) {
+                    unlinkCancelledProducer(node);
+                    throw ex;
+                }
             }
 
             else if (node.setItem(o))
@@ -363,8 +455,17 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 qlock.unlock();
             }
 
-            if (mustWait) 
-                return node.waitForTake(nanos);
+            if (mustWait) {
+                try {
+                    boolean x = node.waitForTake(nanos);
+                    if (!x) 
+                        unlinkCancelledProducer(node);
+                    return x;
+                } catch (InterruptedException ex) {
+                    unlinkCancelledProducer(node);
+                    throw ex;
+                }
+            }
 
             else if (node.setItem(o))
                 return true;
@@ -396,8 +497,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             if (mustWait) {
-                Object x = node.waitForPut();
-                return (E)x;
+                try {
+                    Object x = node.waitForPut();
+                    return (E)x;
+                } catch (InterruptedException ex) {
+                    unlinkCancelledConsumer(node);
+                    throw ex;
+                }
             }
             else {
                 Object x = node.getItem();
@@ -439,8 +545,15 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             if (mustWait) {
-                Object x = node.waitForPut(nanos);
-                return (E)x;
+                try {
+                    Object x = node.waitForPut(nanos);
+                    if (x == null) 
+                        unlinkCancelledConsumer(node);
+                    return (E)x;
+                } catch (InterruptedException ex) {
+                    unlinkCancelledConsumer(node);
+                    throw ex;
+                }
             }
             else {
                 Object x = node.getItem();

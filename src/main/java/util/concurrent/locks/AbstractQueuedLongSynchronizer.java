@@ -1446,15 +1446,23 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
         }
 
         /**
+         * Return true if given node is on this condition queue.
+         * Call only when holding lock.
+         */
+        private boolean isOnConditionQueue(Node node) {
+            return node.next != null || node == lastWaiter;
+        }
+
+        /**
          * Unlink a cancelled waiter node from condition queue.  This
          * is called when cancellation occurred during condition wait,
          * not lock wait, and is called only after lock has been
-         * re-acquired by a cancelled waiter.  It is not usually
-         * called even in these cases because cancelled waiters are
-         * cleared (setting nextWaiter to null) when encountered
-         * during signals, and this is only called after prechecking
-         * nextWaiter. But it is needed to avoid garbage retention in
-         * the absence of signals.
+         * re-acquired by a cancelled waiter and the node is not known
+         * to already have been dequeued.  It is needed to avoid
+         * garbage retention in the absence of signals. So even though
+         * it may require a full traversal, it comes into play only
+         * when timeouts or cancellations occur in the absence of
+         * signals.
          */
         private void unlinkCancelledWaiter(Node node) {
             Node t = firstWaiter;
@@ -1593,7 +1601,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (node.nextWaiter != null)
+            if (isOnConditionQueue(node))
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0) 
                 reportInterruptAfterWait(interruptMode);
@@ -1628,13 +1636,14 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
                 LockSupport.parkNanos(nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
+
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (node.nextWaiter != null)
+            if (isOnConditionQueue(node))
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0) 
                 reportInterruptAfterWait(interruptMode);
@@ -1677,7 +1686,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (node.nextWaiter != null)
+            if (isOnConditionQueue(node))
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
@@ -1724,7 +1733,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (node.nextWaiter != null)
+            if (isOnConditionQueue(node))
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);

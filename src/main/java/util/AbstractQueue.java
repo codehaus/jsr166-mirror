@@ -43,7 +43,7 @@ public abstract class AbstractQueue<E>
      * Adds the specified element to this queue. This implementation
      * returns <tt>true</tt> if <tt>offer</tt> succeeds, else
      * throws an IllegalStateException. 
-     * th
+     * 
      * @param o the element
      * @return <tt>true</tt> (as per the general contract of
      *         <tt>Collection.add</tt>).

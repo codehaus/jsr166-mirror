@@ -10,29 +10,38 @@ import sun.misc.Unsafe;
 
 
 /**
- * Basic thread blocking primitives useful for creating locks and
- * other synchronization classes. 
+ * Basic thread blocking primitives for creating locks and other
+ * synchronization classes.
+ *
  * <p>This class associates with each thread that uses it, a permit
- * (in the sense of the {@link java.util.concurrent.Semaphore Semaphore}
- * class). A call to <tt>park</tt> will return immediately if the permit
- * is available - consuming it in the process - otherwise it may block.
- * A call to <tt>unpark</tt> makes the permit available, if it was not already
- * available.
- * <p>The <tt>park</tt> and <tt>unpark</tt>
- * methods provide a means of blocking and unblocking threads that
- * eliminate the main problem that cause the deprecated methods
- * <tt>Thread.suspend</tt> and <tt>Thread.resume</tt> to be unusable
- * for such purposes: races between one thread invoking
- * <tt>park</tt> and another thread trying to <tt>unpark</tt> it
- * preserve liveness, due to the permit.  
- * Even so, these methods are designed to be used
- * as tools for creating higher-level synchronization utilities, and
- * are not in themselves useful for most concurrency control
- * applications.
+ * (in the sense of the {@link java.util.concurrent.Semaphore
+ * Semaphore} class). A call to <tt>park</tt> will return immediately
+ * if the permit is available, consuming it in the process; otherwise
+ * it <em>may</em> block.  A call to <tt>unpark</tt> makes the permit
+ * available, if it was not already available. (Unlike with Semaphores
+ * though, permits do not accumulate. There is at most one.)
+ *
+ * <p>Methods <tt>park</tt> and <tt>unpark</tt> provide efficient
+ * means of blocking and unblocking threads that do not encounter the
+ * problems that cause the deprecated methods <tt>Thread.suspend</tt>
+ * and <tt>Thread.resume</tt> to be unusable for such purposes: Races
+ * between one thread invoking <tt>park</tt> and another thread trying
+ * to <tt>unpark</tt> it will preserve liveness, due to the
+ * permit. Additionally, <tt>park</tt> will return if the caller's
+ * thread was interrupted, and timeout versions are supported. The
+ * <tt>park</tt> method may also return at any other time, for "no
+ * reason", so in general must be invoked within a loop that rechecks
+ * conditions upon return. In this sense <tt>park</tt> serves as an
+ * optimization of a "busy wait" that does not waste as much time
+ * spinning, but must be paired with an <tt>unpark</tt> to be
+ * effective.
+ *
+ * <p>These methods are designed to be used as tools for creating
+ * higher-level synchronization utilities, and are not in themselves
+ * useful for most concurrency control applications.
  *
  * <p><b>Sample Usage.</b> Here is a sketch of a First-in-first-out
- * non-reentrant lock class that should be made more efficient
- * and complete to be useful in practice, but illustrates basic usage.
+ * non-reentrant lock class.
  * <pre>
  * class FIFOMutex {
  *   private AtomicBoolean locked = new AtomicBoolean(false);
@@ -43,13 +52,15 @@ import sun.misc.Unsafe;
  *     Thread current = Thread.currentThread();
  *     waiters.add(current);
  *
+ *     // Block while not first in queue or cannot acquire lock
  *     while (waiters.peek() != current || 
  *            !locked.compareAndSet(false, true)) { 
  *        LockSupport.park();
  *        if (Thread.interrupted()) // ignore interrupts while waiting
  *          wasInterrupted = true;
  *     }
- *     waiters.poll();
+ *
+ *     waiters.remove();
  *     if (wasInterrupted)          // reassert interrupt status on exit
  *        current.interrupt();
  *   }
@@ -65,6 +76,7 @@ import sun.misc.Unsafe;
 public class LockSupport {
     private LockSupport() {} // Cannot be instantiated.
 
+    // Hotspot implmentation via intrinsics API
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
 
     /**

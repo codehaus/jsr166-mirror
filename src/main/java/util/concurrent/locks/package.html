@@ -7,10 +7,8 @@
 
 This package provides a framework for locking and waiting for
 conditions that is distinct from built-in synchronization and
-monitors. The framework permits much greater flexibility in the use
-of locks and conditions, at the expense of more awkward syntax.
-
-<p> To be continued.
+monitors. The framework permits much greater flexibility in the use of
+locks and conditions, at the expense of more awkward syntax.
 
 <p>
 The {@link java.util.concurrent.locks.Lock} interface supports locking
@@ -23,17 +21,22 @@ java.util.concurrent.locks.ReentrantLock}.
 similarly defines locks that may be shared among readers but are
 exclusive to writers.  Only a single implementation, {@link
 java.util.concurrent.locks.ReentrantReadWriteLock}, is provided, since
-it covers all standard usage contexts. But programmers may create
+it covers most standard usage contexts. But programmers may create
 their own implementations to cover nonstandard requirements.
 
 <p> The {@link java.util.concurrent.locks.Condition} interface
 describes the kinds of condition variables associated with monitors in
-other concurrent languages, as well as pthreads-style condvars.  Their
-support reduces the need for tricky and/or inefficient solutions to
-many classic concurrent problems.  To avoid compatibility problems,
-the names of Condition methods are different than Object versions.
+other concurrent languages, as well as pthreads-style "condvars".
+Their support reduces the need for tricky and/or inefficient solutions
+to many classic concurrent problems.  To avoid compatibility issues,
+the names of Condition methods are different than the corresponding
+Object versions.
+
+<p> The {@link LockSupport} class provides lower-level blocking
+and unblocking support that is useful only for those developers
+implementing their own customized lock classes.
 
 <hr>
 <address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
-<!-- hhmts start --> Last modified: Mon Jul  7 20:39:00 EDT 2003 <!-- hhmts end -->
+<!-- hhmts start --> Last modified: Tue Aug  5 10:26:39 EDT 2003 <!-- hhmts end -->
 </body> </html>

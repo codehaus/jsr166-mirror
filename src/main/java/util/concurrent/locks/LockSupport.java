@@ -13,13 +13,14 @@ import sun.misc.Unsafe;
  * Basic thread blocking primitives useful for creating lock and
  * synchronization classes. The <tt>park</tt> and <tt>unpark</tt>
  * methods provide a means of blocking and unblocking threads that
- * eliminate the main problem that make the deprecated methods
- * <tt>Thread.suspend</tt> and <tt>Thread.resume</tt> unusable for
- * such purposes: Lost races between one thread invoking <tt>park</tt>
- * and another thread trying to <tt>unpark</tt> it preserve liveness.
- * Even so, these methods are designed to be used as tools for
- * creating higher-level synchronization utilities, and are not in
- * themselves useful for most concurrency control applications.
+ * eliminate the main problem that cause the deprecated methods
+ * <tt>Thread.suspend</tt> and <tt>Thread.resume</tt> to be unusable
+ * for such purposes: Lost races between one thread invoking
+ * <tt>park</tt> and another thread trying to <tt>unpark</tt> it
+ * preserve liveness.  Even so, these methods are designed to be used
+ * as tools for creating higher-level synchronization utilities, and
+ * are not in themselves useful for most concurrency control
+ * applications.
  */
 
 public class LockSupport {
@@ -27,7 +28,7 @@ public class LockSupport {
 
     /**
      * Unblock the given thread blocked on <tt>park</tt>, or, if it is not
-     * blocked, cause the subsequent call to <tt>park</tt> not to block.
+     * blocked, cause its subsequent call to <tt>park</tt> not to block.
      * @param thread the thread to unpark.
      * @throws NullPointerException if thread is null
      */
@@ -38,7 +39,7 @@ public class LockSupport {
     }
 
     /**
-     * Block current thread, returning when a balancing
+     * Block the current thread, returning when a balancing
      * <tt>unpark</tt> occurs, or a balancing <tt>unpark</tt> has
      * already occurred, or the thread is interrupted, or spuriously
      * (i.e., returning for no "reason"). This method does
@@ -51,7 +52,7 @@ public class LockSupport {
     }
 
     /**
-     * Block current thread, returning when a balancing
+     * Block the current thread, returning when a balancing
      * <tt>unpark</tt> occurs, or a balancing <tt>unpark</tt> has
      * already occurred, or the thread is interrupted, or the given
      * nanoseconds have elapsed, or spuriously (i.e., returning for no
@@ -65,7 +66,7 @@ public class LockSupport {
     }
 
     /**
-     * Block current thread, returning when a balancing
+     * Block the current thread, returning when a balancing
      * <tt>unpark</tt> occurs, or a balancing <tt>unpark</tt> has
      * already occurred, or the thread is interrupted, or the given
      * deadline has elapsed, or spuriously (i.e., returning for no

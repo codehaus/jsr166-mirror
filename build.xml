@@ -145,6 +145,8 @@
       <packageset dir="${build.filter.doccheck.dir}"/>
     </javadoc>
 
+    <echo>DocCheck output is in ${build.doccheck.dir}</echo>
+
   </target>
 
 

@@ -25,26 +25,11 @@ import sun.security.util.SecurityConstants;
  *
  * <p>Among the facilities provided by the <code>System</code> class
  * are standard input, standard output, and error output streams;
- * access to externally defined "properties" and "environment
- * variables"; a means of loading files and libraries; and a utility
+ * access to externally defined properties and environment
+ * variables; a means of loading files and libraries; and a utility
  * method for quickly copying a portion of an array.
  *
- * <p><a name="EnvironmentVSSystemProperties"><i>System properties</i>
- * and <i>environment variables</i> are both conceptually mappings
- * between names and values.  Both mechanisms can be used to pass
- * user-defined information to a Java process.  Environment variables
- * have a more global effect, because they are visible to all
- * descendants of the process which defines them, not just the
- * immediate Java subprocess.  They can have subtly different
- * semantics, such as case insensitivity, on different operating
- * systems.  For these reasons, environment variables are more likely
- * to have unintended side effects.  It is best to use system
- * properties where possible.  Environment variables should be used
- * when a global effect is desired, or when an external system
- * interface requires an environment variable (such as
- * <code>PATH</code>).
- *
- * @author  Arthur van Hoff
+ * @author  unascribed
  * @version %I%, %G%
  * @since   JDK1.0
  */
@@ -558,9 +543,6 @@ public final class System {
      * <code>getProperties</code> operation, it may choose to permit the
      * {@link #getProperty(String)} operation.
      *
-     * <p>Prefer system properties to
-     * <a href=#EnvironmentVSSystemProperties>environment variables</a>.
-     *
      * @return     the system properties
      * @exception  SecurityException  if a security manager exists and its
      *             <code>checkPropertiesAccess</code> method doesn't allow access
@@ -621,9 +603,6 @@ public final class System {
      * properties is first created and initialized in the same manner as
      * for the <code>getProperties</code> method.
      *
-     * <p>Prefer system properties to
-     * <a href=#EnvironmentVSSystemProperties>environment variables</a>.
-     *
      * @param      key   the name of the system property.
      * @return     the string value of the system property,
      *             or <code>null</code> if there is no property with that key.
@@ -657,9 +636,6 @@ public final class System {
      * If there is no current set of system properties, a set of system
      * properties is first created and initialized in the same manner as
      * for the <code>getProperties</code> method.
-     *
-     * <p>Prefer system properties to
-     * <a href=#EnvironmentVSSystemProperties>environment variables</a>.
      *
      * @param      key   the name of the system property.
      * @param      def   a default value.
@@ -777,8 +753,26 @@ public final class System {
      * being thrown.  If no exception is thrown the value of the
      * variable <code>name</code> is returned.
      *
-     * <p>Consider using <a href=#EnvironmentVSSystemProperties>system
-     * properties</a> instead.
+     * <p><a name="EnvironmentVSSystemProperties"><i>System
+     * properties</i> and <i>environment variables</i> are both
+     * conceptually mappings between names and values.  Both
+     * mechanisms can be used to pass user-defined information to a
+     * Java process.  Environment variables have a more global effect,
+     * because they are visible to all descendants of the process
+     * which defines them, not just the immediate Java subprocess.
+     * They can have subtly different semantics, such as case
+     * insensitivity, on different operating systems.  For these
+     * reasons, environment variables are more likely to have
+     * unintended side effects.  It is best to use system properties
+     * where possible.  Environment variables should be used when a
+     * global effect is desired, or when an external system interface
+     * requires an environment variable (such as <code>PATH</code>).
+     *
+     * <p>On UNIX systems the alphabetic case of <code>name</code> is
+     * typically significant, while on Microsoft Windows systems it is
+     * typically not.  For example, the expression
+     * <code>System.getenv("FOO").equals(System.getenv("foo"))</code>
+     * is likely to be true on Microsoft Windows.
      *
      * @param  name the name of the environment variable
      * @return the string value of the variable, or <code>null</code>
@@ -816,8 +810,11 @@ public final class System {
      * <p>If the system does not support environment variables, an
      * empty map is returned.
      *
-     * <p>Consider using <a href=#EnvironmentVSSystemProperties>system
-     * properties</a> instead.
+     * <p>The returned map is typically case-sensitive on all platforms.
+     *
+     * <p>When passing information to a Java subprocess,
+     * <a href=#EnvironmentVSSystemProperties>system properties</a>
+     * are generally preferred over environment variables.
      *
      * @return the environment as a map of variable names to values
      * @throws SecurityException

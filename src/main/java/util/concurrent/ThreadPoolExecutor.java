@@ -943,9 +943,12 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Sets a new handler for unexecutable tasks.
      *
      * @param handler the new handler
+     * @throws NullPointerException if handler is null
      * @see #getRejectedExecutionHandler
      */
     public void setRejectedExecutionHandler(RejectedExecutionHandler handler) {
+        if (handler == null)
+            throw new NullPointerException();
         this.handler = handler;
     }
 

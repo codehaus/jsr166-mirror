@@ -15,9 +15,9 @@ import java.lang.reflect.*;
  * several fields of the same node are independently subject to atomic
  * updates.
  *
- * <p> Note the weaker guarantees of the <tt>compareAndSet</tt> method
- * in this class than in other atomic classes. Because this class
- * cannot ensure that all uses of the field are appropriate for
+ * <p> Note that the guarantees of the <tt>compareAndSet</tt> method
+ * in this class are weaker than in other atomic classes. Because this
+ * class cannot ensure that all uses of the field are appropriate for
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of
  * <tt>compareAndSet</tt> and <tt>set</tt>.

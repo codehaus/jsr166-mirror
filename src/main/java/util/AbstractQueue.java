@@ -121,7 +121,7 @@ public abstract class AbstractQueue<E>
      * @param c collection whose elements are to be added to this collection.
      * @return <tt>true</tt> if this collection changed as a result of the
      *         call.
-     * @throws NullPointerException if the specified collection, or
+     * @throws NullPointerException if the specified collection or
      * any of its elements are null.
      * @throws IllegalArgumentException if c is this queue.
      * 

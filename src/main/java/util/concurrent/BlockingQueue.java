@@ -33,7 +33,7 @@ import java.util.Queue;
  * <tt>remove(x)</tt>. However, such operations are in general
  * <em>not</em> performed very efficiently, and are intended for only
  * occasional use, such as when a queued message is cancelled.  Also,
- * the bulk Collection operations, most notably <tt>addAll</tt> are
+ * the bulk Collection operations, most notably <tt>addAll</tt>, are
  * <em>not</em> necessarily performed atomically, so it is possible
  * for <tt>addAll(c)</tt> to fail (throwing an exception) after adding
  * only some of the elements in <tt>c</tt>.

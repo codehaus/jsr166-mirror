@@ -52,7 +52,7 @@ package java.util.concurrent;
  * @see Executor
  * @since 1.5
  * @author Doug Lea
- * @param <V> The result type returned by this Future
+ * @param <V> The result type returned by this Future's <tt>get</tt> method
  */
 public interface Future<V> extends Cancellable {
 

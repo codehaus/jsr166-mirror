@@ -328,7 +328,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     /** 
      * Head of the wait queue, lazily initialized.  Except for
      * initialisation, it is modified only by a thread upon acquiring
-     * the lock. If head exists, it's node status is guaranteed not to
+     * the lock. If head exists, its node status is guaranteed not to
      * be CANCELLED.
      */
     private transient volatile LockNode head; 

@@ -891,7 +891,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *     with the same two arguments. 
      * <li>Otherwise, this method checks to see if there is a {
      *     {@linkplain Thread#getDefaultUncaughtExceptionHandler default
-     *     uncaught exception handler} installed, and if so, it's
+     *     uncaught exception handler} installed, and if so, its
      *     <code>uncaughtException</code> method is called with the same 
      *     two arguments.
      * <li>Otherwise, this method determines if the <code>Throwable</code>

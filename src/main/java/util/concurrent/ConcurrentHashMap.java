@@ -34,7 +34,7 @@ import java.io.ObjectOutputStream;
  * Enumerations return elements reflecting the state of the hash table
  * at some point at or since the creation of the iterator/enumeration.
  * They do <em>not</em> throw
- * <tt>ConcurrentModificationException</tt>.  However, Iterators are
+ * {@link ConcurrentModificationException}.  However, iterators are
  * designed to be used by only one thread at a time.
  *
  * <p> The allowed concurrency among update operations is guided by

@@ -1440,10 +1440,10 @@ class Thread implements Runnable {
         void uncaughtException(Thread t, Throwable e);
     }
 
-    // null unless explicitily set
+    // null unless explicitly set
     private volatile UncaughtExceptionHandler uncaughtExceptionHandler;
 
-    // null unless explictily set
+    // null unless explicitly set
     private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
     /**
@@ -1452,10 +1452,10 @@ class Thread implements Runnable {
      * for that thread. 
      *
      * <p>Uncaught exception handling is controlled first by the thread, then
-     * by the thread's <tt>ThreadGroup</tt> object and finally by the default
+     * by the thread's {@link ThreadGroup} object and finally by the default
      * uncaught exception handler. If the thread does not have an explicit
      * uncaught exception handler set, and the thread's thread group
-     * (including parent thread groups)  does not specialise its 
+     * (including parent thread groups) does not specialize its 
      * <tt>uncaughtException</tt> method, then the default handler's
      * <tt>uncaughtException</tt> method will be invoked.
      * <p>By setting the default uncaught exception handler, an application
@@ -1519,7 +1519,7 @@ class Thread implements Runnable {
      * Set the handler invoked when this thread abruptly terminates
      * due to an uncaught exception. 
      * <p>A thread can take full control of how it responds to uncaught
-     * exceptions by having it's uncaught exception handler explicitly set.
+     * exceptions by having its uncaught exception handler explicitly set.
      * If no such handler is set then the thread's <tt>ThreadGroup</tt>
      * object acts as its handler.
      * @param eh the object to use as this thread's uncaught exception

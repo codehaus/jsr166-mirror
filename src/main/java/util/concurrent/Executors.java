@@ -315,7 +315,8 @@ public class Executors {
     }
 
     /**
-     * Return a default thread factory used to create new threads.
+     * Return a thread factory used to create new threads that
+     * have the same permissions as the current thread.
      * This factory creates threads with the same settings as {@link
      * Executors#defaultThreadFactory}, additionally setting the
      * AccessControlContext and contextClassLoader of new threads to
@@ -323,7 +324,7 @@ public class Executors {
      * <tt>privilegedThreadFactory</tt> method.  A new
      * <tt>privilegedThreadFactory</tt> can be created within an
      * {@link AccessController#doPrivileged} action setting the
-     * current threads access control context to create threads with
+     * current thread's access control context to create threads with
      * the selected permission settings holding within that action.
      *
      * <p> Note that while tasks running within such threads will have

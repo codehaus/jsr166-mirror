@@ -90,7 +90,7 @@ import java.util.concurrent.atomic.*;
  *
  * <p> The constructor for this class accepts a <em>fairness</em>
  * parameter. When set false, this class makes no guarantees about the
- * order in which threads acquire permits. In particular, barging is
+ * order in which threads acquire permits. In particular, <em>barging</em> is
  * permitted, that is, a thread invoking {@link #acquire} can be
  * allocated a permit ahead of a thread that has been waiting.  When
  * fairness is set true, the semaphore guarantees that threads
@@ -111,7 +111,7 @@ import java.util.concurrent.atomic.*;
  * <p>This class also provides convenience methods to {@link
  * #acquire(int) acquire} and {@link #release(int) release} multiple
  * permits at a time.  Beware of the increased risk of indefinite
- * postponement when these methods are used without fairness set true,
+ * postponement when these methods are used without fairness set true.
  *
  * @since 1.5
  * @author Doug Lea
@@ -360,7 +360,7 @@ public class Semaphore implements java.io.Serializable {
 
     /**
      * Construct a <tt>Semaphore</tt> with the given number of
-     * permits and the given fairness setting
+     * permits and the given fairness setting.
      * @param permits the initial number of permits available. This
      * value may be negative, in which case releases must
      * occur before any acquires will be granted.
@@ -540,7 +540,7 @@ public class Semaphore implements java.io.Serializable {
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's
      * interrupted status is cleared. 
-     * Any permits that were to be assigned to this thread, are instead 
+     * Any permits that were to be assigned to this thread are instead 
      * assigned to the next waiting thread(s), as if
      * they had been made available by a call to {@link #release()}.
      *
@@ -675,7 +675,7 @@ public class Semaphore implements java.io.Serializable {
      * <p>Releases the given number of permits, increasing the number of 
      * available permits by that amount.
      * If any threads are blocking trying to acquire permits, then the
-     * one that has been waiting the intest
+     * one that has been waiting the longest
      * is selected and given the permits that were just released.
      * If the number of available permits satisfies that thread's request
      * then that thread is re-enabled for thread scheduling purposes; otherwise

@@ -33,8 +33,8 @@ import java.lang.reflect.*;
  * }
  * </pre>
  *
- * <p> Note the weaker guarantees of the <tt>compareAndSet</tt>
- * method in this class than in other atomic classes. Because this
+ * <p> Note that the guarantees of the <tt>compareAndSet</tt>
+ * method in this class are weaker than in other atomic classes. Because this
  * class cannot ensure that all uses of the field are appropriate for
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of

@@ -23,7 +23,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @author Doug Lea
- * @param <V> The result type returned by this Future
+ * @param <V> The result type returned by this FutureTask's <tt>get</tt> method
  */
 public class FutureTask<V> extends CancellableTask implements Future<V> {
 

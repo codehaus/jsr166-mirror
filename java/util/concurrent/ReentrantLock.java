@@ -56,7 +56,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/11 04:54:20 $
+ * @revised $Date: 2002/12/12 07:01:35 $
  * @editor $Author: dholmes $
  * 
  * @fixme (1) We need a non-nested example to motivate this
@@ -91,7 +91,7 @@ public class ReentrantLock implements Lock {
      * <p>If the current thread already holds this lock then the hold count 
      * is incremented by one and the method returns immediately.
      * <p>If the lock is held by another thread then the
-     * the current thread thread becomes disabled for thread scheduling 
+     * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of two things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
@@ -149,7 +149,7 @@ public class ReentrantLock implements Lock {
      * already holds this lock then the hold count is incremented by one and
      * the method returns <tt>true</code>.
      * <p>If the lock is held by another thread then the
-     * the current thread thread becomes disabled for thread scheduling 
+     * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
@@ -258,8 +258,9 @@ public class ReentrantLock implements Lock {
     }
 
     /**
-     * Returns a new {@link Condition} for use with this lock.
-     * The returned {@link Condition} has the same behaviour and usage
+     * Return a {@link Condition} for use with this {@link Lock} instance.
+     *
+     * <p>The returned {@link Condition} has the same behaviour and usage
      * restrictions with this lock as the {@link Object} monitor methods
      * ({@link Object#wait() wait}, {@link Object#notify notify}, and
      * {@link Object#notifyAll notifyAll}) have with the built-in monitor

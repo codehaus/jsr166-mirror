@@ -26,12 +26,108 @@ package java.util.concurrent;
  * To obtain a <tt>Condition</tt> for a particular {@link Lock} use its
  * {@link Lock#newCondition} method.
  *
+ * <p>As an example, suppose we have a bounded buffer which supports methods
+ * to <tt>put</tt> and <tt>take</tt> items in/from the buffer. If a 
+ * <tt>take</tt> is attempted on an empty buffer then the thread will block
+ * until an item becomes available; if a <tt>put</tt> is attempted on a
+ * full buffer, then the thread will block until a space becomes available.
+ * We would like to keep waiting <tt>put</tt> threads and <tt>take</tt>
+ * threads in separate wait-sets so that we can use the optimisation of
+ * only notifying a single thread at a time when items, or spaces, become
+ * available in the buffer. This can be achieved using either two 
+ * {@link Condition} objects, or one {@link Condition} and the actual
+ * monitor wait-set. For clarity we'll use two {@link Condition} objects.
+ * <pre><code>
+ * class BoundedBuffer {
+ *   <b>final Condition notFull  = Locks.newConditionFor(this); 
+ *   final Condition notEmpty = Locks.newConditionFor(this); </b>
+ *
+ *   Object[] items = new Object[100];
+ *   int putptr, takeptr, count;
+ *
+ *   public <b>synchronized</b> void put(Object x) 
+ *                              throws InterruptedException {
+ *     while (count == items.length) 
+ *       <b>notFull.await();</b>
+ *     items[putptr] = x; 
+ *     if (++putptr == items.length) putptr = 0;
+ *     ++count;
+ *     <b>notEmpty.signal();</b>
+ *   }
+ *
+ *   public <b>synchronized</b> Object take() throws InterruptedException {
+ *     while (count == 0) 
+ *       <b>notEmpty.await();</b>
+ *     Object x = items[takeptr]; 
+ *     if (++takeptr == items.length) takeptr = 0;
+ *     --count;
+ *     <b>notFull.signal();</b>
+ *     return x;
+ *   } 
+ * }
+ * </code></pre>
+ *
+ * <p>If we were to use a standalone {@link Lock} object, such as a 
+ * {@link ReentrantLock} then we would write the example as so:
+ * <pre><code>
+ * class BoundedBuffer {
+ *   <b>Lock lock = new ReentrantLock();</b>
+ *   final Condition notFull  = <b>lock.newCondition(); </b>
+ *   final Condition notEmpty = <b>lock.newCondition(); </b>
+ *
+ *   Object[] items = new Object[100];
+ *   int putptr, takeptr, count;
+ *
+ *   public void put(Object x) throws InterruptedException {
+ *     <b>lock.lock();
+ *     try {</b>
+ *       while (count == items.length) 
+ *         <b>notFull.await();</b>
+ *       items[putptr] = x; 
+ *       if (++putptr == items.length) putptr = 0;
+ *       ++count;
+ *       <b>notEmpty.signal();</b>
+ *     <b>}
+ *     finally {
+ *       lock.unlock();
+ *     }</b>
+ *   }
+ *
+ *   public Object take() throws InterruptedException {
+ *     <b>lock.lock();
+ *     try {</b>
+ *       while (count == 0) 
+ *         <b>notEmpty.await();</b>
+ *       Object x = items[takeptr]; 
+ *       if (++takeptr == items.length) takeptr = 0;
+ *       --count;
+ *       <b>notFull.signal();</b>
+ *       return x;
+ *     <b>}
+ *     finally {
+ *       lock.unlock();
+ *     }</b>
+ *   } 
+ * }
+ * </code></pre>
+ *
  * <p>A <tt>Condition</tt> can provide behaviour and semantics that is 
  * different to that of the <tt>Object</tt> monitor methods, such as 
  * guaranteed ordering for notifications, or not requiring a lock to be held 
  * when performing notifications.
  * If an implementation provides such specialised semantics then the 
  * implementation must document those semantics.
+ *
+ * <p>Note that <tt>Condition</tt> instances are just normal objects and can 
+ * themselves be used as the target in a <tt>synchronized</tt> statement,
+ * and can have their own monitor {@link Object#wait wait} and
+ * {@link Object#notify notification} methods invoked.
+ * Acquiring the monitor lock of a <tt>Condition</tt> instance, or using its
+ * monitor methods has no specified relationship with acquiring the 
+ * {@link Lock} associated with that <tt>Condition</tt> or the use of it's
+ * {@link #await waiting} and {@link #signal signalling} methods.
+ * It is recommended that to avoid confusion you never use <tt>Condition</tt>
+ * instances in this way, except perhaps within their own implementation.
  *
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
  * will result in a {@link NullPointerException} being thrown.
@@ -65,11 +161,9 @@ package java.util.concurrent;
  * in this interface.
  *
  *
- * @fixme Need a usage example
- *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/11 04:54:20 $
+ * @revised $Date: 2002/12/12 07:01:35 $
  * @editor $Author: dholmes $
  **/
 public interface Condition {

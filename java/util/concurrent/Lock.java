@@ -60,6 +60,14 @@ package java.util.concurrent;
  * such specialised semantics then the implementation must document those
  * semantics.
  *
+ * <p>Note that <tt>Lock</tt> instances are just normal objects and can 
+ * themselves be used as the target in a <tt>synchronized</tt> statement.
+ * Acquiring the
+ * monitor lock of a <tt>Lock</tt> instance has no specified relationship
+ * with invoking any of the {@link #lock} methods of that instance. 
+ * It is recommended that to avoid confusion you never use <tt>Lock</tt>
+ * instances in this way, except within their own implementation.
+ *
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
  * will result in a {@link NullPointerException} being thrown.
  *
@@ -103,10 +111,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/11 04:54:20 $
+ * @revised $Date: 2002/12/12 07:01:35 $
  * @editor $Author: dholmes $
  *
- * @fixme We need to say something about l.lock() versus synchronized(l)
  **/
 public interface Lock {
 
@@ -114,7 +121,7 @@ public interface Lock {
      * Acquire the lock. 
      * <p>Acquires the lock if it is available and returns immediately.
      * <p>If the lock is not available then
-     * the current thread thread becomes disabled for thread scheduling 
+     * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until the lock has been acquired.
      * <p><b>Implementation Considerations</b>
      * <p>A concrete <tt>Lock</tt> implementation may be able to detect 
@@ -203,7 +210,7 @@ public interface Lock {
      * <p>Acquires the lock if it is available and returns immediately
      * with the value <tt>true</tt>.
      * <p>If the lock is not available then
-     * the current thread thread becomes disabled for thread scheduling 
+     * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or

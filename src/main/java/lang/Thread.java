@@ -316,8 +316,8 @@ class Thread implements Runnable {
 	this.target = target;
 	setPriority(priority);
         if (parent.inheritableThreadLocals != null)
-          this.inheritableThreadLocals = ThreadLocal.createInheritedMap(
-              (ThreadLocal.ThreadLocalMap<Object>)parent.inheritableThreadLocals);
+            this.inheritableThreadLocals = 
+                ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
         /* Stash the specified stack size in case the VM cares */
         this.stackSize = stackSize;
 

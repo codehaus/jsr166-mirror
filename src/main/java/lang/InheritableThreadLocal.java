@@ -50,8 +50,8 @@ public class InheritableThreadLocal<T> extends ThreadLocal<T> {
      *
      * @param t the current thread
      */
-    ThreadLocalMap<T> getMap(Thread t) {
-       return (ThreadLocalMap<T>)t.inheritableThreadLocals;
+    ThreadLocalMap getMap(Thread t) {
+        return t.inheritableThreadLocals;
     }
 
     /**
@@ -62,6 +62,6 @@ public class InheritableThreadLocal<T> extends ThreadLocal<T> {
      * @param map the map to store.
      */
     void createMap(Thread t, T firstValue) {
-        t.inheritableThreadLocals = new ThreadLocalMap<T>(this, firstValue);
+        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
     }
 }

@@ -102,10 +102,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @param comparator the comparator used to order this priority queue.
      * If <tt>null</tt> then the order depends on the elements' natural
      * ordering.
+     * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
+     * than 1
      */
     public PriorityQueue(int initialCapacity, Comparator<E> comparator) {
         if (initialCapacity < 1)
-            initialCapacity = 1;
+            throw new IllegalArgumentException();
         queue = (E[]) new Object[initialCapacity + 1];
         this.comparator = comparator;
     }
@@ -113,7 +115,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Create a <tt>PriorityQueue</tt> containing the elements in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
-     * size of the specified collection. If the specified collection
+     * size of the specified collection; or 1 if the collection is empty. 
+     * If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be
      * sorted according to the same comparator, or according to its elements'
      * natural order if the collection is sorted according to its elements'
@@ -121,29 +124,31 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * <tt>Sorted</tt>, the priority queue is ordered according to
      * its elements' natural order.
      *
-     * @param initialElements the collection whose elements are to be placed
+     * @param c the collection whose elements are to be placed
      *        into this priority queue.
      * @throws ClassCastException if elements of the specified collection
      *         cannot be compared to one another according to the priority
      *         queue's ordering.
-     * @throws NullPointerException if the specified collection or an
-     *         element of the specified collection is <tt>null</tt>.
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
      */
-    public PriorityQueue(Collection<E> initialElements) {
-        int sz = initialElements.size();
+    public PriorityQueue(Collection<E> c) {
+        int sz = c.size();
         int initialCapacity = (int)Math.min((sz * 110L) / 100,
                                             Integer.MAX_VALUE - 1);
         if (initialCapacity < 1)
             initialCapacity = 1;
+
         queue = (E[]) new Object[initialCapacity + 1];
 
-        if (initialElements instanceof Sorted) {
-            comparator = ((Sorted)initialElements).comparator();
-            for (Iterator<E> i = initialElements.iterator(); i.hasNext(); )
+        if (c instanceof Sorted) {
+            // FIXME: this code assumes too much
+            comparator = ((Sorted)c).comparator();
+            for (Iterator<E> i = c.iterator(); i.hasNext(); )
                 queue[++size] = i.next();
         } else {
             comparator = null;
-            for (Iterator<E> i = initialElements.iterator(); i.hasNext(); )
+            for (Iterator<E> i = c.iterator(); i.hasNext(); )
                 add(i.next());
         }
     }
@@ -194,6 +199,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws ClassCastException if the specified element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
      */
     public boolean add(E element) {
         return super.add(element);
@@ -201,17 +209,17 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * @throws NullPointerException if any element is <tt>null</tt>.
+     * @throws ClassCastException if any element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
      */
     public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);
     }
 
-    /**
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
-     */
     public boolean remove(Object o) {
         if (o == null)
-            throw new NullPointerException();
+            return false;
 
         if (comparator == null) {
             for (int i = 1; i <= size; i++) {
@@ -231,14 +239,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return false;
     }
 
-    /**
-     * Returns an iterator over the elements in this priority queue.  The
-     * elements of the priority queue will be returned by this iterator in the
-     * order specified by the queue, which is to say the order they would be
-     * returned by repeated calls to <tt>poll</tt>.
-     *
-     * @return an <tt>Iterator</tt> over the elements in this priority queue.
-     */
     public Iterator<E> iterator() {
         return new Itr();
     }

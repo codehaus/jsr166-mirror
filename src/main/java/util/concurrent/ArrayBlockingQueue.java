@@ -135,6 +135,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @param array the array to use or null if should create new one
      * @param count the number of items in the array, where indices 0
      * to count-1 hold items.
+     * @param lk the lock to use with this queue
      */
     private ArrayBlockingQueue(int cap, E[] array, int count,
                                ReentrantLock lk) {
@@ -155,6 +156,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
      * capacity and default access policy.
      * @param capacity the capacity of this queue
+     * @throws IllegalArgumentException if <tt>capacity</tt> is less than 1
      */
     public ArrayBlockingQueue(int capacity) {
         this(capacity, null, 0, new ReentrantLock());
@@ -167,23 +169,50 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @param fair if <tt>true</tt> then queue accesses for threads blocked
      * on insertion or removal, are processed in FIFO order; if <tt>false</tt>
      * the access order is unspecified.
+     * @throws IllegalArgumentException if <tt>capacity</tt> is less than 1
      */
     public ArrayBlockingQueue(int capacity, boolean fair) {
         this(capacity, null, 0, new ReentrantLock(fair));
     }
 
+    /**
+     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
+     * capacity, the specified access policy and initially holding the 
+     * elements of the given collection, 
+     * added in traversal order of the collection's iterator.
+     * @param capacity the capacity of this queue
+     * @param fair if <tt>true</tt> then queue accesses for threads blocked
+     * on insertion or removal, are processed in FIFO order; if <tt>false</tt>
+     * the access order is unspecified.
+     * @param c the collection of elements to initially contain
+     * @throws IllegalArgumentException if <tt>capacity</tt> is less than
+     * <tt>c.size()</tt>, or less than 1.
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
+     */
+    public ArrayBlockingQueue(int capacity, boolean fair, Collection<E> c) {
+        this(capacity, null, 0, new ReentrantLock(fair));
+
+        if (capacity < c.size())
+            throw new IllegalArgumentException();
+
+        for (Iterator<E> it = c.iterator(); it.hasNext();) 
+            add(it.next());
+    }
 
     // Have to override just to update the javadoc for @throws
 
     /**
      * @throws IllegalStateException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
-    public boolean add(E x) {
-        return super.add(x);
+    public boolean add(E o) {
+        return super.add(o);
     }
 
     /**
      * @throws IllegalStateException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);
@@ -441,7 +470,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             if (a.length < count)
-                a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), count);
+                a = (T[])java.lang.reflect.Array.newInstance(
+                    a.getClass().getComponentType(), 
+                    count
+                    );
 
             int k = 0;
             int i = takeIndex;

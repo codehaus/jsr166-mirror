@@ -18,7 +18,7 @@ package java.util;
  * stacks) which order the elements LIFO (last-in-first-out).
  * Whatever the ordering used, the <em>head</em> of the queue is that element
  * which would be removed by a call to {@link #remove() } or {@link #poll()}.
- * Every Queue implementation must specify its ordering guarantees.
+ * Every <tt>Queue</tt> implementation must specify its ordering guarantees.
  *
  * <p>The {@link #offer(E)} method adds an element if possible, otherwise
  * returning <tt>false</tt>.  This differs from the {@link
@@ -37,7 +37,7 @@ package java.util;
  * while the <tt>poll()</tt> method returns <tt>null</tt>.
  *
  * <p>The {@link #element()} and {@link #peek()} methods return, but do
- * not delete, the head of the queue.
+ * not remove, the head of the queue.
  *
  * <p>The <tt>Queue</tt> interface does not define the <i>blocking queue
  * methods</i>, which are common in concurrent programming.  These methods,
@@ -73,11 +73,11 @@ public interface Queue<E> extends Collection<E> {
     /**
      * Add the specified element to this queue, if possible.
      *
-     * @param element the element to add.
+     * @param o the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
-     * this queue.
+     * this queue, else <tt>false</tt>
      */
-    boolean offer(E element);
+    boolean offer(E o);
 
     /**
      * Retrieve and remove the head of this queue, if it is available.
@@ -90,7 +90,7 @@ public interface Queue<E> extends Collection<E> {
     /**
      * Retrieve and remove the head of this queue.
      * This method differs
-     * from the <tt>poll</tt> method in that it throws an exception if the
+     * from the <tt>poll</tt> method in that it throws an exception if this
      * queue is empty.
      *
      * @return the head of this queue.
@@ -99,9 +99,9 @@ public interface Queue<E> extends Collection<E> {
     E remove();
 
     /**
-     * Retrieve, but do not remove, the head of this queue, or <tt>null</tt>
-     * if this queue is empty.  This method differs from the <tt>poll</tt>
-     * method only in that this method does not remove the element from
+     * Retrieve, but do not remove, the head of this queue.
+     * This method differs from the <tt>poll</tt>
+     * method only in that this method does not remove the head element from
      * this queue.
      *
      * @return the head of this queue, or <tt>null</tt> if this queue is empty.

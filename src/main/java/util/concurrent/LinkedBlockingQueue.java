@@ -166,17 +166,39 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>LinkedBlockingQueue</tt> with a capacity if
+     * Create a <tt>LinkedBlockingQueue</tt> with a capacity of
      * {@link Integer#MAX_VALUE}, initially holding the elements of the 
      * given collection, 
      * added in traversal order of the collection's iterator.
-     * @param initialElements the elements to initially contain
+     * @param c the collection of elements to initially contain
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
      */
-    public LinkedBlockingQueue(Collection<E> initialElements) {
+    public LinkedBlockingQueue(Collection<E> c) {
         this(Integer.MAX_VALUE);
-        for (Iterator<E> it = initialElements.iterator(); it.hasNext();) 
+        for (Iterator<E> it = c.iterator(); it.hasNext();) 
             add(it.next());
     }
+
+
+    // Have to override just to update the javadoc for @throws
+
+    /**
+     * @throws IllegalStateException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public boolean add(E o) {
+        return super.add(o);
+    }
+
+    /**
+     * @throws IllegalStateException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        return super.addAll(c);
+    }
+
 
     // this doc comment is overridden to remove the reference to collections
     // greater in size than Integer.MAX_VALUE
@@ -413,15 +435,15 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public boolean remove(Object x) {
-        if (x == null) return false;
+    public boolean remove(Object o) {
+        if (o == null) return false;
         boolean removed = false;
         fullyLock();
         try {
             Node<E> trail = head;
             Node<E> p = head.next;
             while (p != null) {
-                if (x.equals(p.item)) {
+                if (o.equals(p.item)) {
                     removed = true;
                     break;
                 }

@@ -12,10 +12,10 @@ import java.util.Queue;
 /**
  * A {@link java.util.Queue} that additionally supports operations
  * that wait for elements to exist when retrieving them, and wait for
- * space to exist when putting them.
+ * space to exist when storing them.
  *
  * <p>A <tt>BlockingQueue</tt> does not accept <tt>null</tt> elements.
- * Implementations throw <tt>IllegalArgumentException</tt> on attempts
+ * Implementations throw <tt>NullPointerException</tt> on attempts
  * to <tt>add</tt>, <tt>put</tt> or <tt>offer</tt> a <tt>null</tt>.  A
  * <tt>null</tt> is used as a sentinel value to indicate failure of
  * <tt>poll</tt> operations.
@@ -27,7 +27,7 @@ import java.util.Queue;
  * reports a remaining capacity of <tt>Integer.MAX_VALUE</tt>.
  *
  * <p> While <tt>BlockingQueue</tt> is designed to be used primarily
- * as for producer-consumer queues, it additionally supports the
+ * for producer-consumer queues, it additionally supports the
  * <tt>Collection</tt> interface.  So, for example, it is possible to
  * remove an arbitrary element from within a queue using
  * <tt>remove(x)</tt>. However, such operations are in general
@@ -91,33 +91,34 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/28 16:00:19 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/07/31 07:18:02 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public interface BlockingQueue<E> extends Queue<E> {
 
     /**
      * @throws IllegalStateException if this queue is full
-     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
+     * @throws NullPointerException if <tt>o<tt> is <tt>null</tt>.
      */
-    boolean add(E x);
+    boolean add(E o);
 
     /**
      * @throws IllegalStateException if this queue is full
-     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
+     * @throws NullPointerException if any element of <tt>c<tt> 
+     * is <tt>null</tt>.
      */
     boolean addAll(Collection<? extends E> c);
 
     /**
-     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
+     * @throws NullPointerException if <tt>o<tt> is <tt>null</tt>.
      */
-    public boolean offer(E x);
+    public boolean offer(E o);
 
     /**
      * Add the specified element to this queue, waiting if necessary up to the
      * specified wait time for space to become available.
-     * @param x the element to add
+     * @param o the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
@@ -125,9 +126,9 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
      * the specified waiting time elapses before space is available.
      * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if <tt>x</tt> is <tt>null</tt>.
+     * @throws NullPointerException if <tt>o</tt> is <tt>null</tt>.
      */
-    boolean offer(E x, long timeout, TimeUnit unit)
+    boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**
@@ -157,11 +158,11 @@ public interface BlockingQueue<E> extends Queue<E> {
     /**
      * Add the specified element to this queue, waiting if necessary for
      * space to become available.
-     * @param x the element to add
+     * @param o the element to add
      * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if <tt>x</tt> is <tt>null</tt>.
+     * @throws NullPointerException if <tt>o</tt> is <tt>null</tt>.
      */
-    void put(E x) throws InterruptedException;
+    void put(E o) throws InterruptedException;
 
 
     /**

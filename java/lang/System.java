@@ -275,16 +275,22 @@ public final class System {
 
     /**
      * Returns the number of nanoseconds between the current time and
-     * some arbitrary point of time (possibly in the future, so values
-     * may be negative).  Note that while the unit of time of the
-     * return value is a nanosecond, the granularity of the value
-     * depends on the underlying operating system and may be larger.
-     * The time values returned by this method may be completely
-     * uncoordinated with those from <code>currentTimeMillis</code> or
-     * those used by class <code>Date</code>.
+     * some arbitrary (but constant) base time, modulo 2<sup>64</sup>.
+     * The base time may be in the future, so values may be negative.
+     * Note that while the unit of time of the return value is a
+     * nanosecond, the granularity of the value depends on the
+     * underlying operating system and may be larger.  Beware that
+     * estimates of time differences using successive calls to this
+     * method will be wrong when the interval is greater than
+     * <code>Long.MAX_VALUE</code> nanoseconds (approximately 290
+     * years). The time values returned by this method may be
+     * completely uncoordinated with those from
+     * <code>currentTimeMillis</code> or those used by class
+     * <code>Date</code>.
      *
-     * @return  the difference, measured in nanoseconds, between 
-     *          the current time and an arbitrary time.
+     * @return the difference, modulo 2<sup>64</sup>, measured in
+     * nanoseconds, between the current time and an arbitrary (but
+     * constant) base time.
      */
 
     public static native long currentTimeNanos();

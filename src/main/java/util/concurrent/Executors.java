@@ -45,9 +45,10 @@ public class Executors {
      * ScheduleExecutor methods of a ScheduledThreadPoolExecutor.
      */
     private static class DelegatedScheduledExecutorService
-            extends DelegatedExecutorService implements ScheduledExecutor {
+            extends DelegatedExecutorService 
+            implements ScheduledExecutorService {
         private final ScheduledExecutor e;
-        DelegatedScheduledExecutorService(ScheduledThreadPoolExecutor executor) {
+        DelegatedScheduledExecutorService(ScheduledExecutorService executor) {
             super(executor);
             e = executor;
         }
@@ -180,7 +181,7 @@ public class Executors {
      * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
      * an <tt>ExecutorService</tt>.
      */
-    public static ScheduledExecutor newScheduledThreadPool() {
+    public static ScheduledExecutorService newScheduledThreadPool() {
         return newScheduledThreadPool(1);
     }
     
@@ -192,7 +193,7 @@ public class Executors {
      * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
      * an <tt>ExecutorService</tt>.
      */
-    public static ScheduledExecutor newScheduledThreadPool(int corePoolSize) {
+    public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
         return new DelegatedScheduledExecutorService
             (new ScheduledThreadPoolExecutor(corePoolSize));
     }
@@ -207,8 +208,8 @@ public class Executors {
      * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
      * an <tt>ExecutorService</tt>.
      */
-    public static ScheduledExecutor newScheduledThreadPool(int corePoolSize, 
-                                                           ThreadFactory threadFactory) {
+    public static ScheduledExecutorService newScheduledThreadPool(
+            int corePoolSize, ThreadFactory threadFactory) {
         return new DelegatedScheduledExecutorService
             (new ScheduledThreadPoolExecutor(corePoolSize, threadFactory));
     }

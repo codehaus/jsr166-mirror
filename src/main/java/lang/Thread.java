@@ -1,5 +1,5 @@
 /*
- * @(#)Thread.java	1.131 03/07/11
+ * %W% %E%
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -101,7 +101,7 @@ import sun.security.util.SecurityConstants;
  * a thread is created, a new name is generated for it. 
  *
  * @author  unascribed
- * @version 1.131, 07/11/03
+ * @version %I%, %G%
  * @see     java.lang.Runnable
  * @see     java.lang.Runtime#exit(int)
  * @see     java.lang.Thread#run()
@@ -1290,11 +1290,10 @@ class Thread implements Runnable {
         if (this != Thread.currentThread()) {
             // check for getStackTrace permission
             SecurityManager security = System.getSecurityManager();
-            // FIXME dl - temporarily commented out
-            //            if (security != null) {
-            //                security.checkPermission(
-            //                    SecurityConstants.GET_STACK_TRACE_PERMISSION);
-            //            }
+            if (security != null) {
+                security.checkPermission(
+                    SecurityConstants.GET_STACK_TRACE_PERMISSION);
+            }
         }
 
         if (!isAlive()) {
@@ -1346,9 +1345,8 @@ class Thread implements Runnable {
         // check for getStackTrace permission
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
-            // FIXME dl - temporarily commented out
-            //            security.checkPermission(
-            //                SecurityConstants.GET_STACK_TRACE_PERMISSION);
+            security.checkPermission(
+                SecurityConstants.GET_STACK_TRACE_PERMISSION);
             security.checkPermission(
                 SecurityConstants.MODIFY_THREADGROUP_PERMISSION);
         }

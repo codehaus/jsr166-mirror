@@ -205,7 +205,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      * 
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *	       if there was no mapping for key.  (A <tt>null</tt> return can
      *	       also indicate that the map previously associated <tt>null</tt>
      *	       with the specified key, if the implementation supports
@@ -247,7 +247,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * mapping for the specified key.
      *
      * @param key key whose mapping is to be removed from the map.
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *	       if there was no entry for key.  (A <tt>null</tt> return can
      *	       also indicate that the map previously associated <tt>null</tt>
      *	       with the specified key, if the implementation supports
@@ -692,7 +692,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	 * value.
 	 *
 	 * @param value new value to be stored in this entry.
-	 * @return old value corresponding to the entry.
+	 * @return the old value corresponding to the entry.
          */
 	public V setValue(V value) {
 	    V oldValue = this.value;

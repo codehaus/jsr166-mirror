@@ -182,7 +182,7 @@ public class Collections {
      *
      * @param  list the list to be searched.
      * @param  key the key to be searched for.
-     * @return index of the search key, if it is contained in the list;
+     * @return the index of the search key, if it is contained in the list;
      *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
      *	       <i>insertion point</i> is defined as the point at which the
      *	       key would be inserted into the list: the index of the first
@@ -287,7 +287,7 @@ public class Collections {
      * @param  c the comparator by which the list is ordered.  A
      *        <tt>null</tt> value indicates that the elements' <i>natural
      *        ordering</i> should be used.
-     * @return index of the search key, if it is contained in the list;
+     * @return the index of the search key, if it is contained in the list;
      *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
      *	       <i>insertion point</i> is defined as the point at which the
      *	       key would be inserted into the list: the index of the first

@@ -11,7 +11,7 @@ package java.util;
 /**
  * Red-Black tree based implementation of the <tt>NavigableMap</tt> interface.
  * This class guarantees that the map will be in ascending key order, sorted
- * according to the <i>natural order</i> for the key's class (see
+ * according to the <i>natural order</i> for the keys' class (see
  * <tt>Comparable</tt>), or by the comparator provided at creation time,
  * depending on which constructor is used.<p>
  *
@@ -542,7 +542,7 @@ public class TreeMap<K,V>
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      *
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *         if there was no mapping for key.  A <tt>null</tt> return can
      *         also indicate that the map previously associated <tt>null</tt>
      *         with the specified key.
@@ -591,7 +591,7 @@ public class TreeMap<K,V>
      * Removes the mapping for this key from this TreeMap if present.
      *
      * @param  key key for which mapping should be removed
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *         if there was no mapping for key.  A <tt>null</tt> return can
      *         also indicate that the map previously associated
      *         <tt>null</tt> with the specified key.
@@ -670,8 +670,6 @@ public class TreeMap<K,V>
     /**
      * Returns a key-value mapping associated with the greatest
      * key in this map, or <tt>null</tt> if the map is empty.
-     * The returned entry does <em>not</em> support
-     * the <tt>Entry.setValue</tt> method.
      * 
      * @return an Entry with greatest key, or <tt>null</tt>
      * if the map is empty.
@@ -1145,7 +1143,7 @@ public class TreeMap<K,V>
      * the key-value mappings in <tt>m</tt> whose keys are less than or equal
      * to <tt>high</tt>:
      * <pre>
-     *     NavigableMap head = m.headMap(high+"\0");
+     *     NavigableMap head = m.navigableHeadMap(high+"\0");
      * </pre>
      *
      * @param toKey high endpoint (exclusive) of the headMap.
@@ -1185,7 +1183,7 @@ public class TreeMap<K,V>
      * are strings.  The following idiom obtains a view containing
      * all of the key-value mappings in <tt>m</tt> whose keys are strictly
      * greater than <tt>low</tt>: <pre>
-     *     NavigableMap tail = m.tailMap(low+"\0");
+     *     NavigableMap tail = m.navigableTailMap(low+"\0");
      * </pre>
      *
      * @param fromKey low endpoint (inclusive) of the tailMap.

@@ -1752,7 +1752,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      *
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *         if there was no mapping for key.  
      * @throws ClassCastException if the key cannot be compared with the keys
      *            currently in the map.
@@ -1768,7 +1768,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Removes the mapping for this key from this Map if present.
      *
      * @param  key key for which mapping should be removed
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *         if there was no mapping for key. 
      *
      * @throws ClassCastException if the key cannot be compared with the keys
@@ -2040,7 +2040,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * except that the action is performed atomically.
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *         if there was no mapping for key. 
      *
      * @throws ClassCastException if the key cannot be compared with the keys
@@ -2124,7 +2124,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * except that the action is performed atomically.
      * @param key key with which the specified value is associated.
      * @param value value to be associated with the specified key.
-     * @return previous value associated with specified key, or <tt>null</tt>
+     * @return the previous value associated with specified key, or <tt>null</tt>
      *         if there was no mapping for key.  
      * @throws ClassCastException if the key cannot be compared with the keys
      *            currently in the map.
@@ -3105,7 +3105,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Returns fence key. Needed by ConcurrentSkipListSet
-         * @return fence key or <tt>null</tt> of to end
+         * @return fence key or <tt>null</tt> if to end
          */
         K getFence() {
             return fence;

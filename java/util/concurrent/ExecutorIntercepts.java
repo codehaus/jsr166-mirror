@@ -62,13 +62,10 @@ public class ExecutorIntercepts implements ThreadFactory {
      * will be propagated to the caller of <tt>execute</tt>.
      **/
     public boolean cannotExecute(Runnable r, Executor e) {
-        try {
-            if (!e.isShutdown())
-                r.run();
+        if (!e.isShutdown()) {
+            r.run();
         }
-        finally {
-            return true;
-        }
+        return true;
     }
 
     /**

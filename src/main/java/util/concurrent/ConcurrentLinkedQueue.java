@@ -10,12 +10,18 @@ import java.util.concurrent.atomic.*;
 
 
 /**
- * An unbounded thread-safe queue based on linked nodes.  ConcurrentLinkedQueues
- * are an especially good choice when many threads will share access
- * to a common  queue.
+ * An unbounded thread-safe {@link Queue queue} based on linked nodes.  
+ * This queue orders elements FIFO (first-in-first-out).
+ * The <em>head</em> of the queue is that element that has been on the
+ * queue the longest time.
+ * The <em>tail</em> of the queue is that element that has been on the
+ * queue the shortest time.
+ * A <tt>ConcurrentLinkedQueue</tt> is an especially good choice when 
+ * many threads will share access to a common queue.
+ * This queue does not permit <tt>null</tt> elements.
  *
- * <p> This implementation employs an efficient "wait-free" algorithm
- * based on one described in <a
+ * <p>This implementation employs an efficient &quot;wait-free&quot; 
+ * algorithm based on one described in <a
  * href="http://www.cs.rochester.edu/u/michael/PODC96.html"> Simple,
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.)
@@ -74,25 +80,45 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
 
     /**
-     * Creates an initially empty ConcurrentLinkedQueue.
+     * Creates a <tt>ConcurrentLinkedQueue</tt> that is initially empty.
      */
     public ConcurrentLinkedQueue() {}
 
     /**
-     * Creates a ConcurrentLinkedQueue initially holding the elements
-     * of the given collection. The elements are added in
-     * iterator traversal order.
-     *
-     * @param initialElements the collections whose elements are to be added.
+     * Creates a <tt>ConcurrentLinkedQueue</tt> 
+     * initially holding the elements of the given collection,
+     * added in traversal order of the collection's iterator.
+     * @param c the collection of elements to initially contain
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
      */
-    public ConcurrentLinkedQueue(Collection<? extends E> initialElements) {
-        for (Iterator<? extends E> it = initialElements.iterator(); it.hasNext();)
+    public ConcurrentLinkedQueue(Collection<? extends E> c) {
+        for (Iterator<? extends E> it = c.iterator(); it.hasNext();)
             add(it.next());
     }
 
-    public boolean offer(E x) {
-        if (x == null) throw new NullPointerException();
-        AtomicLinkedNode n = new AtomicLinkedNode(x, null);
+    // Have to override just to update the javadoc for @throws
+
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public boolean add(E o) {
+        return super.add(o);
+    }
+
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        return super.addAll(c);
+    }
+
+    /**
+     * @throws NullPointerException if the specified element is <tt>null</tt>
+     */
+    public boolean offer(E o) {
+        if (o == null) throw new NullPointerException();
+        AtomicLinkedNode n = new AtomicLinkedNode(o, null);
         for(;;) {
             AtomicLinkedNode t = tail;
             AtomicLinkedNode s = t.getNext();
@@ -158,7 +184,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Return the first actual (non-header) node on list.  This is yet
+     * Returns the first actual (non-header) node on list.  This is yet
      * another variant of poll/peek; here returning out the first
      * node, not element (so we cannot collapse with peek() without
      * introducing race.)
@@ -191,9 +217,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns the number of elements in this collection.
+     * {@inheritDoc}
      *
-     * Beware that, unlike in most collection, this method> is
+     * <p>Beware that, unlike in most collections, this method> is
      * <em>NOT</em> a constant-time operation. Because of the
      * asynchronous nature of these queues, determining the current
      * number of elements requires an O(n) traversal.
@@ -208,23 +234,23 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         return count;
     }
 
-    public boolean contains(Object x) {
-        if (x == null) return false;
+    public boolean contains(Object o) {
+        if (o == null) return false;
         for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
             Object item = p.getItem();
             if (item != null &&
-                x.equals(item))
+                o.equals(item))
                 return true;
         }
         return false;
     }
 
-    public boolean remove(Object x) {
-        if (x == null) return false;
+    public boolean remove(Object o) {
+        if (o == null) return false;
         for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
             Object item = p.getItem();
             if (item != null &&
-                x.equals(item) &&
+                o.equals(item) &&
                 p.casItem(item, null))
                 return true;
         }

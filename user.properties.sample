@@ -3,15 +3,15 @@
 #
 # Modify this file to taste and save as user.properties
 #
-# $Id: user.properties.sample,v 1.7 2003/05/29 15:53:58 tim Exp $
+# $Id: user.properties.sample,v 1.8 2003/06/25 20:44:31 tim Exp $
 # ---------------------------------------------------------------------------
 
 
-# ----- Which gj compiler: 1.3 or 2.0? (default 2.0) -----
+# ----- Which gj compiler: 2.0 or 2.1? (default 2.0) -----
 gjc.version = 2.0
 
 
-# ----- Turn on -novariance? (default true, ignored in version 1.3) -----
+# ----- Turn on -novariance? (default true, ignored in version 2.1) -----
 gjc.novariance = true
 
 

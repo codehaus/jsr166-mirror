@@ -24,7 +24,7 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/29 13:49:24 $
+ * @revised $Date: 2003/06/03 16:44:36 $
  * @editor $Author: dl $
  */
 public class Executors {
@@ -41,6 +41,7 @@ public class Executors {
         public List shutdownNow() { return e.shutdownNow(); }
         public boolean isShutdown() { return e.isShutdown(); }
         public boolean isTerminated() { return e.isTerminated(); }
+        public boolean remove(Runnable r) { return e.remove(r) ; }
         public boolean awaitTermination(long timeout, TimeUnit unit)
             throws InterruptedException {
             return e.awaitTermination(timeout, unit);
@@ -151,30 +152,6 @@ public class Executors {
     }
 
     /**
-     * Constructs a ScheduledExecutor.  A ScheduledExecutor is an
-     * Executor which can schedule tasks to run at a given future
-     * time, or to execute periodically.
-     *
-     * @param minThreads the minimum number of threads to keep in the
-     * pool, even if they are idle.
-     * @param maxThreads the maximum number of threads to allow in the
-     * pool.
-     * @param keepAliveTime when the number of threads is greater than
-     * the minimum, this is the maximum time that excess idle threads
-     * will wait for new tasks before terminating.
-     * @param unit the time unit for the keepAliveTime
-     * argument.
-     * @return the newly created ScheduledExecutor
-     */
-    //    public static ScheduledExecutor newScheduledExecutor(int minThreads,
-    //                                                         int maxThreads,
-    //                                                         long keepAliveTime,
-    //                                                         TimeUnit unit) {
-    //        return new ScheduledExecutor(minThreads, maxThreads,
-    //                                     keepAliveTime, unit);
-    //    }
-
-    /**
      * Executes a Runnable task and returns a Future representing that
      * task.
      *
@@ -182,12 +159,12 @@ public class Executors {
      * @param task the task to submit
      * @param value the value which will become the return value of
      * the task upon task completion
-     * @return a Future representing pending completion of the task
+     * @return a CancellableTask that allows cancellation.
      * @throws CannotExecuteException if the task cannot be scheduled
      * for execution
      */
-    public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
-        FutureTask<T> ftask = new FutureTask<T>(task, value);
+    public static CancellableTask execute(Executor executor, Runnable task) {
+        CancellableTask ftask = new CancellableTask(task);
         executor.execute(ftask);
         return ftask;
     }
@@ -201,7 +178,7 @@ public class Executors {
      * @return a Future representing pending completion of the task
      * @throws CannotExecuteException if task cannot be scheduled for execution
      */
-    public static <T> Future<T> execute(Executor executor, Callable<T> task) {
+    public static <T> FutureTask<T> execute(Executor executor, Callable<T> task) {
         FutureTask<T> ftask = new FutureTask<T>(task);
         executor.execute(ftask);
         return ftask;
@@ -217,7 +194,7 @@ public class Executors {
      */
     public static void invoke(Executor executor, Runnable task)
             throws ExecutionException, InterruptedException {
-        FutureTask ftask = new FutureTask(task, Boolean.TRUE);
+        FutureTask<Boolean> ftask = new FutureTask(task, Boolean.TRUE);
         executor.execute(ftask);
         ftask.get();
     }

@@ -136,7 +136,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/29 13:21:28 $
+ * @revised $Date: 2003/06/03 16:44:36 $
  * @editor $Author: dl $
  *
  */
@@ -487,25 +487,6 @@ public class ThreadPoolExecutor implements ExecutorService {
         }
     }
 
-    private static class DequeuableFutureTask<V> extends FutureTask<V> {
-        private final ThreadPoolExecutor tpe;
-        public DequeuableFutureTask(Callable<V> callable, ThreadPoolExecutor tpe) {
-            super(callable);
-            this.tpe = tpe;
-        }
-
-        public DequeuableFutureTask(final Runnable runnable, final V result, ThreadPoolExecutor tpe) {
-            super(runnable, result);
-            this.tpe = tpe;
-        }
-        
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (!isDone())
-                tpe.dequeue(this);
-            return super.cancel(mayInterruptIfRunning);
-        }
-    }
-
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
      * parameters.  It may be more convenient to use one of the factory
@@ -688,20 +669,6 @@ public class ThreadPoolExecutor implements ExecutorService {
         }
     }
 
-    public <T> FutureTask<T> executeAsFuture(Callable<T> task) {
-        FutureTask<T> future = new DequeuableFutureTask<T>(task, this);
-        execute(future);
-        return future;
-    }
-
-    public <T> FutureTask<T> executeAsFuture(Runnable task, T returnValue) {
-        FutureTask<T> future = new DequeuableFutureTask<T>(task, returnValue, this);
-        execute(future);
-        return future;
-    }
-
-
-        
     public void shutdown() {
         mainLock.lock();
         try {
@@ -802,7 +769,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * 
      * #return true if the task was removed
      */
-    public boolean dequeue(Runnable task) {
+    public boolean remove(Runnable task) {
         return getQueue().remove(task);
     }
 
@@ -1016,7 +983,9 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Method invoked prior to executing the given Runnable in given
      * thread.  This method may be used to re-initialize ThreadLocals,
-     * or to perform logging.
+     * or to perform logging. Note: To properly nest multiple
+     * overridings, subclasses should generally invoke
+     * <tt>super.beforeExecute</tt> at the end of this method.
      *
      * @param t the thread that will run task r.
      * @param r the task that will be executed.
@@ -1026,7 +995,9 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Method invoked upon completion of execution of the given
      * Runnable.  If non-null, the Throwable is the uncaught exception
-     * that caused execution to terminate abruptly.
+     * that caused execution to terminate abruptly. Note: To properly
+     * nest multiple overridings, subclasses should generally invoke
+     * <tt>super.afterExecute</tt> at the beginning of this method.
      *
      * @param r the runnable that has completed.
      * @param t the exception that cause termination, or null if

@@ -23,8 +23,8 @@ import java.util.List;
  * @see Executors
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:15:49 $
- * @editor $Author: jozart $
+ * @revised $Date: 2003/06/03 16:44:36 $
+ * @editor $Author: dl $
  */
 public interface ExecutorService extends Executor {
 
@@ -78,4 +78,14 @@ public interface ExecutorService extends Executor {
      */
     boolean awaitTermination(long timeout, TimeUnit unit)
         throws InterruptedException;
+
+
+    /**
+     * Prevent this task from executing if it has not already
+     * commenced executing. This method provides only best-effort
+     * effects, and may fail for any reason.
+     * d
+     * #return true if the task was removed
+     */
+    boolean remove(Runnable task);
 }

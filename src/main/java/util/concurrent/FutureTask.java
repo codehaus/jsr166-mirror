@@ -32,18 +32,10 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:40 $
+ * @revised $Date: 2003/06/03 16:44:36 $
  * @editor $Author: dl $
  */
-public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
-    private V result;
-    private Throwable exception;
-    private boolean ready;
-    private Thread runner;
-    private final Callable<V> callable;
-    private boolean cancelled;
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Condition accessible = lock.newCondition();
+public class FutureTask<V> extends CancellableTask implements Cancellable, Future<V>, Runnable {
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the
@@ -52,7 +44,9 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * @param  callable the callable task
      */
     public FutureTask(Callable<V> callable) {
-        this.callable = callable;
+        // must set after super ctor call to use inner class
+        super();
+        setRunnable(new InnerCancellableFuture(callable));
     }
 
     /**
@@ -66,44 +60,15 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * <tt>Boolean.TRUE</tt>.
      */
     public FutureTask(final Runnable runnable, final V result) {
-        callable = new Callable<V>() {
-            public V call() {
-                runnable.run();
-                return result;
-            }
-        };
+        super();
+        setRunnable(new InnerCancellableFuture
+                    (new Callable<V>() {
+                        public V call() {
+                            runnable.run();
+                            return result;
+                        }
+                    }));
     }
-
-    /* Runnable implementation. */
-
-    /** Starts the computation. */
-    public void run() {
-        doRun();
-    }
-
-    /**
-     * Executes the callable if not already cancelled or running, and
-     * sets the value or exception with its results.
-     */
-    protected void doRun() {
-        try {
-            lock.lock();
-            try {
-                if (ready || runner != null)
-                    return;
-                runner = Thread.currentThread();
-            }
-            finally {
-                lock.unlock();
-            }
-            set(callable.call());
-        }
-        catch(Throwable ex) {
-            setException(ex);
-        }
-    }
-
-    /* Future implementation. INHERIT this javadoc from interface??? Note CancellationException. */
 
     /**
      * Waits if necessary for the computation to complete, and then retrieves
@@ -116,20 +81,7 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * @throws InterruptedException if current thread was interrupted while waiting
      */
     public V get() throws InterruptedException, ExecutionException {
-        lock.lock();
-        try {
-            while (!ready)
-                accessible.await();
-            if (cancelled)
-                throw new CancellationException();
-            else if (exception != null)
-                throw new ExecutionException(exception);
-            else
-                return result;
-        }
-        finally {
-            lock.unlock();
-        }
+        return ((InnerCancellableFuture<V>)getRunnable()).get();
     }
 
     /**
@@ -147,27 +99,7 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-
-        lock.lock();
-        try {
-            if (!ready) {
-                long nanos = unit.toNanos(timeout);
-                do {
-                    if (nanos <= 0)
-                        throw new TimeoutException();
-                    nanos = accessible.awaitNanos(nanos);
-                } while (!ready);
-            }
-            if (cancelled)
-                throw new CancellationException();
-            else if (exception != null)
-                throw new ExecutionException(exception);
-            else
-                return result;
-        }
-        finally {
-            lock.unlock();
-        }
+        return ((InnerCancellableFuture<V>)getRunnable()).get(timeout, unit);
     }
 
     /**
@@ -180,16 +112,7 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * @fixme Need to clarify "should" in "should only be called once".
      */
     protected void set(V v) {
-        lock.lock();
-        try {
-            ready = true;
-            result = v;
-            runner = null;
-            accessible.signalAll();
-        }
-        finally {
-            lock.unlock();
-        }
+        ((InnerCancellableFuture<V>)getRunnable()).set(v);
     }
 
     /**
@@ -201,54 +124,9 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * @param t the throwable
      */
     protected void setException(Throwable t) {
-        lock.lock();
-        try {
-            ready = true;
-            exception = t;
-            runner = null;
-            accessible.signalAll();
-        }
-        finally {
-            lock.unlock();
-        }
+        ((InnerCancellableFuture<V>)getRunnable()).setException(t);
     }
 
-    /* Cancellable implementation. */
-
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        lock.lock();
-        try {
-            if (ready || cancelled)
-                return false;
-            if (mayInterruptIfRunning &&
-                runner != null && runner != Thread.currentThread())
-                runner.interrupt();
-            return cancelled = ready = true;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
-    public boolean isCancelled() {
-        lock.lock();
-        try {
-            return cancelled;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
-    public boolean isDone() {
-        lock.lock();
-        try {
-            return ready;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
 }
 
 

@@ -488,7 +488,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
     /**
      * Without privileges, run with default context throws ACE
      */
-    public void testRun_NoPrivs() {
+    public void testRunWithNoPrivs() {
         try {
             PrivilegedFutureTask task = new PrivilegedFutureTask(new NoOpCallable());
             task.run();
@@ -501,7 +501,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
     /**
      * With ContextClassLoader privileges, run with default context succeeds
      */
-    public void testRun_CCLPrivs() {
+    public void testRunWithContextClassLoaderPermissions() {
         AdjustablePolicy policy = new AdjustablePolicy();
         policy.addPermission(new RuntimePermission("getContextClassLoader"));
         policy.addPermission(new RuntimePermission("setContextClassLoader"));

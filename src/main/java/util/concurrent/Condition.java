@@ -8,21 +8,21 @@ package java.util.concurrent;
 import java.util.Date;
 
 /**
- * <tt>Conditions</tt> abstract out the <tt>Object</tt> monitor
+ * <tt>Condition</tt> factors out the <tt>Object</tt> monitor
  * methods ({@link Object#wait() wait}, {@link Object#notify notify}
  * and {@link Object#notifyAll notifyAll}) into distinct objects to
  * give the effect of having multiple wait-sets per object
- * monitor. They also generalise the monitor methods to allow them to
+ * monitor. It also generalises the monitor methods to allow them to
  * be used with arbitrary {@link Lock} implementations when needed.
  *
- * <p>Conditions (also known as condition queues or condition variables) 
- * provide
+ * <p>Conditions (also known as <em>condition queues</em> or 
+ * <em>condition variables</em>) provide
  * a means for one thread to suspend execution (to &quot;wait&quot;) until
  * notified by another thread that some state condition may now be true.
  * Because access to this shared state information
  * occurs in different threads, it must be protected, and invariably
  * a lock of some form is associated with the condition. The key
- * property is that waiting for a condition provides is that it
+ * property that waiting for a condition provides is that it
  * <em>atomically</em> releases the associated lock and suspends the current
  * thread, just like <tt>Object.wait</tt>.
  *
@@ -167,12 +167,17 @@ import java.util.Date;
  * waiting methods, and when an implementation does support interruption of 
  * thread suspension then it must obey the interruption semantics as defined 
  * in this interface.
+ * <p>As interruption generally implies cancellation, and checks for 
+ * interruption are often infrequent, an implementation can favor responding
+ * to an interrupt over normal method return. This is true even if it can be
+ * shown that the interrupt occurred after another action may have unblocked
+ * the thread. An implementation should document this behaviour. 
  *
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/26 05:42:58 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public interface Condition {
@@ -210,12 +215,6 @@ public interface Condition {
      * case, whether or not the test for interruption occurs before the lock
      * is released.
      * 
-     * <p>The circumstances under which the wait completes are mutually 
-     * exclusive. For example, if the thread is signalled then it will
-     * never return by throwing {@link InterruptedException}; conversely
-     * a thread that is interrupted and throws {@link InterruptedException}
-     * will never consume a {@link #signal}.
-     *
      * <p><b>Implementation Considerations</b>
      * <p>The current thread is assumed to hold the lock associated with this
      * <tt>Condition</tt> when this method is called.
@@ -223,6 +222,11 @@ public interface Condition {
      * the case and if not, how to respond. Typically, an exception will be 
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
+     *
+     * <p>An implementation can favour responding to an interrupt over normal
+     * method return in response to a signal. In that case the implementation
+     * must ensure that the signal is redirected to another waiting thread, if
+     * there is one.
      *
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
@@ -288,7 +292,6 @@ public interface Condition {
      * re-acquire the lock associated with this condition. When the
      * thread returns it is <em>guaranteed</em> to hold this lock.
      *
-     *
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or 
@@ -299,12 +302,6 @@ public interface Condition {
      * interrupted status is cleared. It is not specified, in the first
      * case, whether or not the test for interruption occurs before the lock
      * is released.
-     *
-     * <p>The circumstances under which the wait completes are mutually 
-     * exclusive. For example, if the thread is signalled then it will
-     * never return by throwing {@link InterruptedException}; conversely
-     * a thread that is interrupted and throws {@link InterruptedException}
-     * will never consume a {@link #signal}.
      *
      * <p>The method returns an estimate of the number of nanoseconds
      * remaining to wait given the supplied <tt>nanosTimeout</tt>
@@ -341,6 +338,11 @@ public interface Condition {
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
      *
+     * <p>An implementation can favour responding to an interrupt over normal
+     * method return in response to a signal, or over indicating the elapse
+     * of the specified waiting time. In either case the implementation
+     * must ensure that the signal is redirected to another waiting thread, if
+     * there is one.
      *
      * @param nanosTimeout the maximum time to wait, in nanoseconds
      * @return A value less than or equal to zero if the wait has
@@ -404,11 +406,6 @@ public interface Condition {
      * case, whether or not the test for interruption occurs before the lock
      * is released.
      *
-     * <p>The circumstances under which the wait completes are mutually 
-     * exclusive. For example, if the thread is signalled then it will
-     * never return by throwing {@link InterruptedException}; conversely
-     * a thread that is interrupted and throws {@link InterruptedException}
-     * will never consume a {@link #signal}.
      *
      * <p>The return value idicates whether the deadline has elapsed,
      * which can be used as follows:
@@ -432,6 +429,12 @@ public interface Condition {
      * the case and if not, how to respond. Typically, an exception will be 
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
+     *
+     * <p>An implementation can favour responding to an interrupt over normal
+     * method return in response to a signal, or over indicating the passing
+     * of the specified deadline. In either case the implementation
+     * must ensure that the signal is redirected to another waiting thread, if
+     * there is one.
      *
      *
      * @param deadline the absolute time to wait until
@@ -462,6 +465,9 @@ public interface Condition {
     void signalAll();
 
 }
+
+
+
 
 
 

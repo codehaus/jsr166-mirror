@@ -36,7 +36,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * execute of runnable runs it to completion
+     * execute(runnable) runs it to completion
      */
     public void testExecuteRunnable() {
         try {
@@ -57,7 +57,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
 
 
     /**
-     * completed submit of callable returns result
+     * Completed submit(callable) returns result
      */
     public void testSubmitCallable() {
         try {
@@ -75,7 +75,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * completed submit of runnable returns successfully
+     * Completed submit(runnable) returns successfully
      */
     public void testSubmitRunnable() {
         try {
@@ -93,7 +93,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * completed submit of (runnable, result) returns result
+     * Completed submit(runnable, result) returns result
      */
     public void testSubmitRunnable2() {
         try {
@@ -112,7 +112,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
 
 
     /**
-     * submit of a privileged action runs it to completion
+     * A submitted privileged action to completion
      */
     public void testSubmitPrivilegedAction() {
         Policy savedPolicy = Policy.getPolicy();
@@ -142,7 +142,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * submit of a privileged exception action runs it to completion
+     * A submitted a privileged exception action runs to completion
      */
     public void testSubmitPrivilegedExceptionAction() {
         Policy savedPolicy = Policy.getPolicy();
@@ -172,7 +172,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * submit of a failed privileged exception action reports exception
+     * A submitted failed privileged exception action reports exception
      */
     public void testSubmitFailedPrivilegedExceptionAction() {
         Policy savedPolicy = Policy.getPolicy();
@@ -201,7 +201,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * execute with a null runnable throws NPE
+     * execute(null runnable) throws NPE
      */
     public void testExecuteNullRunnable() {
         try {
@@ -219,7 +219,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
 
 
     /**
-     * submit of a null callable throws NPE
+     * submit(null callable) throws NPE
      */
     public void testSubmitNullCallable() {
         try {
@@ -236,8 +236,8 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * submit of Runnable throws RejectedExecutionException if
-     * saturated.
+     * submit(runnable) throws RejectedExecutionException if
+     * executor is saturated.
      */
     public void testExecute1() {
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
@@ -252,8 +252,8 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * Completed submit of Callable throws RejectedExecutionException
-     *  if saturated.
+     * submit(callable) throws RejectedExecutionException
+     * if executor is saturated.
      */
     public void testExecute2() {
          ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
@@ -268,7 +268,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
 
 
     /**
-     *  blocking on submit of Callable throws InterruptedException if
+     *  Blocking on submit(callable) throws InterruptedException if
      *  caller interrupted.
      */
     public void testInterruptedSubmit() {
@@ -304,7 +304,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     *  get of submit of Callable throws Exception if callable
+     *  get of submitted callable throws Exception if callable
      *  interrupted
      */
     public void testSubmitIE() {
@@ -344,8 +344,8 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     *  completed submit of Callable throws ExecutionException if
-     *  callable throws exception
+     *  get of submit(callable) throws ExecutionException if callable
+     *  throws exception
      */
     public void testSubmitEE() {
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -421,7 +421,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * invokeAny(c) throws ExecutionException if no task completes
+     * invokeAny(c) throws ExecutionException if no task in c completes
      */
     public void testInvokeAny4() {
         ExecutorService e = new DirectExecutorService();
@@ -438,7 +438,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * invokeAny(c) returns result of some task
+     * invokeAny(c) returns result of some task in c if at least one completes
      */
     public void testInvokeAny5() {
         ExecutorService e = new DirectExecutorService();
@@ -505,7 +505,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * get of element of invokeAll(c) throws exception on failed task
+     * get of returned element of invokeAll(c) throws exception on failed task
      */
     public void testInvokeAll4() {
         ExecutorService e = new DirectExecutorService();
@@ -525,7 +525,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * invokeAll(c) returns results of all completed tasks
+     * invokeAll(c) returns results of all completed tasks in c
      */
     public void testInvokeAll5() {
         ExecutorService e = new DirectExecutorService();
@@ -562,7 +562,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * timed invokeAny(,,null) throws NPE
+     * timed invokeAny(null time unit) throws NPE
      */
     public void testTimedInvokeAnyNullTimeUnit() {
         ExecutorService e = new DirectExecutorService();
@@ -630,7 +630,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * timed invokeAny(c) returns result of some task
+     * timed invokeAny(c) returns result of some task in c
      */
     public void testTimedInvokeAny5() {
         ExecutorService e = new DirectExecutorService();
@@ -664,7 +664,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * timed invokeAll(,,null) throws NPE
+     * timed invokeAll(null time unit) throws NPE
      */
     public void testTimedInvokeAllNullTimeUnit() {
         ExecutorService e = new DirectExecutorService();
@@ -714,7 +714,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * get of element of invokeAll(c) throws exception on failed task
+     * get of returned element of invokeAll(c) throws exception on failed task
      */
     public void testTimedInvokeAll4() {
         ExecutorService e = new DirectExecutorService();
@@ -734,7 +734,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * timed invokeAll(c) returns results of all completed tasks
+     * timed invokeAll(c) returns results of all completed tasks in c
      */
     public void testTimedInvokeAll5() {
         ExecutorService e = new DirectExecutorService();
@@ -755,7 +755,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * timed invokeAll(c) cancels tasks not completed by timeout
+     * timed invokeAll cancels tasks not completed by timeout
      */
     public void testTimedInvokeAll6() {
         ExecutorService e = new DirectExecutorService();

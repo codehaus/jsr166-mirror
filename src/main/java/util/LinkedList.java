@@ -530,7 +530,7 @@ public class LinkedList<E>
     public E peekFirst() {
         if (size==0)
             return null;
-        return removeFirst();
+        return getFirst();
     }
 
     /**
@@ -544,7 +544,7 @@ public class LinkedList<E>
     public E peekLast() {
         if (size==0)
             return null;
-        return removeLast();
+        return getLast();
     }
 
     /**

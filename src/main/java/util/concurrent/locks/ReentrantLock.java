@@ -1069,6 +1069,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
 
     static class ReentrantLockCondition implements Condition, java.io.Serializable {
+
+        private static final long serialVersionUID = 1173984872572414699L;
+
         /**
          * Node class for conditions. Because condition queues are
          * accessed only when locks are already held, we just need a

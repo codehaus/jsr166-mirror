@@ -62,7 +62,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private final int capacity;
 
     /** Current number of elements */
-    private transient final AtomicInteger count = new AtomicInteger(0);
+    private final AtomicInteger count = new AtomicInteger(0);
 
     /** Head of linked list */
     private transient Node<E> head;
@@ -629,6 +629,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         // Read in capacity, and any hidden stuff
         s.defaultReadObject();
 
+        count.set(0);
+        last = head = new Node<E>(null);
+
         // Read in all elements and place in queue
         for (;;) {
             E item = (E)s.readObject();
@@ -638,8 +641,3 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 }
-
-
-
-
-

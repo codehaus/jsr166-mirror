@@ -657,7 +657,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         s.writeInt(queue.length);
 
         // Write out all elements in the proper order.
-        for (int i=0; i<size; i++)
+        for (int i=1; i<=size; i++)
             s.writeObject(queue[i]);
     }
 
@@ -676,7 +676,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         queue = new Object[arrayLength];
 
         // Read in all elements in the proper order.
-        for (int i=0; i<size; i++)
+        for (int i=1; i<=size; i++)
             queue[i] = (E) s.readObject();
     }
 

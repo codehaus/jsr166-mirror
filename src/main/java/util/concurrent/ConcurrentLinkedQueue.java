@@ -474,13 +474,15 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         throws java.io.IOException, ClassNotFoundException {
         // Read in capacity, and any hidden stuff
         s.defaultReadObject();
-
+        head = new AtomicLinkedNode(null, null);
+        tail = head;
         // Read in all elements and place in queue
         for (;;) {
             E item = (E)s.readObject();
             if (item == null)
                 break;
-            add(item);
+            else
+                offer(item);
         }
     }
 

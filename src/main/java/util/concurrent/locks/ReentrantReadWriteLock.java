@@ -290,7 +290,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * The Reader lock
      */
-    private class ReaderLock implements Lock {
+    private class ReaderLock implements Lock, java.io.Serializable  {
+
+        private static final long serialVersionUID = -5992448646407690164L;
 
         public void lock() {
             entryLock.lock();
@@ -350,7 +352,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * The writer lock
      */
-    private class WriterLock implements Lock  {
+    private class WriterLock implements Lock, java.io.Serializable  {
+        private static final long serialVersionUID = -4992448646407690164L;
+
         public void lock() {
             entryLock.lock();
             writerEnterUninterruptibly();
@@ -413,7 +417,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * lock condition, but must wait for any readers to exit
          * before returning from wait.
          */
-        private class WriteLockCondition implements Condition {
+        private class WriteLockCondition implements Condition, java.io.Serializable {
+            private static final long serialVersionUID = -3992448646407690164L;
+
             private final Condition entryCond = entryLock.newCondition();
 
             public void await() throws InterruptedException {

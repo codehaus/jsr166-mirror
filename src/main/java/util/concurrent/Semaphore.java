@@ -287,7 +287,7 @@ public class Semaphore implements java.io.Serializable {
      *
      */
     public void acquireUninterruptibly() {
-        sync.acquireSharedUninterruptibly(1);
+        sync.acquireShared(1);
     }
 
     /**
@@ -360,7 +360,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(long timeout, TimeUnit unit) 
         throws InterruptedException {
-        return sync.acquireSharedNanos(1, unit.toNanos(timeout));
+        return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
     }
 
     /**
@@ -449,7 +449,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquireUninterruptibly(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        sync.acquireSharedUninterruptibly(permits);
+        sync.acquireShared(permits);
     }
 
     /**
@@ -538,7 +538,7 @@ public class Semaphore implements java.io.Serializable {
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.acquireSharedNanos(permits, unit.toNanos(timeout));
+        return sync.tryAcquireSharedNanos(permits, unit.toNanos(timeout));
     }
 
     /**

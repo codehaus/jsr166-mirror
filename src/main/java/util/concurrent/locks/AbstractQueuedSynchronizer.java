@@ -18,8 +18,8 @@ import sun.misc.Unsafe;
  * single atomic <tt>int</tt> value to represent state. Subclasses
  * must define the protected methods that change this state, and which
  * define what that state means in terms of this object being acquired
- * or released.  Given these, the other public methods in this class
- * carry out all queuing and blocking mechanics using an internal
+ * or released.  Given these, the other methods in this class carry
+ * out all queuing and blocking mechanics using an internal
  * specialized FIFO queue. Subclasses can maintain other state fields,
  * but only the atomically updated <tt>int</tt> value manipulated
  * using methods {@link #getState}, {@link #setState} and {@link
@@ -30,57 +30,61 @@ import sun.misc.Unsafe;
  * of their enclosing class.  Class
  * <tt>AbstractQueuedSynchronizer</tt> does not implement any
  * synchronization interface.  Instead it defines methods such as
- * {@link #acquireExclusiveUninterruptibly} that can be invoked as
+ * {@link #acquireInterruptibly} that can be invoked as
  * appropriate by concrete locks and related synchronizers to
  * implement their public methods. 
  *
- * <p>This class supports either or both <em>exclusive</em> and
- * <em>shared</em> modes. When acquired in exclusive mode, attempted
- * acquires by other threads cannot succeed. Shared mode acquires may
- * (but need not) succeed by multiple threads. This class does not
- * &quot;understand&quot; these differences except in the mechanical
- * sense that when a shared mode acquire succeeds, the next waiting
- * thread (if one exists) must also determine whether it can acquire
- * as well. Threads waiting in the different modes share the same FIFO
- * queue. Usually, implementation subclasses support only one of these
- * modes, but both can come into play for example in a {@link
- * ReadWriteLock}. Subclasses that support only exclusive or only
- * shared modes need not define the methods for the unused mode.
+ * <p>This class supports either or both a default <em>exclusive</em>
+ * mode and a <em>shared</em> mode. When acquired in exclusive mode,
+ * attempted acquires by other threads cannot succeed. Shared mode
+ * acquires may (but need not) succeed by multiple threads. This class
+ * does not &quot;understand&quot; these differences except in the
+ * mechanical sense that when a shared mode acquire succeeds, the next
+ * waiting thread (if one exists) must also determine whether it can
+ * acquire as well. Threads waiting in the different modes share the
+ * same FIFO queue. Usually, implementation subclasses support only
+ * one of these modes, but both can come into play for example in a
+ * {@link ReadWriteLock}. Subclasses that support only exclusive or
+ * only shared modes need not define the methods for the unused mode.
  *
  * <p>This class defines a nested {@link Condition} class that can be
- * used with subclasses for which method {@link #releaseExclusive}
- * invoked with the current state value fully releases this object, and
- * {@link #acquireExclusiveUninterruptibly}, given this saved state
- * value, eventually restores this object to its previous acquired state. 
- * No <tt>AbstractQueuedSynchronizer</tt> method otherwise creates such a
- * condition, so if this constraint cannot be met, do not use it.  The
- * detailed behavior of {@link ConditionObject} depends of course on
- * the semantics of its synchronizer implementation.
+ * used with subclasses supporting exclusive mode for which method
+ * {@link #isHeldExclusively} reports whether synchronization is
+ * exclusively held with respect to the current thread, method
+ * {@link #release} invoked with the current {@link #getState} value
+ * fully releases this object, and {@link #acquire}, given this saved
+ * state value, eventually restores this object to its previous
+ * acquired state.  No <tt>AbstractQueuedSynchronizer</tt> method
+ * otherwise creates such a condition, so if this constraint cannot be
+ * met, do not use it.  The behavior of {@link ConditionObject}
+ * depends of course on the semantics of its synchronizer
+ * implementation.
  * 
- * <p> This class provides, inspection, instrumentation and monitoring
+ * <p> This class provides inspection, instrumentation, and monitoring
  * methods for the internal queue, as well as similar methods for
  * condition objects. These can be exported as desired into classes
  * using an <tt>AbstractQueuedSynchronizer</tt> for their
  * synchronization mechanics.
  *
  * <p> Serialization of this class stores only the underlying atomic
- * integer maintaining state. Typical subclasses requiring
- * serializability will define a <tt>readObject</tt> method that
- * restores this to a known initial state upon deserialization.
+ * integer maintaining state, so deserialized objects have empty
+ * thread queues. Typical subclasses requiring serializability will
+ * define a <tt>readObject</tt> method that restores this to a known
+ * initial state upon deserialization.
  *
  * <h3>Usage</h3>
  *
- * <p> To use this class as the basis of a synchronizer redefine the
+ * <p> To use this class as the basis of a synchronizer, redefine the
  * following methods, as applicable, by inspecting and/or modifying
  * the synchronization state using {@link #getState}, {@link
  * #setState} and/or {@link #compareAndSetState}: 
  *
  * <ul>
- * <li> {@link #tryAcquireExclusive}
- * <li> {@link #tryReleaseExclusive}
+ * <li> {@link #tryAcquire}
+ * <li> {@link #tryRelease}
  * <li> {@link #tryAcquireShared}
  * <li> {@link #tryReleaseShared}
- * <li> {@link #checkConditionAccess}
+ * <li> {@link #isHeldExclusively}
  *</ul>
  *
  * Each of these methods by default throws {@link
@@ -92,52 +96,53 @@ import sun.misc.Unsafe;
  *
  * <p> Even though this class is based on an internal FIFO queue, it
  * does not automatically enforce FIFO acquisition policies.  The core
- * of exclusive synchronization takes the form (shared mode is
- * similar):
+ * of exclusive synchronization takes the form:
  *
  * <pre>
  * Acquire:
- *     while (!tryAcquireExclusive(arg)) {
+ *     while (!tryAcquire(arg)) {
  *        <em>enqueue thread if it is not already queued</em>;
  *        <em>possibly block current thread</em>;
  *     }
  *
  * Release:
- *     if (tryReleaseExclusive(arg))
+ *     if (tryRelease(arg))
  *        <em>unblock the first queued thread</em>;
  * </pre>
  *
- * Because checks in acquire are invoked before enqueuing, a newly
+ * (Shared mode is similar but may involve cascading signals.)
+ *
+ * <p> Because checks in acquire are invoked before enqueuing, a newly
  * acquiring thread may <em>barge</em> ahead of others that are
  * blocked and queued. However, you can, if desired, define
- * <tt>tryAcquireExclusive</tt> and/or <tt>tryAcquireShared</tt> to
- * disable barging by internally invoking one or more of the
- * inspection methods. In particular, a strict FIFO lock can define
- * <tt>tryAcquireExclusive</tt> to immediately return <tt>false</tt>
- * if {@link #getFirstQueuedThread} does not return the current
- * thread.  A normally preferable non-strict fair version can
- * immediately return <tt>false</tt> only if {@link #hasQueuedThreads}
- * returns <tt>true</tt> and <tt>getFirstQueuedThread</tt> is not the
- * current thread; or equivalently, that <tt>getFirstQueuedThread</tt>
- * is both non-null and not the current thread.  Further variants are
+ * <tt>tryAcquire</tt> and/or <tt>tryAcquireShared</tt> to disable
+ * barging by internally invoking one or more of the inspection
+ * methods. In particular, a strict FIFO lock can define
+ * <tt>tryAcquire</tt> to immediately return <tt>false</tt> if {@link
+ * #getFirstQueuedThread} does not return the current thread.  A
+ * normally preferable non-strict fair version can immediately return
+ * <tt>false</tt> only if {@link #hasQueuedThreads} returns
+ * <tt>true</tt> and <tt>getFirstQueuedThread</tt> is not the current
+ * thread; or equivalently, that <tt>getFirstQueuedThread</tt> is both
+ * non-null and not the current thread.  Further variants are
  * possible.
  *
  * <p> Throughput and scalability are generally highest for the
  * default barging (also known as <em>greedy</em>,
- * <em>renouncement</em> and <em>convoy-avoidance</em>) strategy.
- * While not guaranteed to be starvation-free, earlier queued threads
- * are allowed to recontend before later queued threads, and each
- * recontention has an unbiased chance to succeed against incoming
- * threads.  Also, while acquires do not &quot;spin&quot; in the usual
- * sense, they may perform multiple tryAcquires interspersed with
- * other computations before blocking.  This gives most of the
- * benefits of spins when exclusive synchronization is only briefly
- * held, without most of the liabilities when it isn't. If so desired,
- * you can augment this by preceeding calls to acquire methods with
- * "fast-path" checks, possibly prechecking {@link #hasContended}
- * and/or {@link #hasQueuedThreads} to only do so if the synchronizer
- * is likely not to be contended. Further variants of these techniques
- * are also possible.
+ * <em>renouncement</em>, and <em>convoy-avoidance</em>) strategy.
+ * While not guaranteed to be fair or starvation-free, earlier queued
+ * threads are allowed to recontend before later queued threads, and
+ * each recontention has an unbiased chance to succeed against
+ * incoming threads.  Also, while acquires do not &quot;spin&quot; in
+ * the usual sense, they may perform multiple invocations of
+ * <tt>tryAcquire</tt> interspersed with other computations before
+ * blocking.  This gives most of the benefits of spins when exclusive
+ * synchronization is only briefly held, without most of the
+ * liabilities when it isn't. If so desired, you can augment this by
+ * preceeding calls to acquire methods with "fast-path" checks,
+ * possibly prechecking {@link #hasContended} and/or {@link
+ * #hasQueuedThreads} to only do so if the synchronizer is likely not
+ * to be contended. 
  *
  * <p> This class provides an efficient and scalable basis for
  * synchronization in part by specializing its range of use to
@@ -160,59 +165,54 @@ import sun.misc.Unsafe;
  *
  *    // Our internal helper class
  *    private static class Sync extends AbstractQueuedSynchronizer {
- *       public boolean isLocked() { return getState() == 1; }
+ *      // Report whether in locked state
+ *      protected boolean isHeldExclusively() { 
+ *        return getState() == 1; 
+ *      }
  *
- *       // acquire the lock if state is zero
- *       public boolean tryAcquireExclusive(int acquires) {
- *         assert acquires == 1; // Otherwise unused
- *         return compareAndSetState(0, 1);
- *       }
+ *      // Acquire the lock if state is zero
+ *      public boolean tryAcquire(int acquires) {
+ *        assert acquires == 1; // Otherwise unused
+ *        return compareAndSetState(0, 1);
+ *      }
  *
- *       // release the lock by setting state to zero
- *       protected boolean tryReleaseExclusive(int releases) {
- *         assert releases == 1; // Otherwise unused
- *         setState(0);
- *         return true;
- *       }
+ *      // Release the lock by setting state to zero
+ *      protected boolean tryRelease(int releases) {
+ *        assert releases == 1; // Otherwise unused
+ *        if (getState() == 0) throw new IllegalMonitorStateException();
+ *        setState(0);
+ *        return true;
+ *      }
  *       
- *       // Allow condition use only when locked
- *       protected void checkConditionAccess(Thread thread, boolean waiting) {
- *         if (!isLocked()) throw new IllegalMonitorStateException();
- *       }
+ *      // Provide a Condition
+ *      Condition newCondition() { return new ConditionObject(); }
  *
- *       // provide a Condition for our lock
- *       Condition newCondition() { return new ConditionObject(); }
- *
- *       // deserialize properly
- *       private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
- *         s.defaultReadObject();
- *         setState(0); // reset to unlocked state
- *       }
+ *      // Deserialize properly
+ *      private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+ *        s.defaultReadObject();
+ *        setState(0); // reset to unlocked state
+ *      }
  *    }
  *
  *    // Our sync object does all the hard work. We just forward to it.
  *    private final Sync sync = new Sync();
  *
- *    public void lock() { 
- *       sync.acquireExclusiveUninterruptibly(1);
- *    }
+ *    public void lock() { sync.acquire(1); }
+ *    public boolean tryLock() { return sync.tryAcquire(1); }
  *    public void lockInterruptibly() throws InterruptedException { 
- *       sync.acquireExclusiveInterruptibly(1);
- *    }
- *    public boolean tryLock() { 
- *       return sync.tryAcquireExclusive(1); 
+ *      sync.acquireInterruptibly(1);
  *    }
  *    public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
- *       return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
+ *      return sync.tryAcquireNanos(1, unit.toNanos(timeout));
  *    }
- *    public void unlock() { sync.releaseExclusive(1); }
+ *    public void unlock() { sync.release(1); }
  *    public Condition newCondition() { return sync.newCondition(); }
- *    public boolean isLocked() { return sync.isLockedt(); }
+ *    public boolean isLocked() { return sync.isHeldExclusively(); }
  *    public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
  * }
  * </pre>
  *
- * <p> Here is a latch class that is like {@link CountDownLatch}
+ * <p> Here is a latch class that is like a {@link CountDownLatch}
  * except that it only requires a single <tt>signal</tt> to
  * fire. Because a latch is non-exclusive, it uses the <tt>shared</tt>
  * acquire and release methods.
@@ -224,19 +224,19 @@ import sun.misc.Unsafe;
  *      boolean isSignalled() { return getState() != 0; }
  *
  *      protected int tryAcquireShared(int ignore) {
- *         return isSignalled()? 1 : -1;
+ *        return isSignalled()? 1 : -1;
  *      }
  *        
  *      protected boolean tryReleaseShared(int ignore) {
- *         setState(1);
- *         return true;
+ *        setState(1);
+ *        return true;
  *      }
  *    }
  *
  *    private final Sync sync = new Sync();
  *    public void signal() { sync.releaseShared(1); }
  *    public void await() throws InterruptedException {
- *        sync.acquireSharedInterruptibly(1);
+ *      sync.acquireSharedInterruptibly(1);
  *    }
  *    public boolean isSignalled() { return sync.isSignalled(); }
  * }
@@ -428,8 +428,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         }
 
         /**
-         * Returns prev node, or throws NullPointerException if null.
-         * Use when predecessor cannot be null.
+         * Returns previous node, or throws NullPointerException if
+         * null.  Use when predecessor cannot be null.
          * @return the predecessor of this node
          */
         final Node predecessor() throws NullPointerException {
@@ -440,26 +440,25 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 return p;
         }
 
-
-        Node() { // Used only to establish initial head or SHARED marker
+        Node() {    // Used to establish initial head or SHARED marker
         }
 
-        Node(Thread thread, Node mode) { // used only by addWaiter
+        Node(Thread thread, Node mode) {     // Used by addWaiter
             this.nextWaiter = mode;
             this.thread = thread;
         }
 
         Node(Thread thread, int waitStatus) { // Used by Condition
-            this.thread = thread; 
             this.waitStatus = waitStatus;
+            this.thread = thread; 
         }
     }
 
     /** 
      * Head of the wait queue, lazily initialized.  Except for
-     * initialization, it is modified only upon acquiring via method
-     * setHead.  Note: If head exists, its waitStatus is guaranteed
-     * not to be CANCELLED.
+     * initialization, it is modified only via method setHead.  Note:
+     * If head exists, its waitStatus is guaranteed not to be
+     * CANCELLED.
      */
     private transient volatile Node head;
 
@@ -571,7 +570,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Set head of queue to be node, thus dequeuing. Called only by
      * acquire methods.  Also nulls out unused fields for sake of GC
-     * and to suppress signals.
+     * and to suppress unnecessary signals and traversals.
      * @param node the node 
      */
     private void setHead(Node node) {
@@ -708,18 +707,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Acquire in exclusive uninterruptible mode for thread already in
-     * queue. Used by condition wait methods as well as
-     * acquireExclusiveUninterruptibly
+     * queue. Used by condition wait methods as well as acquire.
      * @param node the node
      * @param arg the acquire argument
      * @return true if interrupted while waiting
      */
-    final boolean acquireExclusiveQueued(final Node node, int arg) {
+    final boolean acquireQueued(final Node node, int arg) {
         try {
             boolean interrupted = false;
             for (;;) {
                 final Node p = node.predecessor();
-                if (p == head && tryAcquireExclusive(arg)) {
+                if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
                     return interrupted;
@@ -738,13 +736,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Acquire in exclusive interruptible mode
      * @param arg the acquire argument
      */
-    private void doAcquireExclusiveInterruptibly(int arg) 
+    private void doAcquireInterruptibly(int arg) 
         throws InterruptedException {
         final Node node = addWaiter(Node.EXCLUSIVE);
         try {
             for (;;) {
                 final Node p = node.predecessor();
-                if (p == head && tryAcquireExclusive(arg)) {
+                if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
                     return;
@@ -768,14 +766,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param nanosTimeout max wait time
      * @return true if acquired
      */
-    private boolean doAcquireExclusiveNanos(int arg, long nanosTimeout) 
+    private boolean doAcquireNanos(int arg, long nanosTimeout) 
         throws InterruptedException {
         long lastTime = System.nanoTime();
         final Node node = addWaiter(Node.EXCLUSIVE);
         try {
             for (;;) {
                 final Node p = node.predecessor();
-                if (p == head && tryAcquireExclusive(arg)) {
+                if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
                     return true;
@@ -806,7 +804,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Acquire in shared uninterruptible mode
      * @param arg the acquire argument
      */
-    private void doAcquireSharedUninterruptibly(int arg) {
+    private void doAcquireShared(int arg) {
         final Node node = addWaiter(Node.SHARED);
         try {
             boolean interrupted = false;
@@ -934,7 +932,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
-    protected boolean tryAcquireExclusive(int arg) {
+    protected boolean tryAcquire(int arg) {
         throw new UnsupportedOperationException();
     }
 
@@ -957,7 +955,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
-    protected boolean tryReleaseExclusive(int arg) {
+    protected boolean tryRelease(int arg) {
         throw new UnsupportedOperationException();
     }
 
@@ -1017,98 +1015,96 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Throws {@link IllegalMonitorStateException} if the given thread
-     * should not access a {@link Condition} method. This method is
-     * invoked immediately upon each call to a {@link ConditionObject}
-     * method.  A typical usage example is to check if the thread has
-     * acquired this synchronizer.  <p>The default implementation
-     * throws {@link UnsupportedOperationException}. This method is
-     * invoked internally only within {@link ConditionObject} methods,
-     * so need not be defined if conditions are not used.
-
-     * @param thread the thread that wants to access the condition
-     * @throws IllegalMonitorStateException if access is not permitted
+     * Return true if synchronization is held exclusively with respect
+     * to the current (calling) thread.  This method is invoked
+     * upon each call to a non-waiting {@link ConditionObject} method.
+     * (Waiting methods instead invoke {@link #release}.)
+     * <p>The default implementation throws {@link
+     * UnsupportedOperationException}. This method is invoked
+     * internally only within {@link ConditionObject} methods, so need
+     * not be defined if conditions are not used.
+     *
      * @throws UnsupportedOperationException if conditions are not supported
      */
-    protected void checkConditionAccess(Thread thread) {
+    protected boolean isHeldExclusively() {
         throw new UnsupportedOperationException();
     }
 
     /**
      * Acquires in exclusive mode, ignoring interrupts.  Implemented
-     * by invoking at least once {@link #tryAcquireExclusive},
+     * by invoking at least once {@link #tryAcquire},
      * returning on success.  Otherwise the thread is queued, possibly
      * repeatedly blocking and unblocking, invoking {@link
-     * #tryAcquireExclusive} until success.  This method can be used
+     * #tryAcquire} until success.  This method can be used
      * to implement method {@link Lock#lock}
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireExclusive} but
+     * This value is conveyed to {@link #tryAcquire} but
      * otherwise uninterpreted and can represent anything
      * you like.
      */ 
-    public final void acquireExclusiveUninterruptibly(int arg) {
-        if (!tryAcquireExclusive(arg) &&
-            acquireExclusiveQueued(addWaiter(Node.EXCLUSIVE), arg))
+    public final void acquire(int arg) {
+        if (!tryAcquire(arg) &&
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
             selfInterrupt();
     }
 
     /**
      * Acquires in exclusive mode, aborting if interrupted.
      * Implemented by first checking interrupt status, then invoking
-     * at least once {@link #tryAcquireExclusive}, returning on
+     * at least once {@link #tryAcquire}, returning on
      * success.  Otherwise the thread is queued, possibly repeatedly
-     * blocking and unblocking, invoking {@link #tryAcquireExclusive}
+     * blocking and unblocking, invoking {@link #tryAcquire}
      * until success or the thread is interrupted.  This method can be
      * used to implement method {@link Lock#lockInterruptibly}
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireExclusive} but
+     * This value is conveyed to {@link #tryAcquire} but
      * otherwise uninterpreted and can represent anything
      * you like.
      * @throws InterruptedException if the current thread is interrupted
      */
-    public final void acquireExclusiveInterruptibly(int arg) throws InterruptedException {
+    public final void acquireInterruptibly(int arg) throws InterruptedException {
         if (Thread.interrupted())
             throw new InterruptedException();
-        if (!tryAcquireExclusive(arg))
-            doAcquireExclusiveInterruptibly(arg);
+        if (!tryAcquire(arg))
+            doAcquireInterruptibly(arg);
     }
 
     /**
-     * Acquires in exclusive mode, aborting if interrupted or the
-     * given timeout elapses.  Implemented by first checking interrupt
-     * status, then invoking at least once {@link
-     * #tryAcquireExclusive}, returning on success.  Otherwise, the
-     * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #tryAcquireExclusive} until success or the
-     * thread is interrupted or the timeout elapses.  This method can
-     * be used to implement method {@link Lock#tryLock(long, TimeUnit)}.
+     * Attempts to acquire in exclusive mode, aborting if interrupted,
+     * and failing if the given timeout elapses.  Implemented by first
+     * checking interrupt status, then invoking at least once {@link
+     * #tryAcquire}, returning on success.  Otherwise, the thread is
+     * queued, possibly repeatedly blocking and unblocking, invoking
+     * {@link #tryAcquire} until success or the thread is interrupted
+     * or the timeout elapses.  This method can be used to implement
+     * method {@link Lock#tryLock(long, TimeUnit)}.
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireExclusive} but
+     * This value is conveyed to {@link #tryAcquire} but
      * otherwise uninterpreted and can represent anything
      * you like.
      * @param nanosTimeout the maximum number of nanoseconds to wait
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public final boolean acquireExclusiveNanos(int arg, long nanosTimeout) throws InterruptedException {
+   public final boolean tryAcquireNanos(int arg, long nanosTimeout) throws InterruptedException {
        if (Thread.interrupted())
            throw new InterruptedException();
-       return tryAcquireExclusive(arg) ||
-           doAcquireExclusiveNanos(arg, nanosTimeout);
+       return tryAcquire(arg) ||
+           doAcquireNanos(arg, nanosTimeout);
    }
 
     /**
      * Releases in exclusive mode.  Implemented by unblocking one or
-     * more threads if {@link #tryReleaseExclusive} returns true.
+     * more threads if {@link #tryRelease} returns true.
      * This method can be used to implement method {@link Lock#unlock}
      * @param arg the release argument.
-     * This value is conveyed to {@link #tryReleaseExclusive} but
+     * This value is conveyed to {@link #tryRelease} but
      * otherwise uninterpreted and can represent anything
      * you like.
-     * @return the value returned from {@link #tryReleaseExclusive} 
+     * @return the value returned from {@link #tryRelease} 
      */
-    public final boolean releaseExclusive(int arg) {
-        if (tryReleaseExclusive(arg)) {
+    public final boolean release(int arg) {
+        if (tryRelease(arg)) {
             Node h = head;
             if (h != null && h.waitStatus != 0) 
                 unparkSuccessor(h);
@@ -1128,9 +1124,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * otherwise uninterpreted and can represent anything
      * you like.
      */
-    public final void acquireSharedUninterruptibly(int arg) {
+    public final void acquireShared(int arg) {
         if (tryAcquireShared(arg) < 0)
-            doAcquireSharedUninterruptibly(arg);
+            doAcquireShared(arg);
     }
 
     /**
@@ -1154,13 +1150,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
    }
 
     /**
-     * Acquires in shared mode, aborting if interrupted or the given
-     * timeout elapses.  Implemented by first checking interrupt
-     * status, then invoking at least once {@link #tryAcquireShared},
-     * returning on success.  Otherwise, the thread is queued,
-     * possibly repeatedly blocking and unblocking, invoking {@link
-     * #tryAcquireShared} until success or the thread is interrupted
-     * or the timeout elapses.  
+     * Attepts to acquire in shared mode, aborting if interrupted, and
+     * failing if the given timeout elapses.  Implemented by first
+     * checking interrupt status, then invoking at least once {@link
+     * #tryAcquireShared}, returning on success.  Otherwise, the
+     * thread is queued, possibly repeatedly blocking and unblocking,
+     * invoking {@link #tryAcquireShared} until success or the thread
+     * is interrupted or the timeout elapses.
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireShared} but
      * otherwise uninterpreted and can represent anything
@@ -1169,7 +1165,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public final boolean acquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
+   public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
        if (Thread.interrupted())
            throw new InterruptedException();
        return tryAcquireShared(arg) >= 0 ||
@@ -1234,10 +1230,15 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * constant time, but may iterate upon contention if other threads are
      * concurrently modifying the queue.
      *
-     * @return the first (longest-waiting) thread in the queue, of
+     * @return the first (longest-waiting) thread in the queue, or
      * <tt>null</tt> if no threads are currently queued.
      */
     public final Thread getFirstQueuedThread() {
+        /*
+         * This loops only when the queue changes while we read
+         * certain sets of fields.  It never loops when invoked from
+         * tryAcquireX called within doAcquireX.
+         */
         for (;;) {
             Node h = head;
             if (h == null)                    // No queue
@@ -1253,34 +1254,28 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
              */
             Node s = h.next;
             if (s != null) {
-                Thread z = s.thread;
-                if (z != null && s.prev == head)
-                    return z;
+                Thread st = s.thread;
+                Node sp = s.prev;
+                if (st != null && sp == head)
+                    return st;
             }
 
             /*
-             * h.next might not have been set yet, or may have been
-             * unset after setHead. So we must check to see if tail is
-             * actually first node, in almost the same way as above.
+             * Head's next field might not have been set yet, or may
+             * have been unset after setHead. So we must check to see
+             * if tail is actually first node, in almost the same way
+             * as above.
              */
-            s = tail; 
-            if (s == h)                       // Empty queue
+            Node t = tail; 
+            if (t == h)                       // Empty queue
                 return null;
-            if (s != null) {
-                Node p = s.prev;
-                if (p == h) {
-                    Thread z = s.thread;
-                    if (z != null && p == head)
-                        return z;
-                }
-            }
 
-            /*
-             * Retry if we got an inconsistent set of reads. This
-             * doesn't happen very often -- only when the queue
-             * changes while we read sets of fields.  It never loops
-             * when invoked from tryAcquireX called within doAcquireX.
-             */
+            if (t != null) {
+                Thread tt = t.thread;
+                Node tp = t.prev;
+                if (tt != null && tp == head)
+                    return tt;
+            }
         }
     }
 
@@ -1366,7 +1361,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         return list;
     }
 
-
     /**
      * Returns a collection containing threads that may be waiting to
      * acquire in shared mode. This has the same properties
@@ -1391,7 +1385,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * state.  The state, in brackets, includes the String &quot;State
      * =&quot; followed by the current value of {@link #getState}, and
      * either &quot;nonempty&quot; or &quot;empty&quot; depending on
-     * whetherthe  queue is empty.
+     * whether the  queue is empty.
      *
      * @return a string identifying this synchronizer, as well as its state.
      */
@@ -1483,6 +1477,27 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         while (!isOnSyncQueue(node)) 
             Thread.yield();
         return false;
+    }
+
+
+    /**
+     * Invoke release with current state value; return saved state.
+     * Cancel node and throw exception on failure.
+     * @param node the condition node for this wait
+     * @return previous sync state
+     */
+    final int fullyRelease(Node node) {
+        try {
+            int savedState = getState();
+            if (release(savedState))
+                return savedState;
+        } catch(RuntimeException ex) {
+            node.waitStatus = Node.CANCELLED;
+            throw ex;
+        }
+        // reach here if release fails
+        node.waitStatus = Node.CANCELLED;
+        throw new IllegalMonitorStateException();
     }
 
     // Instrumentation methods for conditions
@@ -1594,18 +1609,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         /**
          * Add a new waiter to wait queue
-         * @param current the thread that will be waiting
          * @return its new wait node
          */
-        private Node addConditionWaiter(Thread current) {
-            Node w = new Node(current, Node.CONDITION);
+        private Node addConditionWaiter() {
+            Node node = new Node(Thread.currentThread(), Node.CONDITION);
             Node t = lastWaiter;
             if (t == null) 
-                firstWaiter = w;
+                firstWaiter = node;
             else 
-                t.nextWaiter = w;
-            lastWaiter = w;
-            return w;
+                t.nextWaiter = node;
+            lastWaiter = node;
+            return node;
         }
 
         /**
@@ -1643,279 +1657,243 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Moves the longest-waiting thread, if one exists, from the
          * wait queue for this condition to the wait queue for the
          * owning lock.
+         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
+         * returns false
          */
         public final void signal() {
-            checkConditionAccess(Thread.currentThread());
-            Node w = firstWaiter;
-            if (w != null)
-                doSignal(w);
+            if (!isHeldExclusively()) 
+                throw new IllegalMonitorStateException();
+            Node first = firstWaiter;
+            if (first != null)
+                doSignal(first);
         }
          
         /**
          * Moves all threads from the wait queue for this condition to
          * the wait queue for the owning lock.
+         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
+         * returns false
          */
         public final void signalAll() {
-            checkConditionAccess(Thread.currentThread());
-            Node w = firstWaiter;
-            if (w != null) 
-                doSignalAll(w);
+            if (!isHeldExclusively()) 
+                throw new IllegalMonitorStateException();
+            Node first = firstWaiter;
+            if (first != null) 
+                doSignalAll(first);
         }
 
         /**
          * Implements uninterruptible condition wait.
          * <ol>
-         * <li> Invoke {@link #checkConditionAccess} 
          * <li> Save lock state returned by {@link #getState} 
-         * <li> Release by invoking {@link #releaseExclusive} with 
-         *      saved state as argument
+         * <li> Invoke {@link #release} with 
+         *      saved state as argument, throwing 
+         *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled
          * <li> Reacquire by invoking specialized version of
-         *      {@link #acquireExclusiveUninterruptibly} with
-         *      saved state as argument.
+         *      {@link #acquire} with saved state as argument.
          * </ol>
          */
         public final void awaitUninterruptibly() {
-            Thread current = Thread.currentThread();
-            checkConditionAccess(current);
-            Node w = addConditionWaiter(current);
-            int savedState = getState();
-            releaseExclusive(savedState);
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
             boolean interrupted = false;
-
-            while (!isOnSyncQueue(w)) {
+            while (!isOnSyncQueue(node)) {
                 LockSupport.park();
                 if (Thread.interrupted()) 
                     interrupted = true;
             }
+            if (acquireQueued(node, savedState) || interrupted)
+                selfInterrupt();
+        }
 
-            if (acquireExclusiveQueued(w, savedState) || interrupted)
-                current.interrupt();
+        /*
+         * For interruptible waits, we need to track whether to throw
+         * InterruptedException, if interrupted while blocked on
+         * condition, versus reinterrupt current thread, if
+         * interrupted while blocked waiting to re-acquire.
+         */
+
+        /** Mode meaning to reinterrupt on exit from wait */
+        private static final int REINTERRUPT =  1;
+        /** Mode meaning to throw InterruptedException on exit from wait */
+        private static final int THROW_IE    = -1;
+
+        /**
+         * Check for interrupt, returning THROW_IE if interrupted
+         * before signalled, REINTERRUPT if after signalled, or
+         * 0 if not interrupted.
+         */
+        private int checkInterruptWhileWaiting(Node node) {
+            return (Thread.interrupted()) ?
+                ((transferAfterCancelledWait(node))? THROW_IE : REINTERRUPT) :
+                0;
+        }
+
+        /**
+         * Throw InterruptedException, reinterrupt current thread, or
+         * do nothing, depending on mode.
+         */
+        private void reportInterruptAfterWait(int interruptMode) 
+            throws InterruptedException {
+            if (interruptMode != 0) {
+                if (interruptMode == THROW_IE)
+                    throw new InterruptedException();
+                else 
+                    Thread.currentThread().interrupt();
+            }
         }
 
         /**
          * Implements interruptible condition wait.
          * <ol>
-         * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
          * <li> Save lock state returned by {@link #getState} 
-         * <li> Release by invoking {@link #releaseExclusive} with 
-         *      saved state as argument
+         * <li> Invoke {@link #release} with 
+         *      saved state as argument, throwing 
+         *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled or interrupted
          * <li> Reacquire by invoking specialized version of
-         *      {@link #acquireExclusiveUninterruptibly} with
-         *      saved state as argument.
-         * <li> If interrupted while blocked in step 5, throw exception
+         *      {@link #acquire} with saved state as argument.
+         * <li> If interrupted while blocked in step 4, throw exception
          * </ol>
          */
         public final void await() throws InterruptedException {
-            Thread current = Thread.currentThread();
-            checkConditionAccess(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
-
-            Node w = addConditionWaiter(current);
-            int savedState = getState();
-            releaseExclusive(savedState);
-            boolean throwIE = false;
-            boolean interrupted = false;
-
-            for (;;) {
-                if (Thread.interrupted()) {
-                    if (transferAfterCancelledWait(w))
-                        throwIE = true;
-                    else
-                        interrupted = true;
-                    break;
-                }
-                if (isOnSyncQueue(w)) 
-                    break;
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
+            int interruptMode = 0;
+            while (!isOnSyncQueue(node)) {
                 LockSupport.park();
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+                    break;
             }
-
-            if (acquireExclusiveQueued(w, savedState))
-                interrupted = true;
-            if (throwIE)
-                throw new InterruptedException();
-            if (interrupted)
-                current.interrupt();
+            if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+                interruptMode = REINTERRUPT;
+            reportInterruptAfterWait(interruptMode);
         }
 
         /**
          * Implements timed condition wait.
          * <ol>
-         * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
          * <li> Save lock state returned by {@link #getState} 
-         * <li> Release by invoking {@link #releaseExclusive} with 
-         *      saved state as argument
+         * <li> Invoke {@link #release} with 
+         *      saved state as argument, throwing 
+         *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled, interrupted, or timed out
          * <li> Reacquire by invoking specialized version of
-         *      {@link #acquireExclusiveUninterruptibly} with
-         *      saved state as argument.
-         * <li> If interrupted while blocked in step 5, throw InterruptedException
+         *      {@link #acquire} with saved state as argument.
+         * <li> If interrupted while blocked in step 4, throw InterruptedException
          * </ol>
          */
         public final long awaitNanos(long nanosTimeout) throws InterruptedException {
-            Thread current = Thread.currentThread();
-            checkConditionAccess(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
-
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
             long lastTime = System.nanoTime();
-            Node w = addConditionWaiter(current);
-            int savedState = getState();
-            releaseExclusive(savedState);
-            boolean throwIE = false;
-            boolean interrupted = false;
-
-            for (;;) {
-                if (Thread.interrupted()) {
-                    if (transferAfterCancelledWait(w))
-                        throwIE = true;
-                    else
-                        interrupted = true;
-                    break;
-                }
+            int interruptMode = 0;
+            while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
-                    transferAfterCancelledWait(w); 
+                    transferAfterCancelledWait(node); 
                     break;
                 }
-                if (isOnSyncQueue(w)) 
-                    break;
                 LockSupport.parkNanos(nanosTimeout);
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+                    break;
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
             }
-
-            if (acquireExclusiveQueued(w, savedState))
-                interrupted = true;
-            if (throwIE)
-                throw new InterruptedException();
-            if (interrupted)
-                current.interrupt();
+            if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+                interruptMode = REINTERRUPT;
+            reportInterruptAfterWait(interruptMode);
             return nanosTimeout - (System.nanoTime() - lastTime);
         }
 
         /**
          * Implements absolute timed condition wait.
          * <ol>
-         * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
          * <li> Save lock state returned by {@link #getState} 
-         * <li> Release by invoking {@link #releaseExclusive} with 
-         *      saved state as argument
+         * <li> Invoke {@link #release} with 
+         *      saved state as argument, throwing 
+         *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled, interrupted, or timed out
          * <li> Reacquire by invoking specialized version of
-         *      {@link #acquireExclusiveUninterruptibly} with
-         *      saved state as argument.
-         * <li> If interrupted while blocked, throw InterruptedException
-         * <li> If timed out while blocked in step 5, return false, else true
+         *      {@link #acquire} with saved state as argument.
+         * <li> If interrupted while blocked in step 4, throw InterruptedException
+         * <li> If timed out while blocked in step 4, return false, else true
          * </ol>
          */
         public final boolean awaitUntil(Date deadline) throws InterruptedException {
             if (deadline == null)
                 throw new NullPointerException();
             long abstime = deadline.getTime();
-            Thread current = Thread.currentThread();
-            checkConditionAccess(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
-
-            Node w = addConditionWaiter(current);
-            int savedState = getState();
-            releaseExclusive(savedState);
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
             boolean timedout = false;
-            boolean throwIE = false;
-            boolean interrupted = false;
-            
-            for (;;) {
-                if (Thread.interrupted()) {
-                    if (transferAfterCancelledWait(w))
-                        throwIE = true;
-                    else
-                        interrupted = true;
-                    break;
-                }
+            int interruptMode = 0;
+            while (!isOnSyncQueue(node)) {
                 if (System.currentTimeMillis() > abstime) {
-                    timedout = transferAfterCancelledWait(w); 
+                    timedout = transferAfterCancelledWait(node); 
                     break;
                 }
-                if (isOnSyncQueue(w)) 
-                    break;
                 LockSupport.parkUntil(abstime);
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+                    break;
             }
-
-            if (acquireExclusiveQueued(w, savedState))
-                interrupted = true;
-            if (throwIE)
-                throw new InterruptedException();
-            if (interrupted)
-                current.interrupt();
+            if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+                interruptMode = REINTERRUPT;
+            reportInterruptAfterWait(interruptMode);
             return !timedout;
         }
         
         /**
          * Implements timed condition wait. 
          * <ol>
-         * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
          * <li> Save lock state returned by {@link #getState} 
-         * <li> Release by invoking {@link #releaseExclusive} with 
-         *      saved state as argument
+         * <li> Invoke {@link #release} with 
+         *      saved state as argument, throwing 
+         *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled, interrupted, or timed out
          * <li> Reacquire by invoking specialized version of
-         *      {@link #acquireExclusiveUninterruptibly} with
-         *      saved state as argument.
-         * <li> If interrupted while blocked, throw InterruptedException
-         * <li> If timed out while blocked in step 5, return false, else true
+         *      {@link #acquire} with saved state as argument.
+         * <li> If interrupted while blocked in step 4, throw InterruptedException
+         * <li> If timed out while blocked in step 4, return false, else true
          * </ol>
          */
         public final boolean await(long time, TimeUnit unit) throws InterruptedException {
             if (unit == null)
                 throw new NullPointerException();
-
             long nanosTimeout = unit.toNanos(time);
-            Thread current = Thread.currentThread();
-            checkConditionAccess(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
-
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
             long lastTime = System.nanoTime();
-            Node w = addConditionWaiter(current);
-            int savedState = getState();
-            releaseExclusive(savedState);
             boolean timedout = false;
-            boolean throwIE = false;
-            boolean interrupted = false;
-
-            for (;;) {
-                if (Thread.interrupted()) {
-                    if (transferAfterCancelledWait(w))
-                        throwIE = true;
-                    else
-                        interrupted = true;
-                    break;
-                }
+            int interruptMode = 0;
+            while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
-                    timedout = transferAfterCancelledWait(w); 
+                    timedout = transferAfterCancelledWait(node); 
                     break;
                 }
-                if (isOnSyncQueue(w)) 
-                    break;
                 LockSupport.parkNanos(nanosTimeout);
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+                    break;
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
             }
-
-            if (acquireExclusiveQueued(w, savedState))
-                interrupted = true;
-            if (throwIE)
-                throw new InterruptedException();
-            if (interrupted)
-                current.interrupt();
+            if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+                interruptMode = REINTERRUPT;
+            reportInterruptAfterWait(interruptMode);
             return !timedout;
         }
 
@@ -1934,11 +1912,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Queries whether any threads are waiting on this condition.
          * Implements {@link AbstractQueuedSynchronizer#hasWaiters}
          * @return <tt>true</tt> if there are any waiting threads.
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
+         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
+         * returns false
          */ 
         protected final boolean hasWaiters() {
-            checkConditionAccess(Thread.currentThread());
+            if (!isHeldExclusively()) 
+                throw new IllegalMonitorStateException();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.waitStatus == Node.CONDITION)
                     return true;
@@ -1951,11 +1930,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * this condition. 
          * Implements {@link AbstractQueuedSynchronizer#getWaitQueueLength}
          * @return the estimated number of waiting threads.
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
+         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
+         * returns false
          */ 
         protected final int getWaitQueueLength() {
-            checkConditionAccess(Thread.currentThread());
+            if (!isHeldExclusively()) 
+                throw new IllegalMonitorStateException();
             int n = 0;
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.waitStatus == Node.CONDITION)
@@ -1969,11 +1949,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * waiting on this Condition.  
          * Implements {@link AbstractQueuedSynchronizer#getWaitingThreads}
          * @return the collection of threads
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
+         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
+         * returns false
          */
         protected final Collection<Thread> getWaitingThreads() {
-            checkConditionAccess(Thread.currentThread());
+            if (!isHeldExclusively()) 
+                throw new IllegalMonitorStateException();
             ArrayList<Thread> list = new ArrayList<Thread>();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.waitStatus == Node.CONDITION) {
@@ -1991,9 +1972,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * this here: For the sake of permitting future enhancements, we
      * cannot explicitly subclass AtomicInteger, which would be
      * efficient and useful otherwise. So, as the lesser of evils, we
-     * directly implement. And while we are at it, we do the same for
-     * other CASable fields (which could otherwise be done with atomic
-     * field updaters).
+     * natively implement using hotspot intrinsics API. And while we
+     * are at it, we do the same for other CASable fields (which could
+     * otherwise be done with atomic field updaters).
      */
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private static final long stateOffset;

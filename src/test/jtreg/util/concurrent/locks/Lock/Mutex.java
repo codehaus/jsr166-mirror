@@ -15,19 +15,16 @@ import java.io.*;
  */
 public class Mutex implements Lock, java.io.Serializable {
     private static class Sync extends AbstractQueuedSynchronizer {
-        public boolean isLocked() { return getState() == 1; }
+        public boolean isHeldExclusively() { return getState() == 1; }
 
-        public boolean tryAcquireExclusiveState(int acquires) {
+        public boolean tryAcquire(int acquires) {
             assert acquires == 1; // Does not use multiple acquires
             return compareAndSetState(0, 1);
         }
             
-        public boolean releaseExclusiveState(int releases) {
+        public boolean tryRelease(int releases) {
             setState(0);
             return true;
-        }
-        public void checkConditionAccess(Thread thread, boolean waiting) {
-            if (!isLocked()) throw new IllegalMonitorStateException();
         }
             
         Condition newCondition() { return new ConditionObject(); }
@@ -40,19 +37,19 @@ public class Mutex implements Lock, java.io.Serializable {
         
     private final Sync sync = new Sync();
     public void lock() { 
-        sync.acquireExclusiveUninterruptibly(1);  
+        sync.acquire(1);  
     }
     public boolean tryLock() { 
-        return sync.tryAcquireExclusiveState(1);
+        return sync.tryAcquire(1);
     }
     public void lockInterruptibly() throws InterruptedException { 
-        sync.acquireExclusiveInterruptibly(1);
+        sync.acquireInterruptibly(1);
     }
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-        return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
+        return sync.tryAcquireNanos(1, unit.toNanos(timeout));
     }
-    public void unlock() { sync.releaseExclusive(1); }
+    public void unlock() { sync.release(1); }
     public Condition newCondition() { return sync.newCondition(); }
-    public boolean isLocked() { return sync.isLocked(); }
+    public boolean isLocked() { return sync.isHeldExclusively(); }
     public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
 }

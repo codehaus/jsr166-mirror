@@ -241,7 +241,7 @@ public class CountDownLatch {
      */
     public boolean await(long timeout, TimeUnit unit) 
         throws InterruptedException {
-        return sync.acquireSharedNanos(1, unit.toNanos(timeout));
+        return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
     }
 
     /**

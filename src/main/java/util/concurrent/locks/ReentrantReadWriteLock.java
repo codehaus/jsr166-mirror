@@ -209,11 +209,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         abstract void wlock();
 
         /** 
-         * Perform non-fair tryLock for write.  tryAcquireExclusive is
+         * Perform non-fair tryLock for write.  tryAcquire is
          * implemented in subclasses, but both versions need nonfair
          * try for trylock method
          */
-        final boolean nonfairTryAcquireExclusive(int acquires) {
+        final boolean nonfairTryAcquire(int acquires) {
             // mask out readlocks if called from condition methods
             acquires = exclusiveCount(acquires);
             Thread current = Thread.currentThread();
@@ -247,7 +247,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
 
-        protected final boolean tryReleaseExclusive(int releases) {
+        protected final boolean tryRelease(int releases) {
             Thread current = Thread.currentThread();
             int c = getState();
             if (owner != current)
@@ -273,9 +273,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
     
-        protected final void checkConditionAccess(Thread thread) {
-            if (exclusiveCount(getState()) == 0 || owner != thread) 
-                throw new IllegalMonitorStateException();
+        protected final boolean isHeldExclusively() {
+            return exclusiveCount(getState()) != 0 && 
+                owner == Thread.currentThread();
         }
 
         // Methods relayed to outer class
@@ -285,7 +285,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         final Thread getOwner() {
-            return (exclusiveCount(getState()) != 0)? owner : null;
+            int c = exclusiveCount(getState());
+            Thread o = owner;
+            return (c == 0)? null : o;
         }
         
         final int getReadLockCount() {
@@ -296,13 +298,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return exclusiveCount(getState()) != 0;
         }
 
-        final boolean isWriteLockedByCurrentThread() {
-            return getOwner() == Thread.currentThread();
-        }
-
         final int getWriteHoldCount() {
             int c = exclusiveCount(getState());
-            return (owner == Thread.currentThread())? c : 0;
+            Thread o = owner;
+            return (o == Thread.currentThread())? c : 0;
         }
 
         /**
@@ -322,8 +321,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Nonfair version of Sync
      */
     final static class NonfairSync extends Sync {
-        protected final boolean tryAcquireExclusive(int acquires) { 
-            return nonfairTryAcquireExclusive(acquires);
+        protected final boolean tryAcquire(int acquires) { 
+            return nonfairTryAcquire(acquires);
         }
 
         protected final int tryAcquireShared(int acquires) {
@@ -335,7 +334,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             if (compareAndSetState(0, 1))
                 owner = Thread.currentThread();
             else
-                acquireExclusiveUninterruptibly(1);
+                acquire(1);
         }
     }
 
@@ -343,7 +342,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Fair version of Sync
      */
     final static class FairSync extends Sync {
-        protected final boolean tryAcquireExclusive(int acquires) { 
+        protected final boolean tryAcquire(int acquires) { 
             // mask out readlocks if called from condition methods
             acquires = exclusiveCount(acquires);
             Thread current = Thread.currentThread();
@@ -383,7 +382,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         final void wlock() { // no fast path
-            acquireExclusiveUninterruptibly(1);
+            acquire(1);
         }
     }
 
@@ -407,7 +406,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * purposes and lies dormant until the lock has been acquired.
          */
         public void lock() { 
-            sync.acquireSharedUninterruptibly(1);
+            sync.acquireShared(1);
         }
 
         /**
@@ -550,7 +549,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          *
          */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            return sync.acquireSharedNanos(1, unit.toNanos(timeout));
+            return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
         }
 
         /**
@@ -667,7 +666,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * @throws InterruptedException if the current thread is interrupted
          */
         public void lockInterruptibly() throws InterruptedException {
-            sync.acquireExclusiveInterruptibly(1);
+            sync.acquireInterruptibly(1);
         }
 
         /**
@@ -699,7 +698,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * <tt>false</tt> otherwise.
          */
         public boolean tryLock( ) {
-            return sync.nonfairTryAcquireExclusive(1);
+            return sync.nonfairTryAcquire(1);
         }
 
         /**
@@ -779,7 +778,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          *
          */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
+            return sync.tryAcquireNanos(1, unit.toNanos(timeout));
         }
         
         /**
@@ -794,7 +793,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * hold this lock.
          */
         public void unlock() {
-            sync.releaseExclusive(1);
+            sync.release(1);
         }
 
         /**
@@ -912,7 +911,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * <tt>false</tt> otherwise.
      */
     public boolean isWriteLockedByCurrentThread() {
-        return sync.isWriteLockedByCurrentThread();
+        return sync.isHeldExclusively();
     }
 
     /**

@@ -95,14 +95,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Implements AQS base acquire to succeed if not in WAITING state
          */
-        protected boolean tryAcquireExclusive(int ignore) {
+        protected boolean tryAcquire(int ignore) {
             return getState() != 0;
         }
 
         /**
          * Implements AQS base release to signal if state changed
          */
-        protected boolean tryReleaseExclusive(int newState) {
+        protected boolean tryRelease(int newState) {
             return compareAndSetState(0, newState);
         }
 
@@ -121,7 +121,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         private void checkCancellationOnInterrupt(InterruptedException ie) 
             throws InterruptedException {
-            if (releaseExclusive(CANCEL)) 
+            if (release(CANCEL)) 
                 throw ie;
             Thread.currentThread().interrupt();
         }
@@ -132,7 +132,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         boolean setItem(Object x) {
             item = x; // can place in slot even if cancelled
-            return releaseExclusive(ACK);
+            return release(ACK);
         }
 
         /**
@@ -140,7 +140,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * to continue.
          */
         Object getItem() {
-            return (releaseExclusive(ACK))? extract() : null;
+            return (release(ACK))? extract() : null;
         }
 
         /**
@@ -148,7 +148,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         void waitForTake() throws InterruptedException {
             try {
-                acquireExclusiveInterruptibly(0);
+                acquireInterruptibly(0);
             } catch (InterruptedException ie) {
                 checkCancellationOnInterrupt(ie);
             }
@@ -159,7 +159,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         Object waitForPut() throws InterruptedException {
             try {
-                acquireExclusiveInterruptibly(0);
+                acquireInterruptibly(0);
             } catch (InterruptedException ie) {
                 checkCancellationOnInterrupt(ie);
             }
@@ -171,8 +171,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         boolean waitForTake(long nanos) throws InterruptedException {
             try {
-                if (!acquireExclusiveNanos(0, nanos) &&
-                    releaseExclusive(CANCEL))
+                if (!tryAcquireNanos(0, nanos) &&
+                    release(CANCEL))
                     return false;
             } catch (InterruptedException ie) {
                 checkCancellationOnInterrupt(ie);
@@ -185,8 +185,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         Object waitForPut(long nanos) throws InterruptedException {
             try {
-                if (!acquireExclusiveNanos(0, nanos) &&
-                    releaseExclusive(CANCEL))
+                if (!tryAcquireNanos(0, nanos) &&
+                    release(CANCEL))
                     return null;
             } catch (InterruptedException ie) {
                 checkCancellationOnInterrupt(ie);

@@ -95,11 +95,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         abstract void lock();
 
         /** 
-         * Perform non-fair tryLock.  tryAcquireExclusive is
+         * Perform non-fair tryLock.  tryAcquire is
          * implemented in subclasses, but both need nonfair
          * try for trylock method
          */
-        final boolean nonfairTryAcquireExclusive(int acquires) { 
+        final boolean nonfairTryAcquire(int acquires) { 
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
@@ -115,7 +115,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return false;
         }
 
-        protected final boolean tryReleaseExclusive(int releases) {
+        protected final boolean tryRelease(int releases) {
             int c = getState() - releases;
             if (Thread.currentThread() != owner)
                 throw new IllegalMonitorStateException();
@@ -128,9 +128,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return free;
         }
 
-        protected final void checkConditionAccess(Thread thread) {
-            if (getState() == 0 || owner != thread) 
-                throw new IllegalMonitorStateException();
+        protected final boolean isHeldExclusively() {
+            return getState() != 0 && owner == Thread.currentThread();
         }
 
         final ConditionObject newCondition() {
@@ -149,10 +148,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             int c = getState();
             Thread o = owner;
             return (o == Thread.currentThread())? c : 0;
-        }
-        
-        final boolean isHeldByCurrentThread() {
-            return getState() != 0 && owner == Thread.currentThread();
         }
         
         final boolean isLocked() {
@@ -182,11 +177,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (compareAndSetState(0, 1))
                 owner = Thread.currentThread();
             else
-                acquireExclusiveUninterruptibly(1);
+                acquire(1);
         }
 
-        protected final boolean tryAcquireExclusive(int acquires) { 
-            return nonfairTryAcquireExclusive(acquires);
+        protected final boolean tryAcquire(int acquires) { 
+            return nonfairTryAcquire(acquires);
         }
     }
 
@@ -195,14 +190,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     final static class FairSync  extends Sync {
         final void lock() { 
-            acquireExclusiveUninterruptibly(1); 
+            acquire(1); 
         }
 
         /**
          * Fair version of tryAcquire.  Don't grant access unless
          * recursive call or no waiters or is first.
          */
-        protected final boolean tryAcquireExclusive(int acquires) { 
+        protected final boolean tryAcquire(int acquires) { 
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
@@ -304,7 +299,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @throws InterruptedException if the current thread is interrupted
      */
     public void lockInterruptibly() throws InterruptedException { 
-        sync.acquireExclusiveInterruptibly(1);
+        sync.acquireInterruptibly(1);
     }
 
     /**
@@ -335,7 +330,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <tt>false</tt> otherwise.
      */
     public boolean tryLock() {
-        return sync.nonfairTryAcquireExclusive(1);
+        return sync.nonfairTryAcquire(1);
     }
 
     /**
@@ -413,7 +408,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *
      */
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-        return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
+        return sync.tryAcquireNanos(1, unit.toNanos(timeout));
     }
 
     /**
@@ -428,7 +423,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * hold this lock.
      */
     public void unlock() {
-        sync.releaseExclusive(1);
+        sync.release(1);
     }
 
     /**
@@ -551,7 +546,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <tt>false</tt> otherwise.
      */
     public boolean isHeldByCurrentThread() {
-        return sync.isHeldByCurrentThread();
+        return sync.isHeldExclusively();
     }
 
     /**

@@ -233,7 +233,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
         }
 
         V innerGet(long nanosTimeout) throws InterruptedException, ExecutionException, TimeoutException {
-            if (!acquireSharedNanos(0, nanosTimeout))
+            if (!tryAcquireSharedNanos(0, nanosTimeout))
                 throw new TimeoutException();                
             if (getState() == CANCELLED)
                 throw new CancellationException();

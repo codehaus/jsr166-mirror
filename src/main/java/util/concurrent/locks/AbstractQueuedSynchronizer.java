@@ -468,7 +468,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode not supported
      */
-    public int acquireExclusiveState(boolean isQueued, int acquires) {
+    protected int acquireExclusiveState(boolean isQueued, int acquires) {
         throw new UnsupportedOperationException();
     }
 
@@ -489,7 +489,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode not supported
      */
-    public boolean releaseExclusiveState(int releases) {
+    protected boolean releaseExclusiveState(int releases) {
         throw new UnsupportedOperationException();
     }
 
@@ -516,7 +516,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
      * correctly.
      * @throws UnsupportedOperationException if shared mode not supported
      */
-    public int acquireSharedState(boolean isQueued, int acquires) {
+    protected int acquireSharedState(boolean isQueued, int acquires) {
         throw new UnsupportedOperationException();
     }
 
@@ -536,7 +536,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
      * correctly.
      * @throws UnsupportedOperationException if shared mode not supported
      */
-    public boolean releaseSharedState(int releases) {
+    protected boolean releaseSharedState(int releases) {
         throw new UnsupportedOperationException();
     }
 
@@ -552,7 +552,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
      * @throws IllegalMonitorStateException if cannot access
      * @throws UnsupportedOperationException if conditions not supported
      */
-    public void checkConditionAccess(Thread thread, boolean waiting) {
+    protected void checkConditionAccess(Thread thread, boolean waiting) {
         throw new UnsupportedOperationException();
     }
 

@@ -1012,8 +1012,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Returns an enumeration of the values in this table.
-     * Use the Enumeration methods on the returned object to fetch the elements
-     * sequentially.
      *
      * @return  an enumeration of the values in this table.
      * @see     #values

@@ -84,6 +84,8 @@ public class CancellableTask implements Cancellable, Runnable {
             ((Thread)r).interrupt();
         else 
             runnerUpdater.set(this, CANCELLED);
+
+        done();
         return true;
     }
     
@@ -131,8 +133,10 @@ public class CancellableTask implements Cancellable, Runnable {
             Object r = runner;
             if (r == DONE || r == CANCELLED) 
                 return;
-            if (runnerUpdater.compareAndSet(this, r, DONE))
+            if (runnerUpdater.compareAndSet(this, r, DONE)) {
+                done();
                 return;
+            }
         }
     }
 
@@ -157,6 +161,17 @@ public class CancellableTask implements Cancellable, Runnable {
             }
         }
     }
+
+    /**
+     * Protected method invoked when this task transitions to state
+     * <tt>isDone</tt> (whether normally or via cancellation). The
+     * default implementation does nothing.  Subclasses may override
+     * this method to invoke completion callbacks or perform
+     * bookkeeping. Note that you can query status inside the
+     * implementation of this method to determine whether this task
+     * has been cancelled.
+     */
+    protected void done() { }
 
     /**
      * Reset the run state of this task to its initial state unless

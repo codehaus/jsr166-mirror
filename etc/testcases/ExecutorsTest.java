@@ -34,10 +34,9 @@ public class ExecutorsTest extends TestCase {
 
             assertFalse("task should not be complete", task.isCompleted());
 
-            String result = Executors.invoke(e, task, TEST_STRING);
+            Executors.invoke(e, task);
 
             assertTrue("task should be complete", task.isCompleted());
-            assertSame("should return test string", TEST_STRING, result);
         }
         catch (ExecutionException ex) {
             fail("Unexpected execution exception: " + ex);

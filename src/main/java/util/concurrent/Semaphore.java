@@ -83,7 +83,7 @@ import java.util.concurrent.atomic.*;
  * semaphore</em>, because it only has two states: one permit
  * available, or zero permits available.  When used in this way, the
  * binary semaphore has the property (unlike many {@link Lock}
- * implementations, that the &quot;lock&quot; can be released by a
+ * implementations), that the &quot;lock&quot; can be released by a
  * thread other than the owner (as semaphores have no notion of
  * ownership).  This can be useful in some specialized contexts, such
  * as deadlock recovery.

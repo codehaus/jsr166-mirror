@@ -91,7 +91,7 @@ public class ThreadLocal<T> {
      * Returns the current thread's initial value for this thread-local
      * variable.  This method will be called once per accessing thread for each
      * thread-local, the first time each thread accesses the variable with the
-     * {@link #get()} or {@link #set(Object)} method.  If the programmer
+     * {@link #get} or {@link #set} method.  If the programmer
      * desires thread-local variables to be initialized to some value other
      * than <tt>null</tt>, <tt>ThreadLocal</tt> must be subclassed, and this
      * method overridden.  Typically, an anonymous inner class will be used.

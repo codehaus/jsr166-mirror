@@ -54,15 +54,15 @@ import java.util.*;
  * corePoolSize and maximumPoolSize the same, you create a fixed-size
  * thread pool.</dd>
  *
- * <dt>Keep-alive</dt> 
+ * <dt>Keep-alive</dt>
  *
  * <dd>The keepAliveTime determines what happens to idle threads.  If
  * the pool currently has more than the core number of threads, excess
  * threads will be terminated if they have been idle for more than the
  * keepAliveTime.</dd>
  *
- * <dt>Queueing</dt> 
- * 
+ * <dt>Queueing</dt>
+ *
  * <dd>You are free to specify the queuing mechanism used to handle
  * submitted tasks.  A good default is to use queueless synchronous
  * channels to to hand off work to threads.  This is a safe,
@@ -82,7 +82,7 @@ import java.util.*;
  * <p>While queuing can be useful in smoothing out transient bursts of
  * requests, especially in socket-based services, it is not very well
  * behaved when commands continue to arrive on average faster than
- * they can be processed.  
+ * they can be processed.
  *
  * Queue sizes and maximum pool sizes can often be traded off for each
  * other. Using large queues and small pools minimizes CPU usage, OS
@@ -137,63 +137,63 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:35 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/31 20:32:00 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Queue used for holding tasks and handing off to worker threads.
-     */ 
+     */
     private final BlockingQueue<Runnable> workQueue;
 
     /**
      * Lock held on updates to poolSize, corePoolSize, maximumPoolSize, and
      * workers set.
-     */ 
+     */
     private final ReentrantLock mainLock = new ReentrantLock();
 
     /**
      * Wait condition to support awaitTermination
-     */ 
+     */
     private final Condition termination = mainLock.newCondition();
 
     /**
      * Set containing all worker threads in pool.
-     */ 
+     */
     private final Set<Worker> workers = new HashSet<Worker>();
 
     /**
      * Timeout in nanosecods for idle threads waiting for work.
      * Threads use this timeout only when there are more than
      * corePoolSize present. Otherwise they wait forever for new work.
-     */ 
+     */
     private volatile long  keepAliveTime;
 
     /**
      * Core pool size, updated only while holding mainLock,
      * but volatile to allow concurrent readability even
      * during updates.
-     */ 
+     */
     private volatile int   corePoolSize;
 
     /**
      * Maximum pool size, updated only while holding mainLock
      * but volatile to allow concurrent readability even
      * during updates.
-     */ 
+     */
     private volatile int   maximumPoolSize;
 
     /**
      * Current pool size, updated only while holding mainLock
      * but volatile to allow concurrent readability even
      * during updates.
-     */ 
+     */
     private volatile int   poolSize;
 
     /**
      * Shutdown status, becomes (and remains) nonzero when shutdown called.
-     */ 
+     */
     private volatile int shutdownStatus;
 
     // Special values for status
@@ -202,38 +202,38 @@ public class ThreadPoolExecutor implements ExecutorService {
     /** Controlled shutdown mode */
     private static final int SHUTDOWN_WHEN_IDLE = 1;
     /*8 Immediate shutdown mode */
-    private static final int SHUTDOWN_NOW       = 2;        
+    private static final int SHUTDOWN_NOW       = 2;
 
     /**
      * Latch that becomes true when all threads terminate after shutdown.
-     */ 
+     */
     private volatile boolean isTerminated;
 
     /**
      * Handler called when saturated or shutdown in execute.
-     */ 
+     */
     private volatile RejectedExecutionHandler handler = defaultHandler;
 
     /**
      * Factory for new threads.
-     */ 
+     */
     private volatile ThreadFactory threadFactory = defaultThreadFactory;
 
     /**
      * Tracks largest attained pool size.
-     */ 
+     */
     private int largestPoolSize;
 
     /**
      * Counter for completed tasks. Updated only on termination of
      * worker threads.
-     */ 
+     */
     private long completedTaskCount;
 
     /**
-     * The default thread facotry 
+     * The default thread facotry
      */
-    private static final ThreadFactory defaultThreadFactory = 
+    private static final ThreadFactory defaultThreadFactory =
         new ThreadFactory() {
             public Thread newThread(Runnable r) {
                 return new Thread(r);
@@ -243,7 +243,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * The default rejectect execution handler
      */
-    private static final RejectedExecutionHandler defaultHandler = 
+    private static final RejectedExecutionHandler defaultHandler =
         new AbortPolicy();
 
     /**
@@ -275,7 +275,7 @@ public class ThreadPoolExecutor implements ExecutorService {
         Thread t = null;
         mainLock.lock();
         try {
-            if (poolSize < corePoolSize) 
+            if (poolSize < corePoolSize)
                 t = addThread(firstTask);
         }
         finally {
@@ -345,7 +345,7 @@ public class ThreadPoolExecutor implements ExecutorService {
 
     /**
      * Perform bookkeeping for a terminated worker thread.
-     * @param w the worker 
+     * @param w the worker
      */
     private void workerDone(Worker w) {
         boolean allDone = false;
@@ -354,12 +354,12 @@ public class ThreadPoolExecutor implements ExecutorService {
             completedTaskCount += w.completedTasks;
             workers.remove(w);
 
-            if (--poolSize > 0) 
+            if (--poolSize > 0)
                 return;
 
             // If this was last thread, deal with potential shutdown
             int stat = shutdownStatus;
-            
+
             // If there are queued tasks but no threads, create replacement.
             if (stat != SHUTDOWN_NOW) {
                 Runnable r = workQueue.poll();
@@ -370,7 +370,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             }
 
             // if no tasks and not shutdown, can exit without replacement
-            if (stat == NOT_SHUTDOWN) 
+            if (stat == NOT_SHUTDOWN)
                 return;
 
             allDone = true;
@@ -386,7 +386,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     *  Worker threads 
+     *  Worker threads
      */
     private class Worker implements Runnable {
 
@@ -425,7 +425,7 @@ public class ThreadPoolExecutor implements ExecutorService {
 
         /**
          * Interrupt thread if not running a task
-         */ 
+         */
         void interruptIfIdle() {
             if (runLock.tryLock()) {
                 try {
@@ -439,7 +439,7 @@ public class ThreadPoolExecutor implements ExecutorService {
 
         /**
          * Cause thread to die even if running a task.
-         */ 
+         */
         void interruptNow() {
             thread.interrupt();
         }
@@ -498,7 +498,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     task = null; // unnecessary but can help GC
                 }
             }
-            catch(InterruptedException ie) { 
+            catch(InterruptedException ie) {
                 // fall through
             }
             finally {
@@ -534,7 +534,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                               long keepAliveTime,
                               TimeUnit unit,
                               BlockingQueue<Runnable> workQueue) {
-        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, 
+        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
              defaultThreadFactory, defaultHandler);
     }
 
@@ -555,11 +555,11 @@ public class ThreadPoolExecutor implements ExecutorService {
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
      * @param threadFactory the factory to use when the executor
-     * creates a new thread. 
+     * creates a new thread.
      * @throws IllegalArgumentException if corePoolSize, or
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
-     * @throws NullPointerException if <tt>workQueue</tt> 
+     * @throws NullPointerException if <tt>workQueue</tt>
      * or <tt>threadFactory</tt> are null.
      */
     public ThreadPoolExecutor(int corePoolSize,
@@ -569,7 +569,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                               BlockingQueue<Runnable> workQueue,
                               ThreadFactory threadFactory) {
 
-        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, 
+        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
              threadFactory, defaultHandler);
     }
 
@@ -594,7 +594,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * @throws IllegalArgumentException if corePoolSize, or
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
-     * @throws NullPointerException if <tt>workQueue</tt> 
+     * @throws NullPointerException if <tt>workQueue</tt>
      * or  <tt>handler</tt> are null.
      */
     public ThreadPoolExecutor(int corePoolSize,
@@ -603,7 +603,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                               TimeUnit unit,
                               BlockingQueue<Runnable> workQueue,
                               RejectedExecutionHandler handler) {
-        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, 
+        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
              defaultThreadFactory, handler);
     }
 
@@ -624,13 +624,13 @@ public class ThreadPoolExecutor implements ExecutorService {
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
      * @param threadFactory the factory to use when the executor
-     * creates a new thread. 
+     * creates a new thread.
      * @param handler the handler to use when execution is blocked
      * because the thread bounds and queue capacities are reached.
      * @throws IllegalArgumentException if corePoolSize, or
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
-     * @throws NullPointerException if <tt>workQueue</tt> 
+     * @throws NullPointerException if <tt>workQueue</tt>
      * or <tt>threadFactory</tt> or <tt>handler</tt> are null.
      */
     public ThreadPoolExecutor(int corePoolSize,
@@ -640,9 +640,9 @@ public class ThreadPoolExecutor implements ExecutorService {
                               BlockingQueue<Runnable> workQueue,
                               ThreadFactory threadFactory,
                               RejectedExecutionHandler handler) {
-        if (corePoolSize < 0 || 
+        if (corePoolSize < 0 ||
             maximumPoolSize <= 0 ||
-            maximumPoolSize < corePoolSize || 
+            maximumPoolSize < corePoolSize ||
             keepAliveTime < 0)
             throw new IllegalArgumentException();
         if (workQueue == null || threadFactory == null || handler == null)
@@ -662,14 +662,14 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * If the task cannot be submitted for execution, either because this
      * executor has been shutdown or because its capacity has been reached,
-     * the task is handled by the current <tt>RejectedExecutionHandler</tt>.  
+     * the task is handled by the current <tt>RejectedExecutionHandler</tt>.
      *
      * @param command the task to execute
      * @throws RejectedExecutionException at discretion of
      * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted
      * for execution
      */
-    public void execute(Runnable command) { 
+    public void execute(Runnable command) {
         for (;;) {
             if (shutdownStatus != NOT_SHUTDOWN) {
                 handler.rejectedExecution(command, this);
@@ -735,7 +735,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             mainLock.unlock();
         }
     }
-    
+
     /**
      * Sets the thread factory used to create new threads.
      *
@@ -787,7 +787,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Removes this task from internal queue if it is present, thus
      * causing it not to be run if it has not already started.  This
      * method may be useful as one part of a cancellation scheme.
-     * 
+     *
      * @param task the task to remove
      * @return true if the task was removed
      */
@@ -797,7 +797,7 @@ public class ThreadPoolExecutor implements ExecutorService {
 
 
     /**
-     * Removes from the work queue all {@ link Cancellable} tasks
+     * Removes from the work queue all {@link Cancellable} tasks
      * that have been cancelled. This method can be useful as a
      * storage reclamation operation, that has no other impact
      * on functionality. Cancelled tasks are never executed, but
@@ -812,7 +812,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             Runnable r = it.next();
             if (r instanceof Cancellable) {
                 Cancellable c = (Cancellable)r;
-                if (c.isCancelled()) 
+                if (c.isCancelled())
                     it.remove();
             }
         }
@@ -825,7 +825,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * they next become idle.
      *
      * @param corePoolSize the new core size
-     * @throws IllegalArgumentException if <tt>corePoolSize</tt> 
+     * @throws IllegalArgumentException if <tt>corePoolSize</tt>
      * less than zero
      */
     public void setCorePoolSize(int corePoolSize) {
@@ -837,15 +837,15 @@ public class ThreadPoolExecutor implements ExecutorService {
             this.corePoolSize = corePoolSize;
             if (extra > 0 && poolSize > corePoolSize) {
                 Iterator<Worker> it = workers.iterator();
-                while (it.hasNext() && 
-                       extra > 0 && 
+                while (it.hasNext() &&
+                       extra > 0 &&
                        poolSize > corePoolSize &&
                        workQueue.remainingCapacity() == 0) {
                     it.next().interruptIfIdle();
                     --extra;
                 }
             }
-                
+
         }
         finally {
             mainLock.unlock();
@@ -857,7 +857,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the core number of threads
      */
-    public int getCorePoolSize() { 
+    public int getCorePoolSize() {
         return corePoolSize;
     }
 
@@ -880,8 +880,8 @@ public class ThreadPoolExecutor implements ExecutorService {
             this.maximumPoolSize = maximumPoolSize;
             if (extra > 0 && poolSize > maximumPoolSize) {
                 Iterator<Worker> it = workers.iterator();
-                while (it.hasNext() && 
-                       extra > 0 && 
+                while (it.hasNext() &&
+                       extra > 0 &&
                        poolSize > maximumPoolSize) {
                     it.next().interruptIfIdle();
                     --extra;
@@ -898,7 +898,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the maximum allowed number of threads
      */
-    public int getMaximumPoolSize() { 
+    public int getMaximumPoolSize() {
         return maximumPoolSize;
     }
 
@@ -922,12 +922,12 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Returns the thread keep-alive time, which is the amount of time
      * which threads in excess of the core pool size may remain
-     * idle before being terminated. 
+     * idle before being terminated.
      *
      * @param unit the desired time unit of the result
      * @return the time limit
      */
-    public long getKeepAliveTime(TimeUnit unit) { 
+    public long getKeepAliveTime(TimeUnit unit) {
         return unit.convert(keepAliveTime, TimeUnit.NANOSECONDS);
     }
 
@@ -938,7 +938,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the number of threads
      */
-    public int getPoolSize() { 
+    public int getPoolSize() {
         return poolSize;
     }
 
@@ -948,7 +948,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the number of threads
      */
-    public int getActiveCount() { 
+    public int getActiveCount() {
         mainLock.lock();
         try {
             int n = 0;
@@ -969,7 +969,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the number of threads
      */
-    public int getLargestPoolSize() { 
+    public int getLargestPoolSize() {
         mainLock.lock();
         try {
             return largestPoolSize;
@@ -987,7 +987,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the number of tasks
      */
-    public long getTaskCount() { 
+    public long getTaskCount() {
         mainLock.lock();
         try {
             long n = completedTaskCount;
@@ -1012,11 +1012,11 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the number of tasks
      */
-    public long getCompletedTaskCount() { 
+    public long getCompletedTaskCount() {
         mainLock.lock();
         try {
             long n = completedTaskCount;
-            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); ) 
+            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
                 n += it.next().completedTasks;
             return n;
         }

@@ -7,15 +7,15 @@
 package java.util.concurrent;
 
 /**
- * A <tt>TimeUnit</tt> represents time durations at a given unit of 
- * granularity and provides utility methods to convert across units, 
- * and to perform timing and delay operations in these units. 
- * <tt>TimeUnit</tt> is a &quot;featherweight&quot; class. 
- * It does not maintain time information, but only helps organize and 
- * use time representations that may be maintained separately across 
+ * A <tt>TimeUnit</tt> represents time durations at a given unit of
+ * granularity and provides utility methods to convert across units,
+ * and to perform timing and delay operations in these units.
+ * <tt>TimeUnit</tt> is a &quot;featherweight&quot; class.
+ * It does not maintain time information, but only helps organize and
+ * use time representations that may be maintained separately across
  * various contexts.
  *
- * <p>The <tt>TimeUnit</tt> class cannot be directly instantiated.  
+ * <p>The <tt>TimeUnit</tt> class cannot be directly instantiated.
  * Use the {@link #SECONDS}, {@link #MILLISECONDS}, {@link #MICROSECONDS},
  * and {@link #NANOSECONDS} static instances that provide predefined
  * units of precision. If you use these frequently, consider
@@ -23,13 +23,13 @@ package java.util.concurrent;
  *
  * <p>A <tt>TimeUnit</tt> is mainly used to inform blocking methods which
  * can timeout, how the timeout parameter should be interpreted. For example,
- * the following code will timeout in 50 milliseconds if the {@link Lock lock}
+ * the following code will timeout in 50 milliseconds if the {@link java.util.concurrent.locks.Lock lock}
  * is not available:
  * <pre>  Lock lock = ...;
  *  if ( lock.tryLock(50L, TimeUnit.MILLISECONDS) ) ...
  * </pre>
  * while this code will timeout in 50 seconds:
- * <pre>  
+ * <pre>
  *  Lock lock = ...;
  *  if ( lock.tryLock(50L, TimeUnit.SECONDS) ) ...
  * </pre>
@@ -39,8 +39,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/12 00:50:34 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/31 20:32:00 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public final class TimeUnit implements java.io.Serializable {
@@ -58,9 +58,9 @@ public final class TimeUnit implements java.io.Serializable {
     public long convert(long duration, TimeUnit unit) {
         if (unit == this)
             return duration;
-        if (index > unit.index) 
+        if (index > unit.index)
             return duration / multipliers[index - unit.index];
-        else 
+        else
             return duration * multipliers[unit.index - index];
     }
 
@@ -75,9 +75,9 @@ public final class TimeUnit implements java.io.Serializable {
         else
             return duration * multipliers[index];
     }
-    
+
     /**
-     * Perform a timed <tt>Object.wait</tt> using the current time unit. 
+     * Perform a timed <tt>Object.wait</tt> using the current time unit.
      * This is a convenience method that converts timeout arguments into the
      * form required by the <tt>Object.wait</tt> method.
      * <p>For example, you could implement a blocking <tt>poll</tt> method (see
@@ -115,12 +115,12 @@ public final class TimeUnit implements java.io.Serializable {
         int ns = excessNanos(timeout, ms);
         thread.join(ms, ns);
     }
-    
+
     /**
      * Perform a <tt>Thread.sleep</tt> using the current time unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.sleep</tt> method.
-     * @param timeout the minimum time to sleep 
+     * @param timeout the minimum time to sleep
      * @throws InterruptedException if interrupted while sleeping.
      * @see Thread#sleep
      */
@@ -145,17 +145,17 @@ public final class TimeUnit implements java.io.Serializable {
     /** private constructor */
     TimeUnit(int index) { this.index = index; }
 
-    /** 
+    /**
      * Utility method to compute the excess-nanosecond argument to
      * wait, sleep, join.
      * @fixme overflow?
      */
     private int excessNanos(long time, long ms) {
-        if (index == NS) 
+        if (index == NS)
             return (int) (time  - (ms * multipliers[MS-NS]));
-        else if (index == US) 
+        else if (index == US)
             return (int) ((time * multipliers[US-NS]) - (ms * multipliers[MS-NS]));
-        else 
+        else
             return 0;
     }
 

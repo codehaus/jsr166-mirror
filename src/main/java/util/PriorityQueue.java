@@ -78,7 +78,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     private transient int modCount = 0;
 
     /**
-     * Create a <tt>PriorityQueue</tt> with the default initial capacity
+     * Creates a <tt>PriorityQueue</tt> with the default initial capacity
      * (11) that orders its elements according to their natural
      * ordering (using <tt>Comparable</tt>.)
      */
@@ -87,7 +87,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>PriorityQueue</tt> with the specified initial capacity
+     * Creates a <tt>PriorityQueue</tt> with the specified initial capacity
      * that orders its elements according to their natural ordering
      * (using <tt>Comparable</tt>.)
      *
@@ -98,7 +98,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>PriorityQueue</tt> with the specified initial capacity
+     * Creates a <tt>PriorityQueue</tt> with the specified initial capacity
      * that orders its elements according to the specified comparator.
      *
      * @param initialCapacity the initial capacity for this priority queue.
@@ -116,8 +116,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>PriorityQueue</tt> containing the elements in the specified
-     * collection.  The priority queue has an initial capacity of 110% of the
+     * Creates a <tt>PriorityQueue</tt> containing the elements in the 
+     * specified collection.  
+     * The priority queue has an initial capacity of 110% of the
      * size of the specified collection or 1 if the collection is empty.
      * If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be

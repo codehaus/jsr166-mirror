@@ -97,7 +97,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if ((isQueued || !fair || !hasContended()) && 
+                if ((isQueued || !fair || !hasQueuedThreads()) && 
                     compareAndSetState(0, acquires)) {
                     owner = current;
                     return true;

@@ -61,7 +61,7 @@ package java.util;
  * @see java.util.Collection
  * @see LinkedList
  * @see PriorityQueue
- * @see java.util.concurrent.LinkedQueue
+ * @see java.util.concurrent.LinkedBlockingQueue
  * @see java.util.concurrent.BlockingQueue
  * @see java.util.concurrent.ArrayBlockingQueue
  * @see java.util.concurrent.LinkedBlockingQueue

@@ -10,8 +10,12 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded queue of <tt>Delayed</tt> elements, in which
- * elements can only be taken when their delay has expired.
+ * An unbounded {@linkplain BlockingQueue blocking queue} of <tt>Delayed</tt> 
+ * elements, in which an element can only be taken when its delay has expired.
+ * The <em>head</em> of the queue is that <tt>Delayed</tt> element whose delay
+ * expired furthest in the past - if no delay has expired there is no head and
+ * <tt>poll</tt> will return <tt>null</tt>.
+ * This queue does not permit <tt>null</tt> elements.
  * @since 1.5
  * @author Doug Lea
 */
@@ -24,13 +28,16 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     private final PriorityQueue<E> q = new PriorityQueue<E>();
 
     /**
-     * Creates a new DelayQueue with no elements
+     * Creates a new <tt>DelayQueue</tt> that is initially empty.
      */
     public DelayQueue() {}
 
     /**
-     * Create a new DelayQueue with elements taken from the given
-     * collection of {@link Delayed} instances.
+     * Creates a <tt>DelayQueue</tt> initialy containing the elements of the 
+     * given collection of {@link Delayed} instances.
+     *
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
      *
      * @fixme Should the body be wrapped with try-lock-finally-unlock?
      */
@@ -38,12 +45,18 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         this.addAll(c);
     }
 
-    public boolean offer(E x) {
+    /**
+     * Add the specified element to this delay queue.
+     *
+     * @return <tt>true</tt>
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public boolean offer(E o) {
         lock.lock();
         try {
             E first = q.peek();
-            q.offer(x);
-            if (first == null || x.compareTo(first) < 0)
+            q.offer(o);
+            if (first == null || o.compareTo(first) < 0)
                 available.signalAll();
             return true;
         }
@@ -52,16 +65,38 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
-    public void put(E x) {
-        offer(x);
+
+    /**
+     * Adds the specified element to this delay queue. As the queue is
+     * unbounded this method will never block.
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public void put(E o) {
+        offer(o);
     }
 
-    public boolean offer(E x, long time, TimeUnit unit) {
-        return offer(x);
+    /**
+     * Adds the specified element to this priority queue. As the queue is
+     * unbounded this method will never block.
+     * @param o {@inheritDoc}
+     * @param timeout This parameter is ignored as the method never blocks
+     * @param unit This parameter is ignored as the method never blocks
+     * @throws NullPointerException {@inheritDoc}
+     * @return <tt>true</tt>
+     */
+    public boolean offer(E o, long time, TimeUnit unit) {
+        return offer(o);
     }
 
-    public boolean add(E x) {
-        return offer(x);
+    /**
+     * Adds the specified element to this queue.
+     * @return <tt>true</tt> (as per the general contract of
+     * <tt>Collection.add</tt>).
+     *
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public boolean add(E o) {
+        return offer(o);
     }
 
     public E take() throws InterruptedException {
@@ -166,6 +201,10 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Atomically removes all of the elements from this delay queue.
+     * The queue will be empty after this call returns.
+     */
     public void clear() {
         lock.lock();
         try {
@@ -176,6 +215,11 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Always returns <tt>Integer.MAX_VALUE</tt> because
+     * a <tt>DelayQueue</tt> is not capacity constrained.
+     * @return <tt>Integer.MAX_VALUE</tt>
+     */
     public int remainingCapacity() {
         return Integer.MAX_VALUE;
     }
@@ -200,16 +244,36 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
-    public boolean remove(Object x) {
+    /**
+     * Removes a single instance of the specified element from this
+     * queue, if it is present.  More formally,
+     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
+     * o.equals(e))</tt>, if the queue contains one or more such
+     * elements.  Returns <tt>true</tt> if the queue contained the
+     * specified element (or equivalently, if the queue changed as a
+     * result of the call).
+     *
+     * <p>This implementation iterates over the queue looking for the
+     * specified element.  If it finds the element, it removes the element
+     * from the queue using the iterator's remove method.<p>
+     *
+     */
+    public boolean remove(Object o) {
         lock.lock();
         try {
-            return q.remove(x);
+            return q.remove(o);
         }
         finally {
             lock.unlock();
         }
     }
 
+    /**
+     * Returns an iterator over the elements in this queue. The iterator
+     * does not return the elements in any particular order.
+     *
+     * @return an iterator over the elements in this queue.
+     */
     public Iterator<E> iterator() {
         lock.lock();
         try {

@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.*;
 
 
 /**
- * An unbounded thread-safe {@link Queue queue} based on linked nodes.  
+ * An unbounded thread-safe {@linkplain Queue queue} based on linked nodes.  
  * This queue orders elements FIFO (first-in-first-out).
  * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.*;
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.)
  *
- * Beware that, unlike in most collections, the <tt>size</tt> method
+ * <p>Beware that, unlike in most collections, the <tt>size</tt> method
  * is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
  * of elements requires an O(n) traversal.
@@ -86,7 +86,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a <tt>ConcurrentLinkedQueue</tt> 
-     * initially holding the elements of the given collection,
+     * initially containing the elements of the given collection,
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if <tt>c</tt> or any element within it
@@ -97,9 +97,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             add(it.next());
     }
 
-    // Have to override just to update the javadoc for @throws
+    // Have to override just to update the javadoc 
 
     /**
+     * Adds the specified element to the tail of this queue.
+     * @return <tt>true</tt> (as per the general contract of
+     * <tt>Collection.add</tt>).
+     *
      * @throws NullPointerException {@inheritDoc}
      */
     public boolean add(E o) {
@@ -107,6 +111,14 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Adds all of the elements in the specified collection to this queue.
+     * The behavior of this operation is undefined if
+     * the specified collection is modified while the operation is in
+     * progress.  (This implies that the behavior of this call is undefined if
+     * the specified collection is this queue, and this queue is nonempty.)
+     * <p>
+     * This implementation iterates over the specified collection, and adds
+     * each object returned by the iterator to this queue's tail, in turn.
      * @throws NullPointerException {@inheritDoc}
      */
     public boolean addAll(Collection<? extends E> c) {
@@ -219,17 +231,16 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * {@inheritDoc}
      *
-     * <p>Beware that, unlike in most collections, this method> is
+     * <p>Beware that, unlike in most collections, this method is
      * <em>NOT</em> a constant-time operation. Because of the
      * asynchronous nature of these queues, determining the current
      * number of elements requires an O(n) traversal.
-     * @return the number of elements in this collection
      */
     public int size() {
         int count = 0;
         for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
             if (p.getItem() != null)
-                ++count;
+                ++count; 
         }
         return count;
     }
@@ -245,6 +256,20 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         return false;
     }
 
+    /**
+     * Removes a single instance of the specified element from this
+     * queue, if it is present.  More formally,
+     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
+     * o.equals(e))</tt>, if the queue contains one or more such
+     * elements.  Returns <tt>true</tt> if the queue contained the
+     * specified element (or equivalently, if the queue changed as a
+     * result of the call).
+     *
+     * <p>This implementation iterates over the queue looking for the
+     * specified element.  If it finds the element, it removes the element
+     * from the queue using the iterator's remove method.<p>
+     *
+     */
     public boolean remove(Object o) {
         if (o == null) return false;
         for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
@@ -293,6 +318,11 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         return (T[])al.toArray(a);
     }
 
+    /**
+     * Returns an iterator over the elements in this queue in proper sequence.
+     *
+     * @return an iterator over the elements in this queue in proper sequence.
+     */
     public Iterator<E> iterator() {
         return new Itr();
     }

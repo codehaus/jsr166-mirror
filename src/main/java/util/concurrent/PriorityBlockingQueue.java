@@ -10,12 +10,12 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded {@link BlockingQueue blocking queue} based on a {@link
- * PriorityQueue}, obeying its ordering rules and implementation
- * characteristics.  While this queue is logically unbounded,
+ * An unbounded {@linkplain BlockingQueue blocking queue} based on a
+ * {@link PriorityQueue},
+ * obeying its ordering rules and implementation characteristics.
+ * While this queue is logically unbounded,
  * attempted additions may fail due to resource exhaustion (causing
- * <tt>OutOfMemoryError</tt>) when <tt>Integer.MAX_VALUE</tt> elements
- * are held.
+ * <tt>OutOfMemoryError</tt>).
  * @since 1.5
  * @author Doug Lea
 */
@@ -27,7 +27,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     private final Condition notEmpty = lock.newCondition();
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> with the default initial 
+     * Creates a <tt>PriorityBlockingQueue</tt> with the default initial 
      * capacity
      * (11) that orders its elements according to their natural
      * ordering (using <tt>Comparable</tt>.)
@@ -37,19 +37,21 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial
+     * Creates a <tt>PriorityBlockingQueue</tt> with the specified initial
      * capacity
      * that orders its elements according to their natural ordering
      * (using <tt>Comparable</tt>.)
      *
      * @param initialCapacity the initial capacity for this priority queue.
+     * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
+     * than 1
      */
     public PriorityBlockingQueue(int initialCapacity) {
         q = new PriorityQueue<E>(initialCapacity, null);
     }
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial
+     * Creates a <tt>PriorityBlockingQueue</tt> with the specified initial
      * capacity
      * that orders its elements according to the specified comparator.
      *
@@ -57,6 +59,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param comparator the comparator used to order this priority queue.
      * If <tt>null</tt> then the order depends on the elements' natural
      * ordering.
+     * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
+     * than 1
      */
     public PriorityBlockingQueue(int initialCapacity,
                                  Comparator<? super E> comparator) {
@@ -64,7 +68,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> containing the elements
+     * Creates a <tt>PriorityBlockingQueue</tt> containing the elements
      * in the specified collection.  The priority queue has an initial
      * capacity of 110% of the size of the specified collection. If
      * the specified collection is a {@link SortedSet} or a {@link
@@ -87,29 +91,61 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
 
-    // these first two override just to get the throws docs
+    // these first few override just to update doc comments
 
     /**
+     * Adds the specified element to this queue.
+     * @return <tt>true</tt> (as per the general contract of
+     * <tt>Collection.add</tt>).
+     *
      * @throws NullPointerException {@inheritDoc}
+     * @throws ClassCastException if the specified element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
      */
-    public boolean add(E element) {
-        return super.add(element);
+    public boolean add(E o) {
+        return super.add(o);
     }
 
     /**
+     * Adds all of the elements in the specified collection to this queue.
+     * The behavior of this operation is undefined if
+     * the specified collection is modified while the operation is in
+     * progress.  (This implies that the behavior of this call is undefined if
+     * the specified collection is this queue, and this queue is nonempty.)
+     * <p>
+     * This implementation iterates over the specified collection, and adds
+     * each object returned by the iterator to this collection, in turn.
      * @throws NullPointerException {@inheritDoc}
+     * @throws ClassCastException if any element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
      */
     public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);
     }
 
+    /**
+     * Returns the comparator used to order this collection, or <tt>null</tt>
+     * if this collection is sorted according to its elements natural ordering
+     * (using <tt>Comparable</tt>.)
+     *
+     * @return the comparator used to order this collection, or <tt>null</tt>
+     * if this collection is sorted according to its elements natural ordering.
+     */
     public Comparator comparator() {
         return q.comparator();
     }
 
-    /** 
-     * @throws NullPointerException if the specified element is <tt>null</tt> 
-     **/
+    /**
+     * Adds the specified element to this priority queue.
+     *
+     * @return <tt>true</tt>
+     * @throws ClassCastException if the specified element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
         lock.lock();
@@ -124,12 +160,31 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public void put(E o) throws InterruptedException {
+    /**
+     * Adds the specified element to this priority queue. As the queue is
+     * unbounded this method will never block.
+     * @throws ClassCastException if the element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public void put(E o) {
         offer(o); // never need to block
     }
 
-    public boolean offer(E o, long timeout, TimeUnit unit)
-        throws InterruptedException {
+    /**
+     * Adds the specified element to this priority queue. As the queue is
+     * unbounded this method will never block.
+     * @param o {@inheritDoc}
+     * @param timeout This parameter is ignored as the method never blocks
+     * @param unit This parameter is ignored as the method never blocks
+     * @throws ClassCastException if the element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
+     * @throws NullPointerException {@inheritDoc}
+     * @return <tt>true</tt>
+     */
+    public boolean offer(E o, long timeout, TimeUnit unit) {
         return offer(o); // never need to block
     }
 
@@ -210,13 +265,27 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Always returns <tt>Integer.MAX_VALUE</tt> because
-     * PriorityBlockingQueues are not capacity constrained.
+     * a <tt>PriorityBlockingQueue</tt> is not capacity constrained.
      * @return <tt>Integer.MAX_VALUE</tt>
      */
     public int remainingCapacity() {
         return Integer.MAX_VALUE;
     }
 
+    /**
+     * Removes a single instance of the specified element from this
+     * queue, if it is present.  More formally,
+     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
+     * o.equals(e))</tt>, if the queue contains one or more such
+     * elements.  Returns <tt>true</tt> if the queue contained the
+     * specified element (or equivalently, if the queue changed as a
+     * result of the call).
+     *
+     * <p>This implementation iterates over the queue looking for the
+     * specified element.  If it finds the element, it removes the element
+     * from the queue using the iterator's remove method.<p>
+     *
+     */
     public boolean remove(Object o) {
         lock.lock();
         try {
@@ -268,6 +337,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns an iterator over the elements in this queue. The iterator
+     * does not return the elements in any particular order.
+     *
+     * @return an iterator over the elements in this queue.
+     */
     public Iterator<E> iterator() {
         lock.lock();
         try {

@@ -9,8 +9,20 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * A {@link Queue} in which each put must wait for a take, and vice
- * versa.  SynchronousQueues are similar to rendezvous channels used
+ * A {@linkplain BlockingQueue blocking queue} in which each <tt>put</tt> 
+ * must wait for a <tt>take</tt>, and vice versa.  
+ * A synchronous queue does not have any internal capacity - in particular
+ * it does not have a capacity of one. You cannot <tt>peek</tt> at a 
+ * synchronous queue because an element is only present when you try to take
+ * it; you cannot add an element (using any method) unless another thread is
+ * trying to remove it; you cannot iterate as there is nothing to iterate.
+ * The <em>head</em> of the queue is the element that the first queued thread
+ * is trying to add to the queue; if there are no queued threads then no
+ * element is being added and the head is <tt>null</tt>.
+ * Many of the <tt>Collection</tt> methods make little or no sense for a
+ * synchronous queue.
+ * This queue does not permit <tt>null</tt> elements.
+ * <p>Synchronous queues are similar to rendezvous channels used
  * in CSP and Ada. They are well suited for handoff designs, in which
  * an object running in one thread must synch up with an object
  * running in another thread in order to hand it some information,
@@ -290,31 +302,61 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Creates a <tt>SynchronousQueue</tt>
+     */
     public SynchronousQueue() {}
 
 
-    public void put(E x) throws InterruptedException {
-        doPut(x, false, 0);
+    /**
+     * Adds the specified element to this queue, waiting if necessary for
+     * another thread to receive it.
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public void put(E o) throws InterruptedException {
+        doPut(o, false, 0);
     }
 
+    /**
+     * Adds the specified element to this queue, waiting if necessary up to the
+     * specified wait time for another thread to receive it.
+     * @return <tt>true</tt> if successful, or <tt>false</tt> if
+     * the specified waiting time elapses before a taker appears.
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean offer(E x, long timeout, TimeUnit unit) throws InterruptedException {
         return doPut(x, true, unit.toNanos(timeout));
     }
 
 
-
+    /**
+     * Retrieves and removes the head of this queue, waiting if necessary
+     * for another thread to insert it.
+     * @return the head of this queue
+     */
     public E take() throws InterruptedException {
         return doTake(false, 0);
     }
 
+    /**
+     * Retrieves and removes the head of this queue, waiting
+     * if necessary up to the specified wait time, for another thread
+     * to insert it.
+     */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         return doTake(true, unit.toNanos(timeout));
     }
 
     // Untimed nonblocking versions
 
-    public boolean offer(E x) {
-        if (x == null) throw new NullPointerException();
+    /**
+     * Adds the specified element to this queue, if another thread is
+     * waiting to receive it.
+     *
+     * @throws NullpointerException {@inheritDoc}
+     */
+    public boolean offer(E o) {
+        if (o == null) throw new NullPointerException();
 
         for (;;) {
             qlock.lock();
@@ -328,11 +370,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             if (node == null)
                 return false;
 
-            else if (node.set(x))
+            else if (node.set(o))
                 return true;
             // else retry
         }
     }
+
 
     public E poll() {
         for (;;) {
@@ -356,16 +399,50 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
+
     /**
-     * Always returns true. SynchronousQueues have no internal capacity.
-     * @return true.
+     * Adds the specified element to this queue.
+     * @return <tt>true</tt> (as per the general contract of
+     * <tt>Collection.add</tt>).
+     *
+     * @throws NullPointerException {@inheritDoc}
+     * @throws IllegalStateException if no thread is waiting to receive the
+     * element being added
+     */
+    public boolean add(E o) {
+        return super.add(o);
+    }
+
+
+    /**
+     * Adds all of the elements in the specified collection to this queue.
+     * The behavior of this operation is undefined if
+     * the specified collection is modified while the operation is in
+     * progress.  (This implies that the behavior of this call is undefined if
+     * the specified collection is this queue, and this queue is nonempty.)
+     * <p>
+     * This implementation iterates over the specified collection, and adds
+     * each object returned by the iterator to this collection, in turn.
+     * @throws NullPointerException {@inheritDoc}
+     * @throws IllegalStateException if no thread is waiting to receive the
+     * element being added
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        return super.addAll(c);
+    }
+
+    /**
+     * Always returns <tt>true</tt>. 
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @return <tt>true</tt>
      */
     public boolean isEmpty() {
         return true;
     }
 
     /**
-     * Always returns 0. SynchronousQueues have no internal capacity.
+     * Always returns zero.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
      * @return zero.
      */
     public int size() {
@@ -373,7 +450,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Always returns zero. SynchronousQueues have no internal capacity.
+     * Always returns zero.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
      * @return zero.
      */
     public int remainingCapacity() {
@@ -381,9 +459,52 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Always returns null. SynchronousQueues do not return elements
+     * Does nothing.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     */
+    public void clear() {}
+
+    /**
+     * Always returns <tt>false</tt>.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @return <tt>false</tt>
+     */
+    public boolean contains(Object o) {
+        return false;
+    }
+
+    /**
+     * Always returns <tt>false</tt>.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @return <tt>false</tt>
+     */
+    public boolean containsAll(Collection<? extends E> c) {
+        return false;
+    }
+
+    /**
+     * Always returns <tt>false</tt>.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @return <tt>false</tt>
+     */
+    public boolean removeAll(Collection<? extends E> c) {
+        return false;
+    }
+
+    /**
+     * Always returns <tt>false</tt>.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @return <tt>false</tt>
+     */
+    public boolean retainAll(Collection<? extends E> c) {
+        return false;
+    }
+
+    /**
+     * Always returns <tt>null</tt>. 
+     * A <tt>SynchronousQueue</tt> does not return elements
      * unless actively waited on.
-     * @return null.
+     * @return <tt>null</tt>
      */
     public E peek() {
         return null;
@@ -403,7 +524,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns an empty iterator.
+     * Returns an empty iterator: <tt>hasNext</tt> always returns
+     * <tt>false</tt>
+     * @return an empty iterator
      */
     public Iterator<E> iterator() {
         return new EmptyIterator<E>();
@@ -411,15 +534,26 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
 
     /**
-     * Returns an empty array.
+     * Returns a zero-length array.
+     * @return a zero-length array
      */
     public Object[] toArray() {
         return (E[]) new Object[0];
     }
 
+    /**
+     * Sets the zeroeth element of the specified array to <tt>null</tt>
+     * (if the array has non-zero length) and returns it.
+     * @return the specified array
+     */
     public <T> T[] toArray(T[] a) {
         if (a.length > 0)
             a[0] = null;
         return a;
     }
 }
+
+
+
+
+

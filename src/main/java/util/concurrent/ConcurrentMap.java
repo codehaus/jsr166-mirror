@@ -39,7 +39,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *            prevents it from being stored in this map.
      * @throws IllegalArgumentException if some aspect of this key or value
      *            prevents it from being stored in this map.
-     * @throws NullPointerException this map does not permit <tt>null</tt>
+     * @throws NullPointerException if this map does not permit <tt>null</tt>
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.
      *
@@ -60,7 +60,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @param key key with which the specified value is associated.
      * @param value value associated with the specified key.
      * @return true if the value was removed
-     * @throws NullPointerException this map does not permit <tt>null</tt>
+     * @throws NullPointerException if this map does not permit <tt>null</tt>
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.
      */

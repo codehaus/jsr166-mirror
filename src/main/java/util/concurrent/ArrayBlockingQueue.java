@@ -9,7 +9,7 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * A bounded {@link BlockingQueue blocking queue} backed by an array.
+ * A bounded {@linkplain BlockingQueue blocking queue} backed by an array.
  * This queue orders elements FIFO (first-in-first-out).
  * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
@@ -153,7 +153,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
+     * Creates an <tt>ArrayBlockingQueue</tt> with the given (fixed)
      * capacity and default access policy.
      * @param capacity the capacity of this queue
      * @throws IllegalArgumentException if <tt>capacity</tt> is less than 1
@@ -163,7 +163,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
+     * Creates an <tt>ArrayBlockingQueue</tt> with the given (fixed)
      * capacity and the specified access policy.
      * @param capacity the capacity of this queue
      * @param fair if <tt>true</tt> then queue accesses for threads blocked
@@ -176,8 +176,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
-     * capacity, the specified access policy and initially holding the
+     * Creates an <tt>ArrayBlockingQueue</tt> with the given (fixed)
+     * capacity, the specified access policy and initially containing the
      * elements of the given collection,
      * added in traversal order of the collection's iterator.
      * @param capacity the capacity of this queue
@@ -201,9 +201,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             add(it.next());
     }
 
-    // Have to override just to update the javadoc for @throws
+    // Have to override just to update the javadoc
 
     /**
+     * Adds the specified element to the tail of this queue.
+     * @return <tt>true</tt> (as per the general contract of
+     * <tt>Collection.add</tt>).
      * @throws IllegalStateException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
@@ -212,6 +215,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Adds all of the elements in the specified collection to this queue.
+     * The behavior of this operation is undefined if
+     * the specified collection is modified while the operation is in
+     * progress.  (This implies that the behavior of this call is undefined if
+     * the specified collection is this queue, and this queue is nonempty.)
+     * <p>
+     * This implementation iterates over the specified collection, and adds
+     * each object returned by the iterator to this queue's tail, in turn.
      * @throws IllegalStateException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
@@ -220,19 +231,19 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
    /**
-    * Add the specified element to the tail of this queue if possible,
+    * Adds the specified element to the tail of this queue if possible,
     * returning immediately if this queue is full.
     *
     * @throws NullPointerException {@inheritDoc}
     */
-    public boolean offer(E x) {
-        if (x == null) throw new NullPointerException();
+    public boolean offer(E o) {
+        if (o == null) throw new NullPointerException();
         lock.lock();
         try {
             if (count == items.length)
                 return false;
             else {
-                insert(x);
+                insert(o);
                 return true;
             }
         }
@@ -242,21 +253,21 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if
+     * Adds the specified element to the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E x, long timeout, TimeUnit unit)
+    public boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException {
 
-        if (x == null) throw new NullPointerException();
+        if (o == null) throw new NullPointerException();
 
         lock.lockInterruptibly();
         try {
             long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (count != items.length) {
-                    insert(x);
+                    insert(o);
                     return true;
                 }
                 if (nanos <= 0)
@@ -316,8 +327,22 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
 
-    public boolean remove(Object x) {
-        if (x == null) return false;
+    /**
+     * Removes a single instance of the specified element from this
+     * queue, if it is present.  More formally,
+     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
+     * o.equals(e))</tt>, if the queue contains one or more such
+     * elements.  Returns <tt>true</tt> if the queue contained the
+     * specified element (or equivalently, if the queue changed as a
+     * result of the call).
+     *
+     * <p>This implementation iterates over the queue looking for the
+     * specified element.  If it finds the element, it removes the element
+     * from the queue using the iterator's remove method.<p>
+     *
+     */
+    public boolean remove(Object o) {
+        if (o == null) return false;
         lock.lock();
         try {
             int i = takeIndex;
@@ -325,7 +350,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             for (;;) {
                 if (k++ >= count)
                     return false;
-                if (x.equals(items[i])) {
+                if (o.equals(items[i])) {
                     removeAt(i);
                     return true;
                 }
@@ -368,13 +393,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if
+     * Adds the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
-    public void put(E x) throws InterruptedException {
+    public void put(E o) throws InterruptedException {
 
-        if (x == null) throw new NullPointerException();
+        if (o == null) throw new NullPointerException();
 
         lock.lockInterruptibly();
         try {
@@ -386,7 +411,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 notFull.signal(); // propagate to non-interrupted thread
                 throw ie;
             }
-            insert(x);
+            insert(o);
         }
         finally {
             lock.unlock();
@@ -396,7 +421,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     // this doc comment is overridden to remove the reference to collections
     // greater in size than Integer.MAX_VALUE
     /**
-     * Return the number of elements in this collection.
+     * Returns the number of elements in this collection.
      */
     public int size() {
         lock.lock();
@@ -411,7 +436,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     // this doc comment is a modified copy of the inherited doc comment,
     // without the reference to unlimited queues.
     /**
-     * Return the number of elements that this queue can ideally (in
+     * Returns the number of elements that this queue can ideally (in
      * the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue
      * less the current <tt>size</tt> of this queue.
@@ -432,14 +457,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
 
-    public boolean contains(Object x) {
-        if (x == null) return false;
+    public boolean contains(Object o) {
+        if (o == null) return false;
         lock.lock();
         try {
             int i = takeIndex;
             int k = 0;
             while (k++ < count) {
-                if (x.equals(items[i]))
+                if (o.equals(items[i]))
                     return true;
                 i = inc(i);
             }

@@ -28,6 +28,11 @@ public abstract class AbstractQueue<E>
     // We also inherit, or define, all necessary @throws comments
 
     /**
+     * @throws NullPointerException if the specified element is <tt>null</tt>
+     */
+    public abstract boolean offer(E o);
+
+    /**
      * Adds the specified element to this queue.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
@@ -49,7 +54,7 @@ public abstract class AbstractQueue<E>
      * the specified collection is this queue, and this queue is nonempty.)
      * <p>
      * This implementation iterates over the specified collection, and adds
-     * each object returned by the iterator to this collection, in turn.
+     * each object returned by the iterator to this queue, in turn.
      *
      * @param c collection whose elements are to be added to this queue
      * @return <tt>true</tt> if this collection changed as a result of the

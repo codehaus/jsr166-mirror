@@ -91,7 +91,7 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/05 06:38:51 $
+ * @revised $Date: 2003/08/06 01:57:53 $
  * @editor $Author: dholmes $
  * @author Doug Lea
  */
@@ -160,7 +160,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * space to become available.
      * @param o the element to add
      * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if <tt>o</tt> is <tt>null</tt>.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     void put(E o) throws InterruptedException;
 

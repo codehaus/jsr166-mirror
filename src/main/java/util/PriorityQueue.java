@@ -1,7 +1,8 @@
  package java.util;
 
 /**
- * An unbounded priority queue based on a priority heap.  This queue orders
+ * An unbounded priority {@linkplain Queue queue} based on a priority heap.  
+ * This queue orders
  * elements according to an order specified at construction time, which is
  * specified in the same manner as {@link java.util.TreeSet} and
  * {@link java.util.TreeMap}: elements are ordered
@@ -92,6 +93,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * (using <tt>Comparable</tt>.)
      *
      * @param initialCapacity the initial capacity for this priority queue.
+     * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
+     * than 1
      */
     public PriorityQueue(int initialCapacity) {
         this(initialCapacity, null);
@@ -108,7 +111,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
      * than 1
      */
-    public PriorityQueue(int initialCapacity, Comparator<? super E> comparator) {
+    public PriorityQueue(int initialCapacity, 
+                         Comparator<? super E> comparator) {
         if (initialCapacity < 1)
             throw new IllegalArgumentException();
         this.queue = new Object[initialCapacity + 1];
@@ -256,6 +260,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             
     // Queue Methods
 
+
+
     /**
      * Add the specified element to this priority queue.
      *
@@ -290,12 +296,14 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return (E) queue[1];
     }
 
-    // Collection Methods
-
-    // these first two override just to get the throws docs
+    // Collection Methods - the first two override to update docs
 
     /**
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * Adds the specified element to this queue.
+     * @return <tt>true</tt> (as per the general contract of
+     * <tt>Collection.add</tt>).
+     *
+     * @throws NullPointerException {@inheritDoc}
      * @throws ClassCastException if the specified element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
@@ -304,17 +312,40 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return super.add(o);
     }
 
+   
     /**
+     * Adds all of the elements in the specified collection to this queue.
+     * The behavior of this operation is undefined if
+     * the specified collection is modified while the operation is in
+     * progress.  (This implies that the behavior of this call is undefined if
+     * the specified collection is this queue, and this queue is nonempty.)
+     * <p>
+     * This implementation iterates over the specified collection, and adds
+     * each object returned by the iterator to this collection, in turn.
+     * @throws NullPointerException {@inheritDoc}
      * @throws ClassCastException if any element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
-     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
-     * is <tt>null</tt>
      */
     public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);
     }
 
+
+ /**
+     * Removes a single instance of the specified element from this
+     * queue, if it is present.  More formally,
+     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
+     * o.equals(e))</tt>, if the queue contains one or more such
+     * elements.  Returns <tt>true</tt> if the queue contained the
+     * specified element (or equivalently, if the queue changed as a
+     * result of the call).
+     *
+     * <p>This implementation iterates over the queue looking for the
+     * specified element.  If it finds the element, it removes the element
+     * from the queue using the iterator's remove method.<p>
+     *
+     */
     public boolean remove(Object o) {
         if (o == null)
             return false;
@@ -337,6 +368,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return false;
     }
 
+    /**
+     * Returns an iterator over the elements in this queue. The iterator
+     * does not return the elements in any particular order.
+     *
+     * @return an iterator over the elements in this queue.
+     */
     public Iterator<E> iterator() {
         return new Itr();
     }
@@ -393,11 +430,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Returns the number of elements in this priority queue.
-     *
-     * @return the number of elements in this priority queue.
-     */
     public int size() {
         return size;
     }
@@ -495,6 +527,15 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         }
     }
 
+
+    /**
+     * Returns the comparator used to order this collection, or <tt>null</tt>
+     * if this collection is sorted according to its elements natural ordering
+     * (using <tt>Comparable</tt>.)
+     *
+     * @return the comparator used to order this collection, or <tt>null</tt>
+     * if this collection is sorted according to its elements natural ordering.
+     */
     public Comparator<? super E> comparator() {
         return comparator;
     }

@@ -131,7 +131,7 @@ import java.util.List;
  * @see ThreadFactory
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/02/19 10:53:58 $
+ * @revised $Date: 2003/02/19 11:38:50 $
  * @editor $Author: jozart $
  */
 public class ThreadExecutor implements ExecutorService {
@@ -314,12 +314,12 @@ public class ThreadExecutor implements ExecutorService {
      * calling thread of the <tt>execute</tt> method.  This is the default
      * <tt>CannotExecuteHandler</tt>.
      */
-   public class CallerRunsCannotExecuteHandler implements CannotExecuteHandler {
+   public class CallerRunsPolicy implements CannotExecuteHandler {
 
         /**
-         * Creates new <tt>CallerRunsCannotExecuteHandler</tt>.
+         * Constructs a <tt>CallerRunsPolicy</tt>.
          */
-        public CallerRunsCannotExecuteHandler() { }
+        public CallerRunsPolicy() { }
 
         public boolean cannotExecute(Runnable r, boolean isShutdown) {
             if (!isShutdown) {
@@ -332,12 +332,12 @@ public class ThreadExecutor implements ExecutorService {
     /**
      * A handler for unexecutable tasks that throws a <tt>CannotExecuteException</tt>.
      */
-    public class AbortCannotExecuteHandler implements CannotExecuteHandler {
+    public class AbortPolicy implements CannotExecuteHandler {
 
         /**
-         * Creates new <tt>AbortCannotExecuteHandler</tt>.
+         * Constructs a <tt>AbortPolicy</tt>.
          */
-        public AbortCannotExecuteHandler() { }
+        public AbortPolicy() { }
 
         public boolean cannotExecute(Runnable r, boolean isShutdown) {
             if (!isShutdown) {
@@ -351,12 +351,12 @@ public class ThreadExecutor implements ExecutorService {
      * A handler for unexecutable tasks that waits until the task can be
      * submitted for execution.
      */
-    public class WaitCannotExecuteHandler implements CannotExecuteHandler {
+    public class WaitPolicy implements CannotExecuteHandler {
 
         /**
-         * Creates new <tt>WaitCannotExecuteHandler</tt>.
+         * Constructs a <tt>WaitPolicy</tt>.
          */
-        public WaitCannotExecuteHandler() { }
+        public WaitPolicy() { }
 
         public boolean cannotExecute(Runnable r, boolean isShutdown) {
             if (!isShutdown) {
@@ -371,12 +371,12 @@ public class ThreadExecutor implements ExecutorService {
     /**
      * A handler for unexecutable tasks that silently discards these tasks.
      */
-    public class DiscardCannotExecuteHandler implements CannotExecuteHandler {
+    public class DiscardPolicy implements CannotExecuteHandler {
 
         /**
-         * Creates new <tt>DiscardCannotExecuteHandler</tt>.
+         * Constructs <tt>DiscardPolicy</tt>.
          */
-        public DiscardCannotExecuteHandler() { }
+        public DiscardPolicy() { }
 
         public boolean cannotExecute(Runnable r, boolean isShutdown) {
             return true;
@@ -386,12 +386,12 @@ public class ThreadExecutor implements ExecutorService {
     /**
      * A handler for unexecutable tasks that discards the oldest unhandled request.
      */
-    public class DiscardOldestCannotExecuteHandler implements CannotExecuteHandler {
+    public class DiscardOldestPolicy implements CannotExecuteHandler {
 
         /**
-         * Creates new <tt>DiscardOldestCannotExecuteHandler</tt>.
+         * Constructs a <tt>DiscardOldestPolicy</tt>.
          */
-        public DiscardOldestCannotExecuteHandler() { }
+        public DiscardOldestPolicy() { }
 
         public boolean cannotExecute(Runnable r, boolean isShutdown) {
             if (!isShutdown) {

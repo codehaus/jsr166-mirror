@@ -11,7 +11,6 @@ import java.io.PrintStream;
 import sun.misc.VM;
 
 /**
- * <b>JSR166: Declared to implement Thread.UncaughtExceptionHandler</b>.<p>
  * A thread group represents a set of threads. In addition, a thread 
  * group can also include other thread groups. The thread groups form 
  * a tree in which every thread group except the initial thread group 

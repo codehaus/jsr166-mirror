@@ -1,5 +1,5 @@
 /*
- * @(#)Thread.java	1.127 03/01/23
+ * @(#)Thread.java	1.131 03/07/11
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -10,13 +10,13 @@ package java.lang;
 import java.security.AccessController;
 import java.security.AccessControlContext;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Collections;
 import sun.nio.ch.Interruptible;
 import sun.security.util.SecurityConstants;
 
 
 /**
- * <b>JSR166: Added UncaughtExceptionHandlers and changed interrupt to always allow self-interruption</b>.<p>
  * A <i>thread</i> is a thread of execution in a program. The Java 
  * Virtual Machine allows an application to have multiple threads of 
  * execution running concurrently. 
@@ -101,7 +101,7 @@ import sun.security.util.SecurityConstants;
  * a thread is created, a new name is generated for it. 
  *
  * @author  unascribed
- * @version 1.127, 01/23/03
+ * @version 1.131, 07/11/03
  * @see     java.lang.Runnable
  * @see     java.lang.Runtime#exit(int)
  * @see     java.lang.Thread#run()
@@ -110,61 +110,6 @@ import sun.security.util.SecurityConstants;
  */
 public
 class Thread implements Runnable {
-    /**
-     * Interface for handlers invoked when a Thread abruptly terminates
-     * due to an uncaught exception.
-     */
-    public interface UncaughtExceptionHandler { // jsr166
-        void uncaughtException(Thread t, Throwable e);
-    }
-
-    private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler; // jsr166
-
-    /**
-     * Set the default handler invoked when a Thread abruptly terminates
-     * due to an uncaught exception. If unset or set to null, a
-     * Thread's ThreadGroup serves as the default handler.
-     * @exception  SecurityException  if the current thread is not allowed to
-     *               current thread.
-     */
-    public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) { // jsr166
-        currentThread().checkAccess();
-        defaultUncaughtExceptionHandler = eh;
-    }
-
-
-    /**
-     * Return the default handler invoked when a Thread abruptly terminates
-     * due to an uncaught exception. If the returned value is null,
-     * there is no default, and each Thread's ThreadGroup serves as
-     * its handler.
-     */
-    public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler() { // jsr166
-        return defaultUncaughtExceptionHandler;
-    }
-
-    /**
-     * Return the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception.
-     */
-    public UncaughtExceptionHandler getUncaughtExceptionHandler() { // jsr166
-        return (uncaughtExceptionHandler != null)?
-            uncaughtExceptionHandler :
-            group;
-    }
-
-
-    /**
-     * Set the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception.
-     * @exception  SecurityException  if the current thread is not allowed to
-     *               modify current thread.
-     */
-    public void setUncaughtExceptionHandler (UncaughtExceptionHandler eh) { // jsr166
-        checkAccess();
-        uncaughtExceptionHandler = eh;
-    }
-
     /* Make sure registerNatives is the first thing <clinit> does. */
     private static native void registerNatives();
     static {
@@ -175,7 +120,6 @@ class Thread implements Runnable {
     private int         priority;
     private Thread	threadQ;
     private long	eetop;
-    private volatile UncaughtExceptionHandler uncaughtExceptionHandler; // jsr166
 
     /* Whether or not to single_step this thread. */
     private boolean	single_step;
@@ -220,6 +164,18 @@ class Thread implements Runnable {
      * likes with this number; some VMs will ignore it.
      */
     private long stackSize;
+
+    /*
+     * Thread ID
+     */
+    private long tid;
+
+    /* For generating thread ID */
+    private static long threadSeqNumber;
+
+    private static synchronized long nextThreadID() {
+	return ++threadSeqNumber;
+    }
 
     /* The object in which this thread is blocked in an interruptible I/O
      * operation, if any.  The blocker's interrupt method() should be invoked
@@ -355,6 +311,8 @@ class Thread implements Runnable {
         /* Stash the specified stack size in case the VM cares */
         this.stackSize = stackSize;
 
+        /* Set thread ID */
+        tid = nextThreadID();
 	g.add(this);
     }
 
@@ -752,10 +710,8 @@ class Thread implements Runnable {
     /**
      * Interrupts this thread.
      * 
-     * <p> First, if the thread being interrupted is not the current
-     * thread, the {@link #checkAccess() checkAccess} method of this
-     * thread is invoked, which may cause a {@link SecurityException}
-     * to be thrown.
+     * <p> First the {@link #checkAccess() checkAccess} method of this thread
+     * is invoked, which may cause a {@link SecurityException} to be thrown.
      *
      * <p> If this thread is blocked in an invocation of the {@link
      * Object#wait() wait()}, {@link Object#wait(long) wait(long)}, or {@link
@@ -766,8 +722,8 @@ class Thread implements Runnable {
      * will receive an {@link InterruptedException}.
      *
      * <p> If this thread is blocked in an I/O operation upon an {@link
-     * java.nio.channels.InterruptibleChannel <code>interruptible
-     * channel</code>} then the channel will be closed, the thread's interrupt
+     * java.nio.channels.InterruptibleChannel </code>interruptible
+     * channel<code>} then the channel will be closed, the thread's interrupt
      * status will be set, and the thread will receive a {@link
      * java.nio.channels.ClosedByInterruptException}.
      *
@@ -783,7 +739,7 @@ class Thread implements Runnable {
      * @throws  SecurityException
      *          if the current thread cannot modify this thread
      *
-     * @revised 1.4
+     * @revised 1.5
      * @spec JSR-51
      */
     public void interrupt() {
@@ -1292,10 +1248,207 @@ class Thread implements Runnable {
      */
     public static native boolean holdsLock(Object obj);
 
+    private static final StackTraceElement[] EMPTY_STACK_TRACE
+        = new StackTraceElement[0];
+
+    /**
+     * Returns an array of stack trace elements representing the stack dump
+     * of this thread.  This method will return a zero-length array if
+     * this thread has not started or has terminated. 
+     * If the returned array is of non-zero length then the first element of 
+     * the array represents the top of the stack, which is the most recent
+     * method invocation in the sequence.  The last element of the array
+     * represents the bottom of the stack, which is the least recent method
+     * invocation in the sequence.
+     *
+     * <p>If there is a security manager, and this thread is not 
+     * the current thread, then the security manager's 
+     * <tt>checkPermission</tt> method is called with a 
+     * <tt>RuntimePermission("getStackTrace")</tt> permission
+     * to see if it's ok to get the stack trace. 
+     *
+     * <p>Some virtual machines may, under some circumstances, omit one
+     * or more stack frames from the stack trace.  In the extreme case,
+     * a virtual machine that has no stack trace information concerning
+     * this thread is permitted to return a zero-length array from this
+     * method.  
+     *
+     * @return an array of <tt>StackTraceElement</tt>, 
+     * each represents one stack frame.
+     *
+     * @throws SecurityException
+     *        if a security manager exists and its 
+     *        <tt>checkPermission</tt> method doesn't allow 
+     *        getting the stack trace of thread.
+     * @see SecurityManager#checkPermission
+     * @see java.lang.RuntimePermission
+     * @see Throwable#getStackTrace
+     *
+     * @since 1.5
+     */
+    public StackTraceElement[] getStackTrace() {
+        if (this != Thread.currentThread()) {
+            // check for getStackTrace permission
+            SecurityManager security = System.getSecurityManager();
+            // FIXME dl - temporarily commented out
+            //            if (security != null) {
+            //                security.checkPermission(
+            //                    SecurityConstants.GET_STACK_TRACE_PERMISSION);
+            //            }
+        }
+
+        if (!isAlive()) {
+            return EMPTY_STACK_TRACE;
+        }
+
+        Thread[] threads = new Thread[1];
+        threads[0] = this;
+        StackTraceElement[][] result = dumpThreads(threads);
+        return result[0]; 
+    }
+
+    /**
+     * Returns a map of stack traces for all live threads.
+     * The map keys are threads and each map value is an array of
+     * <tt>StackTraceElement</tt> that represents the stack dump
+     * of the corresponding <tt>Thread</tt>.
+     * The returned stack traces are in the format specified for
+     * the {@link #getStackTrace getStackTrace} method.
+     *
+     * <p>The threads may be executing while this method is called.
+     * The stack trace of each thread only represents a snapshot and
+     * each stack trace may be obtained at different time.  A zero-length
+     * array will be returned in the map value if the virtual machine has 
+     * no stack trace information about a thread.
+     *
+     * <p>If there is a security manager, then the security manager's 
+     * <tt>checkPermission</tt> method is called with a 
+     * <tt>RuntimePermission("getStackTrace")</tt> permission as well as
+     * <tt>RuntimePermission("modifyThreadGroup")</tt> permission
+     * to see if it is ok to get the stack trace of all threads. 
+     *
+     * @return a <tt>Map</tt> from <tt>Thread</tt> to an array of 
+     * <tt>StackTraceElement</tt> that represents the stack trace of 
+     * the corresponding thread.
+     *
+     * @throws SecurityException
+     *        if a security manager exists and its 
+     *        <tt>checkPermission</tt> method doesn't allow 
+     *        getting the stack trace of thread.
+     * @see #getStackTrace
+     * @see SecurityManager#checkPermission
+     * @see java.lang.RuntimePermission
+     * @see Throwable#getStackTrace
+     *
+     * @since 1.5
+     */
+    public static Map getAllStackTraces() {
+        // check for getStackTrace permission
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            // FIXME dl - temporarily commented out
+            //            security.checkPermission(
+            //                SecurityConstants.GET_STACK_TRACE_PERMISSION);
+            security.checkPermission(
+                SecurityConstants.MODIFY_THREADGROUP_PERMISSION);
+        }
+
+        // Get a snapshot of the list of all threads 
+        Thread[] threads = getThreads(); 
+        StackTraceElement[][] traces = dumpThreads(threads);
+        Map m = new HashMap(threads.length);
+        for (int i = 0; i < threads.length; i++) {
+            if (threads[i].isAlive()) { 
+                StackTraceElement[] stackTrace = traces[i];
+                if (stackTrace == null) {
+                    stackTrace = EMPTY_STACK_TRACE;
+                } 
+                m.put(threads[i], stackTrace);
+            }
+        }
+        return m;
+    }
+
+    private native static StackTraceElement[][] dumpThreads(Thread[] threads);
+    private native static Thread[] getThreads();
+
+    /**
+     * Returns the identifier of this Thread.  The thread ID is a positive
+     * <tt>long</tt> number generated when this thread was created.  
+     * The thread ID is unique and remains unchanged during its lifetime.  
+     * When a thread is terminated, this thread ID may be reused.
+     *
+     * @return this thread's ID.
+     * @since 1.5
+     */
+    public long getId() {
+        return tid;
+    }
+
     /* Some private helper methods */
     private native void setPriority0(int newPriority);
     private native void stop0(Object o);
     private native void suspend0();
     private native void resume0();
     private native void interrupt0();
+
+    // Added in JSR-166
+
+    /**
+     * Interface for handlers invoked when a Thread abruptly terminates
+     * due to an uncaught exception.
+     */
+    public interface UncaughtExceptionHandler { 
+        void uncaughtException(Thread t, Throwable e);
+    }
+
+    private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler; 
+
+    /**
+     * Set the default handler invoked when a Thread abruptly terminates
+     * due to an uncaught exception. If unset or set to null, a
+     * Thread's ThreadGroup serves as the default handler.
+     * @exception  SecurityException  if the current thread is not allowed to
+     *               current thread.
+     */
+    public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) { 
+        currentThread().checkAccess();
+        defaultUncaughtExceptionHandler = eh;
+    }
+
+
+    /**
+     * Return the default handler invoked when a Thread abruptly terminates
+     * due to an uncaught exception. If the returned value is null,
+     * there is no default, and each Thread's ThreadGroup serves as
+     * its handler.
+     */
+    public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler() { 
+        return defaultUncaughtExceptionHandler;
+    }
+
+    /**
+     * Return the handler invoked when this Thread abruptly terminates
+     * due to an uncaught exception.
+     */
+    public UncaughtExceptionHandler getUncaughtExceptionHandler() { 
+        return (uncaughtExceptionHandler != null)?
+            uncaughtExceptionHandler :
+            group;
+    }
+
+
+    /**
+     * Set the handler invoked when this Thread abruptly terminates
+     * due to an uncaught exception.
+     * @exception  SecurityException  if the current thread is not allowed to
+     *               modify current thread.
+     */
+    public void setUncaughtExceptionHandler (UncaughtExceptionHandler eh) { 
+        checkAccess();
+        uncaughtExceptionHandler = eh;
+    }
+
+    private UncaughtExceptionHandler uncaughtExceptionHandler; 
+
 }

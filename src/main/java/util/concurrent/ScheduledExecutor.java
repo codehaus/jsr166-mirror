@@ -98,6 +98,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         public int compareTo(Object other) {
+            if (other == this)
+                return 0;
             DelayedTask x = (DelayedTask)other;
             long diff = time - x.time;
             if (diff < 0)
@@ -470,6 +472,36 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
+     * Removes this task from internal queue if it is present, thus
+     * causing it not to be run if it has not already started.  This
+     * method may be useful as one part of a cancellation scheme.
+     *
+     * @param task the task to remove
+     * @return true if the task was removed
+     */
+    public boolean remove(Runnable task) {
+        if (task instanceof DelayedTask && getQueue().remove(task))
+            return true;
+
+        // The task might actually have been wrapped as a DelayedTask
+        // in execute(), in which case we need to maually traverse
+        // looking for it.
+
+        DelayedTask wrap = null;
+        Object[] entries = getQueue().toArray();
+        for (int i = 0; i < entries.length; ++i) {
+            DelayedTask t = (DelayedTask)entries[i];
+            Runnable r = t.getRunnable();
+            if (task.equals(r)) {
+                wrap = t;
+                break;
+            }
+        }
+        entries = null;
+        return wrap != null && getQueue().remove(wrap);
+    }
+
+    /**
      * If executed task was periodic, cause the task for the next
      * period to execute.
      * @param r the task (assumed to be a DelayedTask)
@@ -484,7 +516,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         if (next == null) 
             return;
         try {
-            execute(next);
+            delayedExecute(next);
         } catch(RejectedExecutionException ex) {
             // lost race to detect shutdown; ignore
         }

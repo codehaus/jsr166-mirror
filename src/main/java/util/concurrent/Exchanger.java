@@ -62,8 +62,8 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/08 20:05:07 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/26 00:09:18 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public class Exchanger<V> {
@@ -229,7 +229,7 @@ public class Exchanger<V> {
      *
      * <p>If the specified waiting time elapses then {@link TimeoutException}
      * is thrown.
-     * The given waiting time is a best-effort lower bound. If the time is 
+     * If the time is 
      * less than or equal to zero, the method will not wait at all.
      *
      * @param x the object to exchange

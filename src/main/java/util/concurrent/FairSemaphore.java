@@ -23,7 +23,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/25 22:35:45 $
+ * @revised $Date: 2003/08/26 00:09:18 $
  * @editor $Author: dholmes $
  * @author Doug Lea
  *
@@ -186,8 +186,8 @@ public class FairSemaphore extends Semaphore {
      * interrupted status is cleared.
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
-     * The given waiting time is a best-effort lower bound. If the time is
-     * less than or equal to zero, the method will not wait at all.
+     * If the time is less than or equal to zero, the method will not wait 
+     * at all.
      *
      * @param timeout the maximum time to wait for a permit
      * @param unit the time unit of the <tt>timeout</tt> argument.
@@ -407,7 +407,7 @@ public class FairSemaphore extends Semaphore {
      *
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
-     * The given waiting time is a best-effort lower bound. If the time is
+     * If the time is
      * less than or equal to zero, the method will not wait at all.
      * Any permits that were to be assigned to this thread, are instead 
      * assigned to the next waiting thread(s), as if

@@ -119,7 +119,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/25 22:28:11 $
+ * @revised $Date: 2003/08/26 00:09:18 $
  * @editor $Author: dholmes $
  * @author Doug Lea
  */
@@ -209,7 +209,7 @@ public class CountDownLatch {
      *
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
-     * The given waiting time is a best-effort lower bound. If the time is 
+     * If the time is 
      * less than or equal to zero, the method will not wait at all.
      *
      * @param timeout the maximum time to wait

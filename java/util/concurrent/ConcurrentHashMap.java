@@ -332,7 +332,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * map is created with a capacity of twice the number of mappings in
      * the given map or 32 (whichever is greater), and a default load factor.
      */
-    public ConcurrentHashMap(Map t) {
+    public <A extends K, B extends V> ConcurrentHashMap(Map<A,B> t) {
         this(Math.max((int) (t.size() / DEFAULT_LOAD_FACTOR) + 1,
             MINIMUM_CAPACITY),
             DEFAULT_LOAD_FACTOR);
@@ -817,14 +817,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public Object clone() {
         // We cannot call super.clone, since it would share final segments array,
         // and there's no way to reassign finals.
-        return new ConcurrentHashMap(this);
+        return new ConcurrentHashMap<K,V>(this);
     }
 
     // Views
 
     private transient Set<K> keySet = null;
     private transient Set<Map.Entry<K,V>> entrySet = null;
-    private transient Collection values = null;
+    private transient Collection<V> values = null;
 
     /**
      * Returns a set view of the keys contained in this map.  The set is
@@ -969,9 +969,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         private final K key;
         private volatile V value;
         private final int hash;
-        private final Entry next;
+        private final Entry<K,V> next;
 
-        Entry(int hash, K key, V value, Entry next) {
+        Entry(int hash, K key, V value, Entry<K,V> next) {
             this.value = value;
             this.hash = hash;
             this.key = key;
@@ -1044,7 +1044,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     private abstract class HashIterator<T> implements Iterator<T>, Enumeration {
-        private final Entry[] tab;           // snapshot of table
+        private final Entry<K,V>[] tab;      // snapshot of table
         private int index;                   // current slot
         Entry<K,V> entry = null;             // current node of slot
         K currentKey;                        // key for current node

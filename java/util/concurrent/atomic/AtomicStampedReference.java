@@ -13,10 +13,10 @@ public class AtomicStampedReference<V> {
     }
   }
 
-  private final AtomicReference atomicRef;
+  private final AtomicReference<ReferenceIntegerPair> atomicRef;
 
   public AtomicStampedReference(V r, int i) {
-    atomicRef = new AtomicReference(new ReferenceIntegerPair(r, i));
+    atomicRef = new AtomicReference<ReferenceIntegerPair>(new ReferenceIntegerPair(r, i));
   }
 
   public V getReference() {

@@ -40,7 +40,7 @@
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
 
   <property name="gj.compiler.args"
-           value='-J-Xbootclasspath/p:${javac.jar}'
+           value='-J-Xbootclasspath/p:${javac.jar} -deprecation -warnunchecked'
   />
 
   <path id="gj.compiler.bootclasspath">
@@ -84,7 +84,7 @@
   <target name="test" depends="report-tests"/>
 
 
-  <target name="docs" depends="filter-src">
+  <target name="docs" depends="clean-docs, filter-src">
     <delete dir="${build.javadocs.dir}"/>
     <mkdir dir="${build.javadocs.dir}"/>
     <javadoc destdir="${build.javadocs.dir}"
@@ -104,10 +104,14 @@
   </target>
 
 
-  <target name="clean">
+  <target name="clean" depends="clean-docs">
     <delete dir="${build.dir}"/>
     <delete dir="${build.classes.dir}"/>
     <delete dir="${build.lib.dir}"/>
+  </target>
+
+
+  <target name="clean-docs">
     <delete dir="${build.javadocs.dir}"/>
   </target>
 

@@ -12,10 +12,10 @@ public class AtomicMarkableReference<V> {
     }
   }
 
-  private final AtomicReference atomicRef;
+  private final AtomicReference<ReferenceBooleanPair> atomicRef;
 
   public AtomicMarkableReference(V r, boolean bit) {
-    atomicRef = new AtomicReference(new ReferenceBooleanPair(r, bit));
+    atomicRef = new AtomicReference<ReferenceBooleanPair>(new ReferenceBooleanPair(r, bit));
   }
 
   public V getReference() {

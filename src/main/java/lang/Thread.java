@@ -1,7 +1,7 @@
 /*
  * %W% %E%
  *
- * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
@@ -823,6 +823,16 @@ class Thread implements Runnable {
     /**
      * Destroys this thread, without any cleanup. Any monitors it has 
      * locked remain locked. (This method is not implemented.)
+     *
+     * @deprecated If this method were to be implemented, it would be deadlock
+     *     prone in much the manner of {@link #suspend}. If the target thread
+     *     held a lock on the monitor protecting a critical system resource
+     *     when it was suspended, no thread could ever access this resource
+     *     again. If another thread ever attempted to lock this resource,
+     *     deadlock would result. Such deadlocks typically manifest themselves
+     *     as "frozen" processes.  For more information, see <a href=
+     *     "{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html"> Why
+     *     are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
     public void destroy() {
 	throw new NoSuchMethodError();

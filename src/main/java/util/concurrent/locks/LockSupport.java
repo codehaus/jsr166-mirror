@@ -82,7 +82,7 @@ public class LockSupport {
     /**
      * Make available the permit for the given thread, if it
      * was not already available.  If the thread was blocked on
-     * <tt>park</tt> then it will unblock.  Otherwise, it's next call
+     * <tt>park</tt> then it will unblock.  Otherwise, its next call
      * to <tt>park</tt> is guaranteed not to block. This operation
      * is not guaranteed to have any effect at all if the given
      * thread has not been started.

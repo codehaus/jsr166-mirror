@@ -33,7 +33,7 @@ import sun.misc.*;
  * thread.  Otherwise this lock does not guarantee any particular
  * access order.  Programs using fair locks accessed by many threads
  * may display lower overall throughput (i.e., are slower; often much
- * slower) than those using the default setting, but have but smaller
+ * slower) than those using the default setting, but have smaller
  * variances in times to obtain locks and guarantee lack of
  * starvation. Note however, that fairness of locks does not guarantee
  * fairness of thread scheduling. Thus, one of many threads using a
@@ -255,7 +255,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          *               transferred. (Use of this value here
          *               has nothing to do with the other uses
          *               of the field, but simplifies mechanics.)
-         *   0:          Not any of the above
+         *   0:          None of the above
          *
          * The values are arranged numerically to simplify use.
          * Non-negative values mean that a node doesn't need to
@@ -514,9 +514,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         statusUpdater.compareAndSet(node, SIGNAL, 0);
 
         /*
-         * Successor is normally just next node.  But if cancelled or
-         * apparently null, traverse backwards from tail to find
-         * actual non-cancelled successor.
+         * Successor is normally just the next node.  But if cancelled
+         * or apparently null, traverse backwards from tail to find
+         * the actual non-cancelled successor.
          */
         LockNode s = node.next;
         if ((s != null && s.status != CANCELLED) ||
@@ -1612,7 +1612,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         /**
-         * Returns an estimate of the number of threads are waiting on
+         * Returns an estimate of the number of threads waiting on
          * this condition. Note that because timeouts and interrupts
          * may occur at any time, the estimate serves only as an upper
          * bound on the actual number of waiters.  This method is

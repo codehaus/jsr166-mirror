@@ -1309,7 +1309,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     public static class AbortPolicy implements RejectedExecutionHandler {
 
         /**
-         * Creates a <tt>AbortPolicy</tt>.
+         * Creates an <tt>AbortPolicy</tt>.
          */
         public AbortPolicy() { }
 

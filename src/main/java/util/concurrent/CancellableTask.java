@@ -186,8 +186,7 @@ public class CancellableTask implements Cancellable, Runnable {
      *
      * <p><b>Sample Usage</b>. Here are fragments of an example subclass.
      * <pre>
-     *  class MyFutureTask&lt;V&gt; extends CancellableTask implements Future&lt;
-V&gt; {
+     *  class MyFutureTask&lt;V&gt; extends CancellableTask implements Future&lt;V&gt; {
      *                
      *    MyFutureTask(Callable&lt;V&gt; callable) {
      *      setRunnable(new InnerCancellableFuture&lt;V&gt;(callable));

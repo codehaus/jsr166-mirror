@@ -12,14 +12,20 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 /**
- * A {@link FutureTask} that executes with the given (or current, if
- * not specified) access control context and/or the given (or current)
- * context class loader.
+ * A {@link FutureTask} that executes, if allowed, with the current
+ * access control context and context class loader of the thread
+ * creating the task. A new <tt>PrivilegedFutureTask</tt> 
+ * can be created within an {@link AccessController#doPrivileged}
+ * action to run tasks under the selected permission settings
+ * holding within that action.
+ * @see Executors
  *
  * @since 1.5
  * @author Doug Lea
  */
 public class PrivilegedFutureTask<T> extends FutureTask<T> {
+    private final ClassLoader ccl;
+    private final AccessControlContext acc;
 
     /**
      * Constructs a <tt>PrivilegedFutureTask</tt> that will, upon running,
@@ -34,39 +40,38 @@ public class PrivilegedFutureTask<T> extends FutureTask<T> {
         super(task);
         this.ccl = Thread.currentThread().getContextClassLoader();
         this.acc = AccessController.getContext();
-        
         acc.checkPermission(new RuntimePermission("getContextClassLoader"));
         acc.checkPermission(new RuntimePermission("setContextClassLoader"));
     }
 
-
+    /**
+     * Executes within the established access control and context
+     * class loader if possible, else causes invocations of {@link
+     * Future#get} to receive the associated AccessControlException.
+     */
     public void run() {
-        AccessController.doPrivileged(new PrivilegedAction() {
-            public Object run() { 
-                runPrivileged(); 
-                return null; 
-            }
-        }, acc);
+	try {
+	    AccessController.doPrivileged(new PrivilegedFutureAction(), acc);
+	} catch(Throwable ex) {
+	    setException(ex);
+	}
     }
 
-
-    private void runPrivileged() {
-        ClassLoader saved = null;
-        try {
-            ClassLoader current = Thread.currentThread().getContextClassLoader();
-            if (ccl != current) {
-                Thread.currentThread().setContextClassLoader(ccl);
-                saved = current;
-            }
-            super.run();
-        }
-        finally {
-            if (saved != null)
-                Thread.currentThread().setContextClassLoader(saved);
-        }
+    private class PrivilegedFutureAction implements PrivilegedAction {
+	public Object run() {
+	    ClassLoader saved = null;
+	    try {
+		ClassLoader current = Thread.currentThread().getContextClassLoader();
+		if (ccl != current) {
+		    Thread.currentThread().setContextClassLoader(ccl);
+		    saved = current;
+		}
+		PrivilegedFutureTask.super.run();
+		return null;
+	    } finally {
+		if (saved != null)
+		    Thread.currentThread().setContextClassLoader(saved);
+	    }
+	}
     }
-
-    private final ClassLoader ccl;
-    private final AccessControlContext acc;
 }
-

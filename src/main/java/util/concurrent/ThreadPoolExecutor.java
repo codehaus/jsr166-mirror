@@ -73,7 +73,7 @@ import java.util.*;
  *
  * <dd>New threads are created using a {@link
  * java.util.concurrent.ThreadFactory}.  If not otherwise specified, a
- * {@link DefaultThreadFactory} is used, that creates threads to all
+ * {@link Executors#defaultThreadFactory} is used, that creates threads to all
  * be in the same {@link ThreadGroup} and with the same
  * <tt>NORM_PRIORITY</tt> priority and non-daemon status. By supplying
  * a different ThreadFactory, you can alter the thread's name, thread
@@ -322,60 +322,6 @@ public class ThreadPoolExecutor implements ExecutorService {
         handler.rejectedExecution(command, this);
     }
 
-    /**
-     * The default thread factory used to create new threads.  This
-     * factory creates all new threads used by the Executor in the
-     * same {@link ThreadGroup}. If there is a {@link
-     * java.lang.SecurityManager}, it uses the group of {@link
-     * System#getSecurityManager}, else the group of the thread
-     * creating the Executor. Each new thread is created as a
-     * non-daemon thread with priority
-     * <tt>Thread.NORM_PRIORITY</tt>. New threads have names
-     * accessible via {@link Thread#getName} of
-     * <em>pool-N-thread-M</em>, where <em>N</em> is the sequence
-     * number of this factory, and <em>M</em> is the sequence number
-     * of the thread created by this factory.
-     */
-    protected static class DefaultThreadFactory implements ThreadFactory {
-        private static final AtomicInteger poolNumber = new AtomicInteger(1);
-        private final ThreadGroup group;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-        private final String namePrefix;
-
-        /**
-         * Create a new DefaultThreadFactory that will create Threads
-         * with the group of the current System SecurityManager's
-         * ThreadGroup if it exists, else the group of the 
-         * thread invoking this constructor.
-         */
-        public DefaultThreadFactory() {
-            SecurityManager s = System.getSecurityManager();
-            group = (s != null)? s.getThreadGroup() :
-                                 Thread.currentThread().getThreadGroup();
-            namePrefix = "pool-" + 
-                          poolNumber.getAndIncrement() + 
-                         "-thread-";
-        }
-
-        /**
-         * Create and return a new Thread with ThreadGroup established
-         * in constructor, with non-daemon status, with normal
-         * priority, and with name displaying the factory and thread
-         * sequence numbers.
-         * @param r  a runnable to be executed by new thread instance
-         * @return constructed thread
-         */ 
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, 
-                                  namePrefix + threadNumber.getAndIncrement(),
-                                  0);
-            if (t.isDaemon())
-                t.setDaemon(false);
-            if (t.getPriority() != Thread.NORM_PRIORITY)
-                t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
-    }
 
 
     /**
@@ -687,9 +633,9 @@ public class ThreadPoolExecutor implements ExecutorService {
 
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given
-     * initial parameters.  It may be more convenient to use one of
-     * the {@link Executors} factory methods instead of this general
-     * purpose constructor.
+     * initial parameters and default thread factory and handler.  It
+     * may be more convenient to use one of the {@link Executors}
+     * factory methods instead of this general purpose constructor.
      *
      * @param corePoolSize the number of threads to keep in the
      * pool, even if they are idle.
@@ -714,7 +660,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                               TimeUnit unit,
                               BlockingQueue<Runnable> workQueue) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
-             new DefaultThreadFactory(), defaultHandler);
+             Executors.defaultThreadFactory(), defaultHandler);
     }
 
     /**
@@ -783,7 +729,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                               BlockingQueue<Runnable> workQueue,
                               RejectedExecutionHandler handler) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
-             new DefaultThreadFactory(), handler);
+             Executors.defaultThreadFactory(), handler);
     }
 
     /**
@@ -1069,7 +1015,8 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Sets the core number of threads.  This overrides any value set
      * in the constructor.  If the new value is smaller than the
      * current value, excess existing threads will be terminated when
-     * they next become idle.
+     * they next become idle. If larger, new threads will, if needed,
+     * be started to execute any queued tasks.
      *
      * @param corePoolSize the new core size
      * @throws IllegalArgumentException if <tt>corePoolSize</tt>
@@ -1083,17 +1030,20 @@ public class ThreadPoolExecutor implements ExecutorService {
         try {
             int extra = this.corePoolSize - corePoolSize;
             this.corePoolSize = corePoolSize;
-            if (extra > 0 && poolSize > corePoolSize) {
+	    if (extra < 0) {
+		Runnable r;
+		while (extra++ < 0 && poolSize < corePoolSize &&
+		       (r = workQueue.poll()) != null)
+		    addThread(r).start();
+	    }
+	    else if (extra > 0 && poolSize > corePoolSize) {
                 Iterator<Worker> it = workers.iterator();
                 while (it.hasNext() &&
-                       extra > 0 &&
+                       extra-- > 0 &&
                        poolSize > corePoolSize &&
-                       workQueue.remainingCapacity() == 0) {
+                       workQueue.remainingCapacity() == 0) 
                     it.next().interruptIfIdle();
-                    --extra;
-                }
             }
-
         } finally {
             mainLock.unlock();
         }

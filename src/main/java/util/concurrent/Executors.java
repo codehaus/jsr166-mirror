@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -13,8 +14,8 @@ import java.security.PrivilegedExceptionAction;
 
 /**
  * Factory and utility methods for {@link Executor}, {@link
- * ExecutorService}, {@link Future}, and {@link Cancellable} classes
- * defined in this package.
+ * ExecutorService}, {@link ThreadFactory}, {@link Future}, and {@link
+ * Cancellable} classes defined in this package.
  *
  * @since 1.5
  * @author Doug Lea
@@ -273,7 +274,6 @@ public class Executors {
         executor.execute(future);
         return future;
     }
-    
 
     private static class PrivilegedActionAdapter implements Callable<Object> {
         PrivilegedActionAdapter(PrivilegedAction action) {
@@ -295,6 +295,118 @@ public class Executors {
         private final PrivilegedExceptionAction action;
     }
         
+    /**
+     * Return a default thread factory used to create new threads.
+     * This factory creates all new threads used by an Executor in the
+     * same {@link ThreadGroup}. If there is a {@link
+     * java.lang.SecurityManager}, it uses the group of {@link
+     * System#getSecurityManager}, else the group of the thread
+     * invoking this <tt>defaultThreadFactory</tt> method. Each new
+     * thread is created as a non-daemon thread with priority
+     * <tt>Thread.NORM_PRIORITY</tt>. New threads have names
+     * accessible via {@link Thread#getName} of
+     * <em>pool-N-thread-M</em>, where <em>N</em> is the sequence
+     * number of this factory, and <em>M</em> is the sequence number
+     * of the thread created by this factory.
+     * @return the thread factory
+     */
+    public static ThreadFactory defaultThreadFactory() {
+	return new DefaultThreadFactory();
+    }
+
+    /**
+     * Return a default thread factory used to create new threads.
+     * This factory creates threads with the same settings as {@link
+     * Executors#defaultThreadFactory}, additionally setting the
+     * AccessControlContext and contextClassLoader of new threads to
+     * be the same as the thread invoking this
+     * <tt>privilegedThreadFactory</tt> method.  A new
+     * <tt>privilegedThreadFactory</tt> can be created within an
+     * {@link AccessController#doPrivileged} action  to create
+     * threads with the selected permission settings holding within
+     * that action.  Alternatively, a factory can be used to create
+     * threads with any available access control context by first
+     * setting them in the current thread, and then invoking this
+     * method. 
+     *
+     * <p> Note that while tasks running within such threads will have
+     * the same access control and class loader settings as the
+     * current thread, they need not have the same {@link
+     * java.lang.ThreadLocal} or {@link
+     * java.lang.InheritableThreadLocal} values. If necessary,
+     * particular values of thread locals can be set or reset before
+     * any task runs in {@link ThreadPoolExecutor} subclasses using
+     * {@link ThreadPoolExecutor#beforeExecute}. Also, if it is
+     * necessary to initialize worker threads to have the same
+     * InheritableThreadLocal settings as some other designated
+     * thread, you can create a custom ThreadFactory in which that
+     * thread waits for and services requests to create others that
+     * will inherit its values.
+     *
+     * @return the thread factory
+     * @throws AccessControlException if the current access control
+     * context does not have permission to both get and set context
+     * class loader.
+     * @see PrivilegedFutureTask
+     */
+    public static ThreadFactory privilegedThreadFactory() {
+	return new PrivilegedThreadFactory();
+    }
+
+    static class DefaultThreadFactory implements ThreadFactory {
+	static final AtomicInteger poolNumber = new AtomicInteger(1);
+	final ThreadGroup group;
+	final AtomicInteger threadNumber = new AtomicInteger(1);
+	final String namePrefix;
+
+	DefaultThreadFactory() {
+            SecurityManager s = System.getSecurityManager();
+            group = (s != null)? s.getThreadGroup() :
+                                 Thread.currentThread().getThreadGroup();
+            namePrefix = "pool-" + 
+                          poolNumber.getAndIncrement() + 
+                         "-thread-";
+        }
+
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r, 
+                                  namePrefix + threadNumber.getAndIncrement(),
+                                  0);
+            if (t.isDaemon())
+                t.setDaemon(false);
+            if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        }
+    }
+
+    static class PrivilegedThreadFactory extends DefaultThreadFactory {
+        private final ClassLoader ccl;
+        private final AccessControlContext acc;
+
+        PrivilegedThreadFactory() {
+            super();
+            this.ccl = Thread.currentThread().getContextClassLoader();
+            this.acc = AccessController.getContext();
+            acc.checkPermission(new RuntimePermission("setContextClassLoader"));
+        }
+        
+        public Thread newThread(final Runnable r) {
+            return super.newThread(new Runnable() {
+                public void run() {
+                    AccessController.doPrivileged(new PrivilegedAction() {
+                        public Object run() { 
+                            Thread.currentThread().setContextClassLoader(ccl);
+                            r.run();
+                            return null; 
+                        }
+                    }, acc);
+                }
+            });
+        }
+        
+    }
+
         
     /** Cannot instantiate. */
     private Executors() {}

@@ -327,7 +327,24 @@ public class Semaphore implements java.io.Serializable {
             lock.unlock();
         }
     }
+
+    /**
+     * Shrink the number of available permits by the indicated
+     * reduction. This method can be useful in subclasses that
+     * use semaphores to track available resources that become
+     * unavailable. This method differs from <tt>acquire</tt>
+     * in that it does not block waiting for permits to become
+     * available.
+     * @param reduction the number of permits to remove
+     * @throws IllegalArgumentException if reduction is negative
+     */
+    protected void reducePermits(long reduction) {
+	if (reduction < 0) throw new IllegalArgumentException();
+	lock.lock();
+	try {
+	    count -= reduction;
+	} finally {
+	    lock.unlock();
+	}
+    }
 }
-
-
-

@@ -75,37 +75,10 @@ public class FutureTask<V> implements Future<V>, Runnable {
         return sync.innerCancel(mayInterruptIfRunning);
     }
     
-    /**
-     * Waits if necessary for execution to complete, and then
-     * retrieves its result.
-     *
-     * @return computed result
-     * @throws CancellationException if underlying computation was
-     * cancelled
-     * @throws ExecutionException if underlying computation threw an
-     * exception
-     * @throws InterruptedException if current thread was interrupted
-     * while waiting
-     */
     public V get() throws InterruptedException, ExecutionException {
         return sync.innerGet();
     }
 
-    /**
-     * Waits if necessary for at most the given time for execution to
-     * complete, and then retrieves its result, if available.
-     *
-     * @param timeout the maximum time to wait
-     * @param unit the time unit of the timeout argument
-     * @return computed result
-     * @throws CancellationException if underlying computation was
-     * cancelled
-     * @throws ExecutionException if underlying computation threw an
-     * exception
-     * @throws InterruptedException if current thread was interrupted
-     * while waiting
-     * @throws TimeoutException if the wait timed out
-     */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         return sync.innerGet(unit.toNanos(timeout));
@@ -150,8 +123,8 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     /**
-     * Executes the computation without setting result, and then
-     * resets this Future to initial state; failing to do so if the
+     * Executes the computation without setting its result, and then
+     * resets this Future to initial state, failing to do so if the
      * computation encounters an exception or is cancelled.  This is
      * designed for use with tasks that intrinsically execute more
      * than once.
@@ -163,7 +136,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
 
     /**
      * Synchronization control for FutureTask. Note that this must be
-     * a non-static inner class in order to invoke protected
+     * a non-static inner class in order to invoke the protected
      * <tt>done</tt> method. For clarity, all inner class support
      * methods are same as outer, prefixed with "inner".
      *

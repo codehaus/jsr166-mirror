@@ -66,7 +66,7 @@ public interface Future<V> {
      * or could not be cancelled for some other reason. If successful,
      * and this task has not started when <tt>cancel</tt> is called,
      * this task should never run.  If the task has already started,
-     * then the <tt>interruptIfRunning</tt> parameter determines
+     * then the <tt>mayInterruptIfRunning</tt> parameter determines
      * whether the thread executing this task should be interrupted in
      * an attempt to stop the task.
      *
@@ -99,29 +99,29 @@ public interface Future<V> {
     boolean isDone();
 
     /**
-     * Waits if necessary for computation to complete, and then
+     * Waits if necessary for the computation to complete, and then
      * retrieves its result.
      *
-     * @return computed result
-     * @throws CancellationException if this future was cancelled.
-     * @throws ExecutionException if underlying computation threw an
+     * @return the computed result
+     * @throws CancellationException if the computation was cancelled
+     * @throws ExecutionException if the computation threw an
      * exception
-     * @throws InterruptedException if current thread was interrupted
+     * @throws InterruptedException if the current thread was interrupted
      * while waiting
      */
     V get() throws InterruptedException, ExecutionException;
 
     /**
      * Waits if necessary for at most the given time for the computation
-     * to complete, and then retrieves its result.
+     * to complete, and then retrieves its result, if available.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
-     * @return computed result
-     * @throws CancellationException if this future was cancelled.
-     * @throws ExecutionException if underlying computation threw an
+     * @return the computed result
+     * @throws CancellationException if the computation was cancelled
+     * @throws ExecutionException if the computation threw an
      * exception
-     * @throws InterruptedException if current thread was interrupted
+     * @throws InterruptedException if the current thread was interrupted
      * while waiting
      * @throws TimeoutException if the wait timed out
      */

@@ -255,7 +255,7 @@ public class CyclicBarrier {
      * thread; or
      * <li>Some other thread  {@link Thread#interrupt interrupts} one of the
      * other waiting threads; or
-     * <li>Some other thread  times out while waiting for barrier; or
+     * <li>Some other thread times out while waiting for barrier; or
      * <li>Some other thread invokes {@link #reset} on this barrier.
      * </ul>
      * <p>If the current thread:
@@ -317,7 +317,7 @@ public class CyclicBarrier {
      * thread; or
      * <li>Some other thread  {@link Thread#interrupt interrupts} one of the
      * other waiting threads; or
-     * <li>Some other thread  times out while waiting for barrier; or
+     * <li>Some other thread times out while waiting for barrier; or
      * <li>Some other thread invokes {@link #reset} on this barrier.
      * </ul>
      * <p>If the current thread:

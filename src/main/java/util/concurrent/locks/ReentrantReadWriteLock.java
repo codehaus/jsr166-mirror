@@ -901,9 +901,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
     
     /**
-     * Queries the number of read locks held for this lock. This method is
-     * designed for use in monitoring  system state, 
-     * not for synchronization control.
+     * Queries the number of read locks held for this lock. This
+     * method is designed for use in monitoring system state, not for
+     * synchronization control.
      * @return the number of read locks held.
      */
     public int getReadLockCount() {
@@ -912,8 +912,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Queries if the write lock is held by any thread. This method is
-     * designed for use in monitoring  system state, 
-     * not for synchronization control.
+     * designed for use in monitoring system state, not for
+     * synchronization control.
      * @return <tt>true</tt> if any thread holds write lock and 
      * <tt>false</tt> otherwise.
      */

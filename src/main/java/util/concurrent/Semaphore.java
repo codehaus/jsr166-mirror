@@ -453,8 +453,8 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Acquires the given number of permits from this semaphore, only if 
-     * all are available at the  time of invocation.
+     * Acquires the given number of permits from this semaphore, only
+     * if all are available at the time of invocation.
      * <p>Acquires the given number of permits, if they are available, and 
      * returns immediately, with the value <tt>true</tt>,
      * reducing the number of available permits by the given amount.
@@ -589,11 +589,10 @@ public class Semaphore implements java.io.Serializable {
 
     /**
      * Shrink the number of available permits by the indicated
-     * reduction. This method can be useful in subclasses that
-     * use semaphores to track  resources that become
-     * unavailable. This method differs from <tt>acquire</tt>
-     * in that it does not block waiting for permits to become
-     * available.
+     * reduction. This method can be useful in subclasses that use
+     * semaphores to track resources that become unavailable. This
+     * method differs from <tt>acquire</tt> in that it does not block
+     * waiting for permits to become available.
      * @param reduction the number of permits to remove
      * @throws IllegalArgumentException if reduction is negative
      */
@@ -652,7 +651,7 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Returns a string identifying this semaphore, as well its state.
+     * Returns a string identifying this semaphore, as well as its state.
      * The state, in brackets, includes the String 
      * &quot;Permits =&quot; followed by the number of permits.
      * @return a string identifying this semaphore, as well as its

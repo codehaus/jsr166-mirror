@@ -93,13 +93,12 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Replace the held array with a copy of the <tt>n</tt>
-     * elements of the provided array, starting at position
-     * <tt>first</tt>.  To copy an entire array, call with
-     * arguments (array, 0, array.length).
+     * Replace the held array with a copy of the <tt>n</tt> elements
+     * of the provided array, starting at position <tt>first</tt>.  To
+     * copy an entire array, call with arguments (array, 0,
+     * array.length).
      * @param toCopyIn the array. A copy of the indicated elements of
-     * this  array is used as the
-     * internal array.
+     * this array is used as the internal array.
      * @param first The index of first position of the array to
      * start copying from.
      * @param n the number of elements to copy. This will be the new size of

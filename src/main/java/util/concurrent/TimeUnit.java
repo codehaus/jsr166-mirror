@@ -170,7 +170,7 @@ public enum TimeUnit {
      * into the form required by the <tt>Object.wait</tt> method.
      *
      * <p>For example, you could implement a blocking <tt>poll</tt>
-     * method (see {@link BlockingQueue#poll BlockingQueue.poll}
+     * method (see {@link BlockingQueue#poll BlockingQueue.poll})
      * using:
      *
      * <pre>  public synchronized  Object poll(long timeout, TimeUnit unit) throws InterruptedException {

@@ -30,7 +30,7 @@ import java.security.PrivilegedExceptionAction;
  *        that sets newly created threads to a known state.
  *   <li> Methods that create and return a {@link Callable} 
  *        out of other closure-like forms, so they can be used
- *        in execution methods requiring <tt>Callable</tt>
+ *        in execution methods requiring <tt>Callable</tt>.
  * </ul>
  *
  * @since 1.5
@@ -317,7 +317,7 @@ public class Executors {
 
     /**
      * Returns a {@link Callable} object that, when
-     * called, runs the given task and returns <tt>null</tt>
+     * called, runs the given task and returns <tt>null</tt>.
      * @param task the task to run
      * @return a callable object
      * @throws NullPointerException if task null
@@ -330,7 +330,7 @@ public class Executors {
 
     /**
      * Returns a {@link Callable} object that, when
-     * called, runs the given privileged action and returns its result
+     * called, runs the given privileged action and returns its result.
      * @param action the privileged action to run
      * @return a callable object
      * @throws NullPointerException if action null
@@ -344,7 +344,7 @@ public class Executors {
     /**
      * Returns a {@link Callable} object that, when
      * called, runs the given privileged exception action and returns
-     * its result
+     * its result.
      * @param action the privileged exception action to run
      * @return a callable object
      * @throws NullPointerException if action null

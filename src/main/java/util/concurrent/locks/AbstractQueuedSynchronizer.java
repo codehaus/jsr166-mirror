@@ -1380,7 +1380,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * state.  The state, in brackets, includes the String &quot;State
      * =&quot; followed by the current value of {@link #getState}, and
      * either &quot;nonempty&quot; or &quot;empty&quot; depending on
-     * whether the  queue is empty.
+     * whether the queue is empty.
      *
      * @return a string identifying this synchronizer, as well as its state.
      */

@@ -23,15 +23,12 @@ package java.util.concurrent;
  * <pre>
  * interface ArchiveSearcher { String search(String target); }
  * class App {
- *   Executor executor = ...
+ *   ExecutorService executor = ...
  *   ArchiveSearcher searcher = ...
  *   void showSearch(final String target) throws InterruptedException {
- *     Future&lt;String&gt; future =
- *       new FutureTask&lt;String&gt;(new Callable&lt;String&gt;() {
- *         public String call() {
- *           return searcher.search(target);
- *       }});
- *     executor.execute(future);
+ *     Future&lt;String&gt; future = executor.submit(new Callable&lt;String&gt;() {
+ *         public String call() { return searcher.search(target); }
+ *     });
  *     displayOtherThings(); // do other things while searching
  *     try {
  *       displayText(future.get()); // use future
@@ -40,15 +37,16 @@ package java.util.concurrent;
  * }
  * </pre>
  *
- * The {@link Executors} class contains more convenient methods 
- * for common usages. For example, the above explicit
- * construction could be replaced with:
+ * The {@link FutureTask} class is an implementation of <tt>Future</tt> that 
+ * implements <tt>Runnable</tt>, and so may be executed by an <tt>Executor</tt>. 
+ * For example, the above construction with <tt>submit</tt> could be replaced by:
  * <pre>
- * Future&lt;String&gt; future = Executors.execute(executor, 
- *    new Callable&lt;String&gt;() {
- *       public String call() {
- *         return searcher.search(target);
- *    }});
+ *     FutureTask&lt;String&gt; future =
+ *       new FutureTask&lt;String&gt;(new Callable&lt;String&gt;() {
+ *         public String call() {
+ *           return searcher.search(target);
+ *       }});
+ *     executor.execute(future);
  * </pre>
  * @see FutureTask
  * @see Executor

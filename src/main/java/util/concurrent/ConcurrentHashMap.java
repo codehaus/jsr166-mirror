@@ -888,7 +888,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param t Mappings to be stored in this map.
      */
     public void putAll(Map<? extends K, ? extends V> t) {
-        for (Iterator<Map.Entry<? extends K, ? extends V>> it = (Iterator<Map.Entry<? extends K, ? extends V>>) t.entrySet().iterator(); it.hasNext(); ) {
+        for (Iterator<? extends Map.Entry<? extends K, ? extends V>> it = (Iterator<? extends Map.Entry<? extends K, ? extends V>>) t.entrySet().iterator(); it.hasNext(); ) {
             Entry<? extends K, ? extends V> e = it.next();
             put(e.getKey(), e.getValue());
         }

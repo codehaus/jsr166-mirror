@@ -481,6 +481,50 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
+     * hasWaiters throws NPE if null
+     */
+    public void testHasWaitersNPE() {
+	final ReentrantLock lock = new ReentrantLock();
+        try {
+            lock.hasWaiters(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * getWaitQueueLength throws NPE if null
+     */
+    public void testGetWaitQueueLengthNPE() {
+	final ReentrantLock lock = new ReentrantLock();
+        try {
+            lock.getWaitQueueLength(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+
+    /**
+     * getWaitingThreads throws NPE if null
+     */
+    public void testGetWaitingThreadsNPE() {
+	final PublicReentrantLock lock = new PublicReentrantLock();
+        try {
+            lock.getWaitingThreads(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+
+    /**
      * hasWaiters throws IAE if not owned
      */
     public void testHasWaitersIAE() {

@@ -202,7 +202,9 @@ public enum TimeUnit {
      /**
       * Equivalent to <tt>SECONDS.convert(duration, this)</tt>.
       * @param duration the duration
-      * @return the converted duration.
+      * @return the converted duration,
+      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
       * @see #convert
       */
      public abstract long toSeconds(long duration);
@@ -210,7 +212,9 @@ public enum TimeUnit {
      /**
       * Equivalent to <tt>MINUTES.convert(duration, this)</tt>.
       * @param duration the duration
-      * @return the converted duration.
+      * @return the converted duration,
+      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
       * @see #convert
       */
      public abstract long toMinutes(long duration);
@@ -218,7 +222,9 @@ public enum TimeUnit {
      /**
       * Equivalent to <tt>HOURS.convert(duration, this)</tt>.
       * @param duration the duration
-      * @return the converted duration.
+      * @return the converted duration,
+      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
       * @see #convert
       */
      public abstract long toHours(long duration);
@@ -226,7 +232,7 @@ public enum TimeUnit {
      /**
       * Equivalent to <tt>DAYS.convert(duration, this)</tt>.
       * @param duration the duration
-      * @return the converted duration.
+      * @return the converted duration
       * @see #convert
       */
      public abstract long toDays(long duration);

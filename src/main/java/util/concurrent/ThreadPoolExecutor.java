@@ -32,65 +32,44 @@ import java.util.*;
  * automatic thread reclamation), {@link Executors#newFixedThreadPool}
  * (fixed size thread pool) and {@link
  * Executors#newSingleThreadExecutor} (single background thread), that
- * preconfigure settings for the most common usage scenarios.
+ * preconfigure settings for the most common usage scenarios. Use the
+ * following guide when manually configuring and tuning
+ * <tt>ThreadPoolExecutors</tt>:
  *
- *
- * <h3>Tuning guide</h3>
  * <dl>
  *
- * <dt>Core and maximum pool size</dt>
+ * <dt>Core and maximum pool sizes</dt>
  *
  * <dd>A <tt>ThreadPoolExecutor</tt> will automatically adjust the
- * pool size according to the bounds set by corePoolSize and
- * maximumPoolSize.  When a new task is submitted, and fewer than
- * corePoolSize threads are running, a new thread is created to handle
- * the request, even if other worker threads are idle.  If there are
- * more than the corePoolSize but less than maximumPoolSize threads
- * running, a new thread will be created only if the queue is full.
- * By setting corePoolSize and maximumPoolSize the same, you create a
- * fixed-size thread pool. By default, even core threads are only
- * created and started when needed by new tasks, but this can be
- * overridden dynamically using method <tt>prestartCoreThread</tt>.
- * </dd>
+ * pool size 
+ * (see {@link ThreadPoolExecutor#getPoolSize})
+ * according to the bounds set by corePoolSize 
+ * (see {@link ThreadPoolExecutor#getCorePoolSize})
+ * and
+ * maximumPoolSize
+ * (see {@link ThreadPoolExecutor#getMaximumPoolSize}).
+ * When a new task is submitted in method {@link
+ * ThreadPoolExecutor#execute}, and fewer than corePoolSize threads
+ * are running, a new thread is created to handle the request, even if
+ * other worker threads are idle.  If there are more than
+ * corePoolSize but less than maximumPoolSize threads running, a new
+ * thread will be created only if the queue is full.  By setting
+ * corePoolSize and maximumPoolSize the same, you create a fixed-size
+ * thread pool. By setting maximumPoolSize to an essentially unbounded
+ * value such as <tt>Integer.MAX_VALUE</tt>, you allow the pool to
+ * accomodate an arbitrary number of concurrent tasks. Most typically,
+ * core and maximum pool sizes are set only upon construction, but they
+ * may also be changed dynamically using {@link
+ * ThreadPoolExecutor#setCorePoolSize} and {@link
+ * ThreadPoolExecutor#setMaximumPoolSize}. <dd>
  *
- * <dt>Keep-alive</dt>
+ * <dt> On-demand construction
  *
- * <dd>The keepAliveTime determines what happens to idle threads.  If
- * the pool currently has more than the core number of threads, excess
- * threads will be terminated if they have been idle for more than the
- * keepAliveTime.</dd>
- *
- * <dt>Queueing</dt>
- *
- * <dd>Any {@link BlockingQueue} may be used to transfer and hold
- * submitted tasks.  A good default is a {@link SynchronousQueue} that
- * hands off tasks to threads without otherwise holding them.  This
- * policy avoids lockups when handling sets of requests that might
- * have internal dependencies.  Using an unbounded queue (for example
- * a {@link LinkedBlockingQueue}) will cause new tasks to be queued in
- * cases where all corePoolSize threads are busy, so no more than
- * corePoolSize threads will be created.  This may be appropriate when
- * each task is completely independent of others, so tasks cannot
- * affect each others execution; for example, in a web page server.
- * When given a choice, a <tt>ThreadPoolExecutor</tt> always prefers
- * adding a new thread rather than queueing if there are currently
- * fewer than the current getCorePoolSize threads running, but
- * otherwise always prefers queuing a request rather than adding a new
- * thread.
- *
- * <p>While queuing can be useful in smoothing out transient bursts of
- * requests, especially in socket-based services, it is not very well
- * behaved when commands continue to arrive on average faster than
- * they can be processed.  Queue sizes and maximum pool sizes can
- * often be traded off for each other. Using large queues and small
- * pools minimizes CPU usage, OS resources, and context-switching
- * overhead, but can lead to artifically low throughput.  If tasks
- * frequently block (for example if they are I/O bound), a system may
- * be able to schedule time for more threads than you otherwise
- * allow. Use of small queues or queueless handoffs generally requires
- * larger pool sizes, which keeps CPUs busier but may encounter
- * unacceptable scheduling overhead, which also decreases throughput.
- * </dd>
+ * <dd> By default, even core threads are initially created and
+ * started only when needed by new tasks, but this can be overridden
+ * dynamically using method {@link
+ * ThreadPoolExecutor#prestartCoreThread} or
+ * {@link ThreadPoolExecutor#prestartAllCoreThreads}.  </dd>
  *
  * <dt>Creating new threads</dt>
  *
@@ -100,25 +79,145 @@ import java.util.*;
  * ThreadFactory, you can alter the thread's name, thread group,
  * priority, daemon status, etc.  </dd>
  *
- * <dt>Before and after intercepts</dt>
+ * <dt>Keep-alive times</dt>
  *
- * <dd>This class has overridable methods that are called before and
- * after execution of each task.  These can be used to manipulate the
- * execution environment, for example, reinitializing ThreadLocals,
- * gathering statistics, or adding log entries.  </dd>
+ * <dd>If the pool currently has more than corePoolSize threads,
+ * excess threads will be terminated if they have been idle for more
+ * than the keepAliveTime (see {@link
+ * ThreadPoolExecutor#getKeepAliveTime}). This provides a means of
+ * reducing resource consumption when the pool is not being actively
+ * used. If the pool becomes more active later, new threads will be
+ * constructed. This parameter can also be changed dynamically
+ * using method {@link ThreadPoolExecutor#setKeepAliveTime}. Using
+ * a value of <tt>Long.MAX_VALUE</tt> {@link TimeUnit#NANOSECONDS}
+ * effectively disables idle threads from ever terminating prior
+ * to shut down.
+ * </dd>
+ *
+ * <dt>Queueing</dt>
+ *
+ * <dd>Any {@link BlockingQueue} may be used to transfer and hold
+ * submitted tasks.  The use of this queue interacts with pool sizing:
+ *
+ * <ul>
+ *
+ * <li> If fewer than corePoolSize threads are running, a
+ * <tt>ThreadPoolExecutor</tt> always prefers adding a new thread
+ * rather than queueing.</li>
+ *
+ * <li> If corePoolSize or more threads are running, a
+ * <tt>ThreadPoolExecutor</tt>
+ * always prefers queuing a request rather than adding a new thread.</li>
+ * 
+ * <li> If a request cannot be queued, a new thread is created unless
+ * this would exceed maximumPoolSize, in which case, the task will be
+ * rejected.</li>
+ *
+ * </ul>
+ *
+ * There are three general strategies for queuing:
+ * <ol>
+ *
+ * <li> <em> Direct handoffs.</em> A good default choice for a work
+ * queue is a {@link SynchronousQueue} that hands off tasks to threads
+ * without otherwise holding them. Here, an attempt to queue a task
+ * will fail if no threads are immediately available to run it, so a
+ * new thread will be constructed. This policy avoids lockups when
+ * handling sets of requests that might have internal dependencies.
+ * Direct handoffs generally require unbounded maximumPoolSizes to
+ * avoid rejection of new submitted tasks, which in turn admit the
+ * possibility of unbounded thread growth when commands continue to
+ * arrive on average faster than they can be processed.  </li>
+ *
+ * <li><em> Unbounded queues.</em> Using an unbounded queue (for
+ * example a {@link LinkedBlockingQueue} without a predefined
+ * capacity) will cause new tasks to be queued in cases where all
+ * corePoolSize threads are busy, so no more than corePoolSize threads
+ * will be created.  This may be appropriate when each task is
+ * completely independent of others, so tasks cannot affect each
+ * others execution; for example, in a web page server.  While this
+ * style of queuing can be useful in smoothing out transient bursts of
+ * requests, it admits the possibility of unbounded work queue growth
+ * when commands continue to arrive on average faster than they can be
+ * processed.  </li>
+ *
+ * <li><em>Bounded queues.</em> A bounded queue (for example, an
+ * {@link ArrayBlockingQueue}) helps prevent resource exhaustion when
+ * used with finite maximumPoolSizes, but can be more difficult to
+ * tune and control.  Queue sizes and maximum pool sizes may be traded
+ * off for each other: Using large queues and small pools minimizes
+ * CPU usage, OS resources, and context-switching overhead, but can
+ * lead to artifically low throughput.  If tasks frequently block (for
+ * example if they are I/O bound), a system may be able to schedule
+ * time for more threads than you otherwise allow. Use of small queues
+ * or queueless handoffs generally requires larger pool sizes, which
+ * keeps CPUs busier but may encounter unacceptable scheduling
+ * overhead, which also decreases throughput.  </li>
+ *
+ * </ol>
+ *
+ * </dd>
  *
  * <dt>Rejected tasks</dt>
  *
- * <dd>There are a number of factors which can bound the number of
- * tasks which can execute at once, including the maximum pool size
- * and the queuing mechanism used.  If the executor determines that a
- * task cannot be executed because it has been refused by the queue
- * and no threads are available, or because the executor has been shut
- * down, the {@link RejectedExecutionHandler}
- * <tt>rejectedExecution</tt> method is invoked. The default
- * (<tt>AbortPolicy</tt>) handler throws a runtime {@link
- * RejectedExecutionException} upon rejection.  </dd>
+ * <dd> New tasks submitted in method {@link
+ * ThreadPoolExecutor#execute} will be <em>rejected</em> when the
+ * Executor has been shut down, and also when the Executor uses finite
+ * bounds for both maximum threads and work queue capacity, and is
+ * saturated.  In both cases, the <tt>execute</tt> method invokes its
+ * {@link RejectedExecutionHandler} {@link
+ * RejectedExecutionHandler#rejectedExecution} method.  Four
+ * predefined handler policies are provided:
  *
+ * <ol>
+ *
+ * <li> In the
+ * default {@link ThreadPoolExecutor.AbortPolicy}, the handler throws a
+ * runtime {@link RejectedExecutionException} upon rejection. </li>
+ * 
+ * <li> In {@link
+ * ThreadPoolExecutor.CallerRunsPolicy}, the thread that invokes
+ * <tt>execute</tt> itself runs the task. This provides a simple
+ * feedback control mechanism that will slow down the rate that new
+ * tasks are submitted. </li>
+ *
+ * <li> In {@link ThreadPoolExecutor.DiscardPolicy},
+ * a task that cannot be executed is simply dropped.  </li>
+ *
+ * <li>In {@link
+ * ThreadPoolExecutor.DiscardOldestPolicy}, if the executor is not
+ * shut down, the task at the head of the work queue is dropped, and
+ * then execution is retried (which can fail again, causing this to be
+ * repeated.) </li>
+ *
+ * </ol>
+ *
+ * It is possible to define and use other kinds of {@link
+ * RejectedExecutionHandler} classes. Doing so requires some care
+ * especially when policies are designed to work only under particular
+ * capacity or queueing policies. </dd>
+ *
+ * <dt>Hook methods</dt>
+ *
+ * <dd>This class has <tt>protected</tt> overridable {@link
+ * ThreadPoolExecutor#beforeExecute} and {@link
+ * ThreadPoolExecutor#afterExecute} methods that are called before and
+ * after execution of each task.  These can be used to manipulate the
+ * execution environment, for example, reinitializing ThreadLocals,
+ * gathering statistics, or adding log entries. Additionally, method
+ * {@link ThreadPoolExecutor#terminated} can be overridden to perform
+ * any special processing that needs to be done once the Executor has
+ * fully terminated.</dd>
+ *
+ * <dt>Queue maintenance</dt>
+ *
+ * <dd> Method {@link ThreadPoolExecutor#getQueue} allows access
+ * to the work queue for purposes of monitoring and debugging.
+ * Use of this method for any other purpose is strongly discouraged.
+ * Two supplied methods, {@link ThreadPoolExecutor#remove} and
+ * {@link ThreadPoolExecutor#purge} are available to assist in
+ * storage reclamation when large numbers of not-yet-executed
+ * tasks become cancelled.</dd>
  * </dl>
  *
  * @since 1.5
@@ -1151,9 +1250,10 @@ public class ThreadPoolExecutor implements ExecutorService {
     protected void terminated() { }
 
     /**
-     * A handler for unexecutable tasks that runs these tasks directly
-     * in the calling thread of the <tt>execute</tt> method.  This is
-     * the default <tt>RejectedExecutionHandler</tt>.
+     * A handler for rejected tasks that runs the rejected task
+     * directly in the calling thread of the <tt>execute</tt> method,
+     * unless the executor has been shut down, in which case the task
+     * is discarded.
      */
    public static class CallerRunsPolicy implements RejectedExecutionHandler {
 
@@ -1170,7 +1270,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * A handler for unexecutable tasks that throws a
+     * A handler for rejected tasks that throws a
      * <tt>RejectedExecutionException</tt>.
      */
     public static class AbortPolicy implements RejectedExecutionHandler {
@@ -1186,29 +1286,8 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * A handler for unexecutable tasks that waits until the task can be
-     * submitted for execution.
-     */
-    public static class WaitPolicy implements RejectedExecutionHandler {
-        /**
-         * Constructs a <tt>WaitPolicy</tt>.
-         */
-        public WaitPolicy() { }
-
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-            if (!e.isShutdown()) {
-                try {
-                    e.getQueue().put(r);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    throw new RejectedExecutionException(ie);
-                }
-            }
-        }
-    }
-
-    /**
-     * A handler for unexecutable tasks that silently discards these tasks.
+     * A handler for rejected tasks that silently discards the
+     * rejected task.
      */
     public static class DiscardPolicy implements RejectedExecutionHandler {
 
@@ -1222,8 +1301,9 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * A handler for unexecutable tasks that discards the oldest
-     * unhandled request.
+     * A handler for rejected tasks that discards the oldest unhandled
+     * request and then retries <tt>execute</tt>, unless the executor
+     * is shut down, in which case the task is discarded.
      */
     public static class DiscardOldestPolicy implements RejectedExecutionHandler {
         /**

@@ -15,33 +15,26 @@ import java.io.*;
  */
 public class Mutex implements Lock, java.io.Serializable {
     private static class Sync extends AbstractQueuedSynchronizer {
-        public int acquireExclusiveState(boolean isQueued, int acquires) {
+        public boolean isLocked() { return getState() == 1; }
+
+        public boolean tryAcquireExclusiveState(boolean isQueued, int acquires) {
             assert acquires == 1; // Does not use multiple acquires
-            return compareAndSet(0, 1)? 0 : -1;
+            return compareAndSetState(0, 1);
         }
             
         public boolean releaseExclusiveState(int releases) {
-            set(0);
+            setState(0);
             return true;
         }
-            
-        public int acquireSharedState(boolean isQueued, int acquires) {
-            throw new UnsupportedOperationException();
-        }
-            
-        public boolean releaseSharedState(int releases) {
-            throw new UnsupportedOperationException();
-        }
-            
         public void checkConditionAccess(Thread thread, boolean waiting) {
-            if (get() == 0) throw new IllegalMonitorStateException();
+            if (!isLocked()) throw new IllegalMonitorStateException();
         }
             
         Condition newCondition() { return new ConditionObject(); }
             
         private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
             s.defaultReadObject();
-            set(0); // reset to unlocked state
+            setState(0); // reset to unlocked state
         }
     }
         
@@ -50,7 +43,7 @@ public class Mutex implements Lock, java.io.Serializable {
         sync.acquireExclusiveUninterruptibly(1);  
     }
     public boolean tryLock() { 
-        return sync.acquireExclusiveState(false, 1) >= 0;
+        return sync.tryAcquireExclusiveState(false, 1);
     }
     public void lockInterruptibly() throws InterruptedException { 
         sync.acquireExclusiveInterruptibly(1);
@@ -60,6 +53,6 @@ public class Mutex implements Lock, java.io.Serializable {
     }
     public void unlock() { sync.releaseExclusive(1); }
     public Condition newCondition() { return sync.newCondition(); }
-    public boolean isLocked() { return sync.get() != 0; }
+    public boolean isLocked() { return sync.isLocked(); }
     public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
 }

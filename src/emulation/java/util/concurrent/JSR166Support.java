@@ -4,7 +4,7 @@ package java.util.concurrent;
 /**
  * Package-private native methods for classes introduced in JSR166
  */
-final class JSR166Support {
+public final class JSR166Support {
     /**
      *  implementation of trylock entry in Locks.attempt.
      */
@@ -77,11 +77,14 @@ final class JSR166Support {
      * @param time the deadline or timeout. If zero and isAbsolute is
      * false, means to wait forever.
      */
-    static void park(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
+    public static void park(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
         try {
             synchronized(node) {
-                if ( (node.parkSemaphore = (node.parkSemaphore > 0) ? 0 : -1) ==0)
+                int s = node.parkSemaphore;
+                if (s > 0) {
+                    node.parkSemaphore = 0;
                     return;
+                }
                 if (time == 0) 
                     node.wait();
                 else if (!isAbsolute) {
@@ -109,13 +112,14 @@ final class JSR166Support {
      * subsequent call to park not to block. 
      * @param thread the thread to unpark (no-op if null).
      */
-    static void unpark(ReentrantLockQueueNode node, Thread thread) {
+    public static void unpark(ReentrantLockQueueNode node, Thread thread) {
         if (node == null)
             return;
         synchronized(node) {
-            if ( (node.parkSemaphore = (node.parkSemaphore < 0)? 0 : 1) != 0)
-                return;
-            node.notifyAll();
+            int s = node.parkSemaphore;
+            node.parkSemaphore = 1;
+            if (s < 1)
+                node.notify();
         }
     }
 

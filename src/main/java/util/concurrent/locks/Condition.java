@@ -4,7 +4,8 @@
  * redistribute this code in any way without acknowledgement.
  */
 
-package java.util.concurrent;
+package java.util.concurrent.locks;
+import java.util.concurrent.*;
 import java.util.Date;
 
 /**
@@ -176,8 +177,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/26 05:42:58 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/07/08 00:46:41 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public interface Condition {

@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-
+import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
@@ -137,7 +137,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:49 $
+ * @revised $Date: 2003/07/08 00:46:35 $
  * @editor $Author: dl $
  * @author Doug Lea
  */

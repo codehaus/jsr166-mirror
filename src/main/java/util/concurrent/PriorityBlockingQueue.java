@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
@@ -17,7 +18,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
     private final PriorityQueue<E> q;
-    //    private final FairReentrantLock lock = new FairReentrantLock();
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
 

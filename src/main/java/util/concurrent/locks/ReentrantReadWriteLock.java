@@ -4,24 +4,27 @@
  * redistribute this code in any way without acknowledgement.
  */
 
-package java.util.concurrent;
+package java.util.concurrent.locks;
+import java.util.concurrent.*;
 
 /**
  * An implementation of {@link ReadWriteLock} supporting similar
  * semantics to {@link ReentrantLock}.
  * <p>This class has the following properties:
+ *
  * <ul>
  * <li><b>Acquisition order</b>
+ *
  * <p> This class does not impose a reader or writer preference
- * ordering for lock access. Instead, threads contend using an
- * approximately arrival-order policy. The actual order depends on the
- * order in which an internal {@link FairReentrantLock} is granted, but
- * essentially when the write lock is released either the single writer
- * at the notional head of the queue will be assigned the write lock, or
- * the set of readers at the head of the queue will be assigned the read lock.
- * <p>If readers are active and a writer arrives then no subsequent readers
- * will be granted the read lock until after that writer has acquired and 
- * released the write lock.
+ * ordering for lock access.  However, it does support an optional
+ * <em>fairness</em> policy.  When constructed as fair, threads
+ * contend using an approximately arrival-order policy. When the write
+ * lock is released either longest-waiting single writer will be
+ * assigned the write lock, or if there is a reader waiting longer
+ * than any writer, the set of readers will be assigned the read lock.
+ * <p>If readers are active and a writer arrives then no subsequent
+ * readers will be granted the read lock until after that writer has
+ * acquired and released the write lock.
  * 
  * <li><b>Reentrancy</b>
  * <p>This lock allows both readers and writers to reacquire read or
@@ -109,7 +112,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/26 10:47:35 $
+ * @revised $Date: 2003/07/08 00:46:42 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -121,15 +124,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
       deserialized locks are in initial unlocked state.
     */
 
-    /** Inner class providing readlock */
-    private final Lock readerLock = new ReaderLock();
-    /** Inner class providing writelock */
-    private final Lock writerLock = new WriterLock();
-
-    public Lock writeLock() { return writerLock; }
-
-    public Lock readLock() { return readerLock; }
-
     /** 
      * Main lock.  Writers acquire on entry, and hold until release.
      * Reentrant acquires on write lock are allowed.  Readers acquire
@@ -138,7 +132,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * subclass defined below that surrounds WriteLock condition waits
      * with bookeeping to save and restore writer state.
      **/
-    private final RRWLock entryLock = new RRWLock();
+    private final RRWLock entryLock;
 
     /** 
      * Number of threads that have entered read lock.  This is never
@@ -250,6 +244,32 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
     }
 
+    /**
+     * Creates a new <tt>ReentrantReadWriteLock</tt> with
+     * default ordering properties.
+     */
+    public ReentrantReadWriteLock() {
+        entryLock = new RRWLock();
+    }
+
+
+    /**
+     * Creates a new <tt>ReentrantReadWriteLock</tt> with
+     * the given fairness policy
+     * @param fair true if this lock should use a fair ordering policy
+     */
+    public ReentrantReadWriteLock(boolean fair) {
+        entryLock = new RRWLock(fair);
+    }
+
+    /** Inner class providing readlock */
+    private final Lock readerLock = new ReaderLock();
+    /** Inner class providing writelock */
+    private final Lock writerLock = new WriterLock();
+
+    public Lock writeLock() { return writerLock; }
+
+    public Lock readLock() { return readerLock; }
 
     /**
      * The Reader lock
@@ -357,7 +377,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-            long startTime = JSR166Support.currentTimeNanos();
+            long startTime = TimeUnit.nanoTime();
             long nanos = unit.toNanos(time);
             if (!entryLock.tryLock(nanos, TimeUnit.NANOSECONDS)) 
                 return false;
@@ -365,7 +385,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             if (entryLock.getHoldCount() > 1) 
                 return true;
             
-            nanos -= JSR166Support.currentTimeNanos() - startTime;
+            nanos -= TimeUnit.nanoTime() - startTime;
             try {
                 if (!tryWriterEnter(nanos)) {
                     entryLock.unlock();
@@ -400,7 +420,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Subclass of ReentrantLock to adjust fields on entry and exit to
      * condition waits.
      */
-    class RRWLock extends FairReentrantLock {
+    private class RRWLock extends ReentrantLock {
+        RRWLock() {}
+        RRWLock(boolean fair) { super(fair); }
         
         void beforeWait() {
             writing = false;

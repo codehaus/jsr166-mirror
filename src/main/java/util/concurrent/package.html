@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Concurrency Utilities</title>
+</head>
+
+<body>
+
+<p> Package java.util.concurrent contains utility classes commonly
+useful in concurrent programming. Like package java.util, it includes
+a few small standardized extensible frameworks, as well as some
+classes that provide useful functionality and are otherwise tedious or
+difficult to implement.  Here are brief descriptions of the main
+components. See also the <tt>locks</tt> and <tt>atomic</tt> packages.
+
+<h2>Executors</h2>
+
+{@link java.util.concurrent.Executor} is a simple standardized
+interface for defining custom thread-like subsystems, including thread
+pools, asynch-IO, and lightweight task frameworks.  Depending on which
+concrete Executor class is being used, tasks may execute in a newly
+created thread, an existing task-execution thread, or the thread
+calling <tt>execute()</tt>, and may execute sequentially or
+concurrently.  Executors also standardize ways of calling threads that
+compute functions returning results, via a {@link
+java.util.concurrent.Future}. This is supported in part by defining
+interface {@link java.util.concurrent.Callable}, the argument/result
+analog of Runnable.
+ 
+<p> {@link java.util.concurrent.ExecutorService} provides a more
+complete framework for executing Runnables.  An ExecutorService
+manages queueing and scheduling of tasks, and allows controlled
+shutdown.  The two primary implementations of ExecutorService are
+{@link java.util.concurrent.ThreadPoolExecutor}, a highly tunable and
+flexible thread pool and {@link
+java.util.concurrent.ScheduledExecutor}, which adds support for
+delayed and periodic task execution.  These, and other Executors can
+be used in conjunction with a {@link java.util.concurrent.FutureTask} 
+to asynchronously
+start a potentially long-running computation and query the FutureTask
+to determine if its execution has completed, or cancel it.
+
+<p> The {@link java.util.concurrent.Executors} class provides factory
+methods for the most common kinds and styles of Executors, as well as
+a few utilities methods for using them.
+
+<h2>Queues</h2>
+
+ The java.util.concurrent {@link
+java.util.concurrent.ConcurrentLinkedQueue} class supplies an
+efficient sclable thread-safe non-blocking FIFO queue.
+
+<p> Five implementations in java.util.concurrent support the extended
+{@link java.util.concurrent.BlockingQueue} interface, that defines
+blocking versions of put and take: {@link
+java.util.concurrent.LinkedBlockingQueue}, {@link
+java.util.concurrent.ArrayBlockingQueue}, {@link
+java.util.concurrent.SynchronousQueue}, {@link
+java.util.concurrent.PriorityBlockingQueue}, and {@link
+java.util.concurrent.DelayQueue}.
+
+
+<h2>Timing</h2>
+
+The {@link java.util.concurrent.TimeUnit} class provides multiple
+granularities (including nanoseconds) for both accessing time and
+performing time-out based operations.
+
+<h2>Synchronizers</h2>
+
+Five classes aid common special-purpose synchronization idioms.
+{@link java.util.concurrent.Semaphore} and {@link
+java.util.concurrent.FairSemaphore} are classic concurrency tools.
+{@link java.util.concurrent.CountDownLatch} is very simple yet very
+common utility for blocking until a single signal, event, or condition
+holds.  A {@link java.util.concurrent.CyclicBarrier} is a resettable multiway
+synchronization point common in some styles of parallel
+programming. An {@link java.util.concurrent.Exchanger} allows two
+threads to exchange objects at a rendezvous point.
+
+<h2>Concurrent Collections</h2>
+
+Besides Queues, this package supplies a few Collection implementations
+designed for use in multithreaded contexts: {@link
+java.util.concurrent.ConcurrentHashMap}, {@link
+java.util.concurrent.CopyOnWriteArrayList}, and {@link
+java.util.concurrent.CopyOnWriteArraySet}.
+
+<p>The "Concurrent" prefix for classes is a shorthand
+indicating several differences from similar "synchronized"
+classes. For example <tt>java.util.Hashtable</tt> and
+<tt>Collections.synchronizedMap(new HashMap())</tt> are
+synchronized. But {@link
+java.util.concurrent.ConcurrentHashMap} is "concurrent".
+A concurrent collection (among other kinds of classes) is
+thread-safe, but not governed by a single exclusion lock. So, in the
+particular case of ConcurrentHashMap, it safely permits any number of
+concurrent reads as well as a tunable number of concurrent writes.
+There may still be a role for "synchronized" classes in some
+multithreaded programs -- they can sometimes be useful when you need
+to prevent ALL access to a collection via a single lock, at the
+expense of much poor scalability. In all other cases, "concurrent"
+versions are normally preferable.
+
+<p> Most concurrent Collection implementations (including most Queues)
+also differ from the usual java.util conventions in that their Iterators
+provide <em>weakly consistent</em> rather than fast-fail traversal. A
+weakly consistent iterator is thread-safe, but does not necessarily
+freeze the collection while iterating, so it may (or may not) reflect
+any updates since the iterator was created.
+
+
+
+
+<hr>
+<address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
+<!-- hhmts start --> Last modified: Mon Jul  7 20:32:42 EDT 2003 <!-- hhmts end -->
+</body> </html>

@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.locks.*;
 
 /**
  * A counting semaphore.  Conceptually, a semaphore maintains a set of
@@ -93,7 +94,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:49 $
+ * @revised $Date: 2003/07/08 00:46:35 $
  * @editor $Author: dl $
  * @author Doug Lea
  *

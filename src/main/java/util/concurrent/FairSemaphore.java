@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.locks.*;
 
 /**
  * A semaphore guaranteeing that threads invoking any of the {@link
@@ -22,7 +23,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
+ * @revised $Date: 2003/07/08 00:46:33 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -30,9 +31,9 @@ package java.util.concurrent;
 public class FairSemaphore extends Semaphore {
 
     /*
-     * This differs from Semaphore only in that it uses a
-     * FairReentrantLock.  Because the FairReentrantLock guarantees
-     * FIFO queuing, we don't need to do anything fancy to prevent
+     * This differs from Semaphore only in that it uses a Fair
+     * ReentrantLock.  Because the Fair ReentrantLock guarantees FIFO
+     * queuing, we don't need to do anything fancy to prevent
      * overtaking etc.  for the multiple-permit methods. The only
      * minor downside is that multi-permit acquires will sometimes
      * repeatedly wake up finding that they must re-wait. A custom
@@ -46,7 +47,7 @@ public class FairSemaphore extends Semaphore {
      * @param permits the initial number of permits available
      */
     public FairSemaphore(long permits) { 
-        super(permits, new FairReentrantLock()); 
+        super(permits, new ReentrantLock(true)); 
     }
 
     /**

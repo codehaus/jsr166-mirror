@@ -4,7 +4,8 @@
  * redistribute this code in any way without acknowledgement.
  */
 
-package java.util.concurrent;
+package java.util.concurrent.locks;
+import java.util.concurrent.*;
 import java.util.Date;
 
 /**
@@ -52,7 +53,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
+ * @revised $Date: 2003/07/08 00:46:42 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -196,7 +197,8 @@ public class Locks {
      * @return true if lock is held, and either true or false if not held.
      */
     public static boolean mightBeLocked(Object lock) {
-        return JSR166Support.mightBeLocked(lock);
+        //        return JSR166Support.mightBeLocked(lock);
+        return true;
     }
 
     /**

@@ -5,21 +5,26 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
  * A bounded blocking queue backed by an array.  The implementation is
  * a classic "bounded buffer", in which a fixed-sized array holds
- * elements inserted by producers and extracted by
- * consumers.  Once created, the capacity can not be increased.
- * Array-based queues typically have more predictable
- * performance than linked queues but lower throughput in most
- * concurrent applications.
+ * elements inserted by producers and extracted by consumers.  Once
+ * created, the capacity can not be increased.  Attempts to offer an
+ * element to a full queue will result in the offer operation
+ * blocking; attempts to retrieve an element from an empty queue will
+ * similarly block.  
  *
- * Attempts to offer an element to a full queue will result
- * in the offer operation blocking; attempts to retrieve an element from
- * an empty queue will similarly block.  Threads blocked on an insertion or
- * removal will be services in FIFO order.
+ * <p> This class supports an optional fairness policy for ordering
+ * threads blocked on an insertion or removal.  By default, this
+ * ordering is not guaranteed. However, an <tt>ArrayBlockingQueue</tt>
+ * constructed with fairness set to <tt>true</tt> grants blocked
+ * threads access in FIFO order. Fairness generally substantially
+ * decreases throughput but reduces variablility and avoids
+ * starvation.
+ *
  * @since 1.5
  * @author Doug Lea
  */
@@ -47,13 +52,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * found in any textbook.
      */
 
-    /** Main lock gurding all access */
-    //    private final FairReentrantLock lock = new FairReentrantLock();
-    private final ReentrantLock lock = new ReentrantLock();
+    /** Main lock guarding all access */
+    private final ReentrantLock lock;
     /** Condition wor waiting takes */
-    private final Condition notEmpty = lock.newCondition();
+    private final Condition notEmpty;
     /** Condition for wiating puts */
-    private final Condition notFull =  lock.newCondition();
+    private final Condition notFull;
 
     // Internal helper methods
 
@@ -125,7 +129,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @param count the number of items in the array, where indices 0
      * to count-1 hold items.
      */
-    private ArrayBlockingQueue(int cap, E[] array, int count) {
+    private ArrayBlockingQueue(int cap, E[] array, int count, ReentrantLock lk) {
         if (cap <= 0) 
             throw new IllegalArgumentException();
         if (array == null)
@@ -134,34 +138,27 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             this.items = array;
         this.putIndex = count;
         this.count = count;
+        lock = lk;
+        notEmpty = lock.newCondition();
+        notFull =  lock.newCondition();
     }
     
     /**
-     * Creates a new ArrayBlockingQueue with the given (fixed) capacity.
+     * Creates a new ArrayBlockingQueue with the given (fixed) capacity
+     * and default access policy.
      * @param maximumSize the capacity
      */
     public ArrayBlockingQueue(int maximumSize) {
-        this(maximumSize, null, 0);
+        this(maximumSize, null, 0, new ReentrantLock());
     }
 
     /**
-     * Creates a new ArrayBlockingQueue with the given (fixed)
-     * capacity, and initially contianing the given elements, added in
-     * iterator traversal order.
+     * Creates a new ArrayBlockingQueue with the given (fixed) capacity.
      * @param maximumSize the capacity
-     * @param initialElements the items to hold initially.
-     * @throws IllegalArgumentException if the given capacity is
-     * less than the number of initialElements.
+     * @param fair true if queue access should use a fair policy
      */
-    public ArrayBlockingQueue(int maximumSize, Collection<E> initialElements) {
-        this(maximumSize, null, 0);
-        int n = 0;
-        for (Iterator<E> it = initialElements.iterator(); it.hasNext();) {
-            if (++n >= items.length)
-                throw new IllegalArgumentException();
-            items[n] = it.next();
-        }
-        putIndex = count = n;
+    public ArrayBlockingQueue(int maximumSize, boolean fair) {
+        this(maximumSize, null, 0, new ReentrantLock(fair));
     }
 
     /** Return the number of elements currently in the queue */
@@ -616,6 +613,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private Object readResolve() throws java.io.ObjectStreamException {
         E[] array = deserializedItems;
         deserializedItems = null;
-        return new ArrayBlockingQueue(array.length, array, count);
+        return new ArrayBlockingQueue(array.length, array, count, lock);
     }
 }

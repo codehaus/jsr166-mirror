@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-
+import java.util.concurrent.locks.*;
 import java.util.*;
 import java.io.Serializable;
 import java.io.IOException;

@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 /**
  * Base class for cancellable actions running in the Executor

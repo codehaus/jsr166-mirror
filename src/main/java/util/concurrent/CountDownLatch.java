@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.locks.*;
 
 /**
  * A synchronization aid that allows one or more threads to wait until
@@ -120,7 +121,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
+ * @revised $Date: 2003/07/08 00:46:33 $
  * @editor $Author: dl $
  * @author Doug Lea
  */

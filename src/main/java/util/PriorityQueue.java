@@ -62,7 +62,7 @@ package java.util;
  * @param <E> the type of elements held in this collection
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-    implements Queue<E>, java.io.Serializable {
+    implements java.io.Serializable {
 
     private static final long serialVersionUID = -7720805057305804111L;
 

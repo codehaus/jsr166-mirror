@@ -30,7 +30,6 @@
   <!-- Build locations -->
   <property name="build.dir"            location="build"/>
   <property name="build.classes.dir"    location="${build.dir}/classes"/>
-  <property name="build.emulation.dir"  location="${build.dir}/emulation"/>
   <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
@@ -44,7 +43,6 @@
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
-  <property name="emulation.src.dir"    location="${basedir}/src/emulation"/>
   <property name="test.src.dir"         location="${basedir}/src/test"/>
   <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
   <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
@@ -61,20 +59,10 @@
   <property name="sinjdoc.jar"          location="${lib.dir}/sinjdoc.jar"/>
 
 
-  <!-- Files excluded from dist-docs and emulation jar -->
-  <patternset id="unsafe.exclusion">
+  <!-- Files excluded from dist-docs -->
+  <patternset id="docs.exclusion">
     <exclude name="java/util/Random.*"/>
     <exclude name="sun/misc/Unsafe.*"/>
-  </patternset>
-
-  <!-- Files excludes from emulation jar -->
-  <patternset id="atomic.exclusion">
-    <exclude name="java/util/concurrent/atomic/AtomicBoolean*"/>
-    <exclude name="java/util/concurrent/atomic/AtomicInteger*"/>
-    <exclude name="java/util/concurrent/atomic/AtomicLong*"/>
-    <exclude name="java/util/concurrent/atomic/AtomicReference*"/>
-    <exclude name="java/util/concurrent/locks/LockSupport*"/>
-    <exclude name="java/util/concurrent/locks/ReentrantLock*"/>
   </patternset>
 
 
@@ -90,8 +78,7 @@
     <mkdir dir="${build.classes.dir}"/>
 
 <!--
-    <echo>javac ${gjc.args}</echo>
-    <echo>bootclasspath=${compile.bootclasspath}</echo>
+    <echo>javac ${build.args}</echo>
 -->
 
     <javac srcdir="${prepare.src.dir}"
@@ -102,10 +89,7 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <compilerarg    line="${gjc.args}"/>
-<!--
-      <bootclasspath refid="compile.bootclasspath"/>
--->
+      <compilerarg    line="${build.args}"/>
 
     </javac>
 
@@ -113,7 +97,7 @@
 
 
   <target name="jar"
-          depends="configure-emulation, init-jar, native-jar, emulation-jar"
+          depends="init-jar, native-jar"
           description="Builds library jar from compiled sources"/>
 
 
@@ -188,7 +172,7 @@
 
     <java classname="net.cscott.sinjdoc.Main" fork="true">
 
-      <jvmarg value="-Xbootclasspath/p:${test.run.bootclasspath}"/>
+      <jvmarg value="-Xbootclasspath/p:${test.bootclasspath}"/>
 
       <classpath>
         <pathelement location="${sinjdoc.jar}"/>
@@ -197,22 +181,21 @@
         <path refid="test.classpath"/>
       </classpath>
 
-
+      <!-- <arg value="-help"/> -->
+      <!-- <arg value="-verbose"/> -->
+      <!-- <arg value="-link"/>  <arg value="http://java.sun.com/j2se/1.4.1/docs/api"/> -->
+      
       <arg value="-d"/>          <arg value="${build.sinjdocs.dir}"/>
       <arg value="-sourcepath"/> <arg value="${src.dir}"/>
       <arg value="-overview"/>   <arg value="${src.dir}/intro.html"/>
       <arg value="-source"/>     <arg value="${build.sourcelevel}"/>
-      <!-- <arg value="-verbose"/> -->
-      <!-- <arg value="-link"/>  <arg value="http://java.sun.com/j2se/1.4.1/docs/api"/> -->
+      
       <arg value="java.lang"/>
       <arg value="java.util"/>
       <arg value="java.util.concurrent"/>
       <arg value="java.util.concurrent.atomic"/>
       <arg value="java.util.concurrent.locks"/>
 
-      <!--
-      <arg value="-help"/>
-      -->
 
     </java>
 
@@ -238,10 +221,7 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <compilerarg    line="${gjc.args} -s"/>
-<!--
-      <bootclasspath refid="compile.bootclasspath"/>
--->
+      <compilerarg    line="${build.args} -s"/>
 
     </javac>
 
@@ -266,7 +246,6 @@
       <exclude name="${release.jar}"/>
       <exclude name="user.properties"/>
       <exclude name="etc/notes/**"/>
-      <exclude name="lib/gjc/2.1/**"/>
       <exclude name="**/SyntaxTest.java"/>
     </jar>
 
@@ -331,51 +310,10 @@
 
 
   <target name="native-jar"
-          depends="compile"
-          unless="build.emulation.true">
+          depends="compile">
 
     <jar destfile="${product.jar}">
       <fileset dir="${build.classes.dir}"/>
-    </jar>
-
-  </target>
-
-
-  <target name="compile-emulation"
-          depends="init, configure-compiler"
-          if="build.emulation.true">
-
-    <mkdir dir="${build.emulation.dir}"/>
-
-    <javac srcdir="${emulation.src.dir}"
-          destdir="${build.emulation.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
-
-      <compilerarg    line="${gjc.args}"/>
-<!--
-      <bootclasspath refid="compile.bootclasspath"/>
--->
-
-    </javac>
-
-  </target>
-
-
-  <target name="emulation-jar"
-          depends="compile-emulation"
-          if="build.emulation.true">
-
-
-    <jar destfile="${product.jar}" duplicate="add">
-      <fileset dir="${build.classes.dir}">
-        <patternset refid="atomic.exclusion"/>
-        <patternset refid="unsafe.exclusion"/>
-      </fileset>
-      <fileset dir="${build.emulation.dir}"/>
     </jar>
 
   </target>
@@ -416,7 +354,7 @@
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
         <exclude name="**/*.html"/>
-        <patternset refid="unsafe.exclusion"/>
+        <patternset refid="docs.exclusion"/>
       </fileset>
       <filterchain>
 
@@ -439,19 +377,6 @@
           <param name="replacement" value=" "/>
         </filterreader>
 
-
-        <!--
-         # This filter uncomments lines beginning with "//@" so that
-         # javadoc can see imports that are needed to resolve links
-         # but that shouldn't be in the compiled code.
-         -->
-
-        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
-                      classpath="${build.ant.dir}">
-          <param name="matching"    value="^//@.*$"/>
-          <param name="pattern"     value="^//@"/>
-          <param name="replacement" value=""/>
-        </filterreader>
       </filterchain>
     </copy>
 
@@ -514,8 +439,7 @@
     <mkdir dir="${build.testcases.dir}"/>
 
 <!--
-    <echo>javac ${gjc.args}</echo>
-    <echo>bootclasspath=${test.compile.bootclasspath}</echo>
+    <echo>javac ${build.args}</echo>
     <echo>classpath="${test.classpath}"</echo>
 -->
 
@@ -527,11 +451,8 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <compilerarg    line="${gjc.args}"/>
-<!--      
-      <bootclasspath refid="test.compile.bootclasspath"/>
--->      
-      <classpath     refid="test.classpath"/>
+      <compilerarg line="${build.args}"/>
+      <classpath refid="test.classpath"/>
       
       <include name="java/**"/>
       <include name="jsr166/**"/>
@@ -556,7 +477,7 @@
                     dir="${build.reports.dir}"
                    fork="true">
 
-      <jvmarg value="-Xbootclasspath:${test.run.bootclasspath}"/>
+      <jvmarg value="-Xbootclasspath:${test.bootclasspath}"/>
 
       <formatter type="xml"/>
 
@@ -600,39 +521,10 @@
 
   <target name="configure-compiler">
 
-    <property name="gjc.version"
-             value="2.2"/>
-
-    <condition property="novariance.arg" value="-novariance">
-      <and>
-        <equals arg1="${gjc.version}" arg2="2.0"/>
-        <or>
-          <not><isset property="gjc.novariance"/></not>
-          <istrue value="${gjc.novariance}"/>
-        </or>
-      </and>
-    </condition>
-
-    <property name="novariance.arg"
-             value=""/>
-
-    <property name="gjc.dir"
-             value="${lib.dir}/gjc"/>
-
-    <property name="javac.jar"
-          location="${gjc.dir}/${gjc.version}/javac.jar"/>
-
-    <property name="collect.jar"
-          location="${gjc.dir}/${gjc.version}/collect${novariance.arg}.jar"/>
-
-<!--
-    <property name="unchecked.option" value="-warnunchecked"/>
--->
-
     <property name="unchecked.option" value="-Xlint:unchecked"/>
 
     <condition property="warnunchecked.arg" value="${unchecked.option}">
-      <istrue value="${gjc.warnunchecked}"/>
+      <istrue value="${build.warnunchecked}"/>
     </condition>
 
     <property name="warnunchecked.arg" value=""/>
@@ -642,36 +534,8 @@
     </condition>
 
 
-    <!--
-     ! Bootclasspath munging for source compilation.
-     -->
-
-    <path id="pre.bootclasspath">
-<!--
-      <pathelement location="${javac.jar}"/>
--->
-    </path>
-
-    <path id="compile.bootclasspath">
-      <pathelement location="${build.classes.dir}"/>
-<!--       
-      <pathelement location="${collect.jar}"/>
--->
-      <pathelement location="${rt.jar}"/>
-    </path>
-
-    <!-- Flatten paths into platform-appropriate strings -->
-    <property name="pre.bootclasspath"     refid="pre.bootclasspath"/>
-    <property name="compile.bootclasspath" refid="compile.bootclasspath"/>
-
-
     <!-- Common options in javac invocations -->
-<!--
-    <property name="gjc.args"
-             value="-J-Xbootclasspath/p:${pre.bootclasspath} ${warnunchecked.arg} ${novariance.arg}"
-    />
--->
-    <property name="gjc.args" value="${warnunchecked.arg} ${novariance.arg}"/>
+    <property name="build.args" value="${warnunchecked.arg}"/>
 
   </target>
 
@@ -686,15 +550,6 @@
         <exclude name="java/lang/**"/>
       </fileset>
     </copy>
-
-  </target>
-
-
-  <target name="configure-emulation">
-
-    <condition property="build.emulation.true">
-      <istrue value="${build.emulation}"/>
-    </condition>
 
   </target>
 
@@ -725,27 +580,17 @@
     <path id="test.classpath">
       <pathelement location="${product.jar}"/>
       <pathelement location="${rt.jar}"/>
-      <pathelement location="${build.testcases.dir}"/>
       <pathelement location="${junit.jar}"/>
+      <pathelement location="${build.testcases.dir}"/>
     </path>
 
-    <path id="test.compile.bootclasspath">
-      <pathelement location="${javac.jar}"/>
-      <pathelement location="${collect.jar}"/>
-      <pathelement location="${rt.jar}"/>
-    </path>
-
-    <path id="test.run.bootclasspath">
-<!--    
-      <pathelement location="${javac.jar}"/> 
--->      
+    <path id="test.bootclasspath">
       <path refid="test.classpath"/>
     </path>
 
     <!-- Flatten test classpaths into platform-appropriate strings -->
-    <property name="test.classpath"             refid="test.classpath"/>
-    <property name="test.compile.bootclasspath" refid="test.compile.bootclasspath"/>
-    <property name="test.run.bootclasspath"     refid="test.run.bootclasspath"/>
+    <property name="test.classpath"         refid="test.classpath"/>
+    <property name="test.bootclasspath"     refid="test.bootclasspath"/>
 
   </target>
 
@@ -800,7 +645,7 @@
   <target name="ng" depends="test">
     <java classname="SuperfluousAbstract" fork="true">
 
-      <jvmarg value="-Xbootclasspath/p:${test.run.bootclasspath}"/>
+      <jvmarg value="-Xbootclasspath/p:${test.bootclasspath}"/>
 
     </java>
   </target>

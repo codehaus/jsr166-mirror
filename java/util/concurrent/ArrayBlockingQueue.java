@@ -61,7 +61,7 @@ public class ArrayBlockingQueue<E> extends AbstractCollection<E>
     public int capacity() {
         return 0;
     }
-    public E [] toArray() {
+    public Object[] toArray() {
         return null;
     }
 

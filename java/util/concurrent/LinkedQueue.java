@@ -47,7 +47,7 @@ public class LinkedQueue<E> extends AbstractCollection<E>
     public int size() {
         return 0;
     }
-    public E[] toArray() {
+    public Object[] toArray() {
         return null;
     }
 

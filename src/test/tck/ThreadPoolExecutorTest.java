@@ -36,6 +36,15 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
+    static class FailingThreadFactory implements ThreadFactory{
+        int calls = 0;
+        public Thread newThread(Runnable r){
+            if (++calls > 1) throw new NullPointerException();
+            return new Thread(r);
+        }   
+    }
+    
+
     /**
      *  execute successfully executes a runnable
      */
@@ -1498,5 +1507,22 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
-
+    /**
+     * Execution continues if there is at least one thread even if
+     * thread factory fails to create more
+     */
+    public void testFailingThreadFactory() {
+        ExecutorService e = new ThreadPoolExecutor(100, 100, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new FailingThreadFactory());
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            for (int k = 0; k < 100; ++k) {
+                e.execute(new NoOpRunnable());
+            }
+            Thread.sleep(LONG_DELAY_MS);
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
 }

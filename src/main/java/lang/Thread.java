@@ -1415,14 +1415,17 @@ class Thread implements Runnable {
      * <p>This handler is invoked only if the thread has not had its own
      * uncaught exception handler explicitly set.
      * @exception  SecurityException  If a security manager is present and it 
-     * denies <tt>{@link RuntimePermission}(&quot;setDefaultUEH&quot;)</tt>
+     * denies <tt>{@link RuntimePermission}
+     * (&quot;setDefaultUncaughtExceptionHandler&quot;)</tt>
      *
      * @see #setUncaughtExceptionHandler
      */
     public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
 	SecurityManager sm = System.getSecurityManager();
 	if (sm != null) {
-	    sm.checkPermission(new RuntimePermission("setDefaultUEH"));
+	    sm.checkPermission(
+                new RuntimePermission("setDefaultUncaughtExceptionHandler")
+                    );
 	}
 
          defaultUncaughtExceptionHandler = eh;

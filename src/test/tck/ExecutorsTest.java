@@ -426,10 +426,13 @@ public class ExecutorsTest extends JSR166TestCase{
 
     }
 
-    static class CheckCCL implements Callable<Object> {
+    void checkCCL() {
+            AccessController.getContext().checkPermission(new RuntimePermission("getContextClassLoader"));
+    }
+
+    class CheckCCL implements Callable<Object> {
         public Object call() {
-            AccessControlContext acc = AccessController.getContext();
-            acc.checkPermission(new RuntimePermission("getContextClassLoader"));
+            checkCCL();
             return null;
         }
     }
@@ -449,6 +452,15 @@ public class ExecutorsTest extends JSR166TestCase{
             return;
         }
 
+        // Check if program still has too many permissions to run test
+        try {
+            checkCCL();
+            // too many privileges to test; so return
+            Policy.setPolicy(savedPolicy);
+            return;
+        } catch(AccessControlException ok) {
+        } 
+
         try {
             Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
             shouldThrow();
@@ -462,8 +474,8 @@ public class ExecutorsTest extends JSR166TestCase{
     }
 
     /**
-     * Without class loader permissions, calling
-     * privilegedCallableUsingCurrentClassLoader throws ACE
+     * With class loader permissions, calling
+     * privilegedCallableUsingCurrentClassLoader does not throw ACE
      */
     public void testprivilegedCallableUsingCCLWithPrivs() {
 	Policy savedPolicy = null;
@@ -488,39 +500,41 @@ public class ExecutorsTest extends JSR166TestCase{
         }
     }
 
-    class CallCCL implements Runnable {
-        final Callable task;
-        CallCCL(Callable t) { task = t; }
-        public void run() {
-            try {
-                task.call();
-                threadShouldThrow();
-            } catch(AccessControlException success) {
-            } catch(Exception ex) {
-                threadUnexpectedException();
-            } 
-        }
-    }
-
     /**
      * Without permissions, calling privilegedCallable throws ACE
      */
     public void testprivilegedCallableWithNoPrivs() {
-        Thread t1;
+        Callable task;
+        Policy savedPolicy = null;
+        AdjustablePolicy policy = null;
+        AccessControlContext noprivAcc = null;
         try {
-            Policy savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
+            savedPolicy = Policy.getPolicy();
+            policy = new AdjustablePolicy();
             Policy.setPolicy(policy);
-            Callable task = Executors.privilegedCallable(new CheckCCL());
-            t1 = new Thread(new CallCCL(task));
+            noprivAcc = AccessController.getContext();
+            task = Executors.privilegedCallable(new CheckCCL());
             Policy.setPolicy(savedPolicy);
         } catch (AccessControlException ok) {
+            return; // program has too few permissions to set up test
+        }
+
+        // Make sure that program doesn't have too many permissions 
+        try {
+            AccessController.doPrivileged(new PrivilegedAction() {
+                    public Object run() {
+                        checkCCL();
+                        return null;
+                    }}, noprivAcc);
+            // too many permssions; skip test
             return;
+        } catch(AccessControlException ok) {
         }
 
         try {
-            t1.start();
-            t1.join();
+            task.call();
+            shouldThrow();
+        } catch(AccessControlException success) {
         } catch(Exception ex) {
             unexpectedException();
         } 

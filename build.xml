@@ -1,15 +1,32 @@
-<project name="jsr166" default="jar">
+<project name="jsr166" default="usage">
 
   <description>
-
     Build file for JSR-166
 
-    Note that junit.jar must be in ${ant.home}/lib for the
-    test target to work. [FIXME: This should be automatically
-    enforced by this build file by failing with a message if
-    junit.jar is not in the right place.]
-
+    JUnit 1.8 must be in ${ant.home}/lib for the test target to work.
   </description>
+
+
+  <target name="usage" description="Prints this message">
+    <echo>
+ant [target], where target is one of:
+
+ usage       (default) Prints this message
+ compile     Compiles all sources to build folder
+ jar         Builds library jar from compiled sources
+ test        Runs all tests (requires JUnit 1.8 in ${ant.home}/lib)
+ docs        Builds javadocs with custom tags to build folder
+ dist-docs   Builds javadocs without custom tags to dist folder
+ dist        Puts all distributable products in single hierarchy
+
+ clean       Removes all build products
+ dist-clean  Removes all build and distribution products
+
+ checkstyle  Reports on style errors in Java source (verbose, mostly chaff)
+ doccheck    Reports on javadoc style errors (not working yet)
+    </echo>
+  </target>
+
 
   <!-- Compilation options -->
   <property name="build.sourcelevel"    value="1.5"/>
@@ -94,12 +111,12 @@
   </target>
 
 
-  <target name="test" depends="init, report-tests"
-          description="Runs all tests"/>
+  <target name="test" depends="init, check-junit, report-tests"
+          description="Runs all tests (requires JUnit 1.8 in ${ant.home}/lib)"/>
 
 
   <target name="checkstyle" depends="filter-src"
-          description="Reports on style errors in Java source">
+          description="Reports on style errors in Java source (verbose, mostly chaff)">
     <taskdef resource="checkstyletask.properties"
             classpath="${lib.dir}/checkstyle-all-2.4.jar"/>
 
@@ -111,7 +128,7 @@
 
 
   <target name="doccheck" depends="filter-src"
-          description="Reports on javadoc style errors">
+          description="Reports on javadoc style errors (not working yet)">
     <delete dir="${build.doccheck.dir}"/>
     <mkdir dir="${build.doccheck.dir}"/>
     <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
@@ -186,8 +203,7 @@
   <!-- Anthill targets -->
 
   <!-- Should really run the tests instead of just the jar target -->
-  <target name="anthill-build" depends="jar, docs, dist-docs"
-          description="Build the jar and both the external and internal docs"/>
+  <target name="anthill-build" depends="jar, docs, dist-docs"/>
 
   <target name="anthill-publish">
     <copy todir="${deployDir}/docs/private">
@@ -359,6 +375,14 @@
     </junitreport>
 
     <fail message="Test Cases Failed" if="junit.failed"/>
+  </target>
+
+
+  <target name="check-junit">
+    <!-- FIXME: this test isn't specific enough -->
+    <available property="junit.available"
+               classname="junit.framework.TestCase"/>
+    <fail message="Need JUnit 1.8 to run tests" unless="junit.available"/>
   </target>
 
 

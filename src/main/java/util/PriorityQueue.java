@@ -28,6 +28,18 @@
  * elements are added to a priority queue, its capacity grows
  * automatically.  The details of the growth policy are not specified.
  *
+ * <p>The Iterator provided in method {@link #iterator()} is <em>not</em>
+ * guaranteed to traverse the elements of the PriorityQueue in any
+ * particular order. If you need ordered traversal, consider using
+ * <tt>Arrays.sort(pq.toArray())</tt>.
+ *
+ * <p> <strong>Note that this implementation is not synchronized.</strong>
+ * Multiple threads should not access a <tt>PriorityQueue</tt>
+ * instance concurrently if any of the threads modifies the list
+ * structurally. Instead, use the thread-safe {@link
+ * java.util.concurrent.BlockingPriorityQueue} class.
+ *
+ * 
  * <p>Implementation note: this implementation provides O(log(n)) time
  * for the insertion methods (<tt>offer</tt>, <tt>poll</tt>,
  * <tt>remove()</tt> and <tt>add</tt>) methods; linear time for the

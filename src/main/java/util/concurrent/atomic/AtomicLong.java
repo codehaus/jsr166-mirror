@@ -14,7 +14,7 @@ import sun.misc.Unsafe;
  * @since 1.5
  * @author Doug Lea
  */
-public final class AtomicLong implements java.io.Serializable { 
+public class AtomicLong implements java.io.Serializable { 
     private static final long serialVersionUID = 1927816293512124184L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
@@ -50,7 +50,7 @@ public final class AtomicLong implements java.io.Serializable {
      *
      * @return the current value
      */
-    public long get() {
+    public final long get() {
         return value;
     }
  
@@ -59,7 +59,7 @@ public final class AtomicLong implements java.io.Serializable {
      *
      * @param newValue the new value
      */
-    public void set(long newValue) {
+    public final void set(long newValue) {
         value = newValue;
     }
   
@@ -69,7 +69,7 @@ public final class AtomicLong implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
-    public long getAndSet(long newValue) {
+    public final long getAndSet(long newValue) {
         while (true) {
             long current = get();
             if (compareAndSet(current, newValue))
@@ -85,7 +85,7 @@ public final class AtomicLong implements java.io.Serializable {
      * @return true if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
-    public boolean compareAndSet(long expect, long update) {
+    public final boolean compareAndSet(long expect, long update) {
       return unsafe.compareAndSwapLong(this, valueOffset, expect, update);
     }
 
@@ -97,7 +97,7 @@ public final class AtomicLong implements java.io.Serializable {
      * @param update the new value
      * @return true if successful.
      */
-    public boolean weakCompareAndSet(long expect, long update) {
+    public final boolean weakCompareAndSet(long expect, long update) {
       return unsafe.compareAndSwapLong(this, valueOffset, expect, update);
     }
   
@@ -105,7 +105,7 @@ public final class AtomicLong implements java.io.Serializable {
      * Atomically increment by one the current value.
      * @return the previous value
      */
-    public long getAndIncrement() {
+    public final long getAndIncrement() {
         while (true) {
             long current = get();
             long next = current + 1;
@@ -119,7 +119,7 @@ public final class AtomicLong implements java.io.Serializable {
      * Atomically decrement by one the current value.
      * @return the previous value
      */
-    public long getAndDecrement() {
+    public final long getAndDecrement() {
         while (true) {
             long current = get();
             long next = current - 1;
@@ -134,7 +134,7 @@ public final class AtomicLong implements java.io.Serializable {
      * @param delta the value to add
      * @return the previous value
      */
-    public long getAndAdd(long delta) {
+    public final long getAndAdd(long delta) {
         while (true) {
             long current = get();
             long next = current + delta;
@@ -147,7 +147,7 @@ public final class AtomicLong implements java.io.Serializable {
      * Atomically increment by one the current value.
      * @return the updated value
      */
-    public long incrementAndGet() {
+    public final long incrementAndGet() {
         for (;;) {
             long current = get();
             long next = current + 1;
@@ -160,7 +160,7 @@ public final class AtomicLong implements java.io.Serializable {
      * Atomically decrement by one the current value.
      * @return the updated value
      */
-    public long decrementAndGet() {
+    public final long decrementAndGet() {
         for (;;) {
             long current = get();
             long next = current - 1;
@@ -175,7 +175,7 @@ public final class AtomicLong implements java.io.Serializable {
      * @param delta the value to add
      * @return the updated value
      */
-    public long addAndGet(long delta) {
+    public final long addAndGet(long delta) {
         for (;;) {
             long current = get();
             long next = current + delta;

@@ -15,7 +15,7 @@ import sun.misc.Unsafe;
  * @author Doug Lea
  * @param <E> The base class of elements held in this array
  */
-public final class AtomicReferenceArray<E> implements java.io.Serializable { 
+public class AtomicReferenceArray<E> implements java.io.Serializable { 
     private static final long serialVersionUID = -6209656149925076980L;
 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
@@ -23,7 +23,7 @@ public final class AtomicReferenceArray<E> implements java.io.Serializable {
     private static final int scale = unsafe.arrayIndexScale(Object[].class);
     private final Object[] array;
 
-    private final long rawIndex(int i) {
+    private long rawIndex(int i) {
         if (i < 0 || i >= array.length)
             throw new IndexOutOfBoundsException("index " + i);
         return base + i * scale;
@@ -43,7 +43,7 @@ public final class AtomicReferenceArray<E> implements java.io.Serializable {
     /**
      * Return the length of the array.
      */
-    public int length() {
+    public final int length() {
         return array.length;
     }
 
@@ -53,7 +53,7 @@ public final class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param i the index
      * @return the current value
      */
-    public E get(int i) {
+    public final E get(int i) {
         return (E) unsafe.getObjectVolatile(array, rawIndex(i));
     }
  
@@ -63,7 +63,7 @@ public final class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param i the index
      * @param newValue the new value
      */
-    public void set(int i, E newValue) {
+    public final void set(int i, E newValue) {
         unsafe.putObjectVolatile(array, rawIndex(i), newValue);
     }
   
@@ -75,7 +75,7 @@ public final class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
-    public E getAndSet(int i, E newValue) {
+    public final E getAndSet(int i, E newValue) {
         while (true) {
             E current = get(i);
             if (compareAndSet(i, current, newValue))
@@ -92,7 +92,7 @@ public final class AtomicReferenceArray<E> implements java.io.Serializable {
      * @return true if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
-    public boolean compareAndSet(int i, E expect, E update) {
+    public final boolean compareAndSet(int i, E expect, E update) {
         return unsafe.compareAndSwapObject(array, rawIndex(i), 
                                          expect, update);
     }
@@ -106,7 +106,7 @@ public final class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param update the new value
      * @return true if successful.
      */
-    public boolean weakCompareAndSet(int i, E expect, E update) {
+    public final boolean weakCompareAndSet(int i, E expect, E update) {
         return compareAndSet(i, expect, update);
     }
 }

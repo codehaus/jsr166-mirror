@@ -15,7 +15,7 @@ import sun.misc.Unsafe;
  * @since 1.5
  * @author Doug Lea
  */
-public final class AtomicIntegerArray implements java.io.Serializable { 
+public class AtomicIntegerArray implements java.io.Serializable { 
     private static final long serialVersionUID = 2862133569453604235L;
 
    // setup to use Unsafe.compareAndSwapInt for updates
@@ -24,7 +24,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
     private static final int scale = unsafe.arrayIndexScale(int[].class);
     private final int[] array;
 
-    private final long rawIndex(int i) {
+    private long rawIndex(int i) {
         if (i < 0 || i >= array.length)
             throw new IndexOutOfBoundsException("index " + i);
         return base + i * scale;
@@ -46,7 +46,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
     /**
      * Return the length of the array.
      */
-    public int length() {
+    public final int length() {
         return array.length;
     }
 
@@ -56,7 +56,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @return the current value
      */
-    public int get(int i) {
+    public final int get(int i) {
         return unsafe.getIntVolatile(array, rawIndex(i));
     }
  
@@ -66,7 +66,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @param newValue the new value
      */
-    public void set(int i, int newValue) {
+    public final void set(int i, int newValue) {
         unsafe.putIntVolatile(array, rawIndex(i), newValue);
     }
   
@@ -78,7 +78,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
-    public int getAndSet(int i, int newValue) {
+    public final int getAndSet(int i, int newValue) {
         while (true) {
             int current = get(i);
             if (compareAndSet(i, current, newValue))
@@ -96,7 +96,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @return true if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
-    public boolean compareAndSet(int i, int expect, int update) {
+    public final boolean compareAndSet(int i, int expect, int update) {
         return unsafe.compareAndSwapInt(array, rawIndex(i), 
                                         expect, update);
     }
@@ -111,7 +111,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param update the new value
      * @return true if successful.
      */
-    public boolean weakCompareAndSet(int i, int expect, int update) {
+    public final boolean weakCompareAndSet(int i, int expect, int update) {
         return compareAndSet(i, expect, update);
     }
 
@@ -121,7 +121,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @return the previous value;
      */
-    public int getAndIncrement(int i) {
+    public final int getAndIncrement(int i) {
         while (true) {
             int current = get(i);
             int next = current + 1;
@@ -136,7 +136,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @return the previous value;
      */
-    public int getAndDecrement(int i) {
+    public final int getAndDecrement(int i) {
         while (true) {
             int current = get(i);
             int next = current - 1;
@@ -152,7 +152,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param delta the value to add
      * @return the previous value;
      */
-    public int getAndAdd(int i, int delta) {
+    public final int getAndAdd(int i, int delta) {
         while (true) {
             int current = get(i);
             int next = current + delta;
@@ -160,7 +160,6 @@ public final class AtomicIntegerArray implements java.io.Serializable {
                 return current;
         }
     }
-  
 
     /**
      * Atomically increment by one the element at index <tt>i</tt>.
@@ -168,7 +167,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @return the updated value;
      */
-    public int incrementAndGet(int i) {
+    public final int incrementAndGet(int i) {
         while (true) {
             int current = get(i);
             int next = current + 1;
@@ -183,7 +182,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @return the updated value;
      */
-    public int decrementAndGet(int i) {
+    public final int decrementAndGet(int i) {
         while (true) {
             int current = get(i);
             int next = current - 1;
@@ -199,7 +198,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param delta the value to add
      * @return the updated value;
      */
-    public int addAndGet(int i, int delta) {
+    public final int addAndGet(int i, int delta) {
         while (true) {
             int current = get(i);
             int next = current + delta;

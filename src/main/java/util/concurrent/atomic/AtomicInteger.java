@@ -14,7 +14,7 @@ import sun.misc.Unsafe;
  * @since 1.5
  * @author Doug Lea
 */
-public final class AtomicInteger implements java.io.Serializable { 
+public class AtomicInteger implements java.io.Serializable { 
     private static final long serialVersionUID = 6214790243416807050L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
@@ -50,7 +50,7 @@ public final class AtomicInteger implements java.io.Serializable {
      *
      * @return the current value
      */
-    public int get() {
+    public final int get() {
         return value;
     }
   
@@ -59,7 +59,7 @@ public final class AtomicInteger implements java.io.Serializable {
      *
      * @param newValue the new value
      */
-    public void set(int newValue) {
+    public final void set(int newValue) {
         value = newValue;
     }
 
@@ -69,7 +69,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
-    public int getAndSet(int newValue) {
+    public final int getAndSet(int newValue) {
         for (;;) {
             int current = get();
             if (compareAndSet(current, newValue))
@@ -86,7 +86,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * @return true if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
-    public boolean compareAndSet(int expect, int update) {
+    public final boolean compareAndSet(int expect, int update) {
       return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
@@ -98,7 +98,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * @param update the new value
      * @return true if successful.
      */
-    public boolean weakCompareAndSet(int expect, int update) {
+    public final boolean weakCompareAndSet(int expect, int update) {
       return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
@@ -107,7 +107,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * Atomically increment by one the current value.
      * @return the previous value
      */
-    public int getAndIncrement() {
+    public final int getAndIncrement() {
         for (;;) {
             int current = get();
             int next = current + 1;
@@ -121,7 +121,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * Atomically decrement by one the current value.
      * @return the previous value
      */
-    public int getAndDecrement() {
+    public final int getAndDecrement() {
         for (;;) {
             int current = get();
             int next = current - 1;
@@ -136,7 +136,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * @param delta the value to add
      * @return the previous value
      */
-    public int getAndAdd(int delta) {
+    public final int getAndAdd(int delta) {
         for (;;) {
             int current = get();
             int next = current + delta;
@@ -149,7 +149,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * Atomically increment by one the current value.
      * @return the updated value
      */
-    public int incrementAndGet() {
+    public final int incrementAndGet() {
         for (;;) {
             int current = get();
             int next = current + 1;
@@ -162,7 +162,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * Atomically decrement by one the current value.
      * @return the updated value
      */
-    public int decrementAndGet() {
+    public final int decrementAndGet() {
         for (;;) {
             int current = get();
             int next = current - 1;
@@ -177,7 +177,7 @@ public final class AtomicInteger implements java.io.Serializable {
      * @param delta the value to add
      * @return the updated value
      */
-    public int addAndGet(int delta) {
+    public final int addAndGet(int delta) {
         for (;;) {
             int current = get();
             int next = current + delta;

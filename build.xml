@@ -70,9 +70,10 @@ ant [target], where target is one of:
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
 
-  <property name="javac.args"           value='-J-Xbootclasspath/p:${javac.jar}'/>
+  <property name="javac.args"           value='-J-Xbootclasspath/p:$[src.dir]:${javac.jar}'/>
 
   <path id="javac.bootclasspath">
+    <pathelement location="${src.dir}"/>
     <pathelement location="${collect.jar}"/>
     <pathelement location="${rt.jar}"/>
   </path>

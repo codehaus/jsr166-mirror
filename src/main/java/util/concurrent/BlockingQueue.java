@@ -11,8 +11,9 @@ import java.util.Queue;
 
 /**
  * A {@link java.util.Queue} that additionally supports operations
- * that wait for elements to exist when retrieving them, and wait for
- * space to exist when storing them.
+ * that wait for the queue to become non-empty when retrieving an element,
+ * and wait for space to become available in the queue when storing an 
+ * element.
  *
  * <p>A <tt>BlockingQueue</tt> does not accept <tt>null</tt> elements.
  * Implementations throw <tt>NullPointerException</tt> on attempts

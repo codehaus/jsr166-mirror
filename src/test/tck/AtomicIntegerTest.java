@@ -209,4 +209,51 @@ public class AtomicIntegerTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * intValue returns current value.
+     */ 
+    public void testIntValue() {
+        AtomicInteger ai = new AtomicInteger();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals(i, ai.intValue());
+        }
+    }
+
+
+    /**
+     * longValue returns current value.
+     */ 
+    public void testLongValue() {
+        AtomicInteger ai = new AtomicInteger();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals((long)i, ai.longValue());
+        }
+    }
+
+    /**
+     * floatValue returns current value.
+     */ 
+    public void testFloatValue() {
+        AtomicInteger ai = new AtomicInteger();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals((float)i, ai.floatValue());
+        }
+    }
+
+    /**
+     * doubleValue returns current value.
+     */ 
+    public void testDoubleValue() {
+        AtomicInteger ai = new AtomicInteger();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals((double)i, ai.doubleValue());
+        }
+    }
+
+
+
 }

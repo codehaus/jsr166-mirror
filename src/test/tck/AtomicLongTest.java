@@ -208,4 +208,39 @@ public class AtomicLongTest extends JSR166TestCase {
             assertEquals(ai.toString(), Long.toString(i));
         }
     }
+
+    /**
+     * longValue returns current value.
+     */ 
+    public void testLongValue() {
+        AtomicLong ai = new AtomicLong();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals((long)i, ai.longValue());
+        }
+    }
+
+    /**
+     * floatValue returns current value.
+     */ 
+    public void testFloatValue() {
+        AtomicLong ai = new AtomicLong();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals((float)i, ai.floatValue());
+        }
+    }
+
+    /**
+     * doubleValue returns current value.
+     */ 
+    public void testDoubleValue() {
+        AtomicLong ai = new AtomicLong();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals((double)i, ai.doubleValue());
+        }
+    }
+
+
 }

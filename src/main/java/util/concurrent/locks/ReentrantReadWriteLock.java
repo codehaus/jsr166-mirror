@@ -148,7 +148,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * holds the number of readers, so the value increments/decrements
      * by 2 per lock/unlock.
      */
-    private transient final AtomicInteger count = new AtomicInteger(0);
+    private final AtomicInteger count = new AtomicInteger(0);
     /** Current writing thread */
     private transient Thread owner;
     /**  Head of the wait queue, lazily initialized.  */
@@ -260,7 +260,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             runlock();
         }
 
-        public Condition newCondition() {
+        public WriterConditionObject newCondition() {
             throw new UnsupportedOperationException();
         }
     }
@@ -678,6 +678,20 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
         return list;
+    }
+
+    // Serialization support
+
+    /**
+     * Reconstitute this lock instance from a stream (that is,
+     * deserialize it).
+     * @param s the stream
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        // reset to unlocked state
+        count.set(0);
     }
 
 

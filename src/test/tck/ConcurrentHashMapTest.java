@@ -227,7 +227,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
      */
     public void testReplace() {
         ConcurrentHashMap map = map5();
-	assertFalse(map.replace(six, "Z"));
+	assertNull(map.replace(six, "Z"));
         assertFalse(map.containsKey(six));
     }
 
@@ -236,7 +236,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
      */
     public void testReplace2() {
         ConcurrentHashMap map = map5();
-        assertTrue(map.replace(one, "Z"));
+        assertNotNull(map.replace(one, "Z"));
         assertEquals("Z", map.get(one));
     }
 

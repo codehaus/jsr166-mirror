@@ -17,25 +17,25 @@ import java.io.ObjectOutputStream;
  * adjustable expected concurrency for updates. This class obeys the
  * same functional specification as {@link java.util.Hashtable}, and
  * includes versions of methods corresponding to each method of
- * <tt>Hashtable</tt> . However, even though all operations are
+ * <tt>Hashtable</tt>. However, even though all operations are
  * thread-safe, retrieval operations do <em>not</em> entail locking,
  * and there is <em>not</em> any support for locking the entire table
  * in a way that prevents all access.  This class is fully
  * interoperable with <tt>Hashtable</tt> in programs that rely on its
  * thread safety but not on its synchronization details.
  *
- * <p> Retrieval operations (including <tt>get</tt>) ordinarily
- * overlap with update operations (including <tt>put</tt> and
- * <tt>remove</tt>). Retrievals reflect the results of the most
- * recently <em>completed</em> update operations holding upon their
- * onset.  For aggregate operations such as <tt>putAll</tt> and
- * <tt>clear</tt>, concurrent retrievals may reflect insertion or
+ * <p> Retrieval operations (including <tt>get</tt>) generally do not
+ * block, so may overlap with update operations (including
+ * <tt>put</tt> and <tt>remove</tt>). Retrievals reflect the results
+ * of the most recently <em>completed</em> update operations holding
+ * upon their onset.  For aggregate operations such as <tt>putAll</tt>
+ * and <tt>clear</tt>, concurrent retrievals may reflect insertion or
  * removal of only some entries.  Similarly, Iterators and
  * Enumerations return elements reflecting the state of the hash table
  * at some point at or since the creation of the iterator/enumeration.
- * They do <em>not</em> throw <tt>ConcurrentModificationException</tt>.
- * However, Iterators are designed to be used by only one thread at a
- * time.
+ * They do <em>not</em> throw
+ * <tt>ConcurrentModificationException</tt>.  However, Iterators are
+ * designed to be used by only one thread at a time.
  *
  * <p> The allowed concurrency among update operations is guided by
  * the optional <tt>concurrencyLevel</tt> constructor argument
@@ -44,11 +44,13 @@ import java.io.ObjectOutputStream;
  * number of concurrent updates without contention. Because placement
  * in hash tables is essentially random, the actual concurrency will
  * vary.  Ideally, you should choose a value to accommodate as many
- * threads as will ever concurrently access the table. Using a
+ * threads as will ever concurrently modify the table. Using a
  * significantly higher value than you need can waste space and time,
  * and a significantly lower value can lead to thread contention. But
  * overestimates and underestimates within an order of magnitude do
- * not usually have much noticeable impact.
+ * not usually have much noticeable impact. A value of one is
+ * appropriate when it is known that only one thread will modify
+ * and all others will only read.
  *
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Map} and {@link Iterator} interfaces.

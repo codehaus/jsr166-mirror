@@ -55,7 +55,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      *
      * queue.length must be >= 2, even if size == 0.
      */
-    private transient E[] queue;
+    private transient Object[] queue;
 
     /**
      * The number of elements in the priority queue.
@@ -66,7 +66,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * The comparator, or null if priority queue uses elements'
      * natural ordering.
      */
-    private final Comparator<E> comparator;
+    private final Comparator<? super E> comparator;
 
     /**
      * The number of times this priority queue has been
@@ -105,17 +105,17 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
      * than 1
      */
-    public PriorityQueue(int initialCapacity, Comparator<E> comparator) {
+    public PriorityQueue(int initialCapacity, Comparator<? super E> comparator) {
         if (initialCapacity < 1)
             throw new IllegalArgumentException();
-        queue = (E[]) new Object[initialCapacity + 1];
+        this.queue = new Object[initialCapacity + 1];
         this.comparator = comparator;
     }
 
     /**
      * Create a <tt>PriorityQueue</tt> containing the elements in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
-     * size of the specified collection; or 1 if the collection is empty. 
+     * size of the specified collection; or 1 if the collection is empty.
      * If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be
      * sorted according to the same comparator, or according to its elements'
@@ -132,23 +132,23 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if <tt>c</tt> or any element within it
      * is <tt>null</tt>
      */
-    public PriorityQueue(Collection<E> c) {
+    public PriorityQueue(Collection<? extends E> c) {
         int sz = c.size();
         int initialCapacity = (int)Math.min((sz * 110L) / 100,
                                             Integer.MAX_VALUE - 1);
         if (initialCapacity < 1)
             initialCapacity = 1;
 
-        queue = (E[]) new Object[initialCapacity + 1];
+        this.queue = new Object[initialCapacity + 1];
 
         if (c instanceof Sorted) {
             // FIXME: this code assumes too much
-            comparator = ((Sorted)c).comparator();
-            for (Iterator<E> i = c.iterator(); i.hasNext(); )
+            this.comparator = (Comparator<? super E>) ((Sorted)c).comparator();
+            for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
                 queue[++size] = i.next();
         } else {
             comparator = null;
-            for (Iterator<E> i = c.iterator(); i.hasNext(); )
+            for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
                 add(i.next());
         }
     }
@@ -173,7 +173,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         // Grow backing store if necessary
         while (size >= queue.length) {
-            E[] newQueue = (E[]) new Object[2 * queue.length];
+            Object[] newQueue = new Object[2 * queue.length];
             System.arraycopy(queue, 0, newQueue, 0, queue.length);
             queue = newQueue;
         }
@@ -186,11 +186,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     public E poll() {
         if (size == 0)
             return null;
-        return remove(1);
+        return (E) remove(1);
     }
 
     public E peek() {
-        return queue[1];
+        return (E) queue[1];
     }
 
     // Collection Methods
@@ -223,14 +223,14 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         if (comparator == null) {
             for (int i = 1; i <= size; i++) {
-                if (((Comparable)queue[i]).compareTo(o) == 0) {
+                if (((Comparable<E>)queue[i]).compareTo((E)o) == 0) {
                     remove(i);
                     return true;
                 }
             }
         } else {
             for (int i = 1; i <= size; i++) {
-                if (comparator.compare(queue[i], (E)o) == 0) {
+                if (comparator.compare((E)queue[i], (E)o) == 0) {
                     remove(i);
                     return true;
                 }
@@ -272,7 +272,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             checkForComodification();
             if (cursor > size)
                 throw new NoSuchElementException();
-            E result = queue[cursor];
+            E result = (E) queue[cursor];
             lastRet = cursor++;
             return result;
         }
@@ -328,7 +328,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         assert i <= size;
         modCount++;
 
-        E result = queue[i];
+        E result = (E) queue[i];
         queue[i] = queue[size];
         queue[size--] = null;  // Drop extra ref to prevent memory leak
         if (i <= size)
@@ -349,17 +349,17 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         if (comparator == null) {
             while (k > 1) {
                 int j = k >> 1;
-                if (((Comparable)queue[j]).compareTo(queue[k]) <= 0)
+                if (((Comparable<E>)queue[j]).compareTo((E)queue[k]) <= 0)
                     break;
-                E tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
+                Object tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
                 k = j;
             }
         } else {
             while (k > 1) {
                 int j = k >> 1;
-                if (comparator.compare(queue[j], queue[k]) <= 0)
+                if (comparator.compare((E)queue[j], (E)queue[k]) <= 0)
                     break;
-                E tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
+                Object tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
                 k = j;
             }
         }
@@ -378,26 +378,26 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         int j;
         if (comparator == null) {
             while ((j = k << 1) <= size) {
-                if (j<size && ((Comparable)queue[j]).compareTo(queue[j+1]) > 0)
+                if (j<size && ((Comparable<E>)queue[j]).compareTo((E)queue[j+1]) > 0)
                     j++; // j indexes smallest kid
-                if (((Comparable)queue[k]).compareTo(queue[j]) <= 0)
+                if (((Comparable<E>)queue[k]).compareTo((E)queue[j]) <= 0)
                     break;
-                E tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
+                Object tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
                 k = j;
             }
         } else {
             while ((j = k << 1) <= size) {
-                if (j < size && comparator.compare(queue[j], queue[j+1]) > 0)
+                if (j < size && comparator.compare((E)queue[j], (E)queue[j+1]) > 0)
                     j++; // j indexes smallest kid
-                if (comparator.compare(queue[k], queue[j]) <= 0)
+                if (comparator.compare((E)queue[k], (E)queue[j]) <= 0)
                     break;
-                E tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
+                Object tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
                 k = j;
             }
         }
     }
 
-    public Comparator comparator() {
+    public Comparator<? super E> comparator() {
         return comparator;
     }
 
@@ -435,11 +435,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         // Read in array length and allocate array
         int arrayLength = s.readInt();
-        queue = (E[]) new Object[arrayLength];
+        queue = new Object[arrayLength];
 
         // Read in all elements in the proper order.
         for (int i=0; i<size; i++)
-            queue[i] = (E)s.readObject();
+            queue[i] = s.readObject();
     }
 
 }

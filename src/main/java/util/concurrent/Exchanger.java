@@ -64,7 +64,7 @@ import java.util.concurrent.locks.*;
  */
 public class Exchanger<V> {
     private final ReentrantLock lock = new ReentrantLock();
-    private final ReentrantLock.ConditionObject taken = lock.newCondition();
+    private final Condition taken = lock.newCondition();
 
     /** Holder for the item being exchanged */
     private V item;

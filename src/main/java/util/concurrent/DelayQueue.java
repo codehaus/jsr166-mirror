@@ -27,7 +27,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     implements BlockingQueue<E> {
 
     private transient final ReentrantLock lock = new ReentrantLock();
-    private transient final ReentrantLock.ConditionObject available = lock.newCondition();
+    private transient final Condition available = lock.newCondition();
     private final PriorityQueue<E> q = new PriorityQueue<E>();
 
     /**

@@ -86,7 +86,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      */
     private static class Node extends ReentrantLock {
         /** Condition to wait on for other party; lazily constructed */
-        ReentrantLock.ConditionObject done;
+        Condition done;
         /** The item being transferred */
         Object item;
         /** Next node in wait queue */

@@ -59,7 +59,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
     private Throwable exception;
 
     private final ReentrantLock lock = new ReentrantLock();
-    private final ReentrantLock.ConditionObject accessible = lock.newCondition();
+    private final Condition accessible = lock.newCondition();
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the

@@ -118,9 +118,57 @@ import java.util.concurrent.atomic.*;
  *
  */
 
-public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Serializable {
+public class Semaphore implements java.io.Serializable {
     private static final long serialVersionUID = -3222578661600680210L;
-    private final boolean fair;
+    /** Sync mechanics via AbstractQueuedSynchronizer subclass */
+    private final Sync sync;
+
+
+    private final static class Sync extends AbstractQueuedSynchronizer {
+        final boolean fair;
+        Sync(int permits, boolean fair) {
+            this.fair = fair;
+            getState().set(permits);
+        }
+        
+        public final int acquireSharedState(boolean isQueued, int acquires, 
+                                            Thread current) {
+            final AtomicInteger perms = getState();
+            if (!isQueued && fair && hasWaiters())
+                return -1;
+            for (;;) {
+                int available = perms.get();
+                int remaining = available - acquires;
+                if (remaining < 0 ||
+                    perms.compareAndSet(available, remaining))
+                    return remaining;
+            }
+        }
+        
+        public final boolean releaseSharedState(int releases) {
+            final AtomicInteger perms = getState();
+            for (;;) {
+                int p = perms.get();
+                if (perms.compareAndSet(p, p + releases)) 
+                    return true;
+            }
+        }
+        
+        public final int acquireExclusiveState(boolean isQueued, 
+                                               int acquires, 
+                                               Thread current) {
+            throw new UnsupportedOperationException();
+        }
+        
+        public final boolean releaseExclusiveState(int releases) {
+            throw new UnsupportedOperationException();
+        }
+        
+        public final void checkConditionAccess(Thread thread, boolean waiting) {
+            throw new UnsupportedOperationException();
+        }
+
+    }
 
     /**
      * Construct a <tt>Semaphore</tt> with the given number of
@@ -132,8 +180,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      * first-out granting of permits under contention, else false.
      */
     public Semaphore(int permits, boolean fair) { 
-        this.fair = fair;
-        getState().set(permits);
+        sync = new Sync(permits, fair);
     }
 
     /**
@@ -166,7 +213,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      * @see Thread#interrupt
      */
     public void acquire() throws InterruptedException {
-        acquireSharedInterruptibly(1);
+        sync.acquireSharedInterruptibly(1);
     }
 
     /**
@@ -189,7 +236,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      *
      */
     public void acquireUninterruptibly() {
-        acquireSharedUninterruptibly(1);
+        sync.acquireSharedUninterruptibly(1);
     }
 
     /**
@@ -206,7 +253,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      * otherwise.
      */
     public boolean tryAcquire() {
-        return acquireSharedState(false, 1, null) >= 0;
+        return sync.acquireSharedState(false, 1, null) >= 0;
     }
 
     /**
@@ -252,7 +299,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      */
     public boolean tryAcquire(long timeout, TimeUnit unit) 
         throws InterruptedException {
-        return acquireSharedTimed(1, unit.toNanos(timeout));
+        return sync.acquireSharedTimed(1, unit.toNanos(timeout));
     }
 
     /**
@@ -268,7 +315,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      * in the application.
      */
     public void release() {
-        releaseShared(1);
+        sync.releaseShared(1);
     }
        
     /**
@@ -312,7 +359,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      */
     public void acquire(int permits) throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-        acquireSharedInterruptibly(permits);
+        sync.acquireSharedInterruptibly(permits);
     }
 
     /**
@@ -341,7 +388,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      */
     public void acquireUninterruptibly(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        acquireSharedUninterruptibly(permits);
+        sync.acquireSharedUninterruptibly(permits);
     }
 
     /**
@@ -363,7 +410,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return acquireSharedState(false, permits, null) >= 0;
+        return sync.acquireSharedState(false, permits, null) >= 0;
     }
 
     /**
@@ -420,7 +467,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-        return acquireSharedTimed(permits, unit.toNanos(timeout));
+        return sync.acquireSharedTimed(permits, unit.toNanos(timeout));
     }
 
 
@@ -450,7 +497,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      */
     public void release(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        releaseShared(permits);
+        sync.releaseShared(permits);
     }
 
     /**
@@ -459,7 +506,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      * @return the number of permits available in this semaphore.
      */
     public int availablePermits() {
-        return getState().get();
+        return sync.getState().get();
     }
 
     /**
@@ -474,7 +521,7 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      */
     protected void reducePermits(int reduction) {
 	if (reduction < 0) throw new IllegalArgumentException();
-        getState().getAndAdd(-reduction);
+        sync.getState().getAndAdd(-reduction);
     }
 
     /**
@@ -482,60 +529,50 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      * @return true if this semaphore has fairness set true.
      */
     public boolean isFair() {
-        return fair;
+        return sync.fair;
     }
 
-    // Implement abstract methods
 
     /**
-     * Sets internal state to indicate permits acquired if available
+     * Queries whether any threads are waiting to acquire. Note that
+     * because cancellations may occur at any time, a <tt>true</tt>
+     * return does not guarantee that any other thread will ever
+     * acquire.  This method is designed primarily for use in
+     * monitoring of the system state.
+     *
+     * @return true if there may be other threads waiting to acquire
+     * the lock.
      */
-    protected final int acquireSharedState(boolean isQueued, int acquires, 
-                                     Thread current) {
-        final AtomicInteger perms = getState();
-        if (!isQueued && fair && hasWaiters())
-            return -1;
-        for (;;) {
-            int available = perms.get();
-            int remaining = available - acquires;
-            if (remaining < 0 ||
-                perms.compareAndSet(available, remaining))
-                return remaining;
-        }
+    public final boolean hasWaiters() { 
+        return sync.hasWaiters();
     }
-     
+
+
     /**
-     * Sets internal state to indicate permits have been released
+     * Returns an estimate of the number of threads waiting to
+     * acquire.  The value is only an estimate because the number of
+     * threads may change dynamically while this method traverses
+     * internal data structures.  This method is designed for use in
+     * monitoring of the system state, not for synchronization
+     * control.
+     * @return the estimated number of threads waiting for this lock
      */
-    protected final boolean releaseSharedState(int releases) {
-        final AtomicInteger perms = getState();
-        for (;;) {
-            int p = perms.get();
-            if (perms.compareAndSet(p, p + releases)) 
-                return true;
-        }
+    public final int getQueueLength() {
+        return sync.getQueueLength();
     }
 
     /**
-     * Always throws UnsupportedOperationException
+     * Returns a collection containing threads that may be waiting to
+     * acquire.  Because the actual set of threads may change
+     * dynamically while constructing this result, the returned
+     * collection is only a best-effort estimate.  The elements of the
+     * returned collection are in no particular order.  This method is
+     * designed to facilitate construction of subclasses that provide
+     * more extensive monitoring facilities.
+     * @return the collection of threads
      */
-    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
-                                        Thread current) {
-        throw new UnsupportedOperationException();
+    protected Collection<Thread> getQueuedThreads() {
+        return sync.getQueuedThreads();
     }
-
-    /**
-     * Always throws UnsupportedOperationException
-     */
-    protected final boolean releaseExclusiveState(int releases) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Always throws UnsupportedOperationException
-     */
-    protected final void checkConditionAccess(Thread thread, boolean waiting) {
-        throw new UnsupportedOperationException();
-    }
-
+    
 }

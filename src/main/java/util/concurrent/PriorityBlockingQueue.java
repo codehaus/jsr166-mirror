@@ -36,7 +36,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     private final PriorityQueue<E> q;
     private final ReentrantLock lock = new ReentrantLock(true);
-    private final ReentrantLock.ConditionObject notEmpty = lock.newCondition();
+    private final Condition notEmpty = lock.newCondition();
 
     /**
      * Creates a <tt>PriorityBlockingQueue</tt> with the default initial 

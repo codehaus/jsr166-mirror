@@ -292,7 +292,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Wait condition to support awaitTermination
      */
-    private final ReentrantLock.ConditionObject termination = mainLock.newCondition();
+    private final Condition termination = mainLock.newCondition();
 
     /**
      * Set containing all worker threads in pool.

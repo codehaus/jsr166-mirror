@@ -67,9 +67,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /** Main lock guarding all access */
     private final ReentrantLock lock;
     /** Condition for waiting takes */
-    private final ReentrantLock.ConditionObject notEmpty;
+    private final Condition notEmpty;
     /** Condition for waiting puts */
-    private final ReentrantLock.ConditionObject notFull;
+    private final Condition notFull;
 
     // Internal helper methods
 

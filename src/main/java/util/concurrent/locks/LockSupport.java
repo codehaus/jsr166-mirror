@@ -21,9 +21,42 @@ import sun.misc.Unsafe;
  * as tools for creating higher-level synchronization utilities, and
  * are not in themselves useful for most concurrency control
  * applications.
+ *
+ * <p><b>Sample Usage.</b> Here is a sketch of a First-in-first-out
+ * non-reentrant lock class that should be made more efficient
+ * and complete to be useful in practice, but illustrates basic usage.
+ * <pre>
+ * class FIFOMutex {
+ *   private AtomicBoolean locked = new AtomicBoolean(false);
+ *   private Queue<Thread> waiters = new ConcurrentLinkedQueue<Thread>();
+ *
+ *   public void lock() { 
+ *     boolean wasInterrupted = false;
+ *     Thread current = Thread.currentThread();
+ *     waiters.add(current);
+ *
+ *     while (waiters.peek() != current || 
+ *            !locked.compareAndSet(false, true)) { 
+ *        LockSupport.park();
+ *        if (Thread.interrupted()) // ignore interrupts while waiting
+ *          wasInterrupted = true;
+ *     }
+ *     waiters.poll();
+ *     if (wasInterrupted)          // reassert interrupt status on exit
+ *        current.interrupt();
+ *   }
+ *
+ *   public void unlock() {
+ *     locked.set(false);
+ *     LockSupport.unpark(waiters.peek());
+ *   } 
+ * }
+ * </pre>
  */
 
 public class LockSupport {
+    private LockSupport() {} // Cannot be instantiated.
+
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
 
     /**

@@ -94,7 +94,8 @@
 
       <tag name="revised" description="Last revised:"/>
       <tag name="spec" description="Specified by:"/>
-
+      <tag name="editor" description="Last edited by:"/>
+      <tag name="fixme" description="FIX ME:"/>
       <packageset dir="${build.filter.src.dir}">
         <include name="java/**"/>
       </packageset>

@@ -33,12 +33,12 @@ import java.util.concurrent.locks.*;
  */
 public class FutureTask<V> implements Future<V>, Runnable {
     /**
-     * Special value for "runner" indicating task is cancelled
+     * Special value for "runState" indicating task is cancelled
      */
     private static final Object CANCELLED = new Object();
 
     /**
-     * Special value for "runner" indicating task is completed
+     * Special value for "runState" indicating task is completed
      */
     private static final Object DONE = new Object();
 
@@ -49,19 +49,10 @@ public class FutureTask<V> implements Future<V>, Runnable {
      *   DONE              = completed normally,
      *   CANCELLED         = cancelled (may or may not have ever run).
      */
-    private volatile Object runner;
+    private volatile Object runState;
 
-    /*
-     * For simplicity of use, we can use either a Runnable or a
-     * Callable as basis for run method. So one or the other of these
-     * will be null.
-     */
-
-    /** The runnable; if non-null, then callable is null */
-    private final Runnable runnable;
-    /** The callable; if non-null, then runnable is null */
+    /** The underlying callable */
     private final Callable<V> callable;
-
     /** The result to return from get() */
     private V result;
     /** The exception to throw from get() */
@@ -81,7 +72,6 @@ public class FutureTask<V> implements Future<V>, Runnable {
         if (callable == null)
             throw new NullPointerException();
         this.callable = callable;
-        this.runnable = null;
     }
 
     /**
@@ -97,26 +87,28 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @throws NullPointerException if runnable is null
      */
     public FutureTask(Runnable runnable, V result) {
-        if (runnable == null)
-            throw new NullPointerException();
-        this.runnable = runnable;
-        this.result = result;
-        this.callable = null;
+        this.callable = Executors.callable(runnable, result);
+    }
+
+    public boolean isCancelled() {
+        return runState == CANCELLED;
+    }
+    
+    public boolean isDone() {
+        Object r = runState;
+        return r == DONE || r == CANCELLED;
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
         lock.lock();
         try {
-            Object r = runner;
+            Object r = runState;
             if (r == DONE || r == CANCELLED)
                 return false;
-            runner = CANCELLED;
+            runState = CANCELLED;
+            accessible.signalAll();
             if (mayInterruptIfRunning && r != null && r instanceof Thread)
                 ((Thread)r).interrupt();
-            // propagate to nested future
-            Runnable subtask = runnable;
-            if (subtask != null && subtask instanceof Future)
-                ((Future<?>)subtask).cancel(false);
         }
         finally{
             lock.unlock();
@@ -125,15 +117,6 @@ public class FutureTask<V> implements Future<V>, Runnable {
         return true;
     }
     
-    public boolean isCancelled() {
-        return runner == CANCELLED;
-    }
-    
-    public boolean isDone() {
-        Object r = runner;
-        return r == DONE || r == CANCELLED;
-    }
-
     /**
      * Waits if necessary for execution to complete, and then
      * retrieves its result.
@@ -149,14 +132,18 @@ public class FutureTask<V> implements Future<V>, Runnable {
     public V get() throws InterruptedException, ExecutionException {
         lock.lock();
         try {
-            while (!isDone())
+            for (;;) {
+                Object r = runState;
+                if (r == CANCELLED)
+                    throw new CancellationException();
+                if (r == DONE) {
+                    if (exception != null)
+                        throw new ExecutionException(exception);
+                    else
+                        return result;
+                }
                 accessible.await();
-            if (isCancelled())
-                throw new CancellationException();
-            else if (exception != null)
-                throw new ExecutionException(exception);
-            else
-                return result;
+            }
         } finally {
             lock.unlock();
         }
@@ -179,137 +166,25 @@ public class FutureTask<V> implements Future<V>, Runnable {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
+        long nanos = unit.toNanos(timeout);
         lock.lock();
         try {
-            if (!isDone()) {
-                long nanos = unit.toNanos(timeout);
-                do {
-                    if (nanos <= 0)
-                        throw new TimeoutException();
-                    nanos = accessible.awaitNanos(nanos);
-                } while (!isDone());
-            }
-            if (isCancelled())
-                throw new CancellationException();
-            else if (exception != null)
-                throw new ExecutionException(exception);
-            else
-                return result;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Sets the result of this Future to the given value.
-     * @param v the value
-     */ 
-    protected void set(V v) {
-        lock.lock();
-        try {
-            result = v;
-            setDone();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Causes this future to report an <tt>ExecutionException</tt>
-     * with the given throwable as its cause.
-     * @param t the cause of failure.
-     */ 
-    protected void setException(Throwable t) {
-        lock.lock();
-        try {
-            exception = t;
-            setDone();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Sets the state of this task to Cancelled.
-     */
-    protected void setCancelled() {
-        lock.lock();
-        try {
-            runner = CANCELLED;
-        }
-        finally{
-            lock.unlock();
-        }
-    }
-    
-    /**
-     * Sets the state of this task to Done, unless already in a
-     * Cancelled state, in which case Cancelled status is preserved.
-     * Called only while lock held
-     */
-    private void setDone() {
-        Object r = runner;
-        if (r != CANCELLED) 
-            runner = DONE;
-        accessible.signalAll();
-    }
-
-    /**
-     * Attempts to set the state of this task to Running, succeeding
-     * only if the state is currently NOT Done, Running, or Cancelled.
-     * @return true if successful
-     */ 
-    protected boolean setRunning() {
-        lock.lock();
-        try {
-            if (runner != null)
-                return false;
-            runner = Thread.currentThread();
-            return true;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Sets this Future to the results of computation
-     */
-    public void run() {
-        if (setRunning()) {
-            try {
-                if (runnable != null) {
-                    runnable.run();
-                    set(result);
+            for (;;) {
+                Object r = runState;
+                if (r == CANCELLED)
+                    throw new CancellationException();
+                if (r == DONE) {
+                    if (exception != null)
+                        throw new ExecutionException(exception);
+                    else
+                        return result;
                 }
-                else if (callable != null)
-                    set(callable.call());
-            } catch(Throwable ex) {
-                setException(ex);
+                if (nanos <= 0)
+                    throw new TimeoutException();
+                nanos = accessible.awaitNanos(nanos);
             }
-            done();
-        }
-    }
-
-    /**
-     * Sets this Future to the results of computation and then resets
-     * to initial state. This may be useful for tasks that intriniscally
-     * execute more than once.
-     */
-    protected void runAndReset() {
-        if (setRunning()) {
-            try {
-                if (runnable != null) {
-                    runnable.run();
-                    set(result);
-                }
-                else if (callable != null)
-                    set(callable.call());
-            } catch(Throwable ex) {
-                setException(ex);
-            } finally {
-                reset();
-            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -325,17 +200,55 @@ public class FutureTask<V> implements Future<V>, Runnable {
     protected void done() { }
 
     /**
-     * Resets the run state of this task to its initial state unless
-     * it has been cancelled. (Note that a cancelled task cannot be
-     * reset.)
-     * @return true if successful
-     */
-    protected boolean reset() {
+     * Sets the result of this Future to the given value unless
+     * this future has been cancelled
+     * @param v the value
+     */ 
+    protected void set(V v) {
         lock.lock();
         try {
-            if (runner == CANCELLED) 
+            if (runState == CANCELLED) 
+                return;
+            result = v;
+            accessible.signalAll();
+            runState = DONE;
+        } finally {
+            lock.unlock();
+        }
+        done();
+    }
+
+    /**
+     * Causes this future to report an <tt>ExecutionException</tt>
+     * with the given throwable as its cause, unless this Future has
+     * been cancelled.
+     * @param t the cause of failure.
+     */ 
+    protected void setException(Throwable t) {
+        lock.lock();
+        try {
+            if (runState == CANCELLED) 
+                return;
+            exception = t;
+            accessible.signalAll();
+            runState = DONE;
+        } finally {
+            lock.unlock();
+        }
+        done();
+    }
+    
+    /**
+     * Attempts to set the state of this task to Running, succeeding
+     * only if the state is currently NOT Done, Running, or Cancelled.
+     * @return true if successful
+     */ 
+   private boolean setRunning() {
+        lock.lock();
+        try {
+            if (runState != null)
                 return false;
-            runner = null;
+            runState = Thread.currentThread();
             return true;
         }
         finally {
@@ -344,15 +257,56 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     /**
-     * Return the <tt>Runnable</tt> or <tt>Callable</tt> used
-     * in the constructor for this <tt>Future</tt>.
-     * @return the task
-     */ 
-    protected Object getTask() {
-        if (runnable != null)
-            return runnable;
-        else
-            return callable;
+     * Resets the run state of this task to its initial state unless
+     * it has been cancelled. (Note that a cancelled task cannot be
+     * reset.)
+     * @return true if successful
+     */
+    private boolean reset() {
+        lock.lock();
+        try {
+            if (runState == CANCELLED) 
+                return false;
+            runState = null;
+            return true;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Sets this Future to the result of computation unless
+     * it has been cancelled.
+     */
+    public void run() {
+        if (setRunning()) {
+            try {
+                set(callable.call());
+            } catch(Throwable ex) {
+                setException(ex);
+            }
+        }
+    }
+
+    /**
+     * Executes the computation and then resets this Future to initial
+     * state; failing to do so if the computation encounters an
+     * exception or is cancelled.  This is designed for use with tasks
+     * that intrinsically execute more than once.
+     * @return true if successfully run and reset
+     */
+    protected boolean runAndReset() {
+        if (setRunning()) {
+            try {
+                // don't bother to set result; it can't be accessed
+                callable.call();
+                return reset();
+            } catch(Throwable ex) {
+                setException(ex);
+            } 
+        }
+        return false;
     }
 
 }

@@ -307,8 +307,12 @@ public class Executors {
      * <tt>Callable</tt> to an otherwise resultless action.
      * @param task the task to run
      * @param result the result to return
+     * @throws NullPointerException if task null
+     * @return callable object
      */
     public static <T> Callable<T> callable(Runnable task, T result) {
+        if (task == null)
+            throw new NullPointerException();
         return new RunnableAdapter<T>(task, result);
     }
 
@@ -316,8 +320,12 @@ public class Executors {
      * Creates and returns a {@link Callable} object that, when
      * called, runs the given task and returns <tt>null</tt>
      * @param task the task to run
+     * @return callable object
+     * @throws NullPointerException if task null
      */
     public static Callable<Object> callable(Runnable task) {
+        if (task == null)
+            throw new NullPointerException();
         return new RunnableAdapter<Object>(task, null);
     }
 
@@ -325,8 +333,12 @@ public class Executors {
      * Creates and returns a {@link Callable} object that, when
      * called, runs the given privileged action and returns its result
      * @param action the privileged action to run
+     * @return callable object
+     * @throws NullPointerException if action null
      */
     public static Callable<Object> callable(PrivilegedAction action) {
+        if (action == null)
+            throw new NullPointerException();
         return new PrivilegedActionAdapter(action);
     }
 
@@ -335,8 +347,12 @@ public class Executors {
      * called, runs the given privileged exception action and returns
      * its result
      * @param action the privileged exception action to run
+     * @return callable object
+     * @throws NullPointerException if action null
      */
     public static Callable<Object> callable(PrivilegedExceptionAction action) {
+        if (action == null)
+            throw new NullPointerException();
         return new PrivilegedExceptionActionAdapter(action);
     }
 
@@ -350,9 +366,13 @@ public class Executors {
      * not possible, throw an associated {@link
      * AccessControlException}.
      * @param callable the underlying task
+     * @return callable object
+     * @throws NullPointerException if callable null
      *
      */
     public static <T> Callable<T> privilegedCallable(Callable<T> callable) {
+        if (callable == null)
+            throw new NullPointerException();
         return new PrivilegedCallable(callable);
     }
     
@@ -368,11 +388,15 @@ public class Executors {
      * AccessControlException}.
      * @param callable the underlying task
      *
+     * @return callable object
+     * @throws NullPointerException if callable null
      * @throws AccessControlException if the current access control
      * context does not have permission to both set and get context
      * class loader.
      */
     public static <T> Callable<T> privilegedCallableUsingCurrentClassLoader(Callable<T> callable) {
+        if (callable == null)
+            throw new NullPointerException();
         return new PrivilegedCallableUsingCurrentClassLoader(callable);
     }
 

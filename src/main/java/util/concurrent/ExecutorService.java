@@ -159,10 +159,12 @@ public interface ExecutorService extends Executor {
      * when all complete.
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
      * @param tasks the collection of tasks
      * @return A list of Futures representing the tasks, in the same
-     * sequential order as produced by the iterator for the given task list, each of which has
-     * completed.
+     * sequential order as produced by the iterator for the given task
+     * list, each of which has completed.
      * @throws InterruptedException if interrupted while waiting, in
      * which case unfinished tasks are cancelled.
      * @throws NullPointerException if tasks or any of its elements are <tt>null</tt>
@@ -179,13 +181,16 @@ public interface ExecutorService extends Executor {
      * Upon return, tasks that have not completed are cancelled.
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
      * @param tasks the collection of tasks
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
      * @return A list of Futures representing the tasks, in the same
-     * sequential order as as produced by the iterator for the given task list. If the operation did
-     * not time out, each task will have completed. If it did time
-     * out, some of thiese tasks will not have completed.
+     * sequential order as as produced by the iterator for the given
+     * task list. If the operation did not time out, each task will
+     * have completed. If it did time out, some of thiese tasks will
+     * not have completed.
      * @throws InterruptedException if interrupted while waiting, in
      * which case unfinished tasks are cancelled.
      * @throws NullPointerException if tasks, any of its elements, or
@@ -202,6 +207,8 @@ public interface ExecutorService extends Executor {
      * of one that has completed successfully (i.e., without throwing
      * an exception), if any do. Upon normal or exceptional return,
      * tasks that have not completed are cancelled.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
      * @param tasks the collection of tasks
      * @return The result returned by one of the tasks.
      * @throws InterruptedException if interrupted while waiting
@@ -221,6 +228,8 @@ public interface ExecutorService extends Executor {
      * an exception), if any do before the given timeout elapses.
      * Upon normal or exceptional return, tasks that have not
      * completed are cancelled.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
      * @param tasks the collection of tasks
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument

@@ -50,7 +50,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * and whose <tt>get()</tt> method will return <tt>null</tt>
      * upon completion.
      * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
+     * for execution.
      * @throws NullPointerException if command is null
      */
     public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit);
@@ -63,7 +63,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @param unit the time unit of the delay parameter.
      * @return a ScheduledFuture that can be used to extract result or cancel.
      * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
+     * for execution.
      * @throws NullPointerException if callable is null
      */
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit);
@@ -73,8 +73,11 @@ public interface ScheduledExecutorService extends ExecutorService {
      * after the given initial delay, and subsequently with the given
      * period; that is executions will commence after
      * <tt>initialDelay</tt> then <tt>initialDelay+period</tt>, then
-     * <tt>initialDelay + 2 * period</tt>, and so on.  The
-     * task will only terminate via cancellation.
+     * <tt>initialDelay + 2 * period</tt>, and so on.  
+     * If any execution of the task
+     * encounters an exception, subsequent executions are suppressed.
+     * Otherwise, the task will only terminate via cancellation or
+     * termination of the executor.
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param period the period between successive executions.
@@ -83,7 +86,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * and whose <tt>get()</tt> method will throw an exception upon
      * cancellation.
      * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
+     * for execution.
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if period less than or equal to zero.
      */
@@ -93,8 +96,10 @@ public interface ScheduledExecutorService extends ExecutorService {
      * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and subsequently with the
      * given delay between the termination of one execution and the
-     * commencement of the next. 
-     * The task will only terminate via cancellation.
+     * commencement of the next. If any execution of the task
+     * encounters an exception, subsequent executions are suppressed.
+     * Otherwise, the task will only terminate via cancellation or
+     * termination of the executor.
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param delay the delay between the termination of one
@@ -104,7 +109,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * and whose <tt>get()</tt> method will throw an exception upon
      * cancellation.
      * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
+     * for execution.
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if delay less than or equal to zero.
      */

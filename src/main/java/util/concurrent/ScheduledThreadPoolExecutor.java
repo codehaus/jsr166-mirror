@@ -122,7 +122,7 @@ public class ScheduledThreadPoolExecutor
          * Return true if this is a periodic (not a one-shot) action.
          * @return true if periodic
          */
-        public boolean isPeriodic() {
+        boolean isPeriodic() {
             return period > 0;
         }
 
@@ -131,7 +131,7 @@ public class ScheduledThreadPoolExecutor
          *
          * @return the period
          */
-        public long getPeriod(TimeUnit unit) {
+        long getPeriod(TimeUnit unit) {
             return unit.convert(period, TimeUnit.NANOSECONDS);
         }
 
@@ -142,8 +142,7 @@ public class ScheduledThreadPoolExecutor
             if (!isPeriodic())
                 ScheduledFutureTask.super.run();
             else {
-                ScheduledFutureTask.super.runAndReset();
-                if (isCancelled())
+                if (!ScheduledFutureTask.super.runAndReset())
                     return;
                 boolean down = isShutdown();
                 if (!down ||
@@ -481,39 +480,6 @@ public class ScheduledThreadPoolExecutor
      */
     public List<Runnable> shutdownNow() {
         return super.shutdownNow();
-    }
-            
-    /**
-     * Removes this task from internal queue if it is present, thus
-     * causing it not to be run if it has not already started.  This
-     * method may be useful as one part of a cancellation scheme.
-     *
-     * @param task the task to remove
-     * @return true if the task was removed
-     */
-    public boolean remove(Runnable task) {
-        if (task instanceof ScheduledFuture) 
-            return super.remove(task);
-
-        // The task might actually have been wrapped as a ScheduledFuture
-        // in execute(), in which case we need to manually traverse
-        // looking for it.
-
-        ScheduledFuture wrap = null;
-        Object[] entries = super.getQueue().toArray();
-        for (int i = 0; i < entries.length; ++i) {
-            Object e = entries[i];
-            if (e instanceof ScheduledFutureTask) {
-                ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)e;
-                Object r = t.getTask();
-                if (task.equals(r)) {
-                    wrap = t;
-                    break;
-                }
-            }
-        }
-        entries = null;
-        return wrap != null && super.getQueue().remove(wrap);
     }
 
 

@@ -45,91 +45,98 @@ public abstract class AbstractExecutorService implements ExecutorService {
         return ftask;
     }
 
-    // any/all methods, each a little bit different than the other
-
-
-    public <T> T invokeAny(Collection<Callable<T>> tasks)
-        throws InterruptedException, ExecutionException {
+    /**
+     * the main mechanics of invokeAny.
+     */
+    private <T> T doInvokeAny(Collection<Callable<T>> tasks,
+                            boolean timed, long nanos)
+        throws InterruptedException, ExecutionException, TimeoutException {
         if (tasks == null)
             throw new NullPointerException();
-        int n = tasks.size();
-        if (n == 0)
+        int ntasks = tasks.size();
+        if (ntasks == 0)
             throw new IllegalArgumentException();
-        List<Future<T>> futures= new ArrayList<Future<T>>(n);
+        List<Future<T>> futures= new ArrayList<Future<T>>(ntasks);
         ExecutorCompletionService<T> ecs = 
             new ExecutorCompletionService<T>(this);
+
+        // For efficiency, especially in executors with limited
+        // parallelism, check to see if previously submitted tasks are
+        // done before submitting more of them. This interleaving,
+        // plus the exception mechanics account for messiness of main
+        // loop
+
         try {
-            for (Callable<T> t : tasks) 
-                futures.add(ecs.submit(t));
+            // Record exceptions so that if we fail to obtain any
+            // result, we can throw the last exception we got.
             ExecutionException ee = null;
-            RuntimeException re = null;
-            while (n-- > 0) {
-                Future<T> f = ecs.take();
-                try {
-                    return f.get();
-                } catch(InterruptedException ie) {
-                    throw ie;
-                } catch(ExecutionException eex) {
-                    ee = eex;
-                } catch(RuntimeException rex) {
-                    re = rex;
+            long lastTime = (timed)? System.nanoTime() : 0;
+            Iterator<Callable<T>> it = tasks.iterator();
+
+            // Start one task for sure; the rest incrementally
+            futures.add(ecs.submit(it.next()));
+            --ntasks;
+            int active = 1;
+
+            for (;;) {
+                Future<T> f = ecs.poll(); 
+                if (f == null) {
+                    if (ntasks > 0) {
+                        --ntasks;
+                        futures.add(ecs.submit(it.next()));
+                        ++active;
+                    }
+                    else if (active == 0) 
+                        break;
+                    else if (timed) {
+                        f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
+                        if (f == null)
+                            throw new TimeoutException();
+                        long now = System.nanoTime();
+                        nanos -= now - lastTime;
+                        lastTime = now;
+                    }
+                    else 
+                        f = ecs.take();
+                }
+                if (f != null) {
+                    --active;
+                    try {
+                        return f.get();
+                    } catch(InterruptedException ie) {
+                        throw ie;
+                    } catch(ExecutionException eex) {
+                        ee = eex;
+                    } catch(RuntimeException rex) {
+                        ee = new ExecutionException(rex);
+                    }
                 }
             }    
-            if (ee != null)
-                throw ee;
-            if (re != null)
-                throw new ExecutionException(re);
-            throw new ExecutionException();
+
+            if (ee == null)
+                ee = new ExecutionException();
+            throw ee;
+
         } finally {
             for (Future<T> f : futures) 
                 f.cancel(true);
         }
     }
 
+    public <T> T invokeAny(Collection<Callable<T>> tasks)
+        throws InterruptedException, ExecutionException {
+        try {
+            return doInvokeAny(tasks, false, 0);
+        } catch (TimeoutException cannotHappen) {
+            assert false;
+            return null;
+        }
+    }
+
     public <T> T invokeAny(Collection<Callable<T>> tasks, 
                            long timeout, TimeUnit unit) 
         throws InterruptedException, ExecutionException, TimeoutException {
-        if (tasks == null || unit == null)
-            throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
-        int n = tasks.size();
-        if (n == 0)
-            throw new IllegalArgumentException();
-        List<Future<T>> futures= new ArrayList<Future<T>>(n);
-        ExecutorCompletionService<T> ecs = 
-            new ExecutorCompletionService<T>(this);
-        try {
-            for (Callable<T> t : tasks) 
-                futures.add(ecs.submit(t));
-            ExecutionException ee = null;
-            RuntimeException re = null;
-            long lastTime = System.nanoTime();
-            while (n-- > 0) {
-                Future<T> f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
-                if (f == null)
-                    throw new TimeoutException();
-                try {
-                    return f.get();
-                } catch(InterruptedException ie) {
-                    throw ie;
-                } catch(ExecutionException eex) {
-                    ee = eex;
-                } catch(RuntimeException rex) {
-                    re = rex;
-                }
-                long now = System.nanoTime();
-                nanos -= now - lastTime;
-                lastTime = now;
-            }    
-            if (ee != null)
-                throw ee;
-            if (re != null)
-                throw new ExecutionException(re);
-            throw new ExecutionException();
-        } finally {
-            for (Future<T> f : futures) 
-                f.cancel(true);
-        }
+        return doInvokeAny(tasks, true, unit.toNanos(timeout));
     }
 
     public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)

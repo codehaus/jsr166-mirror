@@ -20,9 +20,9 @@ import java.lang.reflect.*;
  *   private volatile Node left, right;
  *
  *   private static final AtomicReferenceFieldUpdater<Node, Node> leftUpdater =
- *     new AtomicReferenceFieldUpdater<Node, Node>(Node.class, Node.class, "left");
+ *     AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "left");
  *   private static AtomicReferenceFieldUpdater<Node, Node> rightUpdater =
- *     new AtomicReferenceFieldUpdater<Node, Node>(Node.class, Node.class, "right");
+ *     AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "right");
  *
  *   Node getLeft() { return left;  }
  *   boolean compareAndSetLeft(Node expect, Node update) {

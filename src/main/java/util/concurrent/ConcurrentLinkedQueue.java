@@ -47,7 +47,50 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * methods ignore those with nulls.
      */
 
-    // Atomics support
+    private static class AtomicLinkedNode {
+        private volatile Object item;
+        private volatile AtomicLinkedNode next;
+        
+        private static final 
+            AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode> 
+            nextUpdater =
+            AtomicReferenceFieldUpdater.newUpdater
+            (AtomicLinkedNode.class, AtomicLinkedNode.class, "next");
+        private static final 
+            AtomicReferenceFieldUpdater<AtomicLinkedNode, Object> 
+            itemUpdater =
+            AtomicReferenceFieldUpdater.newUpdater
+            (AtomicLinkedNode.class, Object.class, "item");
+        
+        AtomicLinkedNode(Object x) { item = x; }
+        
+        AtomicLinkedNode(Object x, AtomicLinkedNode n) { item = x; next = n; }
+        
+        Object getItem() {
+            return item;
+        }
+        
+        boolean casItem(Object cmp, Object val) {
+            return itemUpdater.compareAndSet(this, cmp, val);
+        }
+        
+        void setItem(Object val) {
+            itemUpdater.set(this, val);
+        }
+        
+        AtomicLinkedNode getNext() {
+            return next;
+        }
+        
+        boolean casNext(AtomicLinkedNode cmp, AtomicLinkedNode val) {
+            return nextUpdater.compareAndSet(this, cmp, val);
+        }
+        
+        void setNext(AtomicLinkedNode val) {
+            nextUpdater.set(this, val);
+        }
+        
+    }
 
     private static final 
         AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> 

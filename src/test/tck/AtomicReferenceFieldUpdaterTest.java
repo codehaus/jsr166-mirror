@@ -17,14 +17,12 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
     public static void main(String[] args){
         junit.textui.TestRunner.run(suite());
     }
-
-   
     public static Test suite() {
         return new TestSuite(AtomicReferenceFieldUpdaterTest.class);
     }
 
     /**
-     *
+     * Contruction with non-existent field throws RuntimeException
      */
     public void testConstructor(){
         try{
@@ -38,7 +36,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 
 
     /**
-     *
+     * construction with field not of given type throws RuntimeException
      */
     public void testConstructor2(){
         try{
@@ -51,7 +49,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * Constructor with non-volatile field throws exception
      */
     public void testConstructor3(){
         try{
@@ -64,7 +62,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
     }
 
     /**
-     *
+     *  get returns the last value set or assigned
      */
     public void testGetSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
@@ -77,7 +75,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 	
     }
     /**
-     *
+     * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
@@ -92,7 +90,32 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * compareAndSet in one thread enables another waiting for value
+     * to succeed
+     */
+    public void testCompareAndSetInMultipleThreads() {
+        x = one;
+        final AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
+
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three)) Thread.yield();
+                }});
+        try {
+            t.start();
+            assertTrue(a.compareAndSet(this, one, two));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+            assertEquals(a.get(this), three);
+        }
+        catch(Exception e) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * repeated weakCompareAndSet succeeds in changing value when equal
+     * to expected 
      */
     public void testWeakCompareAndSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
@@ -105,7 +128,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");

@@ -23,7 +23,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
     
     /**
-     *
+     * Creating with negative parties throws IAE
      */
     public void testConstructor1() {
         try {
@@ -33,7 +33,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * Creating with negative parties and no action throws IAE
      */
     public void testConstructor2() {
         try {
@@ -43,16 +43,16 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * getParties returns the number of parties given in constructor
      */
-    public void testConstructor3() {
+    public void testGetParties() {
         CyclicBarrier b = new CyclicBarrier(2);
 	assertEquals(2, b.getParties());
         assertEquals(0, b.getNumberWaiting());
     }
 
     /**
-     *
+     * A 1-party barrier triggers properly
      */
     public void testSingleParty() {
         try {
@@ -69,7 +69,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
     
     /**
-     *
+     * The supplied barrier action is run at barrier
      */
     public void testBarrierAction() {
         try {
@@ -87,9 +87,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
         }
     }
 
-
     /**
-     *
+     * A 2-party/thread barrier triggers properly
      */
     public void testTwoParties() {
         final CyclicBarrier b = new CyclicBarrier(2);
@@ -118,7 +117,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
 
 
     /**
-     *
+     * An interruption in one party causes others waiting in await to
+     * throw BrokenBarrierException
      */
     public void testAwait1_Interrupted_BrokenBarrier() {
         final CyclicBarrier c = new CyclicBarrier(3);
@@ -129,7 +129,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                         threadShouldThrow();
                     } catch(InterruptedException success){}                
                     catch(Exception b){
-                        threadFail("should throw IE");
+                        threadUnexpectedException();
                     }
                 }
             });
@@ -140,7 +140,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                         threadShouldThrow();                        
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
-                        threadFail("should throw BBE");
+                        threadUnexpectedException();
                     }
                 }
             });
@@ -157,7 +157,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * An interruption in one party causes others waiting in timed await to
+     * throw BrokenBarrierException
      */
     public void testAwait2_Interrupted_BrokenBarrier() {
       final CyclicBarrier c = new CyclicBarrier(3);
@@ -168,7 +169,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                         threadShouldThrow();
                     } catch(InterruptedException success){
                     } catch(Exception b){
-                        threadFail("should throw IE");
+                        threadUnexpectedException();
                     }
                 }
             });
@@ -179,7 +180,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                         threadShouldThrow();                        
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
-                        threadFail("should throw BBE");
+                        threadUnexpectedException();
                     }
                 }
             });
@@ -196,7 +197,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
     
     /**
-     *
+     * A timeout in timed await throws TimeoutException
      */
     public void testAwait3_TimeOutException() {
         final CyclicBarrier c = new CyclicBarrier(2);
@@ -207,7 +208,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                         threadShouldThrow();
                     } catch(TimeoutException success){
                     } catch(Exception b){
-                        threadFail("should throw TOE");
+                        threadUnexpectedException();
                         
                     }
                 }
@@ -220,4 +221,80 @@ public class CyclicBarrierTest extends JSR166TestCase{
         }
     }
     
+    /**
+     * A reset of an active barrier causes waiting threads to throw
+     * BrokenBarrierException
+     */
+    public void testReset_BrokenBarrier() {
+        final CyclicBarrier c = new CyclicBarrier(3);
+        Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await();
+                        threadShouldThrow();
+                    } catch(BrokenBarrierException success){}                
+                    catch(Exception b){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await();
+                        threadShouldThrow();                        
+                    } catch(BrokenBarrierException success){
+                    } catch(Exception i){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        try {
+            t1.start();
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            c.reset();
+            t1.join(); 
+            t2.join();
+        } catch(InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * A reset before threads enter barrier does not throw
+     * BrokenBarrierException
+     */
+    public void testReset_NoBrokenBarrier() {
+        final CyclicBarrier c = new CyclicBarrier(3);
+        Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await();
+                    } catch(Exception b){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await();
+                    } catch(Exception i){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        try {
+            c.reset();
+            t1.start();
+            t2.start();
+            c.await();
+            t1.join(); 
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    }
+
 }

@@ -19,7 +19,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
-     *
+     * constructor creates array of given size with all elements null
      */
     public void testConstructor(){
         AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(SIZE);
@@ -29,7 +29,30 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
-     *
+     * get and set for out of bound indices throw IndexOutOfBoundsException
+     */
+    public void testIndexing(){
+        AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(SIZE);
+        try {
+            ai.get(SIZE);
+        } catch(IndexOutOfBoundsException success){
+        }
+        try {
+            ai.get(-1);
+        } catch(IndexOutOfBoundsException success){
+        }
+        try {
+            ai.set(SIZE, null);
+        } catch(IndexOutOfBoundsException success){
+        }
+        try {
+            ai.set(-1, null);
+        } catch(IndexOutOfBoundsException success){
+        }
+    }
+
+    /**
+     * get returns the last value set at index
      */
     public void testGetSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
@@ -44,7 +67,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
-     *
+     * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
@@ -61,7 +84,31 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
-     *
+     * compareAndSet in one thread enables another waiting for value
+     * to succeed
+     */
+    public void testCompareAndSetInMultipleThreads() {
+        final AtomicReferenceArray a = new AtomicReferenceArray(1);
+        a.set(0, one);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(!a.compareAndSet(0, two, three)) Thread.yield();
+                }});
+        try {
+            t.start();
+            assertTrue(a.compareAndSet(0, one, two));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+            assertEquals(a.get(0), three);
+        }
+        catch(Exception e) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * repeated weakCompareAndSet succeeds in changing value when equal
+     * to expected 
      */
     public void testWeakCompareAndSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
@@ -76,7 +123,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
-     *
+     * getAndSet returns previous value and sets to given value at given index
      */
     public void testGetAndSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
@@ -89,7 +136,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
-     *
+     * a deserialized serialized array holds same values
      */
     public void testSerialization() {
         AtomicReferenceArray l = new AtomicReferenceArray(SIZE); 

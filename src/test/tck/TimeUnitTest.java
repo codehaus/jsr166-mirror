@@ -20,7 +20,7 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * convert correctly converts sample values across the four units
      */
     public void testConvert() {
         for (long t = 0; t < 10; ++t) {
@@ -76,7 +76,8 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toNanos correctly converts sample values in different units to
+     * nanoseconds
      */
     public void testToNanos() {
         for (long t = 0; t < 10; ++t) {
@@ -93,7 +94,8 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toMicros correctly converts sample values in different units to
+     * microseconds
      */
     public void testToMicros() {
         for (long t = 0; t < 10; ++t) {
@@ -110,7 +112,8 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toMillis correctly converts sample values in different units to
+     * milliseconds
      */
     public void testToMillis() {
         for (long t = 0; t < 10; ++t) {
@@ -127,7 +130,8 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toSeconds correctly converts sample values in different units to
+     * seconds
      */
     public void testToSeconds() {
         for (long t = 0; t < 10; ++t) {
@@ -145,7 +149,8 @@ public class TimeUnitTest extends JSR166TestCase {
 
 
     /**
-     *
+     * convert saturates positive too-large values to Long.MAX_VALUE 
+     * and negative to LONG.MIN_VALUE
      */
     public void testConvertSaturate() {
         assertEquals(Long.MAX_VALUE,
@@ -154,23 +159,22 @@ public class TimeUnitTest extends JSR166TestCase {
         assertEquals(Long.MIN_VALUE,
                      TimeUnit.NANOSECONDS.convert(-Long.MAX_VALUE / 4,
                                                   TimeUnit.SECONDS));
-
     }
 
     /**
-     *
+     * toNanos saturates positive too-large values to Long.MAX_VALUE 
+     * and negative to LONG.MIN_VALUE
      */
     public void testToNanosSaturate() {
             assertEquals(Long.MAX_VALUE,
                          TimeUnit.MILLISECONDS.toNanos(Long.MAX_VALUE / 2));
             assertEquals(Long.MIN_VALUE,
                          TimeUnit.MILLISECONDS.toNanos(-Long.MAX_VALUE / 3));
-            
     }
 
 
     /**
-     *
+     * toString returns string containing commn name of unit
      */
     public void testToString() {
         String s = TimeUnit.SECONDS.toString();
@@ -181,9 +185,6 @@ public class TimeUnitTest extends JSR166TestCase {
     /**
      *  Timed wait without holding lock throws
      *  IllegalMonitorStateException
-     */
-    /**
-     *
      */
     public void testTimedWait_IllegalMonitorException() {
 	//created a new thread with anonymous runnable
@@ -215,13 +216,7 @@ public class TimeUnitTest extends JSR166TestCase {
     }
     
     /**
-     *   timedWait will throw InterruptedException.
-     *  Thread t waits on timedWait while the main thread interrupts it.
-     *  Note:  This does not throw IllegalMonitorException since timeWait
-     *         is synchronized on o
-     */
-    /**
-     *
+     * timedWait throws InterruptedException when interrupted
      */
     public void testTimedWait() {
 	Thread t = new Thread(new Runnable() {
@@ -253,11 +248,7 @@ public class TimeUnitTest extends JSR166TestCase {
     
     
     /**
-     *   timedJoin will throw InterruptedException.
-     *  Thread t waits on timedJoin while the main thread interrupts it.
-     */
-    /**
-     *
+     * timedJoin throws InterruptedException when interrupted
      */
     public void testTimedJoin() {
 	Thread t = new Thread(new Runnable() {
@@ -289,11 +280,7 @@ public class TimeUnitTest extends JSR166TestCase {
     }
     
     /**
-     *   timedSleep will throw InterruptedException.
-     *  Thread t waits on timedSleep while the main thread interrupts it.
-     */
-    /**
-     *
+     *  timedSleep throws InterruptedException when interrupted
      */
     public void testTimedSleep() {
 	//created a new thread with anonymous runnable
@@ -319,7 +306,7 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * a deserialized serialized unit is equal 
      */
     public void testSerialization() {
         TimeUnit q = TimeUnit.MILLISECONDS;

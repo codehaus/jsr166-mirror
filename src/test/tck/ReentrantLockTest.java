@@ -113,27 +113,27 @@ public class ReentrantLockTest extends JSR166TestCase {
 
 
     /*
-     * getLockQueueLength reports number of waiting threads
+     * getQueueLength reports number of waiting threads
      */
-    public void testGetLockQueueLength() { 
+    public void testGetQueueLength() { 
 	final ReentrantLock lock = new ReentrantLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
         try {
-            assertEquals(0, lock.getLockQueueLength());
+            assertEquals(0, lock.getQueueLength());
             lock.lock();
             t1.start();
             Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getLockQueueLength());
+            assertEquals(1, lock.getQueueLength());
             t2.start();
             Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(2, lock.getLockQueueLength());
+            assertEquals(2, lock.getQueueLength());
             t1.interrupt();
             Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getLockQueueLength());
+            assertEquals(1, lock.getQueueLength());
             lock.unlock();
             Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(0, lock.getLockQueueLength());
+            assertEquals(0, lock.getQueueLength());
             t1.join();
             t2.join();
         } catch(Exception e){

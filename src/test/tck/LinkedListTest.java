@@ -33,14 +33,14 @@ public class LinkedListTest extends JSR166TestCase {
     }
  
     /**
-     *
+     * new queue is empty
      */
     public void testConstructor1() {
         assertEquals(0, new LinkedList().size());
     }
 
     /**
-     *
+     * Initializing from null Collection throws NPE
      */
     public void testConstructor3() {
         try {
@@ -51,7 +51,8 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue contains all elements of collection used to initialize
+
      */
     public void testConstructor6() {
         try {
@@ -66,7 +67,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * isEmpty is true before add, false after
      */
     public void testEmpty() {
         LinkedList q = new LinkedList();
@@ -80,7 +81,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * size changes when elements added and removed
      */
     public void testSize() {
         LinkedList q = populatedQueue(SIZE);
@@ -95,7 +96,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * offer(null) succeeds
      */
     public void testOfferNull() {
 	try {
@@ -107,7 +108,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Offer succeeds 
      */
     public void testOffer() {
         LinkedList q = new LinkedList();
@@ -116,7 +117,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * add succeeds
      */
     public void testAdd() {
         LinkedList q = new LinkedList();
@@ -127,7 +128,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * addAll(null) throws NPE
      */
     public void testAddAll1() {
         try {
@@ -139,7 +140,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue contains all elements, in traversal order, of successful addAll
      */
     public void testAddAll5() {
         try {
@@ -157,7 +158,35 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * addAll with too large an index throws IOOBE
+     */
+    public void testAddAll2_IndexOutOfBoundsException() {
+	try {
+	    LinkedList l = new LinkedList();
+	    l.add(new Object());
+	    LinkedList m = new LinkedList();
+	    m.add(new Object());
+	    l.addAll(4,m);
+	    shouldThrow();
+	} catch(IndexOutOfBoundsException  success) {}
+    }
+
+    /**
+     * addAll with negative index throws IOOBE
+     */
+    public void testAddAll4_BadIndex() {
+	try {
+	    LinkedList l = new LinkedList();
+	    l.add(new Object());
+	    LinkedList m = new LinkedList();
+	    m.add(new Object());
+	    l.addAll(-1,m);
+	    shouldThrow();
+	} catch(IndexOutOfBoundsException  success){}
+    }
+
+    /**
+     *  poll succeeds unless empty
      */
     public void testPoll() {
         LinkedList q = populatedQueue(SIZE);
@@ -168,7 +197,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  peek returns next element, or null if empty
      */
     public void testPeek() {
         LinkedList q = populatedQueue(SIZE);
@@ -182,7 +211,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * 
      */
     public void testElement() {
         LinkedList q = populatedQueue(SIZE);
@@ -198,7 +227,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * element returns next element, or throws NSEE if empty
      */
     public void testRemove() {
         LinkedList q = populatedQueue(SIZE);
@@ -213,7 +242,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remove(x) removes x and returns true if present
      */
     public void testRemoveElement() {
         LinkedList q = populatedQueue(SIZE);
@@ -228,7 +257,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 	
     /**
-     *
+     * contains(x) reports true when elements added but not yet removed
      */
     public void testContains() {
         LinkedList q = populatedQueue(SIZE);
@@ -240,7 +269,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * clear removes all elements
      */
     public void testClear() {
         LinkedList q = populatedQueue(SIZE);
@@ -254,7 +283,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * containsAll(c) is true when c contains a subset of elements
      */
     public void testContainsAll() {
         LinkedList q = populatedQueue(SIZE);
@@ -268,7 +297,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * retainAll(c) retains only those elements of c and reports true if changed
      */
     public void testRetainAll() {
         LinkedList q = populatedQueue(SIZE);
@@ -287,7 +316,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  removeAll(c) removes only those elements of c and reports true if changed
      */
     public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {
@@ -303,7 +332,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  toArray contains all elements
      */
     public void testToArray() {
         LinkedList q = populatedQueue(SIZE);
@@ -314,7 +343,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  toArray(a) contains all elements
      */
     public void testToArray2() {
         LinkedList q = populatedQueue(SIZE);
@@ -324,9 +353,33 @@ public class LinkedListTest extends JSR166TestCase {
         for(int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.poll());
     }
+
+    /**
+     * toArray(null) throws NPE
+     */
+    public void testToArray_BadArg() {
+	try {
+	    LinkedList l = new LinkedList();
+	    l.add(new Object());
+	    Object o[] = l.toArray(null);
+	    shouldThrow();
+	} catch(NullPointerException success){}
+    }
+
+    /**
+     * toArray with incompatable aray type throws CCE
+     */
+    public void testToArray1_BadArg() {
+	try {
+	    LinkedList l = new LinkedList();
+	    l.add(new Integer(5));
+	    Object o[] = l.toArray(new String[10] );
+	    shouldThrow();
+	} catch(ArrayStoreException  success){}
+    }
     
     /**
-     *
+     *  iterator iterates through all elements
      */
     public void testIterator() {
         LinkedList q = populatedQueue(SIZE);
@@ -340,16 +393,13 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  iterator ordering is FIFO
      */
     public void testIteratorOrdering() {
-
         final LinkedList q = new LinkedList();
-
         q.add(new Integer(1));
         q.add(new Integer(2));
         q.add(new Integer(3));
-
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
             int i = ((Integer)(it.next())).intValue();
@@ -360,19 +410,16 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * iterator.remove removes current element
      */
     public void testIteratorRemove () {
         final LinkedList q = new LinkedList();
-
         q.add(new Integer(1));
         q.add(new Integer(2));
         q.add(new Integer(3));
-
         Iterator it = q.iterator();
         it.next();
         it.remove();
-
         it = q.iterator();
         assertEquals(it.next(), new Integer(2));
         assertEquals(it.next(), new Integer(3));
@@ -381,7 +428,7 @@ public class LinkedListTest extends JSR166TestCase {
 
 
     /**
-     *
+     * toString contains toStrings of elements
      */
     public void testToString() {
         LinkedList q = populatedQueue(SIZE);
@@ -392,339 +439,12 @@ public class LinkedListTest extends JSR166TestCase {
     }        
 
     /**
-     *
+     * peek returns element inserted with addFirst
      */
     public void testAddFirst() {
         LinkedList q = populatedQueue(3);
-	q.addFirst(new Integer(4));
-	assertEquals(new Integer(4),q.get(0));
+	q.addFirst(four);
+	assertEquals(four,q.peek());
     }	
-
-    /**
-     *
-     */
-    public void testAddLast() {
-        LinkedList q = populatedQueue(3);
-	q.addLast(new Integer(3));
-	assertEquals(new Integer(3),q.get(3));
-    }
-    
-    /**
-     *
-     */
-    public void testGetFirst() {
-        LinkedList q = populatedQueue(3);
-        assertEquals(new Integer(0),q.getFirst());
-    }	
-    
-    /**
-     *
-     */
-    public void testGetLast() {
-        LinkedList q = populatedQueue(3);
-        assertEquals(new Integer(2),q.getLast());
-    }
-    
-    /**
-     *
-     */
-    public void testIndexOf() {
-        LinkedList q = populatedQueue(3);
-	assertEquals(0,q.indexOf(new Integer(0)));
-	assertEquals(1,q.indexOf(new Integer(1)));
-	assertEquals(2,q.indexOf(new Integer(2)));
-        assertEquals(-1, q.indexOf("not there")); 
-    }
-
-    /**
-     *
-     */
-    public void testLastIndexOf() {
-        LinkedList q = populatedQueue(3);
-        q.add(new Integer(2));
-	assertEquals(3,q.lastIndexOf(new Integer(2)));
-        assertEquals(-1, q.lastIndexOf("not there"));
-    }
-    
-    /**
-     *
-     */
-    public void testSet() {
-        LinkedList q = populatedQueue(3);
-	q.set(0,(new Integer(1)));
-	assertFalse(q.contains(new Integer(0)));
-	assertEquals(new Integer(1), q.get(0));
-    }
-    
-
-    /**
-     *
-     */
-    public void testGetFirst_NoSuchElementException() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.getFirst();
-	    shouldThrow();
-	}
-	catch(NoSuchElementException success) {}
-    }
-    
-    /**
-     *
-     */
-    public void testRemoveFirst() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.removeFirst();
-	    shouldThrow();
-	}
-	catch(NoSuchElementException success) {}
-    }
-    
-    /**
-     *
-     */
-    public void testRemoveLast() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.removeLast();
-	    shouldThrow();
-	}
-	catch(NoSuchElementException success) {}
-    }
-    
-    /**
-     *
-     */
-    public void testGetLast_NoSuchElementException() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.getLast();
-	    shouldThrow();
-	}
-	catch(NoSuchElementException success) {}
-    }
-
-
-    /**
-     *
-     */
-    public void testAddAll_NullPointerException() {
-	try {
-	    LinkedList l = new LinkedList(); 
-	    l.addAll((Collection)null);
-	    shouldThrow();
-	}
-	catch(NullPointerException success){}
-    }
-    
-    
-    /**
-     *
-     */
-    public void testAddAll1_OutOfBounds() {
-	try {
-	    LinkedList l = new LinkedList(); 
-	    l.addAll(4,new LinkedList());
-	    shouldThrow();
-	}
-	catch(IndexOutOfBoundsException  success) {}
-    }
-    
-    
-    /**
-     *
-     */
-    public void testAddAll2_IndexOutOfBoundsException() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    LinkedList m = new LinkedList();
-	    m.add(new Object());
-	    l.addAll(4,m);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success) {}
-    }
-
-    /**
-     *
-     */
-    public void testAddAll4_BadIndex() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    LinkedList m = new LinkedList();
-	    m.add(new Object());
-	    l.addAll(-1,m);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}
-    }
-
-    /**
-     *
-     */
-    public void testget1() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.get(-1);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success) {}	
-    }
-
-    /**
-     *
-     */
-    public void testget2() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.get(5);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}	
-    }
-
-    /**
-     *
-     */
-    public void testset1() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.set(-1,new Object());
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}	
-    }
-
-    /**
-     *
-     */
-    public void testset2() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.set(5,new Object());
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}	
-    }
-
-    /**
-     *
-     */
-    public void testadd1() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.add(-1,new Object());
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}	
-    }
-
-    public void add2() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.add(5,new Object());
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success) {}	
-    }
-
-    /**
-     *
-     */
-    public void testremove() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.remove(-1);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}
-    }
-    
-    /**
-     *
-     */
-    public void testremove1() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.remove(5);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}
-    }
-
-     
-    /**
-     *
-     */
-    public void testremove2() {
-        try {
-	    LinkedList l = new LinkedList();
-            l.remove();
-            shouldThrow();
-	} catch(NoSuchElementException e){}	
-    }
-
-    /**
-     *
-     */
-    public void testlistIt1() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.listIterator(5);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}
-    }
-    
-    /**
-     *
-     */
-    public void testlistIt2() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    l.listIterator(-1);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}
-    }
-    
-    /**
-     *
-     */
-    public void testlistIt3() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    ListIterator a = l.listIterator(0);
-	    l.removeFirst();
-	    a.next();
-	    shouldThrow();
-	} catch(ConcurrentModificationException success){}
-    }
-
-    /**
-     *
-     */
-    public void testToArray_BadArg() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    Object o[] = l.toArray(null);
-	    shouldThrow();
-	} catch(NullPointerException success){}
-    }
-
-    /**
-     *
-     */
-    public void testToArray1_BadArg() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Integer(5));
-	    Object o[] = l.toArray(new String[10] );
-	    shouldThrow();
-	} catch(ArrayStoreException  success){}
-    }
 
 }

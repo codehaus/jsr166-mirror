@@ -11,11 +11,9 @@ import java.util.concurrent.*;
 import java.io.*;
 
 public class PriorityQueueTest extends JSR166TestCase {
-
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
-
     public static Test suite() {
 	return new TestSuite(PriorityQueueTest.class);
     }
@@ -29,7 +27,6 @@ public class PriorityQueueTest extends JSR166TestCase {
             return 0;
         }
     }
-
 
     /**
      * Create a queue of given size containing consecutive
@@ -48,14 +45,14 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
  
     /**
-     *
+     * A new queue has unbounded capacity
      */
     public void testConstructor1() {
         assertEquals(0, new PriorityQueue(SIZE).size());
     }
 
     /**
-     *
+     * Constructor throws IAE if  capacity argument nonpositive
      */
     public void testConstructor2() {
         try {
@@ -66,10 +63,9 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from null Collection throws NPE
      */
     public void testConstructor3() {
-
         try {
             PriorityQueue q = new PriorityQueue((Collection)null);
             shouldThrow();
@@ -78,7 +74,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from Collection of null elements throws NPE
      */
     public void testConstructor4() {
         try {
@@ -90,7 +86,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from Collection with some null elements throws NPE
      */
     public void testConstructor5() {
         try {
@@ -104,7 +100,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue contains all elements of collection used to initialize
      */
     public void testConstructor6() {
         try {
@@ -119,7 +115,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * The comparator used in constructor is used
      */
     public void testConstructor7() {
         try {
@@ -137,7 +133,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * isEmpty is true before add, false after
      */
     public void testEmpty() {
         PriorityQueue q = new PriorityQueue(2);
@@ -151,7 +147,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * size changes when elements added and removed
      */
     public void testSize() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -166,7 +162,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * offer(null) throws NPE
      */
     public void testOfferNull() {
 	try {
@@ -177,16 +173,16 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Offer of comparable element succeeds
      */
     public void testOffer() {
         PriorityQueue q = new PriorityQueue(1);
-        assertTrue(q.offer(new Integer(0)));
-        assertTrue(q.offer(new Integer(1)));
+        assertTrue(q.offer(zero));
+        assertTrue(q.offer(one));
     }
 
     /**
-     *
+     * Offer of non-Comparable throws CCE
      */
     public void testOfferNonComparable() {
         try {
@@ -200,7 +196,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * add of comparable succeeds
      */
     public void testAdd() {
         PriorityQueue q = new PriorityQueue(SIZE);
@@ -211,7 +207,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * addAll(null) throws NPE
      */
     public void testAddAll1() {
         try {
@@ -222,7 +218,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         catch (NullPointerException success) {}
     }
     /**
-     *
+     * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
         try {
@@ -234,7 +230,8 @@ public class PriorityQueueTest extends JSR166TestCase {
         catch (NullPointerException success) {}
     }
     /**
-     *
+     * addAll of a collection with any null elements throws NPE after
+     * possibly adding some elements
      */
     public void testAddAll3() {
         try {
@@ -249,7 +246,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue contains all elements of successful addAll
      */
     public void testAddAll5() {
         try {
@@ -267,7 +264,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * poll succeeds unless empty
      */
     public void testPoll() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -278,7 +275,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * peek returns next element, or null if empty
      */
     public void testPeek() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -292,7 +289,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * element returns next element, or throws NSEE if empty
      */
     public void testElement() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -308,7 +305,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -323,7 +320,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remove(x) removes x and returns true if present
      */
     public void testRemoveElement() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -338,7 +335,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 	
     /**
-     *
+     * contains(x) reports true when elements added but not yet removed
      */
     public void testContains() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -350,7 +347,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * clear removes all elements
      */
     public void testClear() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -364,7 +361,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * containsAll(c) is true when c contains a subset of elements
      */
     public void testContainsAll() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -378,7 +375,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * retainAll(c) retains only those elements of c and reports true if changed
      */
     public void testRetainAll() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -397,7 +394,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * removeAll(c) removes only those elements of c and reports true if changed
      */
     public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {
@@ -413,7 +410,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toArray contains all elements
      */
     public void testToArray() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -424,7 +421,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toArray(a) contains all elements
      */
     public void testToArray2() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -436,7 +433,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
     
     /**
-     *
+     * iterator iterates through all elements
      */
     public void testIterator() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -450,7 +447,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * iterator.remove removes current element
      */
     public void testIteratorRemove () {
         final PriorityQueue q = new PriorityQueue(3);
@@ -470,7 +467,7 @@ public class PriorityQueueTest extends JSR166TestCase {
 
 
     /**
-     *
+     * toString contains toStrings of elements
      */
     public void testToString() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -481,7 +478,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     }        
 
     /**
-     *
+     * A deserialized serialized queue has same elements 
      */
     public void testSerialization() {
         PriorityQueue q = populatedQueue(SIZE);

@@ -18,7 +18,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * constructor initializes to given value
      */
     public void testConstructor() {
         AtomicBoolean ai = new AtomicBoolean(true);
@@ -26,7 +26,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * default constructed intializes to false
      */
     public void testConstructor2() {
         AtomicBoolean ai = new AtomicBoolean();
@@ -34,7 +34,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * get returns the last value set
      */
     public void testGetSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
@@ -45,8 +45,9 @@ public class AtomicBooleanTest extends JSR166TestCase {
 	assertEquals(true,ai.get());
 	
     }
+
     /**
-     *
+     * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
@@ -61,7 +62,29 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * compareAndSet in one thread enables another waiting for value
+     * to succeed
+     */
+    public void testCompareAndSetInMultipleThreads() {
+        final AtomicBoolean ai = new AtomicBoolean(true);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(!ai.compareAndSet(false, true)) Thread.yield();
+                }});
+        try {
+            t.start();
+            assertTrue(ai.compareAndSet(true, false));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+        }
+        catch(Exception e) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * repeated weakCompareAndSet succeeds in changing value when equal
+     * to expected 
      */
     public void testWeakCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
@@ -74,7 +97,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
@@ -85,7 +108,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * a deserialized serialized atomic holds same value
      */
     public void testSerialization() {
         AtomicBoolean l = new AtomicBoolean();

@@ -41,7 +41,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * execute successfully executes a runnable
      */
     public void testExecute() {
 	try {
@@ -66,8 +66,9 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         
     }
 
+
     /**
-     *
+     * delayed schedule of callable successfully executes after delay
      */
     public void testSchedule1() {
 	try {
@@ -87,7 +88,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  
+     *  delayed schedule of runnable successfully executes after delay
      */
     public void testSchedule3() {
 	try {
@@ -106,16 +107,36 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *
+     * scheduleAtFixedRate executes runnable after given initial delay
      */
     public void testSchedule4() {
 	try {
             MyRunnable runnable = new MyRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
-	    p1.schedule(runnable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+	    ScheduledCancellable h = p1.scheduleAtFixedRate(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(runnable.done);
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(runnable.done);
+            h.cancel(true);
+            p1.shutdown();
+            joinPool(p1);
+        } catch(Exception e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * scheduleWithFixedDelay executes runnable after given initial delay
+     */
+    public void testSchedule5() {
+	try {
+            MyRunnable runnable = new MyRunnable();
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+	    ScheduledCancellable h = p1.scheduleWithFixedDelay(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+	    assertFalse(runnable.done);
+	    Thread.sleep(MEDIUM_DELAY_MS);
+	    assertTrue(runnable.done);
+            h.cancel(true);
             p1.shutdown();
             joinPool(p1);
         } catch(Exception e){
@@ -123,12 +144,41 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         }
     }
     
-   
-    // exception tests
+    /**
+     *  execute (null) throws NPE
+     */
+    public void testExecuteNull() {
+        ScheduledExecutor se = null;
+        try {
+	    se = new ScheduledExecutor(1);
+	    se.execute(null);
+            shouldThrow();
+	} catch(NullPointerException success){}
+	catch(Exception e){
+            unexpectedException();
+        }
+	
+	joinPool(se);
+    }
 
     /**
-     *   schedule(Runnable, long) throws RejectedExecutionException
-     *  This occurs on an attempt to schedule a task on a shutdown executor
+     * schedule (null) throws NPE
+     */
+    public void testScheduleNull() {
+        ScheduledExecutor se = new ScheduledExecutor(1);
+	try {
+            MyCallable callable = null;
+	    Future f = se.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            shouldThrow();
+	} catch(NullPointerException success){}
+	catch(Exception e){
+            unexpectedException();
+        }
+	joinPool(se);
+    }
+   
+    /**
+     * execute throws RejectedExecutionException if shutdown
      */
     public void testSchedule1_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
@@ -144,8 +194,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   schedule(Callable, long, TimeUnit) throws RejectedExecutionException
-     *  This occurs on an attempt to schedule a task on a shutdown executor
+     * schedule throws RejectedExecutionException if shutdown
      */
     public void testSchedule2_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
@@ -160,8 +209,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   schedule(Callable, long) throws RejectedExecutionException
-     *  This occurs on an attempt to schedule a task on a shutdown executor
+     * schedule callable throws RejectedExecutionException if shutdown
      */
      public void testSchedule3_RejectedExecutionException() {
          ScheduledExecutor se = new ScheduledExecutor(1);
@@ -176,9 +224,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   scheduleAtFixedRate(Runnable, long, long, TimeUnit) throws 
-     *  RejectedExecutionException.
-     *  This occurs on an attempt to schedule a task on a shutdown executor
+     *  scheduleAtFixedRate throws RejectedExecutionException if shutdown
      */
     public void testScheduleAtFixedRate1_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
@@ -193,26 +239,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   scheduleAtFixedRate(Runnable, long, long, TimeUnit) throws 
-     *  RejectedExecutionException.
-     *  This occurs on an attempt to schedule a task on a shutdown executor
-     */
-    public void testScheduleAtFixedRate2_RejectedExecutionException() {
-        ScheduledExecutor se = new ScheduledExecutor(1);
-        try {
-            se.shutdown();
-            se.scheduleAtFixedRate(new NoOpRunnable(),
-                                   1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            shouldThrow();
-        } catch(RejectedExecutionException success){
-        } 
-        joinPool(se);
-    }
-
-    /**
-     *   scheduleWithFixedDelay(Runnable, long, long, TimeUnit) throws 
-     *  RejectedExecutionException.
-     *  This occurs on an attempt to schedule a task on a shutdown executor
+     * scheduleWithFixedDelay throws RejectedExecutionException if shutdown
      */
     public void testScheduleWithFixedDelay1_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
@@ -227,39 +254,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   scheduleWithFixedDelay(Runnable, long, long, TimeUnit) throws 
-     *  RejectedExecutionException.
-     *  This occurs on an attempt to schedule a task on a shutdown executor
-     */
-     public void testScheduleWithFixedDelay2_RejectedExecutionException() {
-         ScheduledExecutor se = new ScheduledExecutor(1);
-        try {
-            se.shutdown();
-            se.scheduleWithFixedDelay(new NoOpRunnable(),
-                                      1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            shouldThrow();
-        } catch(RejectedExecutionException success){
-        } 
-        joinPool(se);
-    }
-
-    /**
-     *   execute throws RejectedExecutionException
-     *  This occurs on an attempt to schedule a task on a shutdown executor
-     */
-    public void testExecute_RejectedExecutionException() {
-        ScheduledExecutor se = new ScheduledExecutor(1);
-        try {
-            se.shutdown();
-            se.execute(new NoOpRunnable());
-            shouldThrow();
-        } catch(RejectedExecutionException success){
-        } 
-        joinPool(se);
-    }
-
-    /**
-     *   getActiveCount gives correct values
+     *  getActiveCount increases but doesn't overestimate, when a
+     *  thread becomes active
      */
     public void testGetActiveCount() {
         ScheduledExecutor p2 = new ScheduledExecutor(2);
@@ -275,7 +271,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   getCompleteTaskCount gives correct values
+     *    getCompletedTaskCount increases, but doesn't overestimate,
+     *   when tasks complete
      */
     public void testGetCompletedTaskCount() {
         ScheduledExecutor p2 = new ScheduledExecutor(2);
@@ -291,7 +288,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   getCorePoolSize gives correct values
+     *  getCorePoolSize returns size given in constructor if not otherwise set 
      */
     public void testGetCorePoolSize() {
         ScheduledExecutor p1 = new ScheduledExecutor(1);
@@ -300,7 +297,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   getLargestPoolSize gives correct values
+     *    getLargestPoolSize increases, but doesn't overestimate, when
+     *   multiple threads active
      */
     public void testGetLargestPoolSize() {
         ScheduledExecutor p2 = new ScheduledExecutor(2);
@@ -317,7 +315,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   getPoolSize gives correct values
+     *   getPoolSize increases, but doesn't overestimate, when threads
+     *   become active
      */
     public void testGetPoolSize() {
         ScheduledExecutor p1 = new ScheduledExecutor(1);
@@ -328,7 +327,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   getTaskCount gives correct values
+     *    getTaskCount increases, but doesn't overestimate, when tasks
+     *    submitted
      */
     public void testGetTaskCount() {
         ScheduledExecutor p1 = new ScheduledExecutor(1);
@@ -345,7 +345,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   isShutDown gives correct values
+     *   is isShutDown is false before shutdown, true after
      */
     public void testIsShutdown() {
         
@@ -361,7 +361,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
         
     /**
-     *  isTerminated gives correct values
+     *   isTerminated is false before termination, true after
      */
     public void testIsTerminated() {
 	ScheduledExecutor p1 = new ScheduledExecutor(1);
@@ -379,7 +379,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  isTerminating gives correct values
+     *  isTerminating is not true when running or when terminated
      */
     public void testIsTerminating() {
 	ScheduledExecutor p1 = new ScheduledExecutor(1);
@@ -400,8 +400,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   that purge correctly removes cancelled tasks
-     *  from the queue
+     *   purge removes cancelled tasks from the queue
      */
     public void testPurge() {
         ScheduledExecutor p1 = new ScheduledExecutor(1);
@@ -419,8 +418,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   shutDownNow returns a list
-     *  containing the correct number of elements
+     *  shutDownNow returns a list containing tasks that were not run
      */
     public void testShutDownNow() {
 	ScheduledExecutor p1 = new ScheduledExecutor(1);
@@ -433,7 +431,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * In default setting, shutdown cancels periodic but not delayed
+     * tasks at shutdown
      */
     public void testShutDown1() {
         try {
@@ -465,7 +464,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
 
     /**
-     *
+     * If setExecuteExistingDelayedTasksAfterShutdownPolicy is false,
+     * delayed tasks are cancelled at shutdown
      */
     public void testShutDown2() {
         try {
@@ -488,7 +488,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
 
     /**
-     *
+     * If setContinueExistingPeriodicTasksAfterShutdownPolicy is set false,
+     * periodic tasks are not cancelled at shutdown
      */
     public void testShutDown3() {
         try {
@@ -509,7 +510,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * if setContinueExistingPeriodicTasksAfterShutdownPolicy is true,
+     * periodic tasks are cancelled at shutdown
      */
     public void testShutDown4() {
         ScheduledExecutor p1 = new ScheduledExecutor(1);

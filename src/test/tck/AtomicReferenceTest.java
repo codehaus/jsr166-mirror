@@ -18,7 +18,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * constructor initializes to given value
      */
     public void testConstructor(){
         AtomicReference ai = new AtomicReference(one);
@@ -26,7 +26,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * default constructed initializes to null
      */
     public void testConstructor2(){
         AtomicReference ai = new AtomicReference();
@@ -34,7 +34,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * get returns the last value set
      */
     public void testGetSet(){
         AtomicReference ai = new AtomicReference(one);
@@ -46,7 +46,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
 	
     }
     /**
-     *
+     * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){
         AtomicReference ai = new AtomicReference(one);
@@ -60,7 +60,30 @@ public class AtomicReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * compareAndSet in one thread enables another waiting for value
+     * to succeed
+     */
+    public void testCompareAndSetInMultipleThreads() {
+        final AtomicReference ai = new AtomicReference(one);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(!ai.compareAndSet(two, three)) Thread.yield();
+                }});
+        try {
+            t.start();
+            assertTrue(ai.compareAndSet(one, two));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+            assertEquals(ai.get(), three);
+        }
+        catch(Exception e) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * repeated weakCompareAndSet succeeds in changing value when equal
+     * to expected 
      */
     public void testWeakCompareAndSet(){
         AtomicReference ai = new AtomicReference(one);
@@ -72,7 +95,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet(){
         AtomicReference ai = new AtomicReference(one);
@@ -82,7 +105,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * a deserialized serialized atomic holds same value
      */
     public void testSerialization() {
         AtomicReference l = new AtomicReference();

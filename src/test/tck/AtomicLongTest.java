@@ -18,7 +18,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * constructor initializes to given value
      */
     public void testConstructor(){
         AtomicLong ai = new AtomicLong(1);
@@ -26,7 +26,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * default constructed intializes to zero
      */
     public void testConstructor2(){
         AtomicLong ai = new AtomicLong();
@@ -34,7 +34,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * get returns the last value set
      */
     public void testGetSet(){
         AtomicLong ai = new AtomicLong(1);
@@ -46,7 +46,7 @@ public class AtomicLongTest extends JSR166TestCase {
 	
     }
     /**
-     *
+     * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){
         AtomicLong ai = new AtomicLong(1);
@@ -60,7 +60,30 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * compareAndSet in one thread enables another waiting for value
+     * to succeed
+     */
+    public void testCompareAndSetInMultipleThreads() {
+        final AtomicLong ai = new AtomicLong(1);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(!ai.compareAndSet(2, 3)) Thread.yield();
+                }});
+        try {
+            t.start();
+            assertTrue(ai.compareAndSet(1, 2));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+            assertEquals(ai.get(), 3);
+        }
+        catch(Exception e) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * repeated weakCompareAndSet succeeds in changing value when equal
+     * to expected 
      */
     public void testWeakCompareAndSet(){
         AtomicLong ai = new AtomicLong(1);
@@ -72,7 +95,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet(){
         AtomicLong ai = new AtomicLong(1);
@@ -82,7 +105,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * getAndAdd returns previous value and adds given value
      */
     public void testGetAndAdd(){
         AtomicLong ai = new AtomicLong(1);
@@ -93,7 +116,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * getAndDecrement returns previous value and decrements
      */
     public void testGetAndDecrement(){
         AtomicLong ai = new AtomicLong(1);
@@ -103,7 +126,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * getAndIncrement returns previous value and increments
      */
     public void testGetAndIncrement(){
         AtomicLong ai = new AtomicLong(1);
@@ -117,7 +140,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * addAndGet adds given value to current, and returns current value
      */
     public void testAddAndGet(){
         AtomicLong ai = new AtomicLong(1);
@@ -128,7 +151,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * decrementAndGet decrements and returns current value
      */
     public void testDecrementAndGet(){
         AtomicLong ai = new AtomicLong(1);
@@ -139,7 +162,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * incrementAndGet increments and returns current value
      */
     public void testIncrementAndGet(){
         AtomicLong ai = new AtomicLong(1);
@@ -153,7 +176,7 @@ public class AtomicLongTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * a deserialized serialized atomic holds same value
      */
     public void testSerialization() {
         AtomicLong l = new AtomicLong();

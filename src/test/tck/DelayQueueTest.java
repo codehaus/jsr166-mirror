@@ -22,7 +22,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
     /**
      * A delayed implmentation for testing.
-     * Most Q/BQ tests use Pseudodelays, where delays are all elapsed
+     * Most  tests use Pseudodelays, where delays are all elapsed
      * (so, no blocking solely for delays) but are still ordered
      */ 
     static class PDelay implements Delayed { 
@@ -129,14 +129,14 @@ public class DelayQueueTest extends JSR166TestCase {
     }
  
     /**
-     *
+     * A new queue has unbounded capacity
      */
     public void testConstructor1() {
         assertEquals(NOCAP, new DelayQueue().remainingCapacity());
     }
 
     /**
-     *
+     * Initializing from null Collection throws NPE
      */
     public void testConstructor3() {
         try {
@@ -147,7 +147,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from Collection of null elements throws NPE
      */
     public void testConstructor4() {
         try {
@@ -159,7 +159,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from Collection with some null elements throws NPE
      */
     public void testConstructor5() {
         try {
@@ -173,7 +173,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue contains all elements of collection used to initialize
      */
     public void testConstructor6() {
         try {
@@ -188,7 +188,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * isEmpty is true before add, false after
      */
     public void testEmpty() {
         DelayQueue q = new DelayQueue();
@@ -203,7 +203,8 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remainingCapacity does not change when elementa added or removed,
+     * but size does
      */
     public void testRemainingCapacity() {
         DelayQueue q = populatedQueue(SIZE);
@@ -220,7 +221,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * offer(null) throws NPE
      */
     public void testOfferNull() {
 	try {
@@ -231,7 +232,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * offer non-null succeeds
      */
     public void testOffer() {
         DelayQueue q = new DelayQueue();
@@ -240,7 +241,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * add succeeds
      */
     public void testAdd() {
         DelayQueue q = new DelayQueue();
@@ -251,7 +252,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * addAll(null) throws NPE
      */
     public void testAddAll1() {
         try {
@@ -262,7 +263,7 @@ public class DelayQueueTest extends JSR166TestCase {
         catch (NullPointerException success) {}
     }
     /**
-     *
+     * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
         try {
@@ -274,7 +275,8 @@ public class DelayQueueTest extends JSR166TestCase {
         catch (NullPointerException success) {}
     }
     /**
-     *
+     * addAll of a collection with any null elements throws NPE after
+     * possibly adding some elements
      */
     public void testAddAll3() {
         try {
@@ -289,7 +291,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue contains all elements of successful addAll
      */
     public void testAddAll5() {
         try {
@@ -307,7 +309,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * put(null) throws NPE
      */
      public void testPutNull() {
 	try {
@@ -320,7 +322,7 @@ public class DelayQueueTest extends JSR166TestCase {
      }
 
     /**
-     *
+     * all elements successfully put are contained
      */
      public void testPut() {
          try {
@@ -337,7 +339,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * put doesn't block waiting for take
      */
     public void testPutWithTake() {
         final DelayQueue q = new DelayQueue();
@@ -370,7 +372,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed offer does not time out
      */
     public void testTimedOffer() {
         final DelayQueue q = new DelayQueue();
@@ -396,7 +398,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * take retrieves elements in priority order
      */
     public void testTake() {
 	try {
@@ -410,7 +412,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * take blocks interruptibly when empty
      */
     public void testTakeFromEmpty() {
         final DelayQueue q = new DelayQueue();
@@ -433,7 +435,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() {
         Thread t = new Thread(new Runnable() {
@@ -461,7 +463,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
 
     /**
-     *
+     * poll succeeds unless empty
      */
     public void testPoll() {
         DelayQueue q = populatedQueue(SIZE);
@@ -472,7 +474,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed pool with zero timeout succeeds when non-empty, else times out
      */
     public void testTimedPoll0() {
         try {
@@ -487,7 +489,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed pool with nonzero timeout succeeds when non-empty, else times out
      */
     public void testTimedPoll() {
         try {
@@ -502,7 +504,8 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Interrupted timed poll throws InterruptedException instead of
+     * returning timeout status
      */
     public void testInterruptedTimedPoll() {
         Thread t = new Thread(new Runnable() {
@@ -528,7 +531,8 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  timed poll before a delayed offer fails; after offer succeeds;
+     *  on interruption throws
      */
     public void testTimedPollWithOffer() {
         final DelayQueue q = new DelayQueue();
@@ -555,7 +559,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
 
     /**
-     *
+     * peek returns next element, or null if empty
      */
     public void testPeek() {
         DelayQueue q = populatedQueue(SIZE);
@@ -569,7 +573,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * element returns next element, or throws NSEE if empty
      */
     public void testElement() {
         DelayQueue q = populatedQueue(SIZE);
@@ -585,7 +589,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         DelayQueue q = populatedQueue(SIZE);
@@ -600,7 +604,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remove(x) removes x and returns true if present
      */
     public void testRemoveElement() {
         DelayQueue q = populatedQueue(SIZE);
@@ -615,7 +619,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 	
     /**
-     *
+     * contains(x) reports true when elements added but not yet removed
      */
     public void testContains() {
         DelayQueue q = populatedQueue(SIZE);
@@ -627,7 +631,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * clear removes all elements
      */
     public void testClear() {
         DelayQueue q = populatedQueue(SIZE);
@@ -642,7 +646,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * containsAll(c) is true when c contains a subset of elements
      */
     public void testContainsAll() {
         DelayQueue q = populatedQueue(SIZE);
@@ -656,7 +660,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * retainAll(c) retains only those elements of c and reports true if changed
      */
     public void testRetainAll() {
         DelayQueue q = populatedQueue(SIZE);
@@ -675,7 +679,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * removeAll(c) removes only those elements of c and reports true if changed
      */
     public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {
@@ -691,7 +695,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toArray contains all elements
      */
     public void testToArray() {
         DelayQueue q = populatedQueue(SIZE);
@@ -706,7 +710,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toArray(a) contains all elements
      */
     public void testToArray2() {
         DelayQueue q = populatedQueue(SIZE);
@@ -722,7 +726,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
     
     /**
-     *
+     * iterator iterates through all elements
      */
     public void testIterator() {
         DelayQueue q = populatedQueue(SIZE);
@@ -736,20 +740,16 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * iterator.remove removes current element
      */
     public void testIteratorRemove () {
-
         final DelayQueue q = new DelayQueue();
-
         q.add(new PDelay(2));
         q.add(new PDelay(1));
         q.add(new PDelay(3));
-
         Iterator it = q.iterator();
         it.next();
         it.remove();
-
         it = q.iterator();
         assertEquals(it.next(), new PDelay(2));
         assertEquals(it.next(), new PDelay(3));
@@ -758,7 +758,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
 
     /**
-     *
+     * toString contains toStrings of elements
      */
     public void testToString() {
         DelayQueue q = populatedQueue(SIZE);
@@ -769,14 +769,11 @@ public class DelayQueueTest extends JSR166TestCase {
     }        
 
     /**
-     *
+     * offer transfers elements across Executor tasks
      */
     public void testPollInExecutor() {
-
         final DelayQueue q = new DelayQueue();
-
         ExecutorService executor = Executors.newFixedThreadPool(2);
-
         executor.execute(new Runnable() {
             public void run() {
                 threadAssertNull(q.poll());
@@ -801,14 +798,13 @@ public class DelayQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
         joinPool(executor);
 
     }
 
 
     /**
-     *
+     * Dekayed actions do not occur until their delay elapses
      */
     public void testDelay() {
         DelayQueue q = new DelayQueue();

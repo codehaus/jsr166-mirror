@@ -64,7 +64,7 @@ public class JSR166TestCase extends TestCase {
      * be reimplmented to use for example a Property.
      */ 
     protected long getShortDelay() {
-        return 50;
+        return 100;
     }
 
 
@@ -84,7 +84,7 @@ public class JSR166TestCase extends TestCase {
     protected volatile boolean threadFailed;
 
     /**
-     * Initialize test to indicat that no thread assertions have failed
+     * Initialize test to indicate that no thread assertions have failed
      */
     public void setUp() { 
         setDelays();

@@ -12,7 +12,6 @@ import java.util.concurrent.*;
 import java.math.BigInteger;
 
 public class ExecutorsTest extends JSR166TestCase{
-   
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
@@ -79,14 +78,294 @@ public class ExecutorsTest extends JSR166TestCase{
         }
     };
 
+    /**
+     * For use as ThreadFactory in constructors
+     */
+    static class MyThreadFactory implements ThreadFactory{
+        public Thread newThread(Runnable r){
+            return new Thread(r);
+        }   
+    }
+
+    /**
+     * A newCachedThreadPool can execute runnables
+     */
+    public void testNewCachedThreadPool1() {
+        ExecutorService e = Executors.newCachedThreadPool();
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.shutdown();
+    }
+
+    /**
+     * A newCachedThreadPool with given ThreadFactory can execute runnables
+     */
+    public void testNewCachedThreadPool2() {
+        ExecutorService e = Executors.newCachedThreadPool(new MyThreadFactory());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.shutdown();
+    }
+
+    /**
+     * A newCachedThreadPool with null ThreadFactory throws NPE
+     */
+    public void testNewCachedThreadPool3() {
+        try {
+            ExecutorService e = Executors.newCachedThreadPool(null);
+            shouldThrow();
+        }
+        catch(NullPointerException success) {
+        }
+    }
 
 
     /**
-     *   execute(Executor, Runnable) will throw
-     *  RejectedExecutionException Attempting to execute a runnable on
-     *  a full ThreadPool will cause such an exception here, up to 5
-     *  runnables are attempted on a pool capable on handling one
-     *  until it throws an exception
+     * A new SingleThreadExecutor can execute runnables
+     */
+    public void testNewSingleThreadExecutor1() {
+        ExecutorService e = Executors.newSingleThreadExecutor();
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.shutdown();
+    }
+
+    /**
+     * A new SingleThreadExecutor with given ThreadFactory can execute runnables
+     */
+    public void testNewSingleThreadExecutor2() {
+        ExecutorService e = Executors.newSingleThreadExecutor(new MyThreadFactory());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.shutdown();
+    }
+
+    /**
+     * A new SingleThreadExecutor with null ThreadFactory throws NPE
+     */
+    public void testNewSingleThreadExecutor3() {
+        try {
+            ExecutorService e = Executors.newSingleThreadExecutor(null);
+            shouldThrow();
+        }
+        catch(NullPointerException success) {
+        }
+    }
+
+    /**
+     * A new newFixedThreadPool can execute runnables
+     */
+    public void testNewFixedThreadPool1() {
+        ExecutorService e = Executors.newFixedThreadPool(2);
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.shutdown();
+    }
+
+    /**
+     * A new newFixedThreadPool with given ThreadFactory can execute runnables
+     */
+    public void testNewFixedThreadPool2() {
+        ExecutorService e = Executors.newFixedThreadPool(2, new MyThreadFactory());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.execute(new NoOpRunnable());
+        e.shutdown();
+    }
+
+    /**
+     * A new newFixedThreadPool with null ThreadFactory throws NPE
+     */
+    public void testNewFixedThreadPool3() {
+        try {
+            ExecutorService e = Executors.newFixedThreadPool(2, null);
+            shouldThrow();
+        }
+        catch(NullPointerException success) {
+        }
+    }
+
+    /**
+     * A new newFixedThreadPool with 0 threads throws IAE
+     */
+    public void testNewFixedThreadPool4() {
+        try {
+            ExecutorService e = Executors.newFixedThreadPool(0);
+            shouldThrow();
+        }
+        catch(IllegalArgumentException success) {
+        }
+    }
+
+    /**
+     * execute of runnable runs it to completion 
+     */
+    public void testExecuteRunnable () {
+        try {
+            Executor e = new DirectExecutor();
+            MyTask task = new MyTask();
+            assertFalse(task.isCompleted());
+            Future<String> future = Executors.execute(e, task, TEST_STRING);
+            String result = future.get();
+            assertTrue(task.isCompleted());
+            assertSame(TEST_STRING, result);
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * invoke of a runnable runs it to completion 
+     */
+    public void testInvokeRunnable () {
+        try {
+            Executor e = new DirectExecutor();
+            MyTask task = new MyTask();
+            assertFalse(task.isCompleted());
+            Executors.invoke(e, task);
+            assertTrue(task.isCompleted());
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * execute of a callable runs it to completion
+     */
+    public void testExecuteCallable () {
+        try {
+            Executor e = new DirectExecutor();
+            Future<String> future = Executors.execute(e, new StringTask());
+            String result = future.get();
+            assertSame(TEST_STRING, result);
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * invoke of a collable runs it to completion
+     */
+    public void testInvokeCallable () {
+        try {
+            Executor e = new DirectExecutor();
+            String result = Executors.invoke(e, new StringTask());
+
+            assertSame(TEST_STRING, result);
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * execute with null executor throws NPE
+     */
+    public void testNullExecuteRunnable () {
+        try {
+            MyTask task = new MyTask();
+            assertFalse(task.isCompleted());
+            Future<String> future = Executors.execute(null, task, TEST_STRING);
+            shouldThrow();
+        }
+        catch (NullPointerException success) {
+        }
+        catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * execute with a null runnable throws NPE
+     */
+    public void testExecuteNullRunnable() {
+        try {
+            Executor e = new DirectExecutor();
+            MyTask task = null;
+            Future<String> future = Executors.execute(e, task, TEST_STRING);
+            shouldThrow();
+        }
+        catch (NullPointerException success) {
+        }
+        catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * invoke of a null runnable throws NPE
+     */
+    public void testInvokeNullRunnable () {
+        try {
+            Executor e = new DirectExecutor();
+            MyTask task = null;
+            Executors.invoke(e, task);
+            shouldThrow();
+        }
+        catch (NullPointerException success) {
+        }
+        catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * execute of a null callable throws NPE
+     */
+    public void testExecuteNullCallable () {
+        try {
+            Executor e = new DirectExecutor();
+            StringTask t = null;
+            Future<String> future = Executors.execute(e, t);
+            shouldThrow();
+        }
+        catch (NullPointerException success) {
+        }
+        catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * invoke of a null callable throws NPE
+     */
+    public void testInvokeNullCallable () {
+        try {
+            Executor e = new DirectExecutor();
+            StringTask t = null;
+            String result = Executors.invoke(e, t);
+            shouldThrow();
+        }
+        catch (NullPointerException success) {
+        }
+        catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     *  execute(Executor, Runnable) throws RejectedExecutionException
+     *  if saturated.
      */
     public void testExecute1() {
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
@@ -101,11 +380,8 @@ public class ExecutorsTest extends JSR166TestCase{
     }
 
     /**
-     *   execute(Executor, Callable) will throw
-     *  RejectedExecutionException Attempting to execute a callable on
-     *  a full ThreadPool will cause such an exception here, up to 5
-     *  runnables are attempted on a pool capable on handling one
-     *  until it throws an exception
+     *  execute(Executor, Callable)throws RejectedExecutionException
+     *  if saturated.
      */
     public void testExecute2() {
          ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
@@ -120,11 +396,10 @@ public class ExecutorsTest extends JSR166TestCase{
 
 
     /**
-     *   invoke(Executor, Runnable) throws InterruptedException
-     *  A single use of invoke starts that will wait long enough
-     *  for the invoking thread to be interrupted
+     *  invoke(Executor, Runnable) throws InterruptedException if
+     *  caller interrupted.
      */
-    public void testInvoke2() {
+    public void testInterruptedInvoke() {
         final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -156,10 +431,8 @@ public class ExecutorsTest extends JSR166TestCase{
     }
 
     /**
-     *   invoke(Executor, Runnable) will throw
-     *  ExecutionException An ExecutionException occurs when the
-     *  underlying Runnable throws an exception, here the
-     *  DivideByZeroException will cause an ExecutionException
+     *  invoke(Executor, Runnable) throws ExecutionException if
+     *  runnable throws exception.
      */
     public void testInvoke3() {
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -185,9 +458,8 @@ public class ExecutorsTest extends JSR166TestCase{
 
 
     /**
-     *   invoke(Executor, Callable) throws
-     *  InterruptedException A single use of invoke starts that will
-     *  wait long enough for the invoking thread to be interrupted
+     *  invoke(Executor, Callable) throws InterruptedException if
+     *  callable throws exception
      */
     public void testInvoke5() {
         final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -226,9 +498,8 @@ public class ExecutorsTest extends JSR166TestCase{
     }
 
     /**
-     *   invoke(Executor, Callable) will throw ExecutionException
-     *  An ExecutionException occurs when the underlying Runnable throws
-     *  an exception, here the DivideByZeroException will cause an ExecutionException
+     *  invoke(Executor, Callable) will throw ExecutionException
+     *  if callable throws exception
      */
     public void testInvoke6() {
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -246,87 +517,15 @@ public class ExecutorsTest extends JSR166TestCase{
             }
             
             shouldThrow();
-        } catch(RejectedExecutionException e){}
-        catch(InterruptedException e2){}
-        catch(ExecutionException e3){}
+        } 
+        catch(ExecutionException success){
+        } catch(Exception e) {
+            unexpectedException();
+        }
         joinPool(p);
     }
 
-    /**
-     *
-     */
-    public void testExecuteRunnable () {
-        try {
-            Executor e = new DirectExecutor();
-            MyTask task = new MyTask();
-            assertFalse(task.isCompleted());
-            Future<String> future = Executors.execute(e, task, TEST_STRING);
-            String result = future.get();
-            assertTrue(task.isCompleted());
-            assertSame(TEST_STRING, result);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-    }
 
-    /**
-     *
-     */
-    public void testInvokeRunnable () {
-        try {
-            Executor e = new DirectExecutor();
-            MyTask task = new MyTask();
-            assertFalse(task.isCompleted());
-            Executors.invoke(e, task);
-            assertTrue(task.isCompleted());
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-    }
-
-    /**
-     *
-     */
-    public void testExecuteCallable () {
-        try {
-            Executor e = new DirectExecutor();
-            Future<String> future = Executors.execute(e, new StringTask());
-            String result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-    }
-
-    /**
-     *
-     */
-    public void testInvokeCallable () {
-        try {
-            Executor e = new DirectExecutor();
-            String result = Executors.invoke(e, new StringTask());
-
-            assertSame(TEST_STRING, result);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-    }
 
     /**
      *  timeouts from execute will time out if they compute too long.

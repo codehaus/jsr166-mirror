@@ -19,23 +19,19 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Zero, negative, and positive initial values are allowed in constructor
      */
-    public void testConstructor1() {
-        Semaphore s = new Semaphore(0);
-        assertEquals(0, s.availablePermits());
+    public void testConstructor() {
+        Semaphore s0 = new Semaphore(0);
+        assertEquals(0, s0.availablePermits());
+        Semaphore s1 = new Semaphore(-1);
+        assertEquals(-1, s1.availablePermits());
+        Semaphore s2 = new Semaphore(-1);
+        assertEquals(-1, s2.availablePermits());
     }
 
     /**
-     *
-     */
-    public void testConstructor2() {
-        Semaphore s = new Semaphore(-1);
-        assertEquals(-1, s.availablePermits());
-    }
-
-    /**
-     *
+     * tryAcquire succeeds when sufficent permits, else fails
      */
     public void testTryAcquireInSameThread() {
         Semaphore s = new Semaphore(2);
@@ -47,7 +43,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Acquire and release of semaphore succeed if initially available
      */
     public void testAcquireReleaseInSameThread() {
         Semaphore s = new Semaphore(1);
@@ -69,7 +65,8 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Uninterruptible acquire and release of semaphore succeed if
+     * initially available
      */
     public void testAcquireUninterruptiblyReleaseInSameThread() {
         Semaphore s = new Semaphore(1);
@@ -89,38 +86,9 @@ public class SemaphoreTest extends JSR166TestCase {
         }
     }
 
-
     /**
-     *
-     */
-    public void testAcquireReleaseInDifferentThreads() {
-        final Semaphore s = new Semaphore(1);
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    try {
-			s.acquire();
-                        s.release();
-                        s.release();
-                        s.acquire();
-		    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-		}
-	    });
-	t.start();
-        try {
-            s.release();
-            s.release();
-            s.acquire();
-            s.acquire();
-            t.join();
-	} catch( InterruptedException e){
-            unexpectedException();
-        }
-    }
-
-    /**
-     *
+     * Timed Acquire and release of semaphore succeed if
+     * initially available
      */
     public void testTimedAcquireReleaseInSameThread() {
         Semaphore s = new Semaphore(1);
@@ -142,7 +110,66 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * A release in one thread enables an acquire in another thread
+     */
+    public void testAcquireReleaseInDifferentThreads() {
+        final Semaphore s = new Semaphore(0);
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
+			s.acquire();
+                        s.release();
+                        s.release();
+                        s.acquire();
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            s.release();
+            s.release();
+            s.acquire();
+            s.acquire();
+            s.release();
+            t.join();
+	} catch( InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * A release in one thread enables an uninterruptible acquire in another thread
+     */
+    public void testUninterruptibleAcquireReleaseInDifferentThreads() {
+        final Semaphore s = new Semaphore(0);
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+                    s.acquireUninterruptibly();
+                    s.release();
+                    s.release();
+                    s.acquireUninterruptibly();
+		}
+	    });
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            s.release();
+            s.release();
+            s.acquireUninterruptibly();
+            s.acquireUninterruptibly();
+            s.release();
+            t.join();
+	} catch( InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+
+    /**
+     *  A release in one thread enables a timed acquire in another thread
      */
     public void testTimedAcquireReleaseInDifferentThreads() {
         final Semaphore s = new Semaphore(1);
@@ -159,11 +186,12 @@ public class SemaphoreTest extends JSR166TestCase {
                     }
 		}
 	    });
-	t.start();
         try {
+            t.start();
             assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             s.release();
             assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            s.release();
             s.release();
             t.join();
 	} catch( InterruptedException e){
@@ -172,7 +200,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * A waiting acquire blocks interruptibly
      */
     public void testAcquire_InterruptedException() {
 	final Semaphore s = new Semaphore(0);
@@ -195,7 +223,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
     
     /**
-     *
+     *  A waiting timed acquire blocks interruptibly
      */
     public void testTryAcquire_InterruptedException() {
 	final Semaphore s = new Semaphore(0);
@@ -219,7 +247,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * a deserialized serialized semaphore has same number of permits
      */
     public void testSerialization() {
         Semaphore l = new Semaphore(3);

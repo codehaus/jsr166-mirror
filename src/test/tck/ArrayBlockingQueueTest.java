@@ -35,14 +35,14 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
  
     /**
-     *
+     * A new queue has the indicated capacity
      */
     public void testConstructor1() {
         assertEquals(SIZE, new ArrayBlockingQueue(SIZE).remainingCapacity());
     }
 
     /**
-     *
+     * Constructor throws IAE if  capacity argument nonpositive
      */
     public void testConstructor2() {
         try {
@@ -53,10 +53,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from null Collection throws NPE
      */
     public void testConstructor3() {
-
         try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(1, true, null);
             shouldThrow();
@@ -65,7 +64,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from Collection of null elements throws NPE
      */
     public void testConstructor4() {
         try {
@@ -77,7 +76,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from Collection with some null elements throws NPE
      */
     public void testConstructor5() {
         try {
@@ -91,7 +90,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Initializing from too large collection throws IAE
      */
     public void testConstructor6() {
         try {
@@ -105,7 +104,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue contains all elements of collection used to initialize
      */
     public void testConstructor7() {
         try {
@@ -120,7 +119,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Queue transitions from empty to full when elements added
      */
     public void testEmptyFull() {
         ArrayBlockingQueue q = new ArrayBlockingQueue(2);
@@ -135,7 +134,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remainingCapacity decreases on add, increases on remove
      */
     public void testRemainingCapacity() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -152,7 +151,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  offer(null) throws NPE
      */
     public void testOfferNull() {
 	try {
@@ -163,7 +162,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Offer succeeds if not full; fails if full
      */
     public void testOffer() {
         ArrayBlockingQueue q = new ArrayBlockingQueue(1);
@@ -172,7 +171,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * add succeeds if not full; throws ISE if full
      */
     public void testAdd() {
 	try {
@@ -187,7 +186,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  addAll(null) throws NPE
      */
     public void testAddAll1() {
         try {
@@ -198,7 +197,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         catch (NullPointerException success) {}
     }
     /**
-     *
+     *  addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
         try {
@@ -210,7 +209,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         catch (NullPointerException success) {}
     }
     /**
-     *
+     * addAll of a collection with any null elements throws NPE after
+     * possibly adding some elements
      */
     public void testAddAll3() {
         try {
@@ -224,7 +224,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         catch (NullPointerException success) {}
     }
     /**
-     *
+     * addAll throws ISE if not enough room
      */
     public void testAddAll4() {
         try {
@@ -238,7 +238,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         catch (IllegalStateException success) {}
     }
     /**
-     *
+     * Queue contains all elements, in traversal order, of successful addAll
      */
     public void testAddAll5() {
         try {
@@ -256,7 +256,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  put(null) throws NPE
      */
      public void testPutNull() {
 	try {
@@ -272,7 +272,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      }
 
     /**
-     *
+     * all elements successfully put are contained
      */
      public void testPut() {
          try {
@@ -290,7 +290,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * put blocks interruptibly if full
      */
     public void testBlockingPut() {
         Thread t = new Thread(new Runnable() {
@@ -320,7 +320,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * put blocks waiting for take when full
      */
     public void testPutWithTake() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
@@ -354,7 +354,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed offer times out if full and elements not taken
      */
     public void testTimedOffer() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
@@ -381,7 +381,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * take retrieves elements in FIFO order
      */
     public void testTake() {
 	try {
@@ -395,7 +395,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * take blocks interruptibly when empty
      */
     public void testTakeFromEmpty() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
@@ -418,7 +418,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() {
         Thread t = new Thread(new Runnable() {
@@ -446,7 +446,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
 
     /**
-     *
+     * poll succeeds unless empty
      */
     public void testPoll() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -457,7 +457,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed pool with zero timeout succeeds when non-empty, else times out
      */
     public void testTimedPoll0() {
         try {
@@ -472,7 +472,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed pool with nonzero timeout succeeds when non-empty, else times out
      */
     public void testTimedPoll() {
         try {
@@ -487,7 +487,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Interrupted timed poll throws InterruptedException instead of
+     * returning timeout status
      */
     public void testInterruptedTimedPoll() {
         Thread t = new Thread(new Runnable() {
@@ -513,7 +514,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     *  timed poll before a delayed offer fails; after offer succeeds;
+     *  on interruption throws
      */
     public void testTimedPollWithOffer() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
@@ -540,7 +542,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
 
     /**
-     *
+     * peek returns next element, or null if empty
      */
     public void testPeek() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -554,7 +556,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * element returns next element, or throws NSEE if empty
      */
     public void testElement() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -570,7 +572,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -585,7 +587,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * remove(x) removes x and returns true if present
      */
     public void testRemoveElement() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -600,7 +602,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 	
     /**
-     *
+     * contains(x) reports true when elements added but not yet removed
      */
     public void testContains() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -612,7 +614,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * clear removes all elements
      */
     public void testClear() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -627,7 +629,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * containsAll(c) is true when c contains a subset of elements
      */
     public void testContainsAll() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -641,7 +643,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * retainAll(c) retains only those elements of c and reports true if changed
      */
     public void testRetainAll() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -660,7 +662,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * removeAll(c) removes only those elements of c and reports true if changed
      */
     public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {
@@ -675,9 +677,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
     }
 
-
     /**
-     *
+     *  toArray contains all elements
      */
     public void testToArray() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -691,7 +692,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * toArray(a) contains all elements
      */
     public void testToArray2() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -706,7 +707,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
     
     /**
-     *
+     * iterator iterates through all elements
      */
     public void testIterator() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -721,7 +722,26 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * iterator.remove removes current element
+     */
+    public void testIteratorRemove () {
+        final ArrayBlockingQueue q = new ArrayBlockingQueue(3);
+        q.add(two);
+        q.add(one);
+        q.add(three);
+
+        Iterator it = q.iterator();
+        it.next();
+        it.remove();
+        
+        it = q.iterator();
+        assertEquals(it.next(), one);
+        assertEquals(it.next(), three);
+        assertFalse(it.hasNext());
+    }
+
+    /**
+     * iterator ordering is FIFO
      */
     public void testIteratorOrdering() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(3);
@@ -740,7 +760,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Modifications do not cause iterators to fail
      */
     public void testWeaklyConsistentIteration () {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(3);
@@ -756,13 +776,12 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         catch (ConcurrentModificationException e) {
             unexpectedException();
         }
-
         assertEquals(0, q.size());
     }
 
 
     /**
-     *
+     * toString contains toStrings of elements
      */
     public void testToString() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -774,17 +793,13 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
 
     /**
-     *
+     * offer transfers elements across Executor tasks
      */
     public void testOfferInExecutor() {
-
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
-
         q.add(one);
         q.add(two);
-
         ExecutorService executor = Executors.newFixedThreadPool(2);
-
         executor.execute(new Runnable() {
             public void run() {
                 threadAssertFalse(q.offer(three));
@@ -815,14 +830,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * poll retrieves elements across Executor threads
      */
     public void testPollInExecutor() {
-
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
-
         ExecutorService executor = Executors.newFixedThreadPool(2);
-
         executor.execute(new Runnable() {
             public void run() {
                 threadAssertNull(q.poll());
@@ -849,11 +861,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         });
         
         joinPool(executor);
-
     }
 
     /**
-     *
+     * A deserialized serialized queue has same elements in same order
      */
     public void testSerialization() {
         ArrayBlockingQueue q = populatedQueue(SIZE);

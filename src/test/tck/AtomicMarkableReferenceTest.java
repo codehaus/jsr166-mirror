@@ -16,13 +16,8 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
         return new TestSuite(AtomicMarkableReferenceTest.class);
     }
     
-    static final Integer zero = new Integer(0);
-    static final Integer one = new Integer(1);
-    static final Integer two = new Integer(2);
-    static final Integer m3  = new Integer(-3);
-
     /**
-     *
+     *  constructeor initializes to given reference and mark
      */
     public void testConstructor(){
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
@@ -35,7 +30,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     }
 
     /**
-     *
+     *  get returns the last values of reference and mark set
      */
     public void testGetSet(){
         boolean[] mark = new boolean[1];
@@ -57,7 +52,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * attemptMark succeeds in single thread
      */
     public void testAttemptMark(){
         boolean[] mark = new boolean[1];
@@ -70,7 +65,8 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * compareAndSet succeeds in changing values if equal to expected reference
+     * and mark else fails
      */
     public void testCompareAndSet(){
         boolean[] mark = new boolean[1];
@@ -93,7 +89,54 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * compareAndSet in one thread enables another waiting for reference value
+     * to succeed
+     */
+    public void testCompareAndSetInMultipleThreads() {
+        final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(!ai.compareAndSet(two, three, false, false)) Thread.yield();
+                }});
+        try {
+            t.start();
+            assertTrue(ai.compareAndSet(one, two, false, false));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+            assertEquals(ai.getReference(), three);
+            assertFalse(ai.isMarked());
+        }
+        catch(Exception e) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * compareAndSet in one thread enables another waiting for mark value
+     * to succeed
+     */
+    public void testCompareAndSetInMultipleThreads2() {
+        final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(!ai.compareAndSet(one, one, true, false)) Thread.yield();
+                }});
+        try {
+            t.start();
+            assertTrue(ai.compareAndSet(one, one, false, true));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+            assertEquals(ai.getReference(), one);
+            assertFalse(ai.isMarked());
+        }
+        catch(Exception e) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * repeated weakCompareAndSet succeeds in changing values when equal
+     * to expected 
      */
     public void testWeakCompareAndSet(){
         boolean[] mark = new boolean[1];

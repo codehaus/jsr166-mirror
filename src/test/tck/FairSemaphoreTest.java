@@ -21,23 +21,19 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * Zero, negative, and positive initial values are allowed in constructor
      */
-    public void testConstructor1() {
-        FairSemaphore s = new FairSemaphore(0);
-        assertEquals(0, s.availablePermits());
+    public void testConstructor() {
+        FairSemaphore s0 = new FairSemaphore(0);
+        assertEquals(0, s0.availablePermits());
+        FairSemaphore s1 = new FairSemaphore(-1);
+        assertEquals(-1, s1.availablePermits());
+        FairSemaphore s2 = new FairSemaphore(-1);
+        assertEquals(-1, s2.availablePermits());
     }
 
     /**
-     *
-     */
-    public void testConstructor2() {
-        FairSemaphore s = new FairSemaphore(-1);
-        assertEquals(-1, s.availablePermits());
-    }
-
-    /**
-     *
+     * tryAcquire succeeds when sufficent permits, else fails
      */
     public void testTryAcquireInSameThread() {
         FairSemaphore s = new FairSemaphore(2);
@@ -49,7 +45,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * tryAcquire(n) succeeds when sufficent permits, else fails
      */
     public void testTryAcquireNInSameThread() {
         FairSemaphore s = new FairSemaphore(2);
@@ -60,7 +56,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * Acquire and release of semaphore succeed if initially available
      */
     public void testAcquireReleaseInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
@@ -82,7 +78,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * Acquire(n) and release(n) of semaphore succeed if initially available
      */
     public void testAcquireReleaseNInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
@@ -104,7 +100,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * Acquire(n) and release(n) of semaphore succeed if initially available
      */
     public void testAcquireUninterruptiblyReleaseNInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
@@ -125,90 +121,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
-     */
-    public void testAcquireReleaseInDifferentThreads() {
-        final FairSemaphore s = new FairSemaphore(1);
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    try {
-			s.acquire();
-                        s.acquire();
-                        s.acquire();
-                        s.acquire();
-                        s.acquire();
-		    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-		}
-	    });
-	t.start();
-        try {
-            s.release();
-            s.release();
-            s.release();
-            s.release();
-            s.release();
-            t.join();
-            assertEquals(1, s.availablePermits());
-	} catch( InterruptedException e){
-            unexpectedException();
-        }
-    }
-
-    /**
-     *
-     */
-    public void testAcquireReleaseNInDifferentThreads() {
-        final FairSemaphore s = new FairSemaphore(2);
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    try {
-                        s.release(2);
-                        s.release(2);
-                        s.acquire(2);
-                        s.acquire(2);
-		    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-		}
-	    });
-	t.start();
-        try {
-            s.acquire(2);
-            s.acquire(2);
-            s.release(2);
-            s.release(2);
-            t.join();
-	} catch( InterruptedException e){
-            unexpectedException();
-        }
-    }
-
-    /**
-     *
-     */
-    public void testTimedAcquireReleaseInSameThread() {
-        FairSemaphore s = new FairSemaphore(1);
-        try {
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertEquals(1, s.availablePermits());
-	} catch( InterruptedException e){
-            unexpectedException();
-        }
-    }
-
-    /**
-     *
+     * release(n) in one thread enables timed acquire(n) in another thread
      */
     public void testTimedAcquireReleaseNInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
@@ -230,7 +143,93 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * release in one thread enables timed acquire in another thread
+     */
+    public void testTimedAcquireReleaseInSameThread() {
+        FairSemaphore s = new FairSemaphore(1);
+        try {
+            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            s.release();
+            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            s.release();
+            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            s.release();
+            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            s.release();
+            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            s.release();
+            assertEquals(1, s.availablePermits());
+	} catch( InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * A release in one thread enables an acquire in another thread
+     */
+    public void testAcquireReleaseInDifferentThreads() {
+        final FairSemaphore s = new FairSemaphore(0);
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
+			s.acquire();
+                        s.acquire();
+                        s.acquire();
+                        s.acquire();
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            s.release();
+            s.release();
+            s.release();
+            s.release();
+            s.release();
+            s.release();
+            t.join();
+            assertEquals(2, s.availablePermits());
+	} catch( InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * release(n) in one thread enables acquire(n) in another thread
+     */
+    public void testAcquireReleaseNInDifferentThreads() {
+        final FairSemaphore s = new FairSemaphore(0);
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
+                        s.acquire(2);
+                        s.acquire(2);
+                        s.release(4);
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            s.release(6);
+            s.acquire(2);
+            s.acquire(2);
+            s.release(2);
+            t.join();
+	} catch( InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+
+
+    /**
+     * release in one thread enables timed acquire in another thread
      */
     public void testTimedAcquireReleaseInDifferentThreads() {
         final FairSemaphore s = new FairSemaphore(1);
@@ -262,7 +261,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * release(n) in one thread enables timed acquire(n) in another thread
      */
     public void testTimedAcquireReleaseNInDifferentThreads() {
         final FairSemaphore s = new FairSemaphore(2);
@@ -280,10 +279,10 @@ public class FairSemaphoreTest extends JSR166TestCase{
 	    });
 	t.start();
         try {
-            s.release(2);
             assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             s.release(2);
             assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            s.release(2);
             t.join();
 	} catch( InterruptedException e){
             unexpectedException();
@@ -291,7 +290,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * A waiting acquire blocks interruptibly
      */
     public void testAcquire_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(0);
@@ -314,7 +313,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * A waiting acquire(n) blocks interruptibly
      */
     public void testAcquireN_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(2);
@@ -337,7 +336,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
     
     /**
-     *
+     *  A waiting tryAcquire blocks interruptibly
      */
     public void testTryAcquire_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(0);
@@ -361,7 +360,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     *  A waiting tryAcquire(n) blocks interruptibly
      */
     public void testTryAcquireN_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(1);
@@ -385,7 +384,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
     }
 
     /**
-     *
+     * a deserialized serialized semaphore has same number of permits
      */
     public void testSerialization() {
         FairSemaphore l = new FairSemaphore(3);

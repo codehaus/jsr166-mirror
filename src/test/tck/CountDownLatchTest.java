@@ -18,7 +18,7 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * negative constructor argument throws IAE
      */
     public void testConstructor() {
         try {
@@ -28,7 +28,7 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * getCount returns initial count and decreases after countDown
      */
     public void testGetCount() {
 	final CountDownLatch l = new CountDownLatch(2);
@@ -38,7 +38,19 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * countDown has no effect when count is zero
+     */
+    public void testcountDown() {
+	final CountDownLatch l = new CountDownLatch(1);
+	assertEquals(1, l.getCount());
+	l.countDown();
+	assertEquals(0, l.getCount());
+	l.countDown();
+	assertEquals(0, l.getCount());
+    }
+
+    /**
+     * await returns after countDown to zero, but not before
      */
     public void testAwait() {
 	final CountDownLatch l = new CountDownLatch(2);
@@ -46,7 +58,9 @@ public class CountDownLatchTest extends JSR166TestCase {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
+                        threadAssertTrue(l.getCount() > 0);
 			l.await();
+                        threadAssertTrue(l.getCount() == 0);
 		    } catch(InterruptedException e){
                         threadUnexpectedException();
                     }
@@ -68,7 +82,7 @@ public class CountDownLatchTest extends JSR166TestCase {
     
 
     /**
-     *
+     * timed await returns after countDown to zero
      */
     public void testTimedAwait() {
 	final CountDownLatch l = new CountDownLatch(2);
@@ -76,6 +90,7 @@ public class CountDownLatchTest extends JSR166TestCase {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
+                        threadAssertTrue(l.getCount() > 0);
 			threadAssertTrue(l.await(SMALL_DELAY_MS, TimeUnit.MILLISECONDS));
 		    } catch(InterruptedException e){
                         threadUnexpectedException();
@@ -96,17 +111,15 @@ public class CountDownLatchTest extends JSR166TestCase {
         }
     }
     
-
-
-
     /**
-     *
+     * await throws IE ig interrupted before counted down
      */
     public void testAwait_InterruptedException() {
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
+                        threadAssertTrue(l.getCount() > 0);
                         l.await();
                         threadShouldThrow();
                     } catch(InterruptedException success){}
@@ -123,13 +136,14 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed await throws IE ig interrupted before counted down
      */
     public void testTimedAwait_InterruptedException() {
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
+                        threadAssertTrue(l.getCount() > 0);
                         l.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();                        
                     } catch(InterruptedException success){}
@@ -147,14 +161,16 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * timed await times out if not counted down before timeout
      */
     public void testAwaitTimeout() {
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
+                        threadAssertTrue(l.getCount() > 0);
                         threadAssertFalse(l.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(l.getCount() > 0);
                     } catch(InterruptedException ie){
                         threadUnexpectedException();
                     }

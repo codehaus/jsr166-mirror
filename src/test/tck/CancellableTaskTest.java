@@ -31,7 +31,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * creating task with null runnable throws NPE
      */
     public void testConstructor(){
         try {
@@ -43,7 +43,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
     
     /**
-     *
+     * isDone is true after task is run
      */
     public void testIsDone(){
         CancellableTask task = new CancellableTask(new NoOpRunnable());
@@ -53,17 +53,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
-     */
-    public void testReset(){
-        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
-	task.run();
-	assertTrue(task.isDone());
-	assertTrue(task.reset());
-    }
-
-    /**
-     *
+     * Cancelling before running succeeds
      */
     public void testCancelBeforeRun() {
         CancellableTask task = new CancellableTask(new NoOpRunnable());
@@ -74,7 +64,18 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * reset of a done task succeeds and changes status to not done
+     */
+    public void testReset(){
+        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+	task.run();
+	assertTrue(task.isDone());
+	assertTrue(task.reset());
+	assertFalse(task.isDone());
+    }
+
+    /**
+     * Resetting after cancellation fails
      */
     public void testResetAfterCancel() {
         MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
@@ -86,7 +87,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Setting the runnable causes it to be used
      */
     public void testSetRunnable() {
         MyCancellableTask task = new MyCancellableTask();
@@ -102,7 +103,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * setDone of new task causes isDone to be true
      */
     public void testSetDone() {
         MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
@@ -112,7 +113,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * setCancelled of a new task causes isCancelled to be true
      */
     public void testSetCancelled() {
         MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
@@ -123,7 +124,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * Cancel(true) before run succeeds
      */
     public void testCancelBeforeRun2() {
         CancellableTask task = new CancellableTask(new NoOpRunnable());
@@ -134,7 +135,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * cancel of a completed task fails
      */
     public void testCancelAfterRun() {
         CancellableTask task = new CancellableTask(new NoOpRunnable());
@@ -145,7 +146,7 @@ public class CancellableTaskTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * cancel(true) interrupts a running task
      */
     public void testCancelInterrupt(){
         CancellableTask task = new CancellableTask(new SmallInterruptedRunnable());
@@ -165,7 +166,7 @@ public class CancellableTaskTest extends JSR166TestCase {
 
 
     /**
-     *
+     * cancel(false) does not interrupt a running task
      */
     public void testCancelNoInterrupt(){
         CancellableTask task = new CancellableTask(new SmallRunnable());

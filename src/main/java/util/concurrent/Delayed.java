@@ -15,10 +15,10 @@ import java.util.*;
 public interface Delayed extends Comparable {
 
     /**
-     * Get the delay aoociated with this object, in the given time unit.
+     * Get the delay associated with this object, in the given time unit.
      * @param unit the time unit
      * @return the delay; zero or negative values indicate that the
-     * delay has already elapsed.
+     * delay has already elapsed
      */
     public long getDelay(TimeUnit unit);
 }

@@ -438,7 +438,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public Object[] toArray() {
         lock.lock();
         try {
-            E[] a = (E[]) new Object[count];
+            Object[] a = new Object[count];
             int k = 0;
             int i = takeIndex;
             while (k < count) {

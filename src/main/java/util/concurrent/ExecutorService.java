@@ -191,8 +191,10 @@ public interface ExecutorService extends Executor {
     Future<?> submit(Runnable task);
 
     /**
-     * Executes the given tasks, returning their results
-     * when all complete.
+     * Executes the given tasks, returning a list of Futures holding
+     * their status and results when all complete. 
+     * {@link Future#isDone} is <tt>true</tt> for each 
+     * element of the returned list.
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
      * The results of this method are undefined if the given
@@ -212,8 +214,11 @@ public interface ExecutorService extends Executor {
         throws InterruptedException;
 
     /**
-     * Executes the given tasks, returning their results
+     * Executes the given tasks, returning a list of Futures holding
+     * their status and results 
      * when all complete or the timeout expires, whichever happens first.
+     * {@link Future#isDone} is <tt>true</tt> for each 
+     * element of the returned list.
      * Upon return, tasks that have not completed are cancelled.
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.

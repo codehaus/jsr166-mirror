@@ -160,7 +160,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
         /** 
          * The thread running task. When nulled after set/cancel, this
          * indicates that the results are accessible.  Must be
-         * volatile, to serve as write barrier on completion.
+         * volatile, to ensure visibility upon completion.
          */
         private volatile Thread runner;
 

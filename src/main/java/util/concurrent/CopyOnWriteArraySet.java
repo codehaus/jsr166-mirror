@@ -16,6 +16,7 @@ import java.util.*;
  *       stay small, read-only operations
  *       vastly outnumber mutative operations, and you need
  *       to prevent interference among threads during traversal.
+ *  <li>It is thread-safe.
  *  <li>Mutative operations(add, set, remove, etc) are expensive
  *      since they usually entail copying the entire underlying array.
  *  <li>Iterators do not support the mutative remove operation
@@ -44,18 +45,18 @@ import java.util.*;
  *
  *    public void update() {
  *       changeState();
- *       Iterator it = handlers.iterator();
+ *       Iterator&lt;Handler&gt; it = handlers.iterator();
  *       while (it.hasNext())
  *          it.next().handle();
  *    }
  * }
  * </pre>
- * @see CopyOnWriteArrayList
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
  *
+ * @see CopyOnWriteArrayList
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection

@@ -18,7 +18,7 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A variant of {@link java.util.ArrayList} in which all mutative
+ * A thread-safe variant of {@link java.util.ArrayList} in which all mutative
  * operations (add, set, and so on) are implemented by making a fresh
  * copy of the underlying array.  
  *

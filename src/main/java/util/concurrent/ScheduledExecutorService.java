@@ -44,7 +44,7 @@ import java.util.*;
  * to beep every ten seconds for an hour:
  *
  * <pre>
- * import static java.util.concurrent.TimeUnit;
+ * import static java.util.concurrent.TimeUnit.*;
  * class BeeperControl {
  *    private final ScheduledExecutorService scheduler = 
  *       Executors.newScheduledThreadPool(1);

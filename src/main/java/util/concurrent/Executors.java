@@ -322,12 +322,9 @@ public class Executors {
      * be the same as the thread invoking this
      * <tt>privilegedThreadFactory</tt> method.  A new
      * <tt>privilegedThreadFactory</tt> can be created within an
-     * {@link AccessController#doPrivileged} action  to create
-     * threads with the selected permission settings holding within
-     * that action.  Alternatively, a factory can be used to create
-     * threads with any available access control context by first
-     * setting them in the current thread, and then invoking this
-     * method. 
+     * {@link AccessController#doPrivileged} action setting the
+     * current threads access control context to create threads with
+     * the selected permission settings holding within that action.
      *
      * <p> Note that while tasks running within such threads will have
      * the same access control and class loader settings as the

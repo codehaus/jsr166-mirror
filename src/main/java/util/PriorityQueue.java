@@ -3,10 +3,10 @@
 /**
  * An unbounded priority queue based on a priority heap.  This queue orders
  * elements according to an order specified at construction time, which is
- * specified in the same manner as {@link TreeSet} and {@link TreeMap}:
+ * specified in the same manner as {@link java.util.TreeSet} and {@link java.util.TreeMap}:
  * elements are ordered
  * either according to their <i>natural order</i> (see {@link Comparable}), or
- * according to a {@link Comparator}, depending on which constructor is used.
+ * according to a {@link java.util.Comparator}, depending on which constructor is used.
  * The <em>head</em> of this queue is the least element with respect to the
  * specified ordering. If multiple elements are tied for least value, the
  * head is one of those elements. A priority queue does not permit

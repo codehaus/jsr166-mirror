@@ -8,7 +8,7 @@ package java.util;
 
 /**
  * A collection designed for holding elements prior to processing.
- * Besides basic {@link Collection} operations, queues provide
+ * Besides basic {@link java.util.Collection Collection} operations, queues provide
  * additional insertion, extraction, and inspection operations.
  *
  * <p>Queues typically, but do not necessarily, order elements in a
@@ -21,8 +21,8 @@ package java.util;
  * Every <tt>Queue</tt> implementation must specify its ordering guarantees.
  *
  * <p>The {@link #offer(E)} method adds an element if possible, otherwise
- * returning <tt>false</tt>.  This differs from the {@link
- * Collections#add(Object)} method, which throws an unchecked exception upon
+ * returning <tt>false</tt>.  This differs from the {@link java.util.Collection#add Collection.add(E)}
+ * method, which throws an unchecked exception upon
  * failure. It is designed for use in collections in which failure to
  * add is a normal, rather than exceptional occurrence, for example,
  * in fixed-capacity (or &quot;bounded&quot;) queues.
@@ -57,7 +57,7 @@ package java.util;
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @see Collection
+ * @see java.util.Collection
  * @see LinkedList
  * @see PriorityQueue
  * @see java.util.concurrent.LinkedQueue

@@ -17,8 +17,8 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/31 19:49:42 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public class Executors {
@@ -189,7 +189,7 @@ public class Executors {
      */
     public static void invoke(Executor executor, Runnable task)
             throws ExecutionException, InterruptedException {
-        FutureTask<Boolean> ftask = new FutureTask(task, Boolean.TRUE);
+        FutureTask<Boolean> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
         executor.execute(ftask);
         ftask.get();
     }

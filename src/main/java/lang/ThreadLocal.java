@@ -140,7 +140,7 @@ public class ThreadLocal<T> {
      * this functionality, relying solely on the {@link #initialValue}
      * method to set the values of thread-locals.
      *
-     * @param value the value to be stored in the current threads' copy of
+     * @param value the value to be stored in the current thread's copy of
      *        this thread-local.
      */
     public void set(T value) {
@@ -153,12 +153,14 @@ public class ThreadLocal<T> {
     }
 
     /**
-     * Removes the current thread's value for this thread-local variable.
-     * If this thread-local variable is subsequently read by the current
-     * thread, its default value will be computed by invoking its
-     * {@link #initialValue} method again unless its value is set by
-     * the current thread in the interim.
-     * 
+     * Removes the current thread's value for this thread-local
+     * variable.  If this thread-local variable is subsequently
+     * {@linkplain #get read} by the current thread, its value will be
+     * reinitialized by invoking its {@link #initialValue} method,
+     * unless its value is {@linkplain #set set} by the current thread
+     * in the interim.  This may result in multiple invocations of the
+     * <tt>initialValue</tt> method in the current thread.
+     *
      * @since 1.5
      */
      public void remove() {

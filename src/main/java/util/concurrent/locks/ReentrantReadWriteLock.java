@@ -206,14 +206,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         /** Return the number of exclusive holds represented in count  */
         private int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
 
-        public boolean tryAcquireExclusiveState(boolean isQueued, int acquires) {
+        public boolean tryAcquireExclusive(boolean isQueued, int acquires) {
             Thread current = Thread.currentThread();
             int c = getState();
             int w = exclusiveCount(c);
             if (w + acquires >= SHARED_UNIT)
                 throw new Error("Maximum lock count exceeded");
             if ((w == 0 || current != owner) &&
-                (c != 0 || (!isQueued && fair && hasQueuedThreads())))
+                (c != 0 || (!isQueued && fair && hasContended())))
                 return false;
             if (!compareAndSetState(c, c + acquires)) 
                 return false;
@@ -221,7 +221,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return true;
         }
 
-        public boolean releaseExclusiveState(int releases) {
+        public boolean tryReleaseExclusive(int releases) {
             Thread current = Thread.currentThread();
             int c = getState();
             if (owner != current)
@@ -235,7 +235,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return free;
         }
 
-        public int tryAcquireSharedState(boolean isQueued, int acquires) {
+        public int tryAcquireShared(boolean isQueued, int acquires) {
             for (;;) {
                 int c = getState();
                 int nextc = c + (acquires << SHARED_SHIFT);
@@ -243,7 +243,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                     throw new Error("Maximum lock count exceeded");
                 if ((exclusiveCount(c) != 0 && 
                      owner != Thread.currentThread()) ||
-                    (!isQueued && fair && !hasQueuedThreads()))
+                    (!isQueued && fair && !hasContended()))
                     return -1;
                 if (compareAndSetState(c, nextc)) 
                     return 1;
@@ -251,7 +251,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
 
-        public boolean releaseSharedState(int releases) {
+        public boolean tryReleaseShared(int releases) {
             for (;;) {
                 int c = getState();
                 int nextc = c - (releases << SHARED_SHIFT);
@@ -411,7 +411,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * @return <tt>true</tt> if the lock was acquired.
          */
         public  boolean tryLock() {
-            return sync.tryAcquireSharedState(true, 1) >= 0;
+            return sync.tryAcquireShared(true, 1) >= 0;
         }
 
         /**
@@ -617,7 +617,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * <tt>false</tt> otherwise.
          */
         public boolean tryLock( ) {
-            return sync.tryAcquireExclusiveState(true, 1);
+            return sync.tryAcquireExclusive(true, 1);
         }
 
         /**

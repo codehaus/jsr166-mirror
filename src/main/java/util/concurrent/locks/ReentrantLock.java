@@ -83,34 +83,32 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * Provides all synchronization control for this lock
      */
     private final static class Sync  extends AbstractQueuedSynchronizer {
-        /** true if barging disabled */
-        private final boolean fair;
         /** Current owner thread */
         private transient Thread owner;
+        /** true if barging disabled */
+        private final boolean fair;
 
         public Sync(boolean fair) {
             this.fair = fair;
         }
 
         // Implement AQS state methods
-        public boolean tryAcquireExclusiveState(boolean isQueued, int acquires) { 
+        public boolean tryAcquireExclusive(boolean isQueued, int acquires) { 
             final Thread current = Thread.currentThread();
-            int c = getState();
-            if (c == 0) {
-                if ((isQueued || !fair || !hasQueuedThreads()) &&
-                    compareAndSetState(0, acquires)) {
-                    owner = current;
-                    return true;
-                }
+            if ((isQueued || !fair || !hasContended()) && 
+                compareAndSetState(0, acquires)) {
+                owner = current;
+                return true;
             }
-            else if (current == owner) {
-                setState(c + acquires);
+            acquires += getState();
+            if (current == owner) {
+                setState(acquires);
                 return true;
             }
             return false;
         }
 
-        protected boolean releaseExclusiveState(int releases) {
+        protected boolean tryReleaseExclusive(int releases) {
             int c = getState() - releases;
             if (Thread.currentThread() != owner)
                 throw new IllegalMonitorStateException();
@@ -123,6 +121,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return free;
         }
 
+        // Use fastpath for main lock method
+        final void lock() {
+            if (!fair && compareAndSetState(0, 1))
+                owner = Thread.currentThread();
+            else
+                acquireExclusiveUninterruptibly(1);
+        }
+
         protected void checkConditionAccess(Thread thread, boolean waiting) {
             if (getState() == 0 || owner != thread) 
                 throw new IllegalMonitorStateException();
@@ -130,16 +136,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         ConditionObject newCondition() {
             return new ConditionObject();
-        }
-
-        /**
-         * For main lock method, try fastpath before full lock
-         */
-        final void lock() {
-            if (!hasQueuedThreads() && compareAndSetState(0, 1)) // fastpath
-                owner = Thread.currentThread();
-            else
-                acquireExclusiveUninterruptibly(1);
         }
 
         // Methods relayed from outer class
@@ -290,7 +286,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <tt>false</tt> otherwise.
      */
     public boolean tryLock() {
-        return sync.tryAcquireExclusiveState(true, 1);
+        return sync.tryAcquireExclusive(true, 1);
     }
 
     /**

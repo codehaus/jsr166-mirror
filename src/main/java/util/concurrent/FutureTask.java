@@ -202,7 +202,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
         /**
          * Implements AQS base acquire to succeed if Done/cancelled
          */
-        protected int tryAcquireSharedState(boolean b, int ignore) {
+        protected int tryAcquireShared(boolean b, int ignore) {
             return doIsDone()? 1 : -1;
         }
 
@@ -210,7 +210,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
          * Implements AQS base release to always signal after setting
          * final done status by nulling runner thread.
          */
-        protected boolean releaseSharedState(int ignore) {
+        protected boolean tryReleaseShared(int ignore) {
             runner = null;
             return true; 
         }

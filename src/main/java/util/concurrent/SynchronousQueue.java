@@ -79,52 +79,51 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *  0 for waiting, 1 for ack, -1 for cancelled.
      */
     private static final class Node extends AbstractQueuedSynchronizer {
+        /** Synchronization state value representing that node acked */
+        private static final int ACK    =  1;
+        /** Synchronization state value representing that node cancelled */
+        private static final int CANCEL = -1;
+
         /** The item being transferred */
         Object item;
         /** Next node in wait queue */
         Node next;
-        Node(Object x) { item = x; }
 
-        private static final int WAITING   =  0;
-        private static final int ACKED     =  1;
-        private static final int CANCELLED = -1;
+        /** Create node with initial item */
+        Node(Object x) { item = x; }
 
         /**
          * Implements AQS base acquire to succeed if not in WAITING state
          */
-        protected boolean tryAcquireExclusiveState(boolean b, int ignore) {
-            return getState() != WAITING;
+        protected boolean tryAcquireExclusive(boolean b, int ignore) {
+            return getState() != 0;
         }
 
         /**
          * Implements AQS base release to signal if state changed
          */
-        protected boolean releaseExclusiveState(int newState) {
-            return compareAndSetState(WAITING, newState);
+        protected boolean tryReleaseExclusive(int newState) {
+            return compareAndSetState(0, newState);
         }
 
         /**
-         * Try to acknowledge; fail if not waiting
-         */
-        private boolean ack() { 
-            return releaseExclusive(ACKED); 
-        }
-
-        /**
-         * Try to cancel; fail if not waiting
-         */
-        private boolean cancel() { 
-            return releaseExclusive(CANCELLED); 
-        }
-
-        /**
-         * Take item and null out fields (for sake of GC)
+         * Take item and null out field (for sake of GC)
          */
         private Object extract() {
             Object x = item;
             item = null;
-            next = null;
             return x;
+        }
+
+        /**
+         * Try to cancel on interrupt; if so rethrowing,
+         * else setting interrupt state
+         */
+        private void checkCancellationOnInterrupt(InterruptedException ie) 
+            throws InterruptedException {
+            if (releaseExclusive(CANCEL)) 
+                throw ie;
+            Thread.currentThread().interrupt();
         }
 
         /**
@@ -132,8 +131,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * continue.
          */
         boolean setItem(Object x) {
-            item = x;
-            return ack();
+            item = x; // can place in slot even if cancelled
+            return releaseExclusive(ACK);
         }
 
         /**
@@ -141,43 +140,58 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * to continue.
          */
         Object getItem() {
-            return (ack())? extract() : null;
+            return (releaseExclusive(ACK))? extract() : null;
+        }
+
+        /**
+         * Wait for a taker to take item placed by putter.
+         */
+        void waitForTake() throws InterruptedException {
+            try {
+                acquireExclusiveInterruptibly(0);
+            } catch (InterruptedException ie) {
+                checkCancellationOnInterrupt(ie);
+            }
+        }
+
+        /**
+         * Wait for a putter to put item placed by taker.
+         */
+        Object waitForPut() throws InterruptedException {
+            try {
+                acquireExclusiveInterruptibly(0);
+            } catch (InterruptedException ie) {
+                checkCancellationOnInterrupt(ie);
+            }
+            return extract();
         }
 
         /**
          * Wait for a taker to take item placed by putter or time out.
          */
-        boolean waitForTake(boolean timed, long nanos) throws InterruptedException {
+        boolean waitForTake(long nanos) throws InterruptedException {
             try {
-                if (!timed) 
-                    acquireExclusiveInterruptibly(0);
-                else if (!acquireExclusiveTimed(0, nanos) && cancel())
+                if (!acquireExclusiveTimed(0, nanos) &&
+                    releaseExclusive(CANCEL))
                     return false;
-                return true;
             } catch (InterruptedException ie) {
-                if (cancel())
-                    throw ie;
-                Thread.currentThread().interrupt();
-                return true;
+                checkCancellationOnInterrupt(ie);
             }
+            return true;
         }
 
         /**
          * Wait for a putter to put item placed by taker, or time out.
          */
-        Object waitForPut(boolean timed, long nanos) throws InterruptedException {
+        Object waitForPut(long nanos) throws InterruptedException {
             try {
-                if (!timed) 
-                    acquireExclusiveInterruptibly(0);
-                else if (!acquireExclusiveTimed(0, nanos) && cancel()) 
+                if (!acquireExclusiveTimed(0, nanos) &&
+                    releaseExclusive(CANCEL))
                     return null;
-                return extract();
             } catch (InterruptedException ie) {
-                if (cancel()) 
-                    throw ie;
-                Thread.currentThread().interrupt();
-                return extract();
+                checkCancellationOnInterrupt(ie);
             }
+            return extract();
         }
 
     }
@@ -200,68 +214,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
         Node deq() {
             Node p = head;
-            if (p != null && (head = p.next) == null)
-                last = null;
+            if (p != null) {
+                if ((head = p.next) == null)
+                    last = null;
+                p.next = null;
+            }
             return p;
-        }
-    }
-
-    /**
-     * Main put algorithm, used by put, timed offer
-     */
-    private boolean doPut(E x, boolean timed, long nanos) throws InterruptedException {
-        if (x == null) throw new NullPointerException();
-        for (;;) {
-            Node node;
-            boolean mustWait;
-            final ReentrantLock qlock = this.qlock;
-            qlock.lockInterruptibly();
-            try {
-                node = waitingTakes.deq();
-                if ( (mustWait = (node == null)) )
-                    node = waitingPuts.enq(x);
-            } finally {
-                qlock.unlock();
-            }
-
-            if (mustWait) 
-                return  node.waitForTake(timed, nanos);
-
-            else if (node.setItem(x))
-                return true;
-
-            // else taker cancelled, so retry
-        }
-    }
-
-    /**
-     * Main take algorithm, used by take, timed poll
-     */
-    private E doTake(boolean timed, long nanos) throws InterruptedException {
-        for (;;) {
-            Node node;
-            boolean mustWait;
-
-            final ReentrantLock qlock = this.qlock;
-            qlock.lockInterruptibly();
-            try {
-                node = waitingPuts.deq();
-                if ( (mustWait = (node == null)) )
-                    node = waitingTakes.enq(null);
-            } finally {
-                qlock.unlock();
-            }
-
-            if (mustWait) {
-                Object x = node.waitForPut(timed, nanos);
-                return (E)x;
-            }
-            else {
-                Object x = node.getItem();
-                if (x != null)
-                    return (E)x;
-                // else cancelled, so retry
-            }
         }
     }
 
@@ -279,7 +237,31 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public void put(E o) throws InterruptedException {
-        doPut(o, false, 0);
+        if (o == null) throw new NullPointerException();
+        final ReentrantLock qlock = this.qlock;
+
+        for (;;) {
+            Node node;
+            boolean mustWait;
+            qlock.lockInterruptibly();
+            try {
+                node = waitingTakes.deq();
+                if ( (mustWait = (node == null)) )
+                    node = waitingPuts.enq(o);
+            } finally {
+                qlock.unlock();
+            }
+
+            if (mustWait) {
+                node.waitForTake();
+                return;
+            }
+
+            else if (node.setItem(o))
+                return;
+
+            // else taker cancelled, so retry
+        }
     }
 
     /**
@@ -296,7 +278,30 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o, long timeout, TimeUnit unit) throws InterruptedException {
-        return doPut(o, true, unit.toNanos(timeout));
+        if (o == null) throw new NullPointerException();
+        long nanos = unit.toNanos(timeout);
+        final ReentrantLock qlock = this.qlock;
+        for (;;) {
+            Node node;
+            boolean mustWait;
+            qlock.lockInterruptibly();
+            try {
+                node = waitingTakes.deq();
+                if ( (mustWait = (node == null)) )
+                    node = waitingPuts.enq(o);
+            } finally {
+                qlock.unlock();
+            }
+
+            if (mustWait) 
+                return node.waitForTake(nanos);
+
+            else if (node.setItem(o))
+                return true;
+
+            // else taker cancelled, so retry
+        }
+
     }
 
 
@@ -306,7 +311,30 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @return the head of this queue
      */
     public E take() throws InterruptedException {
-        return doTake(false, 0);
+        final ReentrantLock qlock = this.qlock;
+        for (;;) {
+            Node node;
+            boolean mustWait;
+
+            qlock.lockInterruptibly();
+            try {
+                node = waitingPuts.deq();
+                if ( (mustWait = (node == null)) )
+                    node = waitingTakes.enq(null);
+            } finally {
+                qlock.unlock();
+            }
+
+            if (mustWait) 
+                return (E)node.waitForPut();
+
+            else {
+                Object x = node.getItem();
+                if (x != null)
+                    return (E)x;
+                // else cancelled, so retry
+            }
+        }
     }
 
     /**
@@ -322,7 +350,32 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException if interrupted while waiting.
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        return doTake(true, unit.toNanos(timeout));
+        long nanos = unit.toNanos(timeout);
+        final ReentrantLock qlock = this.qlock;
+
+        for (;;) {
+            Node node;
+            boolean mustWait;
+
+            qlock.lockInterruptibly();
+            try {
+                node = waitingPuts.deq();
+                if ( (mustWait = (node == null)) )
+                    node = waitingTakes.enq(null);
+            } finally {
+                qlock.unlock();
+            }
+
+            if (mustWait) 
+                return (E) node.waitForPut(nanos);
+
+            else {
+                Object x = node.getItem();
+                if (x != null)
+                    return (E)x;
+                // else cancelled, so retry
+            }
+        }
     }
 
     // Untimed nonblocking versions

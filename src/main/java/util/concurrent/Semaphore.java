@@ -138,9 +138,9 @@ public class Semaphore implements java.io.Serializable {
             return getState();
         }
 
-        public int tryAcquireSharedState(boolean isQueued, int acquires) {
+        public int tryAcquireShared(boolean isQueued, int acquires) {
             for (;;) {
-                if (!isQueued && fair && hasQueuedThreads())
+                if (!isQueued && fair && hasContended())
                     return -1;
                 int available = getState();
                 int remaining = available - acquires;
@@ -150,7 +150,7 @@ public class Semaphore implements java.io.Serializable {
             }
         }
         
-        public boolean releaseSharedState(int releases) {
+        protected boolean tryReleaseShared(int releases) {
             for (;;) {
                 int p = getState();
                 if (compareAndSetState(p, p + releases)) 
@@ -164,6 +164,14 @@ public class Semaphore implements java.io.Serializable {
                 int next = current - reductions;
                 if (compareAndSetState(current, next))
                     return;
+            }
+        }
+
+        int drainPermits() {
+            for (;;) {
+                int current = getState();
+                if (current == 0 || compareAndSetState(current, 0))
+                    return current;
             }
         }
     }
@@ -261,7 +269,7 @@ public class Semaphore implements java.io.Serializable {
      * otherwise.
      */
     public boolean tryAcquire() {
-        return sync.tryAcquireSharedState(true, 1) >= 0;
+        return sync.tryAcquireShared(true, 1) >= 0;
     }
 
     /**
@@ -428,7 +436,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.tryAcquireSharedState(true, permits) >= 0;
+        return sync.tryAcquireShared(true, permits) >= 0;
     }
 
     /**
@@ -527,9 +535,17 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
+     * Acquire and return all permits that are immediately available.
+     * @return the number of permits 
+     */
+    public int drainPermits() {
+        return sync.drainPermits();
+    }
+
+    /**
      * Shrink the number of available permits by the indicated
      * reduction. This method can be useful in subclasses that
-     * use semaphores to track available resources that become
+     * use semaphores to track  resources that become
      * unavailable. This method differs from <tt>acquire</tt>
      * in that it does not block waiting for permits to become
      * available.

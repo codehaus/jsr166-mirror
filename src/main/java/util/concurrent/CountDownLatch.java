@@ -136,11 +136,11 @@ public class CountDownLatch {
             return getState();
         }
 
-        public int tryAcquireSharedState(boolean isQueued, int acquires) {
+        public int tryAcquireShared(boolean isQueued, int acquires) {
             return getState() == 0? 1 : -1;
         }
         
-        public boolean releaseSharedState(int releases) {
+        public boolean tryReleaseShared(int releases) {
             // Decrement count; signal when transition to zero
             for (;;) {
                 int c = getState();

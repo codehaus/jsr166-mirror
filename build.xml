@@ -39,6 +39,7 @@
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
   <property name="build.doccheck.dir"   location="${build.dir}/doccheck"/>
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
+  <property name="build.filter.doccheck.dir" location="${build.dir}/filterdocchk"/>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -132,8 +133,8 @@
 
 
   <target name="doccheck"
-          depends="filter-src"
-          description="Reports on javadoc style errors (not working yet)">
+          depends="filter-doccheck"
+          description="Reports on javadoc style errors">
 
     <delete dir="${build.doccheck.dir}"/>
     <mkdir dir="${build.doccheck.dir}"/>
@@ -141,7 +142,7 @@
     <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
          docletpath="${lib.dir}/doccheck.jar"
             destdir="${build.doccheck.dir}">
-      <packageset dir="${build.filter.src.dir}"/>
+      <packageset dir="${build.filter.doccheck.dir}"/>
     </javadoc>
 
   </target>
@@ -360,12 +361,6 @@
       </fileset>
     </copy>
 
-    <!-- Not needed now, used for doccheck filtering:
-    <property name="generic.declarations"
-             value="public interface E {} public interface T {} public interface K {} public interface V {}"
-    />
-    -->
-
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
         <exclude name="**/*.html"/>
@@ -405,19 +400,42 @@
           <param name="pattern"     value="^//@"/>
           <param name="replacement" value=""/>
         </filterreader>
+      </filterchain>
+    </copy>
+
+  </target>
 
 
+
+
+  <target name="filter-doccheck"
+          depends="filter-src">
+
+    <mkdir dir="${build.filter.doccheck.dir}"/>
+
+    <copy todir="${build.filter.doccheck.dir}">
+      <fileset dir="${build.filter.src.dir}">
+        <include name="**/*.html"/>
+      </fileset>
+    </copy>
+
+    <property name="generic.declarations"
+             value="/** Fake type parameter. */ public interface E {} /** Fake type parameter. */ public interface T {} /** Fake type parameter. */ public interface K {} /** Fake type parameter. */ public interface V {}"
+    />
+
+    <copy todir="${build.filter.doccheck.dir}">
+      <fileset dir="${build.filter.src.dir}">
+        <exclude name="**/*.html"/>
+      </fileset>
+      <filterchain>
         <!--
-         # The next two filters try to make the source look like
+         # These two filters try to make the source look like
          # something that doccheck can process. The first removes
          # -source 1.4 assertions and the second adds in a bunch
          # of single letter public nested marker interfaces so that
          # the generic type parameters are recognized.
-         #
-         # Currently commented out because doccheck doesn't work. :-(
          -->
 
-        <!--
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"
                       classpath="${build.ant.dir}">
           <param name="matching"    value="^\s*assert[\s ].*$"/>
@@ -427,11 +445,10 @@
 
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"
                       classpath="${build.ant.dir}">
-          <param name="matching"    value="^(.*(class|interface|implements) .*|)\{.*$"/>
+          <param name="matching"    value="^([^*]*(class|interface|implements) .*|)\{.*$"/>
           <param name="pattern"     value="$"/>
           <param name="replacement" value=" ${generic.declarations}"/>
         </filterreader>
-        -->
 
       </filterchain>
     </copy>

@@ -20,7 +20,7 @@ package java.util;
  * which would be removed by a call to {@link #remove() } or {@link #poll()}.
  * Every <tt>Queue</tt> implementation must specify its ordering guarantees.
  *
- * <p>The {@link #offer(E)} method adds an element if possible, otherwise
+ * <p>The {@link #offer offer(E)} method adds an element if possible, otherwise
  * returning <tt>false</tt>.  This differs from the {@link java.util.Collection#add Collection.add(E)}
  * method, which throws an unchecked exception upon
  * failure. It is designed for use in collections in which failure to

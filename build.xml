@@ -84,8 +84,11 @@
 
   <!-- J1 classpath -->
   <path id="j1.classpath">
+    <pathelement location="${build.classes.dir}"/>
     <pathelement location="${build.j1.dir}"/>
     <pathelement location="${junit.jar}"/>
+
+    <!-- Include dl.u.c for BoundedBuffer comparison -->
     <pathelement location="${concurrent.jar}"/>
   </path>
 
@@ -679,7 +682,7 @@
   </target>
 
 
-  <target name="compile-j1" depends="init, configure-compiler">
+  <target name="compile-j1" depends="init, configure-compiler, compile">
 
     <mkdir dir="${build.j1.dir}"/>
 

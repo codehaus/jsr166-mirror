@@ -57,7 +57,7 @@
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
-
+  <property name="sinjdoc.jar"          location="${lib.dir}/sinjdoc.jar"/>
 
 
   <!-- Files excluded from dist-docs and emulation jar -->
@@ -170,6 +170,40 @@
       <packageset dir="${build.filter.src.dir}"/>
 
     </javadoc>
+
+  </target>
+
+
+  <target name="sinjdocs"
+          depends="configure-tests"
+          description="Builds javadocs with custom tags to build folder">
+
+    <delete dir="${build.javadocs.dir}"/>
+    <mkdir dir="${build.javadocs.dir}"/>
+
+    <java classname="net.cscott.sinjdoc.Main" fork="true">
+
+      <jvmarg value="-Xbootclasspath/p:${test.run.bootclasspath}"/>
+
+      <classpath>
+        <pathelement location="${sinjdoc.jar}"/>
+        <path refid="test.classpath"/>
+      </classpath>
+
+      <!-- <arg value="-link"/>       <arg value="http://java.sun.com/j2se/1.4.1/docs/api"/> -->
+
+      <arg value="-d"/>          <arg value="${build.javadocs.dir}"/>
+      <arg value="-sourcepath"/> <arg value="${src.dir}"/>
+      <arg value="-overview"/>   <arg value="${src.dir}/intro.html"/>
+      <arg value="-source"/>     <arg value="1.5"/>
+      <arg value="-verbose"/>
+      <arg value="java.util"/>
+
+      <!--
+      <arg value="-help"/>
+      -->
+
+    </java>
 
   </target>
 

@@ -1,133 +1,130 @@
 package java.util.concurrent;
 
 /**
- * A TimeUnit computes time durations at a given unit of granularity,
- * provides utility methods to convert across units, and to perform
- * timing and delay operations in these units. TimeUnits are
- * "featherweight" classes. They do not themselves maintain time
- * information, they only help organize and use time representations
- * that may be maintained separately across various contexts.
+ * A <tt>TimeUnit</tt> represents time durations at a given unit of 
+ * granularity and provides utility methods to convert across units, 
+ * and to perform timing and delay operations in these units. 
+ * <tt>TimeUnit</tt> is a &quot;featherweight&quot; class. 
+ * It does not maintain time information, but only helps organize and 
+ * use time representations that may be maintained separately across 
+ * various contexts.
+ * A static method {@link #highResolutionTime} provides access to a high
+ * resolution, nanosecond, timer, which can be used to measure elapsed time.
  *
- * <p>
- * The base TimeUnit class cannot be directly instantiated.  Use the
- * <tt>SECONDS</tt>, <tt>MILLISECONDS</tt>, <tt>MICROSECONDS</tt>, and
- * <tt>NANOSECONDS</tt> static singletons that provide predefined
+ * <p>The <tt>TimeUnit</tt> class cannot be directly instantiated.  
+ * Use the {@link #SECONDS}, {@link #MILLISECONDS}, {@link #MICROSECONDS},
+ * and {@link #NANOSECONDS} static instances that provide predefined
  * units of precision. If you use these frequently, consider
  * statically importing this class.
- **/
-
-public abstract class TimeUnit implements java.io.Serializable {
+ *
+ * <p>A <tt>TimeUnit</tt> is mainly used to inform blocking methods which
+ * can timeout, how the timeout parameter should be interpreted. For example,
+ * the following code will timeout in 50 milliseconds if the {@link Lock lock}
+ * is not available:
+ * <pre>  Lock lock = ...;
+ *  if ( lock.tryLock(50L, TimeUnit.MILLISECONDS) ) ...
+ * </pre>
+ * while this code will timeout in 50 seconds:
+ * <pre>  
+ *  Lock lock = ...;
+ *  if ( lock.tryLock(50L, TimeUnit.SECONDS) ) ...
+ * </pre>
+ * Note however, that there is no guarantee that a particular lock, in this
+ * case, will be able to notice the passage of time at the same granularity
+ * as the given <tt>TimeUnit</tt>.
+ *
+ * @since 1.5
+ * @spec JSR-166
+ * @revised $Date: 2003/03/29 02:17:05 $
+ * @editor $Author: dholmes $
+ *
+ * @fixme The previous version created singleton subclass instances. I could
+ * not see any reason to create subclasses instead of just instances.
+ * Neither approach allows creation of your own units.
+ */
+public final class TimeUnit implements java.io.Serializable {
 
     /**
-     * Return a representation of the current time that can later be
-     * used to obtain an elapsed duration via method
-     * <code>elapsed</code>.  Values returned from <code>now</code>
-     * have no numerical significance, and may be completely unrelated
-     * to and uncoordinated with those from
-     * <code>System.currentTimeMillis</code> or those used by class
-     * <code>Date</code>. Returned values are useful only as
-     * arguments to subsequent calls to <code>elapsed</code>, using
-     * the same unit, called from within the same Isolate.
-     * @return an arbitrary representation of the current time, in
-     * the current unit, that can later be used as an argument to
-     * <code>elapsed</code>.
-     **/
-    public long now() {
-        return systemTimeNanos() * nanosPerUnit;
-    }
-
-    /**
-     * Return an estimate of the time elapsed since the given previous
-     * time, in the current unit.  The returned value is a best-effort
-     * <em>estimate</em> of elapsed time that may reflect the effects
-     * of hardware clock drift, system-level clock resets,
-     * multiprocessor clock coordination, and network time
-     * synchronization protocols that lead to inaccuracies and
-     * discontinuities, even those that cause estimated durations of
-     * brief intervals to be negative.  The estimates returned from
-     * this method have the same <em>accuracy</em>, regardless of the
-     * <em>precision</em> of the current <code>TimeUnit</code>.  The
-     * returned value may be wrong or unreliable when the interval is
-     * greater than <code>Long.MAX_VALUE</code> nanoseconds
-     * (approximately 292 years).
+     * Return the current value of the system high resolution timer, in
+     * nanoseconds. This method can only be used to measure elapsed time
+     * and is not related to any notion of system, or wall-clock time.
+     * Although the value returned represents nanoseconds since some
+     * arbitrary start time in the past, the resolution at which this value
+     * is updated is not specified. So we have nanosecond precision, but
+     * not necessarily nanosecond accuracy.
+     * It is guaranteed that successive return
+     * values from this method will not decrease.
      *
      * <p> For example to measure how long some code takes to execute, 
      * with nanosecond precision:
      * <pre>
-     * long startTime = TimeUnit.NANOSECONDS.now();
+     * long startTime = TimeUnit.highResolutionTime();
      * // ... the code being measured ...
-     * long estimatedTime = TimeUnit.NANOSECONDS.elapsed(startTime);
+     * long estimatedTime = TimeUnit.highResolutionTime() - startTime;
      * </pre>
+     * 
+     * @return The current value of the system high resolution timer, in
+     * nanoseconds.
      *
-     * @param previous a value returned by or derived from a previous
-     * call to <code>now</code> with the same time unit, by the same Isolate.
-     * @return an estimate of the time elapsed since <code>previous</code>.
-     **/
-    public long elapsed(long previous) {
-        return now() - previous;
+     * @fixme Is this spec tight enough? Too tight? What about issues of
+     * reading the TSC from different processors on a SMP?
+     */
+    public static final long highResolutionTime() {
+        return systemTimeNanos();
     }
 
     /**
-     * Convert the given duration value in the given unit to the
+     * Convert the given time duration in the given unit to the
      * current unit.  Conversions from finer to coarser granulaties
      * truncate, so lose precision. Conversions from coarser to finer
      * granularities may numerically overflow.
-     * @param time the duration in given unit
-     * @param unit the unit of the duration argument
-     * @return the converted duration.
-     **/
+     *
+     * @param duration the time duration in the given <tt>unit</tt>
+     * @param unit the unit of the <tt>duration</tt> argument
+     * @return the converted duration in the current unit.
+     */
     public long convert(long duration, TimeUnit unit) {
-        long outUnits = nanosPerUnit;
-        long inUnits = unit.nanosPerUnit;
-        if (outUnits >= inUnits)  // minimize overflow and underflow
-            return duration * (outUnits / inUnits);
-        else
-            return (duration * outUnits) / inUnits;
+        if (index > unit.index) {
+            return duration / multipliers[index - unit.index];
+        }
+        else {
+            return duration * multipliers[unit.index - index];
+        }
     }
     
     /**
-     * Equivalent to <code>NANOOSECONDS.convert(duration, this)</code>.
-     * This conversion may overflow.
-     * @param duration the duration
-     * @return the converted duration.
-     **/
-    public long toNanos(long duration) {
-        return duration * nanosPerUnit;
-    }
-    
-    /**
-     * Equivalent to <code>convert(duration, NANOSECONDS)</code>.
-     * This conversion may lose precision.
-     * @param nanos the duration in nanoseconds.
-     * @return the converted duration.
-     **/
-    public long fromNanos(long nanos) {
-        return nanos / nanosPerUnit;
-    }
-
-    /**
-     * Perform a timed <tt>Object.wait</tt> in current units. 
-     * This is a convenience method that converts time arguments into the
+     * Perform a timed <tt>Object.wait</tt> using the current time unit. 
+     * This is a convenience method that converts timeout arguments into the
      * form required by the <tt>Object.wait</tt> method.
-     * @param monitor the object to wait on
+     * <p>For example, you could implement a blocking <tt>poll</tt> method (see
+     * {@link BlockingQueue#poll BlockingQueue.poll} using:
+     * <pre>  public synchronized  Object poll(long timeout, TimeUnit unit) throws InterruptedException {
+     *    while (empty) {
+     *      unit.timedWait(this, timeout);
+     *      ...
+     *    }
+     *  }</pre>
+     * @param obj the object to wait on
      * @param timeout the maximum time to wait
      * @throws InterruptedException if interrupted while waiting.
-     **/
-    public void timedWait(Object monitor, long timeout)
+     * @see Object#wait(long, int)
+     */
+    public void timedWait(Object obj, long timeout)
         throws InterruptedException {
         long ms = MILLISECONDS.convert(timeout, this);
         int ns = excessNanos(timeout, ms);
-        monitor.wait(ms, ns);
+        obj.wait(ms, ns);
     }
 
     /**
-     * Perform a timed <tt>Thread.join</tt> in current units.
+     * Perform a timed <tt>Thread.join</tt> using the current time unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.join</tt> method.
-     * @param monitor the thread to wait for
-     * @param time the maximum time to wait
+     * @param thread the thread to wait for
+     * @param timeout the maximum time to wait
      * @throws InterruptedException if interrupted while waiting.
-     **/
+     * @see Thread#join(long, int)
+     */
     public void timedJoin(Thread thread, long timeout)
         throws InterruptedException {
         long ms = MILLISECONDS.convert(timeout, this);
@@ -136,61 +133,61 @@ public abstract class TimeUnit implements java.io.Serializable {
     }
     
     /**
-     * Perform a timed sleep in current units.
+     * Perform a <tt>Thread.sleep</tt> using the current time unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.sleep</tt> method.
-     * @param time the maximum time to wait
+     * @param time the minimum time to sleep 
      * @throws InterruptedException if interrupted while sleeping.
-     **/
+     * @see Thread#sleep
+     */
     public void sleep(long timeout) throws InterruptedException {
         long ms = MILLISECONDS.convert(timeout, this);
         int ns = excessNanos(timeout, ms);
         Thread.sleep(ms, ns);
     }
 
-    /** package-private conversion factor */
-    final int nanosPerUnit;
-    /** package-private constructor */
-    TimeUnit(int npu) { nanosPerUnit = npu; }
+    /* ordered indices for each time unit */
+    private static final int NS = 0;
+    private static final int US = 1;
+    private static final int MS = 2;
+    private static final int S  = 3;
+
+    /* quick lookup table for conversion factors */
+    static final int[] multipliers = { 1, 1000, 1000*1000, 1000*1000*1000 };
+
+    /* the index of this unit */
+    int index;
+
+    /** private constructor */
+    TimeUnit(int index) { this.index = index; }
 
     /** 
      * Utility method to compute the excess-nanosecond argument to
      * wait, sleep, join.
+     * @fixme overflow?
      */
     private int excessNanos(long time, long ms) {
-        if (nanosPerUnit < MILLISECONDS.nanosPerUnit) 
-            return (int)(toNanos(time) - ms * (1000 * 1000));
+        if (index == NS) 
+            return (int) (time  - (ms * multipliers[MS-NS]));
+        else if (index == US) 
+            return (int) ((time * multipliers[US-NS]) - (ms * multipliers[MS-NS]));
         else 
             return 0;
     }
 
-    
     /** Underlying native time call */
     static native long systemTimeNanos();
 
     /** Unit for one-second granularities */
-    public static final TimeUnit SECONDS = new SecondTimeUnit();
+    public static final TimeUnit SECONDS = new TimeUnit(S);
 
     /** Unit for one-millisecond granularities */
-    public static final TimeUnit MILLISECONDS = new MillisecondTimeUnit();
+    public static final TimeUnit MILLISECONDS = new TimeUnit(MS);
 
     /** Unit for one-microsecond granularities */
-    public static final TimeUnit MICROSECONDS = new MicrosecondTimeUnit();
+    public static final TimeUnit MICROSECONDS = new TimeUnit(US);
 
     /** Unit for one-nanosecond granularities */
-    public static final TimeUnit NANOSECONDS = new NanosecondTimeUnit();
-
-    static final class SecondTimeUnit extends TimeUnit {
-        private SecondTimeUnit() { super(1000 * 1000 * 1000); }
-    }
-    static final class MillisecondTimeUnit extends TimeUnit {
-        private MillisecondTimeUnit() { super(1000 * 1000); }
-    }
-    static final class MicrosecondTimeUnit extends TimeUnit {
-        private MicrosecondTimeUnit() { super(1000); }
-    }
-    static final class NanosecondTimeUnit extends TimeUnit {
-        private NanosecondTimeUnit() { super(1); }
-    }
+    public static final TimeUnit NANOSECONDS = new TimeUnit(NS);
 
 }

@@ -70,5 +70,46 @@ public class AtomicInteger implements java.io.Serializable {
         }
     }
 
+    /**
+     * Atomically increment the current value.
+     * @return the previous value;
+     **/
+    public int getAndIncrement() {
+        for (;;) {
+            int current = get();
+            int next = current+1;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
+  
+    /**
+     * Atomically decrement the current value.
+     * @return the previous value;
+     **/
+    public int getAndDecrement() {
+        for (;;) {
+            int current = get();
+            int next = current-1;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
+  
+    /**
+     * Atomically add the given value to current value.
+     * @return the previous value;
+     **/
+    public int getAndAdd(int y) {
+        for (;;) {
+            int current = get();
+            int next = current+y;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
 
 }

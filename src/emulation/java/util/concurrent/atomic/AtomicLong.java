@@ -70,5 +70,47 @@ public class AtomicLong implements java.io.Serializable {
         }
     }
 
+  
+  
+    /**
+     * Atomically increment the current value.
+     * @return the previous value;
+     **/
+    public long getAndIncrement() {
+        while (true) {
+            long current = get();
+            long next = current+1;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
+  
+    /**
+     * Atomically decrement the current value.
+     * @return the previous value;
+     **/
+    public long getAndDecrement() {
+        while (true) {
+            long current = get();
+            long next = current-1;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
+  
+    /**
+     * Atomically add the given value to current value.
+     * @return the previous value;
+     **/
+    public long getAndAdd(long y) {
+        while (true) {
+            long current = get();
+            long next = current+y;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
 
 }

@@ -87,118 +87,168 @@ public abstract class AbstractExecutorService implements ExecutorService {
         private final PrivilegedExceptionAction action;
     }
 
-    /**
-     * FutureTask extension to provide signal when task completes
-     */
-    private static class SignallingFuture<T> extends FutureTask<T> {
-        private final CountDownLatch signal;
-        SignallingFuture(Callable<T> c, CountDownLatch l) {
-            super(c); signal = l;
-        }
-        SignallingFuture(Runnable t, T r, CountDownLatch l) {
-            super(t, r); signal = l;
-        }
-        protected void done() {
-            signal.countDown();
-        }
-    }
-
     // any/all methods, each a little bit different than the other
 
-    public <T> List<Future<T>> invokeAny(List<Runnable> tasks, T result)
-        throws InterruptedException {
+
+    public <T> T invokeAny(Collection<Callable<T>> tasks)
+        throws InterruptedException, ExecutionException {
         if (tasks == null)
             throw new NullPointerException();
         int n = tasks.size();
-        List<Future<T>> futures = new ArrayList<Future<T>>(n);
         if (n == 0)
-            return futures;
-        CountDownLatch waiter = new CountDownLatch(1);;
-        try {
-            for (Runnable t : tasks) {
-                SignallingFuture<T> f = 
-                    new SignallingFuture<T>(t, result, waiter);
-                futures.add(f);
-                if (waiter.getCount() > 0)
-                    execute(f);
-            }
-            waiter.await();
-            return futures;
-        } finally {
-            for (Future<T> f : futures) 
-                f.cancel(true);
-        }
-    }
-
-    public <T> List<Future<T>> invokeAny(List<Runnable> tasks, T result,
-                                         long timeout, TimeUnit unit) 
-        throws InterruptedException {
-        if (tasks == null || unit == null)
-            throw new NullPointerException();
-        int n = tasks.size();
-        List<Future<T>> futures = new ArrayList<Future<T>>(n);
-        if (n == 0)
-            return futures;
-        CountDownLatch waiter = new CountDownLatch(1);;
-        try {
-            for (Runnable t : tasks) {
-                SignallingFuture<T> f = 
-                    new SignallingFuture<T>(t, result, waiter);
-                futures.add(f);
-                if (waiter.getCount() > 0)
-                    execute(f);
-            }
-            waiter.await(timeout, unit);
-            return futures;
-        } finally {
-            for (Future<T> f : futures) 
-                f.cancel(true);
-        }
-    }
-
-    public <T> List<Future<T>> invokeAny(List<Callable<T>> tasks)
-        throws InterruptedException {
-        if (tasks == null)
-            throw new NullPointerException();
-        int n = tasks.size();
-        List<Future<T>> futures = new ArrayList<Future<T>>(n);
-        if (n == 0)
-            return futures;
-        CountDownLatch waiter = new CountDownLatch(1);;
-        try {
-            for (Callable<T> t : tasks) {
-                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter);
-                futures.add(f);
-                if (waiter.getCount() > 0)
-                    execute(f);
-            }
-            waiter.await();
-            return futures;
-        } finally {
-            for (Future<T> f : futures) 
-                f.cancel(true);
-        }
-    }
-
-    public <T> List<Future<T>> invokeAny(List<Callable<T>> tasks, 
-                                       long timeout, TimeUnit unit) 
-        throws InterruptedException {
-        if (tasks == null || unit == null)
-            throw new NullPointerException();
-        int n = tasks.size();
+            throw new IllegalArgumentException();
         List<Future<T>> futures= new ArrayList<Future<T>>(n);
-        if (n == 0)
-            return futures;
-        CountDownLatch waiter = new CountDownLatch(1);;
+        ExecutorCompletionService<T> ecs = 
+            new ExecutorCompletionService<T>(this);
         try {
-            for (Callable<T> t : tasks) {
-                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter);
-                futures.add(f);
-                if (waiter.getCount() > 0)
-                    execute(f);
-            }
-            waiter.await(timeout, unit);
-            return futures;
+            for (Callable<T> t : tasks) 
+                futures.add(ecs.submit(t));
+            ExecutionException ee = null;
+            RuntimeException re = null;
+            while (n-- > 0) {
+                Future<T> f = ecs.take();
+                try {
+                    return f.get();
+                } catch(ExecutionException eex) {
+                    ee = eex;
+                } catch(RuntimeException rex) {
+                    re = rex;
+                }
+            }    
+            if (ee != null)
+                throw ee;
+            if (re != null)
+                throw new ExecutionException(re);
+            throw new ExecutionException();
+        } finally {
+            for (Future<T> f : futures) 
+                f.cancel(true);
+        }
+    }
+
+    public <T> T invokeAny(Collection<Callable<T>> tasks, 
+                           long timeout, TimeUnit unit) 
+        throws InterruptedException, ExecutionException, TimeoutException {
+        if (tasks == null || unit == null)
+            throw new NullPointerException();
+        long nanos = unit.toNanos(timeout);
+        int n = tasks.size();
+        if (n == 0)
+            throw new IllegalArgumentException();
+        List<Future<T>> futures= new ArrayList<Future<T>>(n);
+        ExecutorCompletionService<T> ecs = 
+            new ExecutorCompletionService<T>(this);
+        try {
+            for (Callable<T> t : tasks) 
+                futures.add(ecs.submit(t));
+            ExecutionException ee = null;
+            RuntimeException re = null;
+            long lastTime = System.nanoTime();
+            while (n-- > 0) {
+                Future<T> f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
+                if (f == null) {
+                    if (nanos <= 0)
+                        throw new TimeoutException();
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;
+                    lastTime = now;
+                }
+                try {
+                    return f.get();
+                } catch(ExecutionException eex) {
+                    ee = eex;
+                } catch(RuntimeException rex) {
+                    re = rex;
+                }
+            }    
+            if (ee != null)
+                throw ee;
+            if (re != null)
+                throw new ExecutionException(re);
+            throw new ExecutionException();
+        } finally {
+            for (Future<T> f : futures) 
+                f.cancel(true);
+        }
+    }
+
+
+    public <T> T invokeAny(Collection<Runnable> tasks, T result)
+        throws InterruptedException, ExecutionException {
+        if (tasks == null)
+            throw new NullPointerException();
+        int n = tasks.size();
+        if (n == 0)
+            throw new IllegalArgumentException();
+        List<Future<T>> futures= new ArrayList<Future<T>>(n);
+        ExecutorCompletionService<T> ecs = 
+            new ExecutorCompletionService<T>(this);
+        try {
+            for (Runnable t : tasks) 
+                futures.add(ecs.submit(t, result));
+            ExecutionException ee = null;
+            RuntimeException re = null;
+            while (n-- > 0) {
+                Future<T> f = ecs.take();
+                try {
+                    return f.get();
+                } catch(ExecutionException eex) {
+                    ee = eex;
+                } catch(RuntimeException rex) {
+                    re = rex;
+                }
+            }    
+            if (ee != null)
+                throw ee;
+            if (re != null)
+                throw new ExecutionException(re);
+            throw new ExecutionException();
+        } finally {
+            for (Future<T> f : futures) 
+                f.cancel(true);
+        }
+    }
+
+    public <T> T invokeAny(Collection<Runnable> tasks, T result,
+                           long timeout, TimeUnit unit) 
+        throws InterruptedException, ExecutionException, TimeoutException {
+        if (tasks == null || unit == null)
+            throw new NullPointerException();
+        long nanos = unit.toNanos(timeout);
+        int n = tasks.size();
+        if (n == 0)
+            throw new IllegalArgumentException();
+        List<Future<T>> futures= new ArrayList<Future<T>>(n);
+        ExecutorCompletionService<T> ecs = 
+            new ExecutorCompletionService<T>(this);
+        try {
+            for (Runnable t : tasks) 
+                futures.add(ecs.submit(t, result));
+            ExecutionException ee = null;
+            RuntimeException re = null;
+            long lastTime = System.nanoTime();
+            while (n-- > 0) {
+                Future<T> f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
+                if (f == null) {
+                    if (nanos <= 0)
+                        throw new TimeoutException();
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;
+                    lastTime = now;
+                }
+                try {
+                    return f.get();
+                } catch(ExecutionException eex) {
+                    ee = eex;
+                } catch(RuntimeException rex) {
+                    re = rex;
+                }
+            }    
+            if (ee != null)
+                throw ee;
+            if (re != null)
+                throw new ExecutionException(re);
+            throw new ExecutionException();
         } finally {
             for (Future<T> f : futures) 
                 f.cancel(true);

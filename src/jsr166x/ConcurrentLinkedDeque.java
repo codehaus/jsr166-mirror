@@ -669,6 +669,9 @@ public class ConcurrentLinkedDeque<E>
         }
     }
 
+    // Replace methods non-public pending deciding whether
+    // visibility consequences OK
+
     /**
      * Replaces the first element <tt>e</tt> such that
      * <tt>oldElement.equals(e)</tt>, if such an element exists in
@@ -680,7 +683,7 @@ public class ConcurrentLinkedDeque<E>
      * @return <tt>true</tt> if an element was replaced
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
-    public boolean replaceFirstOccurrence(E oldElement, E newElement) {
+    boolean replaceFirstOccurrence(E oldElement, E newElement) {
         if (oldElement == null || newElement == null) 
             throw new NullPointerException();
         for (;;) {
@@ -710,7 +713,7 @@ public class ConcurrentLinkedDeque<E>
      * @return <tt>true</tt> if an element was replaced
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
-    public boolean replaceLastOccurrence(E oldElement, E newElement) {
+    boolean replaceLastOccurrence(E oldElement, E newElement) {
         if (oldElement == null || newElement == null) 
             throw new NullPointerException();
         for (;;) {
@@ -919,18 +922,18 @@ public class ConcurrentLinkedDeque<E>
      * accordingly. Ths returned queue does not allow null elements.
      * @return a first-in-first-out view of this deque.
      */
-    public Queue<E> asFIFO() {
+    public Queue<E> asFifoQueue() {
         return new AsFIFO(this);
     }
 
     /**
-     * Returns a view of this deque as a first-in-Last-out stack,
+     * Returns a view of this deque as a last-in-first-out stack,
      * mapping {@link Queue#offer} to <tt>offerFirst</tt>, {@link
      * Queue#poll} to <tt>pollFirst</tt>, and other operations
      * accordingly. Ths returned queue does not allow null elements.
      * @return a first-in-last-out view of this deque.
      */
-    public Queue<E> asLIFO() {
+    public Queue<E> asLifoQueue() {
         return new AsLIFO(this);
     }
 

@@ -19,16 +19,15 @@ import java.util.*;
  * operations or sublists.
  *
  * <p>A view of a subset of Deque operations can be obtained using
- * method {@link #asFIFO} to support only Last-In-First-Out (LIFO)
- * stack behavior, as well as method {@link #asFIFO} to support only
+ * method {@link #asFifoQueue} to support only Last-In-First-Out (LIFO)
+ * stack behavior, as well as method {@link #asFifoQueue} to support only
  * First-in-First-Out (FIFO) queue behavior.  More commonly, a Deque
  * is used when various mixtures of LIFO and FIFO operations are
  * required.
  *
- * <p>Deques additionally provide a few methods to manipulate elements
- * embedded within a deque, proceding from either direction:
- * <tt>removeFirstOccurrence</tt>, <tt>replaceFirstOccurrence</tt>
- * <tt>removeLastOccurrence</tt>, and <tt>replaceLastOccurrence</tt>.
+ * <p>Deques additionally provide a few methods to remove elements
+ * embedded within a deque, proceding from either direction using
+ * <tt>removeFirstOccurrence</tt> and <tt>removeLastOccurrence</tt>.
  * They also support {@link Collection} operations including
  * <tt>contains</tt>, <tt>iterator</tt>, and so on.
  *
@@ -214,47 +213,21 @@ public interface Deque<E> extends Collection<E> {
     boolean removeLastOccurrence(E o);
 
     /**
-     * Replaces the first occurrence of the specified element in this
-     * deque.  If the deque does not contain the element, it is
-     * unchanged.  More formally, replaces the first element <tt>e</tt>
-     * such that <tt>(o==null ? e==null : o.equals(e))</tt> (if
-     * such an element exists).
-     *
-     * @param oldElement element to be replaced in this deque, if present.
-     * @param newElement replacement value
-     * @return <tt>true</tt> if an element was replaced
-     */
-    public boolean replaceFirstOccurrence(E oldElement, E newElement);
-
-    /**
-     * Replaces the last occurrence of the specified element in this
-     * deque.  If the deque does not contain the element, it is
-     * unchanged.  More formally, replaces the last element <tt>e</tt>
-     * such that <tt>(o==null ? e==null : o.equals(e))</tt> (if
-     * such an element exists).
-     *
-     * @param oldElement element to be replaced in this deque, if present.
-     * @param newElement replacement value
-     * @return <tt>true</tt> if an element was replaced
-     */
-    public boolean replaceLastOccurrence(E oldElement, E newElement);
-
-    /**
      * Returns a view of this deque as a first-in-first-out queue,
      * mapping {@link Queue#offer} to <tt>offerLast</tt>, {@link
      * Queue#poll} to <tt>pollFirst</tt>, and other operations
      * accordingly.
      * @return a first-in-first-out view of this deque.
      */
-    public Queue<E> asFIFO();
+    public Queue<E> asFifoQueue();
 
     /**
-     * Returns a view of this deque as a first-in-Last-out stack,
+     * Returns a view of this deque as a last-in-first-out stack,
      * mapping {@link Queue#offer} to <tt>offerFirst</tt>, {@link
      * Queue#poll} to <tt>pollFirst</tt>, and other operations
      * accordingly.
      * @return a first-in-last-out view of this deque.
      */
-    public Queue<E> asLIFO();
+    public Queue<E> asLifoQueue();
 
 }

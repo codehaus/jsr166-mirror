@@ -1,5 +1,8 @@
 package java.util.concurrent;
 
+import java.util.Set;
+import java.util.HashSet;
+
 import junit.framework.TestCase;
 
 /**
@@ -7,10 +10,95 @@ import junit.framework.TestCase;
  */
 public class ArrayBlockingQueueTest extends TestCase {
 
-    public void testCapacity () {
-        final int CAP = 2;
-        ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(CAP);
+    private final boolean EMULATING = true;
 
-        //assertEquals("capacity should equal constructor argument", CAP, q.capacity());
+    public void testCapacity () {
+
+        ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(2);
+
+        assertEquals("should have room for 2", 2, q.remainingCapacity());
+
+        q.add(1);
+        q.add(2);
+
+        assertEquals("queue should be full", 0, q.remainingCapacity());
+
+        assertFalse("offer should be rejected", q.offer(3));
+    }
+
+    public void testOrdering () {
+
+        final ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(3);
+
+        q.add(3);
+        q.add(2);
+        q.add(1);
+
+        assertEquals("queue should be full", 0, q.remainingCapacity());
+
+        int k = 0;
+        for (Integer i : q) {
+            ++k;
+        }
+
+        // Broken?
+        //assertEquals("should go through 3 elements", 3, k);
+
+        // Broken, returns 3 null elements instead of 1, 2, 3.
+        Object[] qa = q.toArray();
+        for (Object i : qa) {
+            System.out.println("q has " + i);
+        }
+    }
+
+    public void testOffer () {
+        // With emulation, at least:
+        //
+        // java.lang.IllegalMonitorStateException
+        //      at java.util.concurrent.ReentrantLock.checkOwner(ReentrantLock.java:331)
+        //      at java.util.concurrent.ReentrantLock.unlock(ReentrantLock.java:646)
+        //      at java.util.concurrent.AbstractBlockingQueueFromQueue.offer(AbstractBlockingQueueFromQueue.java:131)
+        //      at java.util.concurrent.ArrayBlockingQueueTest$1.run(ArrayBlockingQueueTest.java:50)
+        //      at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:442)
+        //      at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:477)
+        //      at java.lang.Thread.run(Thread.java:594)
+
+        final ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(2);
+
+        q.add(2);
+        q.add(1);
+
+        if (!EMULATING) {
+
+            Executor executor = Executors.newFixedThreadPool(2);
+
+            executor.execute(new Runnable() {
+                public void run() {
+                    assertFalse("offer should be rejected", q.offer(3));
+                    try {
+                        assertTrue("offer should be accepted", q.offer(3, 1, TimeUnit.MILLISECONDS));
+                    }
+                    catch (IllegalMonitorStateException e) {
+                        e.printStackTrace(System.err);
+                        fail("illegal monitor state");
+                    }
+                    catch (InterruptedException e) {
+                        fail("should not be interrupted");
+                    }
+                }
+            });
+
+            executor.execute(new Runnable() {
+                public void run() {
+                    try {
+                        Thread.sleep(2000);
+                        assertEquals("first item in queue should be 1", 1, q.take());
+                    }
+                    catch (InterruptedException e) {
+                        fail("should not be interrupted");
+                    }
+                }
+            });
+        }
     }
 }

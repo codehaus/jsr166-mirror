@@ -164,7 +164,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * default ordering properties.
      */
     public ReentrantReadWriteLock() {
-        super();
+        super(false);
     }
 
     /**
@@ -190,12 +190,12 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * @param count a lock status count
      * @return true if count indicates lock is held in write mode
      */
-    boolean isWriting(int count) { return (count & 1) != 0; }
+    private static boolean isWriting(int count) { return (count & 1) != 0; }
 
     // Implementations of abstract methods
 
-
     boolean tryAcquire(int mode, Thread current) {
+        final AtomicInteger count = this.count;
         for (;;) {
             int c = count.get();
             if (isReader(mode)) {
@@ -231,6 +231,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
     }
 
     boolean tryRelease(int mode) {
+        final AtomicInteger count = this.count;
         if (!isReader(mode)) {
             owner = null;
             for (;;) {
@@ -263,7 +264,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
     }
 
     void checkOwner(Thread thread) {
-        if ((count.get() & 1) == 0 ||  owner != thread) 
+        if (!isWriting(count.get()) || owner != thread) 
             throw new IllegalMonitorStateException();
     }
 
@@ -271,7 +272,6 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         if (count.get() != 1 || owner != thread) 
             throw new IllegalMonitorStateException();
     }
-
 
     /**
      * The Reader lock
@@ -282,15 +282,16 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         public void lock() {
             // fast path
             if (!fair || head == tail) {
+                final AtomicInteger count = ReentrantReadWriteLock.this.count;
                 int c = count.get();
                 if ((c & 1) == 0 && count.compareAndSet(c, c+2))
                     return;
             }
-            doLock(Thread.currentThread(), READER | UNINTERRUPTED, 0);
+            doLock(READER | UNINTERRUPTED, 0);
         }
 
         public void lockInterruptibly() throws InterruptedException {
-            if (doLock(Thread.currentThread(), READER | INTERRUPT, 0) == INTERRUPT)
+            if (doLock(READER | INTERRUPT, 0) == INTERRUPT)
                 throw new InterruptedException();
         }
 
@@ -301,7 +302,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
             if (unit == null)
                 throw new NullPointerException();
-            int stat = doLock(Thread.currentThread(), READER | INTERRUPT | TIMEOUT, 
+            int stat = doLock(READER | INTERRUPT | TIMEOUT, 
                               unit.toNanos(timeout));
             if (stat == INTERRUPT)
                 throw new InterruptedException();
@@ -309,6 +310,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         }
 
         public  void unlock() {
+            final AtomicInteger count = ReentrantReadWriteLock.this.count;
             for (;;) {
                 int c = count.get();
                 int nextc = c-2;
@@ -337,19 +339,17 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         private static final long serialVersionUID = -4992448646407690164L;
 
         public void lock() {
-            // fast path
-            if (!fair || head == tail) {
-                int c = count.get();
-                if (c == 0 && count.compareAndSet(0, 1)) {
+            if (!fair || head == tail) { // fast path
+                if (count.compareAndSet(0, 1)) {
                     owner = Thread.currentThread();
                     return;
                 }
             }
-            doLock(Thread.currentThread(), WRITER | UNINTERRUPTED, 0);
+            doLock(WRITER | UNINTERRUPTED, 0);
         }
 
         public void lockInterruptibly() throws InterruptedException {
-            if (doLock(Thread.currentThread(), WRITER | INTERRUPT, 0) == INTERRUPT)
+            if (doLock(WRITER | INTERRUPT, 0) == INTERRUPT)
                 throw new InterruptedException();
         }
 
@@ -360,17 +360,16 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
             if (unit == null)
                 throw new NullPointerException();
-            int stat = doLock(Thread.currentThread(), WRITER | INTERRUPT | TIMEOUT, 
-                              unit.toNanos(timeout));
+            int stat = doLock(WRITER | INTERRUPT | TIMEOUT, unit.toNanos(timeout));
             if (stat == INTERRUPT)
                 throw new InterruptedException();
             return (stat == UNINTERRUPTED);
         }
         
         public void unlock() {
-            Thread current = Thread.currentThread();
+            final AtomicInteger count = ReentrantReadWriteLock.this.count;
             int c = count.get();
-            if (!isWriting(c) || current != owner) 
+            if (!isWriting(c) || owner != Thread.currentThread())
                 throw new IllegalMonitorStateException();
             else if (recursions > 0) 
                 --recursions;
@@ -431,8 +430,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * or zero if this lock is not held by the current thread.
      */
     public int getWriteHoldCount() {
-        return (isWriting(count.get()) && owner == Thread.currentThread())?
-            recursions + 1 :  0;
+        return (isWriteLockedByCurrentThread())? recursions + 1 :  0;
     }
 
     /**
@@ -465,6 +463,13 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
 
     // Serialization support
 
+    /**
+     * Throw away the object created with readObject, and replace it
+     * @return the lock
+     */
+    private Object readResolve() throws java.io.ObjectStreamException {
+        return new ReentrantReadWriteLock(fair);
+    }
     /**
      * Reconstitute this lock instance from a stream (that is,
      * deserialize it).

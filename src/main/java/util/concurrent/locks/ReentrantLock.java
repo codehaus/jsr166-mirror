@@ -67,7 +67,9 @@ import sun.misc.*;
  * <tt>protected</tt> access methods that may be useful for
  * instrumentation and monitoring.  This implementation also provides
  * a {@link #newCondition Condition} implementation that supports the
- * interruption of thread suspension.
+ * interruption of thread suspension.  Serializability of this class
+ * behaves in the same way as built-in locks: a deserialized lock is
+ * in the unlocked state, regardless of its state when serialized.
  *
  * @since 1.5
  * @author Doug Lea
@@ -138,7 +140,9 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
 
     boolean tryReentrantAcquire(int mode, Thread current) {
         Thread o = owner;
-        if (o == null && !fair && ownerUpdater.acquire(this, current))
+        if (o == null && 
+            (!fair || head == tail) &&
+            ownerUpdater.acquire(this, current))
             return true;
         if (o == current) { 
             ++recursions;
@@ -196,9 +200,9 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * at which time the lock hold count is set to one. 
      */
     public void lock() {
-        Thread current = Thread.currentThread();
-        if (head != tail || !ownerUpdater.acquire(this, current))
-            doLock(current, UNINTERRUPTED, 0L);
+        if ((fair && head != tail) || 
+            !ownerUpdater.acquire(this, Thread.currentThread()))
+            doLock(UNINTERRUPTED, 0L);
     }
 
     /**
@@ -234,7 +238,7 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * @throws InterruptedException if the current thread is interrupted
      */
     public void lockInterruptibly() throws InterruptedException { 
-        if (doLock(Thread.currentThread(), INTERRUPT, 0) == INTERRUPT)
+        if (doLock(INTERRUPT, 0) == INTERRUPT)
             throw new InterruptedException();
     }
 
@@ -334,9 +338,7 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
         if (unit == null)
             throw new NullPointerException();
-        int stat = doLock(Thread.currentThread(), 
-                          INTERRUPT | TIMEOUT, 
-                          unit.toNanos(timeout));
+        int stat = doLock(INTERRUPT | TIMEOUT, unit.toNanos(timeout));
         if (stat == INTERRUPT)
             throw new InterruptedException();
         return (stat == UNINTERRUPTED);
@@ -380,7 +382,7 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * or zero if this lock is not held by the current thread.
      */
     public int getHoldCount() {
-        return (owner == Thread.currentThread()) ?  recursions + 1 :  0;
+        return (isHeldByCurrentThread()) ?  recursions + 1 :  0;
     }
 
     /**
@@ -454,10 +456,13 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
 
 
     /**
-     * This class is a minor performance hack, that will hopefully
-     * someday disappear. It specializes AtomicReferenceFieldUpdater
-     * for ReentrantLock owner field without requiring dynamic
-     * instanceof checks in method acquire.
+     * This class will hopefully someday disappear. It specializes
+     * AtomicReferenceFieldUpdater for ReentrantLock owner field
+     * without requiring dynamic instanceof checks in method
+     * acquire. We cannot use a standalone AtomicReference because of
+     * serialization snags -- the field holding it would need to be
+     * "final", but could not be serialized because it holds Thread
+     * values.
      */
     private static class OwnerUpdater extends AtomicReferenceFieldUpdater<ReentrantLock,Thread> {
 

@@ -284,6 +284,12 @@ public abstract class AbstractReentrantLock {
 
     }
 
+    /** true if barging disabled */
+    final boolean fair;
+
+    /** Number of recursive acquires. Note: total holds = recursions+1 */
+    transient int recursions;
+
     /** 
      * Head of the wait queue, lazily initialized.  Except for
      * initialization, it is modified only by a thread upon acquiring
@@ -297,12 +303,6 @@ public abstract class AbstractReentrantLock {
      * method enq to add new wait node.
      */
     transient volatile Node tail; 
-
-    /** Number of recursive acquires. Note: total holds = recursions+1 */
-    transient int recursions;
-
-    /** true if barging disabled */
-    final boolean fair;
 
     // Atomics support
 
@@ -320,8 +320,8 @@ public abstract class AbstractReentrantLock {
         (Node.class, "status");
 
     /**
-     * Creates an instance of <tt>AbstractReentrantLock</tt>.
-     * This is equivalent to using <tt>AbstractReentrantLock(false)</tt>.
+     * Creates an instance of <tt>AbstractReentrantLock</tt> with 
+     * non-fair fairness policy.
      */
     protected AbstractReentrantLock() { 
         fair = false;
@@ -360,7 +360,7 @@ public abstract class AbstractReentrantLock {
      * @param mode mode
      * @return true if read mode
      */
-    boolean isReader(int mode) { return (mode & READER) != 0; }
+    static final boolean isReader(int mode) { return (mode & READER) != 0; }
 
     // abstract methods to acquire/release status
 
@@ -402,6 +402,8 @@ public abstract class AbstractReentrantLock {
             while ((t = tail) == null) {     
                 if (headUpdater.compareAndSet(this, null, h)) 
                     tail = h;
+                else
+                    Thread.yield();
             }
         }
 
@@ -475,16 +477,17 @@ public abstract class AbstractReentrantLock {
      * @return UNINTERRUPTED on success, INTERRUPT on interrupt,
      * TIMEOUT on timeout
      */
-    int doLock(Thread current, int mode, long nanos) {
+    int doLock(int mode, long nanos) {
         if ((mode & INTERRUPT) != 0 && Thread.interrupted())
             return INTERRUPT;
 
+        final Thread current = Thread.currentThread();
         if (tryReentrantAcquire(mode, current))
             return UNINTERRUPTED;
 
         long lastTime = ((mode & TIMEOUT) == 0)? 0 : System.nanoTime();
 
-        Node node = new Node(current, mode & READER);
+        final Node node = new Node(current, mode & READER);
         enq(node);
 
         /*
@@ -592,7 +595,7 @@ public abstract class AbstractReentrantLock {
         }
     }
 
-    // Note: unlock() is done in subclasses since the chacks vary
+    // Note: unlock() is done in subclasses since checks vary
     // across modes/types
 
 
@@ -793,8 +796,8 @@ public abstract class AbstractReentrantLock {
      *
      * <p>In addition to implementing the {@link Condition} interface,
      * this class defines methods <tt>hasWaiters</tt> and
-     * <tt>getWaitQueueLength</tt>, as well as some associated
-     * <tt>protected</tt> access methods, that may be useful for
+     * <tt>getWaitQueueLength</tt>, as well as associated
+     * <tt>protected</tt> access methods that may be useful for
      * instrumentation and monitoring.
      */
     protected static class AbstractConditionObject implements Condition, java.io.Serializable {

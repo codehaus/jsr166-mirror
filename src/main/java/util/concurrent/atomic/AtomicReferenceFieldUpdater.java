@@ -160,24 +160,24 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         
 
         public boolean compareAndSet(T obj, V expect, V update) {
-            if (!tclass.isInstance(obj)||
-                !vclass.isInstance(update))
+            if (!tclass.isInstance(obj) ||
+                (update != null && !vclass.isInstance(update)))
                 throw new ClassCastException();
             return unsafe.compareAndSwapObject(obj, offset, expect, update);
         }
 
         public boolean weakCompareAndSet(T obj, V expect, V update) {
             // same implmentation as strong form for now
-            if (!tclass.isInstance(obj)||
-                !vclass.isInstance(update))
+            if (!tclass.isInstance(obj) ||
+                (update != null && !vclass.isInstance(update)))
                 throw new ClassCastException();
             return unsafe.compareAndSwapObject(obj, offset, expect, update);
         }
 
 
         public void set(T obj, V newValue) {
-            if (!tclass.isInstance(obj)||
-                !vclass.isInstance(newValue))
+            if (!tclass.isInstance(obj) ||
+                (newValue != null & !vclass.isInstance(newValue)))
                 throw new ClassCastException();
             unsafe.putObjectVolatile(obj, offset, newValue);
         }

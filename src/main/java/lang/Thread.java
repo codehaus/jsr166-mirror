@@ -1443,9 +1443,13 @@ class Thread implements Runnable {
      * due to an uncaught exception.
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() { 
-        return (uncaughtExceptionHandler != null)?
-            uncaughtExceptionHandler :
-            group;
+        UncaughtExceptionHandler h = uncaughtExceptionHandler;
+        if (h == null) {
+            h = defaultUncaughtExceptionHandler;
+            if (h == null)
+                h = group;
+        }
+        return h;
     }
 
 
@@ -1455,11 +1459,18 @@ class Thread implements Runnable {
      * @exception  SecurityException  if the current thread is not allowed to
      *               modify current thread.
      */
-    public void setUncaughtExceptionHandler (UncaughtExceptionHandler eh) { 
+    public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) { 
         checkAccess();
         uncaughtExceptionHandler = eh;
     }
 
     private UncaughtExceptionHandler uncaughtExceptionHandler; 
+
+    /**
+     * Dispatch an uncaught exception to the handler
+     */
+    void doUncaughtException(Throwable e) {
+        getUncaughtExceptionHandler().uncaughtException(this, e);
+    }
 
 }

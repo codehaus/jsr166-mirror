@@ -557,13 +557,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with the specified initial
-     * capacity, load factor, and concurrency level.
+     * capacity and the specified load factor.
      *
      * @param initialCapacity the initial capacity. The implementation
      * performs internal sizing to accommodate this many elements.
      * @param loadFactor  the load factor threshold, used to control resizing.
-     * Resizing may be performed when the average number of elements per 
-     * bin exceeds this threshold.
      * @param concurrencyLevel the estimated number of concurrently
      * updating threads. The implementation performs internal sizing
      * to try to accommodate this many threads.  
@@ -605,11 +603,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with the specified initial
-     * capacity,  and with default load factor (<tt>0.75f</tt>)
-     * and concurrencyLevel (<tt>16</tt>).
+     * capacity,  and with default load factor and concurrencyLevel.
      *
-     * @param initialCapacity the initial capacity. The implementation
-     * performs internal sizing to accommodate this many elements.
+     * @param initialCapacity The implementation performs internal
+     * sizing to accommodate this many elements.
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative.
      */
@@ -618,9 +615,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Creates a new, empty map with a default initial capacity
-     * (<tt>16</tt>), load factor (<tt>0.75f</tt>) and
-     * concurrencyLevel (<tt>16</tt>).
+     * Creates a new, empty map with a default initial capacity,
+     * load factor, and concurrencyLevel.
      */
     public ConcurrentHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_SEGMENTS);
@@ -628,14 +624,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new map with the same mappings as the given map.  The
-     * map is created with a capacity consistent with the default load
-     * factor (<tt>0.75f</tt>) and uses the default concurrencyLevel
-     * (<tt>16</tt>).
+     * map is created with a capacity of twice the number of mappings in
+     * the given map or 11 (whichever is greater), and a default load factor
+     * and concurrencyLevel.
      * @param t the map
      */
     public ConcurrentHashMap(Map<? extends K, ? extends V> t) {
         this(Math.max((int) (t.size() / DEFAULT_LOAD_FACTOR) + 1,
-                      DEFAULT_INITIAL_CAPACITY),
+                      11),
              DEFAULT_LOAD_FACTOR, DEFAULT_SEGMENTS);
         putAll(t);
     }

@@ -17,6 +17,9 @@ import java.util.*;
  * asynchronous tasks, due to reduced per-task invocation overhead,
  * and they provide a means of bounding and managing the resources,
  * including threads, consumed when executing a collection of tasks.
+ * Each <tt>ThreadPoolExecutor</tt> also maintains some basic
+ * statistics, such as the number of completed tasks, that may be
+ * useful for monitoring and tuning.
  *
  * <p>To be useful across a wide range of contexts, this class
  * provides many adjustable parameters and extensibility hooks.  For
@@ -24,17 +27,13 @@ import java.util.*;
  * or even to execute tasks sequentially in a single thread, in
  * addition to its most common configuration, which reuses a pool of
  * threads.  However, programmers are urged to use the more convenient
- * {@link Executors} factory methods <tt>newCachedThreadPool</tt>
- * (unbounded thread pool, with automatic thread reclamation),
- * <tt>newFixedThreadPool</tt> (fixed size thread pool),
- * <tt>newSingleThreadPoolExecutor</tt> (single background thread for
- * execution of tasks), and <tt>newThreadPerTaskExeceutor</tt>
- * (execute each task in a new thread), that preconfigure settings for
- * the most common usage scenarios.
+ * {@link Executors} factory methods {@link
+ * Executors#newCachedThreadPool} (unbounded thread pool, with
+ * automatic thread reclamation), {@link Executors#newFixedThreadPool}
+ * (fixed size thread pool) and {@link
+ * Executors#newSingleThreadExecutor} (single background thread), that
+ * preconfigure settings for the most common usage scenarios.
  *
- * <p>Each <tt>ThreadPoolExecutor</tt> also maintains some basic
- * statistics, such as the number of completed tasks, that may be
- * useful for monitoring and tuning executors.
  *
  * <h3>Tuning guide</h3>
  * <dl>
@@ -70,7 +69,7 @@ import java.util.*;
  * have internal dependencies.  Using an unbounded queue (for example
  * a {@link LinkedBlockingQueue}) will cause new tasks to be queued in
  * cases where all corePoolSize threads are busy, so no more than
- * corePoolSize threads will be craated.  This may be appropriate when
+ * corePoolSize threads will be created.  This may be appropriate when
  * each task is completely independent of others, so tasks cannot
  * affect each others execution; for example, in a web page server.
  * When given a choice, a <tt>ThreadPoolExecutor</tt> always prefers

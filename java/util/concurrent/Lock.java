@@ -18,10 +18,19 @@ package java.util.concurrent;
  * order, and all locks must be released in the same lexical scope in which
  * they were acquired.
  *
- * <p>A <tt>Lock</tt> can be acquired and released in different scopes, and
- * multiple locks can be acquired and released in any order. This flexibility
- * is essential for implementing efficient algorithms for the concurrent
- * access of some data structures. But with this increased flexibilty comes
+ * <p>While the scoping mechanism for <tt>synchronized</tt> methods and 
+ * statements make it much easier to program with monitor locks,
+ * and helps avoid many common programming errors involving locks, there are
+ * rare occasions where you need to work with locks in a more flexible way. For
+ * example, some advanced algorithms for traversing concurrently accessed data
+ * structures require the use of what is called &quot;hand-over-hand&quot; or 
+ * &quot;chain locking&quote: you acquire the lock of node A, then node B, 
+ * then release A and acquire C, then release B and acquire D and so on. 
+ * Implementations of this class facilitate the use of such advanced 
+ * algorithms by allowing a <tt>Lock</tt> to be acquired and released in 
+ * different scopes, and allowing
+ * multiple locks to be acquired and released in any order. 
+ * <p>With this increased flexibilty comes
  * additional responsibility as the absence of block-structured locking
  * removes the automatic release of locks that occurs with 
  * <tt>synchronized</tt> methods and statements. For the simplest usage
@@ -40,8 +49,12 @@ package java.util.concurrent;
  * attempt to acquire a lock ({@link #tryLock()}), an attempt to acquire the
  * lock that can be interrupted ({@link #lockInterruptibly}, and an attempt
  * to acquire the lock that can timeout ({@link #tryLock(long, Clock)}).
- * A <tt>Lock</tt> can also provide behaviour and semantics that is quite
- * different to that of the implicit monitor lock.
+ * This additionally functionality is also extended to built-in monitor
+ * locks throughthe methods of the {@link Locks} utility class.
+ *
+ * <p>A <tt>Lock</tt> can also provide behaviour and semantics that is quite
+ * different to that of the implicit monitor lock, such as guaranteed ordering,
+ * non-reentrant usage, or deadlock detection.
  *
  * @see ReentrantLock
  * @see Condition
@@ -50,15 +63,18 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/05 00:54:00 $
+ * @revised $Date: 2002/12/05 06:12:59 $
  * @editor $Author: dholmes $
  *
  * @fixme We need to say something about l.lock() versus synchronized(l)
+ * @fixme (2) Need to say something about memory model requirements.
  **/
 public interface Lock {
 
     /**
-     * Acquire the lock. If the lock is not available then
+     * Acquire the lock. 
+     * <p>Acquires the lock if it is available and returns immediately.
+     * <p>If the lock is not available then
      * the current thread will block until the lock has been acquired.
      * <p>A concrete <tt>Lock</tt> implementation may be able to detect 
      * erroneous use of the
@@ -70,8 +86,9 @@ public interface Lock {
     public void lock();
 
     /**
-     * Acquire the lock only if the current thread is not interrupted.
-     * <p>If the lock is available then this method will return immediately.
+     * Acquire the lock only if the current thread is not 
+     * {@link Thread#interrupt interrupted}.
+     * <p>Acquires the lock if it is available and returns immediately.
      * <p>If the lock is not available then the current thread will block until
      * one of two things happens:
      * <ul>
@@ -103,7 +120,7 @@ public interface Lock {
 
     /**
      * Acquire the lock only if it is free at the time of invocation.
-     * <p>If the lock is available then this method will return immediately
+     * <p>Acquires the lock if it is available and returns immediately
      * with the value <tt>true</tt>.
      * <p>If the lock is not available then this method will return 
      * immediately with the value <tt>false</tt>.
@@ -131,8 +148,8 @@ public interface Lock {
 
     /**
      * Acquire the lock if it is free within the given wait time and the
-     * current thread has not been interrupted. 
-     * <p>If the lock is available then this method will return immediately
+     * current thread has not been {@link Thread#interrupt interrupted}. 
+     * <p>Acquires the lock if it is available and returns immediately
      * with the value <tt>true</tt>.
      * <p>If the lock is not available then the current thread will block until
      * one of three things happens:
@@ -192,7 +209,16 @@ public interface Lock {
     public void unlock();
 
     /**
-     * Construct a new {@link Condition} for this <tt>Lock</tt>.
+     * Construct a new {@link Condition} that is bound to this <tt>Lock</tt>.
+     * Conditions are primarily used with the built-in locking provided by
+     * <tt>synchronized</tt> methods and blocks 
+     * (see {@link Locks#newConditionFor}, but in some rare circumstances it 
+     * can be useful to wait for a condition when working with a data 
+     * structure that is accessed using a stand-alone <tt>Lock</tt> class 
+     * (see {@link ReentrantLock}). Before waiting on the condition the 
+     * <tt>Lock</tt> must be acquired by the caller. 
+     * A call to {@link Condition#await()} will atomically release the lock 
+     * before waiting and re-acquire the lock before the wait returns.
      * <p>The exact operation of the {@link Condition} depends on the concrete
      * <tt>Lock</tt> implementation and must be documented by that
      * implementation.

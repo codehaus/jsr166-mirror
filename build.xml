@@ -40,6 +40,9 @@
   <property name="build.doccheck.dir"   location="${build.dir}/doccheck"/>
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
   <property name="build.dc-filter.dir"  location="${build.dir}/filterdocchk"/>
+  <property name="build.jsr166x.dir"    location="${build.dir}/jsr166x"/>
+  <property name="build.jsr166xlib.dir"        location="${build.dir}/jsr166xlib"/>
+  <property name="build.jsr166xjavadocs.dir"   location="${build.dir}/jsr166xjavadocs"/>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -52,12 +55,16 @@
   <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
   <property name="lib.dir"              location="${basedir}/lib"/>
   <property name="dist.dir"             location="${basedir}/dist"/>
+  <property name="topsrc.dir"           location="${basedir}/src"/>
+  <property name="jsr166xsrc.dir"       location="${basedir}/src/jsr166x"/>
 
   <!-- Distribution locations -->
   <property name="dist.javadocs.dir"    location="${dist.dir}/docs"/>
+  <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
+  <property name="jsr166xproduct.jar"   location="${build.jsr166xlib.dir}/jsr166x.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
   <property name="concurrent.jar"       location="${lib.dir}/concurrent.jar"/>
 
@@ -941,6 +948,113 @@
       <fileset dir="${build.pretiger.dir}">
       </fileset>
     </jar>
+
+  </target>
+
+  <!-- jsr166x -->
+
+
+  <target name="jsr166xcompile"
+          depends="init, configure-compiler"
+          description="Compiles jsr166x sources">
+
+    <mkdir dir="${build.jsr166x.dir}"/>
+
+    <javac srcdir="${jsr166xsrc.dir}"
+          destdir="${build.jsr166x.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <include name="**/*.java"/>
+      <compilerarg line="${build.args}"/>
+
+    </javac>
+
+  </target>
+
+
+
+  <target name="jsr166xjar"
+          depends="jsr166xcompile"
+          description="Builds library jar from compiled sources">
+
+    <mkdir dir="${build.jsr166xlib.dir}"/>
+
+    <jar destfile="${jsr166xproduct.jar}">
+      <fileset dir="${build.jsr166x.dir}"/>
+    </jar>
+
+  </target>
+
+
+
+  <target name="jsr166xdocs"
+          description="Builds javadocs with custom tags to build folder">
+
+    <delete dir="${build.jsr166xjavadocs.dir}"/>
+    <mkdir dir="${build.jsr166xjavadocs.dir}"/>
+
+    <javadoc destdir="${build.jsr166xjavadocs.dir}"
+                link="http://java.sun.com/j2se/1.5.0/docs/api/"
+    >
+      <packageset dir="${topsrc.dir}" defaultexcludes="yes">
+      <include name="jsr166x"/>
+      </packageset>
+
+
+    </javadoc>
+
+  </target>
+
+
+  <target name="jsr166xdist"
+          depends="jsr166xdist-clean, jsr166xdist-jar, jsr166xdist-docs"
+          description="Puts all distributable products in single hierarchy"/>
+
+
+
+  <target name="jsr166xclean"
+          description="Removes all build products">
+
+    <delete dir="${build.jsr166x.dir}"/>
+    <delete dir="${build.jsr166xlib.dir}"/>
+
+  </target>
+
+
+
+  <target name="jsr166xdist-clean"
+          description="Removes all build and distribution products">
+
+  </target>
+
+
+
+  <target name="jsr166xdist-docs"
+          description="Builds javadocs without custom tags to dist folder">
+
+    <delete dir="${dist.jsr166xjavadocs.dir}"/>
+    <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
+
+    <javadoc destdir="${dist.jsr166xjavadocs.dir}"
+                link="http://java.sun.com/j2se/1.5.0/docs/api/"
+              source="${build.sourcelevel}">
+
+      <packageset dir="${topsrc.dir}" defaultexcludes="yes">
+      <include name="jsr166x"/>
+      </packageset>
+
+    </javadoc>
+
+  </target>
+
+  <target name="jsr166xdist-jar"
+          depends="jsr166xclean, jsr166xjar">
+
+    <copy file="${jsr166xproduct.jar}" todir="${dist.dir}"/>
 
   </target>
 

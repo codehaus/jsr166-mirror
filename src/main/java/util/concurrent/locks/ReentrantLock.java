@@ -33,10 +33,8 @@ import sun.misc.*;
  * holding the lock.
  *
  * <p>A <tt>ReentrantLock</tt> may be used in a non-reentrant way by
- * checking that the lock is not already held (see {@link
- * isHeldByCurrentThread} by the current thread (see {@link
- * isHeldByCurrentThread} prior to locking.
- *
+ * checking that the lock is not already held by the current thread 
+ * prior to locking - see {@link #isHeldByCurrentThread}.
  *
  * <p><tt>ReentrantLock</tt> instances are intended to be used primarily 
  * in before/after constructions such as:
@@ -73,8 +71,8 @@ import sun.misc.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/25 19:28:06 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/25 22:57:11 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  * 
  **/
@@ -622,8 +620,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of two things happens:
      * <ul>
-     * <li> The lock is acquired by the current thread; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>The lock is acquired by the current thread; or
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread.
      * </ul>
      * <p>If the lock is acquired by the current thread then the lock hold 
@@ -698,10 +696,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of three things happens:
      * <ul>
-     * <li> The lock is acquired by the current thread; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>The lock is acquired by the current thread; or
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread; or
-     * <li> The specified waiting time elapses
+     * <li>The specified waiting time elapses
      * </ul>
      * <p>If the lock is acquired then the value <tt>true</tt> is returned and
      * the lock hold count is set to one.
@@ -806,7 +804,24 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *   }
      * }
      * </pre>
+     * <p>It can also be used to ensure that a reentrant lock is used
+     * in a non-reentrant manner, for example:
+     * <pre>
+     * class X {
+     *   ReentrantLock lock = new ReentrantLock();
+     *   // ...
      *
+     *   public void m() { 
+     *       assert !lock.isHeldByCurrentThread();
+     *       lock.lock();
+     *       try {
+     *           // ... method body
+     *       } finally {
+     *           lock.unlock();
+     *       }
+     *   }
+     * }
+     * </pre>
      * @return <tt>true</tt> if current thread holds this lock and 
      * <tt>false</tt> otherwise.
      **/
@@ -817,7 +832,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Queries if this lock is held by any thread. This method is
-     * designed for use in monitoring, not for synchronization control.
+     * designed for use in monitoring of the system state, 
+     * not for synchronization control.
      * @return <tt>true</tt> if any thread holds this lock and 
      * <tt>false</tt> otherwise.
      **/

@@ -93,18 +93,21 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * Acts as
      * <pre> 
      *  if ((map.containsKey(key)) {
-     *     map.put(key, value);
-     *     return true;
-     * } else return false;
+     *     return map.put(key, value);
+     * } else return null;
      * </pre>
      * except that the action is performed atomically.
      * @param key key with which the specified value is associated.
      * @param value value to be associated with the specified key.
-     * @return true if the value was replaced
+     * @return previous value associated with specified key, or <tt>null</tt>
+     *         if there was no mapping for key.  A <tt>null</tt> return can
+     *         also indicate that the map previously associated <tt>null</tt>
+     *         with the specified key, if the implementation supports
+     *         <tt>null</tt> values.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.
      */
-    boolean replace(K key, V value);
+    V replace(K key, V value);
 
 }

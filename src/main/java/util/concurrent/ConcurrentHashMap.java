@@ -305,15 +305,39 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     e = e.next;
                 }
 
-                if (oldValue != null) {
-                    V v = e.value;
-                    if (v == null || !oldValue.equals(v))
-                        return false;
-                }
+                V v = e.value;
+                if (v == null || !oldValue.equals(v))
+                    return false;
 
                 e.value = newValue;
                 count = c; // write-volatile
                 return true;
+                
+            } finally {
+                unlock();
+            }
+        }
+
+        V replace(K key, int hash, V newValue) {
+            lock();
+            try {
+                int c = count;
+                HashEntry[] tab = table;
+                int index = hash & (tab.length - 1);
+                HashEntry<K,V> first = (HashEntry<K,V>) tab[index];
+                HashEntry<K,V> e = first;
+                for (;;) {
+                    if (e == null)
+                        return null;
+                    if (e.hash == hash && key.equals(e.key))
+                        break;
+                    e = e.next;
+                }
+
+                V v = e.value;
+                e.value = newValue;
+                count = c; // write-volatile
+                return v;
                 
             } finally {
                 unlock();
@@ -853,26 +877,26 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Replace entry for key only if key is currently mapped.
+     * Replace entry for key only if currently mapped to some value.
      * Acts as
      * <pre> 
      *  if ((map.containsKey(key)) {
-     *     map.put(key, value);
-     *     return true;
-     * } else return false;
+     *     return map.put(key, value);
+     * } else return null;
      * </pre>
      * except that the action is performed atomically.
      * @param key key with which the specified value is associated.
      * @param value value to be associated with the specified key.
-     * @return true if the value was replaced
+     * @return previous value associated with specified key, or <tt>null</tt>
+     *         if there was no mapping for key.  
      * @throws NullPointerException if the specified key or value is
      *            <tt>null</tt>.
      */
-    public boolean replace(K key, V value) {
+    public V replace(K key, V value) {
         if (value == null)
             throw new NullPointerException();
         int hash = hash(key);
-        return segmentFor(hash).replace(key, hash, null, value);
+        return segmentFor(hash).replace(key, hash, value);
     }
 
 

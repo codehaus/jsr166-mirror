@@ -616,7 +616,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         /**
          * Acquire the lock. 
          *
-         * <p>Acquires the lock if it is not held by another thread
+         * <p>Acquires the write lock if neither the read nor write lock 
+         * are held by another thread
          * and returns immediately, setting the lock hold count to
          * one.
          *
@@ -637,7 +638,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * Acquires the lock unless the current thread is {@link
          * Thread#interrupt interrupted}.
          *
-         * <p>Acquires the lock if it is not held by another thread
+         * <p>Acquires the write lock if neither the read nor write lock 
+         * are held by another thread
          * and returns immediately, setting the lock hold count to
          * one.
          *
@@ -691,7 +693,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * Acquires the lock only if it is not held by another thread
          * at the time of invocation.
          *
-         * <p>Acquires the lock if it is not held by another thread
+         * <p>Acquires the write lock if neither the read nor write lock 
+         * are held by another thread
          * and returns immediately with the value <tt>true</tt>,
          * setting the lock hold count to one. Even when this lock has
          * been set to use a fair ordering policy, a call to
@@ -724,7 +727,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * within the given waiting time and the current thread has
          * not been {@link Thread#interrupt interrupted}.
          *
-         * <p>Acquires the lock if it is not held by another thread
+         * <p>Acquires the write lock if neither the read nor write lock 
+         * are held by another thread
          * and returns immediately with the value <tt>true</tt>,
          * setting the lock hold count to one. If this lock has been
          * set to use a fair ordering policy then an available lock

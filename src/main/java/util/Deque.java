@@ -65,7 +65,7 @@ package java.util;
  *
  * <p>This interface extends the {@link Queue} interface.  When a deque is
  * used as a queue, FIFO (First-In-First-Out) behavior results.  Elements are
- * added to the end of the deque and removed from the beginning.  The methods
+ * added at the end of the deque and removed from the beginning.  The methods
  * inherited from the <tt>Queue</tt> interface are precisely equivalent to
  * <tt>Deque</tt> methods as indicated in the following table:<p>
  *
@@ -176,7 +176,7 @@ public interface Deque<E> extends Queue<E> {
     boolean offerFirst(E e);
 
     /**
-     * Inserts the specified element to the end of this deque unless it would
+     * Inserts the specified element at the end of this deque unless it would
      * violate capacity restrictions.  When using a capacity-restricted deque,
      * this method is generally preferable to method <tt>addLast</tt> which
      * can fail to insert an element only by throwing an exception.
@@ -202,7 +202,7 @@ public interface Deque<E> extends Queue<E> {
     void addFirst(E e);
 
     /**
-     * Inserts the specified element to the end of this deque unless it would
+     * Inserts the specified element at the end of this deque unless it would
      * violate capacity restrictions.
      *
      * @param e the element to insert
@@ -298,7 +298,8 @@ public interface Deque<E> extends Queue<E> {
      *
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if the deque contained the specified element
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is null and this
+     *     deque does not permit null elements
      */
     boolean removeFirstOccurrence(Object o);
 
@@ -311,7 +312,8 @@ public interface Deque<E> extends Queue<E> {
      *
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if the deque contained the specified element
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is null and this
+     *     deque does not permit null elements
      */
     boolean removeLastOccurrence(Object o);
 
@@ -321,7 +323,7 @@ public interface Deque<E> extends Queue<E> {
     /**
      * Inserts the specified element into the queue represented by this deque
      * unless it would violate capacity restrictions.  In other words, inserts
-     * the specified element to the end of this deque.  When using a
+     * the specified element at the end of this deque.  When using a
      * capacity-restricted deque, this method is generally preferable to the
      * {@link #add} method, which can fail to insert an element only by
      * throwing an exception.

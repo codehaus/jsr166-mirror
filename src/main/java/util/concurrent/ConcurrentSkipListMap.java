@@ -2269,9 +2269,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *               <tt>null</tt>.
      */
     public SortedMap<K,V> subMap(K fromKey, K toKey) {
-        if (fromKey == null || toKey == null)
-            throw new NullPointerException();
-        return new ConcurrentSkipListSubMap(this, fromKey, toKey);
+        return navigableSubMap(fromKey, toKey);
     }
 
     /**
@@ -2287,9 +2285,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if <tt>toKey</tt> is <tt>null</tt>.
      */
     public SortedMap<K,V> headMap(K toKey) {
-        if (toKey == null)
-            throw new NullPointerException();
-        return new ConcurrentSkipListSubMap(this, null, toKey);
+        return navigableHeadMap(toKey);
     }
 
     /**
@@ -2305,9 +2301,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>.
      */
     public SortedMap<K,V>  tailMap(K fromKey) {
-        if (fromKey == null)
-            throw new NullPointerException();
-        return new ConcurrentSkipListSubMap(this, fromKey, null);
+        return navigableTailMap(fromKey);
     }
 
     /* ---------------- Relational operations -------------- */

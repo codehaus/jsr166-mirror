@@ -477,7 +477,7 @@ public class ConcurrentSkipListSet<E>
      *	       <tt>toElement</tt> is <tt>null</tt>.
      */
     public SortedSet<E> subSet(E fromElement, E toElement) {
-	return new ConcurrentSkipListSubSet<E>(m, fromElement, toElement);
+	return navigableSubSet(fromElement, toElement);
     }
 
     /**
@@ -492,7 +492,7 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>.
      */
     public SortedSet<E> headSet(E toElement) {
-	return new ConcurrentSkipListSubSet<E>(m, null, toElement);
+	return navigableHeadSet(toElement);
     }
 
 
@@ -509,7 +509,7 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>.
      */
     public SortedSet<E> tailSet(E fromElement) {
-	return new ConcurrentSkipListSubSet<E>(m, fromElement, null);
+	return navigableTailSet(fromElement);
     }
 
     /**

@@ -198,7 +198,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Inserts the specified element to the end of this deque.
+     * Inserts the specified element at the end of this deque.
      * This method is equivalent to {@link Collection#add} and
      * {@link #push}.
      *
@@ -260,7 +260,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Inserts the specified element to the end of this deque.
+     * Inserts the specified element at the end of this deque.
      *
      * @param e the element to insert
      * @return <tt>true</tt> (as per the spec for {@link Deque#offerLast})
@@ -408,7 +408,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     // *** Queue methods ***
 
     /**
-     * Inserts the specified element to the end of this deque.
+     * Inserts the specified element at the end of this deque.
      *
      * <p>This method is equivalent to {@link #offerLast}.
      *
@@ -421,7 +421,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Inserts the specified element to the end of this deque.
+     * Inserts the specified element at the end of this deque.
      *
      * <p>This method is equivalent to {@link #addLast}.
      *

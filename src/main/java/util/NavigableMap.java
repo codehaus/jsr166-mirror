@@ -25,7 +25,11 @@ package java.util;
  * <tt>descendingEntrySet</tt> return descending views. The
  * performance of ascending traversals is likely to be faster than
  * descending traversals.  Notice that it is possible to perform
- * subrange traversals in either direction using <tt>SubMap</tt>.
+ * subrange traversals in either direction using <tt>navigableSubMap</tt>.
+ * Methods <tt>navigableSubMap</tt>, <tt>navigableHeadMap</tt>, and
+ * <tt>navigableTailMap</tt> differ from the similarly named
+ * <tt>SortedMap</tt> methods only in that the returned maps
+ * are guaranteed to obey the <tt>NavigableMap</tt> interface.
  * 
  * <p>This interface additionally defines methods <tt>firstEntry</tt>,
  * <tt>pollFirstEntry</tt>, <tt>lastEntry</tt>, and
@@ -240,10 +244,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned
      * navigable map is empty.)  The returned navigable map is backed
      * by this map, so changes in the returned navigable map are
-     * reflected in this map, and vice-versa. Note: This
-     * method differs from <tt>SortedMap.subMap</tt> only
-     * in that the returned map is guaranteed to support the
-     * <tt>NavigableMap</tt> interface.
+     * reflected in this map, and vice-versa. 
      *
      * @param fromKey low endpoint (inclusive) of the subMap.
      * @param toKey high endpoint (exclusive) of the subMap.

@@ -21,6 +21,10 @@ package java.util;
  * additionally defines methods <tt>pollFirst</tt> and
  * <t>pollLast</tt> that return and remove the lowest and highest key,
  * if one exists, else returning <tt>null</tt>.
+ * Methods <tt>navigableSubSet</tt>, <tt>navigableHeadSet</tt>, and
+ * <tt>navigableTailSet</tt> differ from the similarly named
+ * <tt>SortedSet</tt> methods only in that the returned sets
+ * are guaranteed to obey the <tt>NavigableSet</tt> interface.
  *
  * <p> The return values of navigation methods may be ambiguous in
  * implementations that permit <tt>null</tt> elements. However, even
@@ -118,10 +122,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * exclusive.  (If <tt>fromElement</tt> and <tt>toElement</tt> are
      * equal, the returned navigable set is empty.)  The returned
      * navigable set is backed by this set, so changes in the returned
-     * navigable set are reflected in this set, and vice-versa. Note:
-     * This method differs from <tt>SortedSet.subSet</tt> only in that
-     * the returned set is guaranteed to support the
-     * <tt>NavigableSet</tt> interface.
+     * navigable set are reflected in this set, and vice-versa. 
      *
      * @param fromElement low endpoint (inclusive) of the subSet.
      * @param toElement high endpoint (exclusive) of the subSet.

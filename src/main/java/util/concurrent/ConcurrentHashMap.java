@@ -1225,6 +1225,18 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         public void clear() {
             ConcurrentHashMap.this.clear();
         }
+        public Object[] toArray() {
+            Collection<K> c = new ArrayList<K>();
+            for (Iterator<K> i = iterator(); i.hasNext(); )
+                c.add(i.next());
+            return c.toArray();
+        }
+        public <T> T[] toArray(T[] a) {
+            Collection<K> c = new ArrayList<K>();
+            for (Iterator<K> i = iterator(); i.hasNext(); )
+                c.add(i.next());
+            return c.toArray(a);
+        }
     }
 
     final class Values extends AbstractCollection<V> {
@@ -1239,6 +1251,18 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public void clear() {
             ConcurrentHashMap.this.clear();
+        }
+        public Object[] toArray() {
+            Collection<V> c = new ArrayList<V>();
+            for (Iterator<V> i = iterator(); i.hasNext(); )
+                c.add(i.next());
+            return c.toArray();
+        }
+        public <T> T[] toArray(T[] a) {
+            Collection<V> c = new ArrayList<V>();
+            for (Iterator<V> i = iterator(); i.hasNext(); )
+                c.add(i.next());
+            return c.toArray(a);
         }
     }
 

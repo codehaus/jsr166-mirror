@@ -5,12 +5,8 @@ import java.util.concurrent.*;
 
 public class TimerExecutors {
 
-    public static TimerExecutor newTimerExecutor (Executor executor) {
+    public static TimerExecutor newTimerExecutor (ExecutorService executor) {
         return new SimpleTimerExecutor(executor);
-    }
-
-    public static TimerExecutorService newTimerExecutor (ExecutorService executor) {
-        return new SimpleTimerExecutorService(executor);
     }
 
 
@@ -18,7 +14,7 @@ public class TimerExecutors {
 
     private static class SimpleTimerExecutor implements TimerExecutor {
 
-        SimpleTimerExecutor (Executor executor) {
+        SimpleTimerExecutor (ExecutorService executor) {
             this.executor = executor;
         }
 
@@ -47,17 +43,6 @@ public class TimerExecutors {
             return timerTask;
         }
 
-        protected final Timer timer = new Timer();
-        protected final Executor executor;
-    }
-
-    private static class SimpleTimerExecutorService extends SimpleTimerExecutor
-                implements TimerExecutorService {
-
-        SimpleTimerExecutorService (ExecutorService executor) {
-            super(executor);
-        }
-
         public void shutdown() {
             timer.cancel();
             ((ExecutorService) executor).shutdown();
@@ -81,6 +66,9 @@ public class TimerExecutors {
             timer.cancel();
             return ((ExecutorService) executor).awaitTermination(timeout, granularity);
         }
+
+        protected final Timer timer = new Timer();
+        protected final ExecutorService executor;
     }
 
     private static class ExecutionTimerTask extends TimerTask {

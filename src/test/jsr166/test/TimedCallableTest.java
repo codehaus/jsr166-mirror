@@ -10,11 +10,11 @@ import junit.framework.TestCase;
  */
 public class TimedCallableTest extends TestCase {
     
-    private final Executor EXECUTOR = 
+    private final ExecutorService EXECUTOR = 
         Executors.newSingleThreadExecutor();
         //Executors.newFixedThreadPool(4);
         //Executors.newCachedThreadPool();
-        //new DirectExecutor();
+        //new DirectExecutorService();
         
     private static final long MSECS = 5;
     private static final int N = 100;

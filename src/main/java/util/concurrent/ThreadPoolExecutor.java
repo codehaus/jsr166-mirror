@@ -223,7 +223,7 @@ import java.util.*;
  * @since 1.5
  * @author Doug Lea
  */
-public class ThreadPoolExecutor implements ExecutorService {
+public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Queue used for holding tasks and handing off to worker threads.
      */
@@ -1030,13 +1030,13 @@ public class ThreadPoolExecutor implements ExecutorService {
         try {
             int extra = this.corePoolSize - corePoolSize;
             this.corePoolSize = corePoolSize;
-	    if (extra < 0) {
-		Runnable r;
-		while (extra++ < 0 && poolSize < corePoolSize &&
-		       (r = workQueue.poll()) != null)
-		    addThread(r).start();
-	    }
-	    else if (extra > 0 && poolSize > corePoolSize) {
+            if (extra < 0) {
+                Runnable r;
+                while (extra++ < 0 && poolSize < corePoolSize &&
+                       (r = workQueue.poll()) != null)
+                    addThread(r).start();
+            }
+            else if (extra > 0 && poolSize > corePoolSize) {
                 Iterator<Worker> it = workers.iterator();
                 while (it.hasNext() &&
                        extra-- > 0 &&

@@ -43,6 +43,7 @@
   <property name="src.dir"              location="${basedir}/src/main"/>
   <property name="test.src.dir"         location="${basedir}/src/test"/>
   <property name="tck.src.dir"          location="${test.src.dir}/tck"/>
+  <property name="jtreg.src.dir"        location="${test.src.dir}/jtreg"/>
   <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
   <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
   <property name="lib.dir"              location="${basedir}/lib"/>
@@ -410,6 +411,23 @@
 
     </javac>
 
+<!--
+    <javac srcdir="${jtreg.src.dir}"
+          destdir="${build.testcases.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <compilerarg value="${bootclasspath.args}"/>
+      <compilerarg line="${build.args}"/>
+      
+      <classpath refid="test.classpath"/>
+
+    </javac>
+-->
+
   </target>
 
 
@@ -434,14 +452,25 @@
 
       <formatter type="xml"/>
 
-      <batchtest todir="${build.reports.dir}">
+      <batchtest todir="${build.reports.dir}" unless="no.test.tck">
         <fileset dir="${tck.src.dir}">
           <include name="**/${testcase}Test.java"/>
         </fileset>
+      </batchtest>
+      
+      <batchtest todir="${build.reports.dir}" if="do.test.old">
         <fileset dir="${test.src.dir}">
           <include name="jsr166/test/**/${testcase}Test.java"/>
         </fileset>
       </batchtest>
+
+<!--      
+      <batchtest todir="${build.reports.dir}" if="do.test.jtreg">
+        <fileset dir="${jtreg.src.dir}">
+          <include name="**/${testcase}Test.java"/>
+        </fileset>
+      </batchtest>
+-->
 
     </junit>
 

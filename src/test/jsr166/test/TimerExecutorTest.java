@@ -12,7 +12,7 @@ import junit.framework.TestCase;
 public class TimerExecutorTest extends TestCase {
 
     public void testTimedExecute () {
-        TimerExecutor te = TimerExecutors.newTimerExecutor(new DirectExecutor());
+        TimerExecutor te = TimerExecutors.newTimerExecutor(new DirectExecutorService());
         Date inASecond= new Date(System.currentTimeMillis() + 1000);
         flag = false;
         TimerTask timerTask = te.schedule(new Runnable() {
@@ -27,12 +27,6 @@ public class TimerExecutorTest extends TestCase {
             fail("task interrupted");
         }
         assertTrue("flag should have been set", flag);
-    }
-
-    private static class DirectExecutor implements Executor {
-        public void execute (Runnable r) {
-            r.run();
-        }
     }
 
     private boolean flag = false;

@@ -12,7 +12,7 @@ public class ScheduledExecutorTest extends TestCase {
 
     public void testScheduleSleepGet () {
         try {
-            ScheduledExecutor se = Executors.newScheduledThreadPool(1);
+            ScheduledExecutorService se = Executors.newScheduledThreadPool(1);
             StringTask task = new StringTask();
 
             assertFalse("task should not be complete", task.isCompleted());

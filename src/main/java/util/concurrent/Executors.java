@@ -26,7 +26,7 @@ public class Executors {
      * A wrapper class that exposes only the ExecutorService methods
      * of an implementation.
      */
-    private static class DelegatedExecutorService implements ExecutorService {
+    private static class DelegatedExecutorService extends AbstractExecutorService {
         private final ExecutorService e;
         DelegatedExecutorService(ExecutorService executor) { e = executor; }
         public void execute(Runnable command) { e.execute(command); }
@@ -47,7 +47,7 @@ public class Executors {
     private static class DelegatedScheduledExecutorService
             extends DelegatedExecutorService 
             implements ScheduledExecutorService {
-        private final ScheduledExecutor e;
+        private final ScheduledExecutorService e;
         DelegatedScheduledExecutorService(ScheduledExecutorService executor) {
             super(executor);
             e = executor;
@@ -209,136 +209,6 @@ public class Executors {
             int corePoolSize, ThreadFactory threadFactory) {
         return new DelegatedScheduledExecutorService
             (new ScheduledThreadPoolExecutor(corePoolSize, threadFactory));
-    }
-
-    /**
-     * Executes a Runnable task and returns a Future representing that
-     * task.
-     *
-     * @param executor the Executor to which the task will be submitted
-     * @param task the task to submit
-     * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return an arbitrary value 
-     * upon completion
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     */
-    public static Future<?> execute(Executor executor, Runnable task) {
-        FutureTask<?> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
-        executor.execute(ftask);
-        return ftask;
-    }
-
-    /**
-     * Executes a value-returning task and returns a Future
-     * representing the pending results of the task.
-     *
-     * @param executor the Executor to which the task will be submitted
-     * @param task the task to submit
-     * @return a Future representing pending completion of the task
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     */
-    public static <T> Future<T> execute(Executor executor, Callable<T> task) {
-        FutureTask<T> ftask = new FutureTask<T>(task);
-        executor.execute(ftask);
-        return ftask;
-    }
-
-    /**
-     * Executes a Runnable task and blocks until it completes normally
-     * or throws an exception.
-     *
-     * @param executor the Executor to which the task will be submitted
-     * @param task the task to submit
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     * @throws ExecutionException if the task encountered an exception
-     * while executing
-     */
-    public static void invoke(Executor executor, Runnable task)
-            throws ExecutionException, InterruptedException {
-        FutureTask<?> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
-        executor.execute(ftask);
-        ftask.get();
-    }
-
-    /**
-     * Executes a value-returning task and blocks until it returns a
-     * value or throws an exception.
-     *
-     * @param executor the Executor to which the task will be submitted
-     * @param task the task to submit
-     * @return a Future representing pending completion of the task
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     * @throws InterruptedException if interrupted while waiting for
-     * completion
-     * @throws ExecutionException if the task encountered an exception
-     * while executing
-     */
-    public static <T> T invoke(Executor executor, Callable<T> task)
-            throws ExecutionException, InterruptedException {
-        FutureTask<T> ftask = new FutureTask<T>(task);
-        executor.execute(ftask);
-        return ftask.get();
-    }
-
-
-    /**
-     * Executes a privileged action under the current access control 
-     * context and returns a Future representing the pending result 
-     * object of that action.
-     *
-     * @param executor the Executor to which the task will be submitted
-     * @param action the action to submit
-     * @return a Future representing pending completion of the action
-     * @throws RejectedExecutionException if action cannot be scheduled
-     * for execution
-     */
-    public static Future<Object> execute(Executor executor, PrivilegedAction action) {
-        Callable<Object> task = new PrivilegedActionAdapter(action);
-        FutureTask<Object> future = new PrivilegedFutureTask<Object>(task);
-        executor.execute(future);
-        return future;
-    }
-
-    /**
-     * Executes a privileged exception action under the current access control 
-     * context and returns a Future representing the pending result 
-     * object of that action.
-     *
-     * @param executor the Executor to which the task will be submitted
-     * @param action the action to submit
-     * @return a Future representing pending completion of the action
-     * @throws RejectedExecutionException if action cannot be scheduled
-     * for execution
-     */
-    public static Future<Object> execute(Executor executor, PrivilegedExceptionAction action) {
-        Callable<Object> task = new PrivilegedExceptionActionAdapter(action);
-        FutureTask<Object> future = new PrivilegedFutureTask<Object>(task);
-        executor.execute(future);
-        return future;
-    }
-
-    private static class PrivilegedActionAdapter implements Callable<Object> {
-        PrivilegedActionAdapter(PrivilegedAction action) {
-            this.action = action;
-        }
-        public Object call () {
-            return action.run();
-        }
-        private final PrivilegedAction action;
-    }
-    
-    private static class PrivilegedExceptionActionAdapter implements Callable<Object> {
-        PrivilegedExceptionActionAdapter(PrivilegedExceptionAction action) {
-            this.action = action;
-        }
-        public Object call () throws Exception {
-            return action.run();
-        }
-        private final PrivilegedExceptionAction action;
     }
         
     /**

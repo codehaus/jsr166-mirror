@@ -7,6 +7,8 @@
 package java.util.concurrent;
 
 import java.util.List;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * An <tt>Executor</tt> that provides methods to manage termination.
@@ -23,6 +25,83 @@ import java.util.List;
  * @author Doug Lea
  */
 public interface ExecutorService extends Executor {
+
+    /**
+     * Submits a Runnable task for execution and returns a Future 
+     * representing that task.
+     *
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task,
+     * and whose <tt>get()</tt> method will return an arbitrary value 
+     * upon completion
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     */
+    Future<?> submit(Runnable task);
+
+    /**
+     * Submits a value-returning task for execution and returns a Future
+     * representing the pending results of the task.
+     *
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     */
+    <T> Future<T> submit(Callable<T> task);
+
+    /**
+     * Executes a Runnable task and blocks until it completes normally
+     * or throws an exception.
+     *
+     * @param task the task to submit
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     * @throws ExecutionException if the task encountered an exception
+     * while executing
+     */
+    void invoke(Runnable task) throws ExecutionException, InterruptedException;
+
+    /**
+     * Executes a value-returning task and blocks until it returns a
+     * value or throws an exception.
+     *
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     * @throws InterruptedException if interrupted while waiting for
+     * completion
+     * @throws ExecutionException if the task encountered an exception
+     * while executing
+     */
+    <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException;
+
+
+    /**
+     * Submits a privileged action for execution under the current 
+     * access control context and returns a Future representing the 
+     * pending result object of that action.
+     *
+     * @param action the action to submit
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    Future<Object> submit(PrivilegedAction action);
+
+    /**
+     * Submits a privileged exception action for execution under the current 
+     * access control context and returns a Future representing the pending 
+     * result object of that action.
+     *
+     * @param action the action to submit
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    Future<Object> submit(PrivilegedExceptionAction action);
+    
 
     /**
      * Initiates an orderly shutdown in which previously submitted

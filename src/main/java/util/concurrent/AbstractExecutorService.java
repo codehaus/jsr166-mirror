@@ -13,7 +13,15 @@ import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 /**
- * A partial <tt>ExecutorService</tt> implementation.
+ * Provides default implementation of {@link ExecutorService}
+ * execution methods. This class implements the <tt>submit</tt> and
+ * <tt>invoke</tt> methods using the default {@link FutureTask} and
+ * {@link PrivilegedFutureTask} classes provided in this package.  For
+ * example, the the implementation of <tt>submit(Runnable)</tt>
+ * creates an associated <tt>FutureTask</tt> that is executed and
+ * returned. Subclasses overriding these methods to use different
+ * {@link Future} implementations should do so consistently for each
+ * of these methods.
  *
  * @since 1.5
  * @author Doug Lea

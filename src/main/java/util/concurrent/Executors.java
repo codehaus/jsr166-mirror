@@ -14,8 +14,8 @@ import java.security.PrivilegedExceptionAction;
 
 /**
  * Factory and utility methods for {@link Executor}, {@link
- * ExecutorService}, {@link ThreadFactory}, and {@link Future}
- * classes defined in this package.
+ * ExecutorService}, and {@link ThreadFactory} classes defined in this
+ * package.
  *
  * @since 1.5
  * @author Doug Lea

@@ -11,7 +11,9 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 
 /**
- * An <tt>Executor</tt> that provides methods to manage termination.
+ * An <tt>Executor</tt> that provides methods to manage termination
+ * and those that can produce a {@link Future} for tracking
+ * progress of an asynchronous task.
  * An <tt>ExecutorService</tt> can be shut down, which will cause it
  * to stop accepting new tasks.  After being shut down, the executor
  * will eventually terminate, at which point no tasks are actively

@@ -3,13 +3,20 @@
 /**
  * An unbounded priority queue based on a priority heap.  This queue orders
  * elements according to an order specified at construction time, which is
- * specified in the same manner as {@link TreeSet} and {@link TreeMap}: elements are ordered
+ * specified in the same manner as {@link TreeSet} and {@link TreeMap}: 
+ * elements are ordered
  * either according to their <i>natural order</i> (see {@link Comparable}), or
  * according to a {@link Comparator}, depending on which constructor is used.
- * The {@link #peek}, {@link #poll}, and {@link #remove} methods return the
- * minimal element with respect to the specified ordering.  If multiple
- * elements are tied for least value, no guarantees are made as to
- * which of these elements is returned.
+ * The <em>head</em> of this queue is the least element with respect to the
+ * specified ordering. If multiple elements are tied for least value, the 
+ * head is one of those elements. A priority queue does not permit 
+ * <tt>null</tt> elements.
+ * 
+ * <p>The {@link #remove()} and {@link #poll()} methods remove and
+ * return the head of the queue.
+ *
+ * <p>The {@link #element()} and {@link #peek()} methods return, but do
+ * not delete, the head of the queue.
  *
  * <p>A priority queue has a <i>capacity</i>.  The capacity is the
  * size of the array used internally to store the elements on the
@@ -17,12 +24,12 @@
  * elements are added to a priority queue, its capacity grows
  * automatically.  The details of the growth policy are not specified.
  *
- *<p>Implementation note: this implementation provides O(log(n)) time
- *for the insertion methods (<tt>offer</tt>, <tt>poll</tt>,
- *<tt>remove()</tt> and <tt>add</tt>) methods; linear time for the
- *<tt>remove(Object)</tt> and <tt>contains(Object)</tt> methods; and
- *constant time for the retrieval methods (<tt>peek</tt>,
- *<tt>element</tt>, and <tt>size</tt>).
+ * <p>Implementation note: this implementation provides O(log(n)) time
+ * for the insertion methods (<tt>offer</tt>, <tt>poll</tt>,
+ * <tt>remove()</tt> and <tt>add</tt>) methods; linear time for the
+ * <tt>remove(Object)</tt> and <tt>contains(Object)</tt> methods; and
+ * constant time for the retrieval methods (<tt>peek</tt>,
+ * <tt>element</tt>, and <tt>size</tt>).
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -31,8 +38,8 @@
  * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-                              implements Queue<E>,
-                                         java.io.Serializable {
+    implements Queue<E>, Sorted, java.io.Serializable {
+
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 
     /**
@@ -68,16 +75,16 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     private transient int modCount = 0;
 
     /**
-     * Create a new priority queue with the default initial capacity
+     * Create a <tt>PriorityQueue</tt> with the default initial capacity
      * (11) that orders its elements according to their natural
      * ordering (using <tt>Comparable</tt>.)
      */
     public PriorityQueue() {
-        this(DEFAULT_INITIAL_CAPACITY);
+        this(DEFAULT_INITIAL_CAPACITY, null);
     }
 
     /**
-     * Create a new priority queue with the specified initial capacity
+     * Create a <tt>PriorityQueue</tt> with the specified initial capacity
      * that orders its elements according to their natural ordering
      * (using <tt>Comparable</tt>.)
      *
@@ -88,11 +95,13 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a new priority queue with the specified initial capacity (11)
+     * Create a <tt>PriorityQueue</tt> with the specified initial capacity
      * that orders its elements according to the specified comparator.
      *
      * @param initialCapacity the initial capacity for this priority queue.
      * @param comparator the comparator used to order this priority queue.
+     * If <tt>null</tt> then the order depends on the elements' natural
+     * ordering.
      */
     public PriorityQueue(int initialCapacity, Comparator<E> comparator) {
         if (initialCapacity < 1)
@@ -102,7 +111,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a new priority queue containing the elements in the specified
+     * Create a <tt>PriorityQueue</tt> containing the elements in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
      * size of the specified collection. If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be
@@ -128,7 +137,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             initialCapacity = 1;
         queue = (E[]) new Object[initialCapacity + 1];
 
-
         if (initialElements instanceof Sorted) {
             comparator = ((Sorted)initialElements).comparator();
             for (Iterator<E> i = initialElements.iterator(); i.hasNext(); )
@@ -143,67 +151,78 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     // Queue Methods
 
     /**
-     * Remove and return the minimal element from this priority queue
-     * if it contains one or more elements, otherwise return
-     * <tt>null</tt>.  The term <i>minimal</i> is defined according to
-     * this priority queue's order.
+     * Add the specified element to this priority queue.
      *
-     * @return the minimal element from this priority queue if it contains
-     *         one or more elements, otherwise <tt>null</tt>.
+     * @param element the element to add.
+     * @return <tt>true</tt>
+     * @throws ClassCastException if the specified element cannot be compared
+     * with elements currently in the priority queue according
+     * to the priority queue's ordering.
+     * @throws NullPointerException if the specified element is null.
      */
+    public boolean offer(E element) {
+        if (element == null)
+            throw new NullPointerException();
+        modCount++;
+        ++size;
+
+        // Grow backing store if necessary
+        while (size >= queue.length) {
+            E[] newQueue = (E[]) new Object[2 * queue.length];
+            System.arraycopy(queue, 0, newQueue, 0, queue.length);
+            queue = newQueue;
+        }
+
+        queue[size] = element;
+        fixUp(size);
+        return true;
+    }
+
     public E poll() {
         if (size == 0)
             return null;
         return remove(1);
     }
 
-    /**
-     * Return, but do not remove, the minimal element from the
-     * priority queue, or return <tt>null</tt> if the queue is empty.
-     * The term <i>minimal</i> is defined according to this priority
-     * queue's order.  This method returns the same object reference
-     * that would be returned by by the <tt>poll</tt> method.  The two
-     * methods differ in that this method does not remove the element
-     * from the priority queue.
-     *
-     * @return the minimal element from this priority queue if it contains
-     *         one or more elements, otherwise <tt>null</tt>.
-     */
     public E peek() {
         return queue[1];
     }
 
     // Collection Methods
 
+    // these first two override just to get the throws docs
+
     /**
-     * Removes a single instance of the specified element from this priority
-     * queue, if it is present.  Returns true if this collection contained the
-     * specified element (or equivalently, if this collection changed as a
-     * result of the call).
-     *
-     * @param element the element to be removed from this collection,
-     * if present.
-     * @return <tt>true</tt> if this collection changed as a result of the
-     *         call
-     * @throws ClassCastException if the specified element cannot be compared
-     *            with elements currently in the priority queue according
-     *            to the priority queue's ordering.
-     * @throws NullPointerException if the specified element is null.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean remove(Object element) {
-        if (element == null)
+    public boolean add(E element) {
+        return super.add(element);
+    }
+
+    /**
+     * @throws NullPointerException if any element is <tt>null</tt>.
+     */
+    public boolean addAll(Collection c) {
+        return super.addAll(c);
+    }
+
+    /**
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     */
+    public boolean remove(E o) {
+        if (o == null)
             throw new NullPointerException();
 
         if (comparator == null) {
             for (int i = 1; i <= size; i++) {
-                if (((Comparable)queue[i]).compareTo(element) == 0) {
+                if (((Comparable)queue[i]).compareTo(o) == 0) {
                     remove(i);
                     return true;
                 }
             }
         } else {
             for (int i = 1; i <= size; i++) {
-                if (comparator.compare(queue[i], (E) element) == 0) {
+                if (comparator.compare(queue[i], o) == 0) {
                     remove(i);
                     return true;
                 }
@@ -283,34 +302,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      */
     public int size() {
         return size;
-    }
-
-    /**
-     * Add the specified element to this priority queue.
-     *
-     * @param element the element to add.
-     * @return true
-     * @throws ClassCastException if the specified element cannot be compared
-     *            with elements currently in the priority queue according
-     *            to the priority queue's ordering.
-     * @throws NullPointerException if the specified element is null.
-     */
-    public boolean offer(E element) {
-        if (element == null)
-            throw new NullPointerException();
-        modCount++;
-        ++size;
-
-        // Grow backing store if necessary
-        while (size >= queue.length) {
-            E[] newQueue = (E[]) new Object[2 * queue.length];
-            System.arraycopy(queue, 0, newQueue, 0, queue.length);
-            queue = newQueue;
-        }
-
-        queue[size] = element;
-        fixUp(size);
-        return true;
     }
 
     /**
@@ -406,13 +397,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Returns the comparator associated with this priority queue, or
-     * <tt>null</tt> if it uses its elements' natural ordering.
-     *
-     * @return the comparator associated with this priority queue, or
-     *         <tt>null</tt> if it uses its elements' natural ordering.
-     */
     public Comparator comparator() {
         return comparator;
     }
@@ -459,3 +443,4 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
 }
+

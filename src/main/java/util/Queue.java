@@ -7,38 +7,37 @@
 package java.util;
 
 /**
- * A Collection designed for holding elements prior to processing.
+ * A collection designed for holding elements prior to processing.
  * Besides basic {@link Collection} operations, queues provide
  * additional insertion, extraction, and inspection operations.
-0 *
+ *
  * <p>Queues typically, but do not necessarily, order elements in a
  * FIFO (first-in-first-out) manner.  Among the exceptions are
  * priority queues, which order elements according to a supplied
- * comparator, or the elements' natural ordering.  Every Queue
- * implementation must specify its ordering guarantees.
+ * comparator, or the elements' natural ordering, and LIFO queues (or
+ * stacks) which order the elements LIFO (last-in-first-out).
+ * Whatever the ordering used, the <em>head</em> of the queue is that element
+ * which would be removed by a call to {@link #remove() } or {@link #poll()}.
+ * Every Queue implementation must specify its ordering guarantees.
  *
  * <p>The {@link #offer(E)} method adds an element if possible, otherwise
  * returning <tt>false</tt>.  This differs from the {@link
  * Collections#add(Object)} method, which throws an unchecked exception upon
  * failure. It is designed for use in collections in which failure to
  * add is a normal, rather than exceptional occurrence, for example,
- * in fixed-capacity (or &ldquo;bounded&rdquo;) queues.
-
+ * in fixed-capacity (or &quot;bounded&quot;) queues.
  * 
  * <p>The {@link #remove()} and {@link #poll()} methods remove and
- * return an element in accord with the implementation's ordering
- * policy.  Exactly which element is removed from the queue is a
+ * return the head of the queue.
+ * Exactly which element is removed from the queue is a
  * function of the queue's ordering policy, which differs from
- * implementation to implementation.  Possible orderings include (but
- * are not limited to) first-in-first-out (FIFO), last-in-first-out
- * (LIFO), element priority, and arbitrary.  The <tt>remove()</tt> and
+ * implementation to implementation. The <tt>remove()</tt> and
  * <tt>poll()</tt> methods differ only in their behavior when the
  * queue is empty: the <tt>remove()</tt> method throws an exception,
  * while the <tt>poll()</tt> method returns <tt>null</tt>.
  *
- * <p>The {@link #element()} and {@link #peek()} methods return but do
- * not delete the element that would be obtained by a call to
- * the <tt>remove</tt> and <tt>poll</tt> methods respectively.
+ * <p>The {@link #element()} and {@link #peek()} methods return, but do
+ * not delete, the head of the queue.
  *
  * <p>The <tt>Queue</tt> interface does not define the <i>blocking queue
  * methods</i>, which are common in concurrent programming.  These methods,
@@ -70,49 +69,62 @@ package java.util;
  * @author Doug Lea
  */
 public interface Queue<E> extends Collection<E> {
+
     /**
      * Add the specified element to this queue, if possible.
      *
      * @param element the element to add.
-     * @return true if it was possible to add the element to the queue.
+     * @return <tt>true</tt> if it was possible to add the element to 
+     * this queue.
      */
     boolean offer(E element);
 
     /**
-     * Remove and return an element from the queue if one is available.
+     * Retrieve and remove the head of this queue, if it is available.
      *
-     * @return an element previously on the queue, or <tt>null</tt> if the
+     * @return the head of this queue, or <tt>null</tt> if this
      *         queue is empty. 
      */
     E poll();
 
     /**
-     * Remove and return an element from the queue.  This method differs
+     * Retrieve and remove the head of this queue.  
+     * This method differs
      * from the <tt>poll</tt> method in that it throws an exception if the
      * queue is empty. 
      *
-     * @return an element previously on the queue.
-     * @throws NoSuchElementException if the queue is empty.
+     * @return the head of this queue.
+     * @throws NoSuchElementException if this queue is empty.
      */
     E remove() throws NoSuchElementException;
 
     /**
-     * Return, but do not remove, an element from the queue, or <tt>null</tt>
-     * if the queue is empty.  This method returns the same object reference
-     * that would be returned by by the <tt>poll</tt> method.  The two methods
-     * differ in that this method does not remove the element from the queue.
+     * Retrieve, but do not remove, the head of this queue, or <tt>null</tt>
+     * if this queue is empty.  This method differs from the <tt>poll</tt> 
+     * method only in that this method does not remove the element from 
+     * this queue.
      *
-     * @return an element on the queue, or <tt>null</tt> if the queue is empty.
+     * @return the head of this queue, or <tt>null</tt> if this queue is empty.
      */
     E peek();
 
     /**
-     * Return, but do not remove, an element from the queue.  This method
-     * differs from the <tt>peek</tt> method in that it throws an exception if
-     * the queue is empty.
+     * Retrieve, but do not remove, the head of this queue.  This method
+     * differs from the <tt>peek</tt> method only in that it throws an 
+     * exception if this queue is empty.
      *
-     * @return an element on the queue.
-     * @throws NoSuchElementException if the queue is empty.
+     * @return the head of this queue.
+     * @throws NoSuchElementException if this queue is empty.
      */
     E element() throws NoSuchElementException;
 }
+
+
+
+
+
+
+
+
+
+

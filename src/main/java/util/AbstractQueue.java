@@ -25,7 +25,7 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements 
             throw new IllegalStateException("Queue full");
     }
 
-    public E remove() {
+    public E remove() throws NoSuchElementException {
         E x = poll();
         if (x != null)
             return x;
@@ -33,7 +33,7 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements 
             throw new NoSuchElementException();
     }
 
-    public E element() {
+    public E element() throws NoSuchElementException {
         E x = peek();
         if (x != null)
             return x;
@@ -46,5 +46,11 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements 
             ;
     }
 
+    // why is this here? Won't Collection declare this itself??? - David
     public abstract Iterator<E> iterator();
 }
+
+
+
+
+

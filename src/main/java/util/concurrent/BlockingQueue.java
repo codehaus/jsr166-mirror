@@ -12,20 +12,20 @@ import java.util.Queue;
  * that wait for elements to exist when retrieving them, and wait for
  * space to exist when putting them.
  *
- * <p> <tt>BlockingQueues</tt> do not accept <tt>null</tt> elements.
+ * <p>A <tt>BlockingQueue</tt> does not accept <tt>null</tt> elements.
  * Implementations throw <tt>IllegalArgumentException</tt> on attempts
  * to <tt>add</tt>, <tt>put</tt> or <tt>offer</tt> a <tt>null</tt>.  A
  * <tt>null</tt> is used as a sentinel value to indicate failure of
  * <tt>poll</tt> operations.
  *
- * <p><tt>BlockingQueues</tt> may be capacity bounded. At any given
- * time they may have a <tt>remainingCapacity</tt> beyond which no
+ * <p>A <tt>BlockingQueue</tt> may be capacity bounded. At any given
+ * time it may have a <tt>remainingCapacity</tt> beyond which no
  * additional elements can be <tt>put</tt> without blocking.
- * BlockingQueues without any intrinsic capacity constraints always
- * report a remaining capacity of <tt>Integer.MAX_VALUE</tt>.
+ * A <tt>BlockingQueue</tt> without any intrinsic capacity constraints always
+ * reports a remaining capacity of <tt>Integer.MAX_VALUE</tt>.
  *
- * <p> While <tt>BlockingQueues</tt> are designed to be used primarily
- * as producer-consumer queues, they additionally support the
+ * <p> While <tt>BlockingQueue</tt> is designed to be used primarily
+ * as for producer-consumer queues, it additionally supports the
  * <tt>Collection</tt> interface.  So, for example, it is possible to
  * remove an arbitrary element from within a queue using
  * <tt>remove(x)</tt>. However, such operations are in general
@@ -36,7 +36,7 @@ import java.util.Queue;
  * fail (throwing an exception) after adding only some of the elements
  * in <tt>c</tt>.
  *
- * <p><tt>BlockingQueue</tt>s do <em>not</em> intrinsically support
+ * <p>A <tt>BlockingQueue</tt> does <em>not</em> intrinsically support
  * any kind of &quot;close&quot; or &quot;shutdown&quot; operation to
  * indicate that no more items will be added.  The needs and usage of
  * such features tend to be implementation-dependent. For example, a
@@ -46,8 +46,8 @@ import java.util.Queue;
  *
  * <p>
  * Usage example, based on a typical producer-consumer scenario.
- * Note that Blocking queues can safely be used with multiple producers
- * and multiple consumers.
+ * Note that a <tt>BlockingQueue</tt> can safely be used with multiple 
+ * producers and multiple consumers.
  * <pre>
  * class Producer implements Runnable {
  *   private final BlockingQueue queue;
@@ -89,62 +89,85 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/28 04:11:54 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public interface BlockingQueue<E> extends Queue<E> {
-    /**
-     * Retrieve and remove the first element from the queue, waiting
-     * if no objects are present on the queue.
-     * @return the object
-     * @throws InterruptedException if interrupted while waiting.
-     */
-    E take() throws InterruptedException;
 
     /**
-     * Retrieve and remove the first element from the queue, waiting
-     * if necessary up to a specified wait time if no objects are
-     * present on the queue.
+     * @throws IllegalStateException if this queue is full
+     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
+     */
+    boolean add(E x);
+
+    /**
+     * @throws IllegalStateException if this queue is full
+     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
+     */
+    boolean addAll(Collection c);
+
+    /** 
+     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
+     */
+    public boolean offer(E x);
+
+    /**
+     * Add the specified element to this queue, waiting if necessary up to the
+     * specified wait time for space to become available.
+     * @param x the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
-     * @param unit a TimeUnit determining how to interpret the timeout
-     * parameter
-     * @return the object, or <tt>null</tt> if the specified waiting
-     * time elapses before an object is present.
+     * @param unit a <tt>TimeUnit</tt> determining how to interpret the 
+     * <tt>timeout</tt> parameter
+     * @return <tt>true</tt> if successful, or <tt>false</tt> if
+     * the specified waiting time elapses before space is available.
+     * @throws InterruptedException if interrupted while waiting.
+     * @throws NullPointerException if <tt>x</tt> is <tt>null</tt>.
+     */
+    boolean offer(E x, long timeout, TimeUnit unit) 
+        throws InterruptedException;
+
+    /**
+     * Retrieve and remove the head of this queue, waiting
+     * if necessary up to the specified wait time if no elements are
+     * present on this queue.
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a <tt>TimeUnit</tt> determining how to interpret the 
+     * <tt>timeout</tt> parameter
+     * @return the head of this queue, or <tt>null</tt> if the 
+     * specified waiting time elapses before an element is present.
      * @throws InterruptedException if interrupted while waiting.
      */
     E poll(long timeout, TimeUnit unit) 
         throws InterruptedException;
 
     /**
-     * Add the given object to the queue, waiting if necessary for
-     * space to become available.
-     * @param x the object to add
+     * Retrieve and remove the head of this queue, waiting
+     * if no elements are present on this queue.
+     * @return the head of this queue
      * @throws InterruptedException if interrupted while waiting.
+     */
+    E take() throws InterruptedException;
+
+
+    /**
+     * Add the specified element to this queue, waiting if necessary for
+     * space to become available.
+     * @param x the element to add
+     * @throws InterruptedException if interrupted while waiting.
+     * @throws NullPointerException if <tt>x</tt> is <tt>null</tt>.
      */
     void put(E x) throws InterruptedException;
 
-    /**
-     * Add the given object to the queue, waiting if necessary up to a
-     * specified wait time for space to become available.
-     * @param x the object to add
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a TimeUnit determining how to interpret the timeout
-     * parameter
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if
-     * the specified waiting time elapses before space is available.
-     * @throws InterruptedException if interrupted while waiting.
-     */
-    boolean offer(E x, long timeout, TimeUnit unit) 
-        throws InterruptedException;
 
     /**
      * Return the number of elements that this queue can ideally (in
      * the absence of memory or resource constraints) accept without
      * blocking, or <tt>Integer.MAX_VALUE</tt> if there is no
-     * intrinsic limit.  Note that you <em>cannot</em> always tell if
+     * intrinsic limit.  
+     * <p>Note that you <em>cannot</em> always tell if
      * an attempt to <tt>add</tt> an element will succeed by
      * inspecting <tt>remainingCapacity</tt> because it may be the
      * case that a waiting consumer is ready to <tt>take</tt> an
@@ -154,3 +177,11 @@ public interface BlockingQueue<E> extends Queue<E> {
     int remainingCapacity();
 
 }
+
+
+
+
+
+
+
+

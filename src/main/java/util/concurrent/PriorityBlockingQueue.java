@@ -9,29 +9,33 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded blocking queue based on a {@link PriorityQueue},
+ * An unbounded {@link BlockingQueue blocking queue} based on a 
+ * {@link PriorityQueue},
  * obeying its ordering rules and implementation characteristics.
  * @since 1.5
  * @author Doug Lea
 **/
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
-        implements BlockingQueue<E>, java.io.Serializable {
+        implements BlockingQueue<E>, Sorted, java.io.Serializable {
 
     private final PriorityQueue<E> q;
     private final ReentrantLock lock = new ReentrantLock(true);
     private final Condition notEmpty = lock.newCondition();
 
     /**
-     * Create a new priority queue with the default initial capacity (11)
-     * that orders its elements according to their natural ordering.
+     * Create a <tt>PriorityBlockingQueue</tt> with the default initial capacity
+     * (11) that orders its elements according to their natural
+     * ordering (using <tt>Comparable</tt>.)
      */
     public PriorityBlockingQueue() {
         q = new PriorityQueue<E>();
     }
 
     /**
-     * Create a new priority queue with the specified initial capacity
-     * that orders its elements according to their natural ordering.
+     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial 
+     * capacity
+     * that orders its elements according to their natural ordering
+     * (using <tt>Comparable</tt>.)
      *
      * @param initialCapacity the initial capacity for this priority queue.
      */
@@ -40,25 +44,30 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a new priority queue with the specified initial capacity (11)
+     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial 
+     * capacity
      * that orders its elements according to the specified comparator.
      *
      * @param initialCapacity the initial capacity for this priority queue.
      * @param comparator the comparator used to order this priority queue.
+     * If <tt>null</tt> then the order depends on the elements' natural
+     * ordering.
      */
-    public PriorityBlockingQueue(int initialCapacity, Comparator<E> comparator) {
+    public PriorityBlockingQueue(int initialCapacity, 
+                                 Comparator<E> comparator) {
         q = new PriorityQueue<E>(initialCapacity, comparator);
     }
 
     /**
-     * Create a new priority queue containing the elements in the specified
+     * Create a <tt>PriorityBlockingQueue</tt> containing the elements 
+     * in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
      * size of the specified collection. If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be
      * sorted according to the same comparator, or according to its elements'
      * natural order if the collection is sorted according to its elements'
-     * natural order.  If the specified collection does not implement the
-     * <tt>Sorted</tt> interface, the priority queue is ordered according to
+     * natural order.  If the specified collection does not implement
+     * <tt>Sorted</tt>, the priority queue is ordered according to
      * its elements' natural order.
      *
      * @param initialElements the collection whose elements are to be placed
@@ -73,17 +82,28 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         q = new PriorityQueue<E>(initialElements);
     }
 
+
+    // these first two override just to get the throws docs
+
     /**
-     * Returns the comparator associated with this priority queue, or
-     * <tt>null</tt> if it uses its elements' natural ordering.
-     *
-     * @return the comparator associated with this priority queue, or
-     *         <tt>null</tt> if it uses its elements' natural ordering.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
+    public boolean add(E element) {
+        return super.add(element);
+    }
+
+    /**
+     * @throws NullPointerException if any element is <tt>null</tt>.
+     */
+    public boolean addAll(Collection c) {
+        return super.addAll(c);
+    }
+
     public Comparator comparator() {
         return q.comparator();
     }
 
+    /** @throws NullPointerException if <tt>x</tt> is <tt>null</tt> */
     public boolean offer(E x) {
         if (x == null) throw new NullPointerException();
         lock.lock();
@@ -102,7 +122,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         offer(x); // never need to block
     }
 
-    public boolean offer(E x, long timeout, TimeUnit unit) throws InterruptedException {
+    public boolean offer(E x, long timeout, TimeUnit unit) 
+        throws InterruptedException {
         return offer(x); // never need to block
     }
 
@@ -138,8 +159,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        lock.lockInterruptibly();
         long nanos = unit.toNanos(timeout);
+        lock.lockInterruptibly();
         try {
             for (;;) {
                 E x = q.poll();
@@ -154,7 +175,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
                     notEmpty.signal(); // propagate to non-interrupted thread
                     throw ie;
                 }
-
             }
         }
         finally {

@@ -9,8 +9,15 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * A bounded blocking queue backed by an array.  The implementation is
- * a classic "bounded buffer", in which a fixed-sized array holds
+ * A bounded {@link BlockingQueue blocking queue} backed by an array.
+ * This queue orders elements FIFO (first-in-first-out).
+ * The <em>head</em> of the queue is that element that has been on the 
+ * queue the longest time.
+ * The <em>tail</em> of the queue is that element that has been on the
+ * queue the shortest time.
+ *
+ * <p>This is a classic &quot;bounded buffer&quot;, in which a fixed-sized 
+ * array holds
  * elements inserted by producers and extracted by consumers.  Once
  * created, the capacity can not be increased.  Attempts to offer an
  * element to a full queue will result in the offer operation
@@ -54,7 +61,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /** Main lock guarding all access */
     private final ReentrantLock lock;
-    /** Condition wor waiting takes */
+    /** Condition for waiting takes */
     private final Condition notEmpty;
     /** Condition for wiating puts */
     private final Condition notFull;
@@ -83,7 +90,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Extract element at current take position, advance, and signal.
      * Call only when holding lock.
      */
-    private  E extract() {
+    private E extract() {
         E x = items[takeIndex];
         items[takeIndex] = null;
         takeIndex = inc(takeIndex);
@@ -124,13 +131,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Internal constructor also used by readResolve.
      * Sets all final fields, plus count.
-     * @param cap the maximumSize
+     * @param cap the capacity 
      * @param array the array to use or null if should create new one
      * @param count the number of items in the array, where indices 0
      * to count-1 hold items.
      */
-    private ArrayBlockingQueue(int cap, E[] array, int count, ReentrantLock lk) {
-        if (cap <= 0)
+    private ArrayBlockingQueue(int cap, E[] array, int count, 
+                               ReentrantLock lk) {
+        if (cap <= 0) 
             throw new IllegalArgumentException();
         if (array == null)
             this.items = (E[]) new Object[cap];
@@ -144,94 +152,48 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a new ArrayBlockingQueue with the given (fixed) capacity
-     * and default access policy.
-     * @param maximumSize the capacity
+     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed) 
+     * capacity and default access policy.
+     * @param capacity the capacity of this queue
      */
-    public ArrayBlockingQueue(int maximumSize) {
-        this(maximumSize, null, 0, new ReentrantLock());
+    public ArrayBlockingQueue(int capacity) {
+        this(capacity, null, 0, new ReentrantLock());
     }
 
     /**
-     * Creates a new ArrayBlockingQueue with the given (fixed) capacity.
-     * @param maximumSize the capacity
-     * @param fair true if queue access should use a fair policy
+     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed) 
+     * capacity and the specified access policy.
+     * @param capacity the capacity of this queue
+     * @param fair if <tt>true</tt> then queue accesses for threads blocked
+     * on insertion or removal, are processed in FIFO order; if <tt>false</tt>
+     * the access order is unspecified.
      */
-    public ArrayBlockingQueue(int maximumSize, boolean fair) {
-        this(maximumSize, null, 0, new ReentrantLock(fair));
-    }
-
-    /** Return the number of elements currently in the queue */
-    public int size() {
-        lock.lock();
-        try {
-            return count;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
-    /** Return the remaining capacity of the queue, which is the
-     * number of elements that can be inserted before the queue is
-     * full. */
-    public int remainingCapacity() {
-        lock.lock();
-        try {
-            return items.length - count;
-        }
-        finally {
-            lock.unlock();
-        }
+    public ArrayBlockingQueue(int capacity, boolean fair) {
+        this(capacity, null, 0, new ReentrantLock(fair));
     }
 
 
-    /** Insert a new element into the queue, blocking if the queue is full. */
-    public void put(E x) throws InterruptedException {
-        if (x == null) throw new NullPointerException();
-        lock.lockInterruptibly();
-        try {
-            try {
-                while (count == items.length)
-                    notFull.await();
-            }
-            catch (InterruptedException ie) {
-                notFull.signal(); // propagate to non-interrupted thread
-                throw ie;
-            }
-            insert(x);
-        }
-        finally {
-            lock.unlock();
-        }
-    }
+    // Have to override just to update the javadoc for @throws
 
-    /** Remove and return the first element from the queue, blocking
-     * if the queue is empty.
+    /**
+     * @throws IllegalStateException {@inheritDoc}
      */
-    public E take() throws InterruptedException {
-        lock.lockInterruptibly();
-        try {
-            try {
-                while (count == 0)
-                    notEmpty.await();
-            }
-            catch (InterruptedException ie) {
-                notEmpty.signal(); // propagate to non-interrupted thread
-                throw ie;
-            }
-            E x = extract();
-            return x;
-        }
-        finally {
-            lock.unlock();
-        }
+    public boolean add(E x) {
+        return super.add(x);
     }
 
-   /** Attempt to insert a new element into the queue, but return
-    * immediately without inserting the element if the queue is full.
-    * @return <tt>true</tt> if the element was inserted successfully,
-    * <tt>false</tt> otherwise
+    /**
+     * @throws IllegalStateException {@inheritDoc}
+     */
+    public boolean addAll(Collection c) {
+        return super.addAll(c);
+    }
+
+   /** 
+    * Add the specified element to the tail of this queue if possible,
+    * returning immediately if this queue is full.
+    *
+    * @throws NullPointerException {@inheritDoc}
     */
     public boolean offer(E x) {
         if (x == null) throw new NullPointerException();
@@ -249,41 +211,19 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /** Attempt to retrieve the first insert element from the queue,
-     * but return immediately if the queue is empty.
-     * @return The first element of the queue if the queue is not
-     * empty, or <tt>null</tt> otherwise.
+    /**
+     * Add the specified element to the tail of this queue, waiting if 
+     * necessary up to the specified wait time for space to become available.
+     * @throws NullPointerException {@inheritDoc}
      */
-    public E poll() {
-        lock.lock();
-        try {
-            if (count == 0)
-                return null;
-            E x = extract();
-            return x;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
+    public boolean offer(E x, long timeout, TimeUnit unit) 
+        throws InterruptedException {
 
-    /** Attempt to insert a new element into the queue.  If the queue
-     * is full, wait up to the specified amount of time before giving
-     * up.
-     * @param x the element to be inserted
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a TimeUnit determining how to interpret the timeout
-     * parameter
-     * @return <tt>true</tt> if the element was inserted successfully,
-     * <tt>false</tt> otherwise
-     * @throws InterruptedException if interrupted while waiting
-     */
-    public boolean offer(E x, long timeout, TimeUnit unit) throws InterruptedException {
         if (x == null) throw new NullPointerException();
+
         lock.lockInterruptibly();
-        long nanos = unit.toNanos(timeout);
         try {
+            long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (count != items.length) {
                     insert(x);
@@ -305,23 +245,24 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Attempt to retrieve the first insert element from the queue.
-     * If the queue is empty, wait up to the specified amount of time
-     * before giving up.
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a TimeUnit determining how to interpret the timeout
-     * parameter
-     * @return The first element of the queue if an item was
-     * successfully retrieved, or <tt>null</tt> otherwise.
-     * @throws InterruptedException if interrupted while waiting
-     *
-     */
+
+    public E poll() {
+        lock.lock();
+        try {
+            if (count == 0)
+                return null;
+            E x = extract();
+            return x;
+        }
+        finally {
+            lock.unlock(); 
+        }
+    }
+
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         lock.lockInterruptibly();
-        long nanos = unit.toNanos(timeout);
         try {
+            long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (count != 0) {
                     E x = extract();
@@ -338,22 +279,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 }
 
             }
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
-    /** Return, but do not remove, the first element from the queue,
-     * if the queue is not empty.  This will return the same result as
-     * <tt>poll</tt>, but will not remove it from the queue.
-     * @return The first element of the queue if the queue is not
-     * empty, or <tt>null</tt> otherwise.
-     */
-    public E peek() {
-        lock.lock();
-        try {
-            return (count == 0) ? null : items[takeIndex];
         }
         finally {
             lock.unlock();
@@ -382,6 +307,100 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
+
+    public E peek() {
+        lock.lock();
+        try {
+            return (count == 0) ? null : items[takeIndex];
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    public E take() throws InterruptedException {
+        lock.lockInterruptibly();
+        try {
+            try {
+                while (count == 0)
+                    notEmpty.await();
+            }
+            catch (InterruptedException ie) {
+                notEmpty.signal(); // propagate to non-interrupted thread
+                throw ie;
+            }
+            E x = extract();
+            return x;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Add the specified element to the tail of this queue, waiting if 
+     * necessary for space to become available.
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public void put(E x) throws InterruptedException {
+
+        if (x == null) throw new NullPointerException();
+
+        lock.lockInterruptibly();
+        try {
+            try {
+                while (count == items.length)
+                    notFull.await();
+            }
+            catch (InterruptedException ie) {
+                notFull.signal(); // propagate to non-interrupted thread
+                throw ie;
+            }
+            insert(x);
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    // this doc comment is overridden to remove the reference to collections
+    // greater in size than Integer.MAX_VALUE
+    /** 
+     * Return the number of elements in this collection. 
+     */
+    public int size() {
+        lock.lock();
+        try {
+            return count;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    // this doc comment is a modified copy of the inherited doc comment,
+    // without the reference to unlimited queues.
+    /** 
+     * Return the number of elements that this queue can ideally (in
+     * the absence of memory or resource constraints) accept without
+     * blocking. This is always equal to the initial capacity of this queue
+     * less the current <tt>size</tt> of this queue.
+     * <p>Note that you <em>cannot</em> always tell if
+     * an attempt to <tt>add</tt> an element will succeed by
+     * inspecting <tt>remainingCapacity</tt> because it may be the
+     * case that a waiting consumer is ready to <tt>take</tt> an
+     * element out of an otherwise full queue.
+     */
+    public int remainingCapacity() {
+        lock.lock();
+        try {
+            return items.length - count;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
 
     public boolean contains(Object x) {
         if (x == null) return false;
@@ -508,7 +527,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Check whether nextIndex is valied; if so setting nextItem.
+         * Check whether nextIndex is valid; if so setting nextItem.
          * Stops iterator when either hits putIndex or sees null item.
          */
         private void checkNext() {
@@ -584,7 +603,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Reconstitute the Queue instance from a stream (that is,
+     * Reconstitute this queue instance from a stream (that is,
      * deserialize it).
      * @param s the stream
      */

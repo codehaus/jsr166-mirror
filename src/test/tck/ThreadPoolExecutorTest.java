@@ -17,12 +17,29 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         return new TestSuite(ThreadPoolExecutorTest.class);
     }
     
+    static class ExtendedTPE extends ThreadPoolExecutor {
+        volatile boolean beforeCalled = false;
+        volatile boolean afterCalled = false;
+        volatile boolean terminatedCalled = false;
+        public ExtendedTPE() {
+            super(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>());
+        }
+        protected void beforeExecute(Thread t, Runnable r) {
+            beforeCalled = true;
+        }
+        protected void afterExecute(Runnable r, Throwable t) {
+            afterCalled = true;
+        }
+        protected void terminated() {
+            terminatedCalled = true;
+        }
+    }
 
     /**
-     *   execute successfully executes a runnable
+     *  execute successfully executes a runnable
      */
     public void testExecute() {
-        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         try {
             p1.execute(new Runnable() {
                     public void run() {
@@ -45,7 +62,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *  thread becomes active
      */
     public void testGetActiveCount() {
-        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertEquals(0, p2.getActiveCount());
         p2.execute(new MediumRunnable());
         try {
@@ -56,17 +73,45 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         assertEquals(1, p2.getActiveCount());
         joinPool(p2);
     }
+
+    /**
+     *  prestartCoreThread starts a thread if under corePoolSize, else doesn't
+     */
+    public void testPrestartCoreThread() {
+        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        assertEquals(0, p2.getPoolSize());
+        assertTrue(p2.prestartCoreThread());
+        assertEquals(1, p2.getPoolSize());
+        assertTrue(p2.prestartCoreThread());
+        assertEquals(2, p2.getPoolSize());
+        assertFalse(p2.prestartCoreThread());
+        assertEquals(2, p2.getPoolSize());
+        joinPool(p2);
+    }
+
+    /**
+     *  prestartAllCoreThreads starts all corePoolSize threads
+     */
+    public void testPrestartAllCoreThreads() {
+        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        assertEquals(0, p2.getPoolSize());
+        p2.prestartAllCoreThreads();
+        assertEquals(2, p2.getPoolSize());
+        p2.prestartAllCoreThreads();
+        assertEquals(2, p2.getPoolSize());
+        joinPool(p2);
+    }
     
     /**
      *   getCompletedTaskCount increases, but doesn't overestimate,
      *   when tasks complete
      */
     public void testGetCompletedTaskCount() {
-        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertEquals(0, p2.getCompletedTaskCount());
         p2.execute(new ShortRunnable());
         try {
-            Thread.sleep(MEDIUM_DELAY_MS);
+            Thread.sleep(SMALL_DELAY_MS);
         } catch(Exception e){
             unexpectedException();
         }
@@ -79,7 +124,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *   getCorePoolSize returns size given in constructor if not otherwise set
      */
     public void testGetCorePoolSize() {
-        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertEquals(1, p1.getCorePoolSize());
         joinPool(p1);
     }
@@ -92,13 +137,53 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         assertEquals(1, p2.getKeepAliveTime(TimeUnit.SECONDS));
         joinPool(p2);
     }
+
+
+    /** 
+     * getThreadFactory returns factory in constructor if not set
+     */
+    public void testGetThreadFactory() {
+        ThreadFactory tf = new SimpleThreadFactory();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10), tf, new NoOpREHandler());
+        assertSame(tf, p.getThreadFactory());
+        p.shutdown();
+        joinPool(p);
+    }
+
+    /** 
+     * setThreadFactory sets the thread factory returned by getThreadFactory
+     */
+    public void testSetThreadFactory() {
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadFactory tf = new SimpleThreadFactory();
+        p.setThreadFactory(tf);
+        assertSame(tf, p.getThreadFactory());
+        p.shutdown();
+        joinPool(p);
+    }
+
+
+    /** 
+     * setThreadFactory(null) throws NPE
+     */
+    public void testSetThreadFactoryNull() {
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        try {
+            p.setThreadFactory(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        } finally {
+            joinPool(p);
+        }
+    }
+
     
     /**
      *   getLargestPoolSize increases, but doesn't overestimate, when
      *   multiple threads active
      */
     public void testGetLargestPoolSize() {
-        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         try {
             assertEquals(0, p2.getLargestPoolSize());
             p2.execute(new MediumRunnable());
@@ -116,7 +201,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *   otherwise set
      */
     public void testGetMaximumPoolSize() {
-        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertEquals(2, p2.getMaximumPoolSize());
         joinPool(p2);
     }
@@ -126,7 +211,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *   become active
      */
     public void testGetPoolSize() {
-        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertEquals(0, p1.getPoolSize());
         p1.execute(new MediumRunnable());
         assertEquals(1, p1.getPoolSize());
@@ -134,10 +219,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *   getTaskCount increases, but doesn't overestimate, when tasks submitted
+     *  getTaskCount increases, but doesn't overestimate, when tasks submitted
      */
     public void testGetTaskCount() {
-        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         try {
             assertEquals(0, p1.getTaskCount());
             p1.execute(new MediumRunnable());
@@ -154,7 +239,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testIsShutdown() {
         
-	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertFalse(p1.isShutdown());
         p1.shutdown();
 	assertTrue(p1.isShutdown());
@@ -166,7 +251,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *  isTerminated is false before termination, true after
      */
     public void testIsTerminated() {
-	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertFalse(p1.isTerminated());
         try {
             p1.execute(new MediumRunnable());
@@ -185,7 +270,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *  isTerminating is not true when running or when terminated
      */
     public void testIsTerminating() {
-	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertFalse(p1.isTerminating());
         try {
             p1.execute(new SmallRunnable());
@@ -203,10 +288,65 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
+     * getQueue returns the work queue, which contains queued tasks
+     */
+    public void testGetQueue() {
+        BlockingQueue<Runnable> q = new ArrayBlockingQueue<Runnable>(10);
+        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, q);
+        CancellableTask[] tasks = new CancellableTask[5];
+        for(int i = 0; i < 5; i++){
+            tasks[i] = new CancellableTask(new MediumPossiblyInterruptedRunnable());
+            p1.execute(tasks[i]);
+        }
+        try {
+            Thread.sleep(SHORT_DELAY_MS);
+            BlockingQueue<Runnable> wq = p1.getQueue();
+            assertSame(q, wq);
+            assertFalse(wq.contains(tasks[0]));
+            assertTrue(wq.contains(tasks[4]));
+            p1.shutdownNow();
+        } catch(Exception e) {
+            unexpectedException();
+        } finally {
+            joinPool(p1);
+        }
+    }
+
+    /**
+     * remove(task) removes queued task, and fails to remove active task
+     */
+    public void testRemove() {
+        BlockingQueue<Runnable> q = new ArrayBlockingQueue<Runnable>(10);
+        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, q);
+        CancellableTask[] tasks = new CancellableTask[5];
+        for(int i = 0; i < 5; i++){
+            tasks[i] = new CancellableTask(new MediumPossiblyInterruptedRunnable());
+            p1.execute(tasks[i]);
+        }
+        try {
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(p1.remove(tasks[0]));
+            assertTrue(q.contains(tasks[4]));
+            assertTrue(q.contains(tasks[3]));
+            assertTrue(p1.remove(tasks[4]));
+            assertFalse(p1.remove(tasks[4]));
+            assertFalse(q.contains(tasks[4]));
+            assertTrue(q.contains(tasks[3]));
+            assertTrue(p1.remove(tasks[3]));
+            assertFalse(q.contains(tasks[3]));
+            p1.shutdownNow();
+        } catch(Exception e) {
+            unexpectedException();
+        } finally {
+            joinPool(p1);
+        }
+    }
+
+    /**
      *   purge removes cancelled tasks from the queue
      */
     public void testPurge() {
-        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         CancellableTask[] tasks = new CancellableTask[5];
         for(int i = 0; i < 5; i++){
             tasks[i] = new CancellableTask(new MediumPossiblyInterruptedRunnable());
@@ -217,6 +357,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         p1.purge();
         long count = p1.getTaskCount();
         assertTrue(count >= 2 && count < 5);
+        p1.shutdownNow();
         joinPool(p1);
     }
 
@@ -224,7 +365,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *  shutDownNow returns a list containing tasks that were not run
      */
     public void testShutDownNow() {
-	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         List l;
         try {
             for(int i = 0; i < 5; i++)
@@ -298,9 +439,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if workQueue is set to null 
      */
-    public void testNullPointerException() {
+    public void testConstructorNullPointerException() {
         try {
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null);
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null);
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -323,7 +464,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor7() {
         try {
-            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new ThreadPoolExecutor(1,-1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -334,7 +475,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor8() {
         try {
-            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new ThreadPoolExecutor(1,0,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -356,7 +497,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor10() {
         try {
-            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new ThreadPoolExecutor(2,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -365,9 +506,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if workQueue is set to null 
      */
-    public void testNullPointerException2() {
+    public void testConstructorNullPointerException2() {
         try {
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory());
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory());
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -376,10 +517,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if threadFactory is set to null 
      */
-    public void testNullPointerException3() {
+    public void testConstructorNullPointerException3() {
         try {
             ThreadFactory f = null;
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f);
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f);
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -391,7 +532,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor11() {
         try {
-            new ThreadPoolExecutor(-1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new ThreadPoolExecutor(-1,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -402,7 +543,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor12() {
         try {
-            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new ThreadPoolExecutor(1,-1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -413,7 +554,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor13() {
         try {
-            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new ThreadPoolExecutor(1,0,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -435,7 +576,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor15() {
         try {
-            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new ThreadPoolExecutor(2,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -444,9 +585,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if workQueue is set to null 
      */
-    public void testNullPointerException4() {
+    public void testConstructorNullPointerException4() {
         try {
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new NoOpREHandler());
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null,new NoOpREHandler());
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -455,10 +596,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if handler is set to null 
      */
-    public void testNullPointerException5() {
+    public void testConstructorNullPointerException5() {
         try {
             RejectedExecutionHandler r = null;
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),r);
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),r);
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -470,7 +611,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor16() {
         try {
-            new ThreadPoolExecutor(-1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new ThreadPoolExecutor(-1,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -481,7 +622,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor17() {
         try {
-            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new ThreadPoolExecutor(1,-1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -492,7 +633,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor18() {
         try {
-            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new ThreadPoolExecutor(1,0,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -514,7 +655,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor20() {
         try {
-            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new ThreadPoolExecutor(2,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -523,9 +664,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if workQueue is set to null 
      */
-    public void testNullPointerException6() {
+    public void testConstructorNullPointerException6() {
         try {
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory(),new NoOpREHandler());
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -534,10 +675,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if handler is set to null 
      */
-    public void testNullPointerException7() {
+    public void testConstructorNullPointerException7() {
         try {
             RejectedExecutionHandler r = null;
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),r);
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),r);
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -546,10 +687,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /** 
      * Constructor throws if ThreadFactory is set top null 
      */
-    public void testNullPointerException8() {
+    public void testConstructorNullPointerException8() {
         try {
             ThreadFactory f = null;
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f,new NoOpREHandler());
+            new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f,new NoOpREHandler());
             shouldThrow();
         }
         catch (NullPointerException successdn8){}  
@@ -557,28 +698,11 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     
 
     /**
-     *  execute throws RejectedExecutionException if shutdown
-     */
-    public void testRejectedExecutionException() {
-        ThreadPoolExecutor tpe = null;
-        try {
-	    tpe = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(1));
-        } catch(Exception e){}
-        tpe.shutdown();
-	try {
-	    tpe.execute(new NoOpRunnable());
-	    shouldThrow();
-	} catch(RejectedExecutionException success){}
-	
-	joinPool(tpe);
-    }
-
-    /**
      *  execute throws RejectedExecutionException
      *  if saturated.
      */
     public void testSaturatedExecute() {
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
         try {
             
             for(int i = 0; i < 5; ++i){
@@ -590,12 +714,164 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
+     *  executor using CallerRunsPolicy runs task if saturated.
+     */
+    public void testSaturatedExecute2() {
+        RejectedExecutionHandler h = new ThreadPoolExecutor.CallerRunsPolicy();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
+        try {
+            
+            TrackedNoOpRunnable[] tasks = new TrackedNoOpRunnable[5];
+            for(int i = 0; i < 5; ++i){
+                tasks[i] = new TrackedNoOpRunnable();
+            }
+            TrackedLongRunnable mr = new TrackedLongRunnable();
+            p.execute(mr);
+            for(int i = 0; i < 5; ++i){
+                p.execute(tasks[i]);
+            }
+            for(int i = 1; i < 5; ++i) {
+                assertTrue(tasks[i].done);
+            }
+            p.shutdownNow();
+        } catch(RejectedExecutionException ex){
+            unexpectedException();
+        } finally {
+            joinPool(p);
+        }
+    }
+
+    /**
+     *  executor using DiscardPolicy drops task if saturated.
+     */
+    public void testSaturatedExecute3() {
+        RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardPolicy();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
+        try {
+            
+            TrackedNoOpRunnable[] tasks = new TrackedNoOpRunnable[5];
+            for(int i = 0; i < 5; ++i){
+                tasks[i] = new TrackedNoOpRunnable();
+            }
+            p.execute(new TrackedLongRunnable());
+            for(int i = 0; i < 5; ++i){
+                p.execute(tasks[i]);
+            }
+            for(int i = 0; i < 5; ++i){
+                assertFalse(tasks[i].done);
+            }
+            p.shutdownNow();
+        } catch(RejectedExecutionException ex){
+            unexpectedException();
+        } finally {
+            joinPool(p);
+        }
+    }
+
+    /**
+     *  executor using DiscardOldestPolicy drops oldest task if saturated.
+     */
+    public void testSaturatedExecute4() {
+        RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardOldestPolicy();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
+        try {
+            p.execute(new TrackedLongRunnable());
+            TrackedLongRunnable r2 = new TrackedLongRunnable();
+            p.execute(r2);
+            assertTrue(p.getQueue().contains(r2));
+            TrackedNoOpRunnable r3 = new TrackedNoOpRunnable();
+            p.execute(r3);
+            assertFalse(p.getQueue().contains(r2));
+            assertTrue(p.getQueue().contains(r3));
+            p.shutdownNow();
+        } catch(RejectedExecutionException ex){
+            unexpectedException();
+        } finally {
+            joinPool(p);
+        }
+    }
+
+    /**
+     *  execute throws RejectedExecutionException if shutdown
+     */
+    public void testRejectedExecutionExceptionOnShutdown() {
+        ThreadPoolExecutor tpe = 
+            new ThreadPoolExecutor(1,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(1));
+        tpe.shutdown();
+	try {
+	    tpe.execute(new NoOpRunnable());
+	    shouldThrow();
+	} catch(RejectedExecutionException success){}
+	
+	joinPool(tpe);
+    }
+
+    /**
+     *  execute using CallerRunsPolicy drops task on shutdown
+     */
+    public void testCallerRunsOnShutdown() {
+        RejectedExecutionHandler h = new ThreadPoolExecutor.CallerRunsPolicy();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
+
+        p.shutdown();
+	try {
+            TrackedNoOpRunnable r = new TrackedNoOpRunnable();
+	    p.execute(r);
+            assertFalse(r.done);
+	} catch(RejectedExecutionException success){
+            unexpectedException();
+        } finally {
+            joinPool(p);
+        }
+    }
+
+    /**
+     *  execute using DiscardPolicy drops task on shutdown
+     */
+    public void testDiscardOnShutdown() {
+        RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardPolicy();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
+
+        p.shutdown();
+	try {
+            TrackedNoOpRunnable r = new TrackedNoOpRunnable();
+	    p.execute(r);
+            assertFalse(r.done);
+	} catch(RejectedExecutionException success){
+            unexpectedException();
+        } finally {
+            joinPool(p);
+        }
+    }
+
+
+    /**
+     *  execute using DiscardOldestPolicy drops task on shutdown
+     */
+    public void testDiscardOldestOnShutdown() {
+        RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardOldestPolicy();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
+
+        p.shutdown();
+	try {
+            TrackedNoOpRunnable r = new TrackedNoOpRunnable();
+	    p.execute(r);
+            assertFalse(r.done);
+	} catch(RejectedExecutionException success){
+            unexpectedException();
+        } finally {
+            joinPool(p);
+        }
+    }
+
+
+    /**
      *  execute (null) throws NPE
      */
     public void testExecuteNull() {
         ThreadPoolExecutor tpe = null;
         try {
-	    tpe = new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
+	    tpe = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
 	    tpe.execute(null);
             shouldThrow();
 	} catch(NullPointerException success){}
@@ -604,12 +880,12 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
     
     /**
-     *  setCorePoolSize of netaitev value throws IllegalArgumentException
+     *  setCorePoolSize of negative value throws IllegalArgumentException
      */
     public void testCorePoolSizeIllegalArgumentException() {
 	ThreadPoolExecutor tpe = null;
 	try {
-	    tpe = new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
+	    tpe = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
 	} catch(Exception e){}
 	try {
 	    tpe.setCorePoolSize(-1);
@@ -628,7 +904,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testMaximumPoolSizeIllegalArgumentException() {
         ThreadPoolExecutor tpe = null;
         try {
-            tpe = new ThreadPoolExecutor(2,3,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
+            tpe = new ThreadPoolExecutor(2,3,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
         } catch(Exception e){}
         try {
             tpe.setMaximumPoolSize(1);
@@ -647,7 +923,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testMaximumPoolSizeIllegalArgumentException2() {
         ThreadPoolExecutor tpe = null;
         try {
-            tpe = new ThreadPoolExecutor(2,3,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
+            tpe = new ThreadPoolExecutor(2,3,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
         } catch(Exception e){}
         try {
             tpe.setMaximumPoolSize(-1);
@@ -667,7 +943,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testKeepAliveTimeIllegalArgumentException() {
 	ThreadPoolExecutor tpe = null;
         try {
-            tpe = new ThreadPoolExecutor(2,3,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
+            tpe = new ThreadPoolExecutor(2,3,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
         } catch(Exception e){}
         
 	try {
@@ -679,5 +955,35 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
         joinPool(tpe);
     }
-  
+
+    /**
+     * terminated() is called on termination
+     */
+    public void testTerminated() {
+        ExtendedTPE tpe = new ExtendedTPE();
+        tpe.shutdown();
+        assertTrue(tpe.terminatedCalled);
+        joinPool(tpe);
+    }
+
+    /**
+     * beforeExecute and afterExecute are called when executing task
+     */
+    public void testBeforeAfter() {
+        ExtendedTPE tpe = new ExtendedTPE();
+        try {
+            TrackedNoOpRunnable r = new TrackedNoOpRunnable();
+            tpe.execute(r);
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(r.done);
+            assertTrue(tpe.beforeCalled);
+            assertTrue(tpe.afterCalled);
+            tpe.shutdown();
+        }
+        catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(tpe);
+        }
+    }
 }

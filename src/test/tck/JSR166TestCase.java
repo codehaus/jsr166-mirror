@@ -34,9 +34,9 @@ import java.io.*;
  * them. These methods are used to clear and check for thread
  * assertion failures.</li>
  *
- * <li>All delays and timeouts must use one of the constants {@link
- * SHORT_DELAY_MS}, {@link SMALL_DELAY_MS}, {@link MEDIUM_DELAY_MS},
- * {@link LONG_DELAY_MS}. The idea here is that a SHORT is always
+ * <li>All delays and timeouts must use one of the constants <tt>
+ * SHORT_DELAY_MS</tt>, <tt> SMALL_DELAY_MS</tt>, <tt> MEDIUM_DELAY_MS</tt>,
+ * <tt> LONG_DELAY_MS</tt>. The idea here is that a SHORT is always
  * discriminable from zero time, and always allows enough time for the
  * small amounts of computation (creating a thread, calling a few
  * methods, etc) needed to reach a timeout point. Similarly, a SMALL
@@ -47,12 +47,101 @@ import java.io.*;
  *
  * <li> All threads generated must be joined inside each test case
  * method (or <tt>fail</tt> to do so) before returning from the
- * method. The {@link joinPool} method can be used to do this when
+ * method. The <tt> joinPool</tt> method can be used to do this when
  * using Executors.</li>
  *
  * </ol>
+ *
+ * <p> <b>Other notes</b>
+ * <ul>
+ *
+ * <li> Usually, there is one testcase method per JSR166 method
+ * covering "normal" operation, and then as many exception-testing
+ * methods as there are exceptions the method can throw. Sometimes
+ * there are multiple tests per JSR166 method when the different
+ * "normal" behaviors differ significantly. And sometimes testcases
+ * cover multiple methods when they cannot be tested in
+ * isolation.</li>
+ * 
+ * <li> The documentation style for testcases is to provide as javadoc
+ * a simple sentence or two describing the property that the testcase
+ * method purports to test. The javadocs do not say anything about how
+ * the property is tested. To find out, read the code.</li>
+ *
+ * <li> These tests are "conformance tests", and do not attempt to
+ * test throughput, latency, scalability or other performance factors
+ * (see the separate "jtreg" tests for a set intended to check these
+ * for the most central aspects of functionality.) So, most tests use
+ * the smallest sensible numbers of threads, collection sizes, etc
+ * needed to check basic conformance.</li>
+ *
+ * <li>The test classes currently do not declare inclusion in
+ * any particular package to simplify things for people integrating
+ * them in TCK test suites.</li>
+ *
+ * <li> As a convenience, the <tt>main</tt> of this class (JSR166TestCase)
+ * runs all JSR166 unit tests.</li>
+ *
+ * </ul>
  */
 public class JSR166TestCase extends TestCase {
+    /**
+     * Runs all JSR166 unit tests using junit.textui.TestRunner
+     */ 
+    public static void main (String[] args) {
+        junit.textui.TestRunner.run (suite());
+    }
+
+    /**
+     * Collects all JSR166 unit tests as one suite
+     */ 
+    public static Test suite ( ) {
+        TestSuite suite = new TestSuite("JSR166 Unit Tests");
+        
+        suite.addTest(new TestSuite(ArrayBlockingQueueTest.class));
+        suite.addTest(new TestSuite(AtomicBooleanTest.class)); 
+        suite.addTest(new TestSuite(AtomicIntegerArrayTest.class)); 
+        suite.addTest(new TestSuite(AtomicIntegerFieldUpdaterTest.class)); 
+        suite.addTest(new TestSuite(AtomicIntegerTest.class)); 
+        suite.addTest(new TestSuite(AtomicLongArrayTest.class)); 
+        suite.addTest(new TestSuite(AtomicLongFieldUpdaterTest.class)); 
+        suite.addTest(new TestSuite(AtomicLongTest.class)); 
+        suite.addTest(new TestSuite(AtomicMarkableReferenceTest.class)); 
+        suite.addTest(new TestSuite(AtomicReferenceArrayTest.class)); 
+        suite.addTest(new TestSuite(AtomicReferenceFieldUpdaterTest.class)); 
+        suite.addTest(new TestSuite(AtomicReferenceTest.class)); 
+        suite.addTest(new TestSuite(AtomicStampedReferenceTest.class)); 
+        suite.addTest(new TestSuite(CancellableTaskTest.class));
+        suite.addTest(new TestSuite(ConcurrentHashMapTest.class));
+        suite.addTest(new TestSuite(ConcurrentLinkedQueueTest.class));
+        suite.addTest(new TestSuite(CopyOnWriteArrayListTest.class));
+        suite.addTest(new TestSuite(CopyOnWriteArraySetTest.class));
+        suite.addTest(new TestSuite(CountDownLatchTest.class));
+        suite.addTest(new TestSuite(CyclicBarrierTest.class));
+        suite.addTest(new TestSuite(DelayQueueTest.class));
+        suite.addTest(new TestSuite(ExchangerTest.class));
+        suite.addTest(new TestSuite(ExecutorsTest.class));
+        suite.addTest(new TestSuite(FairSemaphoreTest.class));
+        suite.addTest(new TestSuite(FutureTaskTest.class));
+        suite.addTest(new TestSuite(LinkedBlockingQueueTest.class));
+        suite.addTest(new TestSuite(LinkedListTest.class));
+        suite.addTest(new TestSuite(LockSupportTest.class));
+        suite.addTest(new TestSuite(PriorityBlockingQueueTest.class));
+        suite.addTest(new TestSuite(PriorityQueueTest.class));
+        suite.addTest(new TestSuite(ReentrantLockTest.class));
+        suite.addTest(new TestSuite(ReentrantReadWriteLockTest.class));
+        suite.addTest(new TestSuite(ScheduledExecutorTest.class));
+        suite.addTest(new TestSuite(SemaphoreTest.class));
+        suite.addTest(new TestSuite(SynchronousQueueTest.class));
+        suite.addTest(new TestSuite(SystemTest.class));
+        suite.addTest(new TestSuite(ThreadLocalTest.class));
+        suite.addTest(new TestSuite(ThreadPoolExecutorTest.class));
+        suite.addTest(new TestSuite(ThreadTest.class));
+        suite.addTest(new TestSuite(TimeUnitTest.class));
+		
+        return suite;
+    }
+
 
     public static long SHORT_DELAY_MS;
     public static long SMALL_DELAY_MS;
@@ -275,6 +364,16 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    class SmallPossiblyInterruptedRunnable implements Runnable {
+        public void run() {
+            try {
+                Thread.sleep(SMALL_DELAY_MS);
+            }
+            catch(Exception e) {
+            }
+        }
+    }
+
     class SmallCallable implements Callable {
         public Object call() {
             try {
@@ -340,7 +439,7 @@ public class JSR166TestCase extends TestCase {
         }   
     }
 
-    static class TrackedRunnable implements Runnable {
+    static class TrackedShortRunnable implements Runnable {
         volatile boolean done = false;
         public void run() {
             try {
@@ -348,6 +447,35 @@ public class JSR166TestCase extends TestCase {
                 done = true;
             } catch(Exception e){
             }
+        }
+    }
+
+    static class TrackedMediumRunnable implements Runnable {
+        volatile boolean done = false;
+        public void run() {
+            try {
+                Thread.sleep(MEDIUM_DELAY_MS);
+                done = true;
+            } catch(Exception e){
+            }
+        }
+    }
+
+    static class TrackedLongRunnable implements Runnable {
+        volatile boolean done = false;
+        public void run() {
+            try {
+                Thread.sleep(LONG_DELAY_MS);
+                done = true;
+            } catch(Exception e){
+            }
+        }
+    }
+
+    static class TrackedNoOpRunnable implements Runnable {
+        volatile boolean done = false;
+        public void run() {
+            done = true;
         }
     }
 

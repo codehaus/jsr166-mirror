@@ -189,10 +189,10 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * execute of runnable runs it to completion 
      */
-    public void testExecuteRunnable () {
+    public void testExecuteRunnable() {
         try {
             Executor e = new DirectExecutor();
-            TrackedRunnable task = new TrackedRunnable();
+            TrackedShortRunnable task = new TrackedShortRunnable();
             assertFalse(task.done);
             Future<String> future = Executors.execute(e, task, TEST_STRING);
             String result = future.get();
@@ -210,10 +210,10 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * invoke of a runnable runs it to completion 
      */
-    public void testInvokeRunnable () {
+    public void testInvokeRunnable() {
         try {
             Executor e = new DirectExecutor();
-            TrackedRunnable task = new TrackedRunnable();
+            TrackedShortRunnable task = new TrackedShortRunnable();
             assertFalse(task.done);
             Executors.invoke(e, task);
             assertTrue(task.done);
@@ -229,7 +229,7 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * execute of a callable runs it to completion
      */
-    public void testExecuteCallable () {
+    public void testExecuteCallable() {
         try {
             Executor e = new DirectExecutor();
             Future<String> future = Executors.execute(e, new StringTask());
@@ -247,7 +247,7 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * invoke of a collable runs it to completion
      */
-    public void testInvokeCallable () {
+    public void testInvokeCallable() {
         try {
             Executor e = new DirectExecutor();
             String result = Executors.invoke(e, new StringTask());
@@ -265,9 +265,9 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * execute with null executor throws NPE
      */
-    public void testNullExecuteRunnable () {
+    public void testNullExecuteRunnable() {
         try {
-            TrackedRunnable task = new TrackedRunnable();
+            TrackedShortRunnable task = new TrackedShortRunnable();
             assertFalse(task.done);
             Future<String> future = Executors.execute(null, task, TEST_STRING);
             shouldThrow();
@@ -285,7 +285,7 @@ public class ExecutorsTest extends JSR166TestCase{
     public void testExecuteNullRunnable() {
         try {
             Executor e = new DirectExecutor();
-            TrackedRunnable task = null;
+            TrackedShortRunnable task = null;
             Future<String> future = Executors.execute(e, task, TEST_STRING);
             shouldThrow();
         }
@@ -299,10 +299,10 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * invoke of a null runnable throws NPE
      */
-    public void testInvokeNullRunnable () {
+    public void testInvokeNullRunnable() {
         try {
             Executor e = new DirectExecutor();
-            TrackedRunnable task = null;
+            TrackedShortRunnable task = null;
             Executors.invoke(e, task);
             shouldThrow();
         }
@@ -316,7 +316,7 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * execute of a null callable throws NPE
      */
-    public void testExecuteNullCallable () {
+    public void testExecuteNullCallable() {
         try {
             Executor e = new DirectExecutor();
             StringTask t = null;
@@ -333,7 +333,7 @@ public class ExecutorsTest extends JSR166TestCase{
     /**
      * invoke of a null callable throws NPE
      */
-    public void testInvokeNullCallable () {
+    public void testInvokeNullCallable() {
         try {
             Executor e = new DirectExecutor();
             StringTask t = null;

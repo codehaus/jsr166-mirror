@@ -38,9 +38,9 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
 
     /**
-     * countDown has no effect when count is zero
+     * countDown decrements count when positive and has no effect when zero
      */
-    public void testcountDown() {
+    public void testCountDown() {
 	final CountDownLatch l = new CountDownLatch(1);
 	assertEquals(1, l.getCount());
 	l.countDown();
@@ -112,7 +112,7 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
     
     /**
-     * await throws IE ig interrupted before counted down
+     * await throws IE if interrupted before counted down
      */
     public void testAwait_InterruptedException() {
         final CountDownLatch l = new CountDownLatch(1);
@@ -136,7 +136,7 @@ public class CountDownLatchTest extends JSR166TestCase {
     }
 
     /**
-     * timed await throws IE ig interrupted before counted down
+     * timed await throws IE if interrupted before counted down
      */
     public void testTimedAwait_InterruptedException() {
         final CountDownLatch l = new CountDownLatch(1);

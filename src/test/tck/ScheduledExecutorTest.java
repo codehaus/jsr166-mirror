@@ -23,7 +23,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testExecute() {
 	try {
-            TrackedRunnable runnable =new TrackedRunnable();
+            TrackedShortRunnable runnable =new TrackedShortRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    p1.execute(runnable);
 	    assertFalse(runnable.done);
@@ -70,7 +70,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testSchedule3() {
 	try {
-            TrackedRunnable runnable = new TrackedRunnable();
+            TrackedShortRunnable runnable = new TrackedShortRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    p1.schedule(runnable, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
 	    Thread.sleep(SHORT_DELAY_MS);
@@ -89,7 +89,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testSchedule4() {
 	try {
-            TrackedRunnable runnable = new TrackedRunnable();
+            TrackedShortRunnable runnable = new TrackedShortRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    ScheduledCancellable h = p1.scheduleAtFixedRate(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(runnable.done);
@@ -108,7 +108,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testSchedule5() {
 	try {
-            TrackedRunnable runnable = new TrackedRunnable();
+            TrackedShortRunnable runnable = new TrackedShortRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    ScheduledCancellable h = p1.scheduleWithFixedDelay(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(runnable.done);
@@ -321,6 +321,43 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         assertEquals(5, p1.getTaskCount());
         joinPool(p1);
     }
+
+    /** 
+     * getThreadFactory returns factory in constructor if not set
+     */
+    public void testGetThreadFactory() {
+        ThreadFactory tf = new SimpleThreadFactory();
+	ScheduledExecutor p = new ScheduledExecutor(1, tf);
+        assertSame(tf, p.getThreadFactory());
+        p.shutdown();
+        joinPool(p);
+    }
+
+    /** 
+     * setThreadFactory sets the thread factory returned by getThreadFactory
+     */
+    public void testSetThreadFactory() {
+        ThreadFactory tf = new SimpleThreadFactory();
+	ScheduledExecutor p = new ScheduledExecutor(1);
+        p.setThreadFactory(tf);
+        assertSame(tf, p.getThreadFactory());
+        p.shutdown();
+        joinPool(p);
+    }
+
+    /** 
+     * setThreadFactory(null) throws NPE
+     */
+    public void testSetThreadFactoryNull() {
+	ScheduledExecutor p = new ScheduledExecutor(1);
+        try {
+            p.setThreadFactory(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        } finally {
+            joinPool(p);
+        }
+    }
     
     /**
      *   is isShutDown is false before shutdown, true after
@@ -378,13 +415,64 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   purge removes cancelled tasks from the queue
+     * getQueue returns the work queue, which contains queued tasks
+     */
+    public void testGetQueue() {
+        ScheduledExecutor p1 = new ScheduledExecutor(1);
+        ScheduledCancellable[] tasks = new ScheduledCancellable[5];
+        for(int i = 0; i < 5; i++){
+            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
+        }
+        try {
+            Thread.sleep(SHORT_DELAY_MS);
+            BlockingQueue<Runnable> q = p1.getQueue();
+            assertTrue(q.contains(tasks[4]));
+            assertFalse(q.contains(tasks[0]));
+            p1.shutdownNow();
+        } catch(Exception e) {
+            unexpectedException();
+        } finally {
+            joinPool(p1);
+        }
+    }
+
+    /**
+     * remove(task) removes queued task, and fails to remove active task
+     */
+    public void testRemove() {
+        ScheduledExecutor p1 = new ScheduledExecutor(1);
+        ScheduledCancellable[] tasks = new ScheduledCancellable[5];
+        for(int i = 0; i < 5; i++){
+            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
+        }
+        try {
+            Thread.sleep(SHORT_DELAY_MS);
+            BlockingQueue<Runnable> q = p1.getQueue();
+            assertFalse(p1.remove((Runnable)tasks[0]));
+            assertTrue(q.contains((Runnable)tasks[4]));
+            assertTrue(q.contains((Runnable)tasks[3]));
+            assertTrue(p1.remove((Runnable)tasks[4]));
+            assertFalse(p1.remove((Runnable)tasks[4]));
+            assertFalse(q.contains((Runnable)tasks[4]));
+            assertTrue(q.contains((Runnable)tasks[3]));
+            assertTrue(p1.remove((Runnable)tasks[3]));
+            assertFalse(q.contains((Runnable)tasks[3]));
+            p1.shutdownNow();
+        } catch(Exception e) {
+            unexpectedException();
+        } finally {
+            joinPool(p1);
+        }
+    }
+
+    /**
+     *  purge removes cancelled tasks from the queue
      */
     public void testPurge() {
         ScheduledExecutor p1 = new ScheduledExecutor(1);
         ScheduledCancellable[] tasks = new ScheduledCancellable[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = p1.schedule(new SmallRunnable(), 1, TimeUnit.MILLISECONDS);
+            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
         }
         int max = 5;
         if (tasks[4].cancel(true)) --max;
@@ -401,7 +489,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     public void testShutDownNow() {
 	ScheduledExecutor p1 = new ScheduledExecutor(1);
         for(int i = 0; i < 5; i++)
-            p1.schedule(new SmallRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
         List l = p1.shutdownNow();
 	assertTrue(p1.isShutdown());
 	assertTrue(l.size() > 0 && l.size() <= 5);

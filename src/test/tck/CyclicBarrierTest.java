@@ -52,7 +52,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
 
     /**
-     * A 1-party barrier triggers properly
+     * A 1-party barrier triggers after single await
      */
     public void testSingleParty() {
         try {
@@ -88,7 +88,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
     }
 
     /**
-     * A 2-party/thread barrier triggers properly
+     * A 2-party/thread barrier triggers after both threads invoke await
      */
     public void testTwoParties() {
         final CyclicBarrier b = new CyclicBarrier(2);
@@ -216,6 +216,82 @@ public class CyclicBarrierTest extends JSR166TestCase{
         try {
             t.start();
             t.join(); 
+        } catch(InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * A timeout in one party causes others waiting in timed await to
+     * throw BrokenBarrierException
+     */
+    public void testAwait4_Timeout_BrokenBarrier() {
+      final CyclicBarrier c = new CyclicBarrier(3);
+        Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                        threadShouldThrow();
+                    } catch(TimeoutException success){
+                    } catch(Exception b){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+                        threadShouldThrow();                        
+                    } catch(BrokenBarrierException success){
+                    } catch(Exception i){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        try {
+            t1.start();
+            t2.start();
+            t1.join(); 
+            t2.join();
+        } catch(InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * A timeout in one party causes others waiting in await to
+     * throw BrokenBarrierException
+     */
+    public void testAwait5_Timeout_BrokenBarrier() {
+      final CyclicBarrier c = new CyclicBarrier(3);
+        Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                        threadShouldThrow();
+                    } catch(TimeoutException success){
+                    } catch(Exception b){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        c.await();
+                        threadShouldThrow();                        
+                    } catch(BrokenBarrierException success){
+                    } catch(Exception i){
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        try {
+            t1.start();
+            t2.start();
+            t1.join(); 
+            t2.join();
         } catch(InterruptedException e){
             unexpectedException();
         }

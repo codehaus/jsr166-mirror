@@ -211,7 +211,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     * 
+     * element returns next element, or throws NSEE if empty
      */
     public void testElement() {
         LinkedList q = populatedQueue(SIZE);
@@ -227,7 +227,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     * element returns next element, or throws NSEE if empty
+     *  remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         LinkedList q = populatedQueue(SIZE);
@@ -316,7 +316,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  removeAll(c) removes only those elements of c and reports true if changed
+     * removeAll(c) removes only those elements of c and reports true if changed
      */
     public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {

@@ -181,6 +181,17 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
+     * add(null) throws NPE
+     */
+    public void testAddNull() {
+	try {
+            PriorityBlockingQueue q = new PriorityBlockingQueue(1);
+            q.add(null);
+            shouldThrow();
+        } catch (NullPointerException success) { }   
+    }
+
+    /**
      * Offer of comparable element succeeds
      */
     public void testOffer() {
@@ -225,6 +236,19 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         }
         catch (NullPointerException success) {}
     }
+
+    /**
+     * addAll(this) throws IAE
+     */
+    public void testAddAllSelf() {
+        try {
+            PriorityBlockingQueue q = populatedQueue(SIZE);
+            q.addAll(q);
+            shouldThrow();
+        }
+        catch (IllegalArgumentException success) {}
+    }
+
     /**
      * addAll of a collection with null elements throws NPE
      */
@@ -687,6 +711,28 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 	    unexpectedException();
 	}    
     }
+
+    /**
+     * toArray(null) throws NPE
+     */
+    public void testToArray_BadArg() {
+	try {
+            PriorityBlockingQueue q = populatedQueue(SIZE);
+	    Object o[] = q.toArray(null);
+	    shouldThrow();
+	} catch(NullPointerException success){}
+    }
+
+    /**
+     * toArray with incompatable array type throws CCE
+     */
+    public void testToArray1_BadArg() {
+	try {
+            PriorityBlockingQueue q = populatedQueue(SIZE);
+	    Object o[] = q.toArray(new String[10] );
+	    shouldThrow();
+	} catch(ArrayStoreException  success){}
+    }
     
     /**
      * iterator iterates through all elements
@@ -788,5 +834,107 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             unexpectedException();
         }
     }
+
+    /**
+     * drainTo(null) throws NPE
+     */ 
+    public void testDrainToNull() {
+        PriorityBlockingQueue q = populatedQueue(SIZE);
+        try {
+            q.drainTo(null);
+            shouldThrow();
+        } catch(NullPointerException success) {
+        }
+    }
+
+    /**
+     * drainTo(this) throws IAE
+     */ 
+    public void testDrainToSelf() {
+        PriorityBlockingQueue q = populatedQueue(SIZE);
+        try {
+            q.drainTo(q);
+            shouldThrow();
+        } catch(IllegalArgumentException success) {
+        }
+    }
+
+    /**
+     * drainTo(c) empties queue into another collection c
+     */ 
+    public void testDrainTo() {
+        PriorityBlockingQueue q = populatedQueue(SIZE);
+        ArrayList l = new ArrayList();
+        q.drainTo(l);
+        assertEquals(q.size(), 0);
+        assertEquals(l.size(), SIZE);
+        for (int i = 0; i < SIZE; ++i) 
+            assertEquals(l.get(i), new Integer(i));
+    }
+
+    /**
+     * drainTo empties queue
+     */ 
+    public void testDrainToWithActivePut() {
+        final PriorityBlockingQueue q = populatedQueue(SIZE);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    q.put(new Integer(SIZE+1));
+                }
+            });
+        try {
+            t.start();
+            ArrayList l = new ArrayList();
+            q.drainTo(l);
+            assertTrue(l.size() >= SIZE);
+            for (int i = 0; i < SIZE; ++i) 
+                assertEquals(l.get(i), new Integer(i));
+            t.join();
+            assertTrue(q.size() + l.size() == SIZE+1);
+        } catch(Exception e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * drainTo(null, n) throws NPE
+     */ 
+    public void testDrainToNullN() {
+        PriorityBlockingQueue q = populatedQueue(SIZE);
+        try {
+            q.drainTo(null, 0);
+            shouldThrow();
+        } catch(NullPointerException success) {
+        }
+    }
+
+    /**
+     * drainTo(this, n) throws IAE
+     */ 
+    public void testDrainToSelfN() {
+        PriorityBlockingQueue q = populatedQueue(SIZE);
+        try {
+            q.drainTo(q, 0);
+            shouldThrow();
+        } catch(IllegalArgumentException success) {
+        }
+    }
+
+    /**
+     * drainTo(c, n) empties first max {n, size} elements of queue into c
+     */ 
+    public void testDrainToN() {
+        for (int i = 0; i < SIZE + 2; ++i) {
+            PriorityBlockingQueue q = populatedQueue(SIZE);
+            ArrayList l = new ArrayList();
+            q.drainTo(l, i);
+            int k = (i < SIZE)? i : SIZE;
+            assertEquals(q.size(), SIZE-k);
+            assertEquals(l.size(), k);
+            for (int j = 0; j < k; ++j) 
+                assertTrue(l.contains(new Integer(j)));
+        }
+    }
+
 
 }

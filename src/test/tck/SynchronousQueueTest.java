@@ -43,6 +43,17 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
+     * add(null) throws NPE
+     */
+    public void testAddNull() {
+	try {
+            SynchronousQueue q = new SynchronousQueue();
+            q.add(null);
+            shouldThrow();
+        } catch (NullPointerException success) { }   
+    }
+
+    /**
      * offer fails if no active taker
      */
     public void testOffer() {
@@ -74,6 +85,19 @@ public class SynchronousQueueTest extends JSR166TestCase {
         }
         catch (NullPointerException success) {}
     }
+
+    /**
+     * addAll(this) throws IAE
+     */
+    public void testAddAllSelf() {
+        try {
+            SynchronousQueue q = new SynchronousQueue();
+            q.addAll(q);
+            shouldThrow();
+        }
+        catch (IllegalArgumentException success) {}
+    }
+
     /**
      * addAll of a collection with null elements throws NPE
      */
@@ -421,6 +445,18 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
     
     /**
+     * toArray(null) throws NPE
+     */
+    public void testToArray_BadArg() {
+	try {
+            SynchronousQueue q = new SynchronousQueue();
+	    Object o[] = q.toArray(null);
+	    shouldThrow();
+	} catch(NullPointerException success){}
+    }
+
+
+    /**
      * iterator does not traverse any elements
      */
     public void testIterator() {
@@ -549,5 +585,136 @@ public class SynchronousQueueTest extends JSR166TestCase {
             unexpectedException();
         }
     }
+
+    /**
+     * drainTo(null) throws NPE
+     */ 
+    public void testDrainToNull() {
+        SynchronousQueue q = new SynchronousQueue();
+        try {
+            q.drainTo(null);
+            shouldThrow();
+        } catch(NullPointerException success) {
+        }
+    }
+
+    /**
+     * drainTo(this) throws IAE
+     */ 
+    public void testDrainToSelf() {
+        SynchronousQueue q = new SynchronousQueue();
+        try {
+            q.drainTo(q);
+            shouldThrow();
+        } catch(IllegalArgumentException success) {
+        }
+    }
+
+    /**
+     * drainTo(c) of empty queue doesn't transfer elements
+     */ 
+    public void testDrainTo() {
+        SynchronousQueue q = new SynchronousQueue();
+        ArrayList l = new ArrayList();
+        q.drainTo(l);
+        assertEquals(q.size(), 0);
+        assertEquals(l.size(), 0);
+    }
+
+    /**
+     * drainTo empties queue, unblocking a waiting put.
+     */ 
+    public void testDrainToWithActivePut() {
+        final SynchronousQueue q = new SynchronousQueue();
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        q.put(new Integer(1));
+                    } catch (InterruptedException ie){ 
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        try {
+            t.start();
+            ArrayList l = new ArrayList();
+            Thread.sleep(SHORT_DELAY_MS);
+            q.drainTo(l);
+            assertTrue(l.size() <= 1);
+            if (l.size() > 0)
+                assertEquals(l.get(0), new Integer(1));
+            t.join();
+            assertTrue(l.size() <= 1);
+        } catch(Exception e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * drainTo(null, n) throws NPE
+     */ 
+    public void testDrainToNullN() {
+        SynchronousQueue q = new SynchronousQueue();
+        try {
+            q.drainTo(null, 0);
+            shouldThrow();
+        } catch(NullPointerException success) {
+        }
+    }
+
+    /**
+     * drainTo(this, n) throws IAE
+     */ 
+    public void testDrainToSelfN() {
+        SynchronousQueue q = new SynchronousQueue();
+        try {
+            q.drainTo(q, 0);
+            shouldThrow();
+        } catch(IllegalArgumentException success) {
+        }
+    }
+
+    /**
+     * drainTo(c, n) empties up to n elements of queue into c
+     */ 
+    public void testDrainToN() {
+        final SynchronousQueue q = new SynchronousQueue();
+        Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        q.put(one);
+                    } catch (InterruptedException ie){ 
+                        threadUnexpectedException();
+                    }
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        q.put(two);
+                    } catch (InterruptedException ie){ 
+                        threadUnexpectedException();
+                    }
+                }
+            });
+
+        try {
+            t1.start();
+            t2.start();
+            ArrayList l = new ArrayList();
+            Thread.sleep(SHORT_DELAY_MS);
+            q.drainTo(l, 1);
+            assertTrue(l.size() == 1);
+            q.drainTo(l, 1);
+            assertTrue(l.size() == 2);
+            assertTrue(l.contains(one));
+            assertTrue(l.contains(two));
+            t1.join();
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    }
+
 
 }

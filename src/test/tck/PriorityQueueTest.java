@@ -173,6 +173,17 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
+     * add(null) throws NPE
+     */
+    public void testAddNull() {
+	try {
+            PriorityQueue q = new PriorityQueue(1);
+            q.add(null);
+            shouldThrow();
+        } catch (NullPointerException success) { }   
+    }
+
+    /**
      * Offer of comparable element succeeds
      */
     public void testOffer() {

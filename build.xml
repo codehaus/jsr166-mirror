@@ -22,7 +22,6 @@
 
   <!-- Compilation options -->
   <property name="build.sourcelevel"    value="1.5"/>
-  <property name="build.docsourcelevel" value="1.4"/>
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
@@ -34,13 +33,11 @@
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
   <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
-  <property name="build.sinjdocs.dir"   location="${build.dir}/sinjdocs"/>
-  <property name="build.stripped.dir"   location="${build.dir}/stripped"/>
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
+  <property name="build.checkstyle.dir" location="${build.dir}/checkstyle"/>
   <property name="build.doccheck.dir"   location="${build.dir}/doccheck"/>
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
   <property name="build.dc-filter.dir"  location="${build.dir}/filterdocchk"/>
-  <property name="build.checkstyle.dir" location="${build.dir}/checkstyle"/>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -56,25 +53,24 @@
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
-  <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
-  <property name="sinjdoc.jar"          location="${lib.dir}/sinjdoc.jar"/>
+  
+  <!-- Bootclasspath argument -->
+  <property name="bootclasspath.args"   value="-Xbootclasspath/p:${product.jar}"/>
 
-
-  <!-- Files excluded from dist-docs -->
-  <patternset id="docs.exclusion">
-    <exclude name="java/util/Random.*"/>
-    <exclude name="sun/misc/Unsafe.*"/>
-  </patternset>
+  <!-- Test classpath -->
+  <path id="test.classpath">
+    <pathelement location="${build.testcases.dir}"/>
+    <pathelement location="${junit.jar}"/>
+  </path>
 
 
 
   <!-- Main targets -->
 
+
   <target name="compile"
           depends="init, configure-compiler, prepare-src"
           description="Compiles main sources to build folder">
-
-    <property name="prepare.src.dir" value="${src.dir}"/>
 
     <mkdir dir="${build.classes.dir}"/>
 
@@ -93,14 +89,47 @@
   </target>
 
 
+
   <target name="jar"
-          depends="init-jar, native-jar"
-          description="Builds library jar from compiled sources"/>
+          depends="compile"
+          description="Builds library jar from compiled sources">
+
+    <mkdir dir="${build.lib.dir}"/>
+
+    <jar destfile="${product.jar}">
+      <fileset dir="${build.classes.dir}"/>
+    </jar>
+
+  </target>
+
 
 
   <target name="test"
           depends="init, configure-tests, report-tests"
           description="Runs all tests (requires JUnit 3.8.1 in ${ant.home}/lib)" />
+
+
+
+  <target name="docs"
+          description="Builds javadocs with custom tags to build folder">
+
+    <delete dir="${build.javadocs.dir}"/>
+    <mkdir dir="${build.javadocs.dir}"/>
+
+    <javadoc destdir="${build.javadocs.dir}"
+                link="http://java.sun.com/j2se/1.4.1/docs/api"
+            overview="${src.dir}/intro.html"
+              source="${build.sourcelevel}">
+
+      <tag name="revised" description="Last revised:"/>
+      <tag name="spec"    description="Specified by:"/>
+
+      <packageset dir="${src.dir}"/>
+
+    </javadoc>
+
+  </target>
+
 
 
   <target name="checkstyle"
@@ -125,6 +154,7 @@
   </target>
 
 
+
   <target name="doccheck"
           depends="filter-doccheck"
           description="Reports on javadoc style errors">
@@ -142,71 +172,12 @@
 
   </target>
 
-
-  <target name="docs"
-          depends="filter-src"
-          description="Builds javadocs with custom tags to build folder">
-
-    <delete dir="${build.javadocs.dir}"/>
-    <mkdir dir="${build.javadocs.dir}"/>
-
-    <javadoc destdir="${build.javadocs.dir}"
-                link="http://java.sun.com/j2se/1.4.1/docs/api"
-            overview="${src.dir}/intro.html"
-              source="${build.docsourcelevel}">
-
-      <tag name="revised" description="Last revised:"/>
-      <tag name="spec"    description="Specified by:"/>
-
-      <packageset dir="${build.filter.src.dir}"/>
-
-    </javadoc>
-
-  </target>
-
-
-  <target name="sinjdocs"
-          depends="configure-tests"
-          description="Builds javadocs with custom tags to build folder">
-
-    <delete dir="${build.sinjdocs.dir}"/>
-    <mkdir dir="${build.sinjdocs.dir}"/>
-
-    <java classname="net.cscott.sinjdoc.Main" fork="true">
-
-      <jvmarg value="-Xbootclasspath/p:${test.bootclasspath}"/>
-
-      <classpath>
-        <pathelement location="${sinjdoc.jar}"/>
-        <pathelement location="${lib.dir}/jutil.jar"/>
-        <pathelement location="${lib.dir}/cup.jar"/>
-        <path refid="test.classpath"/>
-      </classpath>
-
-      <!-- <arg value="-help"/> -->
-      <!-- <arg value="-verbose"/> -->
-      <!-- <arg value="-link"/>  <arg value="http://java.sun.com/j2se/1.4.1/docs/api"/> -->
-      
-      <arg value="-d"/>          <arg value="${build.sinjdocs.dir}"/>
-      <arg value="-sourcepath"/> <arg value="${src.dir}"/>
-      <arg value="-overview"/>   <arg value="${src.dir}/intro.html"/>
-      <arg value="-source"/>     <arg value="${build.sourcelevel}"/>
-      
-      <arg value="java.lang"/>
-      <arg value="java.util"/>
-      <arg value="java.util.concurrent"/>
-      <arg value="java.util.concurrent.atomic"/>
-      <arg value="java.util.concurrent.locks"/>
-
-
-    </java>
-
-  </target>
-
+  
 
   <target name="dist"
           depends="init, dist-clean, dist-jar, dist-docs"
           description="Puts all distributable products in single hierarchy"/>
+
 
 
   <target name="release"
@@ -227,6 +198,8 @@
 
   </target>
 
+
+
   <target name="clean"
           description="Removes all build products">
 
@@ -237,6 +210,7 @@
   </target>
 
 
+
   <target name="dist-clean"
           description="Removes all build and distribution products">
 
@@ -245,19 +219,19 @@
   </target>
 
 
+
   <target name="dist-docs"
-          depends="filter-src"
           description="Builds javadocs without custom tags to dist folder">
 
     <delete dir="${dist.javadocs.dir}"/>
     <mkdir dir="${dist.javadocs.dir}"/>
 
     <javadoc destdir="${dist.javadocs.dir}"
-                link="http://java.sun.com/j2se/1.4.1/docs/api"
+                link="http://java.sun.com/j2se/1.4.2/docs/api"
             overview="${src.dir}/intro.html"
-              source="${build.docsourcelevel}">
+              source="${build.sourcelevel}">
 
-      <packageset dir="${build.filter.src.dir}"/>
+      <packageset dir="${src.dir}"/>
 
     </javadoc>
 
@@ -274,23 +248,6 @@
     <loadfile property="version" srcFile="version.properties"/>
     <echo>Building JSR-166 version ${version}</echo>
     <echo>java.home is ${java.home}</echo>
-
-  </target>
-
-
-  <target name="init-jar">
-
-    <mkdir dir="${build.lib.dir}"/>
-
-  </target>
-
-
-  <target name="native-jar"
-          depends="compile">
-
-    <jar destfile="${product.jar}">
-      <fileset dir="${build.classes.dir}"/>
-    </jar>
 
   </target>
 
@@ -330,9 +287,13 @@
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
         <exclude name="**/*.html"/>
-        <patternset refid="docs.exclusion"/>
+        <!-- Files excluded from dist-docs -->
+        <exclude name="java/util/Random.*"/>
+        <exclude name="sun/misc/Unsafe.*"/>
       </fileset>
+      <!--
       <filterchain>
+      -->
 
         <!--
          # This filter gets rid of angle-bracketed type parameters
@@ -346,14 +307,18 @@
          #   tweaking.)
          -->
 
+        <!--
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"
                       classpath="${build.ant.dir}">
           <param name="notmatching" value="^\s+\*\s.*$"/>
           <param name="pattern"     value="&lt;[^|>()]+?>+"/>
           <param name="replacement" value=" "/>
         </filterreader>
+        -->
 
+      <!--
       </filterchain>
+      -->
     </copy>
 
   </target>
@@ -412,7 +377,7 @@
 
     <mkdir dir="${build.testcases.dir}"/>
 
-    <javac srcdir="${test.src.dir}"
+    <javac srcdir="${test.src.dir}/tck"
           destdir="${build.testcases.dir}"
             debug="${build.debug}"
        debuglevel="${build.debuglevel}"
@@ -420,11 +385,10 @@
            source="${build.sourcelevel}"
              fork="true">
 
+      <compilerarg value="${bootclasspath.args}"/>
       <compilerarg line="${build.args}"/>
-      <classpath refid="test.classpath"/>
       
-      <include name="java/**"/>
-      <include name="jsr166/**"/>
+      <classpath refid="test.classpath"/>
 
     </javac>
 
@@ -446,14 +410,15 @@
                     dir="${build.reports.dir}"
                    fork="true">
 
-      <jvmarg value="-Xbootclasspath:${test.bootclasspath}"/>
+      <jvmarg value="${bootclasspath.args}"/>
+      
+      <classpath refid="test.classpath"/>
 
       <formatter type="xml"/>
 
       <batchtest todir="${build.reports.dir}">
-        <fileset dir="${test.src.dir}">
-          <include name="java/**/${testcase}Test.java"/>
-          <include name="jsr166/**/${testcase}Test.java"/>
+        <fileset dir="${test.src.dir}/tck">
+          <include name="${testcase}Test.java"/>
         </fileset>
       </batchtest>
 
@@ -501,6 +466,8 @@
     <condition property="prepare.src.dir" value="${build.dir}/prepare-src">
       <istrue value="${build.nothreads}"/>
     </condition>
+    
+    <property name="prepare.src.dir" value="${src.dir}"/>
 
 
     <!-- Common options in javac invocations -->
@@ -530,36 +497,19 @@
     <available property="junit.available"
                classname="junit.framework.Protectable"/>
 
-    <fail message="Need JUnit 3.8.1 in ${ant.home}${file.separator}lib to run tests"
-          unless="junit.available"/>
-
     <!-- Xalan -->
     <available property="xalan.available"
                classname="org.apache.xalan.Version"/>
 
+               
+    <!-- Ant 1.6beta and later don't need or want this check -->
+    <!--    
+    <fail message="Need JUnit 3.8.1 in ${ant.home}${file.separator}lib to run tests"
+          unless="junit.available"/>
+
     <fail message="Need Xalan 2.5.1 jar in ${ant.home}${file.separator}lib to run tests"
           unless="xalan.available"/>
-
-
-    <!--
-     ! Bootclasspath munging for testing, so JUnit can test our local
-     ! modifications to java.*.
-     -->
-
-    <path id="test.classpath">
-      <pathelement location="${product.jar}"/>
-      <pathelement location="${rt.jar}"/>
-      <pathelement location="${junit.jar}"/>
-      <pathelement location="${build.testcases.dir}"/>
-    </path>
-
-    <path id="test.bootclasspath">
-      <path refid="test.classpath"/>
-    </path>
-
-    <!-- Flatten test classpaths into platform-appropriate strings -->
-    <property name="test.classpath"         refid="test.classpath"/>
-    <property name="test.bootclasspath"     refid="test.bootclasspath"/>
+    -->
 
   </target>
 
@@ -611,13 +561,91 @@
   </target>
 
 
-  <target name="ng" depends="test">
-    <java classname="SuperfluousAbstract" fork="true">
 
-      <jvmarg value="-Xbootclasspath/p:${test.bootclasspath}"/>
+  <!-- Backward compatibility, work in progress -->
 
+
+  <target name="compat" depends="jar">
+  
+    <mkdir dir="${build.testcases.dir}"/>
+    
+    <javac srcdir="${test.src.dir}"
+          destdir="${build.testcases.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+             
+      <compilerarg value="${bootclasspath.args}"/>
+      <compilerarg line="${build.args}"/>
+      
+      <classpath refid="test.classpath"/>
+      
+      <include name="Compatibility.java"/>
+      
+    </javac>
+    
+             
+    <java classname="Compatibility" fork="true">
+      <jvmarg value="${bootclasspath.args}"/>
+      <classpath refid="test.classpath"/>
     </java>
   </target>
 
+
+
+  <property name="pretiger.src.dir"     location="${build.dir}/pretiger/src"/>
+  <property name="build.pretiger.dir"   location="${build.dir}/pretiger/classes"/>
+  <property name="pretiger.jar"         location="${build.lib.dir}/jsr166-pretiger.jar"/>
+  <property name="pretiger.sourcelevel" value="1.4"/>
+  
+  <target name="defang" 
+       depends="init"
+   description="Generates pre-Tiger compatible source">
+   
+    <delete dir="${pretiger.src.dir}"/>
+    <mkdir dir="${pretiger.src.dir}"/>
+  
+    <exec executable="perl">
+      <arg file="etc/defang.pl"/>
+      <!-- <arg value="-v"/> -->
+      <arg value="-s"/> <arg file="${src.dir}"/>
+      <arg value="-t"/> <arg file="${pretiger.src.dir}"/>
+    </exec>
+    
+  </target>
+
+  <target name="compile-pretiger"
+          depends="init, configure-compiler, defang"
+          description="Compiles pre-Tiger sources to build folder">
+
+    <mkdir dir="${build.pretiger.dir}"/>
+
+    <javac srcdir="${pretiger.src.dir}"
+          destdir="${build.pretiger.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${pretiger.sourcelevel}"
+             fork="true">
+
+      <compilerarg line="${build.args}"/>
+      <exclude name="**/Thread.java"/>
+
+    </javac>
+
+  </target>
+  
+  <target name="pretiger" depends="compile-pretiger">
+
+    <mkdir dir="${build.lib.dir}"/>
+    
+    <jar destfile="${pretiger.jar}">
+      <fileset dir="${build.pretiger.dir}">
+      </fileset>
+    </jar>
+    
+  </target>
 
 </project>

@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.*;
  * @author Doug Lea
 **/
 
-public class LinkedStack<E> extends AbstractQueue<E>
+public class ConcurrentLinkedStack<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {
 
     /*
@@ -49,7 +49,7 @@ public class LinkedStack<E> extends AbstractQueue<E>
     /** Head of the linked list */
     private transient volatile AtomicLinkedNode head;
 
-    private static final AtomicReferenceFieldUpdater<LinkedStack, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<LinkedStack, AtomicLinkedNode>(new LinkedStack[0], new AtomicLinkedNode[0], "head");
+    private static final AtomicReferenceFieldUpdater<ConcurrentLinkedStack, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<ConcurrentLinkedStack, AtomicLinkedNode>(new ConcurrentLinkedStack[0], new AtomicLinkedNode[0], "head");
 
     private boolean casHead(AtomicLinkedNode cmp, AtomicLinkedNode val) {
         return headUpdater.compareAndSet(this, cmp, val);
@@ -57,19 +57,19 @@ public class LinkedStack<E> extends AbstractQueue<E>
     
 
     /**
-     * Creates an initially empty LinkedStack.
+     * Creates an initially empty ConcurrentLinkedStack.
      */
-    public LinkedStack() {
+    public ConcurrentLinkedStack() {
     }
 
     /**
-     * Creates a LinkedStack initially holding the elements
+     * Creates a ConcurrentLinkedStack initially holding the elements
      * of the given collection. The elements are added in 
      * iterator traversal order.
      *
      * @param initialElements the collections whose elements are to be added.
      */
-    public LinkedStack(Collection<E> initialElements) {
+    public ConcurrentLinkedStack(Collection<E> initialElements) {
         for (Iterator<E> it = initialElements.iterator(); it.hasNext();) 
             add(it.next());
     }

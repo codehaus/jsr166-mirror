@@ -38,7 +38,7 @@ package java.util.concurrent;
  *
  * <pre>
  * class SerialExecutor implements Executor {
- *     LinkedQueue tasks = new LinkedQueue<Runnable>();
+ *     LinkedBlockingQueue tasks = new LinkedBlockingQueue<Runnable>();
  *     Executor executor;
  *     Runnable active;
  *
@@ -80,7 +80,7 @@ package java.util.concurrent;
  * @see FutureTask
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
+ * @revised $Date: 2003/06/26 10:47:35 $
  * @editor $Author: dl $
  * @author Doug Lea
  */

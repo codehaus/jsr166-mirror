@@ -109,8 +109,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/26 05:13:48 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/06/26 10:47:35 $
+ * @editor $Author: dl $
  * @author Doug Lea
  *
  */
@@ -335,6 +335,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 writerEnter();
             }
             catch (InterruptedException ie) {
+                writing = false;
                 entryLock.unlock();
                 throw ie;
             }
@@ -425,9 +426,4 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
 }
-
-
-
-
-
 

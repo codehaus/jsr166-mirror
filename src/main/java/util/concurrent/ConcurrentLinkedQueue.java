@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.*;
 
 
 /**
- * An unbounded thread-safe queue based on linked nodes.  LinkedQueues
+ * An unbounded thread-safe queue based on linked nodes.  ConcurrentLinkedQueues
  * are an especially good choice when many threads will share access
  * to a common  queue. 
  *
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.*;
  * @author Doug Lea
  * 
  **/
-public class LinkedQueue<E> extends AbstractQueue<E>
+public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {
 
     /*
@@ -43,8 +43,8 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
     // Atomics support
 
-    private static final AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> tailUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "tail");
-    private static final AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "head");
+    private static final AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> tailUpdater = new AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode>(new ConcurrentLinkedQueue[0], new AtomicLinkedNode[0], "tail");
+    private static final AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode>(new ConcurrentLinkedQueue[0], new AtomicLinkedNode[0], "head");
 
     private boolean casTail(AtomicLinkedNode cmp, AtomicLinkedNode val) {
         return tailUpdater.compareAndSet(this, cmp, val);
@@ -66,18 +66,18 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
 
     /**
-     * Creates an initially empty LinkedQueue.
+     * Creates an initially empty ConcurrentLinkedQueue.
      */
-    public LinkedQueue() {}
+    public ConcurrentLinkedQueue() {}
 
     /**
-     * Creates a LinkedQueue initially holding the elements
+     * Creates a ConcurrentLinkedQueue initially holding the elements
      * of the given collection. The elements are added in 
      * iterator traversal order.
      *
      * @param initialElements the collections whose elements are to be added.
      */
-    public LinkedQueue(Collection<E> initialElements) {
+    public ConcurrentLinkedQueue(Collection<E> initialElements) {
         for (Iterator<E> it = initialElements.iterator(); it.hasNext();) 
             add(it.next());
     }

@@ -8,21 +8,22 @@ package jsr166x;     // XXX This belongs in java.util!!! XXX
 import java.util.*;    // XXX This import goes away        XXX
 
 /**
- * A linear collection that supports element insertion and removal
- * at both ends.  The name <i>deque</i> is short for "double ended
- * queue" and is usually pronounced "deck".  Most <tt>Deque</tt>
+ * A linear collection that supports element insertion and removal at
+ * both ends.  The name <i>deque</i> is short for "double ended queue"
+ * and is usually pronounced "deck".  Most <tt>Deque</tt>
  * implementations place no fixed limits on the number of elements
  * they may contain, but this interface supports capacity-restricted
  * deques as well as those with no fixed size limit.
  *
- * <p>This interface defines methods to access the elements at both ends of
- * the deque.  Methods are provided to insert, remove, and examine the
- * element.  Each of these methods exists in two forms: one throws an
- * exception if the operation fails, the other returns a special value (either
- * <tt>null</tt> or <tt>false</tt>, depending on the operation).  The latter
- * form of the insert operation is designed specifically for use with
- * capacity-restricted <tt>Deque</tt> implementations; in most implementations,
- * insert operations cannot fail.  
+ * <p>This interface defines methods to access the elements at both
+ * ends of the deque.  Methods are provided to insert, remove, and
+ * examine the element.  Each of these methods exists in two forms:
+ * one throws an exception if the operation fails, the other returns a
+ * special value (either <tt>null</tt> or <tt>false</tt>, depending on
+ * the operation).  The latter form of the insert operation is
+ * designed specifically for use with capacity-restricted
+ * <tt>Deque</tt> implementations; in most implementations, insert
+ * operations cannot fail.
  *
  * <p>The twelve methods described above are are summarized in the 
  * follwoing table:<p>
@@ -126,23 +127,24 @@ import java.util.*;    // XXX This import goes away        XXX
  *    <td>{@link #peekFirst peekFirst()}</td>
  *   </tr>
  * </table>
- * <p>Note that the {@link #peek peek} method works equally well when a deque
- * is used as a queue or a stack; in either case, elements are drawn from the
- * beginning of the deque.
  *
- * <p>This inteface provides two methods to to remove interior elements,
- * {@link #removeFirstOccurrence removeFirstOccurrence} and {@link
- * #removeLastOccurrence removeLastOccurrence}.  Unlike the {@link List}
- * interface, this interface does not provide support for indexed access to
- * elements.
+ * <p>Note that the {@link #peek peek} method works equally well when
+ * a deque is used as a queue or a stack; in either case, elements are
+ * drawn from the beginning of the deque.
  *
- * <p>While <tt>Deque</tt> implementations are not strictly required to
- * prohibit the insertion of null elements, they are strongly encouraged to do
- * so.  Users of any <tt>Deque</tt> implementations that do allow null
- * elements are strongly encouraged <i>not</i> to take advantage of the
- * ability to insert nulls.  This is so because <tt>null</tt> is used as a
- * special return value by various methods to indicated that the deque is
- * empty.
+ * <p>This inteface provides two methods to to remove interior
+ * elements, {@link #removeFirstOccurrence removeFirstOccurrence} and
+ * {@link #removeLastOccurrence removeLastOccurrence}.  Unlike the
+ * {@link List} interface, this interface does not provide support for
+ * indexed access to elements.
+ *
+ * <p>While <tt>Deque</tt> implementations are not strictly required
+ * to prohibit the insertion of null elements, they are strongly
+ * encouraged to do so.  Users of any <tt>Deque</tt> implementations
+ * that do allow null elements are strongly encouraged <i>not</i> to
+ * take advantage of the ability to insert nulls.  This is so because
+ * <tt>null</tt> is used as a special return value by various methods
+ * to indicated that the deque is empty.
  * 
  * <p><tt>Deque</tt> implementations generally do not define
  * element-based versions of the <tt>equals</tt> and <tt>hashCode</tt>

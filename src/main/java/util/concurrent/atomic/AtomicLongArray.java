@@ -113,7 +113,7 @@ public final class AtomicLongArray implements java.io.Serializable {
      * @param i the index
      * @return the previous value;
      */
-    public long getAndincrement(int i) {
+    public long getAndIncrement(int i) {
         while (true) {
             long current = get(i);
             long next = current + 1;

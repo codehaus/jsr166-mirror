@@ -116,7 +116,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
      * @param i the index
      * @return the previous value;
      */
-    public int getAndincrement(int i) {
+    public int getAndIncrement(int i) {
         while (true) {
             int current = get(i);
             int next = current + 1;

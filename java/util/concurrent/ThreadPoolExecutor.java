@@ -39,12 +39,8 @@ import java.util.List;
  * may be useful for monitoring and tuning executors.
  *
  * <h3>Tuning guide</h3>
- * <p>brian I have copied some stuff from dl.u.c; please review to make sure
- * that it is still correct.
- * brian Also please check if my statements about queuing and blocking
- * are correct.
  * <dl>
- * <dt>Minimum and maximum pool size</dt>  
+ * <dt>Minimum and maximum pool size</dt>
  * <dd>ThreadExecutor will
  * automatically adjust the pool size within the bounds set by
  * minimumPoolSize and maximumPoolSize.  When a new task is submitted,
@@ -119,7 +115,7 @@ import java.util.List;
  * refused by the queue and no threads are available, the
  * Callbacks.cannotExecute method will be called.
  * </dd>
- * <dt>Termination</dt>  
+ * <dt>Termination</dt>
  * <dd>ThreadExecutor supports two shutdown options,
  * immediate and graceful.  In an immediate shutdown, any threads
  * currently executing are interrupted, and any tasks not yet begun
@@ -129,19 +125,25 @@ import java.util.List;
  * </dd>
  * </dl>
  *
- * @fixme If greater control is needed, you can use the
- * constructor with custom parameters, selectively override
- * <tt>Callbacks</tt>, and/or dynamically change tuning
- * parameters.
-
  * @since 1.5
  * @see CannotExecuteHandler
  * @see Executors
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/03/10 23:00:48 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/03/12 18:32:40 $
+ * @editor $Author: tim $
+ *
+ * @fixme If greater control is needed, you can use the
+ *        constructor with custom parameters, selectively override
+ *        <tt>Callbacks</tt>, and/or dynamically change tuning
+ *        parameters
+ *
+ * @fixme <br/> Brian copied some stuff from dl.u.c for the tuning guide; please
+ *        review to make sure that it is still correct
+ *
+ * @fixme <br/> Please check if Brian's statements about queuing and blocking
+ *        in the tuning guide are correct.
  */
 public class ThreadPoolExecutor implements ThreadedExecutor {
 

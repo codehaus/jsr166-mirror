@@ -1,19 +1,19 @@
 package java.util.concurrent;
 
 /**
- * Interface describing any class that can generate new Thread
- * objects. Using ThreadFactories removes hardwiring of calls to
- * <code>new Thread</code>, enabling applications to use special
- * thread subclasses, default prioritization settings, or create
- * threads with a specific name or in a specific thread group.  
+ * Interface describing any class that can generate
+ * new <tt>Thread</tt> objects. Using thread factories removes
+ * hardwiring of calls to <tt>new Thread</tt>, enabling
+ * applications to use special thread subclasses, default
+ * priorities, etc.
  */
 public interface ThreadFactory { 
+
     /**
-     * Construct a new Thread, possibly also initializing priorities,
-     * names, daemon status, ThreadGroups, etc.
-     * @param r the runnable that the thread will run upon
-     * <tt>start</tt>.
+     * Construct a new <tt>Thread</tt>, possibly also initializing priority,
+     * name, daemon status, <tt>ThreadGroup</tt>, etc.
+     * @param r the runnable that the thread will run upon <tt>start</tt>.
      * @return the constructed thread.
-     **/
-    public Thread newThread(Runnable r);
+     */
+    Thread newThread(Runnable r);
 }

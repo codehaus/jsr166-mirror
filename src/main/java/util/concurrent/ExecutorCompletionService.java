@@ -9,21 +9,20 @@ package java.util.concurrent;
 
 /**
  * A {@link CompletionService} that uses a supplied {@link Executor}
- * to execute tasks. An <tt>ExecutorCompletionService</tt> can be
- * useful as an add-on to solve task coordination problems.
+ * to execute tasks. 
  *
  * <p>
  *
  * <b>Usage Examples.</b>
- * Suppose you have a set of solvers for a certain problem,
+ * Suppose you have a set of solvers for a certain problem (each returning
+ * a value of some type <tt>Result</tt>),
  * and would like to run them concurrently, using the results of each of them
  * that return a non-null value. You could write this as:
  *
  * <pre>
- *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers) 
- *        throws InterruptedException, ExecutionException {
- *        ExecutorCompletionService&lt;Result&gt; ecs = new
- *            ExecutorCompletionService&lt;Result&gt;(e);
+ *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers)
+ *      throws InterruptedException, ExecutionException {
+ *        CompletionService&lt;Result&gt; ecs = new ExecutorCompletionService&lt;Result&gt;(e);
  *        for (Callable&lt;Result&gt; s : solvers)
  *            ecs.submit(s);
  *        int n = solvers.size();
@@ -36,17 +35,15 @@ package java.util.concurrent;
  * </pre>
  *
  * Suppose instead that you would like to use the first non-null result
- * of a set of tasks, ignoring any of those that encounter exceptions
- * and cancelling all of the other tasks when the first one is ready:
+ * of the set of tasks, ignoring any of those that encounter exceptions,
+ * and cancelling all other tasks when the first one is ready:
  *
  * <pre>
  *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers) 
- *        throws InterruptedException {
- *        ExecutorCompletionService&lt;Result&gt; ecs = 
- *            new ExecutorCompletionService&lt;Result&gt;(e);
+ *      throws InterruptedException {
+ *        CompletionService&lt;Result&gt; ecs = new ExecutorCompletionService&lt;Result&gt;(e);
  *        int n = solvers.size();
- *        ArrayList&lt;Future&lt;Result&gt;&gt; futures = 
- *            new ArrayList&lt;Future&lt;Result&gt;&gt;(n);
+ *        List&lt;Future&lt;Result&gt;&gt; futures = new ArrayList&lt;Future&lt;Result&gt;&gt;(n);
  *        Result result = null;
  *        try {
  *            for (Callable&lt;Result&gt; s : solvers)

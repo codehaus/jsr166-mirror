@@ -92,7 +92,8 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @param  runnable the runnable task
      * @param result the result to return on successful completion. If
      * you don't need a particular result, consider using
-     * <tt>Boolean.TRUE</tt>.
+     * constructions of the form:
+     * <tt>Future&lt;?&gt; f = new FutureTask&lt;Object&gt;(runnable, null)</tt>
      * @throws NullPointerException if runnable is null
      */
     public FutureTask(Runnable runnable, V result) {

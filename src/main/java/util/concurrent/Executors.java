@@ -76,8 +76,11 @@ public class Executors {
     /**
      * Creates an Executor that uses a single worker thread operating
      * off an unbounded queue, and uses the provided ThreadFactory to
-     * create a new thread when needed. The returned executor cannot be
-     * reconfigured to use additional threads.
+     * create a new thread when needed. Unlike the otherwise
+     * equivalent <tt>newFixedThreadPool(1)</tt> the returned executor
+     * is guaranteed not to be reconfigurable to use additional
+     * threads.
+     * 
      * @param threadFactory the factory to use when creating new
      * threads
      *
@@ -310,7 +313,7 @@ public class Executors {
      * A wrapper class that exposes only the ExecutorService methods
      * of an implementation.
      */
-    private static class DelegatedExecutorService extends AbstractExecutorService {
+    static class DelegatedExecutorService extends AbstractExecutorService {
         private final ExecutorService e;
         DelegatedExecutorService(ExecutorService executor) { e = executor; }
         public void execute(Runnable command) { e.execute(command); }
@@ -383,7 +386,7 @@ public class Executors {
      * A wrapper class that exposes only the ExecutorService and 
      * ScheduleExecutor methods of a ScheduledThreadPoolExecutor.
      */
-    private static class DelegatedScheduledExecutorService
+    static class DelegatedScheduledExecutorService
             extends DelegatedExecutorService 
             implements ScheduledExecutorService {
         private final ScheduledExecutorService e;

@@ -45,7 +45,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @param delay the time from now to delay execution.
      * @param unit the time unit of the delay parameter.
      * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return an arbitrary value
+     * and whose <tt>get()</tt> method will return <tt>null</tt>
      * upon completion.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.

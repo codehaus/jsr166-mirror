@@ -220,6 +220,50 @@ import java.util.*;
  * reclamation when large numbers of queued tasks become
  * cancelled.</dd> </dl>
  *
+ * <p> <b>Extension example</b>. Most extensions of this class
+ * override one or more of the protected hook methods. For example,
+ * here is a subclass that adds a simple pause/resume feature:
+ *
+ * <pre>
+ * class PausableThreadPoolExecutor extends ThreadPoolExecutor {
+ *   private boolean isPaused;
+ *   private ReentrantLock pauseLock = new ReentrantLock();
+ *   private Condition unpaused = pauseLock.newCondition();
+ *
+ *   public PausableThreadPoolExecutor(...) { super(...); }
+ * 
+ *   protected void beforeExecute(Thread t, Runnable r) {
+ *     super.beforeExecute(t, r);
+ *     pauseLock.lock();
+ *     try {
+ *       while (isPaused) unpaused.await();
+ *     } catch(InterruptedException ie) {
+ *       Thread.currentThread().interrupt();
+ *     } finally {
+ *        pauseLock.unlock();
+ *     }
+ *   }
+ * 
+ *   public void pause() {
+ *     pauseLock.lock();
+ *     try {
+ *       isPaused = true;
+ *     } finally {
+ *        pauseLock.unlock();
+ *     }
+ *   }
+ * 
+ *   public void resume() {
+ *     pauseLock.lock();
+ *     try {
+ *       isPaused = false;
+ *       unpaused.signalAll();
+ *     } finally {
+ *        pauseLock.unlock();
+ *     }
+ *   }
+ * }
+ * </pre>
  * @since 1.5
  * @author Doug Lea
  */
@@ -228,6 +272,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Only used to force toArray() to produce a Runnable[].
      */
     private static final Runnable[] EMPTY_RUNNABLE_ARRAY = new Runnable[0];
+
+    /**
+     * Permission for checking shutdown
+     */
+    private static final RuntimePermission shutdownPerm =
+        new RuntimePermission("modifyThread");
 
     /**
      * Queue used for holding tasks and handing off to worker threads.
@@ -824,18 +874,39 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     public void shutdown() {
+        // Fail if caller doesn't have modifyThread permission
 	SecurityManager security = System.getSecurityManager();
 	if (security != null) 
-	    security.checkAccess(Thread.currentThread());
+            java.security.AccessController.checkPermission(shutdownPerm);
 
         boolean fullyTerminated = false;
         mainLock.lock();
         try {
             if (workers.size() > 0) {
-                if (runState == RUNNING) // don't override shutdownNow
+                // Check if caller can modify worker threads.
+                // This might not be true even if passed above check,
+                // if the securityManager treats some threads specially.
+                if (security != null) {
+                    for (Worker w: workers)
+                        security.checkAccess(w.thread);
+                }
+
+                int state = runState;
+                if (state == RUNNING) // don't override shutdownNow
                     runState = SHUTDOWN;
-                for (Worker w: workers)
-                    w.interruptIfIdle();
+
+                try {
+                    for (Worker w: workers)
+                        w.interruptIfIdle();
+                } catch(SecurityException se) {
+                    // If SecurityManager allows above checks, but then
+                    // unexpectedly throws exception when interrupting
+                    // threads (which it ought not do), back out as
+                    // cleanly as we can. -Some threads may have been
+                    // killed but we remain in non-shutdown state.
+                    runState = state; 
+                    throw se;
+                }
             }
             else { // If no workers, trigger full termination now
                 fullyTerminated = true;
@@ -851,17 +922,30 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
 
     public List<Runnable> shutdownNow() {
+        // Almost the same code as shutdown()
 	SecurityManager security = System.getSecurityManager();
 	if (security != null) 
-	    security.checkAccess(Thread.currentThread());
+            java.security.AccessController.checkPermission(shutdownPerm);
+
         boolean fullyTerminated = false;
         mainLock.lock();
         try {
             if (workers.size() > 0) {
-                if (runState != TERMINATED)
+                if (security != null) {
+                    for (Worker w: workers)
+                        security.checkAccess(w.thread);
+                }
+
+                int state = runState;
+                if (state != TERMINATED)
                     runState = STOP;
-                for (Worker w : workers)
-                    w.interruptNow();
+                try {
+                    for (Worker w : workers)
+                        w.interruptNow();
+                } catch(SecurityException se) {
+                    runState = state; // back out;
+                    throw se;
+                }
             }
             else { // If no workers, trigger full termination now
                 fullyTerminated = true;
@@ -1262,7 +1346,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Method invoked prior to executing the given Runnable in the
-     * given thread.  This method may be used to re-initialize
+     * given thread.  This method is invoked by thread <tt>t</tt> that
+     * will execute task <tt>r</tt>, and may be used to re-initialize
      * ThreadLocals, or to perform logging. Note: To properly nest
      * multiple overridings, subclasses should generally invoke
      * <tt>super.beforeExecute</tt> at the end of this method.
@@ -1274,7 +1359,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Method invoked upon completion of execution of the given
-     * Runnable.  If non-null, the Throwable is the uncaught exception
+     * Runnable.  This method is invoked by the thread that executed
+     * the task. If non-null, the Throwable is the uncaught exception
      * that caused execution to terminate abruptly. Note: To properly
      * nest multiple overridings, subclasses should generally invoke
      * <tt>super.afterExecute</tt> at the beginning of this method.

@@ -13,13 +13,24 @@ import java.security.PrivilegedExceptionAction;
 
 /**
  * An <tt>Executor</tt> that provides methods to manage termination
- * and those that can produce a {@link Future} for tracking
+ * and methods that can produce a {@link Future} for tracking
  * progress of one or more asynchronous tasks.
+ * <p>
+ *
  * An <tt>ExecutorService</tt> can be shut down, which will cause it
  * to stop accepting new tasks.  After being shut down, the executor
  * will eventually terminate, at which point no tasks are actively
  * executing, no tasks are awaiting execution, and no new tasks can be
  * submitted.
+ *
+ * <p> Method <tt>submit</tt> and related methods extend base method
+ * <tt>execute</tt> by creating and returning a {@link Future} that
+ * can be used to cancel execution and/or wait for completion.
+ * Methods <tt>invokeAny</tt> and <tt>invokeAll</tt> perform the most
+ * commonly useful forms of bulk execution, executing a collection of
+ * tasks and then waiting for at least one, or all to complete. (Class
+ * {@link ExecutorCompletionService} can be used to write customizable
+ * versions of such methods.)
  *
  * <p>The {@link Executors} class provides factory methods for the
  * executor services provided in this package.
@@ -29,84 +40,6 @@ import java.security.PrivilegedExceptionAction;
  */
 public interface ExecutorService extends Executor {
 
-    /**
-     * Submits a Runnable task for execution and returns a Future 
-     * representing that task.
-     *
-     * @param task the task to submit
-     * @param result the result to return upon completion
-     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
-     * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return the given value 
-     * upon completion
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     */
-    <T> Future<T> submit(Runnable task, T result);
-
-    /**
-     * Submits a value-returning task for execution and returns a Future
-     * representing the pending results of the task.
-     *
-     * @param task the task to submit
-     * @return a Future representing pending completion of the task
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     */
-    <T> Future<T> submit(Callable<T> task);
-
-    /**
-     * Executes a Runnable task and blocks until it completes normally
-     * or throws an exception.
-     *
-     * @param task the task to submit
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     * @throws ExecutionException if the task encountered an exception
-     * while executing
-     */
-    void invoke(Runnable task) throws ExecutionException, InterruptedException;
-
-    /**
-     * Executes a value-returning task and blocks until it returns a
-     * value or throws an exception.
-     *
-     * @param task the task to submit
-     * @return a Future representing pending completion of the task
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     * @throws InterruptedException if interrupted while waiting for
-     * completion
-     * @throws ExecutionException if the task encountered an exception
-     * while executing
-     */
-    <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException;
-
-
-    /**
-     * Submits a privileged action for execution under the current 
-     * access control context and returns a Future representing the 
-     * pending result object of that action.
-     *
-     * @param action the action to submit
-     * @return a Future representing pending completion of the action
-     * @throws RejectedExecutionException if action cannot be scheduled
-     * for execution
-     */
-    Future<Object> submit(PrivilegedAction action);
-
-    /**
-     * Submits a privileged exception action for execution under the current 
-     * access control context and returns a Future representing the pending 
-     * result object of that action.
-     *
-     * @param action the action to submit
-     * @return a Future representing pending completion of the action
-     * @throws RejectedExecutionException if action cannot be scheduled
-     * for execution
-     */
-    Future<Object> submit(PrivilegedExceptionAction action);
-    
 
     /**
      * Initiates an orderly shutdown in which previously submitted
@@ -114,8 +47,10 @@ public interface ExecutorService extends Executor {
      * accepted. Invocation has no additional effect if already shut
      * down.
      * @throws SecurityException if a security manager exists and
-     * shutting down this ExecutorService manipulates threads
-     * that the caller is not permitted to access.
+     * shutting down this ExecutorService may manipulate threads that
+     * the caller is not permitted to modify because it does not hold
+     * {@link java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     * or the security manager's <tt>checkAccess</tt>  method denies access.
      */
     void shutdown();
 
@@ -131,8 +66,10 @@ public interface ExecutorService extends Executor {
      *
      * @return list of tasks that never commenced execution
      * @throws SecurityException if a security manager exists and
-     * shutting down this ExecutorService manipulates threads
-     * that the caller is not permitted to access.
+     * shutting down this ExecutorService may manipulate threads that
+     * the caller is not permitted to modify because it does not hold
+     * {@link java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     * or the security manager's <tt>checkAccess</tt> method denies access.
      */
     List<Runnable> shutdownNow();
 
@@ -167,15 +104,93 @@ public interface ExecutorService extends Executor {
         throws InterruptedException;
 
 
+    /**
+     * Submits a Runnable task for execution and returns a Future 
+     * representing that task.
+     *
+     * @param task the task to submit
+     * @param result the result to return upon completion
+     * If you do not need a particular result, consider using
+     * the form: <tt>Future&lt;?&gt; cancellationHandle = e.submit(task, null)</tt>.
+     * @return a Future representing pending completion of the task,
+     * and whose <tt>get()</tt> method will return the given value 
+     * upon completion
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     */
+    <T> Future<T> submit(Runnable task, T result);
 
     /**
-     * Arranges for execution of the given tasks, returning when
+     * Submits a value-returning task for execution and returns a Future
+     * representing the pending results of the task.
+     *
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     */
+    <T> Future<T> submit(Callable<T> task);
+
+
+    /**
+     * Submits a privileged action for execution under the current 
+     * access control context and returns a Future representing the 
+     * pending result object of that action.
+     *
+     * @param action the action to submit
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    Future<Object> submit(PrivilegedAction action);
+
+    /**
+     * Submits a privileged exception action for execution under the current 
+     * access control context and returns a Future representing the pending 
+     * result object of that action.
+     *
+     * @param action the action to submit
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    Future<Object> submit(PrivilegedExceptionAction action);
+    
+    /**
+     * Executes a Runnable task and blocks until it completes normally
+     * or throws an exception.
+     *
+     * @param task the task to submit
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     * @throws ExecutionException if the task encountered an exception
+     * while executing
+     */
+    void invoke(Runnable task) throws ExecutionException, InterruptedException;
+
+    /**
+     * Executes a value-returning task and blocks until it returns a
+     * value or throws an exception.
+     *
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     * @throws InterruptedException if interrupted while waiting for
+     * completion
+     * @throws ExecutionException if the task encountered an exception
+     * while executing
+     */
+    <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException;
+
+    /**
+     * Executes the given tasks, returning when
      * all of them complete. 
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @param result value for each task to return upon completion.
-     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
+     * If you do not need a particular result, consider using <tt>null</tt>.
      * @return A list of Futures representing the tasks, in the same
      * sequential order as as produced by the iterator for the given task list, each of which has
      * completed.
@@ -189,7 +204,7 @@ public interface ExecutorService extends Executor {
         throws InterruptedException;
 
     /**
-     * Arranges for execution of the given tasks, returning normally
+     * Executes the given tasks, returning normally
      * when all complete or the given timeout expires, whichever
      * happens first.
      * Upon return, tasks that have not completed are cancelled.
@@ -197,7 +212,7 @@ public interface ExecutorService extends Executor {
      * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @param result value for each task to return upon completion.
-     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
+     * If you do not need a particular result, consider using <tt>null</tt>.
      * @param timeout the maximum time to wait
      * @return A list of Futures representing the tasks, in the same
      * sequential order as as produced by the iterator for the given task list. If the operation did
@@ -206,7 +221,7 @@ public interface ExecutorService extends Executor {
      * @param unit the time unit of the timeout argument
      * @throws InterruptedException if interrupted while waiting, in
      * which case unfinished tasks are cancelled.
-     * @throws NullPointerException if tasks, any or its elements, or unit are <tt>null</tt>
+     * @throws NullPointerException if tasks, any of its elements, or unit are <tt>null</tt>
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
@@ -216,7 +231,7 @@ public interface ExecutorService extends Executor {
 
 
     /**
-     * Arranges for execution of the given tasks, returning their results
+     * Executes the given tasks, returning their results
      * when all complete.
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
@@ -235,7 +250,7 @@ public interface ExecutorService extends Executor {
         throws InterruptedException;
 
     /**
-     * Arranges for execution of the given tasks, returning their results
+     * Executes the given tasks, returning their results
      * when all complete or the timeout expires, whichever happens first.
      * Upon return, tasks that have not completed are cancelled.
      * Note that a <em>completed</em> task could have
@@ -249,7 +264,7 @@ public interface ExecutorService extends Executor {
      * out, some of thiese tasks will not have completed.
      * @throws InterruptedException if interrupted while waiting, in
      * which case unfinished tasks are cancelled.
-     * @throws NullPointerException if tasks, any or its elements, or
+     * @throws NullPointerException if tasks, any of its elements, or
      * unit are <tt>null</tt>
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
@@ -260,7 +275,7 @@ public interface ExecutorService extends Executor {
 
 
     /**
-     * Arranges for execution of the given tasks, returning the result
+     * Executes the given tasks, returning the result
      * of one that has completed successfully (i.e., without throwing
      * an exception), if any do. Upon normal or exceptional return,
      * tasks that have not completed are cancelled.
@@ -279,7 +294,7 @@ public interface ExecutorService extends Executor {
         throws InterruptedException, ExecutionException;
 
     /**
-     * Arranges for execution of the given tasks, returning the result
+     * Executes the given tasks, returning the result
      * of one that has completed successfully (i.e., without throwing
      * an exception), if any do before the given timeout elapses.
      * Upon normal or exceptional return, tasks that have not
@@ -289,7 +304,7 @@ public interface ExecutorService extends Executor {
      * @param unit the time unit of the timeout argument
      * @return The result returned by one of the tasks.
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if tasks, any or its elements, or
+     * @throws NullPointerException if tasks, any of its elements, or
      * unit are <tt>null</tt>
      * @throws TimeoutException if the given timeout elapses before
      * any task successfully completes
@@ -302,7 +317,7 @@ public interface ExecutorService extends Executor {
         throws InterruptedException, ExecutionException, TimeoutException;
 
     /**
-     * Arranges for execution of the given tasks, returning the given
+     * Executes the given tasks, returning the given
      * result if one completes successfully (i.e., without
      * throwing an exception). Upon normal or exceptional
      * return, tasks that have not completed are cancelled.
@@ -322,7 +337,7 @@ public interface ExecutorService extends Executor {
         throws InterruptedException, ExecutionException;
 
     /**
-     * Arranges for execution of the given tasks, returning the given result
+     * Executes the given tasks, returning the given result
      * if one completes successfully (i.e., without throwing
      * an exception) before the given timeout elapses.
      * Upon normal or exceptional return, tasks that have not
@@ -333,7 +348,7 @@ public interface ExecutorService extends Executor {
      * @param unit the time unit of the timeout argument
      * @return the given result
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if tasks, any or its elements, or
+     * @throws NullPointerException if tasks, any of its elements, or
      * unit are <tt>null</tt>
      * @throws TimeoutException if the given timeout elapses before
      * any task successfully completes

@@ -42,7 +42,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
     }
 
     public void invoke(Runnable task) throws ExecutionException, InterruptedException {
-        FutureTask<?> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
+        FutureTask<?> ftask = new FutureTask<Boolean>(task, null);
         execute(ftask);
         ftask.get();
     }

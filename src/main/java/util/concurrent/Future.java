@@ -16,6 +16,10 @@ package java.util.concurrent;
  * <tt>cancel</tt> method.  Additional methods are provided to
  * determine if the task completed normally or was cancelled. Once a
  * computation has completed, the computation cannot be cancelled.
+ * If you would like to use a <tt>Future</tt> for the sake
+ * of cancellability but not provide a usable result, you can
+ * declare types of the form <tt>Future&lt;?&gt;</tt> and
+ * return <tt>null</tt> as a result of the underlying task.
  *
  * <p>
  * <b>Sample Usage</b> (Note that the following classes are all

@@ -294,18 +294,18 @@ public class ScheduledThreadPoolExecutor
      * @param delay the time from now to delay execution.
      * @param unit the time unit of the delay parameter.
      * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return <tt>Boolean.TRUE</tt>
+     * and whose <tt>get()</tt> method will return <tt>null</tt>
      * upon completion.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      * @throws NullPointerException if command is null
      */
 
-    public ScheduledFuture<Boolean> schedule(Runnable command, long delay,  TimeUnit unit) {
+    public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
-        ScheduledFutureTask<Boolean> t = new ScheduledFutureTask<Boolean>(command, Boolean.TRUE, triggerTime);
+        ScheduledFutureTask<?> t = new ScheduledFutureTask<Boolean>(command, null, triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -349,14 +349,14 @@ public class ScheduledThreadPoolExecutor
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if period less than or equal to zero.
      */
-    public ScheduledFuture<Boolean> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
         if (period <= 0)
             throw new IllegalArgumentException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
-        ScheduledFutureTask<Boolean> t = new ScheduledFutureTask<Boolean>
-            (command, Boolean.TRUE,
+        ScheduledFutureTask<?> t = new ScheduledFutureTask<Object>
+            (command, null,
              triggerTime,
              unit.toNanos(period), 
              true);
@@ -383,15 +383,15 @@ public class ScheduledThreadPoolExecutor
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if delay less than or equal to zero.
      */
-    public ScheduledFuture<Boolean> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
         if (delay <= 0)
             throw new IllegalArgumentException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
-        ScheduledFutureTask<Boolean> t = new ScheduledFutureTask<Boolean>
+        ScheduledFutureTask<?> t = new ScheduledFutureTask<Boolean>
             (command, 
-             Boolean.TRUE,
+             null,
              triggerTime,
              unit.toNanos(delay), 
              false);

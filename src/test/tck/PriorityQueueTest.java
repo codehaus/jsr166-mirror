@@ -102,7 +102,9 @@ public class PriorityQueueTest extends JSR166TestCase {
 
     public void testConstructor7(){
         try {
-            PriorityQueue q = new PriorityQueue(SIZE, new MyReverseComparator());
+            MyReverseComparator cmp = new MyReverseComparator();
+            PriorityQueue q = new PriorityQueue(SIZE, cmp);
+            assertEquals(cmp, q.comparator());
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);

@@ -150,10 +150,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         ThreadPoolExecutor one = new ThreadPoolExecutor(1, 1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         try {
             assertEquals(0, one.getTaskCount());
-            for(int i = 0; i < 5; i++)
-                one.execute(new MediumRunnable());
+            one.execute(new MediumRunnable());
             Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(5, one.getTaskCount());
+            assertEquals(1, one.getTaskCount());
         } catch(Exception e){
             fail("unexpected exception");
         } 

@@ -69,7 +69,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
     }
 
     /**
-     *  tes to verify enumeration returns an enumeration containing the correct elements
+     *   enumeration returns an enumeration containing the correct
+     *   elements
      */
     public void testEnumeration(){
         ConcurrentHashMap map = map5();
@@ -80,6 +81,15 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
 	    e.nextElement();
 	}
 	assertEquals(5, count);
+    }
+
+    /**
+     *   Clone creates an equal map
+     */
+    public void testClone(){
+        ConcurrentHashMap map = map5();
+        ConcurrentHashMap m2 = (ConcurrentHashMap)(map.clone());
+	assertEquals(map, m2);
     }
 
     /**

@@ -34,6 +34,24 @@ public class ThreadTest extends JSR166TestCase {
         current.setUncaughtExceptionHandler(null);
 	assertEquals(tg, current.getUncaughtExceptionHandler());
     }
+
+    public void testGetAndSetDefaultUncaughtExceptionHandler() {
+        assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
+        // failure due to securityException is OK.
+        // Would be nice to explicitly test both ways, but cannot yet.
+        try {
+            Thread current = Thread.currentThread();
+            ThreadGroup tg = current.getThreadGroup();
+            MyHandler eh = new MyHandler();
+            assertEquals(tg, current.getUncaughtExceptionHandler());
+            Thread.setDefaultUncaughtExceptionHandler(eh);
+            Thread.setDefaultUncaughtExceptionHandler(null);
+            assertEquals(tg, current.getUncaughtExceptionHandler());
+        }
+        catch(SecurityException ok) {
+        }
+        assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
+    }
     
     // How to test actually using UEH within junit?
 

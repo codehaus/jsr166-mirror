@@ -41,9 +41,8 @@ import java.io.*;
  * methods, etc) needed to reach a timeout point. Similarly, a SMALL
  * is always discriminable as larger than SHORT and smaller than
  * MEDIUM.  And so on. These constants are set to conservative values,
- * (100, 500, 1000, 5000 MS) but even so, if there is ever any doubt,
- * they can all be increased in one spot to rerun tests on slower
- * platforms</li>
+ * but even so, if there is ever any doubt, they can all be increased
+ * in one spot to rerun tests on slower platforms</li>
  *
  * <li> All threads generated must be joined inside each test case
  * method (or <tt>fail</tt> to do so) before returning from the
@@ -54,6 +53,31 @@ import java.io.*;
  */
 public class JSR166TestCase extends TestCase {
 
+    public static long SHORT_DELAY_MS;
+    public static long SMALL_DELAY_MS;
+    public static long MEDIUM_DELAY_MS;
+    public static long LONG_DELAY_MS;
+
+
+    /**
+     * Return the shortest timed delay. This could
+     * be reimplmented to use for example a Property.
+     */ 
+    protected long getShortDelay() {
+        return 50;
+    }
+
+
+    /**
+     * Set delays as multiples fo SHORT_DELAY.
+     */
+    protected  void setDelays() {
+        SHORT_DELAY_MS = getShortDelay();
+        SMALL_DELAY_MS = SHORT_DELAY_MS * 5;
+        MEDIUM_DELAY_MS = SHORT_DELAY_MS * 10;
+        LONG_DELAY_MS = SHORT_DELAY_MS * 50;
+    }
+
     /**
      * Flag set true if any threadAssert methods fail
      */
@@ -63,6 +87,7 @@ public class JSR166TestCase extends TestCase {
      * Initialize test to indicat that no thread assertions have failed
      */
     public void setUp() { 
+        setDelays();
         threadFailed = false;  
     }
 
@@ -121,10 +146,6 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public static final long SHORT_DELAY_MS =   100; 
-    public static final long SMALL_DELAY_MS =   500; 
-    public static final long MEDIUM_DELAY_MS = 1000;
-    public static final long LONG_DELAY_MS =   5000; 
 
 
     /**

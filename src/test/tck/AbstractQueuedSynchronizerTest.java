@@ -32,7 +32,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         private static class Sync extends AbstractQueuedSynchronizer {
             boolean isLocked() { return getState() == 1; }
 
-            public boolean tryAcquireExclusive(boolean isQueued, int acquires) {
+            public boolean tryAcquireExclusive(int acquires) {
                 assert acquires == 1; // Does not use multiple acquires
                 return compareAndSetState(0, 1);
             }
@@ -57,7 +57,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
          
         private final Sync sync = new Sync();
         public boolean tryLock() { 
-            return sync.tryAcquireExclusive(false, 1);
+            return sync.tryAcquireExclusive(1);
         }
         public void lock() { 
             sync.acquireExclusiveUninterruptibly(1);

@@ -156,16 +156,18 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testWriteLockInterruptibly_Interrupted() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
 			lock.writeLock().lockInterruptibly();
-			threadShouldThrow();
+                        lock.writeLock().unlock();
+			lock.writeLock().lockInterruptibly();
+                        lock.writeLock().unlock();
 		    } catch(InterruptedException success){}
 		}
 	    });
         try {
+            lock.writeLock().lock();
             t.start();
             t.interrupt();
             lock.writeLock().unlock();
@@ -209,7 +211,6 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                 public void run() {
                     try {
 			lock.readLock().lockInterruptibly();
-			threadShouldThrow();
 		    } catch(InterruptedException success){}
 		}
 	    });

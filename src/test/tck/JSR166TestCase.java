@@ -90,7 +90,12 @@ public class JSR166TestCase extends TestCase {
      * Runs all JSR166 unit tests using junit.textui.TestRunner
      */ 
     public static void main (String[] args) {
-        junit.textui.TestRunner.run (suite());
+        int iters = 1;
+        if (args.length > 0) 
+            iters = Integer.parseInt(args[0]);
+        Test s = suite();
+        for (int i = 0; i < iters; ++i) 
+            junit.textui.TestRunner.run (s);
     }
 
     /**

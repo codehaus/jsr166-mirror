@@ -327,41 +327,79 @@
       </fileset>
     </copy>
 
+    <!-- Not needed now, used for doccheck filtering:
+    <property name="generic.declarations"
+             value="public interface E {} public interface T {} public interface K {} public interface V {}"
+    />
+    -->
+
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
         <exclude name="**/*.html"/>
         <patternset refid="emulation.excludes"/>
       </fileset>
       <filterchain>
+
+        <!--
+         # This filter gets rid of angle-bracketed type parameters
+         # so that javadoc can run on the result. The following
+         # heuristic seems to work:
+         #
+         # For all lines not starting with space(s)-asterisk-space(s),
+         #   replace <something> with a space, where there may be more
+         #   than one right angle bracket at the end, and "something"
+         #   must not contain parens or pipes. (This may need some
+         #   tweaking.)
+         -->
+
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"
                       classpath="${build.ant.dir}">
-          <!--
-           # These arguments are to get rid of angle-bracketed type
-           # parameters so that javadoc can run on the result. The
-           # following heuristic that seems to work:
-           #
-           # For all lines not starting with space(s)-asterisk-space(s),
-           #   replace <something> with a space, where there may be more
-           #   than one right angle bracket at the end, and "something"
-           #   must not contain parens or pipes. (This may need some
-           #   tweaking.)
-           -->
           <param name="notmatching" value="^\s+\*\s.*$"/>
-          <param name="pattern" value="&lt;[^|>()]+?>+"/>
+          <param name="pattern"     value="&lt;[^|>()]+?>+"/>
           <param name="replacement" value=" "/>
         </filterreader>
+
+
+        <!--
+         # This filter uncomments lines beginning with "//@" so that
+         # javadoc can see imports that are needed to resolve links
+         # but that shouldn't be in the compiled code.
+         -->
+
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"
                       classpath="${build.ant.dir}">
-          <!--
-           # These arguments are to uncomment lines beginning with
-           # "//@" so that javadoc can see imports that are needed
-           # to resolve links but that shouldn't be in the compiled
-           # code.
-           -->
-          <param name="matching" value="^//@.*$"/>
-          <param name="pattern" value="^//@"/>
+          <param name="matching"    value="^//@.*$"/>
+          <param name="pattern"     value="^//@"/>
           <param name="replacement" value=""/>
         </filterreader>
+
+
+        <!--
+         # The next two filters try to make the source look like
+         # something that doccheck can process. The first removes
+         # -source 1.4 assertions and the second adds in a bunch
+         # of single letter public nested marker interfaces so that
+         # the generic type parameters are recognized.
+         #
+         # Currently commented out because doccheck doesn't work. :-(
+         -->
+
+        <!--
+        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
+                      classpath="${build.ant.dir}">
+          <param name="matching"    value="^\s*assert[\s ].*$"/>
+          <param name="pattern"     value="assert"/>
+          <param name="replacement" value="//assert"/>
+        </filterreader>
+
+        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
+                      classpath="${build.ant.dir}">
+          <param name="matching"    value="^(.*(class|interface|implements) .*|)\{.*$"/>
+          <param name="pattern"     value="$"/>
+          <param name="replacement" value=" ${generic.declarations}"/>
+        </filterreader>
+        -->
+
       </filterchain>
     </copy>
 

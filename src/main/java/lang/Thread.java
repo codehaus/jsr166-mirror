@@ -1442,7 +1442,7 @@ class Thread implements Runnable {
 
     /**
      * Return the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception. If this thread has not had it's
+     * due to an uncaught exception. If this thread has not had its
      * handler explicitly set, then the 
      * {@link #setDefaultUncaughtExceptionHandler default handler} will be
      * returned. If there is no default handler then the thread's

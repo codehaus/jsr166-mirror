@@ -22,7 +22,7 @@ public class DelayQueueTest extends JSR166TestCase {
     private static final int NOCAP = Integer.MAX_VALUE;
 
     /**
-     * A delayed implmentation for testing.
+     * A delayed implementation for testing.
      * Most  tests use Pseudodelays, where delays are all elapsed
      * (so, no blocking solely for delays) but are still ordered
      */ 
@@ -764,7 +764,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatable array type throws CCE
+     * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
 	try {
@@ -853,7 +853,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
 
     /**
-     * Dekayed actions do not occur until their delay elapses
+     * Delayed actions do not occur until their delay elapses
      */
     public void testDelay() {
         DelayQueue q = new DelayQueue();

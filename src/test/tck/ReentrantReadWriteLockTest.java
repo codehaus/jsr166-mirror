@@ -176,7 +176,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     } 
 
     /**
-     * timed write-trylock is interruptible
+     * timed write-tryLock is interruptible
      */
     public void testWriteTryLock_Interrupted() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -224,7 +224,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     } 
 
     /**
-     * timed read-trylock is interruptible
+     * timed read-tryLock is interruptible
      */
     public void testReadTryLock_Interrupted() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -248,7 +248,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 
     
     /**
-     * write-trylock fails if locked
+     * write-tryLock fails if locked
      */
     public void testWriteTryLockWhenLocked() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -268,7 +268,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     } 
 
     /**
-     * read-trylock fails if locked
+     * read-tryLock fails if locked
      */
     public void testReadTryLockWhenLocked() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -378,7 +378,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 
 
     /**
-     * Read trylock succeeds if readlocked but not writelocked
+     * Read tryLock succeeds if readlocked but not writelocked
      */
     public void testTryLockWhenReadLocked() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -401,7 +401,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     
 
     /**
-     * write trylock fails when readlocked
+     * write tryLock fails when readlocked
      */
     public void testWriteTryLockWhenReadLocked() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -423,7 +423,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     
 
     /**
-     * write timed trylock times out if locked
+     * write timed tryLock times out if locked
      */
     public void testWriteTryLock_Timeout() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -447,7 +447,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     } 
 
     /**
-     * read timed trylock times out if write-locked
+     * read timed tryLock times out if write-locked
      */
     public void testReadTryLock_Timeout() { 
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();

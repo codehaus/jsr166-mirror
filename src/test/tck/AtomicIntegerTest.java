@@ -27,7 +27,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
     }
 
     /**
-     * default constructed intializes to zero
+     * default constructed initializes to zero
      */
     public void testConstructor2(){
         AtomicInteger ai = new AtomicInteger();

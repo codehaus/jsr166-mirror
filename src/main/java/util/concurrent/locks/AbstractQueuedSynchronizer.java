@@ -439,7 +439,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /*
      * Mode words are used internally to handle combinations of
-     * interruptiblity and timeout.  These are OR'ed together as
+     * interruptibility and timeout.  These are OR'ed together as
      * appropriate for arguments and results.
      */
 
@@ -762,7 +762,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     private void unparkSuccessor(Node node) {
         /*
          * Reset status before unparking. This improves performance
-         * when called from a releaase method to enable next thread: A
+         * when called from a release method to enable next thread: A
          * given head-node can be in effect across multiple releases
          * that acquired by barging. When they do so, and later
          * release, the successor that lost a previous race and
@@ -1062,7 +1062,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Transfer a node from a condition queue onto sync queue. 
      * Return true if successful.
      * @param node the node
-     * @return true if succesfully transferred (else the node was
+     * @return true if successfully transferred (else the node was
      * cancelled before signal).
      */
     final boolean transferForSignal(Node node) {
@@ -1075,7 +1075,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         /*
          * Splice onto queue and try to set status of predecessor to
          * indicate that thread is (probably) waiting. If cancelled or
-         * attempt to set status fails, wake up to resynch (in which
+         * attempt to set status fails, wake up to resync (in which
          * case the status can be transiently/harmlessly wrong).
          */
         enq(node);

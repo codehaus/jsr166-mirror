@@ -175,7 +175,7 @@ public class TimeUnitTest extends JSR166TestCase {
 
 
     /**
-     * toString returns string containing commn name of unit
+     * toString returns string containing common name of unit
      */
     public void testToString() {
         String s = TimeUnit.SECONDS.toString();

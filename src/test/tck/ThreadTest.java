@@ -25,7 +25,7 @@ public class ThreadTest extends JSR166TestCase {
     
     /**
      * getUncaughtExceptionHandler returns ThreadGroup unless set,
-     * otherwise returning vlaue of last setUncaughtExceptionHandler.
+     * otherwise returning value of last setUncaughtExceptionHandler.
      */
     public void testGetAndSetUncaughtExceptionHandler() {
         // these must be done all at once to avoid state

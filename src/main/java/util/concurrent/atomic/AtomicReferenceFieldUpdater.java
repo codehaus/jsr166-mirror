@@ -59,7 +59,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
-        // Currently rely on standard instrinsics implementation
+        // Currently rely on standard intrinsics implementation
         return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass, 
                                                         vclass, 
                                                         fieldName);

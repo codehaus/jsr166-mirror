@@ -26,7 +26,7 @@ import java.util.*;
  *
  * <p>Synchronous queues are similar to rendezvous channels used in
  * CSP and Ada. They are well suited for handoff designs, in which an
- * object running in one thread must synch up with an object running
+ * object running in one thread must sync up with an object running
  * in another thread in order to hand it some information, event, or
  * task.
  * <p>This class implements all of the <em>optional</em> methods

@@ -101,7 +101,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     private static final int DEFAULT_SEGMENTS = 16;
 
     /**
-     * The maximum number of segments to allow; used to bound ctor arguments.
+     * The maximum number of segments to allow; used to bound
+     * constructor arguments.
      */
     private static final int MAX_SEGMENTS = 1 << 16; // slightly conservative
 
@@ -131,7 +132,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Return a hash code for non-null Object x.
-     * Uses the same hash code spreader as most other j.u hash tables.
+     * Uses the same hash code spreader as most other java.util hash tables.
      * @param x the object serving as a key
      * @return the hash code
      */

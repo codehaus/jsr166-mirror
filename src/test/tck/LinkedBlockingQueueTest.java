@@ -732,7 +732,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatable array type throws CCE
+     * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
 	try {

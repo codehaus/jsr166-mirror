@@ -22,7 +22,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     * Contruction with non-existent field throws RuntimeException
+     * Construction with non-existent field throws RuntimeException
      */
     public void testConstructor() {
         try{

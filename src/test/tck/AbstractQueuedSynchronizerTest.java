@@ -119,7 +119,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     }
 
     /**
-     * trylock on an unlocked lock succeeds
+     * tryLock on an unlocked lock succeeds
      */
     public void testTryLock() { 
 	Mutex rl = new Mutex();
@@ -158,7 +158,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     } 
 
     /**
-     * timed trylock is interruptible.
+     * timed tryLock is interruptible.
      */
     public void testInterruptedException2() { 
 	final Mutex lock = new Mutex();
@@ -181,7 +181,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
 
     /**
-     * Trylock on a locked lock fails
+     * TryLock on a locked lock fails
      */
     public void testTryLockWhenLocked() { 
 	final Mutex lock = new Mutex();
@@ -201,7 +201,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     } 
 
     /**
-     * Timed trylock on a locked lock times out
+     * Timed tryLock on a locked lock times out
      */
     public void testTryLock_Timeout() { 
 	final Mutex lock = new Mutex();

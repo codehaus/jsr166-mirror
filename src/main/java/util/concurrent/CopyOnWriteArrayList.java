@@ -977,7 +977,7 @@ public class CopyOnWriteArrayList<E>
      *     (fromIndex &lt; 0 || toIndex &gt; size || fromIndex &gt; toIndex).
      */
     public synchronized List<E> subList(int fromIndex, int toIndex) {
-        // synchronized since sublist ctor depends on it.
+        // synchronized since sublist constructor depends on it.
         int len = array.length;
         if (fromIndex<0 || toIndex>len  || fromIndex>toIndex)
             throw new IndexOutOfBoundsException();

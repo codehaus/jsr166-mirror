@@ -27,7 +27,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
-     * default constructed intializes to false
+     * default constructed initializes to false
      */
     public void testConstructor2() {
         AtomicBoolean ai = new AtomicBoolean();

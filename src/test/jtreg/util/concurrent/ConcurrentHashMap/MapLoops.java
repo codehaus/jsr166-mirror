@@ -6,8 +6,8 @@
  * @summary Exercise multithreaded maps, by default ConcurrentHashMap.
  * Multithreaded hash table test.  Each thread does a random walk
  * though elements of "key" array. On each iteration, it checks if
- * table includes key.  If absent, with probablility pinsert it
- * inserts it, and if present, with probablility premove it removes
+ * table includes key.  If absent, with probability pinsert it
+ * inserts it, and if present, with probability premove it removes
  * it.  (pinsert and premove are expressed as percentages to simplify
  * parsing from command line.)
  */

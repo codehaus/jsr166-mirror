@@ -93,7 +93,7 @@ import java.util.*;
  * to shut down.
  * </dd>
  *
- * <dt>Queueing</dt>
+ * <dt>Queuing</dt>
  *
  * <dd>Any {@link BlockingQueue} may be used to transfer and hold
  * submitted tasks.  The use of this queue interacts with pool sizing:
@@ -102,7 +102,7 @@ import java.util.*;
  *
  * <li> If fewer than corePoolSize threads are running, the Executor
  * always prefers adding a new thread
- * rather than queueing.</li>
+ * rather than queuing.</li>
  *
  * <li> If corePoolSize or more threads are running, the Executor
  * always prefers queuing a request rather than adding a new
@@ -195,7 +195,7 @@ import java.util.*;
  * It is possible to define and use other kinds of {@link
  * RejectedExecutionHandler} classes. Doing so requires some care
  * especially when policies are designed to work only under particular
- * capacity or queueing policies. </dd>
+ * capacity or queuing policies. </dd>
  *
  * <dt>Hook methods</dt>
  *
@@ -891,7 +891,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             if (workers.size() > 0) {
                 // Check if caller can modify worker threads.
                 // This might not be true even if passed above check,
-                // if the securityManager treats some threads specially.
+                // if the SecurityManager treats some threads specially.
                 if (security != null) {
                     for (Worker w: workers)
                         security.checkAccess(w.thread);

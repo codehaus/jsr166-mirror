@@ -75,7 +75,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     * tryAcquire succeeds when sufficent permits, else fails
+     * tryAcquire succeeds when sufficient permits, else fails
      */
     public void testTryAcquireInSameThread() {
         Semaphore s = new Semaphore(2, false);
@@ -433,7 +433,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     * tryAcquire succeeds when sufficent permits, else fails
+     * tryAcquire succeeds when sufficient permits, else fails
      */
     public void testTryAcquireInSameThread_fair() {
         Semaphore s = new Semaphore(2, true);
@@ -445,7 +445,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     * tryAcquire(n) succeeds when sufficent permits, else fails
+     * tryAcquire(n) succeeds when sufficient permits, else fails
      */
     public void testTryAcquireNInSameThread_fair() {
         Semaphore s = new Semaphore(2, true);

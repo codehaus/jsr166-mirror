@@ -269,7 +269,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     * A deserialized seriealized set is equal
+     * A deserialized serialized set is equal
      */
     public void testSerialization() {
         CopyOnWriteArraySet q = populatedSet(SIZE);

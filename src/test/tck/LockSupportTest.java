@@ -20,7 +20,7 @@ public class LockSupportTest extends JSR166TestCase{
     }
 
     /**
-     * park is released by unpark occuring after park
+     * park is released by unpark occurring after park
      */
     public void testPark() { 
 	Thread t = new Thread(new Runnable() {
@@ -44,7 +44,7 @@ public class LockSupportTest extends JSR166TestCase{
     }
 
     /**
-     * park is released by unpark occuring before park
+     * park is released by unpark occurring before park
      */
     public void testPark2() { 
 	Thread t = new Thread(new Runnable() {

@@ -18,7 +18,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
     }
     
     /**
-     * constructeor initializes to given reference and stamp
+     * constructor initializes to given reference and stamp
      */
     public void testConstructor(){
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);

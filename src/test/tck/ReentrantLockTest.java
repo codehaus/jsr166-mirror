@@ -107,7 +107,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
-     * trylock on an unlocked lock succeeds
+     * tryLock on an unlocked lock succeeds
      */
     public void testTryLock() { 
 	ReentrantLock rl = new ReentrantLock();
@@ -209,7 +209,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 
 
     /**
-     * timed trylock is interruptible.
+     * timed tryLock is interruptible.
      */
     public void testInterruptedException2() { 
 	final ReentrantLock lock = new ReentrantLock();
@@ -232,7 +232,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 
 
     /**
-     * Trylock on a locked lock fails
+     * TryLock on a locked lock fails
      */
     public void testTryLockWhenLocked() { 
 	final ReentrantLock lock = new ReentrantLock();
@@ -252,7 +252,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     } 
 
     /**
-     * Timed trylock on a locked lock times out
+     * Timed tryLock on a locked lock times out
      */
     public void testTryLock_Timeout() { 
 	final ReentrantLock lock = new ReentrantLock();

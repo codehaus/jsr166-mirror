@@ -86,7 +86,7 @@ public class FutureTaskTest extends JSR166TestCase {
 
 
     /**
-     * setting value gauses get to return it
+     * setting value causes get to return it
      */
     public void testSet() {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());

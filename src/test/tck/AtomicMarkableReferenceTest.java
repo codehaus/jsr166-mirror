@@ -18,7 +18,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     }
     
     /**
-     *  constructeor initializes to given reference and mark
+     *  constructor initializes to given reference and mark
      */
     public void testConstructor(){
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);

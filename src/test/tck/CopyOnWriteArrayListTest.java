@@ -141,7 +141,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase{
     }
 
     /**
-     * adding at an index places it in the indindicated index
+     * adding at an index places it in the indicated index
      */
     public void testAddIndex() {
 	CopyOnWriteArrayList full = populatedArray(3);

@@ -655,7 +655,7 @@ class Thread implements Runnable {
      */
     public final void stop() {
 	synchronized (this) {
-            //if the thread is alreay dead, return
+            //if the thread is already dead, return
             if (!this.isAlive()) return;
 	    SecurityManager security = System.getSecurityManager();
 	    if (security != null) {

@@ -43,7 +43,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
     /**
-     * Seialization ID. This class relies on default serialzation even
+     * Serialization ID. This class relies on default serialization even
      * for the items array is default-serialized, even if it is
      * empty. Otherwise it could not be declared final, which is
      * necessary here.

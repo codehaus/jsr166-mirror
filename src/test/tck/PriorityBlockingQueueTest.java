@@ -153,7 +153,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * remainingCapacity does not change when elementa added or removed,
+     * remainingCapacity does not change when elements added or removed,
      * but size does
      */
     public void testRemainingCapacity() {
@@ -725,7 +725,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatable array type throws CCE
+     * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
 	try {

@@ -64,7 +64,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/16 00:17:00 $
+ * @revised $Date: 2003/08/16 00:48:20 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -188,13 +188,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         suspend/resume (plus timeout support) that avoid the intrinsic
         race problems with suspend/resume: Park suspends if not
         preceded by an unpark. Unpark resumes if waiting, else causes
-        next park not to suspend. While safe and efficient, these are
-        not general-purpose public operations because we cannot allow
-        code outside this package to randomly call these methods --
-        parks and unparks should be matched up. (It is OK to have more
-        unparks than unparks, but it causes threads to spuriously wake
-        up. So minimizing excessive unparks is a performance concern.)
-
+        next park not to suspend. 
     */
 
     /**
@@ -356,18 +350,17 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         ReentrantLockQueueNode t;
         while ( (t = tail) == null) {
             ReentrantLockQueueNode h = new ReentrantLockQueueNode();
-            if (headUpdater.compareAndSet(this, null, h)) {
+            if (headUpdater.compareAndSet(this, null, h)) 
                 tail = h;
-                break;
-            }
         }
-
-        ReentrantLockQueueNode p;
-        do {
-            node.prev = p = tail; // prev must be valid before/upon CAS
-        } while (!tailUpdater.compareAndSet(this, p, node));
-        p.next = node;      // Note: next field assignment lags CAS
-        return p;
+        for (;;) {
+            node.prev = t;      // Prev field must be valid before/upon CAS
+            if (tailUpdater.compareAndSet(this, t, node)) {
+                t.next = node;  // Next field assignment lags CAS
+                return t;
+            }
+            t = tail;
+        } 
     }
 
     /**

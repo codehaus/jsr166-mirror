@@ -18,15 +18,25 @@ import java.util.*;
 
 public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     implements BlockingQueue<E> {
-    
+
     private transient final ReentrantLock lock = new ReentrantLock();
     private transient final Condition available = lock.newCondition();
     private final PriorityQueue<E> q = new PriorityQueue<E>();
 
     /**
-     * Creates a new DelayQeueu
+     * Creates a new DelayQueue with no elements
      */
     public DelayQueue() {}
+
+    /**
+     * Create a new DelayQueue with elements taken from the given
+     * collection of {@link Delayed} instances.
+     *
+     * @fixme Should the body be wrapped with try-lock-finally-unlock?
+     */
+    public DelayQueue(Collection<? extends E> c) {
+        this.addAll(c);
+    }
 
     public boolean offer(E x) {
         lock.lock();
@@ -71,7 +81,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                         if (q.size() != 0)
                             available.signalAll(); // wake up other takers
                         return x;
-                        
+
                     }
                 }
             }
@@ -105,7 +115,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                         E x = q.poll();
                         assert x != null;
                         if (q.size() != 0)
-                            available.signalAll(); 
+                            available.signalAll();
                         return x;
                     }
                 }
@@ -127,7 +137,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                 E x = q.poll();
                 assert x != null;
                 if (q.size() != 0)
-                    available.signalAll(); 
+                    available.signalAll();
                 return x;
             }
         }
@@ -212,15 +222,15 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
     private class Itr<E> implements Iterator<E> {
         private final Iterator<E> iter;
-        Itr(Iterator<E> i) { 
-            iter = i; 
+        Itr(Iterator<E> i) {
+            iter = i;
         }
 
-	public boolean hasNext() {
+        public boolean hasNext() {
             return iter.hasNext();
-	}
-        
-	public E next() {
+        }
+
+        public E next() {
             lock.lock();
             try {
                 return iter.next();
@@ -228,9 +238,9 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             finally {
                 lock.unlock();
             }
-	}
-        
-	public void remove() {
+        }
+
+        public void remove() {
             lock.lock();
             try {
                 iter.remove();
@@ -238,7 +248,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             finally {
                 lock.unlock();
             }
-	}
+        }
     }
 
 }

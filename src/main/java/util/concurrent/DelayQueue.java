@@ -19,6 +19,10 @@ import java.util.*;
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Collection} and {@link Iterator} interfaces.
  *
+ * <p>This class and its iterator implement all of the
+ * <em>optional</em> methods of the {@link Collection} and {@link
+ * Iterator} interfaces. 
+ *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
@@ -303,6 +307,10 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Removes a single instance of the specified element from this
+     * collection, if it is present.
+     */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;
         lock.lock();

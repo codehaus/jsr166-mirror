@@ -27,16 +27,22 @@ import java.util.Queue;
  * A <tt>BlockingQueue</tt> without any intrinsic capacity constraints always
  * reports a remaining capacity of <tt>Integer.MAX_VALUE</tt>.
  *
- * <p> While <tt>BlockingQueue</tt> is designed to be used primarily
- * for producer-consumer queues, it additionally supports the {@link
- * java.util.Collection} interface.  So, for example, it is possible
- * to remove an arbitrary element from a queue using
+ * <p> <tt>BlockingQueue</tt> implementations are designed to be used
+ * primarily for producer-consumer queues, but additionally support
+ * the {@link java.util.Collection} interface.  So, for example, it is
+ * possible to remove an arbitrary element from a queue using
  * <tt>remove(x)</tt>. However, such operations are in general
  * <em>not</em> performed very efficiently, and are intended for only
- * occasional use, such as when a queued message is cancelled.  Also,
- * the bulk Collection operations, most notably <tt>addAll</tt>, are
- * <em>not</em> necessarily performed atomically, so it is possible
- * for <tt>addAll(c)</tt> to fail (throwing an exception) after adding
+ * occasional use, such as when a queued message is cancelled.
+ *
+ * <p> <tt>BlockingQueue</tt> implementations are thread-safe.  All
+ * queuing methods achieve their effects atomically using internal
+ * locks or other forms of concurrency control. However, the
+ * <em>bulk</em> Collection operations <tt>addAll</tt>,
+ * <tt>containsAll</tt>, <tt>retainAll</tt> and <tt>removeAll</tt> are
+ * <em>not</em> necessarily performed atomically unless specified
+ * otherwise in an implementation. So it is possible, for example, for
+ * <tt>addAll(c)</tt> to fail (throwing an exception) after adding
  * only some of the elements in <tt>c</tt>.
  *
  * <p>A <tt>BlockingQueue</tt> does <em>not</em> intrinsically support

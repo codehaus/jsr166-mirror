@@ -33,7 +33,7 @@ import java.util.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces.
+ * Iterator} interfaces. 
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -294,7 +294,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-
+    /**
+     * Removes a single instance of the specified element from this
+     * collection, if it is present.
+     */
     public boolean remove(Object o) {
         if (o == null) return false;
         final E[] items = this.items;
@@ -486,6 +489,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
 
+    /**
+     * Atomically removes all of the elements from this queue.
+     * The queue will be empty after this call returns.
+     */
     public void clear() {
         final E[] items = this.items;
         final ReentrantLock lock = this.lock;

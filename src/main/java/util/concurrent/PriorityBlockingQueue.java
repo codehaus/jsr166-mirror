@@ -26,6 +26,10 @@ import java.util.*;
  * PriorityBlockingQueue in any particular order. If you need ordered
  * traversal, consider using <tt>Arrays.sort(pq.toArray())</tt>.
  *
+ * <p>This class and its iterator implement all of the
+ * <em>optional</em> methods of the {@link Collection} and {@link
+ * Iterator} interfaces. 
+ *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
@@ -271,6 +275,10 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return Integer.MAX_VALUE;
     }
 
+    /**
+     * Removes a single instance of the specified element from this
+     * collection, if it is present.
+     */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -355,7 +363,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Atomically removes all of the elements from this delay queue.
+     * Atomically removes all of the elements from this queue.
      * The queue will be empty after this call returns.
      */
     public void clear() {

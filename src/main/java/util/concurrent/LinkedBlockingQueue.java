@@ -445,6 +445,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Removes a single instance of the specified element from this
+     * collection, if it is present.
+     */
     public boolean remove(Object o) {
         if (o == null) return false;
         boolean removed = false;
@@ -512,6 +516,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Atomically removes all of the elements from this queue.
+     * The queue will be empty after this call returns.
+     */
     public void clear() {
         fullyLock();
         try {

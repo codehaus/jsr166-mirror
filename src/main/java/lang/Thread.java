@@ -560,8 +560,13 @@ class Thread implements Runnable {
 	    group.remove(this);
 	    group = null;
 	}
-	/* Aggressively null object connected to Thread: see bug 4006245 */
+	/* Aggressively null out all reference fields: see bug 4006245 */
 	target = null;
+        threadLocals = null;
+        inheritableThreadLocals = null;
+        inheritedAccessControlContext = null;
+        blocker = null;
+        uncaughtExceptionHandler = null; 
     }
 
     /** 
@@ -1459,7 +1464,8 @@ class Thread implements Runnable {
      * <tt>null</tt> then the current 
      * {@link #setDefaultUncaughtExceptionHandler default handler} is
      * returned. If there is no default handler then the thread's
-     * <tt>ThreadGroup</tt> object is returned.
+     * <tt>ThreadGroup</tt> object is returned unless this thread
+     * has died, in which case <tt>null</tt> is returned.
      * @since 1.5
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() { 

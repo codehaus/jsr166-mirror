@@ -5,7 +5,7 @@ package java.util.concurrent;
  * providing methods to query the computation to see if it is
  * complete, wait for its completion, and retrieve the result of the
  * computation.  The result can only be retrieved when the computation
- * has completed; the get() method will block if the computation has
+ * has completed; the <tt>get</tt> method will block if the computation has
  * not yet completed.  Once the computation is completed, the result
  * cannot be changed, nor can the computation be restarted or
  * cancelled.
@@ -36,13 +36,13 @@ package java.util.concurrent;
  * </pre>
  * @see FutureTask
  * @see Executor
- **/
+ */
 public interface Future<V> {
 
     /**
      * Return true if the underlying task has completed.
-     **/
-    public boolean isDone();
+     */
+    boolean isDone();
 
     /**
      * Wait if necessary for computation to complete, and then
@@ -50,8 +50,8 @@ public interface Future<V> {
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws ExecutionException if the underlying computation
      * threw an exception.
-     **/
-    public V get() throws InterruptedException, ExecutionException;
+     */
+    V get() throws InterruptedException, ExecutionException;
 
     /**
      * Wait if necessary for at most the given time for the computation
@@ -62,8 +62,7 @@ public interface Future<V> {
      * @throws TimeOutException if the wait timed out
      * @throws ExecutionException if the underlying computation
      * threw an exception.
-     **/
-    public V get(long timeout, TimeUnit granularity)
+     */
+    V get(long timeout, TimeUnit granularity)
         throws InterruptedException, ExecutionException;
-
 }

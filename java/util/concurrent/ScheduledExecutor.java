@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.util.*;
-
 /**
  * A ScheduledExecutor is an Executor which can schedule tasks to run
  * at a given future time, or execute periodically. Tasks submitted
@@ -10,7 +8,7 @@ import java.util.*;
  * when you need multiple worker threads or the additional flexibility
  * or capabilities of <tt>ThreadExecutor</tt>.
  * @see ThreadExecutor
- * */
+ */
 public class ScheduledExecutor extends ThreadExecutor {
 
     public ScheduledExecutor(int minThreads,
@@ -25,7 +23,7 @@ public class ScheduledExecutor extends ThreadExecutor {
     /**
      * A ScheduledTask is a delayed or periodic task that can be run
      * by a ScheduledExecutor.
-     **/
+     */
     public abstract class ScheduledTask implements Runnable, Cancellable, Comparable {
         /** Return the time this task can run next,
          * in requested units.
@@ -42,7 +40,7 @@ public class ScheduledExecutor extends ThreadExecutor {
      * A ScheduledFutureTask is a delayed result-bearing action that
      * can be run by a ScheduledExecutor.
      * @see Future
-     **/
+     */
     public abstract class ScheduledFutureTask extends ScheduledTask implements Future {
         ScheduledFutureTask() {
         }

@@ -5,7 +5,7 @@ package java.util.concurrent;
  * computation, providing methods to start and cancel the computation,
  * query to see if the computation is complete, and retrieve the
  * result of the computation.  The result can only be retrieved when
- * the computation has completed; the get() method will block if the
+ * the computation has completed; the <tt>get</tt> method will block if the
  * computation has not yet completed.  Once the computation is
  * completed, the result cannot be changed, nor can the computation be
  * restarted or cancelled.
@@ -23,7 +23,7 @@ package java.util.concurrent;
  * @see Future
  * @see Cancellable
  * @see Executor
- **/
+ */
 public class FutureTask<V> implements Runnable, Cancellable, Future {
 
     private V result;
@@ -36,7 +36,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
     /**
      * Construct a FutureTask that will upon running, execute the
      * given Callable.  
-     **/
+     */
     public FutureTask(Callable<V> callable) {
         this.callable = callable;
     }
@@ -50,7 +50,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
      * @param result the result to return on successful completion. If
      * you don't need a particular result, consider just using
      * <tt>Boolean.TRUE</tt>.
-     **/
+     */
     public FutureTask(final Runnable runnable, final V result) {
         callable = new Callable<V>() {
             public V call() {
@@ -63,7 +63,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
     /**
      * Return true if the underlying task has completed, either
      * normally or via cancellation.  
-     **/
+     */
     public synchronized boolean isDone() {
         return ready;
     }
@@ -75,7 +75,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
      * @throws CancellationException if task producing this value was cancelled before completion.
      * @throws ExecutionException if the underlying computation
      * threw an exception.
-     **/
+     */
     public synchronized V get() throws InterruptedException, ExecutionException {
         while (!ready)
             wait();
@@ -95,7 +95,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
      * @throws CancellationException if task producing this value was cancelled before completion.
      * @throws ExecutionException if the underlying computation
      * threw an exception.
-     **/
+     */
     public synchronized V get(long timeout, TimeUnit granularity)
         throws InterruptedException, ExecutionException {
 
@@ -131,7 +131,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
      * in-progress executions are allowed to complete.
      * @return true unless the task has already completed or already
      * been cancelled.  
-     **/
+     */
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
         if (ready || cancelled)
             return false;
@@ -144,7 +144,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
 
     /**
      * Return true if this task has been cancelled before completion.
-     **/
+     */
     public synchronized boolean isCancelled() {
         return cancelled;
     }
@@ -155,7 +155,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
      * is assumed to have completed.  
      * @@@brian We should guard against changing the value by throwing
      * an exception if the value has already been set!
-     **/
+     */
     protected synchronized void set(V v) {
         ready = true;
         result = v;
@@ -168,7 +168,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
      * is called, the computation is assumed to be completed, and any
      * attempt to retrieve the result will throw an ExecutionException
      * wrapping the exception provided here.
-     **/
+     */
     protected synchronized void setException(Throwable t) {
         ready = true;
         exception = t;
@@ -179,7 +179,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
     /**
      * Execute the callable if not already cancelled or running, and
      * set the value or exception with its results.
-     **/
+     */
     protected void doRun() {
         try {
             synchronized(this) {
@@ -198,5 +198,4 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
     public void run() {
         doRun();
     }
-
 }

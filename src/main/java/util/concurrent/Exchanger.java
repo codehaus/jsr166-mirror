@@ -64,7 +64,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:33 $
+ * @revised $Date: 2003/07/09 23:23:17 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -88,6 +88,18 @@ public class Exchanger<V> {
         lock.lock();
         try {
             V other;
+
+            // If arrival count already at two, we must wait for
+            // a previous pair to finish and reset the count;
+            while (arrivalCount == 2) {
+                if (!timed)
+                    taken.await();
+                else if (nanos > 0) 
+                    nanos = taken.awaitNanos(nanos);
+                else 
+                    throw new TimeoutException();
+            }
+
             int count = ++arrivalCount;
 
             // If item is already waiting, replace it and signal other thread
@@ -117,11 +129,13 @@ public class Exchanger<V> {
                 interrupted = ie;
             }
 
-            // get and reset item and count after the wait.
+            // Get and reset item and count after the wait.
+            // (We need to do this even if wait was aborted.)
             other = item;
             item = null;
             count = arrivalCount;
             arrivalCount = 0; 
+            taken.signal();
             
             // If the other thread replaced item, then we must
             // continue even if cancelled.
@@ -131,11 +145,9 @@ public class Exchanger<V> {
                 return other;
             }
 
-            // Otherwise, no one is waiting for us, so we can just back out
-            if (interrupted != null) {
-                taken.signal(); // propagate to any other waiting thread
+            // If no one is waiting for us, we can back out
+            if (interrupted != null) 
                 throw interrupted;
-            }
             else  // must be timeout
                 throw new TimeoutException();
         }

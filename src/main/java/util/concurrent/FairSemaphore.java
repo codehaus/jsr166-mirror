@@ -23,7 +23,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:33 $
+ * @revised $Date: 2003/07/09 23:23:17 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -281,7 +281,9 @@ public class FairSemaphore extends Semaphore {
      */
     public void release(long permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        lock.lock();
+        // Even if using fair locks, releases should try to barge in.
+        if (!lock.tryLock())
+            lock.lock();
         try {
             count += permits;
             for (int i = 0; i < permits; ++i)

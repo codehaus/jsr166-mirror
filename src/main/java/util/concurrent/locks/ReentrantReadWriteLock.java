@@ -112,7 +112,7 @@ import java.util.concurrent.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:42 $
+ * @revised $Date: 2003/07/09 23:23:22 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -217,9 +217,13 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     private boolean tryWriterEnter() {
         writeCheckLock.lock();
-        boolean ok = (exreaders == readers);
-        writeCheckLock.unlock();
-        return ok;
+        try {
+            boolean ok = (exreaders == readers);
+            return ok;
+        }
+        finally {
+            writeCheckLock.unlock();
+        }
     }
 
     /**
@@ -278,14 +282,22 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         public void lock() {
             entryLock.lock();
-            ++readers; 
-            entryLock.unlock();
+            try {
+                ++readers; 
+            }
+            finally {
+                entryLock.unlock();
+            }
         }
 
         public void lockInterruptibly() throws InterruptedException {
             entryLock.lockInterruptibly();
-            ++readers; 
-            entryLock.unlock();
+            try {
+                ++readers; 
+            }
+            finally {
+                entryLock.unlock();
+            }
         }
 
         public  boolean tryLock() {
@@ -296,19 +308,25 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 else
                     Thread.yield();
             }
-
-            ++readers; 
-            entryLock.unlock();
-            return true;
+            try {
+                ++readers; 
+                return true;
+            }
+            finally {
+                entryLock.unlock();
+            }
         }
 
         public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
             if (!entryLock.tryLock(time, unit)) 
                 return false;
-
-            ++readers; 
-            entryLock.unlock();
-            return true;
+            try {
+                ++readers; 
+                return true;
+            }
+            finally {
+                entryLock.unlock();
+            }
         }
 
         public  void unlock() {

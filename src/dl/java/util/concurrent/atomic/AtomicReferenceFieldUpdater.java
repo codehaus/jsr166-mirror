@@ -43,21 +43,22 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * @param field the field to be updated.
      * @throws IllegalArgumentException if the field is not a volatile reference type.
      **/
-    public AtomicReferenceFieldUpdater(Class klass, String fieldName) {
+    public AtomicReferenceFieldUpdater(T[] ta, V[] fa, String fieldName) {
         Field field = null;
+        Class fclass = null;
+        Class fieldClass = null;
         try {
-            field = klass.getDeclaredField(fieldName);
-
-            // test if receiver type OK by casting 0-length array
-            Class rk = field.getDeclaringClass();
-            T[] rtest = (T[])(Array.newInstance(rk, 0));
-            // Same for field type
-            Class fk = field.getType();
-            V[] ftest = (V[])(Array.newInstance(fk, 0));
+            Class tclass = ta.getClass().getComponentType();
+            field = tclass.getDeclaredField(fieldName);
+            fclass = fa.getClass().getComponentType();
+            fieldClass = field.getType();
         }
         catch(Exception ex) {
             throw new RuntimeException(ex);
         }
+
+        if (fclass != fieldClass)
+            throw new ClassCastException();
 
         if (!Modifier.isVolatile(field.getModifiers()))
             throw new IllegalArgumentException("Must be volatile type");
@@ -70,7 +71,7 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * by this Updater to the given updated value if the current value
      * <tt>==</tt> the expected value. This method is guaranteed to be
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
-     * <tt>setForUpdate</tt>, but not necessarily with respect to other
+     * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
      * @return true if successful.
      **/
@@ -84,7 +85,7 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * by this Updater to the given updated value if the current value
      * <tt>==</tt> the expected value. This method is guaranteed to be
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
-     * <tt>setForUpdate</tt>, but not necessarily with respect to other
+     * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
      * @return true if successful.
      * @throws ClassCastException if <tt>obj</tt> is not an instance
@@ -103,15 +104,11 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * to subsequent invocations of <tt>compareAndSet</tt>, but only as
      * a non-volatile store otherwise.
      */
-    public final void setForUpdate(T obj, V newValue) {
-        // We do not need the full StoreLoad barrier semantics of a
-        // volatile store.  But we do need to preserve ordering with
-        // respect to other stores by surrounding with storeStore
-        // barriers.
+    public final void set(T obj, V newValue) {
+        // Unsafe puts do not know about barriers, so manually apply
         unsafe.storeStoreBarrier();
-        // Unsafe store call bypasses barriers used in volatile assignment
         unsafe.putObject(obj, offset, newValue);
-        unsafe.storeStoreBarrier();
+        unsafe.storeLoadBarrier();
     }
 }
 

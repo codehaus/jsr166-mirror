@@ -62,7 +62,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * The comparator, or null if priority queue uses elements'
      * natural ordering.
      */
-    private final Comparator comparator;
+    private final Comparator<E> comparator;
 
     /**
      * The number of times this priority queue has been
@@ -95,7 +95,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @param initialCapacity the initial capacity for this priority queue.
      * @param comparator the comparator used to order this priority queue.
      */
-    public PriorityQueue(int initialCapacity, Comparator comparator) {
+    public PriorityQueue(int initialCapacity, Comparator<E> comparator) {
         if (initialCapacity < 1)
             initialCapacity = 1;
         queue = new E[initialCapacity + 1];
@@ -204,7 +204,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             }
         } else {
             for (int i = 1; i <= size; i++) {
-                if (comparator.compare(queue[i], element) == 0) {
+                if (comparator.compare(queue[i], (E) element) == 0) {
                     remove(i);
                     return true;
                 }

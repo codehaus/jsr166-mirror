@@ -698,4 +698,10 @@ public final class Unsafe {
     /** Insert a store-store barrier (aka release barrier) */
     public final native void storeStoreBarrier();
 
+    /** Insert a store-load barrier (aka volatile barrier) */
+    public final native void storeLoadBarrier();
+
+    /** Insert a load-load barrier (aka aquire barrier) */
+    public final native void loadLoadBarrier();
+
 }

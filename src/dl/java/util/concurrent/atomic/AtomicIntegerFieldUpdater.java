@@ -22,7 +22,6 @@ public class  AtomicIntegerFieldUpdater<T> {
 
     /**
      * Create an updater for objects of the given class with the given field.
-     * @param klass the class with the given field
      * @param fieldname the name of the field to be updated.
      * @throws Error if the given class does not have
      * an accessible field of the given name.
@@ -31,14 +30,11 @@ public class  AtomicIntegerFieldUpdater<T> {
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      **/
-    public AtomicIntegerFieldUpdater(Class klass, String fieldName) {
+    public AtomicIntegerFieldUpdater(T[] ta, String fieldName) {
         Field field = null;
         try {
-            field = klass.getDeclaredField(fieldName);
-            // test if receiver type OK by casting 0-length array
-            Class rk = field.getDeclaringClass();
-            T[] rtest = (T[])(Array.newInstance(rk, 0));
-
+            Class tclass = ta.getClass().getComponentType();
+            field = tclass.getDeclaredField(fieldName);
         }
         catch(Exception ex) {
             throw new RuntimeException(ex);
@@ -59,7 +55,7 @@ public class  AtomicIntegerFieldUpdater<T> {
      * by this Updater to the given updated value if the current value
      * <tt>==</tt> the expected value. This method is guaranteed to be
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
-     * <tt>setForUpdate</tt>, but not necessarily with respect to other
+     * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
      * @return true if successful.
      * @throws ClassCastException if <tt>obj</tt> is not an instance
@@ -85,8 +81,6 @@ public class  AtomicIntegerFieldUpdater<T> {
      **/
 
     public final boolean weakCompareAndSet(T obj, int expect, int update) {
-        //        if (!receiverType.isInstance(obj))
-        //            throw new ClassCastException();
         return unsafe.compareAndSwapInt(obj, offset, expect, update);
     }
 
@@ -96,17 +90,11 @@ public class  AtomicIntegerFieldUpdater<T> {
      * to subsequent invocations of <tt>compareAndSet</tt>, but only as
      * a non-volatile store otherwise.
      */
-    public final void setForUpdate(T obj, int newValue) {
-        //        if (!receiverType.isInstance(obj))
-        //            throw new ClassCastException();
-        // We do not need the full StoreLoad barrier semantics of a
-        // volatile store.  But we do need to preserve ordering with
-        // respect to other stores by surrounding with storeStore
-        // barriers.
+    public final void set(T obj, int newValue) {
+        // Unsafe puts do not know about barriers, so manually apply
         unsafe.storeStoreBarrier();
-        // Unsafe store call bypasses barriers used in volatile assignment
         unsafe.putInt(obj, offset, newValue);
-        unsafe.storeStoreBarrier();
+        unsafe.storeLoadBarrier();
     }
 }
 

@@ -23,15 +23,17 @@ import java.util.List;
  * @see Executors
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
+ * @revised $Date: 2003/08/24 14:47:31 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
 public interface ExecutorService extends Executor {
 
     /**
-     * Initiates an orderly shutdown in which previously submitted tasks
-     * are executed, but no new tasks will be accepted.
+     * Initiates an orderly shutdown in which previously submitted
+     * tasks are executed, but no new tasks will be
+     * accepted. Invocation has no additional effect if already shut
+     * down.
      *
      */
     void shutdown();

@@ -8,13 +8,14 @@ package java.util.concurrent;
 
 /**
  * Exception thrown when attempting to retrieve the result of a task
- * that aborted.
+ * that aborted by throwing an exception. This exception can be
+ * inspected using the {@link #getCause()} method.
  *
  * @since 1.5
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
+ * @revised $Date: 2003/08/24 14:47:31 $
  * @editor $Author: dl $
  * @author Doug Lea
  */

@@ -64,7 +64,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Constants -------------- */
 
     /**
-     * The default initial number of table slots for this table (32).
+     * The default initial number of table slots for this table (16).
      * Used when not otherwise specified in constructor.
      */
     private static int DEFAULT_INITIAL_CAPACITY = 16;
@@ -609,12 +609,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
     /**
      * Tests if some key maps into the specified value in this table.
-     * This operation is more expensive than the <code>containsKey</code>
-     * method.<p>
-     *
-     * Note that this method is identical in functionality to containsValue,
-     * (which is part of the Map interface in the collections framework).
-     *
+     * This operation is more expensive than the
+     * <code>containsKey</code> method.
+     * 
+     * <p> Note that this method is identical in functionality to
+     * containsValue, This method esists solely to ensure plug-in
+     * compatibility with class <tt>Hashtable</tt>, which supported
+     * this method prior to introduction of the collections framework.
+
      * @param      value   a value to search for.
      * @return     <code>true</code> if and only if some key maps to the
      *             <code>value</code> argument in this table as
@@ -658,8 +660,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * with a value, associate it with the given value.
      * This is equivalent to
      * <pre>
-     *   if (!map.containsKey(key)) map.put(key, value);
-     *   return get(key);
+     *   if (!map.containsKey(key)) 
+     *      return map.put(key, value);
+     *   else
+     *      return map.get(key);
      * </pre>
      * Except that the action is performed atomically.
      * @param key key with which the specified value is to be associated.
@@ -670,8 +674,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *         with the specified key, if the implementation supports
      *         <tt>null</tt> values.
      *
-     * @throws NullPointerException this map does not permit <tt>null</tt>
-     *            keys or values, and the specified key or value is
+     * @throws UnsupportedOperationException if the <tt>put</tt> operation is
+     *            not supported by this map.
+     * @throws ClassCastException if the class of the specified key or value
+     *            prevents it from being stored in this map.
+     * @throws NullPointerException if the specified key or value is
      *            <tt>null</tt>.
      *
      **/
@@ -715,17 +722,20 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Removes the (key, value) pair from this
-     * table. This method does nothing if the key is not in the table,
-     * or if the key is associated with a different value.
-     *
-     * @param   key   the key that needs to be removed.
-     * @param   value   the associated value. If the value is null,
-     *                   it means "any value".
-     * @return  the value to which the key had been mapped in this table,
-     *          or <code>null</code> if the key did not have a mapping.
-     * @throws  NullPointerException  if the key is
-     *               <code>null</code>.
+     * Remove entry for key only if currently mapped to given value.
+     * Acts as
+     * <pre> 
+     *  if (map.get(key).equals(value)) {
+     *     map.remove(key);
+     *     return true;
+     * } else return false;
+     * </pre>
+     * except that the action is performed atomically.
+     * @param key key with which the specified value is associated.
+     * @param value value associated with the specified key.
+     * @return true if the value was removed
+     * @throws NullPointerException if the specified key is
+     *            <tt>null</tt>.
      */
     public boolean remove(Object key, Object value) {
         int hash = hash(key);

@@ -153,8 +153,37 @@ public class CancellableTask implements Cancellable, Runnable {
 
     /**
      * Implementation of Future methods under the control of a current
-     * CancellableTask. This is split into an inner class to permit
-     * Future support to be mixed-in with other flavors of tasks.
+     * <tt>CancellableTask</tt>, which it relies on for methods
+     * <tt>isDone</tt>, <tt>isCancelled</tt> and <tt>cancel</tt>. This
+     * class is split into an inner class to permit Future support to
+     * be mixed-in with other flavors of tasks.  Normally, such a
+     * class will delegate <tt>Future</tt> <tt>get</tt> methods to the
+     * <tt>InnerCancellableFuture</tt>, and internally arrange that
+     * <tt>set</tt> methods be invoked when computations are ready.
+     *
+     * <p><b>Sample Usage</b>. Here are fragments of an example subclass.
+     * <pre>
+     *  class MyFutureTask&lt;V&gt; extends CancellableTask implements Future&lt;
+V&gt; {
+     *                
+     *    MyFutureTask(Callable&lt;V&gt; callable) {
+     *      setRunnable(new InnerCancellableFuture&lt;V&gt;(callable));
+     *    }
+     *
+     *    public V get() throws InterruptedException, ExecutionException {
+     *      return ((InnerCancellableFuture&lt;V&gt;)getRunnable()).get();
+     *    }
+     *    // (And similarly for timeout version.)
+     *
+     *    void action() { // whatever action causes execution
+     *      try {
+     *        ((InnerCancellableFuture&lt;V&gt;)getRunnable()).set(compute());
+     *      } catch (Exception ex) {
+     *        ((InnerCancellableFuture&lt;V&gt;)getRunnable()).setException(ex);
+     *      }
+     *   }
+     * }
+     *</pre>
      */
     protected class InnerCancellableFuture<V> implements Future<V>, Runnable {
         private final Callable<V> callable;
@@ -185,6 +214,10 @@ public class CancellableTask implements Cancellable, Runnable {
             return CancellableTask.this.isDone();
         }
 
+
+        /**
+         * Sets this Future to the results of <tt>callable.call</tt>
+         */
         public void run() {
             try {
                 set(callable.call());
@@ -193,6 +226,17 @@ public class CancellableTask implements Cancellable, Runnable {
             }
         }
 
+        /**
+         * Waits if necessary for the call to <tt>callable.call</tt> to
+         * complete, and then retrieves its result.
+         *
+         * @return computed result
+         * @throws CancellationException here???
+         * @throws ExecutionException if underlying computation threw an
+         * exception
+         * @throws InterruptedException if current thread was interrupted
+         * while waiting
+         */
         public V get() throws InterruptedException, ExecutionException {
             lock.lock();
             try {
@@ -209,6 +253,20 @@ public class CancellableTask implements Cancellable, Runnable {
             }
         }
 
+        /**
+         * Waits if necessary for at most the given time for the call to
+         * <tt>callable.call</tt> to complete, and then retrieves its
+         * result.
+         *
+         * @param timeout the maximum time to wait
+         * @param granularity the time unit of the timeout argument
+         * @return computed result
+         * @throws ExecutionException if underlying computation threw an
+         * exception
+         * @throws InterruptedException if current thread was interrupted
+         * while waiting
+         * @throws TimeoutException if the wait timed out
+         */
         public V get(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
             lock.lock();
@@ -232,6 +290,10 @@ public class CancellableTask implements Cancellable, Runnable {
             }
         }
 
+        /**
+         * Sets the result of this Future to the given value.
+         * @param v the value
+         */ 
         protected void set(V v) {
             lock.lock();
             try {
@@ -243,6 +305,11 @@ public class CancellableTask implements Cancellable, Runnable {
             }
         }
 
+        /**
+         * Causes this futue to report an <tt>ExecutionException</tt>
+         * with the given throwable as its cause.
+         * @param t the cause of failure.
+         */ 
         protected void setException(Throwable t) {
             lock.lock();
             try {

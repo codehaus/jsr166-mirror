@@ -17,7 +17,7 @@ package java.util.concurrent;
  * <b>Sample Usage</b> (Note that the following classes are all
  * made-up.) <p>
  * <pre>
- * class ArchiveSearcher { String search(String target); }
+ * interface ArchiveSearcher { String search(String target); }
  * class App {
  *   Executor executor = ...
  *   ArchiveSearcher searcher = ...
@@ -36,13 +36,23 @@ package java.util.concurrent;
  * }
  * </pre>
  *
+ * The {@link Executors} class contains more convenient methods 
+ * for common usages. For example, the above explicit
+ * construction could be replaced with:
+ * <pre>
+ * Future&lt;String&gt; future = Executors.execute(executor, 
+ *    new Callable&lt;String&gt;() {
+ *       public String call() {
+ *         return searcher.search(target);
+ *    }});
+ * </pre>
  * @since 1.5
  * @see FutureTask
  * @see Executor
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/19 15:04:57 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/24 14:47:31 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public interface Future<V> extends Cancellable {

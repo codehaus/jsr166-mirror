@@ -7,31 +7,22 @@
 package java.util.concurrent;
 
 /**
- * A semaphore that guarantees that threads invoking
- * any of the {@link #acquire() acquire} methods 
- * are allocated permits in the order in 
- * which their invocation of those methods was processed (first-in-first-out).
+ * A semaphore guaranteeing that threads invoking any of the {@link
+ * #acquire() acquire} methods are allocated permits in the order in
+ * which their invocation of those methods was processed
+ * (first-in-first-out; FIFO). Note that FIFO ordering necessarily
+ * applies to specific internal points of execution within these
+ * methods.  So, it is possible for one thread to invoke
+ * <tt>acquire</tt> before another, but reach the ordering point after
+ * the other, and similarly upon return from the method.
  *
- * <p>This class introduces a fairness guarantee that can be useful
- * in some contexts.
- * However, it needs to be realized that the order in which invocations are
- * processed can be different from the order in which an application perceives
- * those invocations to be processed. Effectively, when no permit is available
- * each thread is stored in a FIFO queue. As permits are released, they
- * are allocated to the thread at the head of the queue, and so the order
- * in which threads enter the queue, is the order in which they come out.  
- * This order need not have any relationship to the order in which requests 
- * were made, nor the order in which requests actually return to the caller as 
- * these depend on the underlying thread scheduling, which is not guaranteed 
- * to be predictable or fair.
- *
- * <p>As permits are allocated in-order, this class also provides convenience
- * methods to {@link #acquire(long) acquire} and 
- * {@link #release(long) release} multiple permits at a time. 
+ * <p>Because permits are allocated in-order, this class also provides
+ * convenience methods to {@link #acquire(long) acquire} and {@link
+ * #release(long) release} multiple permits at a time. 
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 15:50:14 $
+ * @revised $Date: 2003/06/07 16:07:09 $
  * @editor $Author: dl $
  *
  */
@@ -298,12 +289,4 @@ public class FairSemaphore extends Semaphore {
             lock.unlock();
         }
     }
-        
-
-
 }
-
-
-
-
-

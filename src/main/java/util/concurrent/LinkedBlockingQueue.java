@@ -10,16 +10,16 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An optionally-bounded {@link BlockingQueue blocking queue} based on 
+ * An optionally-bounded {@link BlockingQueue blocking queue} based on
  * linked nodes.
  * This queue orders elements FIFO (first-in-first-out).
- * The <em>head</em> of the queue is that element that has been on the 
+ * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
  * The <em>tail</em> of the queue is that element that has been on the
  * queue the shortest time.
  * Linked queues typically have higher throughput than array-based queues but
  * less predictable performance in most concurrent applications.
- * 
+ *
  * <p> The optional capacity bound constructor argument serves as a
  * way to prevent excessive queue expansion. The capacity, if unspecified,
  * is equal to {@link Integer#MAX_VALUE}.  Linked nodes are
@@ -28,7 +28,7 @@ import java.util.*;
  *
  * @since 1.5
  * @author Doug Lea
- * 
+ *
  **/
 public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
@@ -43,7 +43,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * used. When a put notices that it has enabled at least one take,
      * it signals taker. That taker in turn signals others if more
      * items have been entered since the signal. And symmetrically for
-     * takes signalling puts. Operations such as remove(Object) and 
+     * takes signalling puts. Operations such as remove(Object) and
      * iterators acquire both locks.
     */
 
@@ -129,7 +129,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Lock to prevent both puts and takes. 
+     * Lock to prevent both puts and takes.
      */
     private void fullyLock() {
         putLock.lock();
@@ -137,7 +137,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Unlock to allow both puts and takes. 
+     * Unlock to allow both puts and takes.
      */
     private void fullyUnlock() {
         takeLock.unlock();
@@ -154,7 +154,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity 
+     * Create a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity
      * @param capacity the capacity of this queue.
      * @throws IllegalArgumentException if <tt>capacity</tt> is not greater
      * than zero.
@@ -167,8 +167,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Create a <tt>LinkedBlockingQueue</tt> with a capacity of
-     * {@link Integer#MAX_VALUE}, initially holding the elements of the 
-     * given collection, 
+     * {@link Integer#MAX_VALUE}, initially holding the elements of the
+     * given collection,
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if <tt>c</tt> or any element within it
@@ -176,8 +176,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      */
     public LinkedBlockingQueue(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
-        for (Iterator it = c.iterator(); it.hasNext();) 
-            add((E)it.next());
+        for (Iterator<? extends E> it = c.iterator(); it.hasNext();)
+            add(it.next());
     }
 
 
@@ -202,8 +202,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     // this doc comment is overridden to remove the reference to collections
     // greater in size than Integer.MAX_VALUE
-    /** 
-     * Return the number of elements in this collection. 
+    /**
+     * Return the number of elements in this collection.
      */
     public int size() {
         return count.get();
@@ -211,7 +211,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     // this doc comment is a modified copy of the inherited doc comment,
     // without the reference to unlimited queues.
-    /** 
+    /**
      * Return the number of elements that this queue can ideally (in
      * the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue
@@ -227,7 +227,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if 
+     * Add the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
@@ -235,7 +235,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         if (x == null) throw new NullPointerException();
         // Note: convention in all put/take/etc is to preset
         // local var holding count  negative to indicate failure unless set.
-        int c = -1; 
+        int c = -1;
         putLock.lockInterruptibly();
         try {
             /*
@@ -248,7 +248,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
              * other wait guards.
              */
             try {
-                while (count.get() == capacity) 
+                while (count.get() == capacity)
                     notFull.await();
             }
             catch (InterruptedException ie) {
@@ -263,18 +263,18 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         finally {
             putLock.unlock();
         }
-        if (c == 0) 
+        if (c == 0)
             signalNotEmpty();
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if 
+     * Add the specified element to the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E x, long timeout, TimeUnit unit) 
+    public boolean offer(E x, long timeout, TimeUnit unit)
         throws InterruptedException {
-       
+
         if (x == null) throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
         int c = -1;
@@ -302,12 +302,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         finally {
             putLock.unlock();
         }
-        if (c == 0) 
+        if (c == 0)
             signalNotEmpty();
         return true;
     }
 
-   /** 
+   /**
     * Add the specified element to the tail of this queue if possible,
     * returning immediately if this queue is full.
     *
@@ -317,7 +317,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         if (x == null) throw new NullPointerException();
         if (count.get() == capacity)
             return false;
-        int c = -1; 
+        int c = -1;
         putLock.lock();
         try {
             if (count.get() < capacity) {
@@ -330,7 +330,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         finally {
             putLock.unlock();
         }
-        if (c == 0) 
+        if (c == 0)
             signalNotEmpty();
         return c >= 0;
     }
@@ -342,7 +342,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         takeLock.lockInterruptibly();
         try {
             try {
-                while (count.get() == 0) 
+                while (count.get() == 0)
                     notEmpty.await();
             }
             catch (InterruptedException ie) {
@@ -358,7 +358,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         finally {
             takeLock.unlock();
         }
-        if (c == capacity) 
+        if (c == capacity)
             signalNotFull();
         return x;
     }
@@ -391,7 +391,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         finally {
             takeLock.unlock();
         }
-        if (c == capacity) 
+        if (c == capacity)
             signalNotFull();
         return x;
     }
@@ -400,7 +400,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         if (count.get() == 0)
             return null;
         E x = null;
-        int c = -1; 
+        int c = -1;
         takeLock.tryLock();
         try {
             if (count.get() > 0) {
@@ -413,7 +413,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         finally {
             takeLock.unlock();
         }
-        if (c == capacity) 
+        if (c == capacity)
             signalNotFull();
         return x;
     }
@@ -467,9 +467,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         fullyLock();
         try {
             int size = count.get();
-            Object[] a = new Object[size];                
+            Object[] a = new Object[size];
             int k = 0;
-            for (Node<E> p = head.next; p != null; p = p.next) 
+            for (Node<E> p = head.next; p != null; p = p.next)
                 a[k++] = p.item;
             return a;
         }
@@ -485,9 +485,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             if (a.length < size)
                 a = (T[])java.lang.reflect.Array.newInstance
                     (a.getClass().getComponentType(), size);
-            
+
             int k = 0;
-            for (Node p = head.next; p != null; p = p.next) 
+            for (Node p = head.next; p != null; p = p.next)
                 a[k++] = (T)p.item;
             return a;
         }
@@ -511,7 +511,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     private class Itr implements Iterator<E> {
-        /* 
+        /*
          * Basic weak-consistent iterator.  At all times hold the next
          * item to hand out so that if hasNext() reports true, we will
          * still have it to return even if lost race with a take etc.
@@ -519,7 +519,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         Node<E> current;
         Node<E> lastRet;
         E currentElement;
-        
+
         Itr() {
             fullyLock();
             try {
@@ -531,12 +531,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 fullyUnlock();
             }
         }
-        
-	public boolean hasNext() {
+
+        public boolean hasNext() {
             return current != null;
         }
 
-	public E next() {
+        public E next() {
             fullyLock();
             try {
                 if (current == null)
@@ -551,12 +551,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             finally {
                 fullyUnlock();
             }
-            
+
         }
 
-	public void remove() {
+        public void remove() {
             if (lastRet == null)
-		throw new IllegalStateException();
+                throw new IllegalStateException();
             fullyLock();
             try {
                 Node<E> node = lastRet;
@@ -592,13 +592,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
 
-        fullyLock(); 
+        fullyLock();
         try {
             // Write out any hidden stuff, plus capacity
             s.defaultWriteObject();
 
             // Write out all elements in the proper order.
-            for (Node<E> p = head.next; p != null; p = p.next) 
+            for (Node<E> p = head.next; p != null; p = p.next)
                 s.writeObject(p.item);
 
             // Use trailing null as sentinel
@@ -616,8 +616,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-	// Read in capacity, and any hidden stuff
-	s.defaultReadObject();
+        // Read in capacity, and any hidden stuff
+        s.defaultReadObject();
 
         // Read in all elements and place in queue
         for (;;) {

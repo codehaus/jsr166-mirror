@@ -19,10 +19,10 @@ import java.lang.reflect.*;
  * class Node {
  *   private volatile Node left, right;
  *
- *   private static final AtomicReferenceFieldUpdater leftUpdater =
- *     new AtomicReferenceFieldUpdater(new Node[0], new Node[0], "left");
- *   private static AtomicReferenceFieldUpdater rightUpdater =
- *     new AtomicReferenceFieldUpdater(new Node[0], new Node[0], "right");
+ *   private static final AtomicReferenceFieldUpdater<Node, Node> leftUpdater =
+ *     new AtomicReferenceFieldUpdater<Node, Node>(Node.class, Node.class, "left");
+ *   private static AtomicReferenceFieldUpdater<Node, Node> rightUpdater =
+ *     new AtomicReferenceFieldUpdater<Node, Node>(Node.class, Node.class, "right");
  *
  *   Node getLeft() { return left;  }
  *   boolean compareAndSetLeft(Node expect, Node update) {
@@ -41,21 +41,16 @@ import java.lang.reflect.*;
  * @since 1.5
  * @author Doug Lea
  */
-public class  AtomicReferenceFieldUpdater<T,V>  { 
+public class AtomicReferenceFieldUpdater<T,V>  {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
     /**
-     * Create an updater for objects with the given field.  The odd
-     * nature of the constructor arguments are a result of needing
-     * sufficient information to check that reflective types and
-     * generic types match.
-     * @param ta an array (normally of length 0) of type T (the class
-     * of the objects holding the field). This argument is not used in any
-     * way except for purposes of type checking during construction.
-     * @param va an array (normally of length 0) of type V (the class
-     * of the field).This argument is not used in any
-     * way except for purposes of type checking during construction.
+     * Create an updater for objects with the given field.
+     * The Class constructor arguments are needed to check
+     * that reflective types and generic types match.
+     * @param tclass the class of the objects holding the field.
+     * @param vclass the class of the field
      * @param fieldName the name of the field to be updated.
      * @throws IllegalArgumentException if the field is not a volatile reference type.
      * @throws RuntimeException with an nested reflection-based
@@ -72,12 +67,12 @@ public class  AtomicReferenceFieldUpdater<T,V>  {
             throw new RuntimeException(ex);
         }
 
-        if (vclass != fieldClass) 
+        if (vclass != fieldClass)
             throw new ClassCastException();
-        
+
         if (!Modifier.isVolatile(field.getModifiers()))
             throw new IllegalArgumentException("Must be volatile type");
-        
+
         offset = unsafe.objectFieldOffset(field);
     }
 
@@ -123,7 +118,7 @@ public class  AtomicReferenceFieldUpdater<T,V>  {
      * @param newValue the new value
      */
     public final void set(T obj, V newValue) {
-        unsafe.putObjectVolatile(obj, offset, newValue); 
+        unsafe.putObjectVolatile(obj, offset, newValue);
     }
 
     /**
@@ -132,7 +127,7 @@ public class  AtomicReferenceFieldUpdater<T,V>  {
      * @return the current value
      */
     public final V get(T obj) {
-        return (V)unsafe.getObjectVolatile(obj, offset); 
+        return (V)unsafe.getObjectVolatile(obj, offset);
     }
 
     /**

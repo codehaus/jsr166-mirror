@@ -3,13 +3,13 @@
 /**
  * A priority queue based on a priority heap.  This queue orders
  * elements according to an order specified at construction time, which is
- * specified in the same manner as {@link java.util.TreeSet} and 
+ * specified in the same manner as {@link java.util.TreeSet} and
  * {@link java.util.TreeMap}: elements are ordered
  * either according to their <i>natural order</i> (see {@link Comparable}), or
- * according to a {@link java.util.Comparator}, depending on which 
+ * according to a {@link java.util.Comparator}, depending on which
  * constructor is used.
- * <p>The <em>head</em> of this queue is the <em>least</em> element with 
- * respect to the specified ordering. 
+ * <p>The <em>head</em> of this queue is the <em>least</em> element with
+ * respect to the specified ordering.
  * If multiple elements are tied for least value, the
  * head is one of those elements. A priority queue does not permit
  * <tt>null</tt> elements.
@@ -22,7 +22,7 @@
  *
  * <p>A priority queue has a <i>capacity</i>.  The capacity is the
  * size of the array used internally to store the elements on the
- * queue, and is limited to <tt>Integer.MAX_VALUE-1</tt>.  
+ * queue, and is limited to <tt>Integer.MAX_VALUE-1</tt>.
  * It is always at least as large as the queue size.  As
  * elements are added to a priority queue, its capacity grows
  * automatically.  The details of the growth policy are not specified.
@@ -118,8 +118,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Create a <tt>PriorityQueue</tt> containing the elements in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
-     * size of the specified collection (bounded by 
-     * <tt>Integer.MAX_VALUE-1</tt>); or 1 if the collection is empty. 
+     * size of the specified collection (bounded by
+     * <tt>Integer.MAX_VALUE-1</tt>); or 1 if the collection is empty.
      * If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be
      * sorted according to the same comparator, or according to its elements'
@@ -145,11 +145,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         this.queue = new Object[initialCapacity + 1];
 
-        // FIXME: if c is larger than Integer.MAX_VALUE we'll 
+        // FIXME: if c is larger than Integer.MAX_VALUE we'll
         // overflow the array
 
         if (c instanceof Sorted) {
-            comparator = ((Sorted)c).comparator();
+            comparator = (Comparator<? super E>)((Sorted)c).comparator();
         } else {
             comparator = null;
         }

@@ -12,10 +12,10 @@ import java.lang.reflect.*;
  * class Node {
  *   private volatile Node left, right;
  *
- *   private static final AtomicReferenceFieldUpdater leftUpdater =
- *     new AtomicReferenceFieldUpdater(new Node[0], new Node[0], "left");
- *   private static AtomicReferenceFieldUpdater rightUpdater =
- *     new AtomicReferenceFieldUpdater(new Node[0], new Node[0], "right");
+ *   private static final AtomicReferenceFieldUpdater<Node, Node> leftUpdater =
+ *     new AtomicReferenceFieldUpdater<Node, Node>(Node.class, Node.class, "left");
+ *   private static AtomicReferenceFieldUpdater<Node, Node> rightUpdater =
+ *     new AtomicReferenceFieldUpdater<Node, Node>(Node.class, Node.class, "right");
  *
  *   Node getLeft() { return left;  }
  *   boolean compareAndSetLeft(Node expect, Node update) {
@@ -23,40 +23,34 @@ import java.lang.reflect.*;
  *   }
  *   // ... and so on
  * }
- * </pre>
- *
- * <p> Note the weaker guarantees of the <code>compareAndSet<code>
+ * <p> Note the weaker guarantees of the <tt>compareAndSet</tt>
  * method in this class than in other atomic classes. Because this
  * class cannot ensure that all uses of the field are appropriate for
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of
- * <code>compareAndSet<code> and <tt>set</tt>.
+ * <tt>compareAndSet</tt> and <tt>set</tt>.
+ * @since 1.5
+ * @author Doug Lea
  */
 
-public class  AtomicReferenceFieldUpdater<T, V> {
+public class AtomicReferenceFieldUpdater<T, V> {
     private final Field field;
 
     /**
-     * Create an updater for objects with the given field.  The odd
-     * nature of the constructor arguments are a result of needing
-     * sufficient information to check that reflective types and
-     * generic types match.
-     * @param ta an array (normally of length 0) of type T (the class
-     * of the objects holding the field).
-     * @param va an array (normally of length 0) of type V (the class
-     * of the field).
+     * Create an updater for objects with the given field.
+     * The Class constructor arguments are needed to check
+     * that reflective types and generic types match.
+     * @param tclass the class of the objects holding the field.
+     * @param vclass the class of the field
      * @param fieldName the name of the field to be updated.
      * @throws IllegalArgumentException if the field is not a volatile reference type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      **/
-    public AtomicReferenceFieldUpdater(T[] ta, V[] va, String fieldName) {
-        Class vclass = null;
+    public AtomicReferenceFieldUpdater(Class<T> tclass, Class<V> vclass, String fieldName) {
         Class fieldClass = null;
         try {
-            Class tclass = ta.getClass().getComponentType();
             field = tclass.getDeclaredField(fieldName);
-            vclass = va.getClass().getComponentType();
             fieldClass = field.getType();
             field.setAccessible(true);
         }

@@ -190,15 +190,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if <tt>c</tt> or any element within it
      * is <tt>null</tt>
      */
-    public ArrayBlockingQueue(int capacity, boolean fair, 
+    public ArrayBlockingQueue(int capacity, boolean fair,
                               Collection<? extends E> c) {
         this(capacity, null, 0, new ReentrantLock(fair));
 
         if (capacity < c.size())
             throw new IllegalArgumentException();
 
-        for (Iterator it = c.iterator(); it.hasNext();)
-            add((E)it.next());
+        for (Iterator<? extends E> it = c.iterator(); it.hasNext();)
+            add(it.next());
     }
 
     // Have to override just to update the javadoc for @throws

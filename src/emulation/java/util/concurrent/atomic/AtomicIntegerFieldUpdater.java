@@ -9,37 +9,36 @@ import java.lang.reflect.*;
 
 /**
  * An AtomicIntegerFieldUpdater is a reflection-based utility that
- * enables atomic updates to designated int fields of designated
+ * enables atomic updates to designated integer fields of designated
  * classes.  It is designed for use in atomic data structures in which
  * several fields of the same node are independently subject
  * to atomic updates.
- * <p> Note the weaker guarantees of the <code>compareAndSet<code>
+ * <p> Note the weaker guarantees of the <tt>compareAndSet</tt>
  * method in this class than in other atomic classes. Because this
  * class cannot ensure that all uses of the field are appropriate for
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of
- * <code>compareAndSet<code> and <tt>set</tt>.
+ * <tt>compareAndSet</tt> and <tt>set</tt>.
+ * @since 1.5
+ * @author Doug Lea
  */
 
-public class  AtomicIntegerFieldUpdater<T> {
+public class AtomicIntegerFieldUpdater<T> {
     private final Field field;
 
     /**
-     * Create an updater for objects with the given field.  The odd
-     * nature of the constructor arguments are a result of needing
-     * sufficient information to check that reflective types and
-     * generic types match.
-     * @param ta an array (normally of length 0) of type T (the class
-     * of the objects holding the field).
+     * Create an updater for objects with the given field.
+     * The Class constructor argument is needed to check
+     * that reflective types and generic types match.
+     * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
      * @throws IllegalArgumentException if the field is not a
-     * volatile int type.
+     * volatile integer type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
-     **/
-    public AtomicIntegerFieldUpdater(T[] ta, String fieldName) {
+     */
+    public AtomicIntegerFieldUpdater(Class<T> tclass, String fieldName) {
         try {
-            Class tclass = ta.getClass().getComponentType();
             field = tclass.getDeclaredField(fieldName);
             field.setAccessible(true);
         }

@@ -13,7 +13,7 @@ import java.lang.reflect.*;
  * enables atomic updates to designated integer fields of designated
  * classes.  It is designed for use in atomic data structures in which
  * several fields of the same node are independently subject
- * to atomic updates. 
+ * to atomic updates.
  * <p> Note the weaker guarantees of the <tt>compareAndSet</tt>
  * method in this class than in other atomic classes. Because this
  * class cannot ensure that all uses of the field are appropriate for
@@ -23,18 +23,15 @@ import java.lang.reflect.*;
  * @since 1.5
  * @author Doug Lea
  */
-public class  AtomicIntegerFieldUpdater<T>  { 
+public class AtomicIntegerFieldUpdater<T>  {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
     /**
-     * Create an updater for objects with the given field.  The odd
-     * nature of the constructor arguments are a result of needing
-     * sufficient information to check that reflective types and
-     * generic types match.
-     * @param ta an array (normally of length 0) of type T (the class
-     * of the objects holding the field). This argument is not used in any
-     * way except for purposes of type checking during construction.
+     * Create an updater for objects with the given field.
+     * The Class constructor argument is needed to check
+     * that reflective types and generic types match.
+     * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
      * @throws IllegalArgumentException if the field is not a
      * volatile integer type.
@@ -51,7 +48,7 @@ public class  AtomicIntegerFieldUpdater<T>  {
         }
 
         Class fieldt = field.getType();
-        if (fieldt != int.class) 
+        if (fieldt != int.class)
             throw new IllegalArgumentException("Must be integer type");
 
         if (!Modifier.isVolatile(field.getModifiers()))
@@ -106,7 +103,7 @@ public class  AtomicIntegerFieldUpdater<T>  {
      * @param newValue the new value
      */
     public final void set(T obj, int newValue) {
-        unsafe.putIntVolatile(obj, offset, newValue); 
+        unsafe.putIntVolatile(obj, offset, newValue);
     }
 
     /**
@@ -115,7 +112,7 @@ public class  AtomicIntegerFieldUpdater<T>  {
      * @return the current value
      */
     public final int get(T obj) {
-        return unsafe.getIntVolatile(obj, offset); 
+        return unsafe.getIntVolatile(obj, offset);
     }
 
     /**
@@ -145,8 +142,8 @@ public class  AtomicIntegerFieldUpdater<T>  {
                 return current;
         }
     }
-  
-  
+
+
     /**
      * Atomically decrement the current value.
      * @param obj An object whose field to get and set
@@ -160,8 +157,8 @@ public class  AtomicIntegerFieldUpdater<T>  {
                 return current;
         }
     }
-  
-  
+
+
     /**
      * Atomically add the given value to current value.
      * @param obj An object whose field to get and set

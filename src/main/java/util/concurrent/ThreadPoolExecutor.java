@@ -138,8 +138,8 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/24 23:32:25 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/25 01:58:50 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public class ThreadPoolExecutor implements ExecutorService {
@@ -561,7 +561,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given
      * initial parameters.  It may be more convenient to use one of
-     * the {@link @Executors} factory methods instead of this general
+     * the {@link Executors} factory methods instead of this general
      * purpose constructor.
      *
      * @param corePoolSize the number of threads to keep in the

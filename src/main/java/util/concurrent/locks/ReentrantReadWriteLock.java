@@ -44,7 +44,7 @@ import java.util.*;
  * <li><b>Lock downgrading</b>
  * <p>Reentrancy also allows downgrading from the write lock to a read lock,
  * by acquiring the write lock, then the read lock and then releasing the
- * write lock. However, upgrading from a read lock to the write lock, is
+ * write lock. However, upgrading from a read lock to the write lock is
  * <b>not</b> possible.
  *
  * <li><b>Interruption of lock acquisition</b>
@@ -370,7 +370,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             Thread current = Thread.currentThread();
             for (;;) {
                 int c = getState();
-                int nextc = c + (acquires << SHARED_SHIFT);
                 if (exclusiveCount(c) != 0) {
                     if (owner != current)
                         return -1;
@@ -379,6 +378,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                     if (first != null && first != current)
                         return -1;
                 }
+                int nextc = c + (acquires << SHARED_SHIFT);
                 if (nextc < c)
                     throw new Error("Maximum lock count exceeded");
                 if (compareAndSetState(c, nextc)) 
@@ -838,7 +838,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * affected. However it is essentially always an error to
          * invoke a condition waiting method when the current thread
          * has also acquired read locks, since other threads that
-         * could unblock it will not be able to access the write
+         * could unblock it will not be able to acquire the write
          * lock.)
          *
          * <li>When the condition {@link Condition#await() waiting}
@@ -851,7 +851,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * InterruptedException} will be thrown, and the thread's
          * interrupted status will be cleared.
          *
-         * <li> Waiting threads are signalled in FIFO order
+         * <li> Waiting threads are signalled in FIFO order.
          *
          * <li>The ordering of lock reacquisition for threads returning
          * from waiting methods is the same as for threads initially
@@ -920,7 +920,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Queries if the write lock is held by any thread. This method is
      * designed for use in monitoring system state, not for
      * synchronization control.
-     * @return <tt>true</tt> if any thread holds write lock and 
+     * @return <tt>true</tt> if any thread holds the write lock and 
      * <tt>false</tt> otherwise.
      */
     public boolean isWriteLocked() {
@@ -929,7 +929,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Queries if the write lock is held by the current thread. 
-     * @return <tt>true</tt> if current thread holds this lock and 
+     * @return <tt>true</tt> if the current thread holds the write lock and 
      * <tt>false</tt> otherwise.
      */
     public boolean isWriteLockedByCurrentThread() {
@@ -941,8 +941,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * current thread.  A writer thread has a hold on a lock for
      * each lock action that is not matched by an unlock action.
      *
-     * @return the number of holds on this lock by the current thread,
-     * or zero if this lock is not held by the current thread.
+     * @return the number of holds on the write lock by the current thread,
+     * or zero if the write lock is not held by the current thread.
      */
     public int getWriteHoldCount() {
         return sync.getWriteHoldCount();
@@ -977,11 +977,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Queries whether any threads are waiting to acquire this lock. Note that
-     * because cancellations may occur at any time, a <tt>true</tt>
-     * return does not guarantee that any other thread will ever
-     * acquire this lock.  This method is designed primarily for use in
-     * monitoring of the system state.
+     * Queries whether any threads are waiting to acquire the read or
+     * write lock. Note that because cancellations may occur at any
+     * time, a <tt>true</tt> return does not guarantee that any other
+     * thread will ever acquire a lock.  This method is designed
+     * primarily for use in monitoring of the system state.
      *
      * @return true if there may be other threads waiting to acquire
      * the lock.
@@ -991,11 +991,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Queries whether the given thread is waiting to acquire this
-     * lock. Note that because cancellations may occur at any time, a
-     * <tt>true</tt> return does not guarantee that this thread
-     * will ever acquire this lock.  This method is designed primarily for use
-     * in monitoring of the system state.
+     * Queries whether the given thread is waiting to acquire either
+     * the read or write lock. Note that because cancellations may
+     * occur at any time, a <tt>true</tt> return does not guarantee
+     * that this thread will ever acquire a lock.  This method is
+     * designed primarily for use in monitoring of the system state.
      *
      * @param thread the thread
      * @return true if the given thread is queued waiting for this lock.
@@ -1006,12 +1006,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Returns an estimate of the number of threads waiting to
-     * acquire this lock.  The value is only an estimate because the number of
-     * threads may change dynamically while this method traverses
-     * internal data structures.  This method is designed for use in
-     * monitoring of the system state, not for synchronization
-     * control.
+     * Returns an estimate of the number of threads waiting to acquire
+     * either the read or write lock.  The value is only an estimate
+     * because the number of threads may change dynamically while this
+     * method traverses internal data structures.  This method is
+     * designed for use in monitoring of the system state, not for
+     * synchronization control.
      * @return the estimated number of threads waiting for this lock
      */
     public final int getQueueLength() {
@@ -1020,12 +1020,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Returns a collection containing threads that may be waiting to
-     * acquire this lock.  Because the actual set of threads may change
-     * dynamically while constructing this result, the returned
-     * collection is only a best-effort estimate.  The elements of the
-     * returned collection are in no particular order.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive monitoring facilities.
+     * acquire either the read or write lock.  Because the actual set
+     * of threads may change dynamically while constructing this
+     * result, the returned collection is only a best-effort estimate.
+     * The elements of the returned collection are in no particular
+     * order.  This method is designed to facilitate construction of
+     * subclasses that provide more extensive monitoring facilities.
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedThreads() {

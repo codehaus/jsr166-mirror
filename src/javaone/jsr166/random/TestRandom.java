@@ -12,7 +12,7 @@ public final class TestRandom {
     }
 
 
-    abstract enum Mode {
+    enum Mode {
         SYNCH {
             Random newRandom(long seed) {
                 return new RandomUsingSynch(seed);

@@ -3,6 +3,7 @@ package jsr166.pools;
 import java.util.*;
 import java.util.concurrent.*;
 
+
 /**
  * Compares performance of ResourcePool implementations.
  */
@@ -39,7 +40,7 @@ public final class TestResourcePool {
         private final int id;
     }
 
-    abstract enum Mode {
+    enum Mode {
         SEMAPHORE {
             ResourcePool<Shuffler> newResourcePool(Set<Shuffler> shufflers) {
                 return new ResourcePoolUsingSemaphore<Shuffler>(shufflers);

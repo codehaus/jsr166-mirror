@@ -19,7 +19,7 @@ public final class TestBoundedBuffer {
     }
 
 
-    abstract enum Mode {
+    enum Mode {
         CONDVAR {
             BoundedBuffer<Long> newBuffer(int capacity) {
                 return new BoundedBufferUsingCondVar<Long>(capacity);

@@ -1,52 +1,50 @@
 package jsr166.bbuf;
 
+import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
+import jsr166.util.concurrent.*;
 
 public final class BoundedBufferUsingCondition<E> implements BoundedBuffer<E> {
 
     public BoundedBufferUsingCondition(int capacity) {
-        this.capacity = capacity;
         this.items = (E[]) new Object[capacity];
     }
 
-    public void put(E element) throws InterruptedException {
-        lock.lock();
-        try {
-            while (count == capacity)
-                notFull.await();
-            items[putIndex++] = element;
-            if (putIndex == capacity) putIndex = 0;
-            ++count;
-            notEmpty.signal();
-        }
-        finally {
-            lock.unlock();
-        }
+    public void put(final E element) throws InterruptedException {
+        notFull.when(new Runnable() {
+            public void run() {
+                items[putIndex++] = element;
+                if (putIndex == items.length) putIndex = 0;
+                ++size;
+                notEmpty.signal();
+            }
+        });
     }
 
     public E take() throws InterruptedException {
-        lock.lock();
-        try {
-            while (count == 0)
-                notEmpty.await();
-            E element = items[takeIndex++];
-            if (takeIndex == capacity) takeIndex = 0;
-            --count;
-            notFull.signal();
-            return element;
-        }
-        finally {
-            lock.unlock();
-        }
+        return notEmpty.when(new Callable<E>() {
+            public E call() {
+                E element = items[takeIndex++];
+                if (takeIndex == items.length) takeIndex = 0;
+                --size;
+                notFull.signal();
+                return element;
+            }
+        });
     }
 
     private int putIndex = 0;
     private int takeIndex = 0;
-    private int count = 0;
+    private int size = 0;
 
     private final E[] items;
-    private final int capacity;
-    private final Lock lock = new ReentrantLock();
-    private final Condition notFull = lock.newCondition();
-    private final Condition notEmpty = lock.newCondition();
+    private final Lock lock = new ReentrantLock(true);
+    private final GuardedAction notFull = Conditions.newGuardedAction(
+        lock, new Conditions.Guard() {
+            public boolean call() { return size < items.length; }
+        });
+    private final GuardedAction notEmpty = Conditions.newGuardedAction(
+        lock, new Conditions.Guard() {
+            public boolean call() { return size > 0; }
+        });
 }

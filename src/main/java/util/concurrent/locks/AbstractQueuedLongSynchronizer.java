@@ -125,7 +125,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
     static final class Node {
         /** waitStatus value to indicate thread has cancelled */
         static final int CANCELLED =  1;
-        /** waitStatus value to indicate thread needs unparking */
+        /** waitStatus value to indicate successor's thread needs unparking */
         static final int SIGNAL    = -1;
         /** waitStatus value to indicate thread is waiting on condition */
         static final int CONDITION = -2;
@@ -143,10 +143,10 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
          *               first indicate they need a signal,
          *               then retry the atomic acquire, and then,
          *               on failure, block.
-         *   CANCELLED:  Node is cancelled due to timeout or interrupt
+         *   CANCELLED:  This node is cancelled due to timeout or interrupt.
          *               Nodes never leave this state. In particular,
          *               a thread with cancelled node never again blocks.
-         *   CONDITION:  Node is currently on a condition queue
+         *   CONDITION:  This node is currently on a condition queue.
          *               It will not be used as a sync queue node until
          *               transferred. (Use of this value here
          *               has nothing to do with the other uses
@@ -693,7 +693,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
      * to implement method {@link Lock#tryLock()}.
      *
      * <p>The default
-     * implementation throws {@link UnsupportedOperationException}
+     * implementation throws {@link UnsupportedOperationException}.
      *
      * @param arg the acquire argument. This value
      * is always the one passed to an acquire method,
@@ -718,7 +718,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
      * performing release.
      *
      * <p>The default implementation throws
-     * {@link UnsupportedOperationException}
+     * {@link UnsupportedOperationException}.
      * @param arg the release argument. This value
      * is always the one passed to a release method,
      * or the current state value upon entry to a condition wait.
@@ -748,7 +748,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
      * signalled by a release from some other thread.
      *
      * <p>The default implementation throws {@link
-     * UnsupportedOperationException}
+     * UnsupportedOperationException}.
      *
      * @param arg the acquire argument. This value
      * is always the one passed to an acquire method,
@@ -776,7 +776,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
      * Attempts to set the state to reflect a release in shared mode.
      * <p>This method is always invoked by the thread performing release.
      * <p> The default implementation throws
-     * {@link UnsupportedOperationException}
+     * {@link UnsupportedOperationException}.
      * @param arg the release argument. This value
      * is always the one passed to a release method,
      * or the current state value upon entry to a condition wait.
@@ -819,7 +819,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
      * returning on success.  Otherwise the thread is queued, possibly
      * repeatedly blocking and unblocking, invoking {@link
      * #tryAcquire} until success.  This method can be used
-     * to implement method {@link Lock#lock}
+     * to implement method {@link Lock#lock}.
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquire} but is
      * otherwise uninterpreted and can represent anything
@@ -838,7 +838,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
      * success.  Otherwise the thread is queued, possibly repeatedly
      * blocking and unblocking, invoking {@link #tryAcquire}
      * until success or the thread is interrupted.  This method can be
-     * used to implement method {@link Lock#lockInterruptibly}
+     * used to implement method {@link Lock#lockInterruptibly}.
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquire} but is
      * otherwise uninterpreted and can represent anything
@@ -879,7 +879,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
     /**
      * Releases in exclusive mode.  Implemented by unblocking one or
      * more threads if {@link #tryRelease} returns true.
-     * This method can be used to implement method {@link Lock#unlock}
+     * This method can be used to implement method {@link Lock#unlock}.
      * @param arg the release argument.
      * This value is conveyed to {@link #tryRelease} but is
      * otherwise uninterpreted and can represent anything
@@ -1748,7 +1748,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
 
         /**
          * Queries whether any threads are waiting on this condition.
-         * Implements {@link AbstractQueuedLongSynchronizer#hasWaiters}
+         * Implements {@link AbstractQueuedLongSynchronizer#hasWaiters}.
          * @return <tt>true</tt> if there are any waiting threads.
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          * returns false
@@ -1766,7 +1766,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
         /**
          * Returns an estimate of the number of threads waiting on
          * this condition.
-         * Implements {@link AbstractQueuedLongSynchronizer#getWaitQueueLength}
+         * Implements {@link AbstractQueuedLongSynchronizer#getWaitQueueLength}.
          * @return the estimated number of waiting threads.
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          * returns false
@@ -1785,7 +1785,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
         /**
          * Returns a collection containing those threads that may be
          * waiting on this Condition.
-         * Implements {@link AbstractQueuedLongSynchronizer#getWaitingThreads}
+         * Implements {@link AbstractQueuedLongSynchronizer#getWaitingThreads}.
          * @return the collection of threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          * returns false

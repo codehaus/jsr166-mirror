@@ -21,7 +21,7 @@ public class Executors {
      * multithreaded servers.
      *
      * @param nThreads the number of threads in the pool.
-     **/
+     */
     public static ThreadPoolExecutor newFixedThreadPool(int nThreads) {
         return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
                                       new LinkedBlockingQueue(), new ThreadExecutor.DefaultCallbacks());
@@ -38,14 +38,13 @@ public class Executors {
      * for sixty seconds are terminated and removed from the cache.
      * Thus, a pool that remains idle for long enough will not consume
      * any resources.
-     *
-     * */
+     */
     public static ThreadPoolExecutor newCachedThreadPool() {
         return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60000, TimeUnit.MILLISECONDS,
                                       new SynchronousQueue(), new ThreadExecutor.DefaultCallbacks());
     }
 
-
+    /** JAVADOC?? */
     public static ThreadPoolExecutor newThreadPool(int minThreads,
                                                    int maxThreads,
                                                    long keepAliveTime,
@@ -65,7 +64,7 @@ public class Executors {
      * subsequent tasks.)  Tasks are guaranteed to execute
      * sequentially, and no more than one task will be active at any
      * given time.
-     **/
+     */
     public static SingleThreadedExecutor newSingleThreadExecutor() {
         return new SingleThreadedExecutor();
     }
@@ -83,8 +82,8 @@ public class Executors {
 
     /**
      * Construct a ScheduledExecutor.  A ScheduledExecutor is an Executor
-     * which can schedule tasks to run
-     * at a given future time, or execute periodically.
+     * which can schedule tasks to run at a given future time,
+     * or execute periodically.
      */
     public static ScheduledExecutor newScheduledExecutor(int minThreads,
                                                          int maxThreads,
@@ -93,5 +92,4 @@ public class Executors {
                                                          ExecutorService.Callbacks handler) {
         return new ScheduledExecutor(minThreads, maxThreads, keepAliveTime, granularity, handler);
     }
-
 }

@@ -40,14 +40,14 @@ start a potentially long-running computation and query the FutureTask
 to determine if its execution has completed, or cancel it.
 
 <p> The {@link java.util.concurrent.Executors} class provides factory
-methods for the most common kinds and styles of Executors, as well as
-a few utilities methods for using them.
+methods for the most common kinds and configurations of Executors, as
+well as a few utility methods for using them.
 
 <h2>Queues</h2>
 
  The java.util.concurrent {@link
 java.util.concurrent.ConcurrentLinkedQueue} class supplies an
-efficient sclable thread-safe non-blocking FIFO queue.
+efficient scalable thread-safe non-blocking FIFO queue.
 
 <p> Five implementations in java.util.concurrent support the extended
 {@link java.util.concurrent.BlockingQueue} interface, that defines
@@ -56,14 +56,17 @@ java.util.concurrent.LinkedBlockingQueue}, {@link
 java.util.concurrent.ArrayBlockingQueue}, {@link
 java.util.concurrent.SynchronousQueue}, {@link
 java.util.concurrent.PriorityBlockingQueue}, and {@link
-java.util.concurrent.DelayQueue}.
+java.util.concurrent.DelayQueue}. The different classes cover the most
+common usage contexts for producer-consumer, messaging, parallel
+tasking, and related concurrent designs.
 
 
 <h2>Timing</h2>
 
 The {@link java.util.concurrent.TimeUnit} class provides multiple
-granularities (including nanoseconds) for both accessing time and
-performing time-out based operations.
+granularities (including nanoseconds) for specifying and controlling
+time-out based operations. Nearly all other classes in the package
+contain operations based on time-outs in addition to indefinite waits.
 
 <h2>Synchronizers</h2>
 
@@ -113,5 +116,5 @@ any updates since the iterator was created.
 
 <hr>
 <address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
-<!-- hhmts start --> Last modified: Mon Jul  7 20:32:42 EDT 2003 <!-- hhmts end -->
+<!-- hhmts start --> Last modified: Tue Aug  5 20:39:44 EDT 2003 <!-- hhmts end -->
 </body> </html>

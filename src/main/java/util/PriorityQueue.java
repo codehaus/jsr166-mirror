@@ -37,7 +37,7 @@
  * Multiple threads should not access a <tt>PriorityQueue</tt>
  * instance concurrently if any of the threads modifies the list
  * structurally. Instead, use the thread-safe {@link
- * java.util.concurrent.BlockingPriorityQueue} class.
+ * java.util.concurrent.PriorityBlockingQueue} class.
  *
  * 
  * <p>Implementation note: this implementation provides O(log(n)) time

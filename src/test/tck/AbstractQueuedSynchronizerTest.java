@@ -61,9 +61,11 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         }
         
         private final Sync sync = new Sync();
-        public void lock() { sync.acquireExclusiveUninterruptibly(1);  }
         public boolean tryLock() { 
             return sync.acquireExclusiveState(false, 1, null) >= 0;
+        }
+        public void lock() { 
+            if (!tryLock()) sync.acquireExclusiveUninterruptibly(1);
         }
         public void lockInterruptibly() throws InterruptedException { 
             sync.acquireExclusiveInterruptibly(1);

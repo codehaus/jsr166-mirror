@@ -1,11 +1,12 @@
-package java.util;
+ package java.util;
 
 /**
  * Mixin interface used by collections, maps, and similar objects to
  * indicate that their elements or mappings are stored in sorted
  * order.
  */
-public interface Sorted<E> {
+
+public interface Sorted {
     /**
      * Returns the comparator used to order this collection, or <tt>null</tt>
      * if this collection is sorted according to its elements natural ordering.
@@ -13,5 +14,5 @@ public interface Sorted<E> {
      * @return the comparator used to order this collection, or <tt>null</tt>
      * if this collection is sorted according to its elements natural ordering.
      */
-    Comparator<E> comparator();
+    Comparator comparator();
 }

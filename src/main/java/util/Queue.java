@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util;
 
 /**
@@ -17,7 +23,7 @@ package java.util;
  * failure. It is designed for use in collections in which failure to
  * add is a normal, rather than exceptional occurrence, for example,
  * in fixed-capacity (or &ldquo;bounded&rdquo;) queues.
- *
+ * 
  * <p>The {@link #remove()} and {@link #poll()} methods remove and return an
  * element in accord with the implementation's ordering policy. For example,
  * in FIFO queues, they remove and return the oldest element in the queue.
@@ -71,14 +77,14 @@ public interface Queue<E> extends Collection<E> {
      * to) first-in-first-out (FIFO), element priority, and arbitrary.
      *
      * @return an element previously on the queue, or <tt>null</tt> if the
-     *         queue is empty.
+     *         queue is empty. 
      */
     public E poll();
 
     /**
      * Remove and return an element from the queue.  This method differs
      * from the <tt>poll</tt> method in that it throws an exception if the
-     * queue is empty.
+     * queue is empty. 
      *
      * @return an element previously on the queue.
      * @throws NoSuchElementException if the queue is empty.

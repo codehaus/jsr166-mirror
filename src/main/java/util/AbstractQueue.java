@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util;
 
 /**
@@ -7,6 +13,7 @@ package java.util;
  * The provided implementations all assume that the base implementation
  * does <em>not</em> allow null elements.
  */
+ 
 public abstract class AbstractQueue<E> extends AbstractCollection<E> implements Queue<E> {
 
     public boolean add(E x) {

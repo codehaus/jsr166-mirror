@@ -205,6 +205,53 @@ public class ReentrantLockTest extends JSR166TestCase {
     } 
 
     /**
+     * hasQueuedThread(null) throws NPE
+     */
+    public void testHasQueuedThreadNPE() { 
+	final ReentrantLock sync = new ReentrantLock();
+        try {
+            sync.hasQueuedThread(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        }
+    }
+
+    /**
+     * hasQueuedThread reports whether a thread is queued.
+     */
+    public void testHasQueuedThread() { 
+	final ReentrantLock sync = new ReentrantLock();
+        Thread t1 = new Thread(new InterruptedLockRunnable(sync));
+        Thread t2 = new Thread(new InterruptibleLockRunnable(sync));
+        try {
+            assertFalse(sync.hasQueuedThread(t1));
+            assertFalse(sync.hasQueuedThread(t2));
+            sync.lock();
+            t1.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(sync.hasQueuedThread(t1));
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(sync.hasQueuedThread(t1));
+            assertTrue(sync.hasQueuedThread(t2));
+            t1.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(sync.hasQueuedThread(t1));
+            assertTrue(sync.hasQueuedThread(t2));
+            sync.unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(sync.hasQueuedThread(t1));
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(sync.hasQueuedThread(t2));
+            t1.join();
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
+
+    /**
      * getQueuedThreads includes waiting threads
      */
     public void testGetQueuedThreads() { 

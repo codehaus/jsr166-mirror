@@ -877,6 +877,53 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     } 
 
     /**
+     * hasQueuedThread(null) throws NPE
+     */
+    public void testHasQueuedThreadNPE() { 
+	final ReentrantReadWriteLock sync = new ReentrantReadWriteLock();
+        try {
+            sync.hasQueuedThread(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        }
+    }
+
+    /**
+     * hasQueuedThread reports whether a thread is queued.
+     */
+    public void testHasQueuedThread() { 
+	final ReentrantReadWriteLock sync = new ReentrantReadWriteLock();
+        Thread t1 = new Thread(new InterruptedLockRunnable(sync));
+        Thread t2 = new Thread(new InterruptibleLockRunnable(sync));
+        try {
+            assertFalse(sync.hasQueuedThread(t1));
+            assertFalse(sync.hasQueuedThread(t2));
+            sync.writeLock().lock();
+            t1.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(sync.hasQueuedThread(t1));
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(sync.hasQueuedThread(t1));
+            assertTrue(sync.hasQueuedThread(t2));
+            t1.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(sync.hasQueuedThread(t1));
+            assertTrue(sync.hasQueuedThread(t2));
+            sync.writeLock().unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(sync.hasQueuedThread(t1));
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(sync.hasQueuedThread(t2));
+            t1.join();
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
+
+    /**
      * getQueueLength reports number of waiting threads
      */
     public void testGetQueueLength() { 

@@ -574,6 +574,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         /**
          * Returns a string identifying this lock, as well as its lock state.
+         * The state, in brackets, includes the String 
+         * &quot;Read locks =&quot; followed by the number of held
+         * read locks.
          * @return a string identifying this lock, as well as its lock state.
          */
         public String toString() {
@@ -841,7 +844,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         /**
-         * Returns a string identifying this lock, as well as its lock state.
+         * Returns a string identifying this lock, as well as its lock
+         * state.  The state, in brackets includes either the String
+         * &quot;Unlocked&quot; or the String &quot;Locked by&quot;
+         * followed by the {@link Thread#getName} of the owning thread.
          * @return a string identifying this lock, as well as its lock state.
          */
         public String toString() {
@@ -1063,6 +1069,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Returns a string identifying this lock, as well as its lock state.
+     * The state, in brackets, includes the String &quot;Write locks =&quot;
+     * follwed by the number of reentrantly held write locks, and the
+     * String &quot;Read locks =&quot; followed by the number of held
+     * read locks.
      * @return a string identifying this lock, as well as its lock state.
      */
     public String toString() {

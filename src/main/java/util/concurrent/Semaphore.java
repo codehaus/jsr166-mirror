@@ -652,8 +652,11 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Returns a string identifying this semaphore, as well as the number of permits.
-     * @return a string identifying this semaphore, as well as the number of permits.
+     * Returns a string identifying this semaphore, as well its state.
+     * The state, in brackets, includes the String 
+     * &quot;Permits =&quot; followed by the number of permits.
+     * @return a string identifying this semaphore, as well as its
+     * state
      */
     public String toString() {
         return super.toString() + "[Permits = " + sync.getPermits() + "]";

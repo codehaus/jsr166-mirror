@@ -53,7 +53,7 @@ import java.util.*;
  *        final Runnable beeper = new Runnable() {
  *                public void run() { System.out.println("beep"); }
  *            };
- *        final ScheduledFuture<?> beeperHandle = 
+ *        final ScheduledFuture&lt;?&gt; beeperHandle = 
  *            scheduler.scheduleAtFixedRate(beeper, 10, 10, SECONDS);
  *        scheduler.schedule(new Runnable() {
  *                public void run() { beeperHandle.cancel(true); }

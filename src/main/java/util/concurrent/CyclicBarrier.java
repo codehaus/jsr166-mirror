@@ -175,7 +175,7 @@ public class CyclicBarrier {
                 try {
                     if (!timed) 
                         trip.await();
-                    else if (nanos > 0)
+                    else if (nanos > 0L)
                         nanos = trip.awaitNanos(nanos);
                 } catch (InterruptedException ie) {
                     breakBarrier();
@@ -189,7 +189,7 @@ public class CyclicBarrier {
                 if (g < generation)
                     return index;
 
-                if (timed && nanos <= 0) {
+                if (timed && nanos <= 0L) {
                     breakBarrier();
                     throw new TimeoutException();
                 }
@@ -297,7 +297,7 @@ public class CyclicBarrier {
      */
     public int await() throws InterruptedException, BrokenBarrierException {
         try {
-            return dowait(false, 0);
+            return dowait(false, 0L);
         } catch (TimeoutException toe) {
             throw new Error(toe); // cannot happen;
         }

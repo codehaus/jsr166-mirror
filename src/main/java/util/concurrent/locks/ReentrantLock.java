@@ -140,12 +140,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         // Methods relayed from outer class
 
         final Thread getOwner() {
-            return (getState() != 0)? owner : null;
+            int c = getState();
+            Thread o = owner;
+            return (c == 0)? null : o;
         }
         
         final int getHoldCount() {
             int c = getState();
-            return (owner == Thread.currentThread())? c : 0;
+            Thread o = owner;
+            return (o == Thread.currentThread())? c : 0;
         }
         
         final boolean isHeldByCurrentThread() {
@@ -697,7 +700,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Returns a string identifying this lock, as well as its lock state.
+     * Returns a string identifying this lock, as well as its lock
+     * state.  The state, in brackets, includes either the String
+     * &quot;Unlocked&quot; or the String &quot;Locked by&quot;
+     * followed by the {@link Thread#getName} of the owning thread.
      * @return a string identifying this lock, as well as its lock state.
      */
     public String toString() {

@@ -114,7 +114,7 @@ public class LockSupport {
      * for example, the interrupt status of the thread upon return.
      */
     public static void park() {
-        unsafe.park(false, 0);
+        unsafe.park(false, 0L);
     }
 
     /**
@@ -141,7 +141,8 @@ public class LockSupport {
      * @param nanos the maximum number of nanoseconds to wait
      */
     public static void parkNanos(long nanos) {
-        unsafe.park(false, nanos);   
+        if (nanos > 0)
+            unsafe.park(false, nanos);   
     }
 
     /**

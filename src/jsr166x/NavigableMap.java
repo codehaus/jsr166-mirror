@@ -9,19 +9,19 @@ package jsr166x;
 import java.util.*;
 
 /**
- * A {@link SortedMap} extended with methods returning key-value pairs
- * holding the closest matches for given search targets. Methods
- * <tt>lowerEntry</tt>, <tt>floorEntry</tt>, <tt>ceilingEntry</tt>,
- * and <tt>higherEntry</tt> return {@link Map.Entry} objects
- * associated with keys respectively less than, less than or equal,
- * greater than or equal, and greater than a given key, returning
- * <tt>null</tt> if there is no such key.  These methods are designed
- * for locating, not traversing entries. To traverse, use view
- * iterators and/or <tt>submap</tt>. This interface additionally
- * defines methods <tt>firstEntry</tt>, <tt>pollFirstEntry</tt>
- * <tt>lastEntry</tt>, and <tt>pollLastEntry</tt> that return and/or
- * remove the least and greatest mappings, if any exist, else
- * returning <tt>null</tt>.
+ * A {@link SortedMap} extended with navigation methods returning
+ * key-value pairs holding the closest matches for given search
+ * targets. Methods <tt>lowerEntry</tt>, <tt>floorEntry</tt>,
+ * <tt>ceilingEntry</tt>, and <tt>higherEntry</tt> return
+ * <tt>Map.Entry</tt> objects associated with keys respectively less
+ * than, less than or equal, greater than or equal, and greater than a
+ * given key, returning <tt>null</tt> if there is no such key.  These
+ * methods are designed for locating, not traversing entries. To
+ * traverse, use view iterators and/or <tt>submap</tt>. This interface
+ * additionally defines methods <tt>firstEntry</tt>,
+ * <tt>pollFirstEntry</tt>, <tt>lastEntry</tt>, and
+ * <tt>pollLastEntry</tt> that return and/or remove the least and
+ * greatest mappings, if any exist, else returning <tt>null</tt>.
  *
  * <p> Implementations of these methods are expected to return
  * <tt>Map.Entry</tt> pairs representing snapshots of mappings at the
@@ -37,11 +37,11 @@ import java.util.*;
 public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a key-value mapping associated with the least key
-     * greater than or equal to the given key, or null if there is
+     * greater than or equal to the given key, or <tt>null</tt> if there is
      * no such entry. 
      * 
      * @param key the key.
-     * @return an Entry associated with ceiling of given key, or null
+     * @return an Entry associated with ceiling of given key, or <tt>null</tt>
      * if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
@@ -52,12 +52,12 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
 
     /**
      * Returns a key-value mapping associated with the greatest
-     * key strictly less than the given key, or null if there is no
+     * key strictly less than the given key, or <tt>null</tt> if there is no
      * such entry. 
      * 
      * @param key the key.
      * @return an Entry with greatest key less than the given
-     * key, or null if there is no such Entry.
+     * key, or <tt>null</tt> if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
      * @throws NullPointerException if key is <tt>null</tt> and this map
@@ -67,11 +67,11 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
 
     /**
      * Returns a key-value mapping associated with the greatest
-     * key less than or equal to the given key, or null if there is no
+     * key less than or equal to the given key, or <tt>null</tt> if there is no
      * such entry. 
      * 
      * @param key the key.
-     * @return an Entry associated with floor of given key, or null
+     * @return an Entry associated with floor of given key, or <tt>null</tt>
      * if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
@@ -82,12 +82,12 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
 
     /**
      * Returns a key-value mapping associated with the least
-     * key strictly greater than the given key, or null if there is no
+     * key strictly greater than the given key, or <tt>null</tt> if there is no
      * such entry. 
      * 
      * @param key the key.
      * @return an Entry with least key greater than the given key, or
-     * null if there is no such Entry.
+     * <tt>null</tt> if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
      * @throws NullPointerException if key is <tt>null</tt> and this map
@@ -97,36 +97,36 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
 
     /**
      * Returns a key-value mapping associated with the least
-     * key in this map, or null if the map is empty.
+     * key in this map, or <tt>null</tt> if the map is empty.
      * 
-     * @return an Entry with least key, or null 
+     * @return an Entry with least key, or <tt>null</tt> 
      * if the map is empty.
      */
     public Map.Entry<K,V> firstEntry();
 
     /**
      * Returns a key-value mapping associated with the greatest
-     * key in this map, or null if the map is empty.
+     * key in this map, or <tt>null</tt> if the map is empty.
      * 
-     * @return an Entry with greatest key, or null
+     * @return an Entry with greatest key, or <tt>null</tt>
      * if the map is empty.
      */
     public Map.Entry<K,V> lastEntry();
 
     /**
      * Removes and returns a key-value mapping associated with
-     * the least key in this map, or null if the map is empty.
+     * the least key in this map, or <tt>null</tt> if the map is empty.
      * 
-     * @return the removed first entry of this map, or null
+     * @return the removed first entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
     public Map.Entry<K,V> pollFirstEntry();
 
     /**
      * Removes and returns a key-value mapping associated with
-     * the greatest key in this map, or null if the map is empty.
+     * the greatest key in this map, or <tt>null</tt> if the map is empty.
      * 
-     * @return the removed last entry of this map, or null
+     * @return the removed last entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
     public Map.Entry<K,V> pollLastEntry();

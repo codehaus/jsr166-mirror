@@ -36,7 +36,7 @@ import java.util.concurrent.*;
  * <em>optional</em> methods of the {@link Set} and {@link Iterator}
  * interfaces. Like most other concurrent collection implementations,
  * this class does not permit the use of <tt>null</tt> elements.
- * because null arguments and return values cannot be reliably
+ * because <tt>null</tt> arguments and return values cannot be reliably
  * distinguished from the absence of elements.
  *
  * @author Doug Lea
@@ -85,7 +85,7 @@ public class ConcurrentSkipListSet<E>
      *
      * @throws ClassCastException if the elements in the specified
      * collection are not comparable, or are not mutually comparable.
-     * @throws NullPointerException if the specified collection is null.
+     * @throws NullPointerException if the specified collection is <tt>null</tt>.
      */
     public ConcurrentSkipListSet(Collection<? extends E> c) {
         m = new ConcurrentSkipListMap<E,Object>();
@@ -97,7 +97,7 @@ public class ConcurrentSkipListSet<E>
      * sorted set, sorted according to the same ordering.
      *
      * @param s sorted set whose elements will comprise the new set.
-     * @throws NullPointerException if the specified sorted set is null.
+     * @throws NullPointerException if the specified sorted set is <tt>null</tt>.
      */
     public ConcurrentSkipListSet(SortedSet<E> s) {
         m = new ConcurrentSkipListMap<E,Object>(s.comparator());
@@ -217,10 +217,10 @@ public class ConcurrentSkipListSet<E>
 
     /**
      * Returns an element greater than or equal to the given element, or
-     * null if there is no such element.
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
-     * @return an element greater than or equal to given element, or null
+     * @return an element greater than or equal to given element, or <tt>null</tt>
      * if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
@@ -231,12 +231,12 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Returns an element strictly less than the given element, or null if
+     * Returns an element strictly less than the given element, or <tt>null</tt> if
      * there is no such element.
      * 
      * @param o the value to match
      * @return the greatest element less than the given element, or
-     * null if there is no such element.
+     * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
@@ -246,12 +246,12 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Returns an element less than or equal to the given element, or null
+     * Returns an element less than or equal to the given element, or <tt>null</tt>
      * if there is no such element.
      * 
      * @param o the value to match
      * @return the greatest element less than or equal to given
-     * element, or null if there is no such element.
+     * element, or <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
@@ -261,12 +261,12 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Returns an element strictly greater than the given element, or null
+     * Returns an element strictly greater than the given element, or <tt>null</tt>
      * if there is no such element.
      * 
      * @param o the value to match
      * @return the least element greater than the given element, or
-     * null if there is no such element.
+     * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
@@ -411,8 +411,8 @@ public class ConcurrentSkipListSet<E>
         
         /**
          * Creates a new submap. 
-         * @param fromElement inclusive least value, or null if from start
-         * @param toElement exclusive upper bound or null if to end
+         * @param fromElement inclusive least value, or <tt>null</tt> if from start
+         * @param toElement exclusive upper bound or <tt>null</tt> if to end
          * @throws IllegalArgumentException if fromElement and toElement
          * nonnull and fromElement greater than toElement
          */
@@ -520,10 +520,10 @@ public class ConcurrentSkipListSet<E>
 
         /**
          * Returns an element greater than or equal to the given
-         * element, or null if there is no such element.
+         * element, or <tt>null</tt> if there is no such element.
          * 
          * @param o the value to match
-         * @return an element greater than or equal to given element, or null
+         * @return an element greater than or equal to given element, or <tt>null</tt>
          * if there is no such element.
          * @throws ClassCastException if o cannot be compared with the
          * elements currently in the set.
@@ -539,12 +539,12 @@ public class ConcurrentSkipListSet<E>
         }
 
         /**
-         * Returns an element strictly less than the given element, or null if
+         * Returns an element strictly less than the given element, or <tt>null</tt> if
          * there is no such element.
          * 
          * @param o the value to match
          * @return the greatest element less than the given element, or
-         * null if there is no such element.
+         * <tt>null</tt> if there is no such element.
          * @throws ClassCastException if o cannot be compared with the
          * elements currently in the set.
          * @throws NullPointerException if o is <tt>null</tt>.
@@ -555,12 +555,12 @@ public class ConcurrentSkipListSet<E>
         }
 
         /**
-         * Returns an element less than or equal to the given element, or null
+         * Returns an element less than or equal to the given element, or <tt>null</tt>
          * if there is no such element.
          * 
          * @param o the value to match
          * @return the greatest element less than or equal to given
-         * element, or null if there is no such element.
+         * element, or <tt>null</tt> if there is no such element.
          * @throws ClassCastException if o cannot be compared with the
          * elements currently in the set.
          * @throws NullPointerException if o is <tt>null</tt>.
@@ -571,12 +571,12 @@ public class ConcurrentSkipListSet<E>
         }
 
         /**
-         * Returns an element strictly greater than the given element, or null
+         * Returns an element strictly greater than the given element, or <tt>null</tt>
          * if there is no such element.
          * 
          * @param o the value to match
          * @return the least element greater than the given element, or
-         * null if there is no such element.
+         * <tt>null</tt> if there is no such element.
          * @throws ClassCastException if o cannot be compared with the
          * elements currently in the set.
          * @throws NullPointerException if o is <tt>null</tt>.

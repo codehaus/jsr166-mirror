@@ -8,21 +8,25 @@ package jsr166x;
 import java.util.*;
 
 /**
- * A {@link SortedSet} extended with methods reporting closest matches
- * for given search targets. Methods <tt>lower</tt>, <tt>floor</tt>,
- * <tt>ceiling</tt>, and <tt>higher</tt> return keys respectively
- * less, less than or equal, greater than or equal, and greater than a
- * given key, returning <tt>null</tt> if there is no such key.  These
- * methods are designed for locating, not traversing entries. To
- * traverse, use view iterators and/or <tt>subset</tt>. This interface
- * additionally defines methods <tt>pollFirst</tt> and
- * <t>pollLast</tt> that return and remove the lowest and highest key,
- * if one exists, else returning <tt>null</tt>.
+ * A {@link SortedSet} extended with navigation methods reporting
+ * closest matches for given search targets. Methods <tt>lower</tt>,
+ * <tt>floor</tt>, <tt>ceiling</tt>, and <tt>higher</tt> return keys
+ * respectively less than, less than or equal, greater than or equal,
+ * and greater than a given key, returning <tt>null</tt> if there is
+ * no such key.  These methods are designed for locating, not
+ * traversing entries. To traverse, use view iterators and/or
+ * <tt>subset</tt>. This interface additionally defines methods
+ * <tt>pollFirst</tt> and <t>pollLast</tt> that return and remove the
+ * lowest and highest key, if one exists, else returning
+ * <tt>null</tt>.
  *
  * <p> The return values of these methods may be ambiguous in
  * implementations that permit <tt>null</tt> elements. However, even
- * in this case the result can be diambiguated by checking
- * <tt>contains(null)</tt>.
+ * in this case the result can be disambiguated by checking
+ * <tt>contains(null)</tt>. To avoid such issues, implementations of
+ * this interface are encouraged <em>not</em> to permit insertion of
+ * <tt>null</tt> elements. (Note that sorted sets of {@link
+ * Comparable} elements intrinsically do not permit <tt>null</tt>.)
  *
  * @author Doug Lea
  * @param <E> the type of elements maintained by this set
@@ -30,11 +34,11 @@ import java.util.*;
 public interface NavigableSet<E> extends SortedSet<E> {
     /**
      * Returns an element greater than or equal to the given element, or
-     * null if there is no such element.
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
-     * @return an element greater than or equal to given element, or null
-     * if there is no such element.
+     * @return an element greater than or equal to given element, or
+     * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt> 
@@ -43,12 +47,12 @@ public interface NavigableSet<E> extends SortedSet<E> {
     public E ceiling(E o);
 
     /**
-     * Returns an element strictly less than the given element, or null if
-     * there is no such element.
+     * Returns an element strictly less than the given element, or
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
      * @return the greatest element less than the given element, or
-     * null if there is no such element.
+     * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>
@@ -57,12 +61,12 @@ public interface NavigableSet<E> extends SortedSet<E> {
     public E lower(E o);
 
     /**
-     * Returns an element less than or equal to the given element, or null
-     * if there is no such element.
+     * Returns an element less than or equal to the given element, or
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
      * @return the greatest element less than or equal to given
-     * element, or null if there is no such element.
+     * element, or <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
@@ -71,12 +75,12 @@ public interface NavigableSet<E> extends SortedSet<E> {
     public E floor(E o);
 
     /**
-     * Returns an element strictly greater than the given element, or null
-     * if there is no such element.
+     * Returns an element strictly greater than the given element, or
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
      * @return the least element greater than the given element, or
-     * null if there is no such element.
+     * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>
@@ -117,7 +121,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws IllegalArgumentException if <tt>fromElement</tt> is
      * greater than <tt>toElement</tt>.
      * @throws NullPointerException if <tt>fromElement</tt> or
-     *	       <tt>toElement</tt> is <tt>null</tt>.
+     *	       <tt>toElement</tt> is <tt>null</tt> 
+     * and this set deas not permit <tt>null</tt> elements
      */
     public NavigableSet<E> subSet(E fromElement, E toElement);
 
@@ -132,7 +137,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
-     * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>.
+     * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>
+     * and this set deas not permit <tt>null</tt> elements
      */
     public NavigableSet<E> headSet(E toElement);
 
@@ -148,7 +154,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * compatible with this set's comparator (or, if the set has no
      * comparator, if <tt>fromElement</tt> does not implement
      * <tt>Comparable</tt>).
-     * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>.
+     * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
+     * and this set deas not permit <tt>null</tt> elements
      */
     public NavigableSet<E> tailSet(E fromElement);
 }

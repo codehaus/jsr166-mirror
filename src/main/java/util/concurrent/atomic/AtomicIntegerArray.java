@@ -37,7 +37,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
     public AtomicIntegerArray(int length) {
         array = new int[length];
         for (int i = 0; i < length; ++i)
-            unsafe.putIntVolatile(array, rawIndex(0), 0);
+            unsafe.putIntVolatile(array, rawIndex(i), 0);
 
     }
 

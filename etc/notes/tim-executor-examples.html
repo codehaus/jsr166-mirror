@@ -139,7 +139,8 @@ underlying <code>NativeImpl</code>. </p>
                         System.loadLibrary(library);
                     }
                 });
-                executor.executor(ftask);
+                executor.execute(ftask);
+                ftask.get();
             }
             catch (ExecutionException e) {
                 if (e.getCause() == null) {

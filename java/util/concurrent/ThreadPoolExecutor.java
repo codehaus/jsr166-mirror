@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * A {@link ThreadedExecutor} that executes each submitted task on one of
  * several pooled threads.
- * 
+ *
  * <p>Thread pools address two different problems at the
  * same time: they usually provide faster performance when executing large
  * numbers of asynchronous tasks, due to reduced per-task invocation
@@ -20,7 +20,7 @@ import java.util.List;
  * <p>This class is very configurable and can be configured to create a new
  * thread for each task, or even to execute tasks sequentially in a single
  * thread, in addition to its most common configuration, which reuses a pool
- * of threads.  
+ * of threads.
  *
  * <p>To be useful across a wide range of contexts, this class
  * provides many adjustable parameters and extensibility hooks.
@@ -43,9 +43,9 @@ import java.util.List;
  * may be useful for monitoring and tuning executors.
  *
  * <p>
- * <b>Tuning guide</b> 
+ * <b>Tuning guide</b>
  * @@@brian I have copied some stuff from dl.u.c; please review to make sure
- * that it is still correct.  
+ * that it is still correct.
  * @@@brian Also please check if my statements about queuing and blocking
  * are correct.
  * <dl>
@@ -63,7 +63,7 @@ import java.util.List;
  * <dt>Keep-alive.  The keepAliveTime determines what happens to idle
  * threads.  If the pool currently has more than the minimum number of
  * threads, excess threads will be terminated if they have been idle
- * for more than the keepAliveTime.  
+ * for more than the keepAliveTime.
  *
  * <dt>Queueing.  You are free to specify the queuing mechanism used
  * to handle submitted tasks.  The newCachedThreadPool factory method
@@ -133,8 +133,8 @@ import java.util.List;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/02/26 10:48:09 $
- * @editor $Author: jozart $
+ * @revised $Date: 2003/02/26 15:09:10 $
+ * @editor $Author: tim $
  */
 public class ThreadPoolExecutor implements ThreadedExecutor {
 
@@ -157,7 +157,7 @@ public class ThreadPoolExecutor implements ThreadedExecutor {
      * tasks submitted by the <tt>execute</tt> method.
      * @throws IllegalArgumentException if minThreads, maxThreads, or
      * keepAliveTime less than zero, or if minThreads greater than
-     * maxThreads.  
+     * maxThreads.
      * @throws NullPointerException if <tt>workQueue</tt> is null
      */
     public ThreadPoolExecutor(int minThreads,
@@ -196,7 +196,9 @@ public class ThreadPoolExecutor implements ThreadedExecutor {
         return null;
     }
 
-    public boolean isShutdown() {}
+    public boolean isShutdown() {
+        return false;
+    }
 
     public void interrupt() {}
 
@@ -205,7 +207,7 @@ public class ThreadPoolExecutor implements ThreadedExecutor {
     }
 
     public boolean awaitTermination(long timeout, TimeUnit granularity)
-    throws InterruptedException {
+            throws InterruptedException {
         return false;
     }
 
@@ -221,7 +223,7 @@ public class ThreadPoolExecutor implements ThreadedExecutor {
     public void setMinimumPoolSize(int minThreads) {}
 
     /**
-     * Returns the minimum allowed number of threads.  
+     * Returns the minimum allowed number of threads.
      *
      * @return the minimum number of threads
      */
@@ -420,7 +422,7 @@ public class ThreadPoolExecutor implements ThreadedExecutor {
      * Methods invoked during various points of execution, allowing fine-grained
      * control and monitoring.
      */
-    
+
     /**
      * Method invoked prior to executing the given Runnable in given
      * thread.  This method may be used to re-initialize ThreadLocals,
@@ -430,7 +432,7 @@ public class ThreadPoolExecutor implements ThreadedExecutor {
      * @param r the task that will be executed.
      */
     protected void beforeExecute(Thread t, Runnable r) { }
-    
+
     /**
      * Method invoked upon completion of execution of the given
      * Runnable.  If non-null, the Throwable is the uncaught exception
@@ -441,7 +443,7 @@ public class ThreadPoolExecutor implements ThreadedExecutor {
      * execution completed normally.
      */
     protected void afterExecute(Runnable r, Throwable t) { }
-    
+
     /**
      * Method invoked when the Executor has terminated.  Default
      * implementation does nothing.

@@ -27,7 +27,8 @@ package java.util.concurrent;
  * lock of the given object - they will not perform a {@link Lock#lock}
  * invocation.
  *
- * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
+ * <p>Except where noted, passing a <tt>null</tt> value for any parameter,
+ * or array element,  
  * will result in a {@link NullPointerException} being thrown.
  *
  * <h3>Memory Synchronization</h3>
@@ -48,7 +49,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/12 07:01:35 $
+ * @revised $Date: 2002/12/12 23:53:23 $
  * @editor $Author: dholmes $
  *
  * @fixme add implementation notes for any performance issues related to
@@ -210,7 +211,7 @@ public class Locks {
      * then:
      * <ul>
      * <li><tt>c.await()</tt> is analagous to <tt>o.wait()</tt>
-     * <li><tt>c.signal()</tt> is analagous to <tt>o.notify()</t>; and
+     * <li><tt>c.signal()</tt> is analagous to <tt>o.notify()</tt>; and
      * <li><tt>c.signalAll()</tt> is analagous to <tt>o.notifyAll()</tt>
      * </ul>
      * in that:

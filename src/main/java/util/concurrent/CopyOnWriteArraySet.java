@@ -99,4 +99,5 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     public boolean  removeAll(Collection<?> c)        { return al.removeAll(c); }
     public boolean  retainAll(Collection<?> c)        { return al.retainAll(c); }
 
+    public Object clone() { return new CopyOnWriteArraySet(al); }
 }

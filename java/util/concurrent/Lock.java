@@ -26,10 +26,11 @@ package java.util.concurrent;
  * structures require the use of what is called &quot;hand-over-hand&quot; or 
  * &quot;chain locking&quote: you acquire the lock of node A, then node B, 
  * then release A and acquire C, then release B and acquire D and so on. 
- * Implementations of this class facilitate the use of such advanced 
- * algorithms by allowing a <tt>Lock</tt> to be acquired and released in 
- * different scopes, and allowing
- * multiple locks to be acquired and released in any order. 
+ * Implementations of the <tt>Lock</tt> class facilitate the use of such 
+ * advanced algorithms by allowing a lock to be acquired and released in 
+ * different scopes, and allowing multiple locks to be acquired and released 
+ * in any order. 
+ *
  * <p>With this increased flexibilty comes
  * additional responsibility as the absence of block-structured locking
  * removes the automatic release of locks that occurs with 
@@ -44,8 +45,9 @@ package java.util.concurrent;
  *         l.unlock();
  *     }
  * </tt></pre>
+ *
  * <p>A <tt>Lock</tt> also provides additional functionality over the use
- * of <tt>synchronized</tt> methods and blocks by providing a non-blocking
+ * of <tt>synchronized</tt> methods and statements by providing a non-blocking
  * attempt to acquire a lock ({@link #tryLock()}), an attempt to acquire the
  * lock that can be interrupted ({@link #lockInterruptibly}, and an attempt
  * to acquire the lock that can timeout ({@link #tryLock(long, Clock)}).
@@ -54,7 +56,18 @@ package java.util.concurrent;
  *
  * <p>A <tt>Lock</tt> can also provide behaviour and semantics that is quite
  * different to that of the implicit monitor lock, such as guaranteed ordering,
- * non-reentrant usage, or deadlock detection.
+ * non-reentrant usage, or deadlock detection. If an implementation provides
+ * such specialised semantics then the implementation must document those
+ * semantics.
+ *
+ * <p>It is recognised that the three forms of lock acquisition (interruptible,
+ * non-interruptible, and timed) may differ in their ease of implementation
+ * on some platforms and in their performance characteristics.
+ * In particular, it may be difficult to provide these features and maintain 
+ * specific semantics such as ordering guarantees. Consequently an 
+ * implementation is not required to define exactly the same guarantees or
+ * semantics for all three forms of lock acquistion; but it is required to
+ * clearly document the semantics and guarantees provided by each of them.
  *
  * @see ReentrantLock
  * @see Condition
@@ -63,7 +76,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/05 06:12:59 $
+ * @revised $Date: 2002/12/06 07:27:55 $
  * @editor $Author: dholmes $
  *
  * @fixme We need to say something about l.lock() versus synchronized(l)
@@ -75,7 +88,8 @@ public interface Lock {
      * Acquire the lock. 
      * <p>Acquires the lock if it is available and returns immediately.
      * <p>If the lock is not available then
-     * the current thread will block until the lock has been acquired.
+     * the current thread thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until the lock has been acquired.
      * <p>A concrete <tt>Lock</tt> implementation may be able to detect 
      * erroneous use of the
      * lock, such as an invocation that would cause deadlock, and may throw 
@@ -89,8 +103,9 @@ public interface Lock {
      * Acquire the lock only if the current thread is not 
      * {@link Thread#interrupt interrupted}.
      * <p>Acquires the lock if it is available and returns immediately.
-     * <p>If the lock is not available then the current thread will block until
-     * one of two things happens:
+     * <p>If the lock is not available then
+     * the current thread thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until one of two things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
      * <li> Some other thread {@link Thread#interrupt interrupts} the current
@@ -100,6 +115,11 @@ public interface Lock {
      * while waiting to acquire the lock then {@link InterruptedException}
      * is thrown and the current thread's <em>interrupted status</em> 
      * is cleared.
+     *
+     * <p>The ability to interrupt a lock acquisition in some implementations
+     * could reasonably be foreseen to be an expensive operation. 
+     * The programmer should be aware that this may be the case. An
+     * implementation should document when this is the case.
      *
      * <p>A concrete <tt>Lock</tt> implementation may be able to detect 
      * erroneous use of the
@@ -147,26 +167,27 @@ public interface Lock {
     public boolean tryLock();
 
     /**
-     * Acquire the lock if it is free within the given wait time and the
+     * Acquire the lock if it is free within the given waiting time and the
      * current thread has not been {@link Thread#interrupt interrupted}. 
      * <p>Acquires the lock if it is available and returns immediately
      * with the value <tt>true</tt>.
-     * <p>If the lock is not available then the current thread will block until
-     * one of three things happens:
+     * <p>If the lock is not available then
+     * the current thread thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
      * <li> Some other thread {@link Thread#interrupt interrupts} the current
      * thread; or
-     * <li> The specified wait time elapses
+     * <li> The specified waiting time elapses
      * </ul>
      * <p>If the lock is acquired then the value <tt>true</tt> is returned.
      * <p>If the current thread is {@link Thread#interrupt interrupted} 
      * while waiting to acquire the lock then {@link InterruptedException}
      * is thrown and the current thread's <em>interrupted status</em> 
      * is cleared.
-     * <p>If the specified wait time elapses then the value <tt>false</tt>
+     * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
-     * <p>The given wait time is a best-effort lower bound. If the time is 
+     * <p>The given waiting time is a best-effort lower bound. If the time is 
      * less than or equal to zero, the method will not wait at all, but may 
      * still throw an <tt>InterruptedException</tt> if the thread is 
      * {@link Thread#interrupt interrupted}.
@@ -180,7 +201,7 @@ public interface Lock {
      * @param time the maximum time to wait for the lock
      * @param granularity the time unit of the <tt>time</tt> argument.
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
-     * if the wait time elapsed before the lock was acquired.
+     * if the waiting time elapsed before the lock was acquired.
      *
      * @throws InterruptedException if the current thread is interrupted
      * while trying to acquire the lock.
@@ -211,7 +232,7 @@ public interface Lock {
     /**
      * Construct a new {@link Condition} that is bound to this <tt>Lock</tt>.
      * Conditions are primarily used with the built-in locking provided by
-     * <tt>synchronized</tt> methods and blocks 
+     * <tt>synchronized</tt> methods and statements 
      * (see {@link Locks#newConditionFor}, but in some rare circumstances it 
      * can be useful to wait for a condition when working with a data 
      * structure that is accessed using a stand-alone <tt>Lock</tt> class 
@@ -235,4 +256,12 @@ public interface Lock {
     public Condition newCondition();
 
 }
+
+
+
+
+
+
+
+
 

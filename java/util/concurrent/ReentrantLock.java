@@ -46,7 +46,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/05 06:14:18 $
+ * @revised $Date: 2002/12/06 07:27:55 $
  * @editor $Author: dholmes $
  * 
  **/
@@ -65,8 +65,9 @@ public class ReentrantLock implements Lock {
      * already holds the lock then the hold count is incremented by one and
      * the method returns immediately.
      * <p>If the lock is held by another thread then the
-     * current thread will block until the lock is acquired, at which time the 
-     * lock hold count is set to one. 
+     * the current thread thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until the lock has been acquired
+     * at which time the lock hold count is set to one. 
      */
     public void lock() {}
 
@@ -77,8 +78,9 @@ public class ReentrantLock implements Lock {
      * immediately, setting the lock hold count to one.
      * <p>If the current thread already holds this lock then the hold count 
      * is incremented by one and the method returns immediately.
-     * <p>If the lock is held by another thread then the current thread will 
-     * block until one of two things happens:
+     * <p>If the lock is held by another thread then the
+     * the current thread thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until one of two things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
      * <li> Some other thread {@link Thread#interrupt interrupts} the current
@@ -120,20 +122,21 @@ public class ReentrantLock implements Lock {
     /**
      *
      * Acquire the lock if it is not held by another thread  within the given 
-     * wait time and the current thread has not been interrupted. 
+     * waiting time and the current thread has not been interrupted. 
      * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately with the value <tt>true</tt>, setting the lock hold count 
      * to one.
      * <p> If the current thread
      * already holds this lock then the hold count is incremented by one and
      * the method returns <tt>true</code>.
-     * <p>If the lock is held by another then the current thread will block 
-     * until one of three things happens:
+     * <p>If the lock is held by another thread then the
+     * the current thread thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
      * <li> Some other thread {@link Thread#interrupt interrupts} the current
      * thread; or
-     * <li> The specified wait time elapses
+     * <li> The specified waiting time elapses
      * </ul>
      * <p>If the lock is acquired then the value <tt>true</tt> is returned and
      * the lock hold count is set to one.
@@ -141,16 +144,16 @@ public class ReentrantLock implements Lock {
      * while waiting to acquire the lock then {@link InterruptedException}
      * is thrown and the current thread's <em>interrupted status</em> 
      * is cleared.
-     * <p>If the specified wait time elapses then the value <tt>false</tt>
+     * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
-     * <p>The given wait time is a best-effort lower bound. If the time is 
+     * <p>The given waiting time is a best-effort lower bound. If the time is 
      * less than or equal to zero, the method will not wait at all, but may 
      * still throw an <tt>InterruptedException</tt> if the thread is 
      * {@link Thread#interrupt interrupted}.
      *
      * @return <tt>true</tt>if the lock was free and was acquired by the
      * current thread, or the lock was already held by the current thread; and
-     * <tt>false</tt> if the wait time elapsed before the lock could be 
+     * <tt>false</tt> if the waiting time elapsed before the lock could be 
      * acquired.
 
      * @fixme What if the current thread holds the lock and is in the
@@ -240,7 +243,7 @@ public class ReentrantLock implements Lock {
      * {@link Object#notifyAll notifyAll}) have with the built-in monitor
      * lock:
      * <ul>
-     * <li>If this lock is not held when any of the condition 
+     * <li>If this lock is not held when any of the {@link Condition}
      * {@link Condition#await() waiting} or {@link Condition#signal signalling}
      * methods are called, then an {@link IllegalMonitorStateException} is
      * thrown.

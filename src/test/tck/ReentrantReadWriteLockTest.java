@@ -57,11 +57,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             return super.getQueuedThreads(); 
         }
         public PublicCondition newCondition() { 
-            return new PublicCondition(this);
+            return new PublicCondition();
         }
 
-        static class PublicCondition extends ReentrantReadWriteLock.WriterConditionObject {
-            PublicCondition(PublicReentrantReadWriteLock l) { super(l); }
+        class PublicCondition extends ReentrantReadWriteLock.WriterConditionObject {
+            PublicCondition() { }
             public Collection<Thread> getWaitingThreads() { 
                 return super.getWaitingThreads(); 
             }

@@ -8,9 +8,9 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * An object reference that may be updated atomically. See the package
- * specification for description of the properties of atomic
- * variables.
+ * An object reference that may be updated atomically. See the {@link
+ * java.util.concurrent.atomic} package specification for description
+ * of the properties of atomic variables.
  * @since 1.5
  * @author Doug Lea
  * @param <V> The type of object referred to by this reference

@@ -9,8 +9,8 @@ import sun.misc.Unsafe;
 
 /**
  * A <tt>long</tt> array in which elements may be updated atomically.
- * See the package specification for description of the properties of
- * atomic variables.
+ * See the {@link java.util.concurrent.atomic} package specification
+ * for description of the properties of atomic variables.
  * @since 1.5
  * @author Doug Lea
  */

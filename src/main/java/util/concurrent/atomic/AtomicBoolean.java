@@ -9,8 +9,11 @@ import sun.misc.Unsafe;
 
 /**
  * A <tt>boolean</tt> value that may be updated atomically. See the
- * package specification for description of the properties of atomic
- * variables.
+ * {@link java.util.concurrent.atomic} package specification for
+ * description of the properties of atomic variables. An
+ * <tt>AtomicBoolean</tt> is used in applications such as atomically
+ * updated flags, and cannot be used as a replacement for a
+ * {@link java.lang.Boolean}.
  *
  * @since 1.5
  * @author Doug Lea

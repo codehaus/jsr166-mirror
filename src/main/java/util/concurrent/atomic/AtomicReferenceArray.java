@@ -9,8 +9,9 @@ import sun.misc.Unsafe;
 
 /**
  * An array of object references in which elements may be updated
- * atomically.  See the package specification for description of the
- * properties of atomic variables.
+ * atomically.  See the {@link java.util.concurrent.atomic} package
+ * specification for description of the properties of atomic
+ * variables.
  * @since 1.5
  * @author Doug Lea
  * @param <E> The base class of elements held in this array

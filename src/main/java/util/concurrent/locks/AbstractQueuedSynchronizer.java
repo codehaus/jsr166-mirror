@@ -49,7 +49,7 @@ import sun.misc.Unsafe;
  * queue. Usually, an implementation subclass will supports only one
  * of these modes, but both can come into play when for example
  * creating a {@link ReadWriteLock}. Subclasses that support only
- * exclusive or only shared modes need not redefine the methods for
+ * exclusive or only shared modes need not define the methods for
  * the unused mode.
  *
  * <p>This class defines a nested {@link Condition} class that can be
@@ -62,8 +62,8 @@ import sun.misc.Unsafe;
  * detailed behavior of {@link ConditionObject} depends of course on
  * the semantics of its synchronizer implementation.
  * 
- * <p> This class provides instrumentation and monitoring methods such
- * as {@link #hasQueuedThreads}, as well as similar methods for
+ * <p> This class provides, inspection, instrumentation and monitoring
+ * methods for the internal queue, as well as similar methods for
  * condition objects. These can be exported as desired into classes
  * using an <tt>AbstractQueuedSynchronizer</tt> for their
  * synchronization mechanics.
@@ -90,11 +90,65 @@ import sun.misc.Unsafe;
  *
  * Each of these methods by default throws {@link
  * UnsupportedOperationException}.  Implementations of these methods
- * should in general be short, and not block. Defining these methods
- * is the <em>only</em> supported means of using this class. All other
- * methods are declared <tt>final</tt> because they cannot be
- * independently varied.
+ * must be internally thread-safe, and should in general be short and
+ * not block. Defining these methods is the <em>only</em> supported
+ * means of using this class. All other methods are declared
+ * <tt>final</tt> because they cannot be independently varied.
  *
+ * <p> Even though this class is based on an internal FIFO queue, it
+ * does not automatically enforce FIFO acquisition policies. The core
+ * of an acquire takes the form:
+ *
+ * <pre>
+ *     while (!tryAcquire(...) {
+ *        <em>enqueue thread if it is not already queued</em>;
+ *        <em>possibly block thread</em>;
+ *     }
+ * </pre>
+ *
+ * And the core of a release is to unblock (if necessary) the first
+ * queued thread and allow it to re-check. Because checks are invoked
+ * before enqueuing, a newly acquiring thread may <em>barge</em> ahead
+ * of others that are blocked and queued. However, you can, if
+ * desired, write <tt>tryAcquireExclusive</tt> and/or
+ * <tt>tryAcquireShared</tt> to disable barging by internally invoking
+ * one or more of the inspection methods. In particular, a strict FIFO
+ * lock can define <tt>tryAcquireExclusive</tt> to immediately return
+ * <tt>false</tt> if {@link #getFirstQueuedThread} does not return the
+ * current thread.  A normally preferable non-strict fair version can
+ * immediately return <tt>false</tt> only if {@link #hasQueuedThreads}
+ * returns <tt>true</tt> and <tt>getFirstQueuedThread</tt> is not the
+ * current thread; or equivalently, that <tt>getFirstQueuedThread</tt>
+ * is both non-null and not the current thread.  Further variants are
+ * possible.
+ *
+ * <p> Throughput and scalability are generally highest for the
+ * default barging (also known as <em>greedy</em>,
+ * <em>renouncement</em> and <em>convoy-avoidance</em>) strategy.
+ * While not guaranteed to be starvation-free, it is probabilistically
+ * fair in the sense that earlier queued threads are allowed to
+ * recontend before later queued threads, and each recontention has an
+ * unbiased chance to succeed against incoming threads.  Also, while
+ * acquires do not &quot;spin&quot; in the usual sense, they may
+ * perform multiple tryAcquires interspersed with other computations
+ * before blocking.  This gives most of the benefits of spins when
+ * exclusive synchronization is only briefly held, without most of the
+ * liabilities when it isn't. If so desired, you can augment this by
+ * preceeding calls to acquire methods with "fast-path" checks,
+ * possibly prechecking {@link #hasContended} and/or {@link
+ * #hasQueuedThreads} to only do so if the synchronizer is likely not
+ * to be contended. Further variants of these techniques are also
+ * possible.
+ *
+ * <p> This class provides an efficient and scalable basis for
+ * synchronization in part by specializing its range of use to
+ * synchronizers that can rely on <tt>int</tt> state, acquire, and
+ * release parameters, and an internal FIFO wait queue. When this does
+ * not suffice, you can build synchronizers from a lower level using
+ * {@link java.util.concurrent.atomic atomic} classes, your own custom
+ * {@link java.util.Queue} classes, and {@link LockSupport} blocking
+ * support.
+ * 
  * <h3>Usage Examples</h3>
  *
  * <p>Here is a non-reentrant mutual exclusion lock class that uses
@@ -193,171 +247,7 @@ import sun.misc.Unsafe;
  * @author Doug Lea
  */
 public abstract class AbstractQueuedSynchronizer implements java.io.Serializable {
-    /*
-     *  General description and notes.
-     *
-     *  The basic idea, ignoring all sorts of things
-     *  (modes, cancellation, timeouts, error checking etc) is:
-     *    acquire:
-     *      if (atomically set status) // fastpath
-     *        return;
-     *      node = create and enq a wait node;
-     *      for (;;) {
-     *        if (node is first on queue) {
-     *          if (atomically set status) 
-     *             deq(node);
-     *             return;
-     *           }
-     *        }
-     *        park(currentThread);
-     *      }
-     *
-     *    release:
-     *      atomically set status;
-     *      if (is now fully released) {
-     *         h = first node on queue;
-     *         if (h != null) unpark(h's successor's thread);
-     *      }
-     *
-     *  * The particular atomic actions needed to atomically set
-     *    status vary in subclasses.
-     *
-     *  * By default, contended acquires use a kind of "greedy" /
-     *    "renouncement" / barging / convoy-avoidance strategy: Upon
-     *    release, a waiting thread is signalled so that it can
-     *    (re)contend. It might lose and thus need to rewait. This
-     *    strategy has much higher throughput than "directed handoff"
-     *    because it reduces blocking of running threads, but poorer
-     *    fairness.  The wait queue is FIFO, but newly entering
-     *    threads can barge ahead and acquire before woken waiters,
-     *    so acquires are not strictly FIFO, and transfer is not
-     *    deterministically fair. It is probabilistically fair in the
-     *    sense that earlier queued threads are allowed to recontend
-     *    before later queued threads, and each recontention has an
-     *    unbiased chance to succeed against any incoming barging
-     *    threads.
-     *
-     * * "Fair" variants differ only in that they can disable barging
-     *    in the fast path if there is contention (see "getFirstQueuedThread")
-     *    There can be races in detecting contention, but it is still
-     *    FIFO from a definable (although complicated to describe)
-     *    single point, so qualifies as a FIFO lock.
-     *
-     * * While acquires never "spin" in the usual sense, they can perform
-     *    multiple tryAcquires interspersed with other computations
-     *    before blocking.  This gives most of the benefits of spins
-     *    when locks etc are only briefly held, without most of the
-     *    liabilities when they aren't.
-     *
-     * * The wait queue is a variant of a "CLH" (Craig, Landin, and
-     *    Hagersten) lock. CLH locks are normally used for spinlocks.
-     *    We instead use them for blocking synchronizers, but use the
-     *    same basic tactic of holding some of the control information
-     *    about a thread in the predecessor of its node.  A "status"
-     *    field in each node keeps track of whether a thread is/should
-     *    block.  A node is signalled when its predecessor releases.
-     *    Each node of the queue otherwise serves as a
-     *    specific-notification-style monitor holding a single waiting
-     *    thread. The status field does NOT control whether threads
-     *    are granted locks etc though.  A thread may try to acquire
-     *    if it is first in the queue. But being first does not
-     *    guarantee success; it only gives the right to contend.  So
-     *    the currently released contender thread may need to rewait.
-     *
-     *    To enqueue into a CLH lock, you atomically splice it in as new
-     *    tail. To dequeue, you just set the head field.  
-     *    
-     *         +------+  prev +-----+       +-----+
-     *    head |      | <---- |     | <---- |     |  tail
-     *         +------+       +-----+       +-----+
-     *
-     *    Insertion into a CLH queue requires only a single atomic
-     *    operation on "tail", so there is a simple atomic point of
-     *    demarcation from unqueued to queued. Similarly, dequeing
-     *    involves only updating the "head". However, it takes a bit
-     *    more work for nodes to determine who their successors are,
-     *    in part to deal with possible cancellation due to timeouts
-     *    and interrupts.
-     *
-     *    The "prev" links (not used in original CLH locks), are mainly
-     *    needed to handle cancellation. If a node is cancelled, its
-     *    successor is (normally) relinked to a non-cancelled
-     *    predecessor. For explanation of similar mechanics in the case
-     *    of spin locks, see the papers by Scott & Scherer at
-     *    http://www.cs.rochester.edu/u/scott/synchronization/
-     *    
-     *    We also use "next" links to implement blocking mechanics.
-     *    The thread id for each node is kept in its own node, so a
-     *    predecessor signals the next node to wake up by traversing
-     *    next link to determine which thread it is.  Determination of
-     *    successor must avoid races with newly queued nodes to set
-     *    the "next" fields of their predecessors.  This is solved
-     *    when necessary by checking backwards from the atomically
-     *    updated "tail" when a node's successor appears to be null.
-     *    (Or, said differently, the next-links are an optimization
-     *    so that we don't usually need a backward scan.)
-     *
-     *    Cancellation introduces some conservatism to the basic
-     *    algorithms.  Since we must poll for cancellation of other
-     *    nodes, we can miss noticing whether a cancelled node is
-     *    ahead or behind us. This is dealt with by always unparking
-     *    successors upon cancellation, allowing them to stabilize on
-     *    a new predecessor.
-     *  
-     *  * CLH queues need a dummy header node to get started. But
-     *    we don't create them on construction, because it would be wasted
-     *    effort if there is never contention. Instead, the node
-     *    is constructed and head and tail pointers are set upon first
-     *    contention.
-     *
-     *  * Threads waiting on Conditions use the same nodes, but
-     *    use an additional link. Conditions only need to link nodes
-     *    in simple (non-concurrent) linked queues because they are
-     *    only accessed when exclusively held.  Upon await, a node is
-     *    inserted into a condition queue.  Upon signal, the node is
-     *    transferred to the main queue.  A special value of status
-     *    field is used to mark which queue a node is on.
-     *
-     * * All suspension and resumption of threads uses LockSupport
-     *    park/unpark. 
-     *
-     *  * Thanks go to Dave Dice, Mark Moir, Victor Luchangco, Bill
-     *    Scherer and Michael Scott, along with members of JSR-166
-     *    expert group, for helpful ideas, discussions, and critiques.
-     */
-
     private static final long serialVersionUID = 7373984972572414691L;
-
-
-    /**
-     * Setup to support compareAndSet. We need to natively implement
-     * this here: For the sake of permitting future enhancements, we
-     * cannot explicitly subclass AtomicInteger, which would be
-     * efficient and useful otherwise. So, as the lesser of evils, we
-     * directly implement. And while we are at it, we do the same for
-     * other CASable fields (which could otherwise be done with atomic
-     * field updaters).
-     */
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private static final long stateOffset;
-    private static final long headOffset;
-    private static final long tailOffset;
-    private static final long waitStatusOffset;
-
-    static {
-        try {
-            stateOffset = unsafe.objectFieldOffset
-                (AbstractQueuedSynchronizer.class.getDeclaredField("state"));
-            headOffset = unsafe.objectFieldOffset
-                (AbstractQueuedSynchronizer.class.getDeclaredField("head"));
-            tailOffset = unsafe.objectFieldOffset
-                (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
-            waitStatusOffset = unsafe.objectFieldOffset
-                (Node.class.getDeclaredField("waitStatus"));
-            
-        } catch(Exception ex) { throw new Error(ex); }
-    }
-
 
     /**
      * Creates a new <tt>AbstractQueuedSynchronizer</tt> instance
@@ -366,7 +256,82 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     protected AbstractQueuedSynchronizer() { }
 
     /**
-     * Node class for threads waiting for acquires or conditions.  
+     * Wait queue node class.
+     *
+     * <p> The wait queue is a variant of a "CLH" (Craig, Landin, and
+     * Hagersten) lock queue. CLH locks are normally used for spinlocks.
+     * We instead use them for blocking synchronizers, but use the
+     * same basic tactic of holding some of the control information
+     * about a thread in the predecessor of its node.  A "status"
+     * field in each node keeps track of whether a thread is/should
+     * block.  A node is signalled when its predecessor releases.
+     * Each node of the queue otherwise serves as a
+     * specific-notification-style monitor holding a single waiting
+     * thread. The status field does NOT control whether threads
+     * are granted locks etc though.  A thread may try to acquire
+     * if it is first in the queue. But being first does not
+     * guarantee success; it only gives the right to contend.  So
+     * the currently released contender thread may need to rewait.
+     *
+     * <p>To enqueue into a CLH lock, you atomically splice it in as new
+     * tail. To dequeue, you just set the head field.  
+     * <pre>
+     *      +------+  prev +-----+       +-----+
+     * head |      | <---- |     | <---- |     |  tail
+     *      +------+       +-----+       +-----+
+     * </pre>
+     *
+     * <p>Insertion into a CLH queue requires only a single atomic
+     * operation on "tail", so there is a simple atomic point of
+     * demarcation from unqueued to queued. Similarly, dequeing
+     * involves only updating the "head". However, it takes a bit
+     * more work for nodes to determine who their successors are,
+     * in part to deal with possible cancellation due to timeouts
+     * and interrupts.
+     *
+     * <p>The "prev" links (not used in original CLH locks), are mainly
+     * needed to handle cancellation. If a node is cancelled, its
+     * successor is (normally) relinked to a non-cancelled
+     * predecessor. For explanation of similar mechanics in the case
+     * of spin locks, see the papers by Scott & Scherer at
+     * http://www.cs.rochester.edu/u/scott/synchronization/
+     * 
+     * <p>We also use "next" links to implement blocking mechanics.
+     * The thread id for each node is kept in its own node, so a
+     * predecessor signals the next node to wake up by traversing
+     * next link to determine which thread it is.  Determination of
+     * successor must avoid races with newly queued nodes to set
+     * the "next" fields of their predecessors.  This is solved
+     * when necessary by checking backwards from the atomically
+     * updated "tail" when a node's successor appears to be null.
+     * (Or, said differently, the next-links are an optimization
+     * so that we don't usually need a backward scan.)
+     *
+     * <p>Cancellation introduces some conservatism to the basic
+     * algorithms.  Since we must poll for cancellation of other
+     * nodes, we can miss noticing whether a cancelled node is
+     * ahead or behind us. This is dealt with by always unparking
+     * successors upon cancellation, allowing them to stabilize on
+     * a new predecessor.
+     *
+     * <p>CLH queues need a dummy header node to get started. But
+     * we don't create them on construction, because it would be wasted
+     * effort if there is never contention. Instead, the node
+     * is constructed and head and tail pointers are set upon first
+     * contention.
+     *
+     * <p>Threads waiting on Conditions use the same nodes, but
+     * use an additional link. Conditions only need to link nodes
+     * in simple (non-concurrent) linked queues because they are
+     * only accessed when exclusively held.  Upon await, a node is
+     * inserted into a condition queue.  Upon signal, the node is
+     * transferred to the main queue.  A special value of status
+     * field is used to mark which queue a node is on.
+     *
+     * <p>Thanks go to Dave Dice, Mark Moir, Victor Luchangco, Bill
+     * Scherer and Michael Scott, along with members of JSR-166
+     * expert group, for helpful ideas, discussions, and critiques
+     * on the design of this class.
      */
     static final class Node {
         /** waitStatus value to indicate thread has cancelled */
@@ -399,7 +364,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          *
          * The values are arranged numerically to simplify use.
          * Non-negative values mean that a node doesn't need to
-         * signal. So, some code doesn't need to check for particular
+         * signal. So, most code doesn't need to check for particular
          * values, just for sign.
          *
          * The field is initialized to 0 for normal sync nodes, and
@@ -461,7 +426,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             return nextWaiter == SHARED;
         }
 
-        Node() { 
+        Node() { // Used only to establish SHARED marker
         }
 
         Node(Thread thread, boolean shared) { 
@@ -478,9 +443,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /** 
      * Head of the wait queue, lazily initialized.  Except for
-     * initialization, it is modified only by a thread upon acquiring.
-     * If head exists, its node waitStatus is guaranteed not to be
-     * CANCELLED.
+     * initialization, it is modified only by a thread upon acquiring
+     * via method setHead.  Note: If head exists, its waitStatus is
+     * guaranteed not to be CANCELLED.
      */
     private transient volatile Node head;
 
@@ -514,42 +479,19 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Atomically sets synchronization state to the given updated value
-     * if the current state value <tt>==</tt> the expected value.
-     * This operation has memory semantics of a <tt>volatile</tt> read and write.
+     * Atomically sets synchronization state to the given updated
+     * value if the current state value <tt>==</tt> the expected
+     * value.  This operation has memory semantics of a
+     * <tt>volatile</tt> read and write.
      * @param expect the expected value
      * @param update the new value
      * @return true if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
     protected final boolean compareAndSetState(int expect, int update) {
+        // See below for intrinsics setup to support this
         return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
     }
-
-    /**
-     * CAS head field. Used only by enq
-     */
-    private final boolean compareAndSetHead(Node update) {
-        return unsafe.compareAndSwapObject(this, headOffset, null, update);
-    }
-    
-    /**
-     * CAS tail field. Used only by enq
-     */
-    private final boolean compareAndSetTail(Node expect, Node update) {
-        return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
-    }
-
-    /**
-     * CAS status field
-     */
-    private final static boolean compareAndSetWaitStatus(Node node, 
-                                                         int expect, 
-                                                         int update) {
-        return unsafe.compareAndSwapInt(node, waitStatusOffset, 
-                                        expect, update);
-    }
-
 
     // Queuing utilities
 
@@ -613,6 +555,18 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
+     * Set head of queue to be node, thus dequeuing. Called only by
+     * acquire methods.  Also nulls out unused fields for sake of GC
+     * and to suppress signals.
+     * @param node the node 
+     */
+    private void setHead(Node node) {
+        head = node;
+        node.thread = null;
+        node.prev = null; 
+    }
+
+    /**
      * Wake up node's successor, if one exists.
      * @param node the node
      */
@@ -622,38 +576,24 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * OK if this fails or if status is changed by waiting thread.
          */
         compareAndSetWaitStatus(node, Node.SIGNAL, 0);
-
+        
         /*
-         * Successor is normally just the next node.  But if cancelled
-         * or apparently null, traverse backwards from tail to find
-         * the actual non-cancelled successor. 
+         * Thread to unpark is held in successor, which is normally
+         * just the next node.  But if cancelled or apparently null,
+         * traverse backwards from tail to find the actual
+         * non-cancelled successor.
          */
         Thread thread;
         Node s = node.next;
-        if (s == null || s.waitStatus > 0) {
+        if (s != null && s.waitStatus <= 0)
+            thread = s.thread;
+        else {
             thread = null;
-            for (s = tail; s != node && s != null; s = s.prev) 
+            for (s = tail; s != null && s != node; s = s.prev) 
                 if (s.waitStatus <= 0)
                     thread = s.thread;
         }
-        else
-            thread = s.thread;
         LockSupport.unpark(thread);
-    }
-    
-    /**
-     * Set head of queue to be node, thus dequeuing. Called only by
-     * acquire methods.  Also nulls out unused fields for GC and to
-     * suppress signals Requires that pred == node.prev and that pred
-     * was old head
-     * @param pred the node holding waitStatus for node
-     * @param node the node 
-     */
-    private void setHead(Node pred, Node node) {
-        head = node;
-        node.thread = null;
-        node.prev = null; 
-        pred.next = null; 
     }
 
     /**
@@ -663,12 +603,15 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param node the node 
      * @param propagate the return value from a tryAcquireShared
      */
-    private void setHeadAndPropagate(Node pred, Node node, int propagate) {
+    private void setHeadAndPropagate(Node node, int propagate) {
         if (propagate >= 0) {
-            setHead(pred, node);
+            setHead(node);
             if (propagate > 0 && node.waitStatus != 0) {
+                /*
+                 * Don't bother fully figuring out successor.  If it
+                 * looks null, call unparkSuccessor anyway to be safe.
+                 */
                 Node s = node.next; 
-                // if s apparently null, call anyway to be safe
                 if (s == null || s.isShared())
                     unparkSuccessor(node);
             }
@@ -714,7 +657,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         else
             /*
              * Indicate that we need a signal, but don't park yet. Caller
-             * will need to retry to make sure cannot acquire before
+             * will need to retry to make sure it cannot acquire before
              * parking.
              */
             compareAndSetWaitStatus(pred, 0, Node.SIGNAL);
@@ -740,9 +683,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * interactions of exception mechanics (including ensuring that we
      * cancel if tryAcquire throws exception) and other control, at
      * least not without hurting performance too much. And it is
-     * tolerable here anyway: we write all these variants so that
-     * users of this class won't need to write multiple versions of
-     * their synchronizers.
+     * tolerable here: we write all these variants so that users of
+     * this class won't need to write multiple versions of their
+     * synchronizers. Better to have redundancy concentrated here than
+     * in the applications of this class.
      */
 
     /** 
@@ -760,7 +704,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     noPredecessorError();
                 else {
                     if (p == head && tryAcquireExclusive(arg)) {
-                        setHead(p, node);
+                        setHead(node);
+                        p.next = null; // help GC
                         if (interrupted)
                             current.interrupt();
                         return;
@@ -794,7 +739,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     noPredecessorError();
                 else {
                     if (p == head && tryAcquireExclusive(arg)) {
-                        setHead(p, node);
+                        setHead(node);
+                        p.next = null; // help GC
                         return interrupted;
                     }
                     if (shouldParkAfterFailedAcquire(p, node)) {
@@ -825,7 +771,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     noPredecessorError();
                 else {
                     if (p == head && tryAcquireExclusive(arg)) {
-                        setHead(p, node);
+                        setHead(node);
+                        p.next = null; // help GC
                         return;
                     }
                     if (shouldParkAfterFailedAcquire(p, node)) {
@@ -862,7 +809,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     noPredecessorError();
                 else {
                     if (p == head && tryAcquireExclusive(arg)) {
-                        setHead(p, node);
+                        setHead(node);
+                        p.next = null; // help GC
                         return true;
                     }
                     if (nanosTimeout <= 0) {
@@ -905,7 +853,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     if (p == head) {
                         int r = tryAcquireShared(arg);
                         if (r >= 0) {
-                            setHeadAndPropagate(p, node, r);
+                            setHeadAndPropagate(node, r);
+                            p.next = null; // help GC
+
                             if (interrupted)
                                 current.interrupt();
                             return;
@@ -941,7 +891,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     if (p == head) {
                         int r = tryAcquireShared(arg);
                         if (r >= 0) {
-                            setHeadAndPropagate(p, node, r);
+                            setHeadAndPropagate(node, r);
+                            p.next = null; // help GC
+
                             return;
                         }
                     }
@@ -982,7 +934,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     if (p == head) {
                         int r = tryAcquireShared(arg);
                         if (r >= 0) {
-                            setHeadAndPropagate(p, node, r);
+                            setHeadAndPropagate(node, r);
+                            p.next = null; // help GC
                             return true;
                         }
                     }
@@ -1303,7 +1256,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         return false;
     }
 
-    // Instrumentation and monitoring methods
+    // Queue inspection methods
 
     /**
      * Queries whether any threads are waiting to acquire. Note that
@@ -1335,52 +1288,61 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Returns the first (longest-waiting) thread in the queue,
-     * <tt>null</tt> if no other threads are queued at the point of
-     * this call. This can be used when implementing a fairness
-     * policy: Generally, a fair synchronizer will return
-     * <tt>false</tt> in its {@link #tryAcquireExclusive} and/or
-     * {@link #tryAcquireShared} methods if this method returns a
-     * non-null value different than the current thread.  However,
-     * this class does not enforce strict FIFO ordering of calls to
-     * acquire methods.  In particular, several acquiring threads may
-     * see that there are no queued threads if none have yet failed
-     * and blocked.
+     * Returns the first (longest-waiting) thread in the queue, or
+     * <tt>null</tt> if no threads are currently queued.
+     * this call. 
      *
      * <p> In this implementation, this operation normally returns in
      * constant time, but may iterate if other threads are
      * concurrently modifying the queue.
      *
-     * @return the first (longest-waiting) thread in the queue,
-     * <tt>null</tt> if no other threads are queued at the point of
-     * this call.
+     * @return the first (longest-waiting) thread in the queue, of
+     * <tt>null</tt> if no threads are currently queued.
      */
     public final Thread getFirstQueuedThread() {
-        /*
-         * This loops only in some infrequent cases of contention
-         * where we get an inconsistent set of reads while other
-         * threads are modifying queue. (It never loops when invoked
-         * from tryAcquireX called within doAcquireX.)
-         */
-        Thread z;
         for (;;) {
             Node h = head;
             if (h == null)                    // No queue
                 return null;
 
-            Node s = h.next;                  // Probe first == n.next
-            // Ensure consistent reads
-            if (s != null && (z = s.thread) != null && s.prev == head)
-                return z;
-            
-            // Maybe h.next is not set yet, so retry with first as tail
+            /*
+             * First node is normally h.next. Try to get its thread
+             * field, ensuring consistent reads. If thread field is
+             * nulled out or s.prev is no longer head, then some other
+             * thread(s) concurrently performed setHead, so we must
+             * reread to be sure that we are returning the correct
+             * thread.
+             */
+            Node s = h.next;
+            if (s != null) {
+                Thread z = s.thread;
+                if (z != null && s.prev == head)
+                    return z;
+            }
+
+            /*
+             * h.next might not have been set yet, or may have been
+             * unset after setHead. So we must check to see if tail is
+             * actually first node.
+             */
             s = tail; 
             if (s == h)                       // Empty queue
                 return null;
-            if (s != null && (z = s.thread) != null && s.prev == head)
-                return z;
+            if (s != null) {
+                Node p = s.prev;
+                if (p == h) {
+                    Thread z = s.thread;
+                    if (z != null && p == head)
+                        return z;
+                }
+            }
 
-            // Retry if we got an inconsistent set of reads
+            /*
+             * Retry if we got an inconsistent set of reads. This
+             * doesn't happen very often -- only when the queue
+             * changes while we read sets of fields.  It never loops
+             * when invoked from tryAcquireX called within doAcquireX.
+             */
         }
     }
 
@@ -1402,6 +1364,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 return true;
         return false;
     }
+
+    // Instrumentation and monitoring methods
 
     /**
      * Returns an estimate of the number of threads waiting to
@@ -1530,7 +1494,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Splice onto queue and try to set waitStatus of predecessor to
          * indicate that thread is (probably) waiting. If cancelled or
          * attempt to set waitStatus fails, wake up to resync (in which
-         * case the waitStatus can be transiently/harmlessly wrong).
+         * case the waitStatus can be transiently abd harmlessly wrong).
          */
         Node p = enq(node);
         int c = p.waitStatus;
@@ -2065,4 +2029,58 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             return list;
         }
     }
+
+    /**
+     * Setup to support compareAndSet. We need to natively implement
+     * this here: For the sake of permitting future enhancements, we
+     * cannot explicitly subclass AtomicInteger, which would be
+     * efficient and useful otherwise. So, as the lesser of evils, we
+     * directly implement. And while we are at it, we do the same for
+     * other CASable fields (which could otherwise be done with atomic
+     * field updaters).
+     */
+    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final long stateOffset;
+    private static final long headOffset;
+    private static final long tailOffset;
+    private static final long waitStatusOffset;
+
+    static {
+        try {
+            stateOffset = unsafe.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("state"));
+            headOffset = unsafe.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("head"));
+            tailOffset = unsafe.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+            waitStatusOffset = unsafe.objectFieldOffset
+                (Node.class.getDeclaredField("waitStatus"));
+            
+        } catch(Exception ex) { throw new Error(ex); }
+    }
+
+    /**
+     * CAS head field. Used only by enq
+     */
+    private final boolean compareAndSetHead(Node update) {
+        return unsafe.compareAndSwapObject(this, headOffset, null, update);
+    }
+    
+    /**
+     * CAS tail field. Used only by enq
+     */
+    private final boolean compareAndSetTail(Node expect, Node update) {
+        return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+    }
+
+    /**
+     * CAS waitStatus field of a node.
+     */
+    private final static boolean compareAndSetWaitStatus(Node node, 
+                                                         int expect, 
+                                                         int update) {
+        return unsafe.compareAndSwapInt(node, waitStatusOffset, 
+                                        expect, update);
+    }
+
 }

@@ -9,7 +9,7 @@ import sun.misc.Unsafe;
 
 /**
  * An <tt>int</tt> array in which elements may be updated atomically.
- * See the package
+ * See the {@link java.util.concurrent.atomic} package
  * specification for description of the properties of atomic
  * variables.
  * @since 1.5

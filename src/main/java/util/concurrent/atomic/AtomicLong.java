@@ -9,15 +9,19 @@ import sun.misc.Unsafe;
 
 /**
  * A <tt>long</tt> value that may be updated atomically.
- * See the package specification for
- * description of the properties of atomic variables. 
+ * See the
+ * {@link java.util.concurrent.atomic} package specification for
+ * description of the properties of atomic variables. An
+ * <tt>AtomicLong</tt> is used in applications such as atomically
+ * incremented counters, and cannot be used as a replacement for a
+ * {@link java.lang.Long}.
  * @since 1.5
  * @author Doug Lea
  */
 public class AtomicLong implements java.io.Serializable { 
     private static final long serialVersionUID = 1927816293512124184L;
 
-    // setup to use Unsafe.compareAndSwapInt for updates
+    // setup to use Unsafe.compareAndSwapLong for updates
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private static final long valueOffset;
 

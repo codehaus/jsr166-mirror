@@ -8,9 +8,13 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * An <tt>int</tt> value that may be updated atomically. See the package
- * specification for description of the properties of atomic
- * variables.
+ * An <tt>int</tt> value that may be updated atomically. See the
+ * {@link java.util.concurrent.atomic} package specification for
+ * description of the properties of atomic variables. An
+ * <tt>AtomicInteger</tt> is used in applications such as atomically
+ * incremented counters, and cannot be used as a replacement for an
+ * {@link java.lang.Integer}.
+ *
  * @since 1.5
  * @author Doug Lea
 */

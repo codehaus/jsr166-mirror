@@ -21,8 +21,8 @@ public class FutureTaskTest extends JSR166TestCase {
     /**
      * Subclass to expose protected methods
      */
-    static class MyFutureTask extends FutureTask {
-        public MyFutureTask(Callable r) { super(r); }
+    static class PublicFutureTask extends FutureTask {
+        public PublicFutureTask(Callable r) { super(r); }
         public boolean reset() { return super.reset(); }
         public void setCancelled() { super.setCancelled(); }
         public void setDone() { super.setDone(); }
@@ -68,7 +68,7 @@ public class FutureTaskTest extends JSR166TestCase {
      * reset of a done task succeeds and changes status to not done
      */
     public void testReset() {
-        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
 	task.run();
 	assertTrue(task.isDone());
 	assertTrue(task.reset());	
@@ -79,7 +79,7 @@ public class FutureTaskTest extends JSR166TestCase {
      * Resetting after cancellation fails
      */
     public void testResetAfterCancel() {
-        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
 	task.run();
 	assertTrue(task.isDone());
@@ -91,7 +91,7 @@ public class FutureTaskTest extends JSR166TestCase {
      * setDone of new task causes isDone to be true
      */
     public void testSetDone() {
-        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
 	task.setDone();
 	assertTrue(task.isDone());
 	assertFalse(task.isCancelled());
@@ -101,7 +101,7 @@ public class FutureTaskTest extends JSR166TestCase {
      * setCancelled of a new task causes isCancelled to be true
      */
     public void testSetCancelled() {
-        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
 	task.setCancelled();
 	assertTrue(task.isDone());
@@ -112,7 +112,7 @@ public class FutureTaskTest extends JSR166TestCase {
      * setting value gauses get to return it
      */
     public void testSet() {
-        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.set(one);
         try {
             assertEquals(task.get(), one);
@@ -127,7 +127,7 @@ public class FutureTaskTest extends JSR166TestCase {
      */
     public void testSetException() {
         Exception nse = new NoSuchElementException();
-        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.setException(nse);
         try {
             Object x = task.get();

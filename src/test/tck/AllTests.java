@@ -9,7 +9,7 @@ import junit.framework.*;
 import java.util.*;
 
 /**
- *  Runs all tests
+ *  Runs all JSR166 tests
  */
 public class AllTests {
     public static void main (String[] args) {

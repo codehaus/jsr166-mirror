@@ -20,9 +20,9 @@ public class CancellableTaskTest extends JSR166TestCase {
     /**
      * Subclass to expose protected methods
      */
-    static class MyCancellableTask extends CancellableTask {
-        public MyCancellableTask() {}
-        public MyCancellableTask(Runnable r) { super(r); }
+    static class PublicCancellableTask extends CancellableTask {
+        public PublicCancellableTask() {}
+        public PublicCancellableTask(Runnable r) { super(r); }
         public boolean reset() { return super.reset(); }
         public Runnable getRunnable() { return super.getRunnable(); }
         public void setRunnable(Runnable r) { super.setRunnable(r); }
@@ -67,7 +67,7 @@ public class CancellableTaskTest extends JSR166TestCase {
      * reset of a done task succeeds and changes status to not done
      */
     public void testReset(){
-        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+        PublicCancellableTask task = new PublicCancellableTask(new NoOpRunnable());
 	task.run();
 	assertTrue(task.isDone());
 	assertTrue(task.reset());
@@ -78,7 +78,7 @@ public class CancellableTaskTest extends JSR166TestCase {
      * Resetting after cancellation fails
      */
     public void testResetAfterCancel() {
-        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+        PublicCancellableTask task = new PublicCancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(false));
 	task.run();
 	assertTrue(task.isDone());
@@ -90,7 +90,7 @@ public class CancellableTaskTest extends JSR166TestCase {
      * Setting the runnable causes it to be used
      */
     public void testSetRunnable() {
-        MyCancellableTask task = new MyCancellableTask();
+        PublicCancellableTask task = new PublicCancellableTask();
         assertNull(task.getRunnable());
         Runnable r = new NoOpRunnable();
         task.setRunnable(r);
@@ -106,7 +106,7 @@ public class CancellableTaskTest extends JSR166TestCase {
      * setDone of new task causes isDone to be true
      */
     public void testSetDone() {
-        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+        PublicCancellableTask task = new PublicCancellableTask(new NoOpRunnable());
 	task.setDone();
 	assertTrue(task.isDone());
 	assertFalse(task.isCancelled());
@@ -116,7 +116,7 @@ public class CancellableTaskTest extends JSR166TestCase {
      * setCancelled of a new task causes isCancelled to be true
      */
     public void testSetCancelled() {
-        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+        PublicCancellableTask task = new PublicCancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(false));
 	task.setCancelled();
 	assertTrue(task.isDone());

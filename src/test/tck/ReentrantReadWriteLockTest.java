@@ -19,7 +19,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
 
-    /*
+    /**
      * write-locking and read-locking an unlocked lock succeed
      */
     public void testLock() { 
@@ -31,7 +31,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
 
-    /*
+    /**
      * locking an unlocked fair lock succeeds
      */
     public void testFairLock() { 

@@ -17,22 +17,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         return new TestSuite(ThreadPoolExecutorTest.class);
     }
     
-    /**
-     * For use as ThreadFactory in constructors
-     */
-    static class MyThreadFactory implements ThreadFactory{
-        public Thread newThread(Runnable r){
-            return new Thread(r);
-        }   
-    }
 
-    /**
-     * For use as RejectedExecutionHandler in constructors
-     */
-    static class MyREHandler implements RejectedExecutionHandler{
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor){} 
-    }
- 
     /**
      *   execute successfully executes a runnable
      */
@@ -328,7 +313,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor6() {
         try {
-            new ThreadPoolExecutor(-1,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory());
+            new ThreadPoolExecutor(-1,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         } catch (IllegalArgumentException success){}
     }
@@ -338,7 +323,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor7() {
         try {
-            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory());
+            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -349,7 +334,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor8() {
         try {
-            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory());
+            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -360,7 +345,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor9() {
         try {
-            new ThreadPoolExecutor(1,2,-1L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory());
+            new ThreadPoolExecutor(1,2,-1L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -371,7 +356,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor10() {
         try {
-            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory());
+            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -382,7 +367,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testNullPointerException2() {
         try {
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new MyThreadFactory());
+            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory());
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -406,7 +391,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor11() {
         try {
-            new ThreadPoolExecutor(-1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyREHandler());
+            new ThreadPoolExecutor(-1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -417,7 +402,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor12() {
         try {
-            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyREHandler());
+            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -428,7 +413,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor13() {
         try {
-            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyREHandler());
+            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -439,7 +424,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor14() {
         try {
-            new ThreadPoolExecutor(1,2,-1L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyREHandler());
+            new ThreadPoolExecutor(1,2,-1L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -450,7 +435,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor15() {
         try {
-            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyREHandler());
+            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -461,7 +446,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testNullPointerException4() {
         try {
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new MyREHandler());
+            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new NoOpREHandler());
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -485,7 +470,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor16() {
         try {
-            new ThreadPoolExecutor(-1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory(),new MyREHandler());
+            new ThreadPoolExecutor(-1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -496,7 +481,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor17() {
         try {
-            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory(),new MyREHandler());
+            new ThreadPoolExecutor(1,-1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -507,7 +492,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor18() {
         try {
-            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory(),new MyREHandler());
+            new ThreadPoolExecutor(1,0,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -518,7 +503,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor19() {
         try {
-            new ThreadPoolExecutor(1,2,-1L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory(),new MyREHandler());
+            new ThreadPoolExecutor(1,2,-1L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -529,7 +514,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testConstructor20() {
         try {
-            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory(),new MyREHandler());
+            new ThreadPoolExecutor(2,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (IllegalArgumentException success){}
@@ -540,7 +525,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testNullPointerException6() {
         try {
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new MyThreadFactory(),new MyREHandler());
+            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -552,7 +537,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testNullPointerException7() {
         try {
             RejectedExecutionHandler r = null;
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),new MyThreadFactory(),r);
+            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),r);
             shouldThrow();
         }
         catch (NullPointerException success){}  
@@ -564,7 +549,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testNullPointerException8() {
         try {
             ThreadFactory f = null;
-            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f,new MyREHandler());
+            new ThreadPoolExecutor(1,2,SHORT_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f,new NoOpREHandler());
             shouldThrow();
         }
         catch (NullPointerException successdn8){}  

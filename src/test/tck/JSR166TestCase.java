@@ -12,11 +12,12 @@ import java.io.*;
 
 
 /**
- * Base class for JSR166 Junit TCK tests.  Defines some constants and
- * utility methods, as well as a simple framework for helping to make
- * sure that assertions failing in generated threads cause the
- * associated test that generated them to itself fail (which JUnit doe
- * not otherwise arrange).  The rules for creating such tests are:
+ * Base class for JSR166 Junit TCK tests.  Defines some constants,
+ * utility methods and classes, as well as a simple framework for
+ * helping to make sure that assertions failing in generated threads
+ * cause the associated test that generated them to itself fail (which
+ * JUnit doe not otherwise arrange).  The rules for creating such
+ * tests are:
  *
  * <ol>
  *
@@ -36,8 +37,8 @@ import java.io.*;
  * <li>All delays and timeouts must use one of the constants {@link
  * SHORT_DELAY_MS}, {@link SMALL_DELAY_MS}, {@link MEDIUM_DELAY_MS},
  * {@link LONG_DELAY_MS}. The idea here is that a SHORT is always
- * discriminatable from zero time, and always allows enough time for
- * the small amounts of computation (creating a thread, calling a few
+ * discriminable from zero time, and always allows enough time for the
+ * small amounts of computation (creating a thread, calling a few
  * methods, etc) needed to reach a timeout point. Similarly, a SMALL
  * is always discriminable as larger than SHORT and smaller than
  * MEDIUM.  And so on. These constants are set to conservative values,
@@ -69,7 +70,7 @@ public class JSR166TestCase extends TestCase {
 
 
     /**
-     * Set delays as multiples fo SHORT_DELAY.
+     * Set delays as multiples of SHORT_DELAY.
      */
     protected  void setDelays() {
         SHORT_DELAY_MS = getShortDelay();
@@ -81,7 +82,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * Flag set true if any threadAssert methods fail
      */
-    protected volatile boolean threadFailed;
+    volatile boolean threadFailed;
 
     /**
      * Initialize test to indicate that no thread assertions have failed
@@ -98,35 +99,62 @@ public class JSR166TestCase extends TestCase {
         assertFalse(threadFailed);  
     }
 
+    /**
+     * Fail, also setting status to indicate current testcase should fail
+     */ 
     public void threadFail(String reason) {
         threadFailed = true;
         fail(reason);
     }
 
+    /**
+     * If expression not true, set status to indicate current testcase
+     * should fail
+     */ 
     public void threadAssertTrue(boolean b) {
         if (!b) {
             threadFailed = true;
             assertTrue(b);
         }
     }
+
+    /**
+     * If expression not false, set status to indicate current testcase
+     * should fail
+     */ 
     public void threadAssertFalse(boolean b) {
         if (b) {
             threadFailed = true;
             assertFalse(b);
         }
     }
+
+    /**
+     * If argument not null, set status to indicate current testcase
+     * should fail
+     */ 
     public void threadAssertNull(Object x) {
         if (x != null) {
             threadFailed = true;
             assertNull(x);
         }
     }
+
+    /**
+     * If arguments not equal, set status to indicate current testcase
+     * should fail
+     */ 
     public void threadAssertEquals(long x, long y) {
         if (x != y) {
             threadFailed = true;
             assertEquals(x, y);
         }
     }
+
+    /**
+     * If arguments not equal, set status to indicate current testcase
+     * should fail
+     */ 
     public void threadAssertEquals(Object x, Object y) {
         if (x != y && (x == null || !x.equals(y))) {
             threadFailed = true;
@@ -134,11 +162,17 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    /**
+     * threadFail with message "should throw exception"
+     */ 
     public void threadShouldThrow() {
         threadFailed = true;
         fail("should throw exception");
     }
 
+    /**
+     * threadFail with message "Unexpected exception"
+     */
     public void threadUnexpectedException() {
         threadFailed = true;
         fail("Unexpected exception");
@@ -157,11 +191,17 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    
+
+    /**
+     * fail with message "should throw exception"
+     */ 
     public void shouldThrow() {
         fail("Should throw exception");
     }
 
+    /**
+     * fail with message "Unexpected exception"
+     */
     public void unexpectedException() {
         fail("Unexpected exception");
     }
@@ -170,39 +210,39 @@ public class JSR166TestCase extends TestCase {
     /**
      * The number of elements to place in collections, arrays, etc.
      */
-    public static final int SIZE = 20;
+    static final int SIZE = 20;
 
     // Some convenient Integer constants
 
-    public static final Integer zero = new Integer(0);
-    public static final Integer one = new Integer(1);
-    public static final Integer two = new Integer(2);
-    public static final Integer three  = new Integer(3);
-    public static final Integer four  = new Integer(4);
-    public static final Integer five  = new Integer(5);
-    public static final Integer six = new Integer(6);
-    public static final Integer seven = new Integer(7);
-    public static final Integer eight = new Integer(8);
-    public static final Integer nine = new Integer(9);
-    public static final Integer m1  = new Integer(-1);
-    public static final Integer m2  = new Integer(-2);
-    public static final Integer m3  = new Integer(-3);
-    public static final Integer m4 = new Integer(-4);
-    public static final Integer m5 = new Integer(-5);
-    public static final Integer m10 = new Integer(-10);
+    static final Integer zero = new Integer(0);
+    static final Integer one = new Integer(1);
+    static final Integer two = new Integer(2);
+    static final Integer three  = new Integer(3);
+    static final Integer four  = new Integer(4);
+    static final Integer five  = new Integer(5);
+    static final Integer six = new Integer(6);
+    static final Integer seven = new Integer(7);
+    static final Integer eight = new Integer(8);
+    static final Integer nine = new Integer(9);
+    static final Integer m1  = new Integer(-1);
+    static final Integer m2  = new Integer(-2);
+    static final Integer m3  = new Integer(-3);
+    static final Integer m4 = new Integer(-4);
+    static final Integer m5 = new Integer(-5);
+    static final Integer m10 = new Integer(-10);
 
 
     // Some convenient Runnable classes
 
-    public static class NoOpRunnable implements Runnable {
+    static class NoOpRunnable implements Runnable {
         public void run() {}
     }
 
-    public static class NoOpCallable implements Callable {
+    static class NoOpCallable implements Callable {
         public Object call() { return Boolean.TRUE; }
     }
 
-    public class ShortRunnable implements Runnable {
+    class ShortRunnable implements Runnable {
         public void run() {
             try {
                 Thread.sleep(SHORT_DELAY_MS);
@@ -213,7 +253,7 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public class ShortInterruptedRunnable implements Runnable {
+    class ShortInterruptedRunnable implements Runnable {
         public void run() {
             try {
                 Thread.sleep(SHORT_DELAY_MS);
@@ -224,7 +264,7 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public class SmallRunnable implements Runnable {
+    class SmallRunnable implements Runnable {
         public void run() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
@@ -235,7 +275,7 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public class SmallCallable implements Callable {
+    class SmallCallable implements Callable {
         public Object call() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
@@ -247,7 +287,7 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public class SmallInterruptedRunnable implements Runnable {
+    class SmallInterruptedRunnable implements Runnable {
         public void run() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
@@ -259,7 +299,7 @@ public class JSR166TestCase extends TestCase {
     }
 
 
-    public class MediumRunnable implements Runnable {
+    class MediumRunnable implements Runnable {
         public void run() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
@@ -270,7 +310,7 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public class MediumInterruptedRunnable implements Runnable {
+    class MediumInterruptedRunnable implements Runnable {
         public void run() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
@@ -281,7 +321,7 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public class MediumPossiblyInterruptedRunnable implements Runnable {
+    class MediumPossiblyInterruptedRunnable implements Runnable {
         public void run() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
@@ -290,5 +330,45 @@ public class JSR166TestCase extends TestCase {
             }
         }
     }
+
+    /**
+     * For use as ThreadFactory in constructors
+     */
+    static class SimpleThreadFactory implements ThreadFactory{
+        public Thread newThread(Runnable r){
+            return new Thread(r);
+        }   
+    }
+
+    static class TrackedRunnable implements Runnable {
+        volatile boolean done = false;
+        public void run() {
+            try {
+                Thread.sleep(SMALL_DELAY_MS);
+                done = true;
+            } catch(Exception e){
+            }
+        }
+    }
+
+    static class TrackedCallable implements Callable {
+        volatile boolean done = false;
+        public Object call() {
+            try {
+                Thread.sleep(SMALL_DELAY_MS);
+                done = true;
+            } catch(Exception e){
+            }
+            return Boolean.TRUE;
+        }
+    }
+
+    /**
+     * For use as RejectedExecutionHandler in constructors
+     */
+    static class NoOpREHandler implements RejectedExecutionHandler{
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor){} 
+    }
+ 
     
 }

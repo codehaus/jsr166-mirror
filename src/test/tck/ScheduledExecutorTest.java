@@ -17,35 +17,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	return new TestSuite(ScheduledExecutorTest.class);
     }
 
-    static class MyRunnable implements Runnable {
-        volatile boolean done = false;
-        public void run() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-                done = true;
-            } catch(Exception e){
-            }
-        }
-    }
-
-    static class MyCallable implements Callable {
-        volatile boolean done = false;
-        public Object call() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-                done = true;
-            } catch(Exception e){
-            }
-            return Boolean.TRUE;
-        }
-    }
 
     /**
      * execute successfully executes a runnable
      */
     public void testExecute() {
 	try {
-            MyRunnable runnable =new MyRunnable();
+            TrackedRunnable runnable =new TrackedRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    p1.execute(runnable);
 	    assertFalse(runnable.done);
@@ -72,7 +50,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testSchedule1() {
 	try {
-            MyCallable callable = new MyCallable();
+            TrackedCallable callable = new TrackedCallable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(callable.done);
@@ -92,7 +70,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testSchedule3() {
 	try {
-            MyRunnable runnable = new MyRunnable();
+            TrackedRunnable runnable = new TrackedRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    p1.schedule(runnable, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
 	    Thread.sleep(SHORT_DELAY_MS);
@@ -111,7 +89,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testSchedule4() {
 	try {
-            MyRunnable runnable = new MyRunnable();
+            TrackedRunnable runnable = new TrackedRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    ScheduledCancellable h = p1.scheduleAtFixedRate(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(runnable.done);
@@ -130,7 +108,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testSchedule5() {
 	try {
-            MyRunnable runnable = new MyRunnable();
+            TrackedRunnable runnable = new TrackedRunnable();
             ScheduledExecutor p1 = new ScheduledExecutor(1);
 	    ScheduledCancellable h = p1.scheduleWithFixedDelay(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(runnable.done);
@@ -167,7 +145,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     public void testScheduleNull() {
         ScheduledExecutor se = new ScheduledExecutor(1);
 	try {
-            MyCallable callable = null;
+            TrackedCallable callable = null;
 	    Future f = se.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
 	} catch(NullPointerException success){}

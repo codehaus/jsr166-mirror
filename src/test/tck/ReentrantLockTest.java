@@ -69,7 +69,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 
     }
 
-    /*
+    /**
      * locking an unlocked lock succeeds
      */
     public void testLock() { 
@@ -79,7 +79,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         rl.unlock();
     }
 
-    /*
+    /**
      * locking an unlocked fair lock succeeds
      */
     public void testFairLock() { 
@@ -89,7 +89,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         rl.unlock();
     }
 
-    /*
+    /**
      * Unlocking an unlocked lock throws IllegalMonitorStateException
      */
     public void testUnlock_IllegalMonitorStateException() { 
@@ -101,7 +101,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 	} catch(IllegalMonitorStateException success){}
     }
 
-    /*
+    /**
      * trylock on an unlocked lock succeeds
      */
     public void testTryLock() { 
@@ -112,7 +112,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
 
-    /*
+    /**
      * getQueueLength reports number of waiting threads
      */
     public void testGetQueueLength() { 
@@ -141,7 +141,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         }
     } 
 
-    /*
+    /**
      * getQueuedThreads includes waiting threads
      */
     public void testGetQueuedThreads() { 
@@ -174,7 +174,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     } 
 
 
-    /*
+    /**
      * timed trylock is interruptible.
      */
     public void testInterruptedException2() { 
@@ -290,7 +290,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
 
-    /*
+    /**
      * lockInterruptibly is interruptible.
      */
     public void testLockInterruptibly1() { 

@@ -21,13 +21,6 @@ public class ExecutorsTest extends JSR166TestCase{
 
     private static final String TEST_STRING = "a test string";
 
-    private static class MyTask implements Runnable {
-        public void run() { completed = true; }
-        public boolean isCompleted() { return completed; }
-        public void reset() { completed = false; }
-        private boolean completed = false;
-    }
-
     private static class StringTask implements Callable<String> {
         public String call() { return TEST_STRING; }
     }
@@ -79,15 +72,6 @@ public class ExecutorsTest extends JSR166TestCase{
     };
 
     /**
-     * For use as ThreadFactory in constructors
-     */
-    static class MyThreadFactory implements ThreadFactory{
-        public Thread newThread(Runnable r){
-            return new Thread(r);
-        }   
-    }
-
-    /**
      * A newCachedThreadPool can execute runnables
      */
     public void testNewCachedThreadPool1() {
@@ -102,7 +86,7 @@ public class ExecutorsTest extends JSR166TestCase{
      * A newCachedThreadPool with given ThreadFactory can execute runnables
      */
     public void testNewCachedThreadPool2() {
-        ExecutorService e = Executors.newCachedThreadPool(new MyThreadFactory());
+        ExecutorService e = Executors.newCachedThreadPool(new SimpleThreadFactory());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
@@ -137,7 +121,7 @@ public class ExecutorsTest extends JSR166TestCase{
      * A new SingleThreadExecutor with given ThreadFactory can execute runnables
      */
     public void testNewSingleThreadExecutor2() {
-        ExecutorService e = Executors.newSingleThreadExecutor(new MyThreadFactory());
+        ExecutorService e = Executors.newSingleThreadExecutor(new SimpleThreadFactory());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
@@ -171,7 +155,7 @@ public class ExecutorsTest extends JSR166TestCase{
      * A new newFixedThreadPool with given ThreadFactory can execute runnables
      */
     public void testNewFixedThreadPool2() {
-        ExecutorService e = Executors.newFixedThreadPool(2, new MyThreadFactory());
+        ExecutorService e = Executors.newFixedThreadPool(2, new SimpleThreadFactory());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
@@ -208,11 +192,11 @@ public class ExecutorsTest extends JSR166TestCase{
     public void testExecuteRunnable () {
         try {
             Executor e = new DirectExecutor();
-            MyTask task = new MyTask();
-            assertFalse(task.isCompleted());
+            TrackedRunnable task = new TrackedRunnable();
+            assertFalse(task.done);
             Future<String> future = Executors.execute(e, task, TEST_STRING);
             String result = future.get();
-            assertTrue(task.isCompleted());
+            assertTrue(task.done);
             assertSame(TEST_STRING, result);
         }
         catch (ExecutionException ex) {
@@ -229,10 +213,10 @@ public class ExecutorsTest extends JSR166TestCase{
     public void testInvokeRunnable () {
         try {
             Executor e = new DirectExecutor();
-            MyTask task = new MyTask();
-            assertFalse(task.isCompleted());
+            TrackedRunnable task = new TrackedRunnable();
+            assertFalse(task.done);
             Executors.invoke(e, task);
-            assertTrue(task.isCompleted());
+            assertTrue(task.done);
         }
         catch (ExecutionException ex) {
             unexpectedException();
@@ -283,8 +267,8 @@ public class ExecutorsTest extends JSR166TestCase{
      */
     public void testNullExecuteRunnable () {
         try {
-            MyTask task = new MyTask();
-            assertFalse(task.isCompleted());
+            TrackedRunnable task = new TrackedRunnable();
+            assertFalse(task.done);
             Future<String> future = Executors.execute(null, task, TEST_STRING);
             shouldThrow();
         }
@@ -301,7 +285,7 @@ public class ExecutorsTest extends JSR166TestCase{
     public void testExecuteNullRunnable() {
         try {
             Executor e = new DirectExecutor();
-            MyTask task = null;
+            TrackedRunnable task = null;
             Future<String> future = Executors.execute(e, task, TEST_STRING);
             shouldThrow();
         }
@@ -318,7 +302,7 @@ public class ExecutorsTest extends JSR166TestCase{
     public void testInvokeNullRunnable () {
         try {
             Executor e = new DirectExecutor();
-            MyTask task = null;
+            TrackedRunnable task = null;
             Executors.invoke(e, task);
             shouldThrow();
         }

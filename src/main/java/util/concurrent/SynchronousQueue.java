@@ -62,12 +62,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
       the entire put or take sequence.
     */
 
-    /**
-     * Special marker used in queue nodes to indicate that
-     * the thread waiting for a change in the node has timed out
-     * or been interrupted.
-     **/
-    private static final Object CANCELLED = new Object();
 
     /*
      * Note that all fields are transient final, so there is
@@ -80,137 +74,143 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Nodes each maintain an item and handle waits and signals for
-     * getting and setting it. The class opportunistically extends
-     * ReentrantLock to save an extra object allocation per
-     * rendezvous.
+     * getting and setting it. The class extends
+     * AbstractQueuedSynchronizer to manage blocking, using AQS state
+     *  0 for waiting, 1 for ack, -1 for cancelled.
      */
-    private static class Node extends ReentrantLock {
-        /** Condition to wait on for other party; lazily constructed */
-        Condition done;
+    private static final class Node extends AbstractQueuedSynchronizer {
         /** The item being transferred */
         Object item;
         /** Next node in wait queue */
         Node next;
-
         Node(Object x) { item = x; }
+
+        private static final int WAITING   =  0;
+        private static final int ACKED     =  1;
+        private static final int CANCELLED = -1;
+
+        /**
+         * Implements AQS base acquire to succeed if not in WAITING state
+         */
+        public int acquireExclusiveState(boolean b, int ignore) {
+            return get() == WAITING ? -1 : 0;
+        }
+
+        /**
+         * Implements AQS base release to always signal.
+         * Status is changed in ack or cancel methods before calling,
+         * which is needed to ensure we win cancel race.
+         */
+        public boolean releaseExclusiveState(int ignore) {
+            return true; 
+        }
+
+        /**
+         * Try to acknowledge; fail if not waiting
+         */
+        private boolean ack() { 
+            if (!compareAndSet(WAITING, ACKED)) 
+                return false;
+            releaseExclusive(0); 
+            return true;
+        }
+
+        /**
+         * Try to cancel; fail if not waiting
+         */
+        private boolean cancel() { 
+            if (!compareAndSet(WAITING, CANCELLED)) 
+                return false;
+            releaseExclusive(0); 
+            return true;
+        }
+
+        /**
+         * Take item and null out fields (for sake of GC)
+         */
+        private Object extract() {
+            Object x = item;
+            item = null;
+            next = null;
+            return x;
+        }
 
         /**
          * Fill in the slot created by the taker and signal taker to
          * continue.
          */
-        boolean set(Object x) {
-            this.lock();
-            try {
-                if (item != CANCELLED) {
-                    item = x;
-                    if (done != null)
-                        done.signal();
-                    return true;
-                } else // taker has cancelled
-                    return false;
-            } finally {
-                this.unlock();
-            }
+        boolean setItem(Object x) {
+            item = x;
+            return ack();
         }
 
         /**
          * Remove item from slot created by putter and signal putter
          * to continue.
          */
-        Object get() {
-            this.lock();
+        Object getItem() {
+            if (!ack())
+                return null;
+            return extract();
+        }
+
+        /**
+         * Wait for a taker to take item placed by putter.
+         */
+        boolean waitForTake() throws InterruptedException {
             try {
-                Object x = item;
-                if (x != CANCELLED) {
-                    item = null;
-                    next = null;
-                    if (done != null)
-                        done.signal();
-                    return x;
-                } else
-                    return null;
-            } finally {
-                this.unlock();
+                acquireExclusiveInterruptibly(0);
+                return true;
+            } catch (InterruptedException ie) {
+                if (cancel())
+                    throw ie;
+                Thread.currentThread().interrupt();
+                return true;
             }
         }
 
         /**
          * Wait for a taker to take item placed by putter, or time out.
          */
-        boolean waitForTake(boolean timed, long nanos) throws InterruptedException {
-            this.lock();
+        boolean waitForTake(long nanos) throws InterruptedException {
             try {
-                for (;;) {
-                    if (item == null)
-                        return true;
-                    if (timed) {
-                        if (nanos <= 0) {
-                            item = CANCELLED;
-                            return false;
-                        }
-                    }
-                    if (done == null)
-                        done = this.newCondition();
-                    if (timed)
-                        nanos = done.awaitNanos(nanos);
-                    else
-                        done.await();
-                }
+                return acquireExclusiveTimed(0, nanos) || !cancel();
             } catch (InterruptedException ie) {
-                // If taken, return normally but set interrupt status
-                if (item == null) {
-                    Thread.currentThread().interrupt();
-                    return true;
-                } else {
-                    item = CANCELLED;
-                    done.signal(); // propagate signal
+                if (cancel())
                     throw ie;
-                }
-            } finally {
-                this.unlock();
+                Thread.currentThread().interrupt();
+                return true;
+            }
+        }
+
+        /**
+         * Wait for a putter to put item placed by taker.
+         */
+        Object waitForPut() throws InterruptedException {
+            try {
+                acquireExclusiveInterruptibly(0);
+                return extract();
+            } catch (InterruptedException ie) {
+                if (cancel()) 
+                    throw ie;
+                Thread.currentThread().interrupt();
+                return extract();
             }
         }
 
         /**
          * Wait for a putter to put item placed by taker, or time out.
          */
-        Object waitForPut(boolean timed, long nanos) throws InterruptedException {
-            this.lock();
+        Object waitForPut(long nanos) throws InterruptedException {
             try {
-                for (;;) {
-                    Object x = item;
-                    if (x != null) {
-                        item = null;
-                        next = null;
-                        return x;
-                    }
-                    if (timed) {
-                        if (nanos <= 0) {
-                            item = CANCELLED;
-                            return null;
-                        }
-                    }
-                    if (done == null)
-                        done = this.newCondition();
-                    if (timed)
-                        nanos = done.awaitNanos(nanos);
-                    else
-                        done.await();
-                }
+                if (acquireExclusiveTimed(0, nanos) || !cancel()) 
+                    return extract();
+                return null;
             } catch (InterruptedException ie) {
-                Object y = item;
-                if (y != null) {
-                    item = null;
-                    next = null;
-                    Thread.currentThread().interrupt();
-                    return y;
-                } else {
-                    item = CANCELLED;
-                    done.signal(); // propagate signal
+                if (cancel()) 
                     throw ie;
-                }
-            } finally {
-                this.unlock();
+                Thread.currentThread().interrupt();
+                return extract();
             }
         }
     }
@@ -257,10 +257,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 qlock.unlock();
             }
 
-            if (mustWait)
-                return node.waitForTake(timed, nanos);
+            if (mustWait) 
+                return timed? node.waitForTake(nanos) : node.waitForTake();
 
-            else if (node.set(x))
+            else if (node.setItem(x))
                 return true;
 
             // else taker cancelled, so retry
@@ -285,13 +285,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 qlock.unlock();
             }
 
-            if (mustWait) 
-                return (E)node.waitForPut(timed, nanos);
-
+            if (mustWait) {
+                Object x = timed? node.waitForPut(nanos) : node.waitForPut();
+                return (E)x;
+            }
             else {
-                E x = (E)node.get();
+                Object x = node.getItem();
                 if (x != null)
-                    return x;
+                    return (E)x;
                 // else cancelled, so retry
             }
         }
@@ -383,7 +384,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             if (node == null)
                 return false;
 
-            else if (node.set(o))
+            else if (node.setItem(o))
                 return true;
             // else retry
         }
@@ -410,7 +411,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 return null;
 
             else {
-                Object x = node.get();
+                Object x = node.getItem();
                 if (x != null)
                     return (E)x;
                 // else retry

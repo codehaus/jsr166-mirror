@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 public class ScheduledExecutorTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -104,6 +105,11 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         }
     }
 
+    static class RunnableCounter implements Runnable {
+        AtomicInteger count = new AtomicInteger(0);
+        public void run() { count.getAndIncrement(); }
+    }
+
     /**
      * scheduleWithFixedDelay executes runnable after given initial delay
      */
@@ -122,6 +128,51 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         }
     }
     
+    /**
+     * scheduleAtFixedRate executes series of tasks at given rate
+     */
+    public void testFixedRateSequence() {
+	try {
+            ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+            RunnableCounter counter = new RunnableCounter();
+	    ScheduledFuture h = 
+                p1.scheduleAtFixedRate(counter, 0, 1, TimeUnit.MILLISECONDS);
+	    Thread.sleep(SMALL_DELAY_MS);
+            h.cancel(true);
+            int c = counter.count.get();
+            // By time scaling conventions, we must have at least
+            // an execution per SHORT delay, but no more than one SHORT more
+            assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
+            assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
+	    assertTrue(h.isDone());
+            joinPool(p1);
+        } catch(Exception e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * scheduleWithFixedDelay executes series of tasks with given period
+     */
+    public void testFixedDelaySequence() {
+	try {
+            ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+            RunnableCounter counter = new RunnableCounter();
+	    ScheduledFuture h = 
+                p1.scheduleWithFixedDelay(counter, 0, 1, TimeUnit.MILLISECONDS);
+	    Thread.sleep(SMALL_DELAY_MS);
+            h.cancel(true);
+            int c = counter.count.get();
+            assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
+            assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
+	    assertTrue(h.isDone());
+            joinPool(p1);
+        } catch(Exception e){
+            unexpectedException();
+        }
+    }
+
+
     /**
      *  execute (null) throws NPE
      */
@@ -671,10 +722,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
-
-
-
 
     /**
      * invokeAny(null) throws NPE

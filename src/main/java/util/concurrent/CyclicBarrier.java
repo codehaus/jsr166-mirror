@@ -86,24 +86,12 @@ import java.util.concurrent.locks.*;
  * and best strategy for sharing knowledge about failures among
  * cooperating threads in the most common usage contexts of barriers.
  *
- * <h3>Implementation Considerations</h3>
- * <p>This implementation has the property that interruptions among newly
- * arriving threads can cause as-yet-unresumed threads from a previous
- * barrier cycle to return out as broken. This transmits breakage as
- * early as possible, but with the possible byproduct that only some
- * threads returning out of a barrier will realize that it is newly
- * broken. (Others will not realize this until a future cycle.)
- *
- *
- *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:33 $
+ * @revised $Date: 2003/08/05 22:50:28 $
  * @editor $Author: dl $
  * @see CountDownLatch
  *
- * @fixme Is the above property actually true in this implementation?
- * @fixme Should we have a timeout version of await()?
  * @author Doug Lea
  */
 public class CyclicBarrier {
@@ -148,7 +136,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Main barrier code, covering the various pilicies.
+     * Main barrier code, covering the various policies.
      */
     private int dowait(boolean timed, long nanos) throws InterruptedException, BrokenBarrierException, TimeoutException {
         lock.lock();
@@ -205,7 +193,7 @@ public class CyclicBarrier {
                     throw new TimeoutException();
                 }
 
-                if (broken == generation) 
+                if (broken == g) 
                     throw new BrokenBarrierException();
                 
             }

@@ -17,8 +17,8 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/11 13:17:20 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/18 10:18:36 $
+ * @editor $Author: jozart $
  */
 public class Executors {
 
@@ -26,7 +26,7 @@ public class Executors {
      * A wrapper class that exposes only the ExecutorService methods
      * of an implementation.
      */
-    static private class DelegatedExecutorService implements ExecutorService {
+    private static class DelegatedExecutorService implements ExecutorService {
         private final ExecutorService e;
         DelegatedExecutorService(ExecutorService executor) { e = executor; }
         public void execute(Runnable command) { e.execute(command); }

@@ -39,7 +39,8 @@
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
   <property name="build.doccheck.dir"   location="${build.dir}/doccheck"/>
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
-  <property name="build.filter.doccheck.dir" location="${build.dir}/filterdocchk"/>
+  <property name="build.dc-filter.dir"  location="${build.dir}/filterdocchk"/>
+  <property name="build.checkstyle.dir" location="${build.dir}/checkstyle"/>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -77,10 +78,6 @@
 
     <mkdir dir="${build.classes.dir}"/>
 
-<!--
-    <echo>javac ${build.args}</echo>
--->
-
     <javac srcdir="${prepare.src.dir}"
           destdir="${build.classes.dir}"
             debug="${build.debug}"
@@ -89,7 +86,7 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <compilerarg    line="${build.args}"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
 
@@ -111,12 +108,19 @@
           description="Reports on style errors in Java source (verbose, mostly chaff)">
 
     <taskdef resource="checkstyletask.properties"
-            classpath="${lib.dir}/checkstyle-all-2.4.jar"/>
+            classpath="${lib.dir}/checkstyle-all-3.1.jar"/>
 
-    <checkstyle>
-      <formatter type="plain"/>  <!-- also available: type="xml" -->
+    <mkdir dir="${build.checkstyle.dir}"/>
+    
+    <checkstyle config="etc/checkstyle/sun_checks.xml"
+       failOnViolation="false">
+      <formatter type="xml" toFile="${build.checkstyle.dir}/checkstyle-report.xml"/> 
       <fileset dir="${build.filter.src.dir}" includes="**/*.java"/>
     </checkstyle>
+    
+    <style in="${build.checkstyle.dir}/checkstyle-report.xml" 
+          out="${build.checkstyle.dir}/checkstyle-report.html" 
+        style="${stylesheet.dir}/checkstyle-frames.xsl"/>
 
   </target>
 
@@ -131,7 +135,7 @@
     <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
          docletpath="${lib.dir}/doccheck.jar"
             destdir="${build.doccheck.dir}">
-      <packageset dir="${build.filter.doccheck.dir}"/>
+      <packageset dir="${build.dc-filter.dir}"/>
     </javadoc>
 
     <echo>DocCheck output is in ${build.doccheck.dir}</echo>
@@ -153,8 +157,6 @@
 
       <tag name="revised" description="Last revised:"/>
       <tag name="spec"    description="Specified by:"/>
-      <tag name="editor"  description="Last edited by:"/>
-      <tag name="fixme"   description="FIX ME:"/>
 
       <packageset dir="${build.filter.src.dir}"/>
 
@@ -202,51 +204,25 @@
   </target>
 
 
-  <target name="strip"
-          depends="init, configure-compiler"
-          description="Strip generics from java source (not working yet)">
-
-    <mkdir dir="${build.stripped.dir}"/>
-
-    <!--
-     # javac -s doesn't reliably generate compilable code. It generates
-     # bridge methods (marked as "synthetic") that can have identical
-     # signatures to existing methods except for the return value.
-     -->
-    <javac srcdir="${src.dir}"
-          destdir="${build.stripped.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
-
-      <compilerarg    line="${build.args} -s"/>
-
-    </javac>
-
-  </target>
-
-
   <target name="dist"
           depends="init, dist-clean, dist-jar, dist-docs"
           description="Puts all distributable products in single hierarchy"/>
+
 
   <target name="release"
           depends="dist"
           description="Puts entire CVS tree, plus distribution productions, in a jar">
 
-<!--
-    #keep build dir? - dl
-    <delete dir="${build.dir}"/>
--->
     <property name="release.jar" value="dist/jsr166-${version}-dist.jar"/>
 
     <jar basedir="${basedir}" destfile="${release.jar}">
+      <!-- <exclude name="build/**"/> -->
       <exclude name="${release.jar}"/>
       <exclude name="user.properties"/>
       <exclude name="etc/notes/**"/>
+      <exclude name="src/emulation/**"/>
       <exclude name="**/SyntaxTest.java"/>
+      <exclude name="**/SuperfluousAbstract.java"/>
     </jar>
 
   </target>
@@ -383,14 +359,12 @@
   </target>
 
 
-
-
   <target name="filter-doccheck"
           depends="filter-src">
 
-    <mkdir dir="${build.filter.doccheck.dir}"/>
+    <mkdir dir="${build.dc-filter.dir}"/>
 
-    <copy todir="${build.filter.doccheck.dir}">
+    <copy todir="${build.dc-filter.dir}">
       <fileset dir="${build.filter.src.dir}">
         <include name="**/*.html"/>
       </fileset>
@@ -400,7 +374,7 @@
              value="/** Fake type parameter. */ public interface E {} /** Fake type parameter. */ public interface T {} /** Fake type parameter. */ public interface K {} /** Fake type parameter. */ public interface V {}"
     />
 
-    <copy todir="${build.filter.doccheck.dir}">
+    <copy todir="${build.dc-filter.dir}">
       <fileset dir="${build.filter.src.dir}">
         <exclude name="**/*.html"/>
       </fileset>
@@ -437,11 +411,6 @@
           depends="jar">
 
     <mkdir dir="${build.testcases.dir}"/>
-
-<!--
-    <echo>javac ${build.args}</echo>
-    <echo>classpath="${test.classpath}"</echo>
--->
 
     <javac srcdir="${test.src.dir}"
           destdir="${build.testcases.dir}"

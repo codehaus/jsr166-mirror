@@ -83,7 +83,8 @@ import java.util.concurrent.locks.*;
  * describe each part with a Runnable that executes that portion and
  * counts down on the latch, and queue all the Runnables to an
  * Executor.  When all sub-parts are complete, the coordinating thread
- * will be able to pass through await.
+ * will be able to pass through await. (When threads must repeatedly
+ * count down in this way, instead use a {@link CyclicBarrier}.)
  *
  * <pre>
  * class Driver2 { // ...
@@ -101,7 +102,7 @@ import java.util.concurrent.locks.*;
  * class WorkerRunnable implements Runnable {
  *   private final CountDownLatch doneSignal;
  *   private final int i;
- *   Worker(CountDownLatch doneSignal, int i) {
+ *   WorkerRunnable(CountDownLatch doneSignal, int i) {
  *      this.doneSignal = doneSignal;
  *      this.i = i;
  *   }

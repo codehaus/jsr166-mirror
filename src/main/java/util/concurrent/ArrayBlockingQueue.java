@@ -85,7 +85,7 @@ public class ArrayBlockingQueue<E> extends AbstractBlockingQueueFromQueue<E>
          * Circularly increment i.
          */
         int inc(int i) {
-            return (++i == items.length)? i : 0;
+            return (++i == items.length)? 0 : i;
         }
         
         public boolean offer(E x) {
@@ -159,8 +159,6 @@ public class ArrayBlockingQueue<E> extends AbstractBlockingQueueFromQueue<E>
             E[] a = new E[size];
             for (int k = 0, i = takePtr; i != putPtr; i = inc(i))
                 a[k++] = items[i];
-            if (a.length > size)
-                a[size] = null;
             
             return a;
         }

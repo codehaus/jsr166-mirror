@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
 
@@ -17,7 +18,6 @@ import java.util.concurrent.locks.*;
  * @since 1.5
  * @author Doug Lea
  */
-
 public class CancellableTask implements Cancellable, Runnable {
     /** 
      * Holds the run-state, taking on values:
@@ -40,9 +40,11 @@ public class CancellableTask implements Cancellable, Runnable {
     private static final Object CANCELLED = new Object();
 
     private static AtomicReferenceFieldUpdater<CancellableTask, Object> 
-        runnerUpdater = 
-        AtomicReferenceFieldUpdater.newUpdater
-        (CancellableTask.class, Object.class, "runner");
+        runnerUpdater =
+            AtomicReferenceFieldUpdater.newUpdater(
+                CancellableTask.class,
+                Object.class,
+                "runner");
 
     /**
      * The runnable underlying this task
@@ -69,7 +71,6 @@ public class CancellableTask implements Cancellable, Runnable {
      */
     protected CancellableTask() {
     }
-
 
     public boolean cancel(boolean mayInterruptIfRunning) {
         Object r = runner;
@@ -99,7 +100,7 @@ public class CancellableTask implements Cancellable, Runnable {
     }
 
     /**
-     * Return the Runnable forming the basis of this task.
+     * Returns the Runnable forming the basis of this task.
      * @return the runnable action
      * @see #setRunnable
      */
@@ -108,7 +109,7 @@ public class CancellableTask implements Cancellable, Runnable {
     }
 
     /**
-     * Set the Runnable forming the basis of this task.
+     * Sets the Runnable forming the basis of this task.
      * @param r the runnable action
      * @see #getRunnable
      */
@@ -117,16 +118,15 @@ public class CancellableTask implements Cancellable, Runnable {
     }
 
     /**
-     * Set the state of this task to Cancelled.
+     * Sets the state of this task to Cancelled.
      */
     protected void setCancelled() {
         runnerUpdater.set(this, CANCELLED);
     }
     
     /**
-     * Set the state of this task to Done, unless already
-     * in a Cancelled state, in which Cancelled status is preserved.
-     *
+     * Sets the state of this task to Done, unless already in a
+     * Cancelled state, in which case Cancelled status is preserved.
      */
     protected void setDone() {
         for (;;) {
@@ -141,7 +141,7 @@ public class CancellableTask implements Cancellable, Runnable {
     }
 
     /**
-     * Attempt to set the state of this task to Running, succeeding
+     * Attempts to set the state of this task to Running, succeeding
      * only if the state is currently NOT Done, Running, or Cancelled.
      * @return true if successful
      */ 
@@ -174,7 +174,7 @@ public class CancellableTask implements Cancellable, Runnable {
     protected void done() { }
 
     /**
-     * Reset the run state of this task to its initial state unless
+     * Resets the run state of this task to its initial state unless
      * it has been cancelled. (Note that a cancelled task cannot be
      * reset.)
      * @return true if successful
@@ -230,7 +230,7 @@ public class CancellableTask implements Cancellable, Runnable {
         private Throwable exception;
 
         /**
-         * Create an InnerCancellableFuture that will execute the
+         * Creates an InnerCancellableFuture that will execute the
          * given callable.
          * @param callable the function to execute
          */

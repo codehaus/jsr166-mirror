@@ -9,17 +9,17 @@ import java.util.List;
 /**
  * An <tt>Executor</tt> that provides lifecycle-management functions. 
  *
- * <p>An <tt>ExecutorService</tt> can be shut down, which will cause it to stop
+ * <p> An <tt>ExecutorService</tt> can be shut down, which will cause it to stop
  * processing submitted tasks.  After being shut down, it will
  * normally reach a quiescent terminal state in which no tasks are executing
  * and no new ones will be processed.
  *
- * <p>Several concrete implementations of <tt>ExecutorService</tt> are
- * included in java.util.concurrent, including ThreadExecutor, a flexible
- * thread pool, and ScheduledExecutor, which adds support for timed, delayed
- * and periodic task execution.
+ * <p> Several concrete implementations of <tt>ExecutorService</tt> are
+ * included in <tt>java.util.concurrent</tt>, including <tt>ThreadExecutor</tt>,
+ * a flexible thread pool, and <tt>ScheduledExecutor</tt>, which adds support
+ * for timed, delayed and periodic task execution.
  *
- * <p>The <tt>Executors</tt> class provides factory methods for all of the
+ * <p> The <tt>Executors</tt> class provides factory methods for all of the
  * types of executors provided in <tt>java.util.concurrent</tt>.
  *
  * @see Executors
@@ -73,6 +73,8 @@ public interface ExecutorService extends Executor {
      * may not speed the completion of queued tasks, and may cause
      * improperly written tasks to fail.  This executor remains enabled
      * for future executions.
+     *
+     * @fixme needs to document why you might want to interrupt the current task set
      */
     void interrupt();
 
@@ -92,9 +94,11 @@ public interface ExecutorService extends Executor {
      *
      * @param timeout the maximum time to wait
      * @param granularity the time unit of the timeout argument
+     * @return <tt>true</tt> if this executor terminated and <tt>false</tt>
+     * if waiting time elapsed before termination.
      * @throws IllegalStateException if not shut down
      * @throws InterruptedException if interrupted while waiting
      */
-    void awaitTermination(long timeout, TimeUnit granularity)
+    boolean awaitTermination(long timeout, TimeUnit granularity)
         throws InterruptedException;
 }

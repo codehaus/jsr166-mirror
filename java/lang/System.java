@@ -18,7 +18,7 @@ import sun.net.InetAddressCachePolicy;
 import sun.reflect.Reflection;
 
 /**
- * <b>JSR166: Add <tt>currentTimeNanos</tt><br>
+ * <b>JSR166: Add <tt>currentTimeNanos</tt></b>.<br>
  * The <code>System</code> class contains several useful class fields 
  * and methods. It cannot be instantiated. 
  * <p>

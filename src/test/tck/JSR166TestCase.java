@@ -9,7 +9,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
-
+import java.security.*;
 
 /**
  * Base class for JSR166 Junit TCK tests.  Defines some constants,
@@ -128,6 +128,7 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(LockSupportTest.class));
         suite.addTest(new TestSuite(PriorityBlockingQueueTest.class));
         suite.addTest(new TestSuite(PriorityQueueTest.class));
+        suite.addTest(new TestSuite(PrivilegedFutureTaskTest.class));
         suite.addTest(new TestSuite(ReentrantLockTest.class));
         suite.addTest(new TestSuite(ReentrantReadWriteLockTest.class));
         suite.addTest(new TestSuite(ScheduledExecutorTest.class));
@@ -319,6 +320,28 @@ public class JSR166TestCase extends TestCase {
     static final Integer m4 = new Integer(-4);
     static final Integer m5 = new Integer(-5);
     static final Integer m10 = new Integer(-10);
+
+
+    /**
+     * A security policy where new permissions can be dynamically added
+     * or all cleared.
+     */
+    static class AdjustablePolicy extends java.security.Policy {
+        Permissions perms = new Permissions();
+        AdjustablePolicy() { }
+        void addPermission(Permission perm) { perms.add(perm); }
+        void clearPermissions() { perms = new Permissions(); }
+	public PermissionCollection getPermissions(CodeSource cs) {
+	    return perms;
+	}
+	public PermissionCollection getPermissions(ProtectionDomain pd) {
+	    return perms;
+	}
+	public boolean implies(ProtectionDomain pd, Permission p) {
+	    return perms.implies(p);
+	}
+	public void refresh() {}
+    }
 
 
     // Some convenient Runnable classes

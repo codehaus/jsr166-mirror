@@ -28,7 +28,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
         try{
             AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
                 a = AtomicLongFieldUpdater.newUpdater
-                (getClass(), "y");
+                (AtomicLongFieldUpdaterTest.class, "y");
             shouldThrow();
         }
         catch (RuntimeException rt) {}
@@ -41,7 +41,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
         try{
             AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
                 a = AtomicLongFieldUpdater.newUpdater
-                (getClass(), "z");
+                (AtomicLongFieldUpdaterTest.class, "z");
             shouldThrow();
         }
         catch (RuntimeException rt) {}
@@ -54,7 +54,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
         try{
             AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
                 a = AtomicLongFieldUpdater.newUpdater
-                (getClass(), "w");
+                (AtomicLongFieldUpdaterTest.class, "w");
             shouldThrow();
         }
 
@@ -65,7 +65,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      *  get returns the last value set or assigned
      */
     public void testGetSet(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(1,a.get(this));
 	a.set(this,2);
@@ -78,7 +78,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertTrue(a.compareAndSet(this,1,2));
 	assertTrue(a.compareAndSet(this,2,-4));
@@ -96,7 +96,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() {
         x = 1;
-        final AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        final AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
 
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -119,7 +119,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      * to expected 
      */
     public void testWeakCompareAndSet(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	while(!a.weakCompareAndSet(this,1,2));
         while(!a.weakCompareAndSet(this,2,-4));
@@ -132,7 +132,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      *  getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(1,a.getAndSet(this, 0));
 	assertEquals(0,a.getAndSet(this,-10));
@@ -143,7 +143,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      * getAndAdd returns previous value and adds given value
      */
     public void testGetAndAdd(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(1,a.getAndAdd(this,2));
 	assertEquals(3,a.get(this));
@@ -155,7 +155,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      * getAndDecrement returns previous value and decrements
      */
     public void testGetAndDecrement(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(1,a.getAndDecrement(this));
 	assertEquals(0,a.getAndDecrement(this));
@@ -166,7 +166,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      * getAndIncrement returns previous value and increments
      */
     public void testGetAndIncrement(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(1,a.getAndIncrement(this));
 	assertEquals(2,a.get(this));
@@ -181,7 +181,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      * addAndGet adds given value to current, and returns current value
      */
     public void testAddAndGet(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(3,a.addAndGet(this,2));
 	assertEquals(3,a.get(this));
@@ -193,7 +193,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      *  decrementAndGet decrements and returns current value
      */
     public void testDecrementAndGet(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(0,a.decrementAndGet(this));
 	assertEquals(-1,a.decrementAndGet(this));
@@ -205,7 +205,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      * incrementAndGet increments and returns current value
      */
     public void testIncrementAndGet(){
-        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
+        AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(AtomicLongFieldUpdaterTest.class, "x");
         x = 1;
 	assertEquals(2,a.incrementAndGet(this));
 	assertEquals(2,a.get(this));

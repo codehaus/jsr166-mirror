@@ -28,7 +28,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
         try{
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
-                (getClass(), Integer.class, "y");
+                (AtomicReferenceFieldUpdaterTest.class, Integer.class, "y");
             shouldThrow();
         }
         catch (RuntimeException rt) {}
@@ -42,7 +42,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
         try{
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
-                (getClass(), Integer.class, "z");
+                (AtomicReferenceFieldUpdaterTest.class, Integer.class, "z");
             shouldThrow();
         }
         catch (RuntimeException rt) {}
@@ -55,7 +55,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
         try{
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
-                (getClass(), Integer.class, "w");
+                (AtomicReferenceFieldUpdaterTest.class, Integer.class, "w");
             shouldThrow();
         }
         catch (RuntimeException rt) {}
@@ -65,7 +65,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      *  get returns the last value set or assigned
      */
     public void testGetSet(){
-        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
+        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
         x = one;
 	assertEquals(one,a.get(this));
 	a.set(this,two);
@@ -78,7 +78,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){
-        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
+        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
         x = one;
 	assertTrue(a.compareAndSet(this,one,two));
 	assertTrue(a.compareAndSet(this,two,m4));
@@ -95,7 +95,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      */
     public void testCompareAndSetInMultipleThreads() {
         x = one;
-        final AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
+        final AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
 
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -118,7 +118,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      * to expected 
      */
     public void testWeakCompareAndSet(){
-        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
+        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
         x = one;
 	while(!a.weakCompareAndSet(this,one,two));
 	while(!a.weakCompareAndSet(this,two,m4));
@@ -131,7 +131,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      * getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet(){
-        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
+        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
         x = one;
 	assertEquals(one,a.getAndSet(this, zero));
 	assertEquals(zero,a.getAndSet(this,m10));

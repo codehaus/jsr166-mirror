@@ -68,6 +68,18 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
         offset = unsafe.objectFieldOffset(field);
     }
 
+    final boolean doCas(Object obj, int expect, int update) {
+        return unsafe.compareAndSwapInt(obj, offset, expect, update);
+    }
+
+    final void doSet(Object obj, int newValue) {
+        unsafe.putIntVolatile(obj, offset, newValue);
+    }
+
+    final int doGet(Object obj) {
+        return unsafe.getIntVolatile(obj, offset);
+    }
+
     /**
      * Atomically set the value of the field of the given object managed
      * by this Updater to the given updated value if the current value
@@ -84,7 +96,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      */
 
     public final boolean compareAndSet(T obj, int expect, int update) {
-        return unsafe.compareAndSwapInt(obj, offset, expect, update);
+        return doCas(obj, expect, update);
     }
 
     /**
@@ -103,7 +115,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      */
 
     public final boolean weakCompareAndSet(T obj, int expect, int update) {
-        return unsafe.compareAndSwapInt(obj, offset, expect, update);
+        return compareAndSet(obj, expect, update);
     }
 
     /**
@@ -114,7 +126,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * @param newValue the new value
      */
     public final void set(T obj, int newValue) {
-        unsafe.putIntVolatile(obj, offset, newValue);
+        doSet(obj, newValue);
     }
 
     /**
@@ -123,7 +135,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * @return the current value
      */
     public final int get(T obj) {
-        return unsafe.getIntVolatile(obj, offset);
+        return doGet(obj);
     }
 
     /**
@@ -183,6 +195,51 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
             int next = current + delta;
             if (compareAndSet(obj, current, next))
                 return current;
+        }
+    }
+
+    /**
+     * Atomically increment the current value.
+     * @param obj An object whose field to get and set
+     * @return the updated value;
+     */
+    public int incrementAndGet(T obj) {
+        for (;;) {
+            int current = get(obj);
+            int next = current + 1;
+            if (compareAndSet(obj, current, next))
+                return next;
+        }
+    }
+
+
+    /**
+     * Atomically decrement the current value.
+     * @param obj An object whose field to get and set
+     * @return the updated value;
+     */
+    public int decrementAndGet(T obj) {
+        for (;;) {
+            int current = get(obj);
+            int next = current - 1;
+            if (compareAndSet(obj, current, next))
+                return next;
+        }
+    }
+
+
+    /**
+     * Atomically add the given value to current value.
+     * @param obj An object whose field to get and set
+     * @param delta the value to add
+     * @return the updated value;
+     */
+    public int addAndGet(T obj, int delta) {
+        for (;;) {
+            int current = get(obj);
+            int next = current + delta;
+            if (compareAndSet(obj, current, next))
+                return next;
         }
     }
 

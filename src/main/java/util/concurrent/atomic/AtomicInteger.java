@@ -67,6 +67,32 @@ public final class AtomicInteger implements java.io.Serializable {
                 return current;
         }
     }
+  
+  
+    /**
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
+     * @param expect the expected value
+     * @param update the new value
+     * @return true if successful. False return indicates that
+     * the actual value was not equal to the expected value.
+     */
+    public boolean compareAndSet(int expect, int update) {
+      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+    }
+
+    /**
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
+     * May fail spuriously.
+     * @param expect the expected value
+     * @param update the new value
+     * @return true if successful.
+     */
+    public boolean weakCompareAndSet(int expect, int update) {
+      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+    }
+
 
     /**
      * Atomically increment the current value.
@@ -109,30 +135,46 @@ public final class AtomicInteger implements java.io.Serializable {
                 return current;
         }
     }
-  
-  
-    /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful. False return indicates that
-     * the actual value was not equal to the expected value.
-     */
-    public boolean compareAndSet(int expect, int update) {
-      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
-    }
 
     /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously.
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful.
+     * Atomically increment the current value.
+     * @return the updated value;
      */
-    public boolean weakCompareAndSet(int expect, int update) {
-      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+    public int incrementAndGet() {
+        for (;;) {
+            int current = get();
+            int next = current + 1;
+            if (compareAndSet(current, next))
+                return next;
+        }
+    }
+    
+    /**
+     * Atomically decrement the current value.
+     * @return the updated value;
+     */
+    public int decrementAndGet() {
+        for (;;) {
+            int current = get();
+            int next = current - 1;
+            if (compareAndSet(current, next))
+                return next;
+        }
+    }
+  
+  
+    /**
+     * Atomically add the given value to current value.
+     * @param delta the value to add
+     * @return the updated value;
+     */
+    public int addAndGet(int delta) {
+        for (;;) {
+            int current = get();
+            int next = current + delta;
+            if (compareAndSet(current, next))
+                return next;
+        }
     }
   
 }

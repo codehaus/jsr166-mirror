@@ -72,6 +72,31 @@ public final class AtomicLong implements java.io.Serializable {
     }
   
   
+  
+    /**
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
+     * @param expect the expected value
+     * @param update the new value
+     * @return true if successful. False return indicates that
+     * the actual value was not equal to the expected value.
+     */
+    public boolean compareAndSet(long expect, long update) {
+      return unsafe.compareAndSwapLong(this, valueOffset, expect, update);
+    }
+
+    /**
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
+     * May fail spuriously.
+     * @param expect the expected value
+     * @param update the new value
+     * @return true if successful.
+     */
+    public boolean weakCompareAndSet(long expect, long update) {
+      return unsafe.compareAndSwapLong(this, valueOffset, expect, update);
+    }
+  
     /**
      * Atomically increment the current value.
      * @return the previous value;
@@ -114,29 +139,45 @@ public final class AtomicLong implements java.io.Serializable {
         }
     }
   
+    /**
+     * Atomically increment the current value.
+     * @return the updated value;
+     */
+    public long incrementAndGet() {
+        for (;;) {
+            long current = get();
+            long next = current + 1;
+            if (compareAndSet(current, next))
+                return next;
+        }
+    }
+    
+    /**
+     * Atomically decrement the current value.
+     * @return the updated value;
+     */
+    public long decrementAndGet() {
+        for (;;) {
+            long current = get();
+            long next = current - 1;
+            if (compareAndSet(current, next))
+                return next;
+        }
+    }
+  
   
     /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful. False return indicates that
-     * the actual value was not equal to the expected value.
+     * Atomically add the given value to current value.
+     * @param delta the value to add
+     * @return the updated value;
      */
-    public boolean compareAndSet(long expect, long update) {
-      return unsafe.compareAndSwapLong(this, valueOffset, expect, update);
-    }
-
-    /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously.
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful.
-     */
-    public boolean weakCompareAndSet(long expect, long update) {
-      return unsafe.compareAndSwapLong(this, valueOffset, expect, update);
+    public long addAndGet(long delta) {
+        for (;;) {
+            long current = get();
+            long next = current + delta;
+            if (compareAndSet(current, next))
+                return next;
+        }
     }
   
   

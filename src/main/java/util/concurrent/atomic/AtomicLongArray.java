@@ -79,52 +79,6 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
   
     /**
-     * Atomically increment the element at index <tt>i</tt>.
-     *
-     * @param i the index
-     * @return the previous value;
-     */
-    public long getAndIncrement(int i) {
-        while (true) {
-            long current = get(i);
-            long next = current + 1;
-            if (compareAndSet(i, current, next))
-                return current;
-        }
-    }
-  
-    /**
-     * Atomically decrement the element at index <tt>i</tt>.
-     *
-     * @param i the index
-     * @return the previous value;
-     */
-    public long getAndDecrement(int i) {
-        while (true) {
-            long current = get(i);
-            long next = current - 1;
-            if (compareAndSet(i, current, next))
-                return current;
-        }
-    }
-  
-    /**
-     * Atomically add the given value to element at index <tt>i</tt>.
-     *
-     * @param i the index
-     * @param delta the value to add
-     * @return the previous value;
-     */
-    public long getAndAdd(int i, long delta) {
-        while (true) {
-            long current = get(i);
-            long next = current + delta;
-            if (compareAndSet(i, current, next))
-                return current;
-        }
-    }
-  
-    /**
      * Atomically set the value to the given updated value
      * if the current value <tt>==</tt> the expected value.
      * @param i the index
@@ -150,4 +104,52 @@ public final class AtomicLongArray implements java.io.Serializable {
     public boolean weakCompareAndSet(int i, long expect, long update) {
         return compareAndSet(i, expect, update);
     }
+
+    /**
+     * Atomically increment the element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @return the updated value;
+     */
+    public long incrementAndGet(int i) {
+        while (true) {
+            long current = get(i);
+            long next = current + 1;
+            if (compareAndSet(i, current, next))
+                return next;
+        }
+    }
+  
+    /**
+     * Atomically decrement the element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @return the updated value;
+     */
+    public long decrementAndGet(int i) {
+        while (true) {
+            long current = get(i);
+            long next = current - 1;
+            if (compareAndSet(i, current, next))
+                return next;
+        }
+    }
+  
+    /**
+     * Atomically add the given value to element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @param delta the value to add
+     * @return the updated value;
+     */
+    public long addAndGet(int i, long delta) {
+        while (true) {
+            long current = get(i);
+            long next = current + delta;
+            if (compareAndSet(i, current, next))
+                return next;
+        }
+    }
+  
+
 }

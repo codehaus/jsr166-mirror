@@ -74,6 +74,18 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         offset = unsafe.objectFieldOffset(field);
     }
 
+    final boolean doCas(Object obj, long expect, long update) {
+        return unsafe.compareAndSwapLong(obj, offset, expect, update);
+    }
+
+    final void doSet(Object obj, long newValue) {
+        unsafe.putLongVolatile(obj, offset, newValue);
+    }
+
+    final long doGet(Object obj) {
+        return unsafe.getLongVolatile(obj, offset);
+    }
+
     /**
      * Atomically set the value of the field of the given object managed
      * by this Updater to the given updated value if the current value
@@ -90,7 +102,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      */
 
     public final boolean compareAndSet(T obj, long expect, long update) {
-        return unsafe.compareAndSwapLong(obj, offset, expect, update);
+        return doCas(obj, expect, update);
     }
 
     /**
@@ -109,7 +121,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      */
 
     public final boolean weakCompareAndSet(T obj, long expect, long update) {
-        return unsafe.compareAndSwapLong(obj, offset, expect, update);
+        return compareAndSet(obj, expect, update);
     }
 
     /**
@@ -120,7 +132,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * @param newValue the new value
      */
     public final void set(T obj, long newValue) {
-        unsafe.putLongVolatile(obj, offset, newValue);
+        doSet(obj, newValue);
     }
 
     /**
@@ -129,7 +141,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * @return the current value
      */
     public final long get(T obj) {
-        return unsafe.getLongVolatile(obj, offset);
+        return doGet(obj);
     }
 
     /**
@@ -192,7 +204,50 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 
+    /**
+     * Atomically increment the current value.
+     * @param obj An object whose field to get and set
+     * @return the updated value;
+     */
+    public long incrementAndGet(T obj) {
+        for (;;) {
+            long current = get(obj);
+            long next = current + 1;
+            if (compareAndSet(obj, current, next))
+                return next;
+        }
+    }
 
+
+    /**
+     * Atomically decrement the current value.
+     * @param obj An object whose field to get and set
+     * @return the updated value;
+     */
+    public long decrementAndGet(T obj) {
+        for (;;) {
+            long current = get(obj);
+            long next = current - 1;
+            if (compareAndSet(obj, current, next))
+                return next;
+        }
+    }
+
+
+    /**
+     * Atomically add the given value to current value.
+     * @param obj An object whose field to get and set
+     * @param delta the value to add
+     * @return the updated value;
+     */
+    public long addAndGet(T obj, long delta) {
+        for (;;) {
+            long current = get(obj);
+            long next = current + delta;
+            if (compareAndSet(obj, current, next))
+                return next;
+        }
+    }
 
 }
 

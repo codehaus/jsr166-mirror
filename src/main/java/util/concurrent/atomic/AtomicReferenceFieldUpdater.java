@@ -87,6 +87,20 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         offset = unsafe.objectFieldOffset(field);
     }
 
+    final boolean doCas(Object obj, Object expect, Object update) {
+        return unsafe.compareAndSwapObject(obj, offset, expect, update);
+    }
+
+    final void doSet(Object obj, Object newValue) {
+        unsafe.putObjectVolatile(obj, offset, newValue);
+    }
+
+    final Object doGet(Object obj) {
+        return unsafe.getObjectVolatile(obj, offset);
+    }
+
+
+
     /**
      * Atomically set the value of the field of the given object managed
      * by this Updater to the given updated value if the current value
@@ -100,8 +114,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * @return true if successful.
      */
 
-    public final boolean compareAndSet(T obj, V expect, V update) {
-        return unsafe.compareAndSwapObject(obj, offset, expect, update);
+    public boolean compareAndSet(T obj, V expect, V update) {
+        return doCas(obj, expect, update);
     }
 
     /**
@@ -116,8 +130,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * @param update the new value
      * @return true if successful.
      */
-    public final boolean weakCompareAndSet(T obj, V expect, V update) {
-        return unsafe.compareAndSwapObject(obj, offset, expect, update);
+    public boolean weakCompareAndSet(T obj, V expect, V update) {
+        return compareAndSet(obj, expect, update);
     }
 
 
@@ -128,8 +142,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * @param obj An object whose field to set
      * @param newValue the new value
      */
-    public final void set(T obj, V newValue) {
-        unsafe.putObjectVolatile(obj, offset, newValue);
+    public void set(T obj, V newValue) {
+        doSet(obj, newValue);
     }
 
     /**
@@ -137,8 +151,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * @param obj An object whose field to get
      * @return the current value
      */
-    public final V get(T obj) {
-        return (V)unsafe.getObjectVolatile(obj, offset);
+    public V get(T obj) {
+        return (V)doGet(obj);
     }
 
     /**

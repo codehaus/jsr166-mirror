@@ -1657,34 +1657,32 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         }
 
         /**
-         * Unlink a cancelled waiter node from condition queue.
+         * Unlink a cancelled waiter node from condition queue.  This
+         * is called when cancellation occurred during condition wait,
+         * not lock wait, and is called only after lock has been
+         * re-acquired by a cancelled waiter.  It is not usually
+         * called even in these cases because cancelled waiters are
+         * cleared (setting nextWaiter to null) when encountered
+         * during signals, and this is only called after prechecking
+         * nextWaiter. But it is needed to avoid garbage retention in
+         * the absence of signals.
          */
         private void unlinkCancelledWaiter(Node node) {
-            /* This is called when cancellation occurred during
-             * condition wait, not lock wait, and is called only after
-             * lock has been re-acquired by a cancelled waiter. This
-             * will usually immediately return, because cancelled
-             * waiters are cleared (setting nextWaiter to null) when
-             * encountered during signals, but is needed to avoid
-             * garbage retention in the absence of signals.
-             */
-            if (node.nextWaiter != null) {
-                Node t = firstWaiter;
-                Node trail = null;
-                while (t != null) {
-                    if (t == node) {
-                        Node next = t.nextWaiter;
-                        if (trail == null) 
-                            firstWaiter = next;
-                        else
-                            trail.nextWaiter = next;
-                        if (lastWaiter == node)
-                            lastWaiter = trail;
-                        break;
-                    }
-                    trail = t;
-                    t = t.nextWaiter;
+            Node t = firstWaiter;
+            Node trail = null;
+            while (t != null) {
+                if (t == node) {
+                    Node next = t.nextWaiter;
+                    if (trail == null) 
+                        firstWaiter = next;
+                    else
+                        trail.nextWaiter = next;
+                    if (lastWaiter == node)
+                        lastWaiter = trail;
+                    break;
                 }
+                trail = t;
+                t = t.nextWaiter;
             }
         }
 
@@ -1799,17 +1797,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
             int interruptMode = 0;
-            boolean cancelled = false;
             while (!isOnSyncQueue(node)) {
                 LockSupport.park();
-                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
-                    cancelled = true;
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
-                }
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (cancelled)
+            if (node.nextWaiter != null)
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0) 
                 reportInterruptAfterWait(interruptMode);
@@ -1836,25 +1831,21 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             int savedState = fullyRelease(node);
             long lastTime = System.nanoTime();
             int interruptMode = 0;
-            boolean cancelled = false;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
                     transferAfterCancelledWait(node);
-                    cancelled = true;
                     break;
                 }
                 LockSupport.parkNanos(nanosTimeout);
-                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
-                    cancelled = true;
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
-                }
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (cancelled)
+            if (node.nextWaiter != null)
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0) 
                 reportInterruptAfterWait(interruptMode);
@@ -1886,22 +1877,18 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             int savedState = fullyRelease(node);
             boolean timedout = false;
             int interruptMode = 0;
-            boolean cancelled = false;
             while (!isOnSyncQueue(node)) {
                 if (System.currentTimeMillis() > abstime) {
                     timedout = transferAfterCancelledWait(node);
-                    cancelled = true;
                     break;
                 }
                 LockSupport.parkUntil(abstime);
-                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
-                    cancelled = true;
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
-                }
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (cancelled)
+            if (node.nextWaiter != null)
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
@@ -1934,25 +1921,21 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             long lastTime = System.nanoTime();
             boolean timedout = false;
             int interruptMode = 0;
-            boolean cancelled = false;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
                     timedout = transferAfterCancelledWait(node);
-                    cancelled = true;
                     break;
                 }
                 LockSupport.parkNanos(nanosTimeout);
-                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
-                    cancelled = true;
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
-                }
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (cancelled)
+            if (node.nextWaiter != null)
                 unlinkCancelledWaiter(node);
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);

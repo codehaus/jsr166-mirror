@@ -177,7 +177,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
-
     /** 
      * getRejectedExecutionHandler returns handler in constructor if not set
      */

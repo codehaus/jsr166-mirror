@@ -10,6 +10,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.math.BigInteger;
+import java.security.*;
 
 public class ExecutorsTest extends JSR166TestCase{
     public static void main(String[] args) {
@@ -242,6 +243,96 @@ public class ExecutorsTest extends JSR166TestCase{
         catch (InterruptedException ex) {
             unexpectedException();
         }
+    }
+
+
+    /**
+     * execute of a privileged action runs it to completion
+     */
+    public void testExecutePrivilegedAction() {
+	Policy savedPolicy = Policy.getPolicy();
+        AdjustablePolicy policy = new AdjustablePolicy();
+        policy.addPermission(new RuntimePermission("getContextClassLoader"));
+        policy.addPermission(new RuntimePermission("setContextClassLoader"));
+	Policy.setPolicy(policy);
+        try {
+            Executor e = new DirectExecutor();
+            Future future = Executors.execute(e, new PrivilegedAction() {
+		    public Object run() {
+			return TEST_STRING;
+		    }});
+
+            Object result = future.get();
+            assertSame(TEST_STRING, result);
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        }
+	finally {
+	    Policy.setPolicy(savedPolicy);
+	}
+    }
+
+    /**
+     * execute of a privileged exception action runs it to completion
+     */
+    public void testExecutePrivilegedExceptionAction() {
+	Policy savedPolicy = Policy.getPolicy();
+        AdjustablePolicy policy = new AdjustablePolicy();
+        policy.addPermission(new RuntimePermission("getContextClassLoader"));
+        policy.addPermission(new RuntimePermission("setContextClassLoader"));
+	Policy.setPolicy(policy);
+        try {
+            Executor e = new DirectExecutor();
+            Future future = Executors.execute(e, new PrivilegedExceptionAction() {
+		    public Object run() {
+			return TEST_STRING;
+		    }});
+
+            Object result = future.get();
+            assertSame(TEST_STRING, result);
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        }
+	finally {
+	    Policy.setPolicy(savedPolicy);
+	}
+    }
+
+    /**
+     * execute of a failed privileged exception action reports exception
+     */
+    public void testExecuteFailedPrivilegedExceptionAction() {
+	Policy savedPolicy = Policy.getPolicy();
+        AdjustablePolicy policy = new AdjustablePolicy();
+        policy.addPermission(new RuntimePermission("getContextClassLoader"));
+        policy.addPermission(new RuntimePermission("setContextClassLoader"));
+	Policy.setPolicy(policy);
+        try {
+            Executor e = new DirectExecutor();
+            Future future = Executors.execute(e, new PrivilegedExceptionAction() {
+		    public Object run() throws Exception {
+			throw new IndexOutOfBoundsException();
+		    }});
+
+            Object result = future.get();
+            shouldThrow();
+        }
+        catch (ExecutionException success) {
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        }
+	finally {
+	    Policy.setPolicy(savedPolicy);
+	}
     }
 
     /**
@@ -552,6 +643,84 @@ public class ExecutorsTest extends JSR166TestCase{
     }
 
     
+    /**
+     * ThreadPoolExecutor using defaultThreadFactory has
+     * specified group, priority, daemon status, and name
+     */
+    public void testDefaultThreadFactory() {
+	final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
+	Runnable r = new Runnable() {
+		public void run() {
+		    Thread current = Thread.currentThread();
+		    threadAssertTrue(!current.isDaemon());
+		    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
+		    ThreadGroup g = current.getThreadGroup();
+		    SecurityManager s = System.getSecurityManager();
+		    if (s != null)
+			threadAssertTrue(g == s.getThreadGroup());
+		    else
+			threadAssertTrue(g == egroup);
+		    String name = current.getName();
+		    threadAssertTrue(name.endsWith("thread-1"));
+		}
+	    };
+	ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
+	
+	e.execute(r);
+	e.shutdown();
+	try {
+	    Thread.sleep(SHORT_DELAY_MS);
+	} catch (Exception eX) {
+	    unexpectedException();
+	} finally {
+	    joinPool(e);
+	}
+    }
 
+    /**
+     * ThreadPoolExecutor using privilegedThreadFactory has
+     * specified group, priority, daemon status, name,
+     * access control context and context class loader
+     */
+    public void testPrivilegedThreadFactory() {
+	Policy savedPolicy = Policy.getPolicy();
+        AdjustablePolicy policy = new AdjustablePolicy();
+        policy.addPermission(new RuntimePermission("getContextClassLoader"));
+        policy.addPermission(new RuntimePermission("setContextClassLoader"));
+	Policy.setPolicy(policy);
+	final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
+	final ClassLoader thisccl = Thread.currentThread().getContextClassLoader();
+        final AccessControlContext thisacc = AccessController.getContext();
+	Runnable r = new Runnable() {
+		public void run() {
+		    Thread current = Thread.currentThread();
+		    threadAssertTrue(!current.isDaemon());
+		    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
+		    ThreadGroup g = current.getThreadGroup();
+		    SecurityManager s = System.getSecurityManager();
+		    if (s != null)
+			threadAssertTrue(g == s.getThreadGroup());
+		    else
+			threadAssertTrue(g == egroup);
+		    String name = current.getName();
+		    threadAssertTrue(name.endsWith("thread-1"));
+		    threadAssertTrue(thisccl == current.getContextClassLoader());
+		    threadAssertTrue(thisacc.equals(AccessController.getContext()));
+		}
+	    };
+	ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
+	
+	Policy.setPolicy(savedPolicy);
+	e.execute(r);
+	e.shutdown();
+	try {
+	    Thread.sleep(SHORT_DELAY_MS);
+	} catch (Exception ex) {
+	    unexpectedException();
+	} finally {
+	    joinPool(e);
+	}
+
+    }
 
 }

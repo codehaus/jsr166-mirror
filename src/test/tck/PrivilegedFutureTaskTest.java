@@ -19,12 +19,31 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
 	return new TestSuite(PrivilegedFutureTaskTest.class);
     }
 
+    Policy savedPolicy;
+
+    /**
+     * Establish permissions for get/set for contextClassLoader for each test
+     */
+    public void setUp() {
+	super.setUp();
+	savedPolicy = Policy.getPolicy();
+        AdjustablePolicy policy = new AdjustablePolicy();
+        policy.addPermission(new RuntimePermission("getContextClassLoader"));
+        policy.addPermission(new RuntimePermission("setContextClassLoader"));
+	Policy.setPolicy(policy);
+	//	System.setSecurityManager(new SecurityManager());
+    }
+
+    public void tearDown() {
+	Policy.setPolicy(savedPolicy);
+	super.tearDown();
+    }
+
     /**
      * Subclass to expose protected methods
      */
     static class PublicPrivilegedFutureTask extends PrivilegedFutureTask {
         public PublicPrivilegedFutureTask(Callable r) { super(r); }
-        public PublicPrivilegedFutureTask(Callable r, ClassLoader ccl, AccessControlContext acc) { super(r, ccl, acc); }
         public boolean reset() { return super.reset(); }
         public void setCancelled() { super.setCancelled(); }
         public void setDone() { super.setDone(); }
@@ -48,7 +67,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * isDone is true when a task completes
      */
     public void testIsDone() {
-        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable(), null, null);
+        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable());
 	task.run();
 	assertTrue(task.isDone());
 	assertFalse(task.isCancelled());
@@ -58,7 +77,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * reset of a done task succeeds and changes status to not done
      */
     public void testReset() {
-        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable(), null, null);
+        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable());
 	task.run();
 	assertTrue(task.isDone());
 	assertTrue(task.reset());	
@@ -69,7 +88,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * Resetting after cancellation fails
      */
     public void testResetAfterCancel() {
-        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable(), null, null);
+        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
 	task.run();
 	assertTrue(task.isDone());
@@ -81,7 +100,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * setDone of new task causes isDone to be true
      */
     public void testSetDone() {
-        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable(), null, null);
+        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable());
 	task.setDone();
 	assertTrue(task.isDone());
 	assertFalse(task.isCancelled());
@@ -91,7 +110,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * setCancelled of a new task causes isCancelled to be true
      */
     public void testSetCancelled() {
-        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable(), null, null);
+        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
 	task.setCancelled();
 	assertTrue(task.isDone());
@@ -102,7 +121,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * setting value gauses get to return it
      */
     public void testSet() {
-        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable(), null, null);
+        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable());
         task.set(one);
         try {
             assertEquals(task.get(), one);
@@ -117,7 +136,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      */
     public void testSetException() {
         Exception nse = new NoSuchElementException();
-        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable(), null, null);
+        PublicPrivilegedFutureTask task = new PublicPrivilegedFutureTask(new NoOpCallable());
         task.setException(nse);
         try {
             Object x = task.get();
@@ -136,7 +155,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      *  Cancelling before running succeeds
      */
     public void testCancelBeforeRun() {
-        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable(), null, null);
+        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable());
         assertTrue(task.cancel(false));
 	task.run();
 	assertTrue(task.isDone());
@@ -147,7 +166,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * Cancel(true) before run succeeds
      */
     public void testCancelBeforeRun2() {
-        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable(), null, null);
+        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable());
         assertTrue(task.cancel(true));
 	task.run();
 	assertTrue(task.isDone());
@@ -158,7 +177,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * cancel of a completed task fails
      */
     public void testCancelAfterRun() {
-        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable(), null, null);
+        PrivilegedFutureTask task = new PrivilegedFutureTask( new NoOpCallable());
 	task.run();
         assertFalse(task.cancel(false));
 	assertTrue(task.isDone());
@@ -177,7 +196,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
                     }
                     catch (InterruptedException success) {}
                     return Boolean.TRUE;
-                } }, null, null);
+                } });
         Thread t = new  Thread(task);
         t.start();
         
@@ -206,7 +225,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
                         threadFail("should not interrupt");
                     }
                     return Boolean.TRUE;
-                } }, null, null);
+                } });
         Thread t = new  Thread(task);
         t.start();
         
@@ -234,7 +253,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
                     }
                     return Boolean.TRUE;
 		}
-	}, null, null);
+	});
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -272,7 +291,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
                     }
                     return Boolean.TRUE;
 		}
-            }, null, null);
+            });
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -310,7 +329,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
                     }
 		    return Boolean.TRUE;
 		}
-	    }, null, null);
+	    });
 	try {
 	    Thread t1 = new Thread(new Runnable() {
 		    public void run() {
@@ -348,7 +367,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
                     }
                     return Boolean.TRUE;
 		}
-	    }, null, null);
+	    });
 	try {
 	    Thread t1 = new Thread(new Runnable() {
 		    public void run() {
@@ -384,7 +403,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
 		    int i = 5/0;
 		    return Boolean.TRUE;
 		}
-	    }, null, null);
+	    });
 	try {
 	    ft.run();
 	    ft.get();
@@ -405,7 +424,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
 		    int i = 5/0;
 		    return Boolean.TRUE;
 		}
-	    }, null, null);
+	    });
 	try {
 	    ft.run();
 	    ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
@@ -422,7 +441,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      * Interrupting a waiting get causes it to throw InterruptedException
      */
     public void testGet_InterruptedException() {
-	final PrivilegedFutureTask ft = new PrivilegedFutureTask(new NoOpCallable(), null, null);
+	final PrivilegedFutureTask ft = new PrivilegedFutureTask(new NoOpCallable());
 	Thread t = new Thread(new Runnable() {
 		public void run() {		    
 		    try {
@@ -448,7 +467,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      *  Interrupting a waiting timed get causes it to throw InterruptedException
      */
     public void testTimedGet_InterruptedException2() {
-	final PrivilegedFutureTask ft = new PrivilegedFutureTask(new NoOpCallable(), null, null);
+	final PrivilegedFutureTask ft = new PrivilegedFutureTask(new NoOpCallable());
 	Thread t = new Thread(new Runnable() {
 	 	public void run() {		    
 		    try {
@@ -475,7 +494,7 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
      */
     public void testGet_TimeoutException() {
 	try {
-            PrivilegedFutureTask ft = new PrivilegedFutureTask(new NoOpCallable(), null, null);
+            PrivilegedFutureTask ft = new PrivilegedFutureTask(new NoOpCallable());
 	    ft.get(1,TimeUnit.MILLISECONDS);
 	    shouldThrow();
 	} catch(TimeoutException success){}
@@ -484,11 +503,12 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
 	}
     }
 
-
     /**
      * Without privileges, run with default context throws ACE
      */
     public void testRunWithNoPrivs() {
+        AdjustablePolicy policy = new AdjustablePolicy();
+	Policy.setPolicy(policy);
         try {
             PrivilegedFutureTask task = new PrivilegedFutureTask(new NoOpCallable());
             task.run();
@@ -496,27 +516,5 @@ public class PrivilegedFutureTaskTest extends JSR166TestCase {
         } catch(AccessControlException success) {
         }
     }
-
-
-    /**
-     * With ContextClassLoader privileges, run with default context succeeds
-     */
-    public void testRunWithContextClassLoaderPermissions() {
-        AdjustablePolicy policy = new AdjustablePolicy();
-        policy.addPermission(new RuntimePermission("getContextClassLoader"));
-        policy.addPermission(new RuntimePermission("setContextClassLoader"));
-	Policy.setPolicy(policy);
-	System.setSecurityManager(new SecurityManager());
-        
-        try {
-            PrivilegedFutureTask task = new PrivilegedFutureTask(new NoOpCallable());
-            task.run();
-            assertTrue(task.isDone());
-        } catch(Exception e) {
-            unexpectedException();
-            
-        }
-    }
-
     
 }

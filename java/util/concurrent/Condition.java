@@ -1,5 +1,7 @@
 package java.util.concurrent;
 
+import java.util.Date;
+
 /**
  * <tt>Conditions</tt> abstract out the <tt>Object</tt> monitor 
  * methods ({@link Object#wait() wait}, {@link Object#notify notify} and
@@ -164,7 +166,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/09 17:56:50 $
+ * @revised $Date: 2003/01/10 13:21:16 $
  * @editor $Author: dl $
  **/
 public interface Condition {
@@ -344,6 +346,82 @@ public interface Condition {
      * interruption of thread suspension is supported).
      */
     public long awaitNanos(long nanosTimeout) throws InterruptedException;
+
+
+    
+    /**
+     * Causes the current thread to wait until it is signalled or interrupted,
+     * or the specified deadline elapses.
+     *
+     * <p>The lock associated with this condition is atomically 
+     * released and the current thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until <em>one</em> of five things happens:
+     * <ul>
+     * <li>Some other thread invokes the {@link #signal} method for this 
+     * <tt>Condition</tt> and the current thread happens to be chosen as the 
+     * thread to be awakened; or 
+     * <li>Some other thread invokes the {@link #signalAll} method for this 
+     * <tt>Condition</tt>; or
+     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * thread, and interruption of thread suspension is supported; or
+     * <li>The specified deadline elapses; or
+     * <li>A &quot;<em>spurious wakeup</em>&quot; occurs.
+     * </ul>
+     *
+     * <p>In all cases, before this method can return the current thread must
+     * re-acquire the lock associated with this condition. When the
+     * thread returns it is <em>guaranteed</em> to hold this lock.
+     *
+     *
+     * <p>If the current thread:
+     * <ul>
+     * <li>has its interrupted status set on entry to this method; or 
+     * <li>is {@link Thread#interrupt interrupted} while waiting 
+     * and interruption of thread suspension is supported, 
+     * </ul>
+     * then {@link InterruptedException} is thrown and the current thread's 
+     * interrupted status is cleared. It is not specified, in the first
+     * case, whether or not the test for interruption occurs before the lock
+     * is released.
+     *
+     * <p>The circumstances under which the wait completes are mutually 
+     * exclusive. For example, if the thread is signalled then it will
+     * never return by throwing {@link InterruptedException}; conversely
+     * a thread that is interrupted and throws {@link InterruptedException}
+     * will never consume a {@link #signal}.
+     *
+     * <p>The return value idicates whether the deadline has elapsed,
+     * which can be used as follows:
+     * <pre>
+     * synchronized boolean aMethod(Date deadline) {
+     *   boolean stillWaiting = true;
+     *   while (!conditionBeingWaitedFor) {
+     *     if (stillwaiting)
+     *         stillWaiting = theCondition.awaitUntil(deadline);
+     *      else
+     *        return false;
+     *   }
+     *   // ... 
+     * }
+     * </pre>
+     *
+     * <p><b>Implementation Considerations</b>
+     * <p>The current thread is assumed to hold the lock associated with this
+     * <tt>Condition</tt> when this method is called.
+     * It is up to the implementation to determine if this is
+     * the case and if not, how to respond. Typically, an exception will be 
+     * thrown (such as {@link IllegalMonitorStateException}) and the
+     * implementation must document that fact.
+     *
+     *
+     * @param deadline the absolute time to wait until
+     * @return <tt>false</tt> if the deadline has
+     * elapsed upon return, else <tt>true</tt>.
+     *
+     * @throws InterruptedException if the current thread is interrupted (and
+     * interruption of thread suspension is supported).
+     */
+    public boolean awaitUntil(Date deadline) throws InterruptedException;
 
     /**
      * Wakes up one waiting thread.

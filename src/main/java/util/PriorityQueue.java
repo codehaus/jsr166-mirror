@@ -412,7 +412,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @return the comparator associated with this priority queue, or
      *         <tt>null</tt> if it uses its elements' natural ordering.
      */
-    Comparator comparator() {
+    Comparator<E> comparator() {
         return comparator;
     }
 }

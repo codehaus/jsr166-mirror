@@ -137,7 +137,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/07 16:00:28 $
+ * @revised $Date: 2003/08/08 17:48:45 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -247,6 +247,14 @@ public class ThreadPoolExecutor implements ExecutorService {
         new AbortPolicy();
 
     /**
+     * Invoke the rejected execution handler for the give command.
+     */
+    void reject(Runnable command) {
+        handler.rejectedExecution(command, this);
+    }
+
+
+    /**
      * Create and return a new thread running firstTask as its first
      * task. Call only while holding mainLock
      * @param firstTask the task the new thread should run first (or
@@ -271,7 +279,8 @@ public class ThreadPoolExecutor implements ExecutorService {
      * null if none)
      * @return true if successful.
      */
-    private boolean addIfUnderCorePoolSize(Runnable firstTask) {
+    // non-private; accessible to ScheduledExecutor
+    boolean addIfUnderCorePoolSize(Runnable firstTask) {
         Thread t = null;
         mainLock.lock();
         try {
@@ -286,15 +295,6 @@ public class ThreadPoolExecutor implements ExecutorService {
         t.start();
         return true;
     }
-
-    /**
-     * Eagerly (vs by default lazily) start all core threads.
-     */
-    void prestartCoreThreads() {
-        while (addIfUnderCorePoolSize(null)) {
-        }
-    }
-
 
     /**
      * Create and start a new thread only if less than maximumPoolSize
@@ -681,7 +681,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     public void execute(Runnable command) {
         for (;;) {
             if (shutdownStatus != NOT_SHUTDOWN) {
-                handler.rejectedExecution(command, this);
+                reject(command);
                 return;
             }
             if (poolSize < corePoolSize && addIfUnderCorePoolSize(command))
@@ -692,7 +692,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             if (r == command)
                 return;
             if (r == null) {
-                handler.rejectedExecution(command, this);
+                reject(command);
                 return;
             }
             // else retry

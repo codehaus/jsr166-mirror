@@ -32,6 +32,13 @@ import java.util.*;
  * delays, which may drift from absolute times (as returned by
  * <tt>System.currentTimeMillis</tt>) over sufficiently long periods.
  *
+ * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
+ * of the inherited tuning methods are not especially useful for
+ * it. In particular, because a <tt>ScheduledExecutor</tt> always acts
+ * as a fixed-sized pool using <tt>corePoolSize</tt> threads and an
+ * unbounded queue, adjustments to <tt>maximumPoolSize</tt> have no
+ * useful effect.
+ *
  * @since 1.5
  * @see Executors
  *
@@ -226,7 +233,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     public ScheduledExecutor(int corePoolSize) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue());
-        prestartCoreThreads();
     }
 
     /**
@@ -241,7 +247,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                              ThreadFactory threadFactory) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue(), threadFactory);
-        prestartCoreThreads();
     }
 
     /**
@@ -256,7 +261,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                               RejectedExecutionHandler handler) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue(), handler);
-        prestartCoreThreads();
     }
 
     /**
@@ -274,7 +278,23 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                               RejectedExecutionHandler handler) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue(), threadFactory, handler);
-        prestartCoreThreads();
+    }
+
+    /**
+     * Specialized variant of ThreadPoolExecutor.execute for delayed tasks.
+     */
+    void delayedExecute(Runnable command) {
+        if (isShutdown()) {
+            reject(command);
+            return;
+        }
+        // Prestart thread if necessary. We cannot prestart it running
+        // the task because the task (probably) shouldn't be run yet,
+        // so thread will just idle until delay elapses.
+        if (getPoolSize() < getCorePoolSize())
+            addIfUnderCorePoolSize(null);
+            
+        getQueue().offer(command);
     }
 
     /**
@@ -288,7 +308,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
     public DelayedTask schedule(Runnable command, long delay,  TimeUnit unit) {
         DelayedTask t = new DelayedTask(command, System.nanoTime() + unit.toNanos(delay));
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
 
@@ -306,7 +326,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             (command, 
              TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
                                            System.currentTimeMillis()));
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
     
@@ -328,7 +348,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         DelayedTask t = new DelayedTask
             (command, System.nanoTime() + unit.toNanos(initialDelay),
              unit.toNanos(period), true);
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
     
@@ -353,7 +373,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
              TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
                                            System.currentTimeMillis()),
              unit.toNanos(period), true);
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
 
@@ -375,7 +395,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         DelayedTask t = new DelayedTask
             (command, System.nanoTime() + unit.toNanos(initialDelay),
              unit.toNanos(delay), false);
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
     
@@ -399,7 +419,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
              TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
                                            System.currentTimeMillis()),
              unit.toNanos(delay), false);
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
 
@@ -417,7 +437,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     public <V> DelayedFutureTask<V> schedule(Callable<V> callable, long delay,  TimeUnit unit) {
         DelayedFutureTask<V> t = new DelayedFutureTask<V>
             (callable, delay, unit);
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
 
@@ -433,7 +453,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     public <V> DelayedFutureTask<V> schedule(Callable<V> callable, Date date) {
         DelayedFutureTask<V> t = new DelayedFutureTask<V>
             (callable, date);
-        super.execute(t);
+        delayedExecute(t);
         return t;
     }
 

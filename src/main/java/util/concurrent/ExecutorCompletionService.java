@@ -8,11 +8,11 @@ package java.util.concurrent;
 
 
 /**
- * A {@link CompletionService} that uses a supplied {@link ExecutorService}
+ * A {@link CompletionService} that uses a supplied {@link Executor}
  * to execute tasks.
  */
 public class ExecutorCompletionService<V> implements CompletionService<V> {
-    private final ExecutorService executor;
+    private final Executor executor;
     private final LinkedBlockingQueue<Future<V>> cq = 
         new LinkedBlockingQueue<Future<V>>();
 
@@ -31,7 +31,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * executor should be dedicated for use by this service
      8 @throws NullPointerException if executor is null
      */
-    public ExecutorCompletionService(ExecutorService executor) {
+    public ExecutorCompletionService(Executor executor) {
         if (executor == null) 
             throw new NullPointerException();
         this.executor = executor;
@@ -39,12 +39,12 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
 
 
     /**
-     * Return the {@link ExecutorService} used for base
+     * Return the {@link Executor} used for base
      * task execution. This may for example be used to shut
      * down the service.
      * @return the executor
      */
-    public ExecutorService getExecutor() { 
+    public Executor getExecutor() { 
         return executor; 
     }
 

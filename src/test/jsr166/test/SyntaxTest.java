@@ -41,21 +41,20 @@ public class SyntaxTest extends TestCase {
 
     private static final int[] IARRAY = new int[] { 1, 2, 3, 4 };
 
+    enum Color {
+        red(1), green(2), blue(3), yellow(4), magenta(5), cyan(6);
+
+        Color(int ival) { this.ival = ival; }
+
+        public int intValue() { return ival; }
+
+        private final int ival;
+    }
 
     public void testEnumerations () {
 
-        enum Color {
-            red(1), green(2), blue(3), yellow(4), magenta(5), cyan(6);
-
-            Color(int ival) { this.ival = ival; }
-
-            public int intValue() { return ival; }
-
-            private final int ival;
-        };
-
         List<Color> colors = Arrays.asList(Color.values());
-        
+
         assertEquals("should get expected list of colors",
                      "[red, green, blue, yellow, magenta, cyan]",
                      colors.toString());

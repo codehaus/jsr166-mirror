@@ -50,8 +50,8 @@ ant [target], where target is one of:
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
 
   <!-- Source locations -->
-  <property name="src.dir"              location="${basedir}"/>
-  <property name="test.src.dir"         location="${basedir}/etc/testcases"/>
+  <property name="src.dir"              location="${basedir}/src/main"/>
+  <property name="test.src.dir"         location="${basedir}/src/test"/>
   <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
   <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
   <property name="lib.dir"              location="${basedir}/lib"/>
@@ -95,9 +95,6 @@ ant [target], where target is one of:
       <bootclasspath refid="javac.bootclasspath"/>
       <compilerarg line="${javac.args} ${build.warnings.option}"/>
 
-      <!-- need this because srcdir is basedir! -->
-      <include name="java/**/*.java"/>
-
     </javac>
   </target>
 
@@ -134,9 +131,7 @@ ant [target], where target is one of:
     <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
          docletpath="${lib.dir}/doccheck.jar"
             destdir="${build.doccheck.dir}">
-      <packageset dir="${build.filter.src.dir}">
-        <include name="java/**"/>
-      </packageset>
+      <packageset dir="${build.filter.src.dir}"/>
     </javadoc>
   </target>
 
@@ -154,14 +149,17 @@ ant [target], where target is one of:
       <tag name="spec" description="Specified by:"/>
       <tag name="editor" description="Last edited by:"/>
       <tag name="fixme" description="FIX ME:"/>
-      <packageset dir="${build.filter.src.dir}">
-        <include name="java/**"/>
-      </packageset>
+      <packageset dir="${build.filter.src.dir}"/>
 
     </javadoc>
   </target>
 
 
+  <!--
+   # javac -s doesn't reliably generate compilable code. It generates
+   # bridge methods (marked as "synthetic") that can have identical
+   # signatures to existing methods except for the return value.
+   -->
   <target name="strip" depends="init">
     <mkdir dir="${build.stripped.dir}"/>
     <javac srcdir="${src.dir}"
@@ -174,9 +172,6 @@ ant [target], where target is one of:
 
       <bootclasspath refid="javac.bootclasspath"/>
       <compilerarg line="${javac.args} ${build.warnings.option} -s"/>
-
-      <!-- need this because srcdir is basedir! -->
-      <include name="java/**/*.java"/>
 
     </javac>
   </target>
@@ -253,9 +248,7 @@ ant [target], where target is one of:
             overview="${src.dir}/intro.html"
               source="${build.sourcelevel}">
 
-      <packageset dir="${build.filter.src.dir}">
-        <include name="java/**"/>
-      </packageset>
+      <packageset dir="${build.filter.src.dir}"/>
 
     </javadoc>
   </target>
@@ -274,7 +267,7 @@ ant [target], where target is one of:
     <mkdir dir="${build.filter.src.dir}"/>
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
-        <include name="java/**/*.java"/>
+        <include name="**/*.java"/>
       </fileset>
       <filterchain>
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"

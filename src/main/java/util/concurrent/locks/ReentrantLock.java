@@ -161,7 +161,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         ConditionObject newCondition() {
-            return new ConditionObject();
+            return new ConditionObject(this);
         }
         
         Thread getOwner() {
@@ -179,6 +179,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         
         boolean isLocked() {
             return getState().get() != 0;
+        }
+
+        Collection<Thread> getWaitingThreads(ReentrantLock.ConditionObject condition) {
+            if (condition.getOwner() != this)
+                throw new IllegalArgumentException("not owner");
+            return condition.getWaitingThreads();
         }
 
         /**
@@ -406,16 +412,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Returns a {@link Condition} instance for use with this {@link
-     * Lock} instance.  This class supports the same basic semantics
-     * and styles of usage as the {@link Object} monitor methods.
-     * Methods may be invoked only when holding the lock associated
-     * with this Condition. Failure to comply results in {@link
-     * IllegalMonitorStateException}.
+     * Lock} instance.  
      *
      * @return the Condition object
      */
-    public AbstractQueuedSynchronizer.ConditionObject newCondition() {
-        return sync.newCondition();
+    public ConditionObject newCondition() {
+        return new ConditionObject(sync.newCondition());
     }
 
     /**
@@ -573,4 +575,310 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         return sync.getQueuedThreads();
     }
 
+    /**
+     * Returns a collection containing those threads that may be
+     * waiting on the given Condition.  Because the actual set of
+     * threads may change dynamically while constructing this
+     * result, the returned collection is only a best-effort
+     * estimate. The elements of the returned collection are in no
+     * particular order.  This method is designed to facilitate
+     * construction of subclasses that provide more extensive
+     * condition monitoring facilities.
+     * @param condition the condition
+     * @return the collection of threads
+     * @throws IllegalMonitorStateException if this lock is not held.
+     * @throws IllegalArgumentException if the given condition is
+     * not associated with this lock
+     */
+    protected Collection<Thread> getWaitingThreads(ConditionObject condition) {
+        return sync.getWaitingThreads(condition);
+    }
+
+    /**
+     * Condition implementation for <tt>ReentrantLock</tt>. This class
+     * supports the same basic semantics and styles of usage as the
+     * {@link Object} monitor methods.  Methods may be invoked only
+     * when holding the lock associated with this Condition. Failure
+     * to comply results in {@link IllegalMonitorStateException}.
+     */
+    public static class ConditionObject implements Condition {
+        private final AbstractQueuedSynchronizer.ConditionObject cond;
+        ConditionObject(AbstractQueuedSynchronizer.ConditionObject cond) {
+            this.cond = cond;
+        }
+
+        /**
+         * Wakes up one waiting thread.
+         *
+         * <p>If any threads are waiting on this condition then one is
+         * selected for waking up.  This implementation always chooses
+         * to wake up the longest-waiting thread whose wait has not
+         * been interrupted or timed out.  That thread must then
+         * re-acquire the lock before it returns. The order in which
+         * it will do so is the same as that for threads initially
+         * acquiring the lock, which is in the default case not
+         * specified, but for <em>fair</em> locks favors those threads
+         * that have been waiting the longest. Note that an awakened
+         * thread can return, at the soonest, only after the current
+         * thread releases the lock associated with this Condition.
+         * 
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         **/
+        public void signal() { cond.signal(); }
+
+        /**
+         * Wake up all waiting threads.
+         *
+         * <p>If any threads are waiting on this condition then they
+         * are all woken up. Each thread must re-acquire the lock
+         * before it returns.
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         */
+        public void signalAll() { cond.signalAll(); }
+
+        /**
+         * Causes the current thread to wait until it is signalled.
+         *
+         * <p>The lock associated with this condition is atomically
+         * released and the current thread becomes disabled for thread
+         * scheduling purposes and lies dormant until <em>one</em> of
+         * the following happens: 
+         *
+         * <ul>
+         *
+         * <li>Some other thread invokes the {@link #signal} method
+         * for this <tt>Condition</tt> and the current thread 
+         * has been waiting the longest of all waiting threads; or
+         *
+         * <li>Some other thread invokes the {@link #signalAll} method
+         * for this <tt>Condition</tt>
+         *
+         * </ul>
+         *
+         * <p>In all cases, before this method can return the current
+         * thread must re-acquire the lock associated with this
+         * condition. When the thread returns it is
+         * <em>guaranteed</em> to hold this lock.
+         *
+         * <p>If the current thread's interrupt status is set when it
+         * enters this method, or it is {@link Thread#interrupt
+         * interrupted} while waiting, it will continue to wait until
+         * signalled. When it finally returns from this method its
+         * <em>interrupted status</em> will still be set.
+         * 
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         */
+        public void awaitUninterruptibly() { cond.awaitUninterruptibly(); }
+
+
+        /**
+         * Causes the current thread to wait until it is signalled or
+         * {@link Thread#interrupt interrupted}.
+         *
+         * <p>The lock associated with this <tt>Condition</tt> is
+         * atomically released and the current thread becomes disabled
+         * for thread scheduling purposes and lies dormant until
+         * <em>one</em> of the following happens:
+         *
+         * <ul>
+         *
+         * <li>Some other thread invokes the {@link #signal} method
+         * for this <tt>Condition</tt> and the current thread 
+         * has been waiting the longest of all waiting threads; or
+         *
+         * <li>Some other thread invokes the {@link #signalAll} method
+         * for this <tt>Condition</tt>; or
+         *
+         * <li>Some other thread {@link Thread#interrupt interrupts}
+         * the current thread
+         *
+         * </ul>
+         *
+         * <p>In all cases, before this method can return the current
+         * thread must re-acquire the lock associated with this
+         * condition. When the thread returns it is
+         * <em>guaranteed</em> to hold this lock.
+         *
+         * <p>If the current thread has its interrupted status set on
+         * entry to this method or is {@link Thread#interrupt
+         * interrupted} while waiting, then {@link
+         * InterruptedException} is thrown and the current thread's
+         * interrupted status is cleared.  
+         *
+         * @throws InterruptedException if the current thread is
+         * interrupted
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         **/
+        public void await() throws InterruptedException { cond.await(); }
+
+        /**
+         * Causes the current thread to wait until it is signalled or
+         * interrupted, or the specified waiting time elapses.
+         *
+         * <p>The lock associated with this condition is atomically
+         * released and the current thread becomes disabled for thread
+         * scheduling purposes and lies dormant until <em>one</em> of
+         * the following happens:
+         *
+         * <ul>
+         *
+         * <li>Some other thread invokes the {@link #signal} method
+         * for this <tt>Condition</tt> and the current thread 
+         * has been waiting the longest of all waiting threads; or
+         *
+         * <li>Some other thread invokes the {@link #signalAll} method
+         * for this <tt>Condition</tt>; or
+         *
+         * <li>Some other thread {@link Thread#interrupt interrupts}
+         * the current thread; or
+         *
+         * <li>The specified waiting time elapses
+         *
+         * </ul>
+         *
+         * <p>In all cases, before this method can return the current
+         * thread must re-acquire the lock associated with this
+         * condition. When the thread returns it is
+         * <em>guaranteed</em> to hold this lock.
+         *
+         * <p>If the current thread has its interrupted status set on
+         * entry to this method or is {@link Thread#interrupt
+         * interrupted} while waiting, then {@link
+         * InterruptedException} is thrown and the current thread's
+         * interrupted status is cleared.  
+         *
+         * <p>The method returns an estimate of the number of nanoseconds
+         * remaining to wait given the supplied <tt>nanosTimeout</tt>
+         * value upon return, or a value less than or equal to zero if it
+         * timed out. This value can be used to determine whether and how
+         * long to re-wait in cases where the wait returns but an awaited
+         * condition still does not hold. 
+         *
+         * @param nanosTimeout the maximum time to wait, in nanoseconds
+         * @return A value less than or equal to zero if the wait has
+         * timed out; otherwise an estimate, that
+         * is strictly less than the <tt>nanosTimeout</tt> argument,
+         * of the time still remaining when this method returned.
+         *
+         * @throws InterruptedException if the current thread is
+         * interrupted.
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         */
+        public long awaitNanos(long nanosTimeout) 
+            throws InterruptedException { 
+            return cond.awaitNanos(nanosTimeout); 
+        }
+        
+        /**
+         * Causes the current thread to wait until it is signalled or
+         * interrupted, or the specified deadline elapses.
+         *
+         * <p>The lock associated with this condition is atomically
+         * released and the current thread becomes disabled for thread
+         * scheduling purposes and lies dormant until <em>one</em> of
+         * the following happens:
+         *
+         * <ul>
+         *
+         * <li>Some other thread invokes the {@link #signal} method
+         * for this <tt>Condition</tt> and the current thread 
+         * has been waiting the longest of all waiting threads; or
+         *
+         * <li>Some other thread invokes the {@link #signalAll} method
+         * for this <tt>Condition</tt>; or
+         *
+         * <li>Some other thread {@link Thread#interrupt interrupts}
+         * the current thread; or
+         *
+         * <li>The specified deadline elapses
+         *
+         * </ul>
+         *
+         * <p>In all cases, before this method can return the current
+         * thread must re-acquire the lock associated with this
+         * condition. When the thread returns it is
+         * <em>guaranteed</em> to hold this lock.
+         *
+         * <p>If the current thread has its interrupted status set on
+         * entry to this method or is {@link Thread#interrupt
+         * interrupted} while waiting, then {@link
+         * InterruptedException} is thrown and the current thread's
+         * interrupted status is cleared.  
+         *
+         * @param deadline the absolute time to wait until
+         * @return <tt>false</tt> if the deadline has
+         * elapsed upon return, else <tt>true</tt>.
+         *
+         * @throws InterruptedException if the current thread is interrupted
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         * @throws NullPointerException if deadline is null
+         */
+        public boolean awaitUntil(Date deadline) throws InterruptedException {
+            return cond.awaitUntil(deadline);
+        }
+
+        /**
+         * Causes the current thread to wait until it is signalled or
+         * interrupted, or the specified waiting time elapses. This
+         * method is behaviorally equivalent to:<br>
+         *
+         * <pre>
+         *   awaitNanos(unit.toNanos(time)) &gt; 0
+         * </pre>
+         *
+         * @param time the maximum time to wait
+         * @param unit the time unit of the <tt>time</tt> argument.
+         * @return <tt>false</tt> if the waiting time detectably
+         * elapsed before return from the method, else <tt>true</tt>.
+         * @throws InterruptedException if the current thread is
+         * interrupted
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         * @throws NullPointerException if unit is null
+         */
+        public boolean await(long time, TimeUnit unit) throws InterruptedException {
+            return cond.await(time, unit);
+        }
+
+        /**
+         * Queries whether any threads are waiting on this
+         * condition. Note that because timeouts and interrupts may
+         * occur at any time, a <tt>true</tt> return does not
+         * guarantee that a future <tt>signal</tt> will awaken any
+         * threads.  This method is designed primarily for use in
+         * monitoring of the system state.
+         * @return <tt>true</tt> if there are any waiting threads.
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         */ 
+        public boolean hasWaiters() { return cond.hasWaiters(); }
+
+        /**
+         * Returns an estimate of the number of threads waiting on
+         * this condition. Note that because timeouts and interrupts
+         * may occur at any time, the estimate serves only as an upper
+         * bound on the actual number of waiters.  This method is
+         * designed for use in monitoring of the system state, not for
+         * synchronization control.
+         * @return the estimated number of waiting threads.
+         * @throws IllegalMonitorStateException if the lock associated
+         * with this Condition is not held
+         */ 
+        public int getWaitQueueLength() { return cond.getWaitQueueLength(); }
+
+        Collection<Thread> getWaitingThreads() {
+            return cond.getWaitingThreads();
+        }
+
+        AbstractQueuedSynchronizer getOwner() {
+            return cond.getOwner();
+        }
+
+    }
 }

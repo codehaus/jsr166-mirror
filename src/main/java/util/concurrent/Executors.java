@@ -39,6 +39,33 @@ public class Executors {
             return e.awaitTermination(timeout, unit);
         }
     }
+    
+    /**
+     * A wrapper class that exposes only the ExecutorService and 
+     * ScheduleExecutor methods of a ScheduledThreadPoolExecutor.
+     */
+    private static class DelegatedScheduledExecutorService 
+            extends DelegatedExecutorService
+            implements ScheduledExecutor {
+        
+        private final ScheduledExecutor e;
+        DelegatedScheduledExecutorService(ScheduledThreadPoolExecutor executor) {
+            super(executor);
+            e = executor;
+        }
+        public ScheduledFuture<Boolean> schedule(Runnable command, long delay,  TimeUnit unit) {
+            return e.schedule(command, delay, unit);
+        }
+        public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+            return e.schedule(callable, delay, unit);
+        }
+        public ScheduledFuture<Boolean> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
+            return e.scheduleAtFixedRate(command, initialDelay, period, unit);
+        }
+        public ScheduledFuture<Boolean> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+            return e.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+        }
+    }
 
     /**
      * Creates a thread pool that reuses a fixed set of threads
@@ -148,6 +175,83 @@ public class Executors {
                                     new SynchronousQueue<Runnable>(),
                                     threadFactory));
     }
+    
+    
+    /**
+     * Creates a thread pool that can schedule commands to run after a 
+     * given delay, or to execute periodically.
+     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
+     * an <tt>ExecutorService</tt>.
+     */
+    public static ScheduledExecutor newScheduledThreadPool() {
+        return newScheduledThreadPool(0);
+    }
+    
+    
+    /**
+     * Creates a thread pool that can schedule commands to run after a 
+     * given delay, or to execute periodically.
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
+     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
+     * an <tt>ExecutorService</tt>.
+     */
+    public static ScheduledExecutor newScheduledThreadPool(int corePoolSize) {
+        return newScheduledThreadPool(corePoolSize, null);
+    }
+
+
+    /**
+     * Creates a thread pool that can schedule commands to run after a 
+     * given delay, or to execute periodically.
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
+     * @param threadFactory the factory to use when the executor
+     * creates a new thread. 
+     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
+     * an <tt>ExecutorService</tt>.
+     */
+    public static ScheduledExecutor newScheduledThreadPool(int corePoolSize, 
+                                                           ThreadFactory threadFactory) {
+        return newScheduledThreadPool(corePoolSize, threadFactory, false, false);
+    }
+
+    
+    /**
+     * Creates a thread pool that can schedule commands to run after a 
+     * given delay, or to execute periodically.
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
+     * @param threadFactory the factory to use when the executor
+     * creates a new thread. 
+     * @param continueExistingPeriodicTasksAfterShutdown  whether to 
+     * continue executing existing periodic tasks even when the returned 
+     * executor has been <tt>shutdown</tt>.
+     * @param executeExistingDelayedTasksAfterShutdown  whether to 
+     * continue executing existing delayed tasks even when the returned 
+     * executor has been <tt>shutdown</tt>.
+     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
+     * an <tt>ExecutorService</tt>.
+     */
+    public static ScheduledExecutor newScheduledThreadPool(
+            int corePoolSize, 
+            ThreadFactory threadFactory,
+            boolean continueExistingPeriodicTasksAfterShutdown,
+            boolean executeExistingDelayedTasksAfterShutdown) {
+                
+        ScheduledThreadPoolExecutor stpe = threadFactory == null ? 
+            new ScheduledThreadPoolExecutor(corePoolSize) :
+            new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
+            
+        stpe.setContinueExistingPeriodicTasksAfterShutdownPolicy(
+            continueExistingPeriodicTasksAfterShutdown);
+            
+        stpe.setExecuteExistingDelayedTasksAfterShutdownPolicy(
+            executeExistingDelayedTasksAfterShutdown);
+        
+        return new DelegatedScheduledExecutorService(stpe);
+    }
+    
 
     /**
      * Executes a Runnable task and returns a Future representing that
@@ -313,7 +417,7 @@ public class Executors {
      * @return the thread factory
      */
     public static ThreadFactory defaultThreadFactory() {
-	return new DefaultThreadFactory();
+        return new DefaultThreadFactory();
     }
 
     /**
@@ -350,16 +454,16 @@ public class Executors {
      * @see PrivilegedFutureTask
      */
     public static ThreadFactory privilegedThreadFactory() {
-	return new PrivilegedThreadFactory();
+        return new PrivilegedThreadFactory();
     }
 
     static class DefaultThreadFactory implements ThreadFactory {
-	static final AtomicInteger poolNumber = new AtomicInteger(1);
-	final ThreadGroup group;
-	final AtomicInteger threadNumber = new AtomicInteger(1);
-	final String namePrefix;
+        static final AtomicInteger poolNumber = new AtomicInteger(1);
+        final ThreadGroup group;
+        final AtomicInteger threadNumber = new AtomicInteger(1);
+        final String namePrefix;
 
-	DefaultThreadFactory() {
+        DefaultThreadFactory() {
             SecurityManager s = System.getSecurityManager();
             group = (s != null)? s.getThreadGroup() :
                                  Thread.currentThread().getThreadGroup();

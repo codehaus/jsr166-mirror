@@ -452,7 +452,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Set policy on whether to execute existing delayed
+     * Get policy on whether to execute existing delayed
      * tasks even when this executor has been <tt>shutdown</tt>. In
      * this case, these tasks will only terminate upon
      * <tt>shutdownNow</tt>, or after setting the policy to

@@ -39,15 +39,16 @@ import java.io.ObjectOutputStream;
  *
  * <p> The allowed concurrency among update operations is guided by
  * the optional <tt>concurrencyLevel</tt> constructor argument
- * (default 16). The table is internally partitioned to permit the
- * indicated number of concurrent updates without contention. Because
- * placement in hash tables is essentially random, the actual
- * concurrency will vary.  Ideally, you should choose a value to
- * accommodate as many threads as will ever concurrently access the
- * table. Using a significantly higher value than you need can waste
- * space and time, and a significantly lower value can lead to thread
- * contention. But overestimates and underestimates within an order of
- * magnitude do not usually have much noticeable impact.
+ * (default 16), which is used as a hint for internal sizing.  The
+ * table is internally partitioned to try to permit the indicated
+ * number of concurrent updates without contention. Because placement
+ * in hash tables is essentially random, the actual concurrency will
+ * vary.  Ideally, you should choose a value to accommodate as many
+ * threads as will ever concurrently access the table. Using a
+ * significantly higher value than you need can waste space and time,
+ * and a significantly lower value can lead to thread contention. But
+ * overestimates and underestimates within an order of magnitude do
+ * not usually have much noticeable impact.
  *
  * <p> Like Hashtable but unlike java.util.HashMap, this class does
  * NOT allow <tt>null</tt> to be used as a key or value.
@@ -75,9 +76,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * The maximum capacity, used if a higher value is implicitly
      * specified by either of the constructors with arguments.  MUST
-     * be a power of two <= 1<<30.
+     * be a power of two <= 1<<30 to ensure that entries are indexible
+     * using ints.
      */
-    static final int MAXIMUM_CAPACITY = 1 << 30;
+    static final int MAXIMUM_CAPACITY = 1 << 30; 
 
     /**
      * The default load factor for this table.  Used when not
@@ -89,6 +91,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * The default number of concurrency control segments.
      **/
     private static final int DEFAULT_SEGMENTS = 16;
+
+    /**
+     * The maximum number of segments to allow; used to bound ctor arguments.
+     */
+    private static final int MAX_SEGMENTS = 1 << 16; // slightly conservative
 
     /* ---------------- Fields -------------- */
 
@@ -190,6 +197,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         transient volatile int count;
 
         /**
+         * Number of updates; used for checking lack of modifications
+         * in bulk-read methods.
+         */
+        transient int modCount;
+
+        /**
          * The table is rehashed when its size exceeds this threshold.
          * (The value of this field is always (int)(capacity *
          * loadFactor).)
@@ -279,12 +292,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         V oldValue = e.value;
                         if (!onlyIfAbsent)
                             e.value = value;
+                        ++modCount;
                         count = c; // write-volatile
                         return oldValue;
                     }
                 }
 
                 tab[index] = new HashEntry<K,V>(hash, key, value, first);
+                ++modCount;
                 ++c;
                 count = c; // write-volatile
                 if (c > threshold)
@@ -389,6 +404,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     newFirst = new HashEntry<K,V>(p.hash, p.key,
                                                   p.value, newFirst);
                 tab[index] = newFirst;
+                ++modCount;
                 count = c-1; // write-volatile
                 return oldValue;
             } finally {
@@ -402,6 +418,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 HashEntry[] tab = table;
                 for (int i = 0; i < tab.length ; i++)
                     tab[i] = null;
+                ++modCount;
                 count = 0; // write-volatile
             } finally {
                 unlock();
@@ -410,7 +427,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * ConcurrentReaderHashMap list entry.
+     * ConcurrentHashMap list entry.
      */
     private static class HashEntry<K,V> implements Entry<K,V> {
         private final K key;
@@ -471,7 +488,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param loadFactor  the load factor threshold, used to control resizing.
      * @param concurrencyLevel the estimated number of concurrently
      * updating threads. The implementation performs internal sizing
-     * to accommodate this many threads.  
+     * to try to accommodate this many threads.  
      * @throws IllegalArgumentException if the initial capacity is
      * negative or the load factor or concurrencyLevel are
      * nonpositive.
@@ -480,6 +497,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                              float loadFactor, int concurrencyLevel) {
         if (!(loadFactor > 0) || initialCapacity < 0 || concurrencyLevel <= 0)
             throw new IllegalArgumentException();
+
+        if (concurrencyLevel > MAX_SEGMENTS)
+            concurrencyLevel = MAX_SEGMENTS;
 
         // Find power-of-two sizes best matching arguments
         int sshift = 0;
@@ -539,20 +559,62 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     // inherit Map javadoc
-    public int size() {
-        int c = 0;
-        for (int i = 0; i < segments.length; ++i)
-            c += segments[i].count;
-        return c;
+    public boolean isEmpty() {
+        /*
+         * We need to keep track of per-segment modCounts to avoid ABA
+         * problems in which an element in one segment was added and
+         * in another removed during traversal, in which case the
+         * table was never actually empty at any point. Note the
+         * similar use of modCounts in the size() and containsValue()
+         * methods, which are the only other methods also susceptible
+         * to ABA problems.
+         */
+        int[] mc = new int[segments.length];
+        int mcsum = 0;
+        for (int i = 0; i < segments.length; ++i) {
+            if (segments[i].count != 0)
+                return false;
+            else 
+                mcsum += mc[i] = segments[i].modCount;
+        }
+        // If mcsum happens to be zero, then we know we got a snapshot
+        // before any modifications at all were made.  This is
+        // probably common enough to bother tracking.
+        if (mcsum != 0) {
+            for (int i = 0; i < segments.length; ++i) {
+                if (segments[i].count != 0 ||
+                    mc[i] != segments[i].modCount) 
+                    return false;
+            }
+        }
+        return true;
     }
 
     // inherit Map javadoc
-    public boolean isEmpty() {
-        for (int i = 0; i < segments.length; ++i)
-            if (segments[i].count != 0)
-                return false;
-        return true;
+    public int size() {
+        int[] mc = new int[segments.length];
+        for (;;) {
+            int sum = 0;
+            int mcsum = 0;
+            for (int i = 0; i < segments.length; ++i) {
+                sum += segments[i].count;
+                mcsum += mc[i] = segments[i].modCount;
+            }
+            int check = 0;
+            if (mcsum != 0) {
+                for (int i = 0; i < segments.length; ++i) {
+                    check += segments[i].count;
+                    if (mc[i] != segments[i].modCount) {
+                        check = -1; // force retry
+                        break;
+                    }
+                }
+            }
+            if (check == sum)
+                return sum;
+        }
     }
+
 
     /**
      * Returns the value to which the specified key is mapped in this table.
@@ -601,11 +663,29 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         if (value == null)
             throw new NullPointerException();
 
-        for (int i = 0; i < segments.length; ++i) {
-            if (segments[i].containsValue(value))
-                return true;
+        int[] mc = new int[segments.length];
+        for (;;) {
+            int sum = 0;
+            int mcsum = 0;
+            for (int i = 0; i < segments.length; ++i) {
+                int c = segments[i].count;
+                mcsum += mc[i] = segments[i].modCount;
+                if (segments[i].containsValue(value))
+                    return true;
+            }
+            boolean cleanSweep = true;
+            if (mcsum != 0) {
+                for (int i = 0; i < segments.length; ++i) {
+                    int c = segments[i].count;
+                    if (mc[i] != segments[i].modCount) {
+                        cleanSweep = false;
+                        break;
+                    }
+                }
+            }
+            if (cleanSweep)
+                return false;
         }
-        return false;
     }
 
     /**
@@ -614,7 +694,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>containsKey</tt> method.
      * 
      * <p> Note that this method is identical in functionality to
-     * <tt>containsValue</tt>, This method esists solely to ensure
+     * <tt>containsValue</tt>, This method exists solely to ensure
      * full compatibility with class {@link java.util.Hashtable},
      * which supported this method prior to introduction of the
      * collections framework.

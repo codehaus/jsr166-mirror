@@ -51,7 +51,7 @@ package java.util.concurrent;
  * @see Executor
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/24 14:47:31 $
+ * @revised $Date: 2003/08/29 14:09:52 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -62,7 +62,7 @@ public interface Future<V> extends Cancellable {
      * retrieves its result.
      *
      * @return computed result
-     * @throws CancellationException here???
+     * @throws CancellationException if this future was cancelled.
      * @throws ExecutionException if underlying computation threw an
      * exception
      * @throws InterruptedException if current thread was interrupted

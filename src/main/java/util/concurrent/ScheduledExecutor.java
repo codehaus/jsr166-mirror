@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.*;
 import java.util.*;
 
 /**
- * An <tt>Executor</tt> that can schedule command to run after a given
+ * An <tt>Executor</tt> that can schedule commands to run after a given
  * delay, or to execute periodically. This class is preferable to
  * <tt>java.util.Timer</tt> when multiple worker threads are needed,
  * or when the additional flexibility or capabilities of
@@ -150,22 +150,12 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         /**
          * Creates a Future that may trigger after the given delay.
          */
-        DelayedFutureTask(Callable<V> callable, long delay,  TimeUnit unit) {
+        DelayedFutureTask(Callable<V> callable, long triggerTime) {
             // must set after super ctor call to use inner class
-            super(null, System.nanoTime() + unit.toNanos(delay));
+            super(null, triggerTime);
             setRunnable(new InnerCancellableFuture<V>(callable));
         }
 
-        /**
-         * Creates a one-shot action that may trigger after the given date.
-         */
-        DelayedFutureTask(Callable<V> callable, Date date) {
-            super(null, 
-                  TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
-                                                System.currentTimeMillis()));
-            setRunnable(new InnerCancellableFuture<V>(callable));
-        }
-    
         public V get() throws InterruptedException, ExecutionException {
             return ((InnerCancellableFuture<V>)getRunnable()).get();
         }
@@ -306,10 +296,13 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @param delay the time from now to delay execution.
      * @param unit the time unit of the delay parameter.
      * @return a handle that can be used to cancel the task.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
      */
 
     public DelayedTask schedule(Runnable command, long delay,  TimeUnit unit) {
-        DelayedTask t = new DelayedTask(command, System.nanoTime() + unit.toNanos(delay));
+        long triggerTime = System.nanoTime() + unit.toNanos(delay);
+        DelayedTask t = new DelayedTask(command, triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -324,10 +317,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
     public DelayedTask schedule(Runnable command, Date date) {
-        DelayedTask t = new DelayedTask
-            (command, 
-             TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
-                                           System.currentTimeMillis()));
+        long triggerTime = System.nanoTime() + 
+            TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
+                                          System.currentTimeMillis()); 
+        DelayedTask t = new DelayedTask(command, triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -347,9 +340,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
     public DelayedTask scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
-        DelayedTask t = new DelayedTask
-            (command, System.nanoTime() + unit.toNanos(initialDelay),
-             unit.toNanos(period), true);
+        long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
+        DelayedTask t = new DelayedTask(command, 
+                                        triggerTime,
+                                        unit.toNanos(period), 
+                                        true);
         delayedExecute(t);
         return t;
     }
@@ -370,11 +365,13 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
     public DelayedTask scheduleAtFixedRate(Runnable command, Date initialDate, long period, TimeUnit unit) {
-        DelayedTask t = new DelayedTask
-            (command, 
-             TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
-                                           System.currentTimeMillis()),
-             unit.toNanos(period), true);
+        long triggerTime = System.nanoTime() + 
+            TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
+                                          System.currentTimeMillis()); 
+        DelayedTask t = new DelayedTask(command, 
+                                        triggerTime,
+                                        unit.toNanos(period), 
+                                        true);
         delayedExecute(t);
         return t;
     }
@@ -394,9 +391,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
     public DelayedTask scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
-        DelayedTask t = new DelayedTask
-            (command, System.nanoTime() + unit.toNanos(initialDelay),
-             unit.toNanos(delay), false);
+        long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
+        DelayedTask t = new DelayedTask(command, 
+                                        triggerTime,
+                                        unit.toNanos(delay), 
+                                        false);
         delayedExecute(t);
         return t;
     }
@@ -416,11 +415,13 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
     public DelayedTask scheduleWithFixedDelay(Runnable command, Date initialDate, long delay, TimeUnit unit) {
-        DelayedTask t = new DelayedTask
-            (command, 
-             TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
-                                           System.currentTimeMillis()),
-             unit.toNanos(delay), false);
+        long triggerTime = System.nanoTime() + 
+            TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
+                                          System.currentTimeMillis()); 
+        DelayedTask t = new DelayedTask(command, 
+                                        triggerTime,
+                                        unit.toNanos(delay), 
+                                        false);
         delayedExecute(t);
         return t;
     }
@@ -437,8 +438,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
     public <V> DelayedFutureTask<V> schedule(Callable<V> callable, long delay,  TimeUnit unit) {
-        DelayedFutureTask<V> t = new DelayedFutureTask<V>
-            (callable, delay, unit);
+        long triggerTime = System.nanoTime() + unit.toNanos(delay);
+        DelayedFutureTask<V> t = new DelayedFutureTask<V>(callable, 
+                                                          triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -453,8 +455,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
     public <V> DelayedFutureTask<V> schedule(Callable<V> callable, Date date) {
-        DelayedFutureTask<V> t = new DelayedFutureTask<V>
-            (callable, date);
+        long triggerTime = System.nanoTime() + 
+            TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
+                                          System.currentTimeMillis()); 
+        DelayedFutureTask<V> t = new DelayedFutureTask<V>(callable, 
+                                                          triggerTime);
         delayedExecute(t);
         return t;
     }

@@ -18,8 +18,8 @@ public final class AtomicReferenceArray<V> implements java.io.Serializable {
     private static final long serialVersionUID = -6209656149925076980L;
 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private static final int base = unsafe.arrayBaseOffset(long[].class);
-    private static final int scale = unsafe.arrayIndexScale(long[].class);
+    private static final int base = unsafe.arrayBaseOffset(Object[].class);
+    private static final int scale = unsafe.arrayIndexScale(Object[].class);
     private final Object[] array;
 
     private final long rawIndex(int i) {

@@ -198,4 +198,14 @@ public class AtomicLongTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString returns current value.
+     */ 
+    public void testToString() {
+        AtomicLong ai = new AtomicLong();
+        for (long i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals(ai.toString(), Long.toString(i));
+        }
+    }
 }

@@ -198,5 +198,15 @@ public class AtomicIntegerTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString returns current value.
+     */ 
+    public void testToString() {
+        AtomicInteger ai = new AtomicInteger();
+        for (int i = -12; i < 6; ++i) {
+            ai.set(i);
+            assertEquals(ai.toString(), Integer.toString(i));
+        }
+    }
 
 }

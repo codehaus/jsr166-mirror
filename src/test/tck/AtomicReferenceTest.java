@@ -127,5 +127,15 @@ public class AtomicReferenceTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString returns current value.
+     */ 
+    public void testToString() {
+        AtomicReference<Integer> ai = new AtomicReference<Integer>(one); 
+        assertEquals(ai.toString(), one.toString());
+        ai.set(two);
+        assertEquals(ai.toString(), two.toString());
+    }
+
 }
 

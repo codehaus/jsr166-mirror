@@ -131,8 +131,8 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     /**
-     * Waits if necessary for the call to <tt>callable.call</tt> to
-     * complete, and then retrieves its result.
+     * Waits if necessary for execution to complete, and then
+     * retrieves its result.
      *
      * @return computed result
      * @throws CancellationException if underlying computation was
@@ -159,9 +159,8 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     /**
-     * Waits if necessary for at most the given time for the call to
-     * <tt>callable.call</tt> to complete, and then retrieves its
-     * result.
+     * Waits if necessary for at most the given time for execution to
+     * complete, and then retrieves its result, if available.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
@@ -299,7 +298,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
 
     /**
      * Sets this Future to the results of computation and then resets
-     * to initial state. This may be useful for tasks that must
+     * to initial state. This may be useful for tasks that intriniscally
      * execute more than once.
      */
     protected void runAndReset() {

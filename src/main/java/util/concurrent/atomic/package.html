@@ -20,21 +20,16 @@ classes) atomically sets a variable to the <tt>updateValue</tt> if it
 currently holds the <tt>expectedValue</tt>, reporting <tt>true</tt> on
 success.  The classes in this package also contain methods to get and
 unconditionally set values, as well as a weaker conditional atomic
-update operation:
+update operation <tt> weakCompareAndSet</tt>.  The weak version may be
+more efficient in the normal case, but differs in that any given
+invocation of <tt>weakCompareAndSet</tt> method may fail, even
+spuriously (that is, for no apparent reason). A <tt>false</tt> return
+means only that the operation may be retried if desired, relying on
+the guarantee that repeated invocation when the variable holds
+<tt>expectedValue</tt> and no other thread is also attempting to set
+the variable will eventually succeed.
 
-<pre>
-  boolean weakCompareAndSet(expectedValue, updateValue);
-</pre>
-
-The weak version may be more efficient in the normal case, but differs
-in that any given invocation of <tt>weakCompareAndSet</tt> method may
-fail, even spuriously (that is, for no apparent reason). A
-<tt>false</tt> return means only that the operation may be retried if
-desired, relying on the guarantee that repeated invocation when the
-variable holds <tt>expectedValue</tt> and no other thread is also
-attempting to set the variable will eventually succeed.
-
-<p>The specifications of these methods enable implementations to
+<p> The specifications of these methods enable implementations to
 employ efficient machine-level atomic instructions that are available
 on contemporary processors. However on some platforms, support may
 entail some form of internal locking. Thus the methods are not
@@ -42,7 +37,7 @@ strictly guaranteed to be non-blocking.
 
 <p> The classes and methods in this package provide a few related
 operations and capabilities to form a small toolkit of common
-constructions using atomics.  <p>Instances of classes {@link
+constructions using atomics.  Instances of classes {@link
 java.util.concurrent.atomic.AtomicBoolean}, {@link 
 java.util.concurrent.atomic.AtomicInteger}, {@link 
 java.util.concurrent.atomic.AtomicLong}, and {@link

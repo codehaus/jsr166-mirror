@@ -8,7 +8,8 @@ package java.util.concurrent.locks;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.Date;
-
+import java.lang.reflect.*;
+import sun.misc.*;
 
 /**
  * A reentrant mutual exclusion {@link Lock} with the same basic
@@ -72,7 +73,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/17 14:18:53 $
+ * @revised $Date: 2003/08/19 01:00:39 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -310,22 +311,19 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     // Atomics support
 
-    private final static 
-        AtomicReferenceFieldUpdater<ReentrantLock, Thread> 
-        ownerUpdater = 
-        AtomicReferenceFieldUpdater.newUpdater
-        (ReentrantLock.class, Thread.class, "owner");
-    private final static 
+    private static final OwnerUpdater ownerUpdater = new OwnerUpdater();
+
+    private static final 
         AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>  
         tailUpdater = 
-        AtomicReferenceFieldUpdater.newUpdater
+        AtomicReferenceFieldUpdater.<ReentrantLock, ReentrantLockQueueNode>newUpdater 
         (ReentrantLock.class, ReentrantLockQueueNode.class, "tail");
-    private final static 
+    private static final 
         AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>   
         headUpdater = 
-        AtomicReferenceFieldUpdater.newUpdater 
+        AtomicReferenceFieldUpdater.<ReentrantLock, ReentrantLockQueueNode>newUpdater 
         (ReentrantLock.class,  ReentrantLockQueueNode.class, "head");
-    private final static 
+    private static final 
         AtomicIntegerFieldUpdater<ReentrantLockQueueNode>  
         releaseStatusUpdater = 
         AtomicIntegerFieldUpdater.newUpdater 
@@ -407,7 +405,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             // Last chance to retry fast path before queuing node
             if ((!fair || head == tail) && 
                 owner == null &&
-                ownerUpdater.compareAndSet(this, null, current))
+                ownerUpdater.acquire(this, current))
                 return true;
             enq(node);
         } 
@@ -438,7 +436,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         for (;;) {
             if (p == head &&
                 owner == null &&
-                ownerUpdater.compareAndSet(this, null, current)) {
+                ownerUpdater.acquire(this, current)) {
                 // Set head and unlink after successful acquire
                 head = node;
                 p.next = null; 
@@ -486,7 +484,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
             else if ((releaseStatus < 0 ||
                       releaseStatusUpdater.compareAndSet(p, 0, -1)) &&
-                     (owner != null || p != head)) {
+                     (p != head || owner != null)) {
 
                 if (nanos <= 0L) {  // Untimed
                     LockSupport.park();
@@ -614,8 +612,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lock() {
         Thread current = Thread.currentThread();
-        if ((fair && head != tail) || 
-            !ownerUpdater.compareAndSet(this, null, current))
+        if ((fair && head != tail) || owner != null ||
+            !ownerUpdater.acquire(this, current))
             waitForLock(current, null, 0L);
     }
 
@@ -655,8 +653,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         Thread current = Thread.currentThread();
         // Fail if interrupted or fastpath and slowpath both fail
         if (Thread.interrupted() ||
-            (((fair && head != tail) ||
-              !ownerUpdater.compareAndSet(this, null, current)) &&
+            (((fair && head != tail) || owner != null ||
+              !ownerUpdater.acquire(this, current)) &&
              !waitForLock(current, null, -1L)))
             throw new InterruptedException();
     }
@@ -682,7 +680,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public boolean tryLock() {
         Thread current = Thread.currentThread();
-        if (ownerUpdater.compareAndSet(this, null, current))
+        if (ownerUpdater.acquire(this, current))
             return true;
         if (owner == current) {
             ++recursions;
@@ -748,8 +746,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             throw new NullPointerException();
         if (!Thread.interrupted()) {
             Thread current = Thread.currentThread();
-            if ((!fair || head == tail) && 
-                ownerUpdater.compareAndSet(this, null, current))
+            if ((!fair || head == tail) && owner == null &&
+                ownerUpdater.acquire(this, current))
                 return true;
             if (owner == current) { // Must check recursions before timeout
                 ++recursions;
@@ -1272,5 +1270,47 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return awaitNanos(unit.toNanos(timeout)) > 0L;
         }
     }
+
+
+    /**
+     * This class represents a minor performance hack, that
+     * specializes AtomicReferenceFieldUpdater for ReentrantLock owner
+     * field without requiring dynamic checks.
+     */
+    private static class OwnerUpdater extends AtomicReferenceFieldUpdater<ReentrantLock,Thread> {
+
+        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private final long offset;
+
+        OwnerUpdater() {
+            try {
+                Field field = ReentrantLock.class.getDeclaredField("owner");
+                offset = unsafe.objectFieldOffset(field);
+            } catch(Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        public boolean compareAndSet(ReentrantLock obj, Thread expect, Thread update) {
+            return unsafe.compareAndSwapObject(obj, offset, expect, update);
+        }
+
+        public boolean weakCompareAndSet(ReentrantLock obj, Thread expect, Thread update) {
+            return unsafe.compareAndSwapObject(obj, offset, expect, update);
+        }
+
+        public void set(ReentrantLock obj, Thread newValue) {
+            unsafe.putObjectVolatile(obj, offset, newValue);
+        }
+
+        public Thread get(ReentrantLock obj) {
+            return (Thread)unsafe.getObjectVolatile(obj, offset);
+        }
+
+        final boolean acquire(ReentrantLock obj, Thread current) {
+            return unsafe.compareAndSwapObject(obj, offset, null, current);
+        }
+    }
+        
 }
 

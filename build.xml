@@ -189,17 +189,23 @@
 
       <classpath>
         <pathelement location="${sinjdoc.jar}"/>
+        <pathelement location="${lib.dir}/jutil.jar"/>
+        <pathelement location="${lib.dir}/cup.jar"/>
         <path refid="test.classpath"/>
       </classpath>
 
-      <!-- <arg value="-link"/>       <arg value="http://java.sun.com/j2se/1.4.1/docs/api"/> -->
 
       <arg value="-d"/>          <arg value="${build.javadocs.dir}"/>
       <arg value="-sourcepath"/> <arg value="${src.dir}"/>
       <arg value="-overview"/>   <arg value="${src.dir}/intro.html"/>
-      <arg value="-source"/>     <arg value="1.5"/>
-      <arg value="-verbose"/>
+      <arg value="-source"/>     <arg value="${build.sourcelevel}"/>
+      <!-- <arg value="-verbose"/> -->
+      <!-- <arg value="-link"/>  <arg value="http://java.sun.com/j2se/1.4.1/docs/api"/> -->
+      <arg value="java.lang"/>
       <arg value="java.util"/>
+      <arg value="java.util.concurrent"/>
+      <arg value="java.util.concurrent.atomic"/>
+      <arg value="java.util.concurrent.locks"/>
 
       <!--
       <arg value="-help"/>

@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 import java.util.concurrent.locks.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
 
 /**
@@ -70,11 +71,13 @@ import java.util.*;
  *
  * <dt>Creating new threads</dt>
  *
- * <dd>New threads are created using a {@link ThreadFactory}.  By
- * default, threads are created simply with the <tt>new
- * Thread(Runnable)</tt> constructor, but by supplying a different
- * ThreadFactory, you can alter the thread's name, thread group,
- * priority, daemon status, etc.  </dd>
+ * <dd>New threads are created using a {@link
+ * java.util.concurrent.ThreadFactory}.  If not otherwise specified, a
+ * {@link DefaultThreadFactory} is used, that creates threads to all
+ * be in the same {@link ThreadGroup} and with the same
+ * <tt>NORM_PRIORITY</tt> priority and non-daemon status. By supplying
+ * a different ThreadFactory, you can alter the thread's name, thread
+ * group, priority, daemon status, etc.  </dd>
  *
  * <dt>Keep-alive times</dt>
  *
@@ -288,12 +291,12 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Handler called when saturated or shutdown in execute.
      */
-    private volatile RejectedExecutionHandler handler = defaultHandler;
+    private volatile RejectedExecutionHandler handler;
 
     /**
      * Factory for new threads.
      */
-    private volatile ThreadFactory threadFactory = defaultThreadFactory;
+    private volatile ThreadFactory threadFactory;
 
     /**
      * Tracks largest attained pool size.
@@ -307,16 +310,6 @@ public class ThreadPoolExecutor implements ExecutorService {
     private long completedTaskCount;
 
     /**
-     * The default thread factory
-     */
-    private static final ThreadFactory defaultThreadFactory =
-        new ThreadFactory() {
-            public Thread newThread(Runnable r) {
-                return new Thread(r);
-            }
-        };
-
-    /**
      * The default rejectect execution handler
      */
     private static final RejectedExecutionHandler defaultHandler =
@@ -328,6 +321,62 @@ public class ThreadPoolExecutor implements ExecutorService {
     void reject(Runnable command) {
         handler.rejectedExecution(command, this);
     }
+
+    /**
+     * The default thread factory used to create new threads.  This
+     * factory creates all new threads used by the Executor in the
+     * same {@link ThreadGroup}. If there is a {@link
+     * java.lang.SecurityManager}, it uses the group of {@link
+     * System#getSecurityManager}, else the group of the thread
+     * creating the Executor. Each new thread is created as a
+     * non-daemon thread with priority
+     * <tt>Thread.NORM_PRIORITY</tt>. New threads have names
+     * accessible via {@link Thread#getName} of
+     * <em>pool-N-thread-M</em>, where <em>N</em> is the sequence
+     * number of this factory, and <em>M</em> is the sequence number
+     * of the thread created by this factory.
+     */
+    protected static class DefaultThreadFactory implements ThreadFactory {
+        private static final AtomicInteger poolNumber = new AtomicInteger(1);
+        private final ThreadGroup group;
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+        private final String namePrefix;
+
+        /**
+         * Create a new DefaultThreadFactory that will create Threads
+         * with the group of the current System SecurityManager's
+         * ThreadGroup if it exists, else the group of the 
+         * thread invoking this constructor.
+         */
+        public DefaultThreadFactory() {
+            SecurityManager s = System.getSecurityManager();
+            group = (s != null)? s.getThreadGroup() :
+                                 Thread.currentThread().getThreadGroup();
+            namePrefix = "pool-" + 
+                          poolNumber.getAndIncrement() + 
+                         "-thread-";
+        }
+
+        /**
+         * Create and return a new Thread with ThreadGroup established
+         * in constructor, with non-daemon status, with normal
+         * priority, and with name displaying the factory and thread
+         * sequence numbers.
+         * @param r  a runnable to be executed by new thread instance
+         * @return constructed thread
+         */ 
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r, 
+                                  namePrefix + threadNumber.getAndIncrement(),
+                                  0);
+            if (t.isDaemon())
+                t.setDaemon(false);
+            if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        }
+    }
+
 
     /**
      * Create and return a new thread running firstTask as its first
@@ -665,7 +714,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                               TimeUnit unit,
                               BlockingQueue<Runnable> workQueue) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
-             defaultThreadFactory, defaultHandler);
+             new DefaultThreadFactory(), defaultHandler);
     }
 
     /**
@@ -734,7 +783,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                               BlockingQueue<Runnable> workQueue,
                               RejectedExecutionHandler handler) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
-             defaultThreadFactory, handler);
+             new DefaultThreadFactory(), handler);
     }
 
     /**

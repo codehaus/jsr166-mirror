@@ -1,7 +1,7 @@
 /*
  * %W% %E%
  *
- * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
@@ -306,7 +306,7 @@ public class LinkedList<E>
      * @param index index of element to return.
      * @return the element at the specified position in this list.
      *
-     * @throws IndexOutOfBoundsException if the specified index is is out of
+     * @throws IndexOutOfBoundsException if the specified index is out of
      * range (<tt>index &lt; 0 || index &gt;= size()</tt>).
      */
     public E get(int index) {

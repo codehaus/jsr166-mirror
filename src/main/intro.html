@@ -10,30 +10,17 @@
   by <a href="http://gee.cs.oswego.edu/dl">Doug Lea</a>
   <p>
 
-This is an updated version of the specification submitted for JCP
-Community Draft review.  To check for further updates, access a
-preliminary prototype release of main functionality, or join a mailing
-list discussing this JSR, go to: <A
+This is an updated version of the specification submitted for JCP Public
+Review.  To check for further updates, access a preliminary prototype
+release of main functionality, or join a mailing list discussing
+JSR-166, go to: <A
 HREF="http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest">
-http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest</A>
-.  <p>
+http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest</A>.
 
-<em> <b>Disclaimer</b>. The prototype implementation is experimental
-code developed as part of JCP JSR-166 is made available to the
-developer community for use as-is. It is not a supported product. Use
-it at your own risk. The specification, language and implementation
-are subject to change as a result of your feedback. Because these
-features have not yet been approved for addition to the Java language,
-there is no schedule for their inclusion in a product.  </em>
-
-<p> <em> <b>Disclaimer</b>.  This draft specification was produced
-using JDK1.4 tools plus some preprocessing. The resulting javadocs do
-not yet correctly render other planned JDK1.5 constructs on which
-JSR-166 relies, most notably the use of generic types. We are
-releasing this version now (before the availability of JDK1.5-based
-tools) because, even though they are misformatted and sometimes lack
-proper cross-referencing, they otherwise convey the intended
-specifications.  </em>
+<p><em>Note: The javadocs here includes some existing java.util
+Collection interfaces and classes that are not part of the JSR-166
+spec, but are included because JSR-166 methods implement or inherit
+from their specifications.</em>
 
 <p> JSR-166 introduces package <tt>java.util.concurrent</tt>
 containing utility classes commonly useful in concurrent
@@ -50,8 +37,8 @@ data structures, to high-level execution agents including thread
 pools. This diversity reflects the range of contexts in which
 developers of concurrent programs have been found to require or desire
 support not previously available in J2SE, which also keeping the
-resulting package small; providing only that minimial support for
-which it makes sense to standardize.
+resulting package small; providing only functionality that it makes
+sense to standardize.
 
 <p>Descriptions and brief motivations for the main components may be
 found in the associated package documentation.  JSR-166 also includes
@@ -106,6 +93,5 @@ designs.
 
 
   <hr>
-  <address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
  </body>
 </html>

@@ -97,32 +97,4 @@ public class ThreadPoolExecutor extends ThreadExecutor {
     public BlockingQueue getQueue() {
         return super.getQueue();
     }
-
-    public CannotExecuteHandler getCannotExecuteHandler() {
-        return super.getCannotExecuteHandler();
-    }
-
-    public void setCannotExecuteHandler(CannotExecuteHandler handler) {
-        super.setCannotExecuteHandler(handler);
-    }
-
-    public void callerRunsWhenCannotExecute() {
-        super.callerRunsWhenCannotExecute();
-    }
-
-    public void abortWhenCannotExecute() {
-        super.abortWhenCannotExecute();
-    }
-
-    public void waitWhenCannotExecute() {
-        super.waitWhenCannotExecute();
-    }
-
-    public void discardWhenCannotExecute() {
-        super.discardWhenCannotExecute();
-    }
-
-    public void discardOldestWhenCannotExecute() {
-        super.discardOldestWhenCannotExecute();
-    }
 }

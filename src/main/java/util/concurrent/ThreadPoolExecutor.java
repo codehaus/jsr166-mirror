@@ -376,8 +376,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         handler.rejectedExecution(command, this);
     }
 
-
-
     /**
      * Create and return a new thread running firstTask as its first
      * task. Call only while holding mainLock
@@ -395,8 +393,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             largestPoolSize = nt;
         return t;
     }
-
-
 
     /**
      * Create and start a new thread running firstTask as its first

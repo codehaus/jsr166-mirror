@@ -95,15 +95,19 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         // Implement AQS state methods
         public boolean tryAcquireExclusive(boolean isQueued, int acquires) { 
             final Thread current = Thread.currentThread();
-            if ((isQueued || !fair || !hasContended()) && 
-                compareAndSetState(0, acquires)) {
-                owner = current;
-                return true;
+            int c = getState();
+            if (c == 0) {
+                if ((isQueued || !fair || !hasContended()) && 
+                    compareAndSetState(0, acquires)) {
+                    owner = current;
+                    return true;
+                }
             }
-            acquires += getState();
-            if (current == owner) {
-                setState(acquires);
-                return true;
+            else {
+                if (current == owner) {
+                    setState(c+acquires);
+                    return true;
+                }
             }
             return false;
         }
@@ -123,13 +127,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         // Use fastpath for main lock method
         final void lock() {
-            if (!fair && compareAndSetState(0, 1))
-                owner = Thread.currentThread();
-            else
+            if (fair || !compareAndSetState(0, 1))
                 acquireExclusiveUninterruptibly(1);
+            else
+                owner = Thread.currentThread();
         }
 
-        protected void checkConditionAccess(Thread thread, boolean waiting) {
+        protected void checkConditionAccess(Thread thread) {
             if (getState() == 0 || owner != thread) 
                 throw new IllegalMonitorStateException();
         }
@@ -154,7 +158,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
         
         boolean isHeldByCurrentThread() {
-            return getOwner() == Thread.currentThread();
+            return getState() != 0 && owner == Thread.currentThread();
         }
         
         boolean isLocked() {

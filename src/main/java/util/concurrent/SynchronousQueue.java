@@ -325,9 +325,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 qlock.unlock();
             }
 
-            if (mustWait) 
-                return (E)node.waitForPut();
-
+            if (mustWait) {
+                Object x = node.waitForPut();
+                return (E)x;
+            }
             else {
                 Object x = node.getItem();
                 if (x != null)
@@ -366,9 +367,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 qlock.unlock();
             }
 
-            if (mustWait) 
-                return (E) node.waitForPut(nanos);
-
+            if (mustWait) {
+                Object x = node.waitForPut(nanos);
+                return (E)x;
+            }
             else {
                 Object x = node.getItem();
                 if (x != null)

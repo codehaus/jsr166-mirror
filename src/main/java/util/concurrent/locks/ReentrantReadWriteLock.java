@@ -213,7 +213,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             if (w + acquires >= SHARED_UNIT)
                 throw new Error("Maximum lock count exceeded");
             if ((w == 0 || current != owner) &&
-                (c != 0 || (!isQueued && fair && hasContended())))
+                (c != 0 || (!isQueued && fair && hasQueuedThreads())))
                 return false;
             if (!compareAndSetState(c, c + acquires)) 
                 return false;
@@ -237,13 +237,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         public int tryAcquireShared(boolean isQueued, int acquires) {
             for (;;) {
+                if (!isQueued && fair && hasQueuedThreads())
+                    return -1;
                 int c = getState();
                 int nextc = c + (acquires << SHARED_SHIFT);
                 if (nextc < c)
                     throw new Error("Maximum lock count exceeded");
-                if ((exclusiveCount(c) != 0 && 
-                     owner != Thread.currentThread()) ||
-                    (!isQueued && fair && !hasContended()))
+                if (exclusiveCount(c) != 0 && 
+                    owner != Thread.currentThread())
                     return -1;
                 if (compareAndSetState(c, nextc)) 
                     return 1;
@@ -262,11 +263,17 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
     
-        public void checkConditionAccess(Thread thread, boolean waiting) {
-            int c = getState();
-            if (exclusiveCount(c) == 0 ||
-                (waiting && sharedCount(c) != 0))
+        public void checkConditionAccess(Thread thread) {
+            if (exclusiveCount(getState()) == 0 || owner != thread) 
                 throw new IllegalMonitorStateException();
+        }
+
+        // Use fastpath for main write lock method
+        final void wlock() {
+            if (fair || !compareAndSetState(0, 1))
+                acquireExclusiveUninterruptibly(1);
+            else
+                owner = Thread.currentThread();
         }
 
         // Methods relayed to outer class
@@ -531,7 +538,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * time the lock hold count is set to one.
          */
         public void lock() {
-            sync.acquireExclusiveUninterruptibly(1);
+            sync.wlock();
         }
 
         /**
@@ -727,9 +734,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * <ul>
          *
          * <li>If this write lock is not held when any {@link
-         * Condition} method is called, or if any read locks are held
-         * when a {@link Condition#await() waiting} method is called
-         * then an {@link IllegalMonitorStateException} is thrown.
+         * Condition} method is called then an {@link
+         * IllegalMonitorStateException} is thrown.  (Read locks are
+         * held independently of write locks, so are not checked or
+         * affected. However it is essentially always an error to
+         * invoke a condition waiting method when the current thread
+         * has also acquired read locks, since other threads that
+         * could unblock it will not be able to access the write
+         * lock.)
          *
          * <li>When the condition {@link Condition#await() waiting}
          * methods are called the write lock is released and, before

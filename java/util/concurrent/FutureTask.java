@@ -29,8 +29,8 @@ package java.util.concurrent;
  * @see Executor
  *
  * @spec JSR-166
- * @revised $Date: 2003/03/12 18:22:40 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/03/29 02:15:28 $
+ * @editor $Author: dholmes $
  */
 public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
 
@@ -135,14 +135,14 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
         throws InterruptedException, ExecutionException {
 
         if (!ready) {
-            long startTime = granularity.now();
+            long startTime = TimeUnit.highResolutionTime();
             long waitTime = timeout;
             for (;;) {
                 granularity.timedWait(this, waitTime);
                 if (ready)
                     break;
                 else {
-                    waitTime = granularity.elapsed(startTime);
+                    waitTime = TimeUnit.highResolutionTime() - startTime;
                     if (waitTime <= 0)
                         throw new TimeoutException();
                 }
@@ -206,3 +206,13 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
         return ready;
     }
 }
+
+
+
+
+
+
+
+
+
+

@@ -120,7 +120,6 @@ class Thread implements Runnable {
     private int         priority;
     private Thread	threadQ;
     private long	eetop;
-    private boolean     started; // true iff this thread has been started
 
     /* Whether or not to single_step this thread. */
     private boolean	single_step;
@@ -173,12 +172,6 @@ class Thread implements Runnable {
 
     /* For generating thread ID */
     private static long threadSeqNumber;
-
-    /* Java thread status for tools, 
-     * initialized to indicate thread 'not yet started'
-     */
-    private int threadStatus = 0;
-
 
     private static synchronized long nextThreadID() {
 	return ++threadSeqNumber;
@@ -322,6 +315,7 @@ class Thread implements Runnable {
 
         /* Set thread ID */
         tid = nextThreadID();
+	g.add(this);
     }
 
    /**
@@ -536,15 +530,7 @@ class Thread implements Runnable {
      * @see        java.lang.Thread#run()
      * @see        java.lang.Thread#stop()
      */
-    public synchronized void start() {
-        if (started)
-            throw new IllegalThreadStateException();
-        started = true;
-        group.add(this);
-        start0();
-    }
-
-    private native void start0();
+    public synchronized native void start();
 
     /**
      * If this thread was constructed using a separate 

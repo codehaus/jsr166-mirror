@@ -7,20 +7,20 @@
 package java.util;
 
 /**
- * <tt>AbstractQueue</tt> provides default implementations of 
- * {@link #add add}, {@link #remove remove}, and {@link #element element} 
- * based on 
- * {@link #offer offer}, {@link #poll poll}, and {@link #peek peek}, 
- * respectively but that 
- * throw exceptions instead of indicating failure via <tt>false</tt> or 
+ * <tt>AbstractQueue</tt> provides default implementations of
+ * {@link #add add}, {@link #remove remove}, and {@link #element element}
+ * based on
+ * {@link #offer offer}, {@link #poll poll}, and {@link #peek peek},
+ * respectively but that
+ * throw exceptions instead of indicating failure via <tt>false</tt> or
  * <tt>null</tt> returns.
  * <p>The provided implementations all assume that the base implementation
  * does <em>not</em> allow <tt>null</tt> elements.
  * @since 1.5
  * @author Doug Lea
  */
-public abstract class AbstractQueue<E> 
-    extends AbstractCollection<E> 
+public abstract class AbstractQueue<E>
+    extends AbstractCollection<E>
     implements Queue<E> {
 
     // note that optional methods are not optional here or in our subclasses,
@@ -29,7 +29,7 @@ public abstract class AbstractQueue<E>
 
     /**
      * Adds the specified element to this queue.
-     * @return <tt>true</tt> (as per the general contract of 
+     * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
      * @throws NullPointerException if the element is null
@@ -55,9 +55,9 @@ public abstract class AbstractQueue<E>
      * @return <tt>true</tt> if this collection changed as a result of the
      *         call.
      * @throws NullPointerException if <tt>c</tt> is <tt>null</tt>
-     * 
+     *
      */
-    boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);
     }
 

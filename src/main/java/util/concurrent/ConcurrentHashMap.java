@@ -437,9 +437,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * ConcurrentHashMap list entry.
+     * ConcurrentHashMap list entry. Note that this is never exported
+     * out as a user-visible Map.Entry
      */
-    private static class HashEntry<K,V> implements Entry<K,V> {
+    private static class HashEntry<K,V> {
         private final K key;
         private V value;
         private final int hash;
@@ -450,39 +451,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             this.hash = hash;
             this.key = key;
             this.next = next;
-        }
-
-        public K getKey() {
-            return key;
-        }
-
-        public V getValue() {
-            return value;
-        }
-
-        public V setValue(V newValue) {
-            // We aren't required to, and don't provide any
-            // visibility barriers for setting value.
-            if (newValue == null)
-                throw new NullPointerException();
-            V oldValue = this.value;
-            this.value = newValue;
-            return oldValue;
-        }
-
-        public boolean equals(Object o) {
-            if (!(o instanceof Entry))
-                return false;
-            Entry<K,V> e = (Entry<K,V>)o;
-            return (key.equals(e.getKey()) && value.equals(e.getValue()));
-        }
-
-        public int hashCode() {
-            return  key.hashCode() ^ value.hashCode();
-        }
-
-        public String toString() {
-            return key + "=" + value;
         }
     }
 
@@ -952,7 +920,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         private int nextTableIndex;
         private HashEntry[] currentTable;
         private HashEntry<K, V> nextEntry;
-        private HashEntry<K, V> lastReturned;
+        HashEntry<K, V> lastReturned;
 
         private HashIterator() {
             nextSegmentIndex = segments.length - 1;
@@ -1013,8 +981,60 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         public V nextElement() { return super.nextEntry().value; }
     }
 
-    private class EntryIterator extends HashIterator implements Iterator<Entry<K,V>> {
-        public Map.Entry<K,V> next() { return super.nextEntry(); }
+    
+
+    /**
+     * Exported Entry objects must write-through changes in setValue,
+     * even if the nodes have been cloned. So we cannot return
+     * internal HashEntry objects. Instead, the iterator itself acts
+     * as a forwarding pseudo-entry.
+     */
+    private class EntryIterator extends HashIterator implements Map.Entry<K,V>, Iterator<Entry<K,V>> {
+        public Map.Entry<K,V> next() {
+            nextEntry();
+            return this;
+        }
+
+        public K getKey() {
+            if (lastReturned == null)
+                throw new IllegalStateException("Entry was removed");
+            return lastReturned.key;
+        }
+
+        public V getValue() {
+            if (lastReturned == null)
+                throw new IllegalStateException("Entry was removed");
+            return ConcurrentHashMap.this.get(lastReturned.key);
+        }
+
+        public V setValue(V value) {
+            if (lastReturned == null)
+                throw new IllegalStateException("Entry was removed");
+            return ConcurrentHashMap.this.put(lastReturned.key, value);
+        }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+	    Map.Entry e = (Map.Entry)o;
+	    return eq(getKey(), e.getKey()) && eq(getValue(), e.getValue());
+	}
+
+        public int hashCode() {
+            Object k = getKey();
+            Object v = getValue();
+            return ((k == null) ? 0 : k.hashCode()) ^
+                   ((v == null) ? 0 : v.hashCode());
+        }
+
+        public String toString() {
+            return getKey() + "=" + getValue();
+        }
+
+        private boolean eq(Object o1, Object o2) {
+            return (o1 == null ? o2 == null : o1.equals(o2));
+        }
+
     }
 
     private class KeySet extends AbstractSet<K> {
@@ -1072,6 +1092,74 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public void clear() {
             ConcurrentHashMap.this.clear();
+        }
+        public Object[] toArray() {
+            // Since we don't ordinarily have distinct Entry objects, we
+            // must pack elements using exportable SimpleEntry
+            Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
+            for (Iterator<Map.Entry<K,V>> i = iterator(); i.hasNext(); )
+                c.add(new SimpleEntry<K,V>(i.next()));
+            return c.toArray();
+        }
+        public <T> T[] toArray(T[] a) {
+            Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
+            for (Iterator<Map.Entry<K,V>> i = iterator(); i.hasNext(); )
+                c.add(new SimpleEntry<K,V>(i.next()));
+            return c.toArray(a);
+        }
+
+    }
+
+    /**
+     * This duplicates java.util.AbstractMap.SimpleEntry until this class
+     * is made accessible.
+     */
+    static class SimpleEntry<K,V> implements Entry<K,V> {
+	K key;
+	V value;
+
+	public SimpleEntry(K key, V value) {
+	    this.key   = key;
+            this.value = value;
+	}
+
+	public SimpleEntry(Entry<K,V> e) {
+	    this.key   = e.getKey();
+            this.value = e.getValue();
+	}
+
+	public K getKey() {
+	    return key;
+	}
+
+	public V getValue() {
+	    return value;
+	}
+
+	public V setValue(V value) {
+	    V oldValue = this.value;
+	    this.value = value;
+	    return oldValue;
+	}
+
+	public boolean equals(Object o) {
+	    if (!(o instanceof Map.Entry))
+		return false;
+	    Map.Entry e = (Map.Entry)o;
+	    return eq(key, e.getKey()) && eq(value, e.getValue());
+	}
+
+	public int hashCode() {
+	    return ((key   == null)   ? 0 :   key.hashCode()) ^
+		   ((value == null)   ? 0 : value.hashCode());
+	}
+
+	public String toString() {
+	    return key + "=" + value;
+	}
+
+        private static boolean eq(Object o1, Object o2) {
+            return (o1 == null ? o2 == null : o1.equals(o2));
         }
     }
 

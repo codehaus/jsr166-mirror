@@ -173,8 +173,8 @@ public interface BlockingQueue<E> extends Queue<E> {
      * <p>Note that you <em>cannot</em> always tell if
      * an attempt to <tt>add</tt> an element will succeed by
      * inspecting <tt>remainingCapacity</tt> because it may be the
-     * case that a waiting consumer is ready to <tt>take</tt> an
-     * element out of an otherwise full queue.
+     * case that another thread is about to <tt>put</tt> or <tt>take</tt> an
+     * element.
      * @return the remaining capacity
      */
     int remainingCapacity();

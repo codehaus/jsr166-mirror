@@ -328,6 +328,10 @@ public class CyclicBarrier {
      * then {@link InterruptedException} is thrown and the current thread's
      * interrupted status is cleared.
      *
+     * <p>If the specified waiting time elapses then {@link TimeoutException}
+     * is thrown. If the time is less than or equal to zero, the
+     * method will not wait at all.
+     *
      * <p>If the barrier is {@link #reset} while any thread is waiting, or if 
      * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked,
      * or while any thread is waiting,

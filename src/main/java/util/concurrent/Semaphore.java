@@ -93,15 +93,19 @@ import java.util.concurrent.atomic.*;
  * guarantees about the order in which threads acquire permits. In
  * particular, <em>barging</em> is permitted, that is, a thread
  * invoking {@link #acquire} can be allocated a permit ahead of a
- * thread that has been waiting.  When fairness is set true, the
+ * thread that has been waiting - logically the new thread places itself at
+ * the head of the queue of waiting threads. When fairness is set true, the
  * semaphore guarantees that threads invoking any of the {@link
- * #acquire() acquire} methods are allocated permits in the order in
+ * #acquire() acquire} methods are selected to obtain permits in the order in
  * which their invocation of those methods was processed
  * (first-in-first-out; FIFO). Note that FIFO ordering necessarily
  * applies to specific internal points of execution within these
  * methods.  So, it is possible for one thread to invoke
  * <tt>acquire</tt> before another, but reach the ordering point after
  * the other, and similarly upon return from the method.
+ * Also note that the untimed {@link #tryAcquire() tryAcquire} methods do not 
+ * honor the fairness setting, but will take any permits that are
+ * available.
  *
  * <p>Generally, semaphores used to control resource access should be
  * initialized as fair, to ensure that no thread is starved out from
@@ -367,9 +371,9 @@ public class Semaphore implements java.io.Serializable {
      * Releases a permit, returning it to the semaphore.
      * <p>Releases a permit, increasing the number of available permits
      * by one.
-     * If any threads are blocking trying to acquire a permit, then one
+     * If any threads are trying to acquire a permit, then one
      * is selected and given the permit that was just released.
-     * That thread is re-enabled for thread scheduling purposes.
+     * That thread is (re)enabled for thread scheduling purposes.
      * <p>There is no requirement that a thread that releases a permit must
      * have acquired that permit by calling {@link #acquire}.
      * Correct usage of a semaphore is established by programming convention
@@ -408,8 +412,8 @@ public class Semaphore implements java.io.Serializable {
      * then {@link InterruptedException} is thrown and the current thread's
      * interrupted status is cleared. 
      * Any permits that were to be assigned to this thread are instead 
-     * assigned to the next waiting thread(s), as if
-     * they had been made available by a call to {@link #release()}.
+     * assigned to other threads trying to acquire permits, as if
+     * permits had been made available by a call to {@link #release()}.
      *
      * @param permits the number of permits to acquire
      *
@@ -513,16 +517,16 @@ public class Semaphore implements java.io.Serializable {
      * then {@link InterruptedException} is thrown and the current thread's
      * interrupted status is cleared.
      * Any permits that were to be assigned to this thread, are instead 
-     * assigned to the next waiting thread(s), as if
-     * they had been made available by a call to {@link #release()}.
+     * assigned to other threads trying to acquire permits, as if
+     * the permits had been made available by a call to {@link #release()}.
      *
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
      * If the time is
      * less than or equal to zero, the method will not wait at all.
      * Any permits that were to be assigned to this thread, are instead 
-     * assigned to the next waiting thread(s), as if
-     * they had been made available by a call to {@link #release()}.
+     * assigned to other threads trying to acquire permits, as if
+     * the permits had been made available by a call to {@link #release()}.
      *
      * @param permits the number of permits to acquire
      * @param timeout the maximum time to wait for the permits
@@ -546,17 +550,14 @@ public class Semaphore implements java.io.Serializable {
      * Releases the given number of permits, returning them to the semaphore.
      * <p>Releases the given number of permits, increasing the number of 
      * available permits by that amount.
-     * If any threads are blocking trying to acquire permits, then the
-     * one that has been waiting the longest
+     * If any threads are trying to acquire permits, then one
      * is selected and given the permits that were just released.
      * If the number of available permits satisfies that thread's request
-     * then that thread is re-enabled for thread scheduling purposes; otherwise
-     * the thread continues to wait. If there are still permits available
-     * after the first thread's request has been satisfied, then those permits
-     * are assigned to the next waiting thread. If it is satisfied then it is
-     * re-enabled for thread scheduling purposes. This continues until there
-     * are insufficient permits to satisfy the next waiting thread, or there
-     * are no more waiting threads.
+     * then that thread is (re)enabled for thread scheduling purposes;
+     * otherwise the thread will wait until sufficient permits are available.
+     * If there are still permits available
+     * after this thread's request has been satisfied, then those permits
+     * are assigned in turn to other threads trying to acquire permits.
      *
      * <p>There is no requirement that a thread that releases a permit must
      * have acquired that permit by calling {@link Semaphore#acquire acquire}.

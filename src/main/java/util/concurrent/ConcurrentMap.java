@@ -66,6 +66,8 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @param key key with which the specified value is associated.
      * @param value value associated with the specified key.
      * @return true if the value was removed, false otherwise
+     * @throws UnsupportedOperationException if the <tt>remove</tt> operation is
+     *            not supported by this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.
@@ -87,6 +89,8 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @param oldValue value expected to be associated with the specified key.
      * @param newValue value to be associated with the specified key.
      * @return true if the value was replaced
+     * @throws UnsupportedOperationException if the <tt>put</tt> operation is
+     *            not supported by this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.
@@ -109,6 +113,8 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         also indicate that the map previously associated <tt>null</tt>
      *         with the specified key, if the implementation supports
      *         <tt>null</tt> values.
+     * @throws UnsupportedOperationException if the <tt>put</tt> operation is
+     *            not supported by this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.

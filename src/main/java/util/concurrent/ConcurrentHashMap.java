@@ -625,7 +625,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Creates a new map with the same mappings as the given map.  The
      * map is created with a capacity of twice the number of mappings in
-     * the given map or 11 (whichever is greater), and a default load factor.
+     * the given map or 11 (whichever is greater), and a default load factor
+     * and concurrencyLevel.
      * @param t the map
      */
     public ConcurrentHashMap(Map<? extends K, ? extends V> t) {
@@ -863,8 +864,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *         with the specified key, if the implementation supports
      *         <tt>null</tt> values.
      *
-     * @throws UnsupportedOperationException if the <tt>put</tt> operation is
-     *            not supported by this map.
      * @throws ClassCastException if the class of the specified key or value
      *            prevents it from being stored in this map.
      * @throws NullPointerException if the specified key or value is
@@ -995,7 +994,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt>, and
      * <tt>clear</tt> operations.  It does not support the <tt>add</tt> or
      * <tt>addAll</tt> operations.
-     * The returned <tt>iterator</tt> is a "weakly consistent" iterator that
+     * The view's returned <tt>iterator</tt> is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
@@ -1017,7 +1016,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
      * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt> operations.
      * It does not support the <tt>add</tt> or <tt>addAll</tt> operations.
-     * The returned <tt>iterator</tt> is a "weakly consistent" iterator that
+     * The view's returned <tt>iterator</tt> is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
@@ -1040,7 +1039,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
      * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt> operations.
      * It does not support the <tt>add</tt> or <tt>addAll</tt> operations.
-     * The returned <tt>iterator</tt> is a "weakly consistent" iterator that
+     * The view's returned <tt>iterator</tt> is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)

@@ -35,7 +35,10 @@ import java.util.concurrent.atomic.*;
  * fairness of thread scheduling. Thus, one of many threads using a
  * fair lock may obtain it multiple times in succession while other
  * active threads are not progressing and not currently holding the
- * lock.
+ * lock. 
+ * Also note that the untimed {@link #tryLock() tryLock} method does not 
+ * honor the fairness setting. It will succeed if the lock
+ * is available even if other threads are waiting.
  *
  * <p> It is recommended practice to <em>always</em> immediately
  * follow a call to <tt>lock</tt> with a <tt>try</tt> block, most

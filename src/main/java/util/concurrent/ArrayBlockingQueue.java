@@ -177,8 +177,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
-     * capacity, the specified access policy and initially holding the 
-     * elements of the given collection, 
+     * capacity, the specified access policy and initially holding the
+     * elements of the given collection,
      * added in traversal order of the collection's iterator.
      * @param capacity the capacity of this queue
      * @param fair if <tt>true</tt> then queue accesses for threads blocked
@@ -196,7 +196,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (capacity < c.size())
             throw new IllegalArgumentException();
 
-        for (Iterator<E> it = c.iterator(); it.hasNext();) 
+        for (Iterator<E> it = c.iterator(); it.hasNext();)
             add(it.next());
     }
 
@@ -471,7 +471,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             if (a.length < count)
                 a = (T[])java.lang.reflect.Array.newInstance(
-                    a.getClass().getComponentType(), 
+                    a.getClass().getComponentType(),
                     count
                     );
 
@@ -664,6 +664,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private Object readResolve() throws java.io.ObjectStreamException {
         E[] array = deserializedItems;
         deserializedItems = null;
-        return new ArrayBlockingQueue(array.length, array, count, lock);
+        return new ArrayBlockingQueue<E>(array.length, array, count, lock);
     }
 }

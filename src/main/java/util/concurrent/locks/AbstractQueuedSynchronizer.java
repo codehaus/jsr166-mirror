@@ -48,11 +48,25 @@ import java.util.concurrent.atomic.*;
  * used with subclasses for which method <tt>releaseExclusive</tt>
  * invoked with the current state value fully releases the lock, and
  * <tt>acquireExclusive</tt>, given this saved state value, restores
- * the lock to its previous lock state. No public method creates such
- * a condition, so if this does not apply, do not use it.
+ * the lock to its previous lock state. No method creates such a
+ * condition, so if this constraint cannot be met, do not use it.
  * 
- * <p> Serialization of this class serializes only the 
- * atomic integer maintaining state.
+ * <p> Serialization of this class serializes only the atomic integer
+ * maintaining state. Typical subclasses requiring seializability will
+ * define a <tt>readObject</tt> method that restores this to a known
+ * initial state upon deserialization.
+ *
+ * <p> To extend this class for use as a synchronization implementation,
+ * implement the following five methods, throwing
+ * {@link UnsupportedOperationException} for those that will not
+ * be used:
+ * <ul>
+ * <li> {@link #acquireExclusiveState}
+ * <li> {@link #releaseExclusiveState}
+ * <li> {@link #acquireSharedState}
+ * <li> {@link #releaseSharedState}
+ * <li> {@link #checkConditionAccess}
+ *</ul>
  *
  * <p>
  * <b>Extension Example.</b> Here is a fair mutual exclusion lock class:
@@ -94,9 +108,8 @@ import java.util.concurrent.atomic.*;
  *    public void lock() { sync.acquireExclusiveUninterruptibly(1); }
  *    public void unlock() { sync.releaseExclusive(1); }
  *    public boolean tryLock() { return sync.acquireExclusiveState(false, 1, null); }
- *    // ... and so on for other lock methods
- *
  *    public Condition newCondition() { return sync.newCondition(); }
+ *    // ... and so on for other lock methods
  * }
  * </pre>
  *
@@ -430,9 +443,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Returns the atomic integer maintaining synchronization status.
-     * The returned {@link AtomicInteger} should be used inside
-     * methods that acquire and release state to effect these state
-     * changes.
+     * The returned {@link AtomicInteger} is to be used inside methods
+     * that initialize, acquire and release state to effect these
+     * state changes.
      * @return the state
      */
     public AtomicInteger getState() {
@@ -492,7 +505,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param current current thread
      * @return negative on failure, zero on exclusive success, and
      * positive if non-exclusively successful, in which case a
-     * subsequent waiting thread can check availability.
+     * subsequent waiting thread must check availability.
      * @throws IllegalMonitorStateException if acquiring would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
@@ -500,8 +513,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws UnsupportedOperationException if shared mode not supported
      */
     public abstract int acquireSharedState(boolean isQueued, 
-                                              int acquires, 
-                                              Thread current);
+                                           int acquires, 
+                                           Thread current);
     /**
      * Set status to reflect a release in shared mode.
      * @param releases the number of releases. This value
@@ -527,7 +540,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws UnsupportedOperationException if conditions not supported
      */
     public abstract void checkConditionAccess(Thread thread, 
-                                                 boolean waiting);
+                                              boolean waiting);
 
     /**
      * Acquire in exclusive mode, ignoring interrupts.
@@ -816,7 +829,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     if (nanos <= 0) {
                         cancelAcquire(node);
                         return TIMEOUT;
-                }
+                    }
                     else
                         LockSupport.parkNanos(nanos);
                 }
@@ -1042,9 +1055,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Instances of this class can be constructed only by subclasses.
      *
      * <p>In addition to implementing the {@link Condition} interface,
-     * this class defines methods <tt>hasWaiters</tt> and
-     * <tt>getWaitQueueLength</tt>, as well as associated
-     * <tt>protected</tt> access methods that may be useful for
+     * this class defines public methods <tt>hasWaiters</tt> and
+     * <tt>getWaitQueueLength</tt>, as well as <tt>protected
+     * getWaitingThreads</tt> methods that may be useful for
      * instrumentation and monitoring.
      */
     public class ConditionObject implements Condition, java.io.Serializable {

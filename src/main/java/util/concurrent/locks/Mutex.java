@@ -82,6 +82,7 @@ public class Mutex implements Lock, java.io.Serializable {
             s.defaultReadObject();
             getState().set(0); // reset to unlocked state
         }
+
     }
 
     /**

@@ -106,7 +106,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         public int acquireExclusiveState(boolean isQueued, int acquires, 
                                          Thread current) {
             final AtomicInteger count = getState();
-            boolean nobarge = !isQueued && fair;
             for (;;) {
                 int c = count.get();
                 int nextc = c + acquires;
@@ -119,7 +118,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                     return 0;
                 }
                 else {
-                    if (nobarge && hasWaiters())
+                    if (!isQueued && fair && hasWaiters())
                         return -1;
                     if (count.compareAndSet(c, nextc)) {
                         owner = current;
@@ -129,6 +128,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 // Recheck count if lost CAS
             }
         }
+
 
         public void checkConditionAccess(Thread thread, boolean waiting) {
             if (getState().get() == 0 || owner != thread) 
@@ -180,6 +180,17 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         boolean isLocked() {
             return getState().get() != 0;
         }
+
+        /**
+         * Reconstitute this lock instance from a stream
+         * @param s the stream
+         */
+        private void readObject(java.io.ObjectInputStream s)
+            throws java.io.IOException, ClassNotFoundException {
+            s.defaultReadObject();
+            getState().set(0); // reset to unlocked state
+        }
+
     }
 
 

@@ -934,8 +934,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
 
         /**
-         * Reconstitute this lock instance from a stream (that is,
-         * deserialize it).
+         * Reconstitute this lock instance from a stream
          * @param s the stream
          */
         private void readObject(java.io.ObjectInputStream s)

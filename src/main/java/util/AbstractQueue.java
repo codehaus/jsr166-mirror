@@ -45,10 +45,10 @@ public abstract class AbstractQueue<E>
      *         this queue, else <tt>false</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
-    //    public boolean offer(E o) { return false; }
+    public boolean offer(E o) { return false; }
     // FIXME: Replace above no-op with following abstract version
     // when javac allows it.
-    public abstract boolean offer(E o);
+    //    public abstract boolean offer(E o);
 
     /**
      * Adds the specified element to this queue. This implementation

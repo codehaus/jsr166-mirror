@@ -10,12 +10,12 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded {@linkplain BlockingQueue blocking queue} based on a
- * {@link PriorityQueue}, obeying its ordering rules and
- * implementation characteristics.  While this queue is logically
+ * An unbounded {@linkplain BlockingQueue blocking queue} that uses
+ * the same ordering rules as class {@link PriorityQueue} and supplies
+ * blocking retrieval operations.  While this queue is logically
  * unbounded, attempted additions may fail due to resource exhaustion
- * (causing <tt>OutOfMemoryError</tt>). A priority queue does not
- * permit <tt>null</tt> elements.  A priority queue relying on natural
+ * (causing <tt>OutOfMemoryError</tt>). This class does not permit
+ * <tt>null</tt> elements.  A priority queue relying on natural
  * ordering also does not permit insertion of non-comparable objects
  * (doing so results in <tt>ClassCastException</tt>).
  *

@@ -80,24 +80,29 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     private final Sync sync;
 
     /**
-     * Provides all synchronization control for this lock
+     * Base of synchronization control for this lock. Subclassed
+     * into fair and nonfair versions below.
      */
-    private final static class Sync  extends AbstractQueuedSynchronizer {
+    static abstract class Sync  extends AbstractQueuedSynchronizer {
         /** Current owner thread */
-        private transient Thread owner;
-        /** true if barging disabled */
-        private final boolean fair;
+        transient Thread owner;
 
-        public Sync(boolean fair) {
-            this.fair = fair;
-        }
+        /**
+         * Perform {@link Lock#lock}. The main reason for subclassing
+         * is to allow fast path for nonfair version.
+         */
+        abstract void lock();
 
-        // Implement AQS state methods
-        public boolean tryAcquireExclusive(boolean isFirst, int acquires) { 
+        /** 
+         * Perform non-fair tryLock.  tryAcquireExclusive is
+         * implemented in subclasses, but both versions need nonfair
+         * try for trylock method
+         */
+        final boolean nonfairTryAcquireExclusive(int acquires) { 
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if ((isFirst || !fair) && compareAndSetState(0, acquires)) {
+                if (compareAndSetState(0, acquires)) {
                     owner = current;
                     return true;
                 }
@@ -109,7 +114,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return false;
         }
 
-        protected boolean tryReleaseExclusive(int releases) {
+        protected final boolean tryReleaseExclusive(int releases) {
             int c = getState() - releases;
             if (Thread.currentThread() != owner)
                 throw new IllegalMonitorStateException();
@@ -122,43 +127,31 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return free;
         }
 
-        // Use fastpath for main lock method
-        final void lock() {
-            if (fair || !compareAndSetState(0, 1))
-                acquireExclusiveUninterruptibly(1);
-            else
-                owner = Thread.currentThread();
-        }
-
-        protected void checkConditionAccess(Thread thread) {
+        protected final void checkConditionAccess(Thread thread) {
             if (getState() == 0 || owner != thread) 
                 throw new IllegalMonitorStateException();
         }
 
-        ConditionObject newCondition() {
+        final ConditionObject newCondition() {
             return new ConditionObject();
         }
 
         // Methods relayed from outer class
 
-        boolean isFair() {
-            return fair;
-        }
-
-        Thread getOwner() {
+        final Thread getOwner() {
             return (getState() != 0)? owner : null;
         }
         
-        int getHoldCount() {
+        final int getHoldCount() {
             int c = getState();
             return (owner == Thread.currentThread())? c : 0;
         }
         
-        boolean isHeldByCurrentThread() {
+        final boolean isHeldByCurrentThread() {
             return getState() != 0 && owner == Thread.currentThread();
         }
         
-        boolean isLocked() {
+        final boolean isLocked() {
             return getState() != 0;
         }
 
@@ -174,11 +167,60 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
+     * Sync object for non-fair locks
+     */
+    final static class NonfairSync extends Sync {
+        /**
+         * Perform lock.  Try immediate barge, backing up to normal
+         * acquire on failure.
+         */
+        final void lock() {
+            if (compareAndSetState(0, 1))
+                owner = Thread.currentThread();
+            else
+                acquireExclusiveUninterruptibly(1);
+        }
+
+        protected final boolean tryAcquireExclusive(int acquires) { 
+            return nonfairTryAcquireExclusive(acquires);
+        }
+    }
+
+    /**
+     * Sync object for fair locks
+     */
+    final static class FairSync  extends Sync {
+        final void lock() { 
+            acquireExclusiveUninterruptibly(1); 
+        }
+
+        /**
+         * Fair version of tryAcquire.  Don't grant access unless
+         * recursive call or is first.
+         */
+        protected final boolean tryAcquireExclusive(int acquires) { 
+            final Thread current = Thread.currentThread();
+            int c = getState();
+            if (c == 0) {
+                if (isFirst(current) && compareAndSetState(0, acquires)) {
+                    owner = current;
+                    return true;
+                }
+            }
+            else if (current == owner) {
+                setState(c+acquires);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /**
      * Creates an instance of <tt>ReentrantLock</tt>.
      * This is equivalent to using <tt>ReentrantLock(false)</tt>.
      */
     public ReentrantLock() { 
-        sync = new Sync(false);
+        sync = new NonfairSync();
     }
 
     /**
@@ -186,7 +228,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * given fairness policy.
      */
     public ReentrantLock(boolean fair) { 
-        sync = new Sync(fair);
+        sync = (fair)? new FairSync() : new NonfairSync();
     }
 
     /**
@@ -287,7 +329,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <tt>false</tt> otherwise.
      */
     public boolean tryLock() {
-        return sync.tryAcquireExclusive(true, 1);
+        return sync.nonfairTryAcquireExclusive(1);
     }
 
     /**
@@ -523,7 +565,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @return true if this lock has fairness set true.
      */
     public final boolean isFair() {
-        return sync.isFair();
+        return sync instanceof FairSync;
     }
 
     /**

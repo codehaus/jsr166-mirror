@@ -136,7 +136,7 @@ public class CountDownLatch {
             return getState();
         }
 
-        public int tryAcquireShared(boolean isQueued, int acquires) {
+        public int tryAcquireShared(int acquires) {
             return getState() == 0? 1 : -1;
         }
         
@@ -146,8 +146,9 @@ public class CountDownLatch {
                 int c = getState();
                 if (c == 0)
                     return false;
-                if (compareAndSetState(c, c-1)) 
-                    return c == 1;
+                int nextc = c-1;
+                if (compareAndSetState(c, nextc)) 
+                    return nextc == 0;
             }
         }
     }

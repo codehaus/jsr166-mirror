@@ -124,23 +124,20 @@ public class Semaphore implements java.io.Serializable {
     private final Sync sync;
 
     /**
-     * Synchronization implementation for semaphore.
-     * Uses AQS state to represent permits
+     * Synchronization implementation for semaphore.  Uses AQS state
+     * to represent permits. Subclassed into fair and nonfair
+     * versions.
      */
-    private final static class Sync extends AbstractQueuedSynchronizer {
-        final boolean fair;
-        Sync(int permits, boolean fair) {
-            this.fair = fair;
+    abstract static class Sync extends AbstractQueuedSynchronizer {
+        Sync(int permits) {
             setState(permits);
         }
         
-        public int getPermits() {
+        final int getPermits() {
             return getState();
         }
 
-        public int tryAcquireShared(boolean isFirst, int acquires) {
-            if (!isFirst && fair)
-                return -1;
+        final int nonfairTryAcquireShared(int acquires) {
             for (;;) {
                 int available = getState();
                 int remaining = available - acquires;
@@ -150,7 +147,7 @@ public class Semaphore implements java.io.Serializable {
             }
         }
         
-        protected boolean tryReleaseShared(int releases) {
+        protected final boolean tryReleaseShared(int releases) {
             for (;;) {
                 int p = getState();
                 if (compareAndSetState(p, p + releases)) 
@@ -158,7 +155,7 @@ public class Semaphore implements java.io.Serializable {
             }
         }
 
-        void reducePermits(int reductions) {
+        final void reducePermits(int reductions) {
             for (;;) {
                 int current = getState();
                 int next = current - reductions;
@@ -167,11 +164,46 @@ public class Semaphore implements java.io.Serializable {
             }
         }
 
-        int drainPermits() {
+        final int drainPermits() {
             for (;;) {
                 int current = getState();
                 if (current == 0 || compareAndSetState(current, 0))
                     return current;
+            }
+        }
+    }
+
+    /**
+     * NonFair version
+     */
+    final static class NonfairSync extends Sync {
+        NonfairSync(int permits) {
+            super(permits);
+        }
+       
+        protected int tryAcquireShared(int acquires) {
+            return nonfairTryAcquireShared(acquires);
+        }
+    }
+
+    /**
+     * Fair version
+     */
+    final static class FairSync extends Sync {
+        FairSync(int permits) {
+            super(permits);
+        }
+        
+        protected int tryAcquireShared(int acquires) {
+            Thread current = Thread.currentThread();
+            for (;;) {
+                if (!isFirst(current))
+                    return -1;
+                int available = getState();
+                int remaining = available - acquires;
+                if (remaining < 0 ||
+                    compareAndSetState(available, remaining))
+                    return remaining;
             }
         }
     }
@@ -186,7 +218,7 @@ public class Semaphore implements java.io.Serializable {
      * first-out granting of permits under contention, else false.
      */
     public Semaphore(int permits, boolean fair) { 
-        sync = new Sync(permits, fair);
+        sync = (fair)? new FairSync(permits) : new NonfairSync(permits);
     }
 
     /**
@@ -269,7 +301,7 @@ public class Semaphore implements java.io.Serializable {
      * otherwise.
      */
     public boolean tryAcquire() {
-        return sync.tryAcquireShared(true, 1) >= 0;
+        return sync.nonfairTryAcquireShared(1) >= 0;
     }
 
     /**
@@ -436,7 +468,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.tryAcquireShared(true, permits) >= 0;
+        return sync.nonfairTryAcquireShared(permits) >= 0;
     }
 
     /**
@@ -562,7 +594,7 @@ public class Semaphore implements java.io.Serializable {
      * @return true if this semaphore has fairness set true.
      */
     public boolean isFair() {
-        return sync.fair;
+        return sync instanceof FairSync;
     }
 
     /**

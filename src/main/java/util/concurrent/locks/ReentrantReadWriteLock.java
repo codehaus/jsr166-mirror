@@ -163,7 +163,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * default ordering properties.
      */
     public ReentrantReadWriteLock() {
-        sync = new Sync(false);
+        sync = new NonfairSync();
     }
 
     /**
@@ -173,22 +173,19 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * @param fair true if this lock should use a fair ordering policy
      */
     public ReentrantReadWriteLock(boolean fair) {
-        sync = new Sync(fair);
+        sync = (fair)? new FairSync() : new NonfairSync();
     }
 
     public ReentrantReadWriteLock.WriteLock writeLock() { return writerLock; }
     public ReentrantReadWriteLock.ReadLock  readLock()  { return readerLock; }
 
     /** 
-     * Synchronization implementation for ReentrantReadWriteLock 
+     * Synchronization implementation for ReentrantReadWriteLock.
+     * Subclassed into fair and nonfair versions.
      */
-    private final static class Sync extends AbstractQueuedSynchronizer {
-        /** true if barging disabled */
-        private final boolean fair;
+    abstract static class Sync extends AbstractQueuedSynchronizer {
         /** Current (exclusive) owner thread */
-        private transient Thread owner;
-
-        Sync(boolean fair) { this.fair = fair; }
+        transient Thread owner;
 
         /* 
          * Shared vs write count extraction constants and functions.  Lock
@@ -197,23 +194,32 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * upper the shared (reader) hold count.
          */
 
-        private static final int SHARED_SHIFT   = 16;
-        private static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-        private static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+        static final int SHARED_SHIFT   = 16;
+        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
 
         /** Return the number of shared holds represented in count  */
-        private int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
+        static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
         /** Return the number of exclusive holds represented in count  */
-        private int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
+        static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
 
-        public boolean tryAcquireExclusive(boolean isFirst, int acquires) {
+        /**
+         * Perform write lock. Allows fast path in non-fair version.
+         */
+        abstract void wlock();
+
+        /** 
+         * Perform non-fair tryLock for write.  tryAcquireExclusive is
+         * implemented in subclasses, but both versions need nonfair
+         * try for trylock method
+         */
+        final boolean nonfairTryAcquireExclusive(int acquires) {
             Thread current = Thread.currentThread();
             int c = getState();
             int w = exclusiveCount(c);
             if (w + acquires >= SHARED_UNIT)
                 throw new Error("Maximum lock count exceeded");
-            if ((w == 0 || current != owner) &&
-                (c != 0 || (!isFirst && fair)))
+            if (c != 0 && (w == 0 || current != owner))
                 return false;
             if (!compareAndSetState(c, c + acquires)) 
                 return false;
@@ -221,23 +227,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return true;
         }
 
-        public boolean tryReleaseExclusive(int releases) {
-            Thread current = Thread.currentThread();
-            int c = getState();
-            if (owner != current)
-                throw new IllegalMonitorStateException();
-            boolean free = false;
-            if (exclusiveCount(c) == releases) {
-                free = true;
-                owner = null;
-            }
-            setState(c - releases);
-            return free;
-        }
-
-        public int tryAcquireShared(boolean isFirst, int acquires) {
-            if (!isFirst && fair)
-                return -1;
+        /** 
+         * Perform non-fair tryLock for read. 
+         */
+        final int nonfairTryAcquireShared(int acquires) {
             for (;;) {
                 int c = getState();
                 int nextc = c + (acquires << SHARED_SHIFT);
@@ -252,7 +245,21 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
 
-        public boolean tryReleaseShared(int releases) {
+        protected final boolean tryReleaseExclusive(int releases) {
+            Thread current = Thread.currentThread();
+            int c = getState();
+            if (owner != current)
+                throw new IllegalMonitorStateException();
+            boolean free = false;
+            if (exclusiveCount(c) == releases) {
+                free = true;
+                owner = null;
+            }
+            setState(c - releases);
+            return free;
+        }
+
+        protected final boolean tryReleaseShared(int releases) {
             for (;;) {
                 int c = getState();
                 int nextc = c - (releases << SHARED_SHIFT);
@@ -263,55 +270,42 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
     
-        public void checkConditionAccess(Thread thread) {
+        protected final void checkConditionAccess(Thread thread) {
             if (exclusiveCount(getState()) == 0 || owner != thread) 
                 throw new IllegalMonitorStateException();
         }
 
-        // Use fastpath for main write lock method
-        final void wlock() {
-            if (fair || !compareAndSetState(0, 1))
-                acquireExclusiveUninterruptibly(1);
-            else
-                owner = Thread.currentThread();
-        }
-
-        // Methods relayed to outer class
-
-        boolean isFair() {
-            return fair;
-        }
-
-        ConditionObject newCondition() { 
+        
+        final ConditionObject newCondition() { 
             return new ConditionObject(); 
         }
 
-        Thread getOwner() {
+        final Thread getOwner() {
             return (exclusiveCount(getState()) != 0)? owner : null;
         }
         
-        int getReadLockCount() {
+        final int getReadLockCount() {
             return sharedCount(getState());
         }
         
-        boolean isWriteLocked() {
+        final boolean isWriteLocked() {
             return exclusiveCount(getState()) != 0;
         }
 
-        boolean isWriteLockedByCurrentThread() {
+        final boolean isWriteLockedByCurrentThread() {
             return getOwner() == Thread.currentThread();
         }
 
-        int getWriteHoldCount() {
+        final int getWriteHoldCount() {
             int c = exclusiveCount(getState());
             return (owner == Thread.currentThread())? c : 0;
         }
 
-        Collection<Thread> getQueuedWriterThreads() {
+        final Collection<Thread> getQueuedWriterThreads() {
             return getQueuedThreads(false);
         }
 
-        Collection<Thread> getQueuedReaderThreads() {
+        final Collection<Thread> getQueuedReaderThreads() {
             return getQueuedThreads(true);
         }
 
@@ -323,6 +317,70 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             throws java.io.IOException, ClassNotFoundException {
             s.defaultReadObject();
             setState(0); // reset to unlocked state
+        }
+    }
+
+    /** 
+     * Nonfair version of Sync
+     */
+    final static class NonfairSync extends Sync {
+        protected final boolean tryAcquireExclusive(int acquires) { 
+            return nonfairTryAcquireExclusive(acquires);
+        }
+
+        protected final int tryAcquireShared(int acquires) {
+            return nonfairTryAcquireShared(acquires);
+        }
+
+        // Use fastpath for main write lock method
+        final void wlock() {
+            if (compareAndSetState(0, 1))
+                owner = Thread.currentThread();
+            else
+                acquireExclusiveUninterruptibly(1);
+        }
+    }
+
+    /** 
+     * Fair version of Sync
+     */
+    final static class FairSync extends Sync {
+        protected final boolean tryAcquireExclusive(int acquires) { 
+            Thread current = Thread.currentThread();
+            int c = getState();
+            int w = exclusiveCount(c);
+            if (w + acquires >= SHARED_UNIT)
+                throw new Error("Maximum lock count exceeded");
+            if ((w == 0 || current != owner) &&
+                (c != 0 || !isFirst(current)))
+                return false;
+            if (!compareAndSetState(c, c + acquires)) 
+                return false;
+            owner = current;
+            return true;
+        }
+
+
+        protected final int tryAcquireShared(int acquires) {
+            Thread current = Thread.currentThread();
+            for (;;) {
+                if (!isFirst(current))
+                    return -1;
+                int c = getState();
+                int nextc = c + (acquires << SHARED_SHIFT);
+                if (nextc < c)
+                    throw new Error("Maximum lock count exceeded");
+                if (exclusiveCount(c) != 0 && 
+                    owner != Thread.currentThread())
+                    return -1;
+                if (compareAndSetState(c, nextc)) 
+                    return 1;
+                // Recheck count if lost CAS
+            }
+        }
+
+        final void wlock() {
+            acquireExclusiveUninterruptibly(1);
         }
     }
 
@@ -418,7 +476,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * @return <tt>true</tt> if the lock was acquired.
          */
         public  boolean tryLock() {
-            return sync.tryAcquireShared(true, 1) >= 0;
+            return sync.nonfairTryAcquireShared(1) >= 0;
         }
 
         /**
@@ -624,7 +682,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * <tt>false</tt> otherwise.
          */
         public boolean tryLock( ) {
-            return sync.tryAcquireExclusive(true, 1);
+            return sync.nonfairTryAcquireExclusive(1);
         }
 
         /**
@@ -777,7 +835,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * @return true if this lock has fairness set true.
      */
     public final boolean isFair() {
-        return sync.isFair();
+        return sync instanceof FairSync;
     }
 
     /**

@@ -95,7 +95,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Implements AQS base acquire to succeed if not in WAITING state
          */
-        protected boolean tryAcquireExclusive(boolean b, int ignore) {
+        protected boolean tryAcquireExclusive(int ignore) {
             return getState() != 0;
         }
 

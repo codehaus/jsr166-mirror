@@ -200,9 +200,9 @@ public class FutureTask<V> implements Future<V>, Runnable {
         }
 
         /**
-         * Implements AQS base acquire to succeed if Done/cancelled
+         * Implements AQS base acquire to succeed if ran or cancelled
          */
-        protected int tryAcquireShared(boolean b, int ignore) {
+        protected int tryAcquireShared(int ignore) {
             return doIsDone()? 1 : -1;
         }
 

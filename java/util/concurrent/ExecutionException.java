@@ -7,8 +7,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/29 23:02:23 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/01/31 00:13:35 $
+ * @editor $Author: tim $
  */
 public class ExecutionException extends Exception {
 
@@ -24,9 +24,9 @@ public class ExecutionException extends Exception {
      * message. The cause is not initialized, and may subsequently be
      * initialized by a call to {@link #initCause(Throwable) initCause}.
      *
-     * @param detail the detail message.
+     * @param message the detail message.
      */
-    protected ExecutionException(String detail) {
+    protected ExecutionException(String message) {
         super(message);
     }
 
@@ -34,20 +34,20 @@ public class ExecutionException extends Exception {
      * Constructs a <tt>ExecutionException</tt> with the specified detail
      * message and cause.
      *
-     * @param  detail the detail message.
+     * @param  message the detail message.
      * @param  cause the cause (which is saved for later retrieval by the
      *         {@link #getCause()} method).
      */
-    public ExecutionException(String detail, Throwable cause) {
+    public ExecutionException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * Constructs a <tt>ExecutionException</tt> with the specified cause. 
+     * Constructs a <tt>ExecutionException</tt> with the specified cause.
      * The detail message is set to:
      * <pre>
      *  (cause == null ? null : cause.toString())</pre>
-     * (which typically contains the class and detail message of 
+     * (which typically contains the class and detail message of
      * <tt>cause</tt>).
      *
      * @param  cause the cause (which is saved for later retrieval by the

@@ -6,10 +6,10 @@ package java.util.concurrent;
  * @fixme THROWN BY WHAT??
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/29 23:07:44 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/01/31 00:13:35 $
+ * @editor $Author: tim $
  */
-public class CancellationException extends IllegalStateException {  
+public class CancellationException extends IllegalStateException {
 
     /**
      * Constructs a <tt>CancellationException</tt> with no detail message.
@@ -20,9 +20,9 @@ public class CancellationException extends IllegalStateException {
      * Constructs a <tt>CancellationException</tt> with the specified detail
      * message.
      *
-     * @param detail the detail message
+     * @param message the detail message
      */
-    public CancellationException(String detail) {
-        super(detail);
+    public CancellationException(String message) {
+        super(message);
     }
 }

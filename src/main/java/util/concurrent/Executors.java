@@ -81,7 +81,7 @@ public class Executors {
      * <tt>newFixedThreadPool(1)</tt> the returned executor is
      * guaranteed not to be reconfigurable to use additional threads.
      *
-     * @return the newly-created single-threaded Executor
+     * @return the newly created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor() {
         return new DelegatedExecutorService
@@ -101,7 +101,7 @@ public class Executors {
      * @param threadFactory the factory to use when creating new
      * threads
      *
-     * @return the newly-created single-threaded Executor
+     * @return the newly created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
         return new DelegatedExecutorService
@@ -159,7 +159,7 @@ public class Executors {
      * given time. Unlike the otherwise equivalent
      * <tt>newScheduledThreadPool(1)</tt> the returned executor is
      * guaranteed not to be reconfigurable to use additional threads.
-     * @return a newly created scheduled executor
+     * @return the newly created scheduled executor
      */
     public static ScheduledExecutorService newSingleThreadScheduledExecutor() {
         return new DelegatedScheduledExecutorService
@@ -195,7 +195,7 @@ public class Executors {
      */
     public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
         return new ScheduledThreadPoolExecutor(corePoolSize);
-}
+    }
 
     /**
      * Creates a thread pool that can schedule commands to run after a 
@@ -213,7 +213,7 @@ public class Executors {
 
 
     /**
-     * Creates and returns an object that delegates all defined {@link
+     * Returns an object that delegates all defined {@link
      * ExecutorService} methods to the given executor, but not any
      * other methods that might otherwise be accessible using
      * casts. This provides a way to safely "freeze" configuration and
@@ -229,7 +229,7 @@ public class Executors {
     }
 
     /**
-     * Creates and returns an object that delegates all defined {@link
+     * Returns an object that delegates all defined {@link
      * ScheduledExecutorService} methods to the given executor, but
      * not any other methods that might otherwise be accessible using
      * casts. This provides a way to safely "freeze" configuration and
@@ -257,7 +257,7 @@ public class Executors {
      * <em>pool-N-thread-M</em>, where <em>N</em> is the sequence
      * number of this factory, and <em>M</em> is the sequence number
      * of the thread created by this factory.
-     * @return the thread factory
+     * @return a thread factory
      */
     public static ThreadFactory defaultThreadFactory() {
         return new DefaultThreadFactory();
@@ -290,7 +290,7 @@ public class Executors {
      * thread waits for and services requests to create others that
      * will inherit its values.
      *
-     * @return the thread factory
+     * @return a thread factory
      * @throws AccessControlException if the current access control
      * context does not have permission to both get and set context
      * class loader.
@@ -301,14 +301,14 @@ public class Executors {
 
 
     /**
-     * Creates and returns a {@link Callable} object that, when
+     * Returns a {@link Callable} object that, when
      * called, runs the given task and returns the given result.  This
      * can be useful when applying methods requiring a
      * <tt>Callable</tt> to an otherwise resultless action.
      * @param task the task to run
      * @param result the result to return
      * @throws NullPointerException if task null
-     * @return callable object
+     * @return a callable object
      */
     public static <T> Callable<T> callable(Runnable task, T result) {
         if (task == null)
@@ -317,10 +317,10 @@ public class Executors {
     }
 
     /**
-     * Creates and returns a {@link Callable} object that, when
+     * Returns a {@link Callable} object that, when
      * called, runs the given task and returns <tt>null</tt>
      * @param task the task to run
-     * @return callable object
+     * @return a callable object
      * @throws NullPointerException if task null
      */
     public static Callable<Object> callable(Runnable task) {
@@ -330,10 +330,10 @@ public class Executors {
     }
 
     /**
-     * Creates and returns a {@link Callable} object that, when
+     * Returns a {@link Callable} object that, when
      * called, runs the given privileged action and returns its result
      * @param action the privileged action to run
-     * @return callable object
+     * @return a callable object
      * @throws NullPointerException if action null
      */
     public static Callable<Object> callable(PrivilegedAction action) {
@@ -343,11 +343,11 @@ public class Executors {
     }
 
     /**
-     * Creates and returns a {@link Callable} object that, when
+     * Returns a {@link Callable} object that, when
      * called, runs the given privileged exception action and returns
      * its result
      * @param action the privileged exception action to run
-     * @return callable object
+     * @return a callable object
      * @throws NullPointerException if action null
      */
     public static Callable<Object> callable(PrivilegedExceptionAction action) {
@@ -357,7 +357,7 @@ public class Executors {
     }
 
     /**
-     * Creates and returns a {@link Callable} object that will, when
+     * Returns a {@link Callable} object that will, when
      * called, execute the given <tt>callable</tt> under the current
      * access control context. This method should normally be
      * invoked within an {@link AccessController#doPrivileged} action
@@ -366,7 +366,7 @@ public class Executors {
      * not possible, throw an associated {@link
      * AccessControlException}.
      * @param callable the underlying task
-     * @return callable object
+     * @return a callable object
      * @throws NullPointerException if callable null
      *
      */
@@ -377,7 +377,7 @@ public class Executors {
     }
     
     /**
-     * Creates and returns a {@link Callable} object that will, when
+     * Returns a {@link Callable} object that will, when
      * called, execute the given <tt>callable</tt> under the current
      * access control context, with the current context class loader
      * as the context class loader. This method should normally be
@@ -388,7 +388,7 @@ public class Executors {
      * AccessControlException}.
      * @param callable the underlying task
      *
-     * @return callable object
+     * @return a callable object
      * @throws NullPointerException if callable null
      * @throws AccessControlException if the current access control
      * context does not have permission to both set and get context
@@ -629,7 +629,7 @@ public class Executors {
     
     /**
      * A wrapper class that exposes only the ExecutorService and 
-     * ScheduleExecutor methods of a ScheduledThreadPoolExecutor.
+     * ScheduleExecutor methods of a ScheduledExecutorService implementation.
      */
     static class DelegatedScheduledExecutorService
             extends DelegatedExecutorService 

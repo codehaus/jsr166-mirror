@@ -195,7 +195,7 @@ public class CancellableTask implements Cancellable, Runnable {
      * <tt>isDone</tt>, <tt>isCancelled</tt> and <tt>cancel</tt>. This
      * class is split into an inner class to permit Future support to
      * be mixed-in with other flavors of tasks.  Normally, such a
-     * class will delegate <tt>Future</tt> <tt>get</tt> methods to the
+     * class will delegate <tt>get</tt> methods to the
      * <tt>InnerCancellableFuture</tt>, and internally arrange that
      * <tt>set</tt> methods be invoked when computations are ready.
      *
@@ -268,7 +268,8 @@ public class CancellableTask implements Cancellable, Runnable {
          * complete, and then retrieves its result.
          *
          * @return computed result
-         * @throws CancellationException here???
+         * @throws CancellationException if underlying computation was
+         * cancelled
          * @throws ExecutionException if underlying computation threw an
          * exception
          * @throws InterruptedException if current thread was interrupted

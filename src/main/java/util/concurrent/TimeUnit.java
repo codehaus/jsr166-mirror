@@ -241,7 +241,7 @@ public enum TimeUnit {
       * Utility to compute the excess-nanosecond argument to wait,
       * sleep, join.
       * @param d the duration
-      * @param m the number of millisecondss
+      * @param m the number of milliseconds
       * @return the number of nanoseconds
       */
      abstract int excessNanos(long d, long m);

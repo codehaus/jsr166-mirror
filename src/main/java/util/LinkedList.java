@@ -578,7 +578,7 @@ public class LinkedList<E>
 
     /**
      * Pushes an element onto the stack represented by this list.  In other
-     * words, inserts the element to the front this list.
+     * words, inserts the element to the front of this list.
      *
      * <p>This method is equivalent to {@link #addFirst}.
      *
@@ -591,7 +591,7 @@ public class LinkedList<E>
 
     /**
      * Pops an element from the stack represented by this list.  In other
-     * words, removes and returns the the first element of this list.
+     * words, removes and returns the first element of this list.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
      *

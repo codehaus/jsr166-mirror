@@ -141,8 +141,8 @@ public interface ExecutorService extends Executor {
 
     /**
      * Submits a value-returning task for execution and returns a
-     * Future representing the pending results of the task, and whose
-     * <<tt>get</tt> method will return the given result upon
+     * Future representing the pending results of the task. The
+     * Future's <tt>get</tt> method will return the given result upon
      * <em>successful</em> completion.
      *
      * <p>
@@ -165,14 +165,12 @@ public interface ExecutorService extends Executor {
 
     /**
      * Submits a Runnable task for execution and returns a Future
-     * representing that task that will upon successful completion
-     * return the given result.
+     * representing that task. The Future's <tt>get</tt> method will 
+     * return the given result upon successful completion.
      *
      * @param task the task to submit
      * @param result the result to return
-     * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return the given result
-     * upon successful completion.
+     * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      * @throws NullPointerException if task null     
@@ -181,12 +179,11 @@ public interface ExecutorService extends Executor {
 
     /**
      * Submits a Runnable task for execution and returns a Future 
-     * representing that task.
+     * representing that task. The Future's <tt>get</tt> method will 
+     * return <tt>null>/tt> upon successful completion.
      *
      * @param task the task to submit
-     * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return <tt>null</tt>
-     * upon successful completion.
+     * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      * @throws NullPointerException if task null

@@ -203,7 +203,7 @@ public class TreeMap<K,V>
      *            specified key.
      * @throws ClassCastException if the key cannot be compared with the keys
      *                  currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *                  natural ordering, or its comparator does not tolerate
      *            <tt>null</tt> keys.
      */
@@ -260,9 +260,9 @@ public class TreeMap<K,V>
      * @param key key whose associated value is to be returned.
      * @return the value to which this map maps the specified key, or
      *               <tt>null</tt> if the map contains no mapping for the key.
-     * @throws    ClassCastException key cannot be compared with the keys
+     * @throws    ClassCastException if key cannot be compared with the keys
      *                  currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *                  natural ordering, or its comparator does not tolerate
      *                  <tt>null</tt> keys.
      *
@@ -343,7 +343,7 @@ public class TreeMap<K,V>
      *                does not contain an entry for the key.
      * @throws ClassCastException if the key cannot be compared with the keys
      *                  currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *                  natural order, or its comparator does not tolerate *
      *                  <tt>null</tt> keys.
      */
@@ -546,9 +546,9 @@ public class TreeMap<K,V>
      *         if there was no mapping for key.  A <tt>null</tt> return can
      *         also indicate that the map previously associated <tt>null</tt>
      *         with the specified key.
-     * @throws    ClassCastException key cannot be compared with the keys
+     * @throws    ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -596,9 +596,9 @@ public class TreeMap<K,V>
      *         also indicate that the map previously associated
      *         <tt>null</tt> with the specified key.
      *
-     * @throws    ClassCastException key cannot be compared with the keys
+     * @throws    ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -723,7 +723,7 @@ public class TreeMap<K,V>
      * <tt>null</tt> if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the
      * keys currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -742,7 +742,7 @@ public class TreeMap<K,V>
      * if there is no such key.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -763,7 +763,7 @@ public class TreeMap<K,V>
      * if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -782,7 +782,7 @@ public class TreeMap<K,V>
      * such key.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -801,7 +801,7 @@ public class TreeMap<K,V>
      * <tt>null</tt> if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -819,7 +819,7 @@ public class TreeMap<K,V>
      * <tt>null</tt> if there is no such key.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -838,7 +838,7 @@ public class TreeMap<K,V>
      * key, or <tt>null</tt> if there is no such Entry.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -856,7 +856,7 @@ public class TreeMap<K,V>
      * key, or <tt>null</tt> if there is no such key.
      * @throws ClassCastException if key cannot be compared with the keys
      *            currently in the map.
-     * @throws NullPointerException key is <tt>null</tt> and this map uses
+     * @throws NullPointerException if key is <tt>null</tt> and this map uses
      *         natural order, or its comparator does not tolerate
      *         <tt>null</tt> keys.
      */
@@ -1026,7 +1026,7 @@ public class TreeMap<K,V>
 
     /**
      * Returns a set view of the mappings contained in this map.  The
-     * set's iterator returns the mappings in descrending key order.
+     * set's iterator returns the mappings in descending key order.
      * Each element in the returned set is a <tt>Map.Entry</tt>.  The
      * set is backed by this map, so changes to this map are reflected
      * in the set, and vice-versa.  The set supports element removal,

@@ -199,7 +199,7 @@ public class TreeSet<E>
      *
      * @throws ClassCastException if the specified object cannot be compared
      * 		  with the elements currently in the set.
-     * @throws NullPointerException o is <tt>null</tt> and this map
+     * @throws NullPointerException if o is <tt>null</tt> and this map
      * uses natural ordering and is non-empty, or its comparator does
      * not tolerate <tt>null</tt> keys.
      */
@@ -216,7 +216,7 @@ public class TreeSet<E>
      *
      * @throws ClassCastException if the specified object cannot be compared
      * 		  with the elements currently in the set.
-     * @throws NullPointerException o is <tt>null</tt> and this map
+     * @throws NullPointerException if o is <tt>null</tt> and this map
      * uses natural ordering and is non-empty, or its comparator does
      * not tolerate <tt>null</tt> keys.
      */
@@ -232,7 +232,7 @@ public class TreeSet<E>
      *
      * @throws ClassCastException if the specified object cannot be compared
      * 		  with the elements currently in the set.
-     * @throws NullPointerException o is <tt>null</tt> and this map
+     * @throws NullPointerException if o is <tt>null</tt> and this map
      * uses natural ordering and is non-empty, or its comparator does
      * not tolerate <tt>null</tt> keys.
      */
@@ -448,7 +448,7 @@ public class TreeSet<E>
      * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException o is <tt>null</tt> and this map
+     * @throws NullPointerException if o is <tt>null</tt> and this map
      * uses natural ordering and is non-empty, or its comparator does
      * not tolerate <tt>null</tt> keys.
      */
@@ -465,7 +465,7 @@ public class TreeSet<E>
      * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException o is <tt>null</tt> and this map
+     * @throws NullPointerException if o is <tt>null</tt> and this map
      * uses natural ordering and is non-empty, or its comparator does
      * not tolerate <tt>null</tt> keys.
      */
@@ -482,7 +482,7 @@ public class TreeSet<E>
      * element, or <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException o is <tt>null</tt> and this map
+     * @throws NullPointerException if o is <tt>null</tt> and this map
      * uses natural ordering and is non-empty, or its comparator does
      * not tolerate <tt>null</tt> keys.
      */
@@ -499,7 +499,7 @@ public class TreeSet<E>
      * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException o is <tt>null</tt> and this map
+     * @throws NullPointerException if o is <tt>null</tt> and this map
      * uses natural ordering and is non-empty, or its comparator does
      * not tolerate <tt>null</tt> keys.
      */

@@ -643,7 +643,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * <tt>Map.entrySet().toArray</tt>
      */
     public static class SimpleEntry<K,V> implements Entry<K,V> {
-	private K key;
+	private final K key;
 	private V value;
 
         /**

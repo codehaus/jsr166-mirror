@@ -9,11 +9,12 @@ import java.util.concurrent.atomic.*;
 import java.util.*;
 
 /**
- * A {@link ThreadPoolExecutor} that can schedule commands to run
- * after a given delay, or to execute periodically. This class is
- * preferable to {@link java.util.Timer} when multiple worker threads
- * are needed, or when the additional flexibility or capabilities of
- * {@link ThreadPoolExecutor} (which this class extends) are required.
+ * A {@link ThreadPoolExecutor} that can additionally schedule
+ * commands to run after a given delay, or to execute
+ * periodically. This class is preferable to {@link java.util.Timer}
+ * when multiple worker threads are needed, or when the additional
+ * flexibility or capabilities of {@link ThreadPoolExecutor} (which
+ * this class extends) are required.
  *
  * <p> Delayed tasks execute no sooner than they are enabled, but
  * without any real-time guarantees about when, after they are enabled,
@@ -21,7 +22,7 @@ import java.util.*;
  * enabled in first-in-first-out (FIFO) order of submission. 
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
- * of the inherited tuning methods are not especially useful for
+ * of the inherited tuning methods are not useful for
  * it. In particular, because a <tt>ScheduledExecutor</tt> always acts
  * as a fixed-sized pool using <tt>corePoolSize</tt> threads and an
  * unbounded queue, adjustments to <tt>maximumPoolSize</tt> have no
@@ -287,20 +288,6 @@ public class ScheduledThreadPoolExecutor
         super.getQueue().add(command);
     }
 
-    /**
-     * Creates and executes a one-shot action that becomes enabled after
-     * the given delay.
-     * @param command the task to execute.
-     * @param delay the time from now to delay execution.
-     * @param unit the time unit of the delay parameter.
-     * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return <tt>null</tt>
-     * upon completion.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     * @throws NullPointerException if command is null
-     */
-
     public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
@@ -310,17 +297,6 @@ public class ScheduledThreadPoolExecutor
         return t;
     }
 
-    /**
-     * Creates and executes a ScheduledFuture that becomes enabled after the
-     * given delay.
-     * @param callable the function to execute.
-     * @param delay the time from now to delay execution.
-     * @param unit the time unit of the delay parameter.
-     * @return a ScheduledFuture that can be used to extract result or cancel.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     * @throws NullPointerException if callable is null
-     */
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
         if (callable == null)
             throw new NullPointerException();
@@ -330,25 +306,6 @@ public class ScheduledThreadPoolExecutor
         return t;
     }
 
-    /**
-     * Creates and executes a periodic action that becomes enabled first
-     * after the given initial delay, and subsequently with the given
-     * period; that is executions will commence after
-     * <tt>initialDelay</tt> then <tt>initialDelay+period</tt>, then
-     * <tt>initialDelay + 2 * period</tt>, and so on.  The
-     * task will only terminate via cancellation.
-     * @param command the task to execute.
-     * @param initialDelay the time to delay first execution.
-     * @param period the period between successive executions.
-     * @param unit the time unit of the delay and period parameters
-     * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will throw an exception upon
-     * cancellation.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     * @throws NullPointerException if command is null
-     * @throws IllegalArgumentException if period less than or equal to zero.
-     */
     public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
@@ -364,25 +321,6 @@ public class ScheduledThreadPoolExecutor
         return t;
     }
     
-    /**
-     * Creates and executes a periodic action that becomes enabled first
-     * after the given initial delay, and subsequently with the
-     * given delay between the termination of one execution and the
-     * commencement of the next. 
-     * The task will only terminate via cancellation.
-     * @param command the task to execute.
-     * @param initialDelay the time to delay first execution.
-     * @param delay the delay between the termination of one
-     * execution and the commencement of the next.
-     * @param unit the time unit of the delay and delay parameters
-     * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will throw an exception upon
-     * cancellation.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     * @throws NullPointerException if command is null
-     * @throws IllegalArgumentException if delay less than or equal to zero.
-     */
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
@@ -419,6 +357,17 @@ public class ScheduledThreadPoolExecutor
         schedule(command, 0, TimeUnit.NANOSECONDS);
     }
 
+    public Future<?> submit(Runnable task) {
+        return schedule(task, 0, TimeUnit.NANOSECONDS);
+    }
+
+    public <T> Future<T> submit(Runnable task, T result) {
+        return schedule(Executors.callable(task, result), 0, TimeUnit.NANOSECONDS);
+    }
+
+    public <T> Future<T> submit(Callable<T> task) {
+        return schedule(task, 0, TimeUnit.NANOSECONDS);
+    }
 
     /**
      * Set policy on whether to continue executing existing periodic
@@ -488,9 +437,12 @@ public class ScheduledThreadPoolExecutor
         else if (keepDelayed || keepPeriodic) {
             Object[] entries = super.getQueue().toArray();
             for (int i = 0; i < entries.length; ++i) {
-                ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)entries[i];
-                if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
-                    t.cancel(false);
+                Object e = entries[i];
+                if (e instanceof ScheduledFutureTask) {
+                    ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)e;
+                    if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
+                        t.cancel(false);
+                }
             }
             entries = null;
             purge();
@@ -551,11 +503,14 @@ public class ScheduledThreadPoolExecutor
         ScheduledFuture wrap = null;
         Object[] entries = super.getQueue().toArray();
         for (int i = 0; i < entries.length; ++i) {
-            ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)entries[i];
-            Object r = t.getTask();
-            if (task.equals(r)) {
-                wrap = t;
-                break;
+            Object e = entries[i];
+            if (e instanceof ScheduledFutureTask) {
+                ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)e;
+                Object r = t.getTask();
+                if (task.equals(r)) {
+                    wrap = t;
+                    break;
+                }
             }
         }
         entries = null;

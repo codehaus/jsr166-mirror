@@ -110,9 +110,13 @@ public class FutureTask<V> implements Future<V>, Runnable {
             Object r = runner;
             if (r == DONE || r == CANCELLED)
                 return false;
+            runner = CANCELLED;
             if (mayInterruptIfRunning && r != null && r instanceof Thread)
                 ((Thread)r).interrupt();
-            runner = CANCELLED;
+            // propagate to nested future
+            Runnable subtask = runnable;
+            if (subtask != null && subtask instanceof Future)
+                ((Future<?>)subtask).cancel(false);
         }
         finally{
             lock.unlock();

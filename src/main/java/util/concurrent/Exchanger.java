@@ -8,10 +8,10 @@ package java.util.concurrent;
 import java.util.concurrent.locks.*;
 
 /**
- * An <tt>Exchanger</tt> provides a synchronization point at which two threads
- * can exchange objects.  Each thread presents some object on entry to
- * the {@link #exchange exchange} method, and receives the object presented by
- * the other thread on return.
+ * A synchronization point at which two threads can exchange objects.
+ * Each thread presents some object on entry to the {@link #exchange
+ * exchange} method, and receives the object presented by the other
+ * thread on return.
  *
  * <p><b>Sample Usage:</b>
  * Here are the highlights of a class that uses an <tt>Exchanger</tt> to

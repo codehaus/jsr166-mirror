@@ -16,9 +16,13 @@ import java.util.*;
  * and return a task object that can be used to cancel or check
  * execution. The <tt>scheduleAtFixedRate</tt> and
  * <tt>scheduleWithFixedDelay</tt> methods create and execute tasks
- * that run periodically until cancelled.  Commands submitted using
- * the <tt>execute</tt> method are scheduled with a requested delay of
- * zero.
+ * that run periodically until cancelled.  
+ *
+ * <p> Commands submitted using the {@link Executor#execute} and
+ * {@link ExecutorService} <tt>submit</tt> methods are scheduled with
+ * a requested delay of zero. Zero and negative delays (but not
+ * periods) are also allowed in <tt>schedule</tt> methods, and are
+ * treated as requests for immediate execution.
  *
  * <p>All <t>schedule</tt> methods accept <em>relative</em> delays and
  * periods as arguments, not absolute times or dates. It is a simple
@@ -29,9 +33,7 @@ import java.util.*;
  * TimeUnit.MILLISECONDS)</tt>. Beware however that expiration of a
  * relative delay need not coincide with the current <tt>Date</tt> at
  * which the task is enabled due to network time synchronization
- * protocols, clock drift, or other factors. Negative relative delays
- * (but not periods) are allowed in <tt>schedule</tt> methods, and are
- * treated as requests for immediate execution.
+ * protocols, clock drift, or other factors. 
  *
  * @since 1.5
  * @author Doug Lea
@@ -76,7 +78,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param period the period between successive executions.
-     * @param unit the time unit of the delay and period parameters
+     * @param unit the time unit of the initialDelay and period parameters
      * @return a Future representing pending completion of the task,
      * and whose <tt>get()</tt> method will throw an exception upon
      * cancellation.
@@ -97,7 +99,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @param initialDelay the time to delay first execution.
      * @param delay the delay between the termination of one
      * execution and the commencement of the next.
-     * @param unit the time unit of the delay and delay parameters
+     * @param unit the time unit of the initialDelay and delay parameters
      * @return a Future representing pending completion of the task,
      * and whose <tt>get()</tt> method will throw an exception upon
      * cancellation.
@@ -108,13 +110,4 @@ public interface ScheduledExecutorService extends ExecutorService {
      */
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit);
 
-    /**
-     * Execute command with zero required delay. This has effect
-     * equivalent to <tt>schedule(command, 0, anyUnit)</tt>.  
-     * @param command the task to execute
-     * @throws RejectedExecutionException if this task cannot be
-     * accepted for execution.
-     * @throws NullPointerException if command is null
-     */
-    public void execute(Runnable command);
 }

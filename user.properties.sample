@@ -3,16 +3,12 @@
 #
 # Modify this file to taste and save as user.properties
 #
-# $Id: user.properties.sample,v 1.11 2003/09/15 14:07:37 tim Exp $
+# $Id: user.properties.sample,v 1.12 2003/12/08 03:10:54 tim Exp $
 # ---------------------------------------------------------------------------
 
 
 # ----- Turn on -warnunchecked? (default false) -----
 build.warnunchecked = false
-
-
-# ----- Skip java.lang.Thread* classes? (default false) -----
-build.nothreads = false
 
 
 # ----- Restrict to test cases matching this pattern (omit trailing "Test") -----

@@ -42,6 +42,7 @@
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
   <property name="test.src.dir"         location="${basedir}/src/test"/>
+  <property name="tck.src.dir"          location="${test.src.dir}/tck"/>
   <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
   <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
   <property name="lib.dir"              location="${basedir}/lib"/>
@@ -69,12 +70,12 @@
 
 
   <target name="compile"
-          depends="init, configure-compiler, prepare-src"
+          depends="init, configure-compiler"
           description="Compiles main sources to build folder">
 
     <mkdir dir="${build.classes.dir}"/>
 
-    <javac srcdir="${prepare.src.dir}"
+    <javac srcdir="${src.dir}"
           destdir="${build.classes.dir}"
             debug="${build.debug}"
        debuglevel="${build.debuglevel}"
@@ -132,6 +133,25 @@
 
 
 
+  <target name="doccheck"
+          depends="filter-doccheck"
+          description="Reports on javadoc style errors">
+
+    <delete dir="${build.doccheck.dir}"/>
+    <mkdir dir="${build.doccheck.dir}"/>
+
+    <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
+         docletpath="${lib.dir}/doccheck.jar"
+            destdir="${build.doccheck.dir}">
+      <packageset dir="${build.dc-filter.dir}"/>
+    </javadoc>
+
+    <echo>DocCheck output is in ${build.doccheck.dir}</echo>
+
+  </target>
+
+
+
   <target name="checkstyle"
           depends="filter-src"
           description="Reports on style errors in Java source (verbose, mostly chaff)">
@@ -150,25 +170,6 @@
     <style in="${build.checkstyle.dir}/checkstyle-report.xml" 
           out="${build.checkstyle.dir}/checkstyle-report.html" 
         style="${stylesheet.dir}/checkstyle-frames.xsl"/>
-
-  </target>
-
-
-
-  <target name="doccheck"
-          depends="filter-doccheck"
-          description="Reports on javadoc style errors">
-
-    <delete dir="${build.doccheck.dir}"/>
-    <mkdir dir="${build.doccheck.dir}"/>
-
-    <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
-         docletpath="${lib.dir}/doccheck.jar"
-            destdir="${build.doccheck.dir}">
-      <packageset dir="${build.dc-filter.dir}"/>
-    </javadoc>
-
-    <echo>DocCheck output is in ${build.doccheck.dir}</echo>
 
   </target>
 
@@ -377,7 +378,7 @@
 
     <mkdir dir="${build.testcases.dir}"/>
 
-    <javac srcdir="${test.src.dir}/tck"
+    <javac srcdir="${tck.src.dir}"
           destdir="${build.testcases.dir}"
             debug="${build.debug}"
        debuglevel="${build.debuglevel}"
@@ -385,6 +386,23 @@
            source="${build.sourcelevel}"
              fork="true">
 
+      <compilerarg value="${bootclasspath.args}"/>
+      <compilerarg line="${build.args}"/>
+      
+      <classpath refid="test.classpath"/>
+
+    </javac>
+
+    <javac srcdir="${test.src.dir}"
+          destdir="${build.testcases.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <include name="jsr166/test/**"/>
+      
       <compilerarg value="${bootclasspath.args}"/>
       <compilerarg line="${build.args}"/>
       
@@ -417,8 +435,11 @@
       <formatter type="xml"/>
 
       <batchtest todir="${build.reports.dir}">
-        <fileset dir="${test.src.dir}/tck">
-          <include name="${testcase}Test.java"/>
+        <fileset dir="${tck.src.dir}">
+          <include name="**/${testcase}Test.java"/>
+        </fileset>
+        <fileset dir="${test.src.dir}">
+          <include name="jsr166/test/**/${testcase}Test.java"/>
         </fileset>
       </batchtest>
 
@@ -462,30 +483,10 @@
     </condition>
 
     <property name="warnunchecked.arg" value=""/>
-    
-    <condition property="prepare.src.dir" value="${build.dir}/prepare-src">
-      <istrue value="${build.nothreads}"/>
-    </condition>
-    
-    <property name="prepare.src.dir" value="${src.dir}"/>
 
 
     <!-- Common options in javac invocations -->
     <property name="build.args" value="${warnunchecked.arg}"/>
-
-  </target>
-
-
-  <target name="prepare-src"
-          depends="configure-compiler"
-          if="prepare.src.dir">
-
-    <mkdir dir="${prepare.src.dir}"/>
-    <copy todir="${prepare.src.dir}">
-      <fileset dir="${src.dir}">
-        <exclude name="java/lang/**"/>
-      </fileset>
-    </copy>
 
   </target>
 
@@ -562,7 +563,7 @@
 
 
 
-  <!-- Backward compatibility, work in progress -->
+  <!-- Backward compatibility, work in progress (some files not checked in) -->
 
 
   <target name="compat" depends="jar">

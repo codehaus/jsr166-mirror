@@ -14,14 +14,16 @@ package java.util;
  * <i>natural order</i> (see {@link Comparable}), or according to a
  * {@link java.util.Comparator}, depending on which constructor is
  * used. A priority queue does not permit <tt>null</tt> elements.
+ * A priority queue relying on natural ordering also does not
+ * permit insertion of non-comparable objects (doing so results
+ * in <tt>ClassCastException</tt>). 
  *
  * <p>The <em>head</em> of this queue is the <em>least</em> element
  * with respect to the specified ordering.  If multiple elements are
  * tied for least value, the head is one of those elements -- ties are
- * broken arbitrarily.  The {@link #remove()} and {@link #poll()}
- * methods remove and return the head of the queue, and the {@link
- * #element()} and {@link #peek()} methods return, but do not delete,
- * the head of the queue.
+ * broken arbitrarily.  The queue retrieval operations <tt>poll</tt>,
+ * <tt>remove</tt>, <tt>peek</tt>, and <tt>element</tt> access the
+ * element at the head of the queue.
  *
  * <p>A priority queue is unbounded, but has an internal
  * <i>capacity</i> governing the size of an array used to store the
@@ -278,7 +280,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             
 
     /**
-     * Inserts the specified element to this priority queue.
+     * Inserts the specified element into this priority queue.
      *
      * @return <tt>true</tt>
      * @throws ClassCastException if the specified element cannot be compared
@@ -321,29 +323,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      */
     public boolean add(E o) {
         return offer(o);
-    }
-
-   
-    /**
-     * Adds all of the elements in the specified collection to this queue.
-     * The behavior of this operation is undefined if
-     * the specified collection is modified while the operation is in
-     * progress.  (This implies that the behavior of this call is undefined if
-     * the specified collection is this queue, and this queue is nonempty.)
-     * <p>
-     * This implementation iterates over the specified collection, and adds
-     * each object returned by the iterator to this collection, in turn.
-     * @param c collection whose elements are to be added to this queue
-     * @return <tt>true</tt> if this queue changed as a result of the
-     *         call.
-     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
-     * is <tt>null</tt>
-     * @throws ClassCastException if any element cannot be compared
-     * with elements currently in the priority queue according
-     * to the priority queue's ordering.
-     */
-    public boolean addAll(Collection<? extends E> c) {
-        return super.addAll(c);
     }
 
     public boolean remove(Object o) {

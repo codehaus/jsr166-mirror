@@ -11,11 +11,13 @@ import java.util.*;
 
 /**
  * An unbounded {@linkplain BlockingQueue blocking queue} based on a
- * {@link PriorityQueue},
- * obeying its ordering rules and implementation characteristics.
- * While this queue is logically unbounded,
- * attempted additions may fail due to resource exhaustion (causing
- * <tt>OutOfMemoryError</tt>).
+ * {@link PriorityQueue}, obeying its ordering rules and
+ * implementation characteristics.  While this queue is logically
+ * unbounded, attempted additions may fail due to resource exhaustion
+ * (causing <tt>OutOfMemoryError</tt>). A priority queue does not
+ * permit <tt>null</tt> elements.  A priority queue relying on natural
+ * ordering also does not permit insertion of non-comparable objects
+ * (doing so results in <tt>ClassCastException</tt>).
  *
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Collection} and {@link Iterator} interfaces.
@@ -117,28 +119,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Adds all of the elements in the specified collection to this queue.
-     * The behavior of this operation is undefined if
-     * the specified collection is modified while the operation is in
-     * progress.  (This implies that the behavior of this call is undefined if
-     * the specified collection is this queue, and this queue is nonempty.)
-     * <p>
-     * This implementation iterates over the specified collection, and adds
-     * each object returned by the iterator to this collection, in turn.
-     * @param c collection whose elements are to be added to this queue
-     * @return <tt>true</tt> if this queue changed as a result of the
-     *         call.
-     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
-     * is <tt>null</tt>
-     * @throws ClassCastException if any element cannot be compared
-     * with elements currently in the priority queue according
-     * to the priority queue's ordering.
-     */
-    public boolean addAll(Collection<? extends E> c) {
-        return super.addAll(c);
-    }
-
-    /**
      * Returns the comparator used to order this collection, or <tt>null</tt>
      * if this collection is sorted according to its elements natural ordering
      * (using <tt>Comparable</tt>).
@@ -151,7 +131,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element to this priority queue.
+     * Inserts the specified element into this priority queue.
      *
      * @param o the element to add
      * @return <tt>true</tt>
@@ -187,7 +167,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Adds the specified element to this priority queue. As the queue is
+     * Inserts the specified element into this priority queue. As the queue is
      * unbounded this method will never block.
      * @param o the element to add
      * @param timeout This parameter is ignored as the method never blocks

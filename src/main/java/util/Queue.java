@@ -83,7 +83,7 @@ package java.util;
 public interface Queue<E> extends Collection<E> {
 
     /**
-     * Inserts the specified element to this queue, if possible.  When
+     * Inserts the specified element into this queue, if possible.  When
      * using queues that may impose insertion restrictions (for
      * example capacity bounds), method <tt>offer</tt> is generally
      * preferable to method {@link Collection#add}, which can fail to

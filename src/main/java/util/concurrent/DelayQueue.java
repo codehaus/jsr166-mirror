@@ -47,7 +47,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element to this delay queue.
+     * Inserts the specified element into this delay queue.
      *
      * @param o the element to add
      * @return <tt>true</tt>
@@ -78,7 +78,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
-     * Adds the specified element to this delay queue. As the queue is
+     * Inserts the specified element into this delay queue. As the queue is
      * unbounded this method will never block.
      * @param o the element to add
      * @param timeout This parameter is ignored as the method never blocks

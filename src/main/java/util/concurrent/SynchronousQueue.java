@@ -313,7 +313,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Adds the specified element to this queue, waiting if necessary
+     * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for another thread to receive it.
      * @param o the element to add
      * @param timeout how long to wait before giving up, in units of
@@ -358,7 +358,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     // Untimed nonblocking versions
 
    /**
-    * Adds the specified element to this queue, if another thread is
+    * Inserts the specified element into this queue, if another thread is
     * waiting to receive it.
     *
     * @param o the element to add.

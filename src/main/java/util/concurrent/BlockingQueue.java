@@ -93,7 +93,7 @@ import java.util.Queue;
 public interface BlockingQueue<E> extends Queue<E> {
 
     /**
-     * Inserts the specified element to this queue, if possible.  When
+     * Inserts the specified element into this queue, if possible.  When
      * using queues that may impose insertion restrictions (for
      * example capacity bounds), method <tt>offer</tt> is generally
      * preferable to method {@link Collection#add}, which can fail to
@@ -105,9 +105,9 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     boolean offer(E o);
-
+    
     /**
-     * Adds the specified element to this queue, waiting if necessary
+     * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for space to become available.
      * @param o the element to add
      * @param timeout how long to wait before giving up, in units of

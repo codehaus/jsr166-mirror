@@ -267,7 +267,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * CAS, except for transitions to CANCELLED, which are
          * unconditionally, "finally" assigned.
          */
-        transient volatile int status;
+        volatile int status;
 
         /**
          * Link to predecessor node that current node/thread relies on
@@ -280,7 +280,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * cancelled thread never gets the lock, and a thread only
          * cancels itself, not any other node.
          */
-        transient volatile LockNode prev;
+        volatile LockNode prev;
 
         /**
          * Link to the successor node that the current node/thread
@@ -296,7 +296,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * double-check.
          *
          */
-        transient volatile LockNode next;
+        volatile LockNode next;
 
         /**
          * The thread that enqueued this node.  Initialized on
@@ -305,7 +305,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * traversing volatile links, and written before writing
          * links.
          */
-        transient Thread thread;
+        Thread thread;
 
         LockNode(Thread t) { 
             thread = t; 
@@ -328,7 +328,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     /** 
      * Head of the wait queue, lazily initialized.  Except for
      * initialisation, it is modified only by a thread upon acquiring
-     * the lock. If head exists, it's node status is guaanteed not to
+     * the lock. If head exists, it's node status is guaranteed not to
      * be CANCELLED.
      */
     private transient volatile LockNode head; 
@@ -1659,6 +1659,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
     }
 
+    /**
+     * Return true if this lock has fairness set true.
+     * @return true if this lock has fairness set true.
+     */
+    public boolean isFair() {
+        return fair;
+    }
 
     /**
      * This class is a minor performance hack, that will hopefully

@@ -461,12 +461,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Always returns <tt>false</tt>.
+     * Returns <tt>false</tt> unless given collection is empty.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     * @return <tt>false</tt>
+     * @return <tt>false</tt> unless given collection is empty
      */
     public boolean containsAll(Collection<?> c) {
-        return false;
+        return c.isEmpty();
     }
 
     /**

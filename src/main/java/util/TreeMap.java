@@ -874,9 +874,6 @@ public class TreeMap<K,V>
     private transient Set<Map.Entry<K,V>> descendingEntrySet = null;
     private transient Set<K> descendingKeySet = null;
 
-    transient Set<K> keySet = null;        // XXX remove when integrated
-    transient Collection<V> values = null; // XXX remove when integrated
-
     /**
      * Returns a Set view of the keys contained in this map.  The set's
      * iterator will return the keys in ascending order.  The set is backed by

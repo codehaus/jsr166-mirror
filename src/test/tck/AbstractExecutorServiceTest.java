@@ -48,7 +48,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             ExecutorService e = new DirectExecutorService();
             TrackedShortRunnable task = new TrackedShortRunnable();
             assertFalse(task.done);
-            Future<?> future = e.submit(task, null);
+            Future<?> future = e.submit(task);
             future.get();
             assertTrue(task.done);
         }
@@ -60,24 +60,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         }
     }
 
-    /**
-     * invoke of a runnable runs it to completion
-     */
-    public void testInvokeRunnable() {
-        try {
-            ExecutorService e = new DirectExecutorService();
-            TrackedShortRunnable task = new TrackedShortRunnable();
-            assertFalse(task.done);
-            e.invoke(task);
-            assertTrue(task.done);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-    }
 
     /**
      * execute of a callable runs it to completion
@@ -188,7 +170,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     }
 
     /**
-     * invoke of a collable runs it to completion
+     * invoke of a callable runs it to completion
      */
     public void testInvokeCallable() {
         try {
@@ -212,7 +194,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         try {
             ExecutorService e = new DirectExecutorService();
             TrackedShortRunnable task = null;
-            Future<?> future = e.submit(task, null);
+            Future<?> future = e.submit(task);
             shouldThrow();
         }
         catch (NullPointerException success) {
@@ -222,22 +204,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         }
     }
 
-    /**
-     * invoke of a null runnable throws NPE
-     */
-    public void testInvokeNullRunnable() {
-        try {
-            ExecutorService e = new DirectExecutorService();
-            TrackedShortRunnable task = null;
-            e.invoke(task);
-            shouldThrow();
-        }
-        catch (NullPointerException success) {
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
-    }
 
     /**
      * execute of a null callable throws NPE
@@ -282,7 +248,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         try {
 
             for(int i = 0; i < 5; ++i){
-                p.submit(new MediumRunnable(), null);
+                p.submit(new MediumRunnable());
             }
             shouldThrow();
         } catch(RejectedExecutionException success){}
@@ -306,7 +272,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
 
 
     /**
-     *  invoke(Executor, Runnable) throws InterruptedException if
+     *  invoke(Executor, Callable) throws InterruptedException if
      *  caller interrupted.
      */
     public void testInterruptedInvoke() {
@@ -314,13 +280,14 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        p.invoke(new Runnable() {
-                                public void run() {
+                        p.invoke(new Callable<Object>() {
+                                public Object call() {
                                     try {
                                         Thread.sleep(MEDIUM_DELAY_MS);
                                         shouldThrow();
                                     } catch(InterruptedException e){
                                     }
+                                    return null;
                                 }
                             });
                     } catch(InterruptedException success){
@@ -339,33 +306,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         }
         joinPool(p);
     }
-
-    /**
-     *  invoke(Executor, Runnable) throws ExecutionException if
-     *  runnable throws exception.
-     */
-    public void testInvoke3() {
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
-        try {
-            Runnable r = new Runnable() {
-                    public void run() {
-                        int i = 5/0;
-                    }
-                };
-
-            for(int i =0; i < 5; i++){
-                p.invoke(r);
-            }
-
-            shouldThrow();
-        } catch(ExecutionException success){
-        } catch(Exception e){
-            unexpectedException();
-        }
-        joinPool(p);
-    }
-
-
 
     /**
      *  invoke(Executor, Callable) throws InterruptedException if

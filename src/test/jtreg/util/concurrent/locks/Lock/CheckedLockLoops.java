@@ -1,10 +1,9 @@
 /*
  * @test %I% %E%
  * @bug 4486658
- * @summary basic safety and liveness of ReentrantLocks, and other locks based on them
- *
  * @compile -source 1.5 CheckedLockLoops.java
- * @run main CheckedLockLoops
+ * @run main/timeout=7200 CheckedLockLoops
+ * @summary basic safety and liveness of ReentrantLocks, and other locks based on them
  */
 
 import java.util.concurrent.*;

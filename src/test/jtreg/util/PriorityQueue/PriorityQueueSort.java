@@ -1,10 +1,9 @@
 /*
  * @test %I% %E%
  * @bug 4486658
- * @summary Checks that a priority queue returns elements in sorted order across various operations
- *
  * @compile -source 1.5 PriorityQueueSort.java
  * @run main PriorityQueueSort
+ * @summary Checks that a priority queue returns elements in sorted order across various operations
  */
 
 import java.util.*;

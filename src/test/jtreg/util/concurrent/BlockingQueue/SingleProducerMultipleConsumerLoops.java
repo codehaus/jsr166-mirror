@@ -1,10 +1,9 @@
 /*
  * @test %I% %E%
  * @bug 4486658
- * @summary  check ordering for blocking queues with 1 producer and multiple consumers
- *
  * @compile -source 1.5 SingleProducerMultipleConsumerLoops.java
- * @run main SingleProducerMultipleConsumerLoops
+ * @run main/timeout=600 SingleProducerMultipleConsumerLoops
+ * @summary  check ordering for blocking queues with 1 producer and multiple consumers
  */
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166

@@ -1,10 +1,9 @@
 /**
  * @test %I% %E%
  * @bug 4486658
- * @summary Times and checks basic map operations
- *
  * @compile -source 1.5 MapCheck.java
- * @run main MapCheck
+ * @run main/timeout=240 MapCheck
+ * @summary Times and checks basic map operations
  */
 import java.util.*;
 import java.io.*;

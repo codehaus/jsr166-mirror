@@ -1,10 +1,9 @@
 /*
  * @test %I% %E%
  * @bug 4486658
- * @summary Checks that a set of threads can repeatedly get and modify items
- *
  * @compile -source 1.5 ConcurrentQueueLoops.java
- * @run main ConcurrentQueueLoops
+ * @run main/timeout=230 ConcurrentQueueLoops
+ * @summary Checks that a set of threads can repeatedly get and modify items
  */
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166

@@ -1,11 +1,9 @@
 /* 
  * @test %I% %E%
  * @bug 4486658
- * @summary Exercise multithreaded maps, byt default ConcurrentHashMap
- *
  * @compile -source 1.5 MapLoops.java
- * @run main MapLoops
- *
+ * @run main/timeout=1600 MapLoops
+ * @summary Exercise multithreaded maps, by default ConcurrentHashMap.
  * Multithreaded hash table test.  Each thread does a random walk
  * though elements of "key" array. On each iteration, it checks if
  * table includes key.  If absent, with probablility pinsert it

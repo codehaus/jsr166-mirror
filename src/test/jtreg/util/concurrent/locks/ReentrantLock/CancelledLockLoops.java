@@ -1,11 +1,9 @@
 /*
  * @test %I% %E%
  * @bug 4486658
- * @summary tests lockInterruptibly
- *
  * @compile -source 1.5 CancelledLockLoops.java
- * @run main CancelledLockLoops
- *
+ * @run main/timeout=2800 CancelledLockLoops
+ * @summary tests lockInterruptibly.
  * Checks for responsiveness of locks to interrupts. Runs under that
  * assumption that ITERS_VALUE computations require more than TIMEOUT
  * msecs to complete.

@@ -1,11 +1,9 @@
 /*
  * @test %I% %E%
  * @bug 4486658
- * @summary Checks for responsiveness of locks to timeouts.
- *
  * @compile -source 1.5 TimeoutLockLoops.java
  * @run main TimeoutLockLoops
- *
+ * @summary Checks for responsiveness of locks to timeouts.
  * Runs under the assumption that ITERS computations require more than
  * TIMEOUT msecs to complete, which seems to be a safe assumption for
  * another decade.

@@ -178,8 +178,7 @@ public class Executors {
     /**
      * Creates a thread pool that can schedule commands to run after a 
      * given delay, or to execute periodically.
-     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
-     * an <tt>ExecutorService</tt>.
+     * @return a newly created scheduled thread pool with termination management
      */
     public static ScheduledExecutorService newScheduledThreadPool() {
         return newScheduledThreadPool(1);
@@ -190,8 +189,7 @@ public class Executors {
      * given delay, or to execute periodically.
      * @param corePoolSize the number of threads to keep in the pool,
      * even if they are idle.
-     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
-     * an <tt>ExecutorService</tt>.
+     * @return a newly created scheduled thread pool with termination management
      */
     public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
         return new DelegatedScheduledExecutorService
@@ -205,8 +203,7 @@ public class Executors {
      * even if they are idle.
      * @param threadFactory the factory to use when the executor
      * creates a new thread. 
-     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
-     * an <tt>ExecutorService</tt>.
+     * @return a newly created scheduled thread pool with termination management
      */
     public static ScheduledExecutorService newScheduledThreadPool(
             int corePoolSize, ThreadFactory threadFactory) {

@@ -30,7 +30,9 @@ import java.util.*;
  * @since 1.5
  * @author Doug Lea
  */
-public class ScheduledThreadPoolExecutor extends ThreadPoolExecutor implements ScheduledExecutor {
+public class ScheduledThreadPoolExecutor 
+        extends ThreadPoolExecutor 
+        implements ScheduledExecutorService {
 
     /**
      * False if should cancel/suppress periodic tasks on shutdown.

@@ -6,6 +6,7 @@
 
 package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
+import java.util.*;
 
 /**
  * An <tt>int</tt> array in which elements may be updated atomically.
@@ -226,7 +227,6 @@ public class AtomicIntegerArray implements java.io.Serializable {
                 return next;
         }
     }
-  
-
+ 
 
 }

@@ -132,4 +132,5 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     public final boolean weakCompareAndSet(int i, E expect, E update) {
         return compareAndSet(i, expect, update);
     }
+
 }

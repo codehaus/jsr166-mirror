@@ -85,8 +85,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/21 13:29:13 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/01/22 00:31:59 $
+ * @editor $Author: dholmes $
  *
  */
 public class Semaphore {
@@ -216,7 +216,7 @@ public class Semaphore {
      * <p>This method is typically used for debugging and testing purposes.
      * @return the number of permits available in this semaphore.
      */
-    public long getPermits() {
+    public long availablePermits() {
         return permits;
     }
 }

@@ -251,8 +251,8 @@
     <echo>java.home is ${java.home}</echo>
 
   </target>
-
-
+  
+  
   <target name="dist-jar"
           depends="clean, jar">
 
@@ -562,11 +562,9 @@
   </target>
 
 
-
-  <!-- Backward compatibility, work in progress (some files not checked in) -->
-
-
-  <target name="compat" depends="jar">
+  <!-- Standalone sample program -->
+  
+  <target name="sample" depends="jar">
   
     <mkdir dir="${build.testcases.dir}"/>
     
@@ -583,16 +581,20 @@
       
       <classpath refid="test.classpath"/>
       
-      <include name="Compatibility.java"/>
+      <include name="jsr166/test/Sample.java"/>
       
     </javac>
     
              
-    <java classname="Compatibility" fork="true">
+    <java classname="jsr166.test.Sample" fork="true">
       <jvmarg value="${bootclasspath.args}"/>
       <classpath refid="test.classpath"/>
     </java>
   </target>
+
+
+
+  <!-- Backward compatibility, work in progress (some files not checked in) -->
 
 
 

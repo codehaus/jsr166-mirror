@@ -230,24 +230,6 @@ public class Executors {
     }
 
     /**
-     * Executes a Runnable task and returns a Future representing that
-     * task.
-     *
-     * @param executor the Executor to which the task will be submitted
-     * @param task the task to submit
-     * @param value the value which will become the return value of
-     * the task upon task completion
-     * @return a Future representing pending completion of the task
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     */
-    public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
-        FutureTask<T> ftask = new FutureTask<T>(task, value);
-        executor.execute(ftask);
-        return ftask;
-    }
-
-    /**
      * Executes a value-returning task and returns a Future
      * representing the pending results of the task.
      *

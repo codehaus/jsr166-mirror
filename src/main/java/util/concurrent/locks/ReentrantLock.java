@@ -64,7 +64,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/13 10:23:42 $
+ * @revised $Date: 2003/07/13 22:52:03 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -211,9 +211,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * there is no contention). The special value of CANCELLED is used
          * to mean that the releaseStatus cannot be either incremented or
          * decremented.  The special value of ON_CONDITION_QUEUE is used
-         * when nodes are on conditions queues instead of lock queue, and
-         * the special value TRANSFERRING is used while signals are in
-         * progress.
+         * when nodes are on conditions queues instead of lock queue.
          */
         transient volatile int releaseStatus;
 
@@ -348,13 +346,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * condition queue. Must be large negative number.
      */
     private static final int ON_CONDITION_QUEUE = Integer.MIN_VALUE;
-
-    /**
-     * Special value for node releaseStatus indicating that node is in
-     * process of transfer. Must be negative and greater than
-     * ON_CONDITION_QUEUE.
-     */
-    private static final int TRANSFERRING = ON_CONDITION_QUEUE + 1;
 
     /**
      * Return whether lock wait queue is empty
@@ -930,8 +921,18 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * a condition queue, is off the condition queue (and thus,
      * normally is now on lock queue.)
      */
-    boolean isOffConditionQueue(ReentrantLockQueueNode w) {
-        return w.releaseStatus > TRANSFERRING;
+    boolean isOnLockQueue(ReentrantLockQueueNode w) {
+        if (w.releaseStatus == ON_CONDITION_QUEUE || w.prev == null)
+            return false;
+        /*
+         * w.prev can be non-null, but not yet on lock queue because
+         * the CAS to place it on queue can fail. So we have
+         * to traverse from tail to make sure it actually made it.
+         */
+        for (ReentrantLockQueueNode t = tail; t != null; t = t.prev)
+            if (t == w)
+                return true;
+        return false;
     } 
 
     /**
@@ -940,12 +941,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     final boolean transferToLockQueue(ReentrantLockQueueNode node) {
         /*
-         * Atomically change status to TRANSFERRING to avoid races
-         * with cancelling waiters. We use a special value that causes
-         * any waiters spuriously waking up to re-park until the node
-         * has been placed on lock queue.
+         * If cannot atomically change status, then a cancellation
+         * lost to a signal, or vice versa.
          */
-        if (!casReleaseStatus(node, ON_CONDITION_QUEUE, TRANSFERRING))
+        if (!casReleaseStatus(node, ON_CONDITION_QUEUE, 0))
             return false;
 
         /*
@@ -956,30 +955,44 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         ReentrantLockQueueNode p = enq(node);
 
         /*
-         * Establish normal lock-queue releaseStatus for node.  The
-         * CAS can fail if node already was involved in a cancellation
-         * on lock-queue, in which case we signal to be sure.
+         * Ensure releaseStatus of predecessor is negative to indicate
+         * that thread is (probably) waiting. If already negative or
+         * attempt to set releaseStatus fails, wake up to resynch.
          */
-        if (!casReleaseStatus(node, TRANSFERRING, 0)) {
-            signalSuccessor(node);
+
+        for (;;) {
+            int c = p.releaseStatus;
+            if (c == CANCELLED)  // Ignore cancelled nodes
+                node.prev = p = p.prev;
+            else {
+                if (c < 0 || !casReleaseStatus(p, c, -1)) {
+                    // Don't unpark self (when called from cancellation).
+                    Thread t = node.thread;
+                    if (t != null && t != Thread.currentThread()) {
+                        LockSupport.unpark(node, t);
+                    }
+                }
+                break;
+            }
         }
 
-        /*
-         * Ensure releaseStatus of predecessor is negative to indicate
-         * that thread is (probably) waiting. If attempt to set releaseStatus
-         * fails or is pred is/becomes cancelled, wake up successor
-         * (which will ordinarily be "node") to resynch.
-         */
-
-        int c;
-        do {
-            c = p.releaseStatus;
-            if (c < 0 || (c != CANCELLED && casReleaseStatus(p, c, -1)))
-                break;
-            signalSuccessor(p);
-        } while (c != CANCELLED);
-
         return true;
+    }
+
+    /**
+     * Transfer a node upon cancellation of a wait.
+     */
+    void transferCancelledWaiter(ReentrantLockQueueNode w) {
+        if (!transferToLockQueue(w)) {
+            /*
+             * If we lost race to a signal(), then we can't proceed
+             * until it succeeds in placing us on lock queue. 
+             * So just spin.
+             */
+            
+            while (!isOnLockQueue(w))
+                Thread.yield();
+        }
     }
 
     private class ReentrantLockConditionObject implements Condition, java.io.Serializable {
@@ -1067,20 +1080,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             int recs = unlockForWait();
 
             boolean wasInterrupted = false;
-            while (!isOffConditionQueue(w) &&
-                   !(wasInterrupted = Thread.interrupted()))
+            for (;;) {
+                if (wasInterrupted = Thread.interrupted()) {
+                    transferCancelledWaiter(w);
+                    break;
+                }
+                if (isOnLockQueue(w))
+                    break;
                 LockSupport.park(w);
-
-            /**
-             * If cancelled, kill node and allow relock below to make
-             * a new one for lock re-acquistion.  If not cancelled,
-             * our node is already in the lock queue when relock is
-             * called.
-             */ 
-            if (wasInterrupted &&
-                casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
-                w.thread = null;
-                w = null;
             }
 
             relockAfterWait(current, w, recs);
@@ -1095,7 +1102,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             int recs = unlockForWait();
 
             boolean wasInterrupted = false;
-            while (!isOffConditionQueue(w)) {
+            while (!isOnLockQueue(w)) {
                 LockSupport.park(w);
                 if (Thread.interrupted()) 
                     wasInterrupted = true;
@@ -1119,15 +1126,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             long startTime = System.nanoTime();
             boolean wasInterrupted = false;
 
-            while (!isOffConditionQueue(w) &&
-                   !(wasInterrupted = Thread.interrupted()) &&
-                   (timeLeft = nanos - (System.nanoTime() - startTime)) > 0)
+            for (;;) {
+                if ((wasInterrupted = Thread.interrupted()) ||
+                    (timeLeft = nanos - (System.nanoTime()-startTime)) <= 0) {
+                    transferCancelledWaiter(w);
+                    break;
+                }
+                if (isOnLockQueue(w))
+                    break;
                 LockSupport.parkNanos(w, timeLeft);
-
-            if ((wasInterrupted || timeLeft <= 0) &&
-                casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
-                w.thread = null;
-                w = null;
             }
 
             relockAfterWait(current, w, recs);
@@ -1147,25 +1154,23 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
             boolean wasInterrupted = false;
             boolean timedOut = false;
-            boolean cancelled = false;
             long abstime = deadline.getTime();
 
-            while (!isOffConditionQueue(w) &&
-                   !(wasInterrupted = Thread.interrupted()) &&
-                   !(timedOut = System.currentTimeMillis() > abstime))
+            for (;;) {
+                if ((wasInterrupted = Thread.interrupted()) ||
+                    (timedOut = System.currentTimeMillis() > abstime)) {
+                    transferCancelledWaiter(w);
+                    break;
+                }
+                if (isOnLockQueue(w))
+                    break;
                 LockSupport.parkUntil(w, abstime);
-
-            if ((wasInterrupted || timedOut) &&
-                casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
-                w.thread = null;
-                w = null;
-                cancelled = true;
             }
 
             relockAfterWait(current, w, recs);
             if (wasInterrupted || Thread.interrupted())
                 throw new InterruptedException();
-            return !cancelled;
+            return !timedOut;
         }
 
         public boolean await(long time, TimeUnit unit) throws InterruptedException {

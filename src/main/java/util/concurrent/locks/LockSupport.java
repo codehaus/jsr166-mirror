@@ -80,12 +80,14 @@ public class LockSupport {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
 
     /**
-     * Make available the permit for the given thread, if it was not already
-     * available.
-     * If the thread was blocked on <tt>park</tt> then it will unblock. 
-     * Otherwise, it's next call to <tt>park</tt> is guaranteed not to block.
+     * Make available the permit for the given thread, if it
+     * was not already available.  If the thread was blocked on
+     * <tt>park</tt> then it will unblock.  Otherwise, it's next call
+     * to <tt>park</tt> is guaranteed not to block. This operation
+     * is not guaranteed to have any effect at all if the given
+     * thread has not been started.
      * @param thread the thread to unpark, or <tt>null</tt>, in which case
-     * this operation has no effect.
+     * this operation has no effect. 
      */
     public static void unpark(Thread thread) {
         if (thread != null)

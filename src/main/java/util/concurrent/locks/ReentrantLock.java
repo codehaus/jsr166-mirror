@@ -902,7 +902,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * control.
      * @return the estimated number of threads waiting for this lock
      */
-    public int getLockQueueLength() {
+    public int getQueueLength() {
         int n = 0;
         for (LockNode p = tail; p != null && p != head; p = p.prev)
             ++n;

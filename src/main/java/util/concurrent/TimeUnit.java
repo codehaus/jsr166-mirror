@@ -39,7 +39,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/30 14:52:52 $
+ * @revised $Date: 2003/08/30 14:59:27 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -51,13 +51,13 @@ public final class TimeUnit implements java.io.Serializable {
      * truncate, so lose precision. Conversions from coarser to finer
      * granularities with arguments that would numerically overflow
      * saturate to <tt>Long.MIN_VALUE</tt> if negative or
-     * <tt>Long>MAX_VALUE</tt> if positive.
+     * <tt>Long.MAX_VALUE</tt> if positive.
      *
      * @param duration the time duration in the given <tt>unit</tt>
      * @param unit the unit of the <tt>duration</tt> argument
      * @return the converted duration in the current unit,
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
-     * overflow, or <tt>Long>MAX_VALUE</tt> if it would positively overflow.
+     * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      */
     public long convert(long duration, TimeUnit unit) {
         if (unit == this)
@@ -79,7 +79,7 @@ public final class TimeUnit implements java.io.Serializable {
      * @param duration the duration
      * @return the converted duration.
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
-     * overflow, or <tt>Long>MAX_VALUE</tt> if it would positively overflow.
+     * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      **/
     public long toNanos(long duration) {
         if (index == NS)

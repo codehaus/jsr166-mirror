@@ -13,7 +13,7 @@ import java.util.*;
  * execution methods. This class implements the <tt>submit</tt>,
  * <tt>invokeAny</tt> and <tt>invokeAll</tt> methods using the default
  * {@link FutureTask} class provided in this package.  For example,
- * the the implementation of <tt>submit(Runnable)</tt> creates an
+ * the implementation of <tt>submit(Runnable)</tt> creates an
  * associated <tt>FutureTask</tt> that is executed and
  * returned. Subclasses overriding these methods to use different
  * {@link Future} implementations should do so consistently for each
@@ -62,9 +62,9 @@ public abstract class AbstractExecutorService implements ExecutorService {
 
         // For efficiency, especially in executors with limited
         // parallelism, check to see if previously submitted tasks are
-        // done before submitting more of them. This interleaving,
+        // done before submitting more of them. This interleaving
         // plus the exception mechanics account for messiness of main
-        // loop
+        // loop.
 
         try {
             // Record exceptions so that if we fail to obtain any

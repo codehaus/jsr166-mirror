@@ -17,9 +17,10 @@ import java.util.*;
  * this class extends) are required.
  *
  * <p> Delayed tasks execute no sooner than they are enabled, but
- * without any real-time guarantees about when, after they are enabled,
- * they will commence. Tasks tied for the same execution time are
- * enabled in first-in-first-out (FIFO) order of submission. 
+ * without any real-time guarantees about when, after they are
+ * enabled, they will commence. Tasks scheduled for exactly the same
+ * execution time are enabled in first-in-first-out (FIFO) order of
+ * submission.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not useful for it. In
@@ -54,7 +55,7 @@ public class ScheduledThreadPoolExecutor
     private static final long NANO_ORIGIN = System.nanoTime();
 
     /**
-     * Return nanosecond time offset by origin
+     * Returns nanosecond time offset by origin
      */
     final long now() {
 	return System.nanoTime() - NANO_ORIGIN;
@@ -126,7 +127,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Return true if this is a periodic (not a one-shot) action.
+         * Returns true if this is a periodic (not a one-shot) action.
          * @return true if periodic
          */
         boolean isPeriodic() {
@@ -453,13 +454,13 @@ public class ScheduledThreadPoolExecutor
      * awaiting execution. 
      *  
      * <p>There are no guarantees beyond best-effort attempts to stop
-     * processing actively executing tasks.  This implementations
-     * cancels via {@link Thread#interrupt}, so if any tasks mask or
+     * processing actively executing tasks.  This implementation
+     * cancels tasks via {@link Thread#interrupt}, so if any tasks mask or
      * fail to respond to interrupts, they may never terminate.
      *
      * @return list of tasks that never commenced execution.  Each
      * element of this list is a {@link ScheduledFuture},
-     * including those tasks submitted using <tt>execute</tt> which
+     * including those tasks submitted using <tt>execute</tt>, which
      * are for scheduling purposes used as the basis of a zero-delay
      * <tt>ScheduledFuture</tt>.
      */

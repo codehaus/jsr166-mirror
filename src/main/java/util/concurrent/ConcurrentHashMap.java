@@ -135,7 +135,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Small Utilities -------------- */
 
     /**
-     * Return a hash code for non-null Object x.
+     * Returns a hash code for non-null Object x.
      * Uses the same hash code spreader as most other java.util hash tables.
      * @param x the object serving as a key
      * @return the hash code
@@ -150,7 +150,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Return the segment that should be used for key with given hash
+     * Returns the segment that should be used for key with given hash
+     * @param hash the hash code for the key
+     * @return the segment
      */
     final Segment<K,V> segmentFor(int hash) {
         return (Segment<K,V>) segments[(hash >>> segmentShift) & segmentMask];
@@ -519,7 +521,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Public operations -------------- */
 
     /**
-     * Constructs a new, empty map with the specified initial
+     * Creates a new, empty map with the specified initial
      * capacity and the specified load factor.
      *
      * @param initialCapacity the initial capacity. The implementation
@@ -565,7 +567,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Constructs a new, empty map with the specified initial
+     * Creates a new, empty map with the specified initial
      * capacity,  and with default load factor and concurrencyLevel.
      *
      * @param initialCapacity The implementation performs internal
@@ -578,7 +580,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Constructs a new, empty map with a default initial capacity,
+     * Creates a new, empty map with a default initial capacity,
      * load factor, and concurrencyLevel.
      */
     public ConcurrentHashMap() {
@@ -586,7 +588,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Constructs a new map with the same mappings as the given map.  The
+     * Creates a new map with the same mappings as the given map.  The
      * map is created with a capacity of twice the number of mappings in
      * the given map or 11 (whichever is greater), and a default load factor.
      * @param t the map
@@ -755,9 +757,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Maps the specified <tt>key</tt> to the specified
      * <tt>value</tt> in this table. Neither the key nor the
-     * value can be <tt>null</tt>. <p>
+     * value can be <tt>null</tt>. 
      *
-     * The value can be retrieved by calling the <tt>get</tt> method
+     * <p> The value can be retrieved by calling the <tt>get</tt> method
      * with a key that is equal to the original key.
      *
      * @param      key     the table key.

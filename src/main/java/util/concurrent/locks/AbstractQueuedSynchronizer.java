@@ -37,7 +37,7 @@ import sun.misc.Unsafe;
  * <p>This class supports either or both a default <em>exclusive</em>
  * mode and a <em>shared</em> mode. When acquired in exclusive mode,
  * attempted acquires by other threads cannot succeed. Shared mode
- * acquires may (but need not) succeed by multiple threads. This class
+ * acquires by multiple threads may (but need not) succeed. This class
  * does not &quot;understand&quot; these differences except in the
  * mechanical sense that when a shared mode acquire succeeds, the next
  * waiting thread (if one exists) must also determine whether it can
@@ -47,18 +47,18 @@ import sun.misc.Unsafe;
  * {@link ReadWriteLock}. Subclasses that support only exclusive or
  * only shared modes need not define the methods supporting the unused mode.
  *
- * <p>This class defines a nested {@link Condition} class that can be
- * used with subclasses supporting exclusive mode for which method
- * {@link #isHeldExclusively} reports whether synchronization is
- * exclusively held with respect to the current thread, method
- * {@link #release} invoked with the current {@link #getState} value
- * fully releases this object, and {@link #acquire}, given this saved
- * state value, eventually restores this object to its previous
- * acquired state.  No <tt>AbstractQueuedSynchronizer</tt> method
- * otherwise creates such a condition, so if this constraint cannot be
- * met, do not use it.  The behavior of {@link ConditionObject}
- * depends of course on the semantics of its synchronizer
- * implementation.
+ * <p>This class defines a nested {@link ConditionObject} class that
+ * can be used as a {@link Condition} implementation by subclasses
+ * supporting exclusive mode for which method {@link
+ * #isHeldExclusively} reports whether synchronization is exclusively
+ * held with respect to the current thread, method {@link #release}
+ * invoked with the current {@link #getState} value fully releases
+ * this object, and {@link #acquire}, given this saved state value,
+ * eventually restores this object to its previous acquired state.  No
+ * <tt>AbstractQueuedSynchronizer</tt> method otherwise creates such a
+ * condition, so if this constraint cannot be met, do not use it.  The
+ * behavior of {@link ConditionObject} depends of course on the
+ * semantics of its synchronizer implementation.
  * 
  * <p> This class provides inspection, instrumentation, and monitoring
  * methods for the internal queue, as well as similar methods for
@@ -139,7 +139,7 @@ import sun.misc.Unsafe;
  * computations before blocking.  This gives most of the benefits of
  * spins when exclusive synchronization is only briefly held, without
  * most of the liabilities when it isn't. If so desired, you can
- * augment this by preceeding calls to acquire methods with
+ * augment this by preceding calls to acquire methods with
  * "fast-path" checks, possibly prechecking {@link #hasContended}
  * and/or {@link #hasQueuedThreads} to only do so if the synchronizer
  * is likely not to be contended.
@@ -634,8 +634,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Check and update status for a node that failed to acquire.
-     * Return true if thread should block. This is the main signal
+     * Checks and updates status for a node that failed to acquire.
+     * Returns true if thread should block. This is the main signal
      * control in all acquire loops.  Requires that pred == node.prev
      * @param pred node's predecessor holding status
      * @param node the node 
@@ -926,7 +926,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Attempts to set the state to reflect a release in exclusive
      * mode.  <p>This method is always invoked by the thread
-     * performing release.  <p>The default implementation throws
+     * performing release.  
+     *
+     * <p>The default implementation throws
      * {@link UnsupportedOperationException}
      * @param arg the release argument. This value
      * is always the one passed to a release method,
@@ -1142,7 +1144,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
    }
 
     /**
-     * Attepts to acquire in shared mode, aborting if interrupted, and
+     * Attempts to acquire in shared mode, aborting if interrupted, and
      * failing if the given timeout elapses.  Implemented by first
      * checking interrupt status, then invoking at least once {@link
      * #tryAcquireShared}, returning on success.  Otherwise, the
@@ -1169,7 +1171,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * threads if {@link #tryReleaseShared} returns true. 
      * @param arg the release argument.
      * This value is conveyed to {@link #tryReleaseShared} but is
-     * is otherwise uninterpreted and can represent anything
+     * otherwise uninterpreted and can represent anything
      * you like.
      * @return the value returned from {@link #tryReleaseShared} 
      */
@@ -1395,7 +1397,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     // Internal support methods for Conditions
 
     /**
-     * Return true if a node, always one that was initially placed on
+     * Returns true if a node, always one that was initially placed on
      * a condition queue, is now waiting to reacquire on sync queue.
      * @param node the node
      * @return true if is reacquiring
@@ -1417,7 +1419,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     } 
 
     /**
-     * Return true if node is on sync queue by searching backwards from tail.
+     * Returns true if node is on sync queue by searching backwards from tail.
      * Called only when needed by isOnSyncQueue.
      * @return true if present
      */
@@ -1433,8 +1435,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Transfer a node from a condition queue onto sync queue. 
-     * Return true if successful.
+     * Transfers a node from a condition queue onto sync queue. 
+     * Returns true if successful.
      * @param node the node
      * @return true if successfully transferred (else the node was
      * cancelled before signal).
@@ -1450,7 +1452,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Splice onto queue and try to set waitStatus of predecessor to
          * indicate that thread is (probably) waiting. If cancelled or
          * attempt to set waitStatus fails, wake up to resync (in which
-         * case the waitStatus can be transiently abd harmlessly wrong).
+         * case the waitStatus can be transiently and harmlessly wrong).
          */
         Node p = enq(node);
         int c = p.waitStatus;

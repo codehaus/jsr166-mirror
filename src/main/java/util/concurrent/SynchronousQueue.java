@@ -11,18 +11,18 @@ import java.util.*;
 /**
  * A {@linkplain BlockingQueue blocking queue} in which each
  * <tt>put</tt> must wait for a <tt>take</tt>, and vice versa.  A
- * synchronous queue does not have any internal capacity - in
- * particular it does not have a capacity of one. You cannot
- * <tt>peek</tt> at a synchronous queue because an element is only
- * present when you try to take it; you cannot add an element (using
- * any method) unless another thread is trying to remove it; you
- * cannot iterate as there is nothing to iterate.  The <em>head</em>
- * of the queue is the element that the first queued thread is trying
- * to add to the queue; if there are no queued threads then no element
- * is being added and the head is <tt>null</tt>.  For purposes of
- * other <tt>Collection</tt> methods (for example <tt>contains</tt>),
- * a <tt>SynchronousQueue</tt> acts as an empty collection.  This
- * queue does not permit <tt>null</tt> elements.
+ * synchronous queue does not have any internal capacity, not even a
+ * capacity of one. You cannot <tt>peek</tt> at a synchronous queue
+ * because an element is only present when you try to take it; you
+ * cannot add an element (using any method) unless another thread is
+ * trying to remove it; you cannot iterate as there is nothing to
+ * iterate.  The <em>head</em> of the queue is the element that the
+ * first queued thread is trying to add to the queue; if there are no
+ * queued threads then no element is being added and the head is
+ * <tt>null</tt>.  For purposes of other <tt>Collection</tt> methods
+ * (for example <tt>contains</tt>), a <tt>SynchronousQueue</tt> acts
+ * as an empty collection.  This queue does not permit <tt>null</tt>
+ * elements.
  *
  * <p>Synchronous queues are similar to rendezvous channels used in
  * CSP and Ada. They are well suited for handoff designs, in which an
@@ -88,14 +88,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Creates a <tt>SynchronousQueue</tt> with nonfair access policy.
      */
     public SynchronousQueue() {
-        qlock = new ReentrantLock();
-        waitingProducers = new LifoWaitQueue();
-        waitingConsumers = new LifoWaitQueue();
+        this(false);
     }
 
     /**
      * Creates a <tt>SynchronousQueue</tt> with specified fairness policy.
-     * @param fair if true, threads contend in FIFO order for access.
+     * @param fair if true, threads contend in FIFO order for access;
+     * otherwise the order is unspecified.
      */
     public SynchronousQueue(boolean fair) {
         if (fair) {
@@ -113,7 +112,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Queue to hold waiting puts/takes; specialized to FiFo/Lifo below.
      * These queues have all transient fields, but are serializable
-     * in order to retain fairness settings when deserialized.
+     * in order to recover fairness settings when deserialized.
      */
     static abstract class WaitQueue implements java.io.Serializable {
         /** Create, add, and return node for x */
@@ -163,8 +162,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
         Node deq() {
             Node p = head;
-            if (p != null)
+            if (p != null) {
                 head = p.next;
+                p.next = null;
+            }
             return p;
         }
     }
@@ -186,10 +187,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /** Next node in wait queue */
         Node next;
 
-        /** Create node with initial item */
+        /** Creates a node with initial item */
         Node(Object x) { item = x; }
 
-        /** Create node with initial item and next */
+        /** Creates a node with initial item and next */
         Node(Object x, Node n) { item = x; next = n; }
 
         /**
@@ -207,7 +208,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Take item and null out field (for sake of GC)
+         * Takes item and nulls out field (for sake of GC)
          */
         private Object extract() {
             Object x = item;
@@ -216,7 +217,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Try to cancel on interrupt; if so rethrowing,
+         * Tries to cancel on interrupt; if so rethrowing,
          * else setting interrupt state
          */
         private void checkCancellationOnInterrupt(InterruptedException ie) 
@@ -227,7 +228,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Fill in the slot created by the consumer and signal consumer to
+         * Fills in the slot created by the consumer and signal consumer to
          * continue.
          */
         boolean setItem(Object x) {
@@ -236,7 +237,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Remove item from slot created by producer and signal producer
+         * Removes item from slot created by producer and signal producer
          * to continue.
          */
         Object getItem() {
@@ -244,7 +245,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a consumer to take item placed by producer.
+         * Waits for a consumer to take item placed by producer.
          */
         void waitForTake() throws InterruptedException {
             try {
@@ -255,7 +256,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a producer to put item placed by consumer.
+         * Waits for a producer to put item placed by consumer.
          */
         Object waitForPut() throws InterruptedException {
             try {
@@ -267,7 +268,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a consumer to take item placed by producer or time out.
+         * Waits for a consumer to take item placed by producer or time out.
          */
         boolean waitForTake(long nanos) throws InterruptedException {
             try {
@@ -281,7 +282,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a producer to put item placed by consumer, or time out.
+         * Waits for a producer to put item placed by consumer, or time out.
          */
         Object waitForPut(long nanos) throws InterruptedException {
             try {
@@ -294,8 +295,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             return extract();
         }
     }
-
-
 
     /**
      * Adds the specified element to this queue, waiting if necessary for

@@ -20,9 +20,9 @@ import java.util.*;
 /**
  * A variant of {@link java.util.ArrayList} in which all mutative
  * operations (add, set, and so on) are implemented by making a fresh
- * copy of the underlying array.  <p>
+ * copy of the underlying array.  
  *
- * This is ordinarily too costly, but may be <em>more</em> efficient
+ * <p> This is ordinarily too costly, but may be <em>more</em> efficient
  * than alternatives when traversal operations vastly outnumber
  * mutations, and is useful when you cannot or don't want to
  * synchronize traversals, yet need to preclude interference among
@@ -822,8 +822,10 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns the hash code value for this List.  <p> This
-     * implementation uses the definition in {@link List#hashCode}.
+     * Returns the hash code value for this List.  
+     *
+     * <p> This implementation uses the definition in {@link
+     * List#hashCode}.
      * @return the hash code
      */
     public int hashCode() {

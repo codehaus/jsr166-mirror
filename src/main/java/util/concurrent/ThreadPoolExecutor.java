@@ -986,7 +986,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /** 
-     * Return true if this executor is in the process of terminating
+     * Returns true if this executor is in the process of terminating
      * after <tt>shutdown</tt> or <tt>shutdownNow</tt> but has not
      * completely terminated.  This method may be useful for
      * debugging. A return of <tt>true</tt> reported a sufficient
@@ -1187,7 +1187,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Start a core thread, causing it to idly wait for work. This
+     * Starts a core thread, causing it to idly wait for work. This
      * overrides the default policy of starting core threads only when
      * new tasks are executed. This method will return <tt>false</tt>
      * if all core threads have already been started.
@@ -1198,7 +1198,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Start all core threads, causing them to idly wait for work. This
+     * Starts all core threads, causing them to idly wait for work. This
      * overrides the default policy of starting core threads only when
      * new tasks are executed. 
      * @return the number of threads started.

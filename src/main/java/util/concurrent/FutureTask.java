@@ -35,7 +35,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
     private final Sync sync;
 
     /**
-     * Constructs a <tt>FutureTask</tt> that will upon running, execute the
+     * Creates a <tt>FutureTask</tt> that will upon running, execute the
      * given <tt>Callable</tt>.
      *
      * @param  callable the callable task
@@ -48,7 +48,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     /**
-     * Constructs a <tt>FutureTask</tt> that will upon running, execute the
+     * Creates a <tt>FutureTask</tt> that will upon running, execute the
      * given <tt>Runnable</tt>, and arrange that <tt>get</tt> will return the
      * given result on successful completion.
      *

@@ -194,9 +194,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
     static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
     
-    /** Return the number of shared holds represented in count  */
+    /** Returns the number of shared holds represented in count  */
     static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
-    /** Return the number of exclusive holds represented in count  */
+    /** Returns the number of exclusive holds represented in count  */
     static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
 
     /** 
@@ -880,7 +880,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     // Instrumentation and status
 
     /**
-     * Return true if this lock has fairness set true.
+     * Returns true if this lock has fairness set true.
      * @return true if this lock has fairness set true.
      */
     public final boolean isFair() {
@@ -932,7 +932,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Queries the number of reentrant write holds on this lock by the
-     * current thread.  <p>A writer thread has a hold on a lock for
+     * current thread.  A writer thread has a hold on a lock for
      * each lock action that is not matched by an unlock action.
      *
      * @return the number of holds on this lock by the current thread,

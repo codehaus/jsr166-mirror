@@ -67,14 +67,14 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     private final CopyOnWriteArrayList<E> al;
 
     /**
-     * Constructs an empty set.
+     * Creates an empty set.
      */
     public CopyOnWriteArraySet() {
         al = new CopyOnWriteArrayList<E>();
     }
 
     /**
-     * Constructs a set containing all of the elements of the specified
+     * Creates a set containing all of the elements of the specified
      * Collection.
      * @param c the collection
      */

@@ -391,8 +391,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Move to next valid node.
-         * Return item to return for next(), or null if no such.
+         * Moves to next valid node and returns item to return for
+         * next(), or null if no such.
          */
         private E advance() {
             lastRet = nextNode;

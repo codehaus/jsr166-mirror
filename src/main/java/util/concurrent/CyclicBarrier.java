@@ -121,7 +121,7 @@ public class CyclicBarrier {
     private int count; 
 
     /**
-     * Update state on barrier trip and wake up everyone.
+     * Updates state on barrier trip and wake up everyone.
      */  
     private void nextGeneration() {
         count = parties;
@@ -130,7 +130,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Set barrier as broken and wake up everyone
+     * Sets barrier as broken and wake up everyone
      */
     private void breakBarrier() {
         broken = true;
@@ -201,7 +201,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Create a new <tt>CyclicBarrier</tt> that will trip when the
+     * Creates a new <tt>CyclicBarrier</tt> that will trip when the
      * given number of parties (threads) are waiting upon it, and which
      * will execute the given barrier action when the barrier is tripped,
      * performed by the last thread entering the barrier.
@@ -221,7 +221,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Create a new <tt>CyclicBarrier</tt> that will trip when the
+     * Creates a new <tt>CyclicBarrier</tt> that will trip when the
      * given number of parties (threads) are waiting upon it, and
      * does not perform a predefined action upon each barrier.
      *
@@ -235,7 +235,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Return the number of parties required to trip this barrier.
+     * Returns the number of parties required to trip this barrier.
      * @return the number of parties required to trip this barrier.
      **/
     public int getParties() {
@@ -243,7 +243,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Wait until all {@link #getParties parties} have invoked <tt>await</tt>
+     * Waits until all {@link #getParties parties} have invoked <tt>await</tt>
      * on this barrier.
      *
      * <p>If the current thread is not the last to arrive then it is
@@ -304,7 +304,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Wait until all {@link #getParties parties} have invoked <tt>await</tt>
+     * Waits until all {@link #getParties parties} have invoked <tt>await</tt>
      * on this barrier.
      *
      * <p>If the current thread is not the last to arrive then it is
@@ -368,7 +368,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Query if this barrier is in a broken state.
+     * Queries if this barrier is in a broken state.
      * @return <tt>true</tt> if one or more parties broke out of this
      * barrier due to interruption or timeout since construction or
      * the last reset, or a barrier action failed due to an exception; 
@@ -385,7 +385,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Reset the barrier to its initial state.  If any parties are
+     * Resets the barrier to its initial state.  If any parties are
      * currently waiting at the barrier, they will return with a
      * {@link BrokenBarrierException}. Note that resets <em>after</em>
      * a breakage has occurred for other reasons can be complicated to
@@ -412,7 +412,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Return the number of parties currently waiting at the barrier.
+     * Returns the number of parties currently waiting at the barrier.
      * This method is primarily useful for debugging and assertions.
      *
      * @return the number of parties currently blocked in {@link #await}

@@ -562,7 +562,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Return true if this lock has fairness set true.
+     * Returns true if this lock has fairness set true.
      * @return true if this lock has fairness set true.
      */
     public final boolean isFair() {

@@ -43,7 +43,7 @@ public interface CompletionService<V> {
 
     /**
      * Submits a Runnable task for execution and returns a Future 
-     * representing that task.Upon completion,
+     * representing that task. Upon completion,
      * this task may be taken or polled.
      *
      * @param task the task to submit

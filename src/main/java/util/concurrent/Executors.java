@@ -11,6 +11,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
+import java.security.AccessControlException;
 
 /**
  * Factory and utility methods for {@link Executor}, {@link
@@ -245,7 +246,7 @@ public class Executors {
     }
         
     /**
-     * Return a default thread factory used to create new threads.
+     * Returns a default thread factory used to create new threads.
      * This factory creates all new threads used by an Executor in the
      * same {@link ThreadGroup}. If there is a {@link
      * java.lang.SecurityManager}, it uses the group of {@link
@@ -264,7 +265,7 @@ public class Executors {
     }
 
     /**
-     * Return a thread factory used to create new threads that
+     * Returns a thread factory used to create new threads that
      * have the same permissions as the current thread.
      * This factory creates threads with the same settings as {@link
      * Executors#defaultThreadFactory}, additionally setting the

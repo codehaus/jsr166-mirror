@@ -211,7 +211,7 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Construct a <tt>Semaphore</tt> with the given number of
+     * Creates a <tt>Semaphore</tt> with the given number of
      * permits and nonfair fairness setting.
      * @param permits the initial number of permits available. This
      * value may be negative, in which case releases must
@@ -222,7 +222,7 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Construct a <tt>Semaphore</tt> with the given number of
+     * Creates a <tt>Semaphore</tt> with the given number of
      * permits and the given fairness setting.
      * @param permits the initial number of permits available. This
      * value may be negative, in which case releases must
@@ -455,6 +455,7 @@ public class Semaphore implements java.io.Serializable {
     /**
      * Acquires the given number of permits from this semaphore, only
      * if all are available at the time of invocation.
+     *
      * <p>Acquires the given number of permits, if they are available, and 
      * returns immediately, with the value <tt>true</tt>,
      * reducing the number of available permits by the given amount.
@@ -571,7 +572,7 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Return the current number of permits available in this semaphore.
+     * Returns the current number of permits available in this semaphore.
      * <p>This method is typically used for debugging and testing purposes.
      * @return the number of permits available in this semaphore.
      */
@@ -588,7 +589,7 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Shrink the number of available permits by the indicated
+     * Shrinks the number of available permits by the indicated
      * reduction. This method can be useful in subclasses that use
      * semaphores to track resources that become unavailable. This
      * method differs from <tt>acquire</tt> in that it does not block

@@ -223,7 +223,7 @@ public interface ExecutorService extends Executor {
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
      * @return A list of Futures representing the tasks, in the same
-     * sequential order as as produced by the iterator for the given
+     * sequential order as produced by the iterator for the given
      * task list. If the operation did not time out, each task will
      * have completed. If it did time out, some of thiese tasks will
      * not have completed.

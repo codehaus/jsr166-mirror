@@ -91,7 +91,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * executor for base task execution and a
      * {@link LinkedBlockingQueue} as a completion queue.
      * @param executor the executor to use
-     8 @throws NullPointerException if executor is <tt>null</tt>
+     * @throws NullPointerException if executor is <tt>null</tt>
      */
     public ExecutorCompletionService(Executor executor) {
         if (executor == null) 
@@ -107,7 +107,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * @param executor the executor to use
      * @param completionQueue the queue to use as the completion queue
      * normally one dedicated for use by this service
-     8 @throws NullPointerException if executor or completionQueue are <tt>null</tt>
+     * @throws NullPointerException if executor or completionQueue are <tt>null</tt>
      */
     public ExecutorCompletionService(Executor executor,
                                      BlockingQueue<Future<V>> completionQueue) {

@@ -57,7 +57,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Signal a waiting take. Called only from put/offer (which do not
-     * otherwise ordinarily have  takeLock.)
+     * otherwise ordinarily lock takeLock.)
      */
     private void signalNotEmpty() {
         takeLock.lock();
@@ -390,9 +390,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         try {
             int size = count.get();
             if (a.length < size)
-                a = (T[])java.lang.reflect.Array.newInstance(
-                                                             a.getClass().getComponentType(), size);
-
+                a = (T[])java.lang.reflect.Array.newInstance
+                    (a.getClass().getComponentType(), size);
+            
             int k = 0;
             for (Node p = head.next; p != null; p = p.next) 
                 a[k++] = (T)p.item;
@@ -418,21 +418,21 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     private class Itr implements Iterator<E> {
+        /* 
+         * Basic weak-consistent iterator.  At all times hold the next
+         * item to hand out so that if hasNext() reports true, we will
+         * still have it to return even if lost race with a take etc.
+         */
         Node<E> current;
         Node<E> lastRet;
-
-        // for comodification checks
-        Node<E> expectedHead;
-        Node<E> expectedLast;
-        int expectedCount;
+        E currentElement;
         
         Itr() {
             fullyLock();
             try {
-                expectedHead = head;
                 current = head.next;
-                expectedLast = last;
-                expectedCount = count.get();
+                if (current != null)
+                    currentElement = current.item;
             }
             finally {
                 fullyUnlock();
@@ -443,22 +443,16 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             return current != null;
         }
 
-        private void checkForModification() {
-            if (expectedHead != head ||
-                expectedLast != last ||
-                expectedCount != count.get())
-                throw new  ConcurrentModificationException();
-        }
-
 	public E next() {
             fullyLock();
             try {
                 if (current == null)
                     throw new NoSuchElementException();
-                checkForModification();
-                E x = current.item;
+                E x = currentElement;
                 lastRet = current;
                 current = current.next;
+                if (current != null)
+                    currentElement = current.item;
                 return x;
             }
             finally {
@@ -472,7 +466,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 		throw new IllegalStateException();
             fullyLock();
             try {
-                checkForModification();
                 Node<E> node = lastRet;
                 lastRet = null;
                 Node<E> trail = head;
@@ -485,9 +478,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                     p.item = null;
                     trail.next = p.next;
                     int c = count.getAndDecrement();
-                    expectedHead = head;
-                    expectedLast = last;
-                    expectedCount = c;
                     if (c == capacity)
                         notFull.signalAll();
                 }

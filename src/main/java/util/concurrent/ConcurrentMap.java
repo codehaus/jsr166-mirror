@@ -8,7 +8,7 @@ package java.util.concurrent;
 import java.util.Map;
 
 /**
- * A ConcurrentMap is a Map providing an additional atomic
+ * A {@link java.util.Map} providing an additional atomic
  * <tt>putIfAbsent</tt> method.
  **/
 public interface ConcurrentMap<K, V> extends Map<K, V> {

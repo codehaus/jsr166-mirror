@@ -8,9 +8,9 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * CopyOnWriteArraySets implement a java.util.Set that uses
- * CopyOnWriteArrayList for all of its operations.
- * Thus, it shares the same basic properties:
+ * A {@link java.util.Set} that uses {@link
+ * java.util.concurrent.CopyOnWriteArrayList} for all of its
+ * operations.  Thus, it shares the same basic properties:
  * <ul>
  *  <li> It is best suited for applications in which set sizes generally
  *       stay small, read-only operations

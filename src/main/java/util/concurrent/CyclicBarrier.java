@@ -7,11 +7,12 @@
 package java.util.concurrent;
 
 /**
- * A <tt>CyclicBarrier</tt> allows a set threads to all wait for each 
- * other to reach a common barrier point.  They are useful in programs
- * involving a fixed sized party of threads that must occasionally
- * wait for each other. The barrier is <em>cyclic</em> because it can
- * be re-used after the waiting threads are released. 
+ * A synchronization aid that allows a set threads to all wait for
+ * each other to reach a common barrier point.  CyckicBarriers are
+ * useful in programs involving a fixed sized party of threads that
+ * must occasionally wait for each other. The barrier is
+ * <em>cyclic</em> because it can be re-used after the waiting threads
+ * are released.
  *
  * <p>A <tt>CyclicBarrier</tt> supports an optional {@link Runnable} command
  * that is run once per barrier point, after the last thread in the party
@@ -96,7 +97,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:39 $
+ * @revised $Date: 2003/06/07 18:20:20 $
  * @editor $Author: dl $
  *
  * @fixme Is the above property actually true in this implementation?

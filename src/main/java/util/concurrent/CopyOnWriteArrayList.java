@@ -18,29 +18,28 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * CopyOnWriteArrayList is a variant of java.util.ArrayList in which all
- * mutative operations (add, set, and so on) are implemented by making
- * a fresh copy of the underlying array.  <p>
+ * A variant of {@link java.util.ArrayList} in which all mutative
+ * operations (add, set, and so on) are implemented by making a fresh
+ * copy of the underlying array.  <p>
  *
  * This is ordinarily too costly, but it becomes attractive when
- * traversal operations vastly overwhelm mutations, and, especially,
+ * traversal operations vastly overwhelm mutations, and, especially
  * when you cannot or don't want to synchronize traversals, yet need
  * to preclude interference among concurrent threads.  The iterator
  * method uses a reference to the state of the array at the point that
  * the iterator was created. This array never changes during the
- * lifetime of the iterator, so interference is impossible.  (The
+ * lifetime of the iterator, so interference is impossible.  The
  * iterator will not traverse elements added or changed since the
- * iterator was created, but usually this is a desirable feature.)
+ * iterator was created.
  * <p>
  *
  * Because of the copy-on-write policy, some one-by-one mutative
  * operations in the java.util.Arrays and java.util.Collections
  * classes are so time/space intensive as to never be worth calling.
- * <p>
- *
- * Due to their strict read-only nature, element-changing operations
- * on iterators (remove, set, and add) are not supported. These are
- * the only methods throwing UnsupportedOperationException.  <p>
+ * Also, due to their strict read-only nature, element-changing
+ * operations on iterators (remove, set, and add) are not
+ * supported. These are the only methods throwing
+ * UnsupportedOperationException.  <p>
  **/
 public class CopyOnWriteArrayList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable {

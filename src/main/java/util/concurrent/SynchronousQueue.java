@@ -8,12 +8,12 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A Queue in which each put must wait for a take, and vice versa.
- * SynchronousQueues are similar to rendezvous channels used in CSP
- * and Ada. They are well suited for handoff designs, in which an
- * object running in one thread must synch up with an object running
- * in another thread in order to hand it some information, event, or
- * task.
+ * A {@link Queue} in which each put must wait for a take, and vice
+ * versa.  SynchronousQueues are similar to rendezvous channels used
+ * in CSP and Ada. They are well suited for handoff designs, in which
+ * an object running in one thread must synch up with an object
+ * running in another thread in order to hand it some information,
+ * event, or task.
  **/
 public class SynchronousQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
@@ -285,26 +285,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     public SynchronousQueue() {}
 
-    public boolean isEmpty() {
-        return true;
-    }
-
-    public int size() {
-        return 0;
-    }
-
-    /**
-     * Always returns zero. SynchronousQueues have no internal capacity.
-     * @return zero.
-     */
-    public int remainingCapacity() {
-        return 0;
-    }
-
-    public E peek() {
-        return null;
-    }
-
 
     public void put(E x) throws InterruptedException {
         doPut(x, false, 0);
@@ -369,11 +349,41 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public boolean remove(Object x) {
-        return false;
+    /**
+     * Always returns true. SynchronousQueues have no internal capacity.
+     * @return true.
+     */
+    public boolean isEmpty() {
+        return true;
     }
 
-    static class EmptyIterator<E> implements Iterator {
+    /**
+     * Always returns 0. SynchronousQueues have no internal capacity.
+     * @return zero.
+     */
+    public int size() {
+        return 0;
+    }
+
+    /**
+     * Always returns zero. SynchronousQueues have no internal capacity.
+     * @return zero.
+     */
+    public int remainingCapacity() {
+        return 0;
+    }
+
+    /**
+     * Always returns null. SynchronousQueues do not return elements
+     * unless actively waited on.
+     * @return null.
+     */
+    public E peek() {
+        return null;
+    }
+
+
+    static class EmptyIterator<E> implements Iterator<E> {
         public boolean hasNext() {
             return false;
         }
@@ -385,11 +395,17 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns an empty iterator.
+     */
     public Iterator<E> iterator() {
-        return new EmptyIterator();
+        return new EmptyIterator<E>();
     }
 
 
+    /**
+     * Returns an empty array.
+     */
     public Object[] toArray() {
         return new E[0];
     }

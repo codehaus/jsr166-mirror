@@ -7,26 +7,21 @@
 package java.util.concurrent;
 
 /**
- * This class provides the most commonly useful implementation of a
- * {@link ReadWriteLock}. 
- *
+ * An implementation of {@link ReadWriteLock} supporting similar
+ * semantics to {@link ReentrantLock}.
  * <p>This class has the following properties:
  * <ul>
  * <li><b>Acquisition order</b>
  * <p> This class does not impose a reader or writer preference
  * ordering for lock access. Instead, threads contend using an
  * approximately arrival-order policy. The actual order depends on the
- * order in which an internal {@link ReentrantLock} is granted, but
+ * order in which an internal {@link FairReentrantLock} is granted, but
  * essentially when the write lock is released either the single writer
  * at the notional head of the queue will be assigned the write lock, or
  * the set of readers at the head of the queue will be assigned the read lock.
  * <p>If readers are active and a writer arrives then no subsequent readers
  * will be granted the read lock until after that writer has acquired and 
  * released the write lock.
- * <p><b>Note:</b> As all threads, readers and writers, must pass through an
- * internal lock, it is possible for the read lock <tt>tryLock</tt> methods
- * to return <tt>false</tt> even if the lock is logically available to the 
- * thread.
  * 
  * <li><b>Reentrancy</b>
  * <p>This lock allows both readers and writers to reacquire read or
@@ -42,7 +37,7 @@ package java.util.concurrent;
  * <li><b>Lock downgrading</b>
  * <p>Reentrancy also allows downgrading from the write lock to a read lock,
  * by acquiring the write lock, then the read lock and then releasing the
- * write lock. Note that upgrading, from a read lock to the write lock, is
+ * write lock. However, upgrading from a read lock to the write lock, is
  * <b>not</b> possible.
  *
  * <li><b>Interruption of lock aquisition</b>
@@ -62,8 +57,8 @@ package java.util.concurrent;
  * <p>While not exposing a means to query the owner, the write lock does
  * internally define an owner and so the write lock can only be released by
  * the thread that acquired it.
- * <p>In contrast, the read lock has no concept of ownership, simply a count
- * of the number of active readers. Consequently, while not a particularly 
+ * <p>In contrast, the read lock has no concept of ownership.
+ * Consequently, while not a particularly 
  * good practice, it is possible to acquire a read lock in one thread, and 
  * release it in another. This can occasionally be useful.
  *
@@ -106,7 +101,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:40 $
+ * @revised $Date: 2003/06/07 18:20:21 $
  * @editor $Author: dl $
  *
  */

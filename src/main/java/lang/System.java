@@ -1061,10 +1061,6 @@ public final class System {
 	// an initializer only if it is called before sun.misc.VM.booted().
 	sun.misc.VM.allowArraySyntax();
 
-        // Initialize the map of all possible values of the threadStatus
-        // field which is set by the VM to the corresponding Thread.State.
-        sun.misc.VM.initThreadStates();
-  
 	// Subsystems that are invoked during initialization can invoke
 	// sun.misc.VM.isBooted() in order to avoid doing things that should
 	// wait until the application class loader has been set up.

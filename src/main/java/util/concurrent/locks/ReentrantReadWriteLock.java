@@ -228,7 +228,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         /** 
-         * Perform non-fair tryLock for read. 
+         * Perform nonfair tryLock for read. 
          */
         final int nonfairTryAcquireShared(int acquires) {
             for (;;) {
@@ -275,6 +275,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 throw new IllegalMonitorStateException();
         }
 
+        // Methods relayed to outer class
         
         final ConditionObject newCondition() { 
             return new ConditionObject(); 
@@ -299,14 +300,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         final int getWriteHoldCount() {
             int c = exclusiveCount(getState());
             return (owner == Thread.currentThread())? c : 0;
-        }
-
-        final Collection<Thread> getQueuedWriterThreads() {
-            return getQueuedThreads(false);
-        }
-
-        final Collection<Thread> getQueuedReaderThreads() {
-            return getQueuedThreads(true);
         }
 
         /**
@@ -906,7 +899,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedWriterThreads() {
-        return sync.getQueuedWriterThreads();
+        return sync.getExclusiveQueuedThreads();
     }
 
     /**
@@ -920,7 +913,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedReaderThreads() {
-        return getQueuedReaderThreads();
+        return sync.getSharedQueuedThreads();
     }
 
     /**

@@ -88,7 +88,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/05 22:50:28 $
+ * @revised $Date: 2003/08/05 23:59:16 $
  * @editor $Author: dl $
  * @see CountDownLatch
  *
@@ -383,7 +383,11 @@ public class CyclicBarrier {
     /**
      * Reset the barrier to its initial state.  If any parties are
      * currently waiting at the barrier, they will return with a
-     * {@link BrokenBarrierException}.
+     * {@link BrokenBarrierException}. Note that resets <em>after</em>
+     * a breakage can be complicated to carry out; threads need to
+     * re-synchronize in some other way, and choose one to perform the
+     * reset.  It may be preferable to instead create a new barrier
+     * for subsequent use.
      */
     public void reset() {
         lock.lock();

@@ -20,10 +20,10 @@ import java.util.concurrent.atomic.*;
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.)
  *
- * Beware that, unlike most collections, the <tt>size</tt> method is
- * <em>NOT</em> a constant-time operation. Because of the asynchronous
- * nature of these queues, determining the current number of elements
- * requires an O(n) traversal.
+ * Beware that, unlike in most collections, the <tt>size</tt> method
+ * is <em>NOT</em> a constant-time operation. Because of the
+ * asynchronous nature of these queues, determining the current number
+ * of elements requires an O(n) traversal.
  * 
  **/
 public class LinkedQueue<E> extends AbstractQueue<E>
@@ -39,69 +39,56 @@ public class LinkedQueue<E> extends AbstractQueue<E>
      * methods ignore those with nulls.
      */
 
-    static class Node {
-        private volatile Object item;
-        private volatile Node next;
-        Node(Object x, Node n) { item = x; next = n; }
-    }
-
     // Atomics support
 
-    private final static AtomicReferenceFieldUpdater<LinkedQueue, Node> tailUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, Node>(new LinkedQueue[0], new Node[0], "tail");
-    private final static AtomicReferenceFieldUpdater<LinkedQueue, Node> headUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, Node>(new LinkedQueue[0], new Node[0], "head");
-    private final static AtomicReferenceFieldUpdater<Node, Node> nextUpdater =
-    new AtomicReferenceFieldUpdater<Node, Node>(new Node[0], new Node[0], "next");
-    private final static AtomicReferenceFieldUpdater<Node, Object> itemUpdater
-     = new AtomicReferenceFieldUpdater<Node, Object>(new Node[0], new Object[0], "item");
+    private final static AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> tailUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "tail");
+    private final static AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "head");
 
-    private boolean casTail(Node cmp, Node val) {
+    private boolean casTail(AtomicLinkedNode cmp, AtomicLinkedNode val) {
         return tailUpdater.compareAndSet(this, cmp, val);
     }
 
-    private boolean casHead(Node cmp, Node val) {
+    private boolean casHead(AtomicLinkedNode cmp, AtomicLinkedNode val) {
         return headUpdater.compareAndSet(this, cmp, val);
-    }
-
-    private boolean casNext(Node node, Node cmp, Node val) {
-        return nextUpdater.compareAndSet(node, cmp, val);
-    }
-
-    private boolean casItem(Node node, Object cmp, Object val) {
-        return itemUpdater.compareAndSet(node, cmp, val);
     }
 
 
     /** 
      * Pointer to header node, initialized to a dummy node.  The first
-     * actual node is at head.next.
+     * actual node is at head.getNext().
      */
-    private transient volatile Node head = new Node(null, null);
+    private transient volatile AtomicLinkedNode head = new AtomicLinkedNode(null, null);
 
     /** Pointer to last node on list **/
-    private transient volatile Node tail = head;
+    private transient volatile AtomicLinkedNode tail = head;
+
 
     /**
-     * Return the first actual (non-header) node on list.
+     * Creates an initially empty LinkedQueue.
      */
-    Node first() { return head.next; }
-
     public LinkedQueue() {}
 
+    /**
+     * Creates a LinkedQueue initially holding the elements
+     * of the given collection. The elements are added in 
+     * iterator traversal order.
+     *
+     * @param initialElements the collections whose elements are to be added.
+     */
     public LinkedQueue(Collection<E> initialElements) {
         for (Iterator<E> it = initialElements.iterator(); it.hasNext();) 
             add(it.next());
     }
 
-
-    public boolean add(E x) {
+    public boolean offer(E x) {
         if (x == null) throw new IllegalArgumentException();
-        Node n = new Node(x, null);
+        AtomicLinkedNode n = new AtomicLinkedNode(x, null);
         for(;;) {
-            Node t = tail;
-            Node s = t.next;
+            AtomicLinkedNode t = tail;
+            AtomicLinkedNode s = t.getNext();
             if (t == tail) {
                 if (s == null) {
-                    if (casNext(t, s, n)) {
+                    if (t.casNext(s, n)) {
                         casTail(t, n); 
                         return true;
                     }
@@ -113,15 +100,11 @@ public class LinkedQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public boolean offer(E x) {
-        return add(x);
-    }
-
     public E poll() {
         for (;;) {
-            Node h = head;
-            Node t = tail;
-            Node first = h.next;
+            AtomicLinkedNode h = head;
+            AtomicLinkedNode t = tail;
+            AtomicLinkedNode first = h.getNext();
             if (h == head) {
                 if (h == t) {
                     if (first == null)
@@ -130,9 +113,9 @@ public class LinkedQueue<E> extends AbstractQueue<E>
                         casTail(t, first);
                 }
                 else if (casHead(h, first)) {
-                    E item = (E)first.item;
+                    E item = (E)first.getItem();
                     if (item != null) {
-                        itemUpdater.set(first, null);
+                        first.setItem(null);
                         return item;
                     }
                     // else skip over deleted item, continue loop, 
@@ -143,9 +126,9 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
     public E peek() { // same as poll except don't remove item
         for (;;) {
-            Node h = head;
-            Node t = tail;
-            Node first = h.next;
+            AtomicLinkedNode h = head;
+            AtomicLinkedNode t = tail;
+            AtomicLinkedNode first = h.getNext();
             if (h == head) {
                 if (h == t) {
                     if (first == null)
@@ -154,7 +137,7 @@ public class LinkedQueue<E> extends AbstractQueue<E>
                         casTail(t, first);
                 }
                 else {
-                    E item = (E)first.item;
+                    E item = (E)first.getItem();
                     if (item != null)
                         return item;
                     else // remove deleted node and continue
@@ -164,14 +147,43 @@ public class LinkedQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Return the first actual (non-header) node on list.  This is yet
+     * another variant of poll/peek; here returning out the first
+     * node, not element (so we cannot collapse with peek() without
+     * introducing race.)
+     */
+    AtomicLinkedNode first() { 
+        for (;;) {
+            AtomicLinkedNode h = head;
+            AtomicLinkedNode t = tail;
+            AtomicLinkedNode first = h.getNext();
+            if (h == head) {
+                if (h == t) {
+                    if (first == null)
+                        return null;
+                    else
+                        casTail(t, first);
+                }
+                else {
+                    if (first.getItem() != null)
+                        return first;
+                    else // remove deleted node and continue
+                        casHead(h, first);
+                }
+            }
+        }
+    }
+
+
     public boolean isEmpty() {
-        return peek() == null;
+        return first() == null;
     }
 
     /**
      * Returns the number of elements in this collection. 
      * 
-     * Beware that, unlike most collection, this method> is
+     * Beware that, unlike in most collection, this method> is
      * <em>NOT</em> a constant-time operation. Because of the
      * asynchronous nature of these queues, determining the current
      * number of elements requires an O(n) traversal.
@@ -179,8 +191,8 @@ public class LinkedQueue<E> extends AbstractQueue<E>
      */ 
     public int size() {
         int count = 0;
-        for (Node p = first(); p != null; p = p.next) {
-            if (p.item != null)
+        for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
+            if (p.getItem() != null)
                 ++count;
         }
         return count;
@@ -188,8 +200,8 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
     public boolean contains(Object x) {
         if (x == null) return false;
-        for (Node p = first(); p != null; p = p.next) {
-            Object item = p.item;
+        for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
+            Object item = p.getItem();
             if (item != null && 
                 x.equals(item))
                 return true;
@@ -199,11 +211,11 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
     public boolean remove(Object x) {
         if (x == null) return false;
-        for (Node p = first(); p != null; p = p.next) {
-            Object item = p.item;
+        for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
+            Object item = p.getItem();
             if (item != null && 
                 x.equals(item) &&
-                casItem(p, item, null))
+                p.casItem(item, null))
                 return true;
         }
         return false;
@@ -212,8 +224,8 @@ public class LinkedQueue<E> extends AbstractQueue<E>
     public Object[] toArray() {
         // Use ArrayList to deal with resizing.
         ArrayList al = new ArrayList();
-        for (Node p = first(); p != null; p = p.next) {
-            Object item = p.item;
+        for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
+            Object item = p.getItem();
             if (item != null)
                 al.add(item);
         }
@@ -223,9 +235,9 @@ public class LinkedQueue<E> extends AbstractQueue<E>
     public <T> T[] toArray(T[] a) {
         // try to use sent-in array
         int k = 0;
-        Node p;
-        for (p = first(); p != null && k < a.length; p = p.next) {
-            Object item = p.item;
+        AtomicLinkedNode p;
+        for (p = first(); p != null && k < a.length; p = p.getNext()) {
+            Object item = p.getItem();
             if (item != null)
                 a[k++] = (T)item;
         }
@@ -237,8 +249,8 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
         // If won't fit, use ArrayList version
         ArrayList al = new ArrayList();
-        for (Node q = first(); q != null; q = q.next) {
-            Object item = q.item;
+        for (AtomicLinkedNode q = first(); q != null; q = q.getNext()) {
+            Object item = q.getItem();
             if (item != null)
                 al.add(item);
         }
@@ -250,61 +262,69 @@ public class LinkedQueue<E> extends AbstractQueue<E>
     }
 
     private class Itr implements Iterator<E> {
-        private Node current;
+        /**
+         * Next node to return item for.
+         */
+        private AtomicLinkedNode nextNode;
+
         /** 
-         * currentItem holds on to item fields because once we claim
+         * nextItem holds on to item fields because once we claim
          * that an element exists in hasNext(), we must return it in
          * the following next() call even if it was in the process of
          * being removed when hasNext() was called.
          **/
-        private E currentItem;
+        private E nextItem;
+
+        /**
+         * Node of the last returned item, to support remove.
+         */
+        private AtomicLinkedNode lastRet;
 
         Itr() { 
-            for (current = first(); current != null; current = current.next) {
-                E item = (E)current.item;
-                if (item != null) {
-                    currentItem = item;
-                    return;
-                }
-            }
+            advance();
         }
         
         /**
          * Move to next valid node. 
-         * Return previous item, or null if no such.
+         * Return item to return for next(), or null if no such.
          */
         private E advance() { 
-            E x = (E)currentItem;
+            lastRet = nextNode;
+            E x = (E)nextItem;
+
+            AtomicLinkedNode p = (nextNode == null)? first() : nextNode.getNext();
             for (;;) {
-                current = current.next;
-                if (current == null) {
-                    currentItem = null;
+                if (p == null) {
+                    nextNode = null;
+                    nextItem = null;
                     return x;
                 }
-                E item = (E)current.item;
+                E item = (E)p.getItem();
                 if (item != null) {
-                    currentItem = item;
+                    nextNode = p;
+                    nextItem = item;
                     return x;
                 }
+                else // skip over nulls 
+                    p = p.getNext();
             }
         }
         
         public boolean hasNext() {
-            return current != null;
+            return nextNode != null;
         }
         
         public E next() {
-            if (current == null) throw new NoSuchElementException();
+            if (nextNode == null) throw new NoSuchElementException();
             return advance();
         }
         
         public void remove() {
-            if (current == null) throw new NoSuchElementException();
-            // java.util.Iterator contract requires throw if already removed
-            if (currentItem == null) throw new IllegalStateException();
+            AtomicLinkedNode l = lastRet;
+            if (l == null) throw new IllegalStateException();
             // rely on a future traversal to relink.
-            currentItem = null;
-            itemUpdater.set(current, null);
+            l.setItem(null);
+            lastRet = null;
         }
     }
 
@@ -321,8 +341,11 @@ public class LinkedQueue<E> extends AbstractQueue<E>
         s.defaultWriteObject();
         
         // Write out all elements in the proper order.
-        for (Node p = first(); p != null; p = p.next) 
-            s.writeObject(p.item);
+        for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
+            Object item = p.getItem();
+            if (item != null)
+                s.writeObject(item);
+        }
 
         // Use trailing null as sentinel
         s.writeObject(null);

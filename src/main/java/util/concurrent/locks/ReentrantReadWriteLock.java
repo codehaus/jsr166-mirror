@@ -128,6 +128,10 @@ import java.util.*;
  * </pre>
  * 
  *
+ * <p> Serialization of this class behaves in the same way as built-in
+ * locks: a deserialized lock is in the unlocked state, regardless of
+ * its state when serialized.
+ *
  * <h3>Implementation Notes</h3>
  *
  * <p>A reentrant write lock intrinsically defines an owner and can
@@ -137,27 +141,20 @@ import java.util.*;
  * the same as the one that acquired it.  However, this property is
  * not guaranteed to hold in future implementations of this class.
  *
+ * <p> This lock supports a maximum of 655536 recursive write locks
+ * and 65536 read locks. Attempts to exceed this limit result in
+ * {@link Error} throws from locking methods.
+ *
  * @since 1.5
  * @author Doug Lea
  *
  */
 public class ReentrantReadWriteLock extends AbstractReentrantLock implements ReadWriteLock, java.io.Serializable  {
-
     private static final long serialVersionUID = -6992448646407690164L;
-
-    /** 
-     * Read/write hold status is kept in a separate AtomicInteger. The
-     * low bit (1) is set when there is a writer. The rest of the word
-     * holds the number of readers, so the value increments/decrements
-     * by 2 per lock/unlock.
-     */
-    private final AtomicInteger count = new AtomicInteger(0);
-    /** Current writing thread */
-    private transient Thread owner;
     /** Inner class providing readlock */
-    private final Lock readerLock = new ReadLock();
+    private final ReentrantReadWriteLock.ReadLock readerLock = new ReadLock();
     /** Inner class providing writelock */
-    private final Lock writerLock = new WriteLock();
+    private final ReentrantReadWriteLock.WriteLock writerLock = new WriteLock();
 
     /**
      * Creates a new <tt>ReentrantReadWriteLock</tt> with
@@ -177,216 +174,418 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         super(fair);
     }
 
-    public Lock writeLock() { 
+    public ReentrantReadWriteLock.WriteLock writeLock() { 
         return writerLock; 
     }
 
-    public Lock readLock() { 
+    public ReentrantReadWriteLock.ReadLock readLock() { 
         return readerLock; 
     }
 
     /**
-     * Return true if count indicates lock is held in write mode
-     * @param count a lock status count
-     * @return true if count indicates lock is held in write mode
+     * The lock returned by method {@link ReentrantReadWriteLock#readLock}.
      */
-    private static boolean isWriting(int count) { return (count & 1) != 0; }
-
-    // Implementations of abstract methods
-
-    boolean tryAcquire(int mode, Thread current) {
-        final AtomicInteger count = this.count;
-        for (;;) {
-            int c = count.get();
-            if (isReader(mode)) {
-                if (isWriting(c) && current != owner)
-                    return false;
-                if (count.compareAndSet(c, c+2))
-                    return true;
-            }
-            else {
-                if (c != 0) {
-                    if (current != owner)
-                        return false;
-                    ++recursions;
-                    return true;
-                }
-                else if (count.compareAndSet(c, 1)) {
-                    owner = current;
-                    return true;
-                }
-            }
-        }
-    }
-
-    boolean tryReentrantAcquire(int mode, Thread current) {
-        if (!isReader(mode)) {
-            int c = count.get();
-            if (isWriting(c) && current == owner) {
-                ++recursions;
-                return true;
-            }
-        }
-        return (!fair || head == tail) && tryAcquire(mode, current);
-    }
-
-    boolean tryRelease(int mode) {
-        final AtomicInteger count = this.count;
-        if (!isReader(mode)) {
-            owner = null;
-            for (;;) {
-                int c = count.get();
-                if (count.compareAndSet(c, c-1))
-                    return true;
-            }
-        }
-        else {
-            for (;;) {
-                int c = count.get();
-                int nextc = c-2;
-                if (count.compareAndSet(c, nextc)) 
-                    return nextc <= 1;
-            }
-        }
-    }
-
-    /**
-     * Returns the thread that currently owns the write lock, or
-     * <tt>null</tt> if not owned. Note that the owner may be
-     * momentarily <tt>null</tt> even if there are threads trying to
-     * acquire the lock but have not yet done so.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive lock monitoring facilities.
-     * @return the owner, or <tt>null</tt> if not owned.
-     */
-    protected Thread getOwner() {
-        return (isWriting(count.get()))? owner : null;
-    }
-
-    void checkOwner(Thread thread) {
-        if (!isWriting(count.get()) || owner != thread) 
-            throw new IllegalMonitorStateException();
-    }
-
-    void checkOwnerForWait(Thread thread) {
-        if (count.get() != 1 || owner != thread) 
-            throw new IllegalMonitorStateException();
-    }
-
-    /**
-     * The Reader lock
-     */
-    private class ReadLock implements Lock, java.io.Serializable  {
+    public class ReadLock implements Lock, java.io.Serializable  {
         private static final long serialVersionUID = -5992448646407690164L;
 
-        public void lock() {
-            // fast path
-            if (!fair || head == tail) {
-                final AtomicInteger count = ReentrantReadWriteLock.this.count;
-                int c = count.get();
-                if ((c & 1) == 0 && count.compareAndSet(c, c+2))
-                    return;
-            }
-            doLock(READER | UNINTERRUPTED, 0);
+        /** Constructor for use by subclasses */
+        protected ReadLock() {}
+
+        /**
+         * Acquires the shared lock. 
+         *
+         * <p>Acquires the lock if it is not held exclusively by
+         * another thread and returns immediately.
+         *
+         * <p>If the lock is held exclusively by another thread then
+         * the current thread becomes disabled for thread scheduling
+         * purposes and lies dormant until the lock has been acquired.
+         */
+        public void lock() { 
+            lockShared();
         }
 
+        /**
+         * Acquires the shared lock unless the current thread is 
+         * {@link Thread#interrupt interrupted}.
+         *
+         * <p>Acquires the shared lock if it is not held exclusively
+         * by another thread and returns immediately.
+         *
+         * <p>If the lock is held by another thread then the
+         * current thread becomes disabled for thread scheduling 
+         * purposes and lies dormant until one of two things happens:
+         *
+         * <ul>
+         *
+         * <li>The lock is acquired by the current thread; or
+         *
+         * <li>Some other thread {@link Thread#interrupt interrupts}
+         * the current thread.
+         *
+         * </ul>
+         *
+         * <p>If the current thread:
+         *
+         * <ul>
+         *
+         * <li>has its interrupted status set on entry to this method; or 
+         *
+         * <li>is {@link Thread#interrupt interrupted} while acquiring 
+         * the lock,
+         *
+         * </ul>
+         *
+         * then {@link InterruptedException} is thrown and the current
+         * thread's interrupted status is cleared.
+         *
+         * <p>In this implementation, as this method is an explicit
+         * interruption point, preference is given to responding to
+         * the interrupt over normal or reentrant acquisition of the
+         * lock.
+         *
+         * @throws InterruptedException if the current thread is interrupted
+         */
         public void lockInterruptibly() throws InterruptedException {
-            if (doLock(READER | INTERRUPT, 0) == INTERRUPT)
-                throw new InterruptedException();
+            lockInterruptiblyShared();
         }
 
+        /**
+         * Acquires the shared lock only if it is not held exclusively by
+         * another thread at the time of invocation.
+         *
+         * <p>Acquires the lock if it is not held exclusively by
+         * another thread and returns immediately with the value
+         * <tt>true</tt>. Even when this lock has been set to use a
+         * fair ordering policy, a call to <tt>tryLock()</tt>
+         * <em>will</em> immediately acquire the lock if it is
+         * available, whether or not other threads are currently
+         * waiting for the lock.  This &quot;barging&quot; behavior
+         * can be useful in certain circumstances, even though it
+         * breaks fairness. If you want to honor the fairness setting
+         * for this lock, then use {@link #tryLock(long, TimeUnit)
+         * tryLock(0, TimeUnit.SECONDS) } which is almost equivalent
+         * (it also detects interruption).
+         *
+         * <p>If the lock is held exclusively by another thread then
+         * this method will return immediately with the value
+         * <tt>false</tt>.
+         *
+         * @return <tt>true</tt> if the lock was acquired.
+         */
         public  boolean tryLock() {
-            return tryAcquire(READER, Thread.currentThread());
+            return tryLockShared();
         }
 
+        /**
+         * Acquires the shared lock if it is not held exclusively by
+         * another thread within the given waiting time and the
+         * current thread has not been {@link Thread#interrupt
+         * interrupted}.
+         *
+         * <p>Acquires the lock if it is not held exclusively by
+         * another thread and returns immediately with the value
+         * <tt>true</tt>. If this lock has been set to use a fair
+         * ordering policy then an available lock <em>will not</em> be
+         * acquired if any other threads are waiting for the
+         * lock. This is in contrast to the {@link #tryLock()}
+         * method. If you want a timed <tt>tryLock</tt> that does
+         * permit barging on a fair lock then combine the timed and
+         * un-timed forms together:
+         *
+         * <pre>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
+         * </pre>
+         *
+         * <p>If the lock is held exclusively by another thread then the
+         * current thread becomes disabled for thread scheduling 
+         * purposes and lies dormant until one of three things happens:
+         *
+         * <ul>
+         *
+         * <li>The lock is acquired by the current thread; or
+         *
+         * <li>Some other thread {@link Thread#interrupt interrupts} the current
+         * thread; or
+         *
+         * <li>The specified waiting time elapses
+         *
+         * </ul>
+         *
+         * <p>If the lock is acquired then the value <tt>true</tt> is
+         * returned.
+         *
+         * <p>If the current thread:
+         *
+         * <ul>
+         *
+         * <li>has its interrupted status set on entry to this method; or 
+         *
+         * <li>is {@link Thread#interrupt interrupted} while acquiring
+         * the lock,
+         *
+         * </ul> then {@link InterruptedException} is thrown and the
+         * current thread's interrupted status is cleared.
+         *
+         * <p>If the specified waiting time elapses then the value
+         * <tt>false</tt> is returned.  If the time is less than or
+         * equal to zero, the method will not wait at all.
+         *
+         * <p>In this implementation, as this method is an explicit
+         * interruption point, preference is given to responding to
+         * the interrupt over normal or reentrant acquisition of the
+         * lock, and over reporting the elapse of the waiting time.
+         *
+         * @param timeout the time to wait for the lock
+         * @param unit the time unit of the timeout argument
+         *
+         * @return <tt>true</tt> if the lock was acquired.
+         *
+         * @throws InterruptedException if the current thread is interrupted
+         * @throws NullPointerException if unit is null
+         *
+         */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            if (unit == null)
-                throw new NullPointerException();
-            int stat = doLock(READER | INTERRUPT | TIMEOUT, 
-                              unit.toNanos(timeout));
-            if (stat == INTERRUPT)
-                throw new InterruptedException();
-            return (stat == UNINTERRUPTED);
+            return tryLockShared(timeout, unit);
         }
 
+        /**
+         * Attempts to release this lock.  
+         *
+         * <p> If the number of readers is now zero then the lock
+         * is made available for other lock attempts.
+         */
         public  void unlock() {
-            final AtomicInteger count = ReentrantReadWriteLock.this.count;
-            for (;;) {
-                int c = count.get();
-                int nextc = c-2;
-                if (nextc < 0)
-                    throw new IllegalMonitorStateException();
-                if (count.compareAndSet(c, nextc)) {
-                    if (nextc <= 1) {
-                        Node h = head;
-                        if (h != null  && h.status < 0)
-                            unparkSuccessor(h);
-                    }
-                    return;
-                }
-            }
+            unlockShared();
         }
 
+        /**
+         * Throws UnsupportedOperationException because ReadLocks
+         * do not support conditions.
+         * @throws UnsupportedOperationException always
+         */
         public Condition newCondition() {
             throw new UnsupportedOperationException();
         }
     }
 
     /**
-     * The writer lock
+     * The lock returned by method {@link ReentrantReadWriteLock#writeLock}.
      */
-    private class WriteLock implements Lock, java.io.Serializable  {
+    public class WriteLock implements Lock, java.io.Serializable  {
         private static final long serialVersionUID = -4992448646407690164L;
 
+        /** Constructor for use by subclasses */
+        protected WriteLock() {}
+
+        /**
+         * Acquire the lock. 
+         *
+         * <p>Acquires the lock if it is not held by another thread
+         * and returns immediately, setting the lock hold count to
+         * one.
+         *
+         * <p>If the current thread already holds the lock then the
+         * hold count is incremented by one and the method returns
+         * immediately.
+         *
+         * <p>If the lock is held by another thread then the current
+         * thread becomes disabled for thread scheduling purposes and
+         * lies dormant until the lock has been acquired, at which
+         * time the lock hold count is set to one.
+         */
         public void lock() {
-            if (!fair || head == tail) { // fast path
-                if (count.compareAndSet(0, 1)) {
-                    owner = Thread.currentThread();
-                    return;
-                }
-            }
-            doLock(WRITER | UNINTERRUPTED, 0);
+            lockExclusive();
         }
 
+        /**
+         * Acquires the lock unless the current thread is {@link
+         * Thread#interrupt interrupted}.
+         *
+         * <p>Acquires the lock if it is not held by another thread
+         * and returns immediately, setting the lock hold count to
+         * one.
+         *
+         * <p>If the current thread already holds this lock then the
+         * hold count is incremented by one and the method returns
+         * immediately.
+         *
+         * <p>If the lock is held by another thread then the current
+         * thread becomes disabled for thread scheduling purposes and
+         * lies dormant until one of two things happens:
+         *
+         * <ul>
+         *
+         * <li>The lock is acquired by the current thread; or
+         *
+         * <li>Some other thread {@link Thread#interrupt interrupts}
+         * the current thread.
+         *
+         * </ul>
+         *
+         * <p>If the lock is acquired by the current thread then the
+         * lock hold count is set to one.
+         *
+         * <p>If the current thread:
+         *
+         * <ul>
+         *
+         * <li>has its interrupted status set on entry to this method;
+         * or
+         *
+         * <li>is {@link Thread#interrupt interrupted} while acquiring
+         * the lock,
+         *
+         * </ul>
+         *
+         * then {@link InterruptedException} is thrown and the current
+         * thread's interrupted status is cleared.
+         *
+         * <p>In this implementation, as this method is an explicit
+         * interruption point, preference is given to responding to
+         * the interrupt over normal or reentrant acquisition of the
+         * lock.
+         *
+         * @throws InterruptedException if the current thread is interrupted
+         */
         public void lockInterruptibly() throws InterruptedException {
-            if (doLock(WRITER | INTERRUPT, 0) == INTERRUPT)
-                throw new InterruptedException();
+            lockInterruptiblyExclusive();
         }
 
+        /**
+         * Acquires the lock only if it is not held by another thread
+         * at the time of invocation.
+         *
+         * <p>Acquires the lock if it is not held by another thread
+         * and returns immediately with the value <tt>true</tt>,
+         * setting the lock hold count to one. Even when this lock has
+         * been set to use a fair ordering policy, a call to
+         * <tt>tryLock()</tt> <em>will</em> immediately acquire the
+         * lock if it is available, whether or not other threads are
+         * currently waiting for the lock.  This &quot;barging&quot;
+         * behavior can be useful in certain circumstances, even
+         * though it breaks fairness. If you want to honor the
+         * fairness setting for this lock, then use {@link
+         * #tryLock(long, TimeUnit) tryLock(0, TimeUnit.SECONDS) }
+         * which is almost equivalent (it also detects interruption).
+         *
+         * <p> If the current thread already holds this lock then the
+         * hold count is incremented by one and the method returns
+         * <tt>true</tt>.
+         *
+         * <p>If the lock is held by another thread then this method
+         * will return immediately with the value <tt>false</tt>.
+         *
+         * @return <tt>true</tt> if the lock was free and was acquired by the
+         * current thread, or the lock was already held by the current thread; and
+         * <tt>false</tt> otherwise.
+         */
         public boolean tryLock( ) {
-            return tryAcquire(WRITER, Thread.currentThread());
+            return tryLockExclusive();
         }
 
+        /**
+         * Acquires the lock if it is not held by another thread
+         * within the given waiting time and the current thread has
+         * not been {@link Thread#interrupt interrupted}.
+         *
+         * <p>Acquires the lock if it is not held by another thread
+         * and returns immediately with the value <tt>true</tt>,
+         * setting the lock hold count to one. If this lock has been
+         * set to use a fair ordering policy then an available lock
+         * <em>will not</em> be acquired if any other threads are
+         * waiting for the lock. This is in contrast to the {@link
+         * #tryLock()} method. If you want a timed <tt>tryLock</tt>
+         * that does permit barging on a fair lock then combine the
+         * timed and un-timed forms together:
+         *
+         * <pre>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
+         * </pre>
+         *
+         * <p>If the current thread already holds this lock then the
+         * hold count is incremented by one and the method returns
+         * <tt>true</tt>.
+         *
+         * <p>If the lock is held by another thread then the current
+         * thread becomes disabled for thread scheduling purposes and
+         * lies dormant until one of three things happens:
+         *
+         * <ul>
+         *
+         * <li>The lock is acquired by the current thread; or
+         *
+         * <li>Some other thread {@link Thread#interrupt interrupts}
+         * the current thread; or
+         *
+         * <li>The specified waiting time elapses
+         *
+         * </ul>
+         *
+         * <p>If the lock is acquired then the value <tt>true</tt> is
+         * returned and the lock hold count is set to one.
+         *
+         * <p>If the current thread:
+         *
+         * <ul>
+         *
+         * <li>has its interrupted status set on entry to this method;
+         * or
+         *
+         * <li>is {@link Thread#interrupt interrupted} while acquiring
+         * the lock,
+         *
+         * </ul> 
+         *
+         * then {@link InterruptedException} is thrown and the current
+         * thread's interrupted status is cleared.
+         *
+         * <p>If the specified waiting time elapses then the value
+         * <tt>false</tt> is returned.  If the time is less than or
+         * equal to zero, the method will not wait at all.
+         *
+         * <p>In this implementation, as this method is an explicit
+         * interruption point, preference is given to responding to
+         * the interrupt over normal or reentrant acquisition of the
+         * lock, and over reporting the elapse of the waiting time.
+         *
+         * @param timeout the time to wait for the lock
+         * @param unit the time unit of the timeout argument
+         *
+         * @return <tt>true</tt> if the lock was free and was acquired
+         * by the current thread, or the lock was already held by the
+         * current thread; and <tt>false</tt> if the waiting time
+         * elapsed before the lock could be acquired.
+         *
+         * @throws InterruptedException if the current thread is interrupted
+         * @throws NullPointerException if unit is null
+         *
+         */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            if (unit == null)
-                throw new NullPointerException();
-            int stat = doLock(WRITER | INTERRUPT | TIMEOUT, unit.toNanos(timeout));
-            if (stat == INTERRUPT)
-                throw new InterruptedException();
-            return (stat == UNINTERRUPTED);
+            return tryLockExclusive(timeout, unit);
         }
         
+        /**
+         * Attempts to release this lock.  
+         *
+         * <p>If the current thread is the holder of this lock then
+         * the hold count is decremented. If the hold count is now
+         * zero then the lock is released.  If the current thread is
+         * not the holder of this lock then {@link
+         * IllegalMonitorStateException} is thrown.
+         * @throws IllegalMonitorStateException if the current thread does not
+         * hold this lock.
+         */
         public void unlock() {
-            final AtomicInteger count = ReentrantReadWriteLock.this.count;
-            int c = count.get();
-            if (!isWriting(c) || owner != Thread.currentThread())
-                throw new IllegalMonitorStateException();
-            else if (recursions > 0) 
-                --recursions;
-            else {
-                owner = null;
-                while (!count.compareAndSet(c, c-1))
-                    c = count.get();
-                Node h = head;
-                if (h != null  && h.status < 0)
-                    unparkSuccessor(h);
-            }
+            unlockExclusive();
         }
 
+        /**
+         * Returns a {@link Condition} instance for use with this
+         * {@link Lock} instance.
+         * @return the Condition object
+         */
         public WriterConditionObject newCondition() { 
             return new WriterConditionObject(ReentrantReadWriteLock.this);
         }
-
     }
     
     // Instrumentation methods
@@ -398,7 +597,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * @return the number of read locks held.
      */
     public int getReadLockCount() {
-        return count.get() >>> 1;
+        return getSharedCount();
     }
 
     /**
@@ -409,7 +608,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * <tt>false</tt> otherwise.
      */
     public boolean isWriteLocked() {
-        return isWriting(count.get());
+        return getExclusiveCount() != 0;
     }
 
     /**
@@ -418,7 +617,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * <tt>false</tt> otherwise.
      */
     public boolean isWriteLockedByCurrentThread() {
-        return isWriting(count.get()) && owner == Thread.currentThread();
+        return getOwner() == Thread.currentThread();
     }
 
     /**
@@ -430,7 +629,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * or zero if this lock is not held by the current thread.
      */
     public int getWriteHoldCount() {
-        return (isWriteLockedByCurrentThread())? recursions + 1 :  0;
+        return getExclusiveCount();
     }
 
     /**
@@ -444,7 +643,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedWriterThreads() {
-        return getQueuedThreadsWithMode(WRITER);
+        return getQueuedThreads(false);
     }
 
     /**
@@ -458,28 +657,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedReaderThreads() {
-        return getQueuedThreadsWithMode(READER);
-    }
-
-    // Serialization support
-
-    /**
-     * Throw away the object created with readObject, and replace it
-     * @return the lock
-     */
-    private Object readResolve() throws java.io.ObjectStreamException {
-        return new ReentrantReadWriteLock(fair);
-    }
-    /**
-     * Reconstitute this lock instance from a stream (that is,
-     * deserialize it).
-     * @param s the stream
-     */
-    private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        // reset to unlocked state
-        count.set(0);
+        return getQueuedThreads(true);
     }
 
     /**

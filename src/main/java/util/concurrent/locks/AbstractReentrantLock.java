@@ -15,13 +15,15 @@ import sun.misc.*;
  * Provides shared data structures, utility methods, base {@link
  * Condition} implementations, and instrumentation methods for the
  * reentrant lock classes defined in this package.  This class is not
- * designed to be subclassed outside of this package.
+ * designed to be directly subclassed outside of this
+ * package. However, subclasses {@link ReentrantLock} and {@link
+ * ReentrantReadWriteLock} may in turn be usefully extended.
  *
  * @since 1.5
  * @author Doug Lea
  * 
  */
-public abstract class AbstractReentrantLock {
+public abstract class AbstractReentrantLock implements java.io.Serializable {
     /*
      *  General description and notes.
      *
@@ -71,8 +73,7 @@ public abstract class AbstractReentrantLock {
      *  * Even non-fair locks don't do a bare atomic CAS in the
      *    fast path (except in tryLock). Instead, if the wait queue
      *    appears to be non-empty, they use a test-and-test-and-set
-     *    approach, checking the owner field before trying to CAS it,
-     *    which avoids most failed CASes.
+     *    approach,  which avoids most failed CASes.
      *
      *  * The "fair" variant differs only in that barging is disabled
      *    when there is contention, so locks proceed FIFO. There can be
@@ -170,6 +171,13 @@ public abstract class AbstractReentrantLock {
      *    expert group, for helpful ideas, discussions, and critiques.
      */
 
+    /**
+     * Serialization ID. Note that all fields are defined in a way so
+     * that deserialized locks are in initial unlocked state, and
+     * there is no explicit serialization code.
+     */
+    private static final long serialVersionUID = 7373984872572414691L;
+
     /** Node status value to indicate thread has cancelled */
     static final int CANCELLED =  1;
     /** Node status value to indicate thread needs unparking */
@@ -265,7 +273,6 @@ public abstract class AbstractReentrantLock {
          */
         Thread thread;
 
-
         Node(Thread thread) { 
             this.thread = thread; 
             this.mode = 0;
@@ -281,14 +288,49 @@ public abstract class AbstractReentrantLock {
             this.mode = mode;
             this.status = status;
         }
-
     }
 
     /** true if barging disabled */
-    final boolean fair;
+    private final boolean fair;
 
-    /** Number of recursive acquires. Note: total holds = recursions+1 */
-    transient int recursions;
+    /** 
+     * Lock hold status is kept in a separate AtomicInteger.  It is
+     * logically divided into two shorts: The lower one representing
+     * the exclusive (write) lock hold count, and the upper the shared
+     * hold count.
+     */
+    private final AtomicInteger count = new AtomicInteger();
+
+    // shared vs write count extraction constants and functions
+
+    static final int SHARED_SHIFT = 16;
+    static final int SHARED_UNIT = (1 << SHARED_SHIFT);
+    static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+
+    /**
+     * Return true if count indicates lock is held in exclusive mode
+     * @param c a lock status count
+     * @return true if count indicates lock is held in exclusive mode
+     */
+    static final boolean isExclusive(int c) { return (c & EXCLUSIVE_MASK) != 0; }
+
+    /**
+     * Return the number of shared holds represented in count
+     */
+    static final int sharedCount(int c)  { return c >>> SHARED_SHIFT; }
+
+    /**
+     * Return the number of exclusive holds represented in count
+     */
+    static final int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
+
+    /** Return current shared count */
+    final int getSharedCount() { return sharedCount(count.get()); }
+    /** Return current exclusive count */
+    final int getExclusiveCount() { return exclusiveCount(count.get()) ; }
+
+    /** Current (exclusive) owner thread */
+    private transient Thread owner;
 
     /** 
      * Head of the wait queue, lazily initialized.  Except for
@@ -296,21 +338,21 @@ public abstract class AbstractReentrantLock {
      * the lock. If head exists, its node status is guaranteed not to
      * be CANCELLED.
      */
-    transient volatile Node head; 
+    private transient volatile Node head; 
 
     /** 
      * Tail of the wait queue, lazily initialized.  Modified only via
      * method enq to add new wait node.
      */
-    transient volatile Node tail; 
+    private transient volatile Node tail; 
 
     // Atomics support
 
-    static final 
+    private static final 
         AtomicReferenceFieldUpdater<AbstractReentrantLock, Node> tailUpdater = 
         AtomicReferenceFieldUpdater.<AbstractReentrantLock, Node>newUpdater 
         (AbstractReentrantLock.class, Node.class, "tail");
-    static final 
+    private static final 
         AtomicReferenceFieldUpdater<AbstractReentrantLock, Node> headUpdater = 
         AtomicReferenceFieldUpdater.<AbstractReentrantLock, Node>newUpdater 
         (AbstractReentrantLock.class,  Node.class, "head");
@@ -342,62 +384,84 @@ public abstract class AbstractReentrantLock {
      * results.
      */
 
-    /** As arg or node field, lock in write mode */
-    static final int WRITER        =  0;
-    /** As arg or node field, lock in read mode */
-    static final int READER        =  1;
+    /** As arg or node field, lock in exclusive mode */
+    private static final int EXCLUSIVE     =  0;
+    /** As arg or node field, lock in shared mode */
+    private static final int SHARED        =  1;
     /** As arg, don't interrupt; as result, was not interrupted */
-    static final int UNINTERRUPTED =  0;
+    private static final int UNINTERRUPTED =  0;
     /** As arg, allow interrupt; as result, was interrupted */ 
-    static final int INTERRUPT     =  2;
+    private static final int INTERRUPT     =  2;
     /** As arg, allow timeouts; as result, did time out */
-    static final int TIMEOUT       =  4;
+    private static final int TIMEOUT       =  4;
     /** As arg, reset interrupt status upon return */
-    static final int REINTERRUPT   =  8;
+    private static final int REINTERRUPT   =  8;
+    /** As arg, don't acquire unowned lock unless unfair or queue is empty */
+    private static final int CHECK_FAIRNESS = 16;
 
     /**
-     * Return true if mode denotes a read-lock
+     * Return true if mode denotes a shared-lock
      * @param mode mode
-     * @return true if read mode
+     * @return true if shared mode
      */
-    static final boolean isReader(int mode) { return (mode & READER) != 0; }
-
-    // abstract methods to acquire/release status
+    static final boolean isSharedMode(int mode) { return (mode & SHARED) != 0; }
 
     /**
-     * Try to atomically set lock status
+     * Try to set lock status
      * @param mode lock mode
      * @param current current thread
      * @return true if successful
      */
-    abstract boolean tryAcquire(int mode, Thread current);
-
+    private boolean tryAcquire(int mode, Thread current) {
+        final AtomicInteger count = this.count;
+        boolean nobarge = (mode & CHECK_FAIRNESS) != 0 && fair;
+        for (;;) {
+            int c = count.get();
+            int w = exclusiveCount(c);
+            int r = sharedCount(c);
+            if (isSharedMode(mode)) {
+                if (w != 0 && current != owner)
+                    return false;
+                if (nobarge && head != tail)
+                    return false;
+                int nextc = c + SHARED_UNIT;
+                if (nextc < c)
+                    throw new Error("Maximum lock count exceeded");
+                if (count.compareAndSet(c, nextc)) 
+                    return true;
+            }
+            else {
+                if (r != 0)
+                    return false;
+                if (w != 0) {
+                    if (current != owner)
+                        return false;
+                    if (w + 1 >= SHARED_UNIT)
+                        throw new Error("Maximum lock count exceeded");
+                    if (count.compareAndSet(c, c + 1)) 
+                        return true;
+                }
+                else {
+                    if (nobarge && head != tail)
+                        return false;
+                    if (count.compareAndSet(c, c + 1)) {
+                        owner = current;
+                        return true;
+                    }
+                }
+            }
+            // Recheck count if lost any of the above CAS's
+        }
+    }
     
-    /**
-     * Atomically release lock status
-     * @param mode lock mode
-     * @return true if lock is now free
-     */
-    abstract boolean tryRelease(int mode);
-
-    /**
-     * Try to recursively acquire or barge (if not fair) lock.
-     * @param mode lock mode
-     * @param current current thread
-     * @return true if successful
-     */
-    abstract boolean tryReentrantAcquire(int mode, Thread current);
-
-
     // Queuing utilities
 
     /**
-     * Insert node into queue, initializing head and tail if necessary.
-     * @param node the node to insert
+     * Initialize queue. Called on first contended lock attempt
      */
-    void enq(Node node) {
+    private void initializeQueue() {
         Node t = tail;
-        if (t == null) {         // Must initialize first
+        if (t == null) {         
             Node h = new Node(null);
             while ((t = tail) == null) {     
                 if (headUpdater.compareAndSet(this, null, h)) 
@@ -406,7 +470,18 @@ public abstract class AbstractReentrantLock {
                     Thread.yield();
             }
         }
+    }
 
+    /**
+     * Insert node into queue, initializing head and tail if necessary.
+     * @param node the node to insert
+     */
+    private void enq(Node node) {
+        Node t = tail;
+        if (t == null) {         // Must initialize first
+            initializeQueue();
+            t = tail;
+        }
         for (;;) {
             node.prev = t;      // Prev field must be valid before/upon CAS
             if (tailUpdater.compareAndSet(this, t, node)) {
@@ -421,7 +496,7 @@ public abstract class AbstractReentrantLock {
      * Wake up node's successor, if one exists.
      * @param node the node
      */
-    void unparkSuccessor(Node node) {
+    private void unparkSuccessor(Node node) {
         /*
          * Reset status before unparking. This improves performance
          * when called from unlock to release next thread: A given
@@ -449,7 +524,6 @@ public abstract class AbstractReentrantLock {
             LockSupport.unpark(s.thread);
     }
 
-
     /**
      * Find the successor of a node, working backwards from the tail
      * @param node the node
@@ -469,7 +543,6 @@ public abstract class AbstractReentrantLock {
         }
     }
 
-
     /**
      * Main locking code.
      * @param mode mode representing r/w, interrupt, timeout control
@@ -477,17 +550,19 @@ public abstract class AbstractReentrantLock {
      * @return UNINTERRUPTED on success, INTERRUPT on interrupt,
      * TIMEOUT on timeout
      */
-    int doLock(int mode, long nanos) {
+    private int doLock(int mode, long nanos) {
+        final Thread current = Thread.currentThread();
+
         if ((mode & INTERRUPT) != 0 && Thread.interrupted())
             return INTERRUPT;
 
-        final Thread current = Thread.currentThread();
-        if (tryReentrantAcquire(mode, current))
+        // Try initial barging or recursive acquire
+        if (tryAcquire(mode | CHECK_FAIRNESS, current))
             return UNINTERRUPTED;
 
         long lastTime = ((mode & TIMEOUT) == 0)? 0 : System.nanoTime();
 
-        final Node node = new Node(current, mode & READER);
+        final Node node = new Node(current, mode & SHARED);
         enq(node);
 
         /*
@@ -511,9 +586,9 @@ public abstract class AbstractReentrantLock {
                 node.thread = null;
                 node.prev = null; 
                 head = node;
-                if (isReader(mode) && node.status < 0) {
+                if (isSharedMode(mode) && node.status < 0) {
                     Node s = node.next; // wake up other readers
-                    if (s == null || isReader(s.mode))
+                    if (s == null || isSharedMode(s.mode))
                         unparkSuccessor(node);
                 }
                 
@@ -561,20 +636,21 @@ public abstract class AbstractReentrantLock {
     }
 
     /**
-     * Re-acquire lock after a wait, resetting recursion count.
+     * Re-acquire lock after a wait, resetting lock count.
      * Assumes (does not check) that lock was, and will be, held in
-     * write-mode.
+     * exclusive-mode.
      * @param current the waiting thread
      * @param node its node
-     * @param recs number of recursive holds on lock before entering wait
+     * @param holds number of holds on lock before entering wait
      * @return true if interrupted while re-acquiring lock
      */
-    boolean relock(Thread current, Node node, int recs) {
+    boolean relock(Thread current, Node node, int holds) {
         boolean interrupted = false;
         for (;;) {
             Node p = node.prev; 
-            if (p == head && tryAcquire(WRITER, current)) {
-                recursions = recs;
+            if (p == head && tryAcquire(EXCLUSIVE, current)) {
+                if (holds != 1)
+                    count.set(holds);
                 p.next = null; 
                 node.thread = null;
                 node.prev = null; 
@@ -595,24 +671,142 @@ public abstract class AbstractReentrantLock {
         }
     }
 
-    // Note: unlock() is done in subclasses since checks vary
-    // across modes/types
+    // Exportable versions of main lock/unlock methods
+
+    /** Acquire shared lock */
+    final void lockShared() {
+        if (!fair || head == tail) {             // fast path
+            final AtomicInteger count = this.count;
+            int c = count.get();
+            if (!isExclusive(c) && count.compareAndSet(c, c + SHARED_UNIT))
+                return;
+        }
+        doLock(SHARED | UNINTERRUPTED, 0);
+    }
+
+    /** trylock for shared lock */
+    final boolean tryLockShared() {
+        final AtomicInteger count = this.count;
+        int c = count.get();
+        if (!isExclusive(c) && count.compareAndSet(c, c + SHARED_UNIT))
+            return true;
+        return tryAcquire(SHARED, Thread.currentThread());
+    }
+
+    /** Trylock for shared lock */
+    final boolean tryLockShared(long timeout, TimeUnit unit) throws InterruptedException {
+        int s = doLock(SHARED | INTERRUPT | TIMEOUT, unit.toNanos(timeout));
+        if (s == UNINTERRUPTED)
+            return true;
+        if (s != INTERRUPT)
+            return false;
+        throw new InterruptedException();
+    }
+
+    /** Interruptibly lock shared lock */
+    final void lockInterruptiblyShared() throws InterruptedException {
+        if (doLock(SHARED | INTERRUPT, 0) == INTERRUPT)
+            throw new InterruptedException();
+    }
 
 
-    /**
-     * Fully unlock the lock, setting recursions to zero.  Assumes
-     * (does not check) that lock is held in write-mode.
-     * @return current recursion count.
-     */
-    int fullyUnlock() {
-        int recs = recursions;
-        recursions = 0;
-        if (tryRelease(WRITER)) {
-            Node h = head;
-            if (h != null && h.status < 0)
+    /** Release shared lock */
+    final void unlockShared() {
+        final AtomicInteger count = this.count;
+        for (;;) {
+            int c = count.get();
+            int nextc = c - SHARED_UNIT;
+            if (nextc < 0)
+                throw new IllegalMonitorStateException();
+            if (count.compareAndSet(c, nextc)) {
+                if (nextc == 0) {
+                    Node h = head;
+                    if (h != null && h.status < 0)
+                        unparkSuccessor(h);
+                }
+                return;
+            }
+        }
+    }
+
+    /** Acquire exclusive (write) lock */
+    final void lockExclusive() {
+        if ((!fair || head == tail) && count.compareAndSet(0, 1)) 
+            owner = Thread.currentThread();
+        else
+            doLock(UNINTERRUPTED, 0);
+    }
+
+    /** Trylock for exclusive (write) lock */
+    final boolean tryLockExclusive() {
+        if (count.compareAndSet(0, 1)) {
+            owner = Thread.currentThread();
+            return true;
+        }
+        return tryAcquire(0, Thread.currentThread());
+    }
+
+    /** Release exclusive (write) lock */
+    final void unlockExclusive() {
+        Node h;
+        final AtomicInteger count = this.count;
+        Thread current = Thread.currentThread();
+        if (count.get() != 1 || current != owner) 
+            slowUnlockExclusive(current);
+        else {
+            owner = null;
+            count.set(0);
+            if ((h = head) != null && h.status < 0)
                 unparkSuccessor(h);
         }
-        return recs;
+    }
+
+    /**
+     * Handle uncommon cases for unlockExclusive
+     * @param current current Thread
+     */
+    private void slowUnlockExclusive(Thread current) {
+        Node h;
+        int c = count.get();
+        int w = exclusiveCount(c) - 1;
+        if (w < 0 || owner != current)
+            throw new IllegalMonitorStateException();
+        if (w == 0) 
+            owner = null;
+        count.set(c - 1);
+        if (w == 0 && (h = head) != null && h.status < 0)
+            unparkSuccessor(h);
+    }
+
+    /** Trylock for exclusive (write) lock */
+    final boolean tryLockExclusive(long timeout, TimeUnit unit) throws InterruptedException {
+        int s = doLock(INTERRUPT | TIMEOUT, unit.toNanos(timeout));
+        if (s == UNINTERRUPTED)
+            return true;
+        if (s != INTERRUPT)
+            return false;
+        throw new InterruptedException();
+    }
+
+    /** Interruptible lock exclusive (write) lock */
+    final void lockInterruptiblyExclusive() throws InterruptedException { 
+        if (doLock(INTERRUPT, 0) == INTERRUPT)
+            throw new InterruptedException();
+    }
+
+    /**
+     * Fully unlock the lock, setting lock holds to zero.  Assumes
+     * (does not check) that lock is held in exclusive-mode.
+     * @return current hold count.
+     */
+    final int fullyUnlock() {
+        int holds = count.get();
+        owner = null;
+        count.set(0);
+        Node h = head;
+        if (h != null && h.status < 0)
+            unparkSuccessor(h);
+        return holds;
     }
 
     // Instrumentation and status
@@ -661,13 +855,14 @@ public abstract class AbstractReentrantLock {
         return list;
     }
 
-
     /**
      * Returns a collection containing threads that may be waiting to
      * acquire lock with given mode. 
+     * @param shared true if shared mode, else exclusive
      * @return the collection of threads
      */
-    Collection<Thread> getQueuedThreadsWithMode(int mode) {
+    Collection<Thread> getQueuedThreads(boolean shared) {
+        int mode = shared? SHARED : EXCLUSIVE;
         ArrayList<Thread> list = new ArrayList<Thread>();
         for (Node p = tail; p != null; p = p.prev) {
             if (p.mode == mode) {
@@ -680,7 +875,7 @@ public abstract class AbstractReentrantLock {
     }
 
     /**
-     * Returns the thread that currently owns the lock, or
+     * Returns the thread that currently owns the exclusive lock, or
      * <tt>null</tt> if not owned. Note that the owner may be
      * momentarily <tt>null</tt> even if there are threads trying to
      * acquire the lock but have not yet done so.  This method is
@@ -688,14 +883,19 @@ public abstract class AbstractReentrantLock {
      * more extensive lock monitoring facilities.
      * @return the owner, or <tt>null</tt> if not owned.
      */
-    protected abstract Thread getOwner();
+    protected Thread getOwner() {
+        return (isExclusive(count.get()))? owner : null;
+    }
 
     /**
      * Throw IllegalMonitorStateException if given thread is not owner
      * @param thread the thread
      * @throws IllegalMonitorStateException if thread not owner
      */
-    abstract void checkOwner(Thread thread);
+    final void checkOwner(Thread thread) {
+        if (!isExclusive(count.get()) || owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
 
     /**
      * Throw IllegalMonitorStateException if given thread cannot
@@ -703,7 +903,11 @@ public abstract class AbstractReentrantLock {
      * @param thread the thread
      * @throws IllegalMonitorStateException if thread cannot wait
      */
-    abstract void checkOwnerForWait(Thread thread);
+    final void checkOwnerForWait(Thread thread) {
+        // Waiters cannot hold shared locks
+        if (count.get() != 1 || owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
 
     /**
      * Return true if a node, always one that was initially placed on
@@ -711,7 +915,7 @@ public abstract class AbstractReentrantLock {
      * @param node the node
      * @return true if on lock queue
      */
-    boolean isOnLockQueue(Node node) {
+    final boolean isOnLockQueue(Node node) {
         if (node.status == CONDITION || node.prev == null)
             return false;
         // If node has successor, it must be on lock queue
@@ -742,7 +946,7 @@ public abstract class AbstractReentrantLock {
      * @return true if succesfully transferred (else the node was
      * cancelled before signal).
      */
-    boolean transferForSignal(Node node) {
+    final boolean transferForSignal(Node node) {
         /*
          * If cannot change status, the node has been cancelled.
          */
@@ -772,7 +976,7 @@ public abstract class AbstractReentrantLock {
      * @param node its node
      * @return true if cancelled before the node was signalled.
      */
-    boolean transferAfterCancelledWait(Thread current, Node node) {
+    final boolean transferAfterCancelledWait(Thread current, Node node) {
         if (statusUpdater.compareAndSet(node, CONDITION, 0)) {
             enq(node);
             return true;
@@ -788,6 +992,19 @@ public abstract class AbstractReentrantLock {
                 Thread.yield();
             return false;
         }
+    }
+
+    // Serialization support
+
+    /**
+     * Reconstitute this lock instance from a stream (that is,
+     * deserialize it).
+     * @param s the stream
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        count.set(0); // reset to unlocked state
     }
 
     /**
@@ -824,8 +1041,6 @@ public abstract class AbstractReentrantLock {
         }
 
         // Internal methods
-
-
 
         /**
          * Add a new waiter to wait queue
@@ -958,14 +1173,14 @@ public abstract class AbstractReentrantLock {
             Thread current = Thread.currentThread();
             lock.checkOwnerForWait(current);
             Node w = addConditionWaiter(current);
-            int recs = lock.fullyUnlock();
+            int holds = lock.fullyUnlock();
             boolean interrupted = false;
             while (!lock.isOnLockQueue(w)) {
                 LockSupport.park();
                 if (Thread.interrupted()) 
                     interrupted = true;
             }
-            if (lock.relock(current, w, recs))
+            if (lock.relock(current, w, holds))
                 interrupted = true;
             if (interrupted)
                 current.interrupt();
@@ -1017,7 +1232,7 @@ public abstract class AbstractReentrantLock {
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int recs = lock.fullyUnlock();
+            int holds = lock.fullyUnlock();
             boolean throwIE = false;
             boolean interrupted = false;
 
@@ -1034,7 +1249,7 @@ public abstract class AbstractReentrantLock {
                 LockSupport.park();
             }
 
-            if (lock.relock(current, w, recs))
+            if (lock.relock(current, w, holds))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1103,7 +1318,7 @@ public abstract class AbstractReentrantLock {
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int recs = lock.fullyUnlock();
+            int holds = lock.fullyUnlock();
             long lastTime = System.nanoTime();
             boolean throwIE = false;
             boolean interrupted = false;
@@ -1128,7 +1343,7 @@ public abstract class AbstractReentrantLock {
                 lastTime = now;
             }
 
-            if (lock.relock(current, w, recs))
+            if (lock.relock(current, w, holds))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1192,7 +1407,7 @@ public abstract class AbstractReentrantLock {
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int recs = lock.fullyUnlock();
+            int holds = lock.fullyUnlock();
             long abstime = deadline.getTime();
             boolean timedout = false;
             boolean throwIE = false;
@@ -1215,7 +1430,7 @@ public abstract class AbstractReentrantLock {
                 LockSupport.parkUntil(abstime);
             }
 
-            if (lock.relock(current, w, recs))
+            if (lock.relock(current, w, holds))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1254,7 +1469,7 @@ public abstract class AbstractReentrantLock {
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int recs = lock.fullyUnlock();
+            int holds = lock.fullyUnlock();
             long lastTime = System.nanoTime();
             boolean timedout = false;
             boolean throwIE = false;
@@ -1280,7 +1495,7 @@ public abstract class AbstractReentrantLock {
                 lastTime = now;
             }
 
-            if (lock.relock(current, w, recs))
+            if (lock.relock(current, w, holds))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1356,5 +1571,4 @@ public abstract class AbstractReentrantLock {
             return list;
         }
     }
-
 }

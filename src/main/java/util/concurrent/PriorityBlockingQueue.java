@@ -16,7 +16,7 @@ import java.util.*;
  * @author Doug Lea
 **/
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
-        implements BlockingQueue<E>, Sorted, java.io.Serializable {
+        implements BlockingQueue<E>, java.io.Serializable {
 
     private final PriorityQueue<E> q;
     private final ReentrantLock lock = new ReentrantLock(true);

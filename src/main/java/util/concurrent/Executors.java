@@ -23,50 +23,6 @@ import java.security.PrivilegedExceptionAction;
 public class Executors {
 
     /**
-     * A wrapper class that exposes only the ExecutorService methods
-     * of an implementation.
-     */
-    private static class DelegatedExecutorService extends AbstractExecutorService {
-        private final ExecutorService e;
-        DelegatedExecutorService(ExecutorService executor) { e = executor; }
-        public void execute(Runnable command) { e.execute(command); }
-        public void shutdown() { e.shutdown(); }
-        public List<Runnable> shutdownNow() { return e.shutdownNow(); }
-        public boolean isShutdown() { return e.isShutdown(); }
-        public boolean isTerminated() { return e.isTerminated(); }
-        public boolean awaitTermination(long timeout, TimeUnit unit)
-            throws InterruptedException {
-            return e.awaitTermination(timeout, unit);
-        }
-    }
-    
-    /**
-     * A wrapper class that exposes only the ExecutorService and 
-     * ScheduleExecutor methods of a ScheduledThreadPoolExecutor.
-     */
-    private static class DelegatedScheduledExecutorService
-            extends DelegatedExecutorService 
-            implements ScheduledExecutorService {
-        private final ScheduledExecutorService e;
-        DelegatedScheduledExecutorService(ScheduledExecutorService executor) {
-            super(executor);
-            e = executor;
-        }
-        public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit) {
-            return e.schedule(command, delay, unit);
-        }
-        public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-            return e.schedule(callable, delay, unit);
-        }
-        public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
-            return e.scheduleAtFixedRate(command, initialDelay, period, unit);
-        }
-        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
-            return e.scheduleWithFixedDelay(command, initialDelay, delay, unit);
-        }
-    }
-
-    /**
      * Creates a thread pool that reuses a fixed set of threads
      * operating off a shared unbounded queue. If any thread
      * terminates due to a failure during execution prior to shutdown,
@@ -77,10 +33,9 @@ public class Executors {
      * @return the newly created thread pool
      */
     public static ExecutorService newFixedThreadPool(int nThreads) {
-        return new DelegatedExecutorService
-            (new ThreadPoolExecutor(nThreads, nThreads,
-                                    0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue<Runnable>()));
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());
     }
 
     /**
@@ -93,11 +48,10 @@ public class Executors {
      * @return the newly created thread pool
      */
     public static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
-        return new DelegatedExecutorService
-            (new ThreadPoolExecutor(nThreads, nThreads,
-                                    0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue<Runnable>(),
-                                    threadFactory));
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>(),
+                                      threadFactory);
     }
 
     /**
@@ -113,10 +67,9 @@ public class Executors {
      * @return the newly-created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor() {
-        return new DelegatedExecutorService
-            (new ThreadPoolExecutor(1, 1,
-                                    0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue<Runnable>()));
+        return new ThreadPoolExecutor(1, 1,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());
     }
 
     /**
@@ -129,11 +82,10 @@ public class Executors {
      * @return the newly-created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-        return new DelegatedExecutorService
-            (new ThreadPoolExecutor(1, 1,
-                                    0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue<Runnable>(),
-                                    threadFactory));
+        return new ThreadPoolExecutor(1, 1,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>(),
+                                      threadFactory);
     }
 
     /**
@@ -153,10 +105,9 @@ public class Executors {
      * @return the newly created thread pool
      */
     public static ExecutorService newCachedThreadPool() {
-        return new DelegatedExecutorService
-            (new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                    60, TimeUnit.SECONDS,
-                                    new SynchronousQueue<Runnable>()));
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      60, TimeUnit.SECONDS,
+                                      new SynchronousQueue<Runnable>());
     }
 
     /**
@@ -168,11 +119,10 @@ public class Executors {
      * @return the newly created thread pool
      */
     public static ExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
-        return new DelegatedExecutorService
-            (new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                    60, TimeUnit.SECONDS,
-                                    new SynchronousQueue<Runnable>(),
-                                    threadFactory));
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      60, TimeUnit.SECONDS,
+                                      new SynchronousQueue<Runnable>(),
+                                      threadFactory);
     }
    
     /**
@@ -192,9 +142,8 @@ public class Executors {
      * @return a newly created scheduled thread pool with termination management
      */
     public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
-        return new DelegatedScheduledExecutorService
-            (new ScheduledThreadPoolExecutor(corePoolSize));
-    }
+        return new ScheduledThreadPoolExecutor(corePoolSize);
+}
 
     /**
      * Creates a thread pool that can schedule commands to run after a 
@@ -207,8 +156,7 @@ public class Executors {
      */
     public static ScheduledExecutorService newScheduledThreadPool(
             int corePoolSize, ThreadFactory threadFactory) {
-        return new DelegatedScheduledExecutorService
-            (new ScheduledThreadPoolExecutor(corePoolSize, threadFactory));
+        return new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
     }
         
     /**

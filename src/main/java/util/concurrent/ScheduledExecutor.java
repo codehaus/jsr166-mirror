@@ -9,13 +9,28 @@ import java.util.concurrent.atomic.*;
 import java.util.*;
 
 /**
- * An <tt>Executor</tt> that can schedule tasks to run after a given delay,
- * or to execute periodically. This class is preferable to
+ * An <tt>Executor</tt> that can schedule command to run after a given
+ * delay, or to execute periodically. This class is preferable to
  * <tt>java.util.Timer</tt> when multiple worker threads are needed,
  * or when the additional flexibility or capabilities of
- * <tt>ThreadExecutor</tt> are required.  Tasks submitted using the
- * <tt>execute</tt> method are scheduled as if they had a requested
- * delay of zero. 
+ * <tt>ThreadPoolExecutor</tt> (which this class extends) are
+ * required.
+ *
+ * <p> The <tt>schedule</tt> methods create tasks with various delays
+ * and return a task object that can be used to cancel or check
+ * execution. The <tt>scheduleAtFixedRate</tt> and
+ * <tt>scheduleWithFixedDelay</tt> methods create and execute tasks
+ * that run periodically until cancelled.  Commands submitted using
+ * the <tt>execute</tt> method are scheduled with a requested delay of
+ * zero.
+ *
+ * <p> Delayed tasks execute no sooner than they are enabled, but
+ * without any real-time guarantees about when, after they are enabled
+ * they will commence. Tasks tied for the same execution time are
+ * enabled in first-in-first-out (FIFO) order of submission. An
+ * internal {@link DelayQueue} used for scheduling relies on relative
+ * delays, which may drift from absolute times (as returned by
+ * <tt>System.currentTimeMillis</tt>) over sufficiently long periods.
  *
  * @since 1.5
  * @see Executors
@@ -37,7 +52,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         private final long sequenceNumber;
         private final long time;
         private final long period;
-
+        private final boolean rateBased; // true if at fixed rate;
+                                         // false if fixed delay
         /**
          * Creates a one-shot action with given nanoTime-based trigger time
          */
@@ -45,24 +61,27 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             super(r);
             this.time = ns;
             this.period = 0;
+            rateBased = false;
             this.sequenceNumber = sequencer.getAndIncrement();
         }
 
         /**
          * Creates a periodic action with given nano time and period
          */
-        DelayedTask(Runnable r, long ns,  long period) {
+        DelayedTask(Runnable r, long ns,  long period, boolean rateBased) {
             super(r);
             if (period <= 0)
                 throw new IllegalArgumentException();
             this.time = ns;
             this.period = period;
+            this.rateBased = rateBased;
             this.sequenceNumber = sequencer.getAndIncrement();
         }
 
 
         public long getDelay(TimeUnit unit) {
-            return unit.convert(time - TimeUnit.nanoTime(), TimeUnit.NANOSECONDS);
+            return unit.convert(time - TimeUnit.nanoTime(), 
+                                TimeUnit.NANOSECONDS);
         }
 
         public int compareTo(Object other) {
@@ -106,7 +125,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         DelayedTask nextTask() {
             if (period <= 0 || isCancelled())
                 return null;
-            return new DelayedTask(getRunnable(), time+period, period);
+            long nextTime = period + (rateBased ? time : TimeUnit.nanoTime());
+            return new DelayedTask(getRunnable(), nextTime, period, rateBased);
         }
 
     }
@@ -155,7 +175,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
      * An annoying wrapper class to convince generics compiler to
-     * use a DelayQueue<DelayedTask> as a BlockingQUeue<Runnable>
+     * use a DelayQueue<DelayedTask> as a BlockingQueue<Runnable>
      */ 
     private static class DelayedWorkQueue extends AbstractQueue<Runnable> implements BlockingQueue<Runnable> {
         private final DelayQueue<DelayedTask> dq = new DelayQueue<DelayedTask>();
@@ -244,7 +264,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Creates and executes a one-shot action that may trigger after
+     * Creates and executes a one-shot action that becomes enabled after
      * the given delay.
      * @param command the task to execute.
      * @param delay the time from now to delay execution.
@@ -259,7 +279,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Creates and executes a one-shot action that may trigger after the given date.
+     * Creates and executes a one-shot action that becomes enabled after the given date.
      * @param command the task to execute.
      * @param date the time to commence excution.
      * @return a handle that can be used to cancel the task.
@@ -276,9 +296,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
     
     /**
-     * Creates and executes a periodic action that may trigger first
+     * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and subsequently with the given
-     * period.
+     * period; that is executions will commence after
+     * <tt>initialDelay</tt> then <tt>initialDelay+period</tt>, then
+     * <tt>initialDelay + 2 * period</tt>, and so on.
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param period the period between successive executions.
@@ -287,38 +309,89 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public DelayedTask schedule (Runnable command, long initialDelay,  long period, TimeUnit unit) {
+    public DelayedTask scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
         DelayedTask t = new DelayedTask
             (command, TimeUnit.nanoTime() + unit.toNanos(initialDelay),
-             unit.toNanos(period));
+             unit.toNanos(period), true);
         super.execute(t);
         return t;
     }
     
     /**
-     * Creates a periodic action that may trigger first after the
-     * given date, and subsequently with the given period.
+     * Creates a periodic action that becomes enabled first after the
+     * given date, and subsequently with the given period
+     * period; that is executions will commence after
+     * <tt>initialDate</tt> then <tt>initialDate+period</tt>, then
+     * <tt>initialDate + 2 * period</tt>, and so on.
      * @param command the task to execute.
      * @param initialDate the time to delay first execution.
-     * @param period the period between successive executions.
+     * @param period the period between commencement of successive
+     * executions.
      * @param unit the time unit of the  period parameter.
      * @return a handle that can be used to cancel the task.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public DelayedTask schedule(Runnable command, Date initialDate, long period, TimeUnit unit) {
+    public DelayedTask scheduleAtFixedRate(Runnable command, Date initialDate, long period, TimeUnit unit) {
         DelayedTask t = new DelayedTask
             (command, 
              TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
                                            System.currentTimeMillis()),
-             unit.toNanos(period));
+             unit.toNanos(period), true);
+        super.execute(t);
+        return t;
+    }
+
+    /**
+     * Creates and executes a periodic action that becomes enabled first
+     * after the given initial delay, and and subsequently with the
+     * given delay between the termination of one execution and the
+     * commencement of the next.
+     * @param command the task to execute.
+     * @param initialDelay the time to delay first execution.
+     * @param delay the delay between the termination of one
+     * execution and the commencement of the next.
+     * @param unit the time unit of the delay and delay parameters
+     * @return a handle that can be used to cancel the task.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
+     */
+    public DelayedTask scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+        DelayedTask t = new DelayedTask
+            (command, TimeUnit.nanoTime() + unit.toNanos(initialDelay),
+             unit.toNanos(delay), false);
+        super.execute(t);
+        return t;
+    }
+    
+    /**
+     * Creates a periodic action that becomes enabled first after the
+     * given date, and subsequently with the given delay between
+     * the termination of one execution and the commencement of the
+     * next.
+     * @param command the task to execute.
+     * @param initialDate the time to delay first execution.
+     * @param delay the delay between the termination of one
+     * execution and the commencement of the next.
+     * @param unit the time unit of the  delay parameter.
+     * @return a handle that can be used to cancel the task.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
+     */
+    public DelayedTask scheduleWithFixedDelay(Runnable command, Date initialDate, long delay, TimeUnit unit) {
+        DelayedTask t = new DelayedTask
+            (command, 
+             TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
+                                           System.currentTimeMillis()),
+             unit.toNanos(delay), false);
         super.execute(t);
         return t;
     }
 
 
     /**
-     * Creates and executes a Future that may trigger after the given delay.
+     * Creates and executes a Future that becomes enabled after the
+     * given delay.
      * @param callable the function to execute.
      * @param delay the time from now to delay execution.
      * @param unit the time unit of the delay parameter.
@@ -334,7 +407,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Creates and executes a one-shot action that may trigger after
+     * Creates and executes a one-shot action that becomes enabled after
      * the given date.
      * @param callable the function to execute.
      * @param date the time to commence excution.

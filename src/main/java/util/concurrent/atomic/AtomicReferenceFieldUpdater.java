@@ -50,9 +50,11 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * sufficient information to check that reflective types and
      * generic types match.
      * @param ta an array (normally of length 0) of type T (the class
-     * of the objects holding the field).
+     * of the objects holding the field). This argument is not used in any
+     * way except for purposes of type checking during construction.
      * @param va an array (normally of length 0) of type V (the class
-     * of the field).
+     * of the field).This argument is not used in any
+     * way except for purposes of type checking during construction.
      * @param fieldName the name of the field to be updated.
      * @throws IllegalArgumentException if the field is not a volatile reference type.
      * @throws RuntimeException with an nested reflection-based

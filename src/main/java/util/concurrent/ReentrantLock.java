@@ -10,13 +10,11 @@ import java.util.Date;
 
 
 /**
- * A reentrant mutual exclusion lock.  
- * <p><tt>ReentrantLock</tt> defines a stand-alone {@link Lock} class with 
- * the same basic behavior and semantics as the implicit
- * monitor lock accessed by the use of <tt>synchronized</tt> methods and
- * statements, but without the forced block-structured locking and unlocking
- * that occurs with <tt>synchronized</tt> methods and
- * statements. 
+ * A reentrant mutual exclusion {@link Lock} with the same basic
+ * behavior and semantics as the implicit monitor lock accessed by the
+ * use of <tt>synchronized</tt> methods and statements, but without
+ * the forced block-structured locking and unlocking that occurs with
+ * <tt>synchronized</tt> methods and statements.
  *
  * <p>The order in which blocked threads are granted the lock is not
  * specified.  
@@ -55,17 +53,15 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/07 17:10:36 $
+ * @revised $Date: 2003/06/09 02:32:05 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
  **/
 public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.io.Serializable {
     /*
-      This is a fastpath/slowpath algorithm.
-
-      * The basic algorithm looks like this, ignoring reentrance,
-        cancellation, timeouts, error checking etc:
+      The basic fastpath/slowpath algorithm looks like this, ignoring 
+      reentrance, cancellation, timeouts, error checking etc:
         Lock:
           if (!fair && casOwner(null, currentThread)) // fastpath
             return;
@@ -193,8 +189,8 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
         ReentrantLockQueueNode class as an expedient and efficient
         (although slightly sleazy) solution to serialization and
         initialization problems -- we need head and tail nodes to be
-        initialized to a head node, so use the ReeantrantLock itself
-        as that node.
+        initialized to an otherwise useless dummy node, so use the
+        ReeantrantLock itself as that node.
     */
 
     /*
@@ -546,9 +542,9 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
     }
 
     /**
-     * Attempts to release this lock.  <p>If the current thread is the
+     * Attempts to release this lock.  If the current thread is the
      * holder of this lock then the hold count is decremented. If the
-     * hold count is now zero then the lock is released.  <p>If the
+     * hold count is now zero then the lock is released.   If the
      * current thread is not the holder of this lock then {@link
      * IllegalMonitorStateException} is thrown.
      * @throws IllegalMonitorStateException if the current thread does not

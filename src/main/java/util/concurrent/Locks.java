@@ -14,8 +14,6 @@ import java.util.Date;
  * use of <tt>synchronized</tt> methods and statements by:
  * <ul>
  * <li>allowing for an attempt to acquire a monitor lock only if it is free, 
- * or if it becomes free within a specified time;
- * <li>allowing an attempt to acquire a monitor lock to be interruptible; and
  * <li>providing a method to acquire multiple monitor locks only if
  * they are all available.
  * </ul>
@@ -55,11 +53,9 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:40 $
+ * @revised $Date: 2003/06/09 02:32:05 $
  * @editor $Author: dl $
  *
- * @fixme add implementation notes for any performance issues related to
- * timeouts or interrupts
  **/
 public class Locks {
     private Locks() {} // uninstantiable.

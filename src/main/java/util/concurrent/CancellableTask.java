@@ -70,13 +70,11 @@ public class CancellableTask implements Cancellable, Runnable {
             r != null &&
             r instanceof Thread &&
             r != Thread.currentThread() &&
-            runnerUpdater.compareAndSet(this, r, CANCELLED)) {
+            runnerUpdater.compareAndSet(this, r, CANCELLED)) 
 
             ((Thread)r).interrupt();
-        }
-        else {
+        else 
             runnerUpdater.set(this, CANCELLED);
-        }
         return true;
     }
     

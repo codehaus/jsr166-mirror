@@ -35,7 +35,8 @@ public class  AtomicLongFieldUpdater<T> {
      * sufficient information to check that reflective types and
      * generic types match.
      * @param ta an array (normally of length 0) of type T (the class
-     * of the objects holding the field).
+     * of the objects holding the field).This argument is not used in any
+     * way except for purposes of type checking during construction.
      * @param fieldName the name of the field to be updated.
      * @throws IllegalArgumentException if the field is not a
      * volatile long type.

@@ -431,8 +431,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             checkForComodification();
 
             PriorityQueue.this.remove(lastRet);
-            if (lastRet < cursor)
-                cursor--;
+            cursor--;
             lastRet = 0;
             expectedModCount = modCount;
         }
@@ -464,8 +463,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * Removes and returns the ith element from queue.  Recall
      * that queue is one-based, so 1 <= i <= size.
      *
-     * XXX: Could further special-case i==size, but is it worth it?
-     * XXX: Could special-case i==0, but is it worth it?
      */
     private E remove(int i) {
         assert i <= size;
@@ -520,7 +517,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     private void fixDown(int k) {
         int j;
         if (comparator == null) {
-            while ((j = k << 1) <= size) {
+            while ((j = k << 1) <= size && j > 0) {
                 if (j<size && ((Comparable<E>)queue[j]).compareTo((E)queue[j+1]) > 0)
                     j++; // j indexes smallest kid
                 if (((Comparable<E>)queue[k]).compareTo((E)queue[j]) <= 0)
@@ -529,7 +526,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                 k = j;
             }
         } else {
-            while ((j = k << 1) <= size) {
+            while ((j = k << 1) <= size && j > 0) {
                 if (j < size && comparator.compare((E)queue[j], (E)queue[j+1]) > 0)
                     j++; // j indexes smallest kid
                 if (comparator.compare((E)queue[k], (E)queue[j]) <= 0)

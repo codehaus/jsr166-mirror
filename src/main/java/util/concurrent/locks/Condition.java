@@ -12,9 +12,11 @@ import java.util.Date;
  * <tt>Condition</tt> factors out the <tt>Object</tt> monitor
  * methods ({@link Object#wait() wait}, {@link Object#notify notify}
  * and {@link Object#notifyAll notifyAll}) into distinct objects to
- * give the effect of having multiple wait-sets per object
- * monitor. It also generalises the monitor methods to allow them to
- * be used with arbitrary {@link Lock} implementations when needed.
+ * give the effect of having multiple wait-sets per object, by
+ * combining them with the use of arbitrary {@link Lock} implementations.
+ * Where a <tt>Lock</tt> replaces the use of <tt>synchronized</tt> methods
+ * and statements, a <tt>Condition</tt> replaces the use of the Object
+ * monitor methods.
  *
  * <p>Conditions (also known as <em>condition queues</em> or 
  * <em>condition variables</em>) provide
@@ -27,10 +29,9 @@ import java.util.Date;
  * <em>atomically</em> releases the associated lock and suspends the current
  * thread, just like <tt>Object.wait</tt>.
  *
- * <p>A <tt>Condition</tt> instance is intrinsically bound to a lock, either
- * the built-in monitor lock of an object, or a {@link Lock} instance.
+ * <p>A <tt>Condition</tt> instance is intrinsically bound to a lock.
  * To obtain a <tt>Condition</tt> instance for a particular {@link Lock} 
- * instance use its {@link Lock#newCondition} method.
+ * instance use its {@link Lock#newCondition newCondition()} method.
  *
  * <p>As an example, suppose we have a bounded buffer which supports
  * <tt>put</tt> and <tt>take</tt> methods.  If a
@@ -140,8 +141,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/06 18:42:49 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/25 22:37:13 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public interface Condition {
@@ -159,7 +160,7 @@ public interface Condition {
      * thread to be awakened; or
      * <li>Some other thread invokes the {@link #signalAll} method for this 
      * <tt>Condition</tt>; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread, and interruption of thread suspension is supported; or
      * <li>A &quot;<em>spurious wakeup</em>&quot; occurs
      * </ul>
@@ -246,7 +247,7 @@ public interface Condition {
      * thread to be awakened; or 
      * <li>Some other thread invokes the {@link #signalAll} method for this 
      * <tt>Condition</tt>; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread, and interruption of thread suspension is supported; or
      * <li>The specified waiting time elapses; or
      * <li>A &quot;<em>spurious wakeup</em>&quot; occurs.
@@ -348,7 +349,7 @@ public interface Condition {
      * thread to be awakened; or 
      * <li>Some other thread invokes the {@link #signalAll} method for this 
      * <tt>Condition</tt>; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread, and interruption of thread suspension is supported; or
      * <li>The specified deadline elapses; or
      * <li>A &quot;<em>spurious wakeup</em>&quot; occurs.

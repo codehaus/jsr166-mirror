@@ -60,6 +60,18 @@ package java.util.concurrent;
  * such specialised semantics then the implementation must document those
  * semantics.
  *
+ * <p>All <tt>Lock</tt> implementations <em>must</em> enforce the same
+ * memory synchronization semantics as provided by the built-in monitor lock:
+ * <ul>
+ * <li>A successful lock operation  acts like a successful 
+ * <tt>monitorEnter</tt> action
+ * <li>A successful <tt>unlock</tt> operation acts like a successful
+ * <tt>monitorExit</tt> action
+ * </ul>
+ * Note that unsuccessful locking and unlocking operations, and reentrant
+ * locking/unlocking operations, do not require any memory synchronization
+ * effects.
+ *
  * <p>It is recognised that the three forms of lock acquisition (interruptible,
  * non-interruptible, and timed) may differ in their ease of implementation
  * on some platforms and in their performance characteristics.
@@ -69,6 +81,9 @@ package java.util.concurrent;
  * semantics for all three forms of lock acquistion; but it is required to
  * clearly document the semantics and guarantees provided by each of them.
  *
+ * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
+ * will result in a {@link NullPointerException} being thrown.
+ *
  * @see ReentrantLock
  * @see Condition
  * @see ReadWriteLock
@@ -76,11 +91,10 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/06 07:27:55 $
+ * @revised $Date: 2002/12/09 06:38:24 $
  * @editor $Author: dholmes $
  *
  * @fixme We need to say something about l.lock() versus synchronized(l)
- * @fixme (2) Need to say something about memory model requirements.
  **/
 public interface Lock {
 
@@ -213,8 +227,6 @@ public interface Lock {
      * we won't throw IE, if the lock is not available and the timeout is <=0
      * then we may throw IE. Need to resolve this.
      *
-     * @fixme (2) Do we throw NPE if Clock is null?
-     *
      **/
     public boolean tryLock(long time, Clock granularity) throws InterruptedException;
 
@@ -230,7 +242,7 @@ public interface Lock {
     public void unlock();
 
     /**
-     * Construct a new {@link Condition} that is bound to this <tt>Lock</tt>.
+     * Return a {@link Condition} that is bound to this <tt>Lock</tt>.
      * Conditions are primarily used with the built-in locking provided by
      * <tt>synchronized</tt> methods and statements 
      * (see {@link Locks#newConditionFor}, but in some rare circumstances it 
@@ -247,11 +259,6 @@ public interface Lock {
      * @return A {@link Condition} object for this <tt>Lock</tt>, or
      * <tt>null</tt> if this <tt>Lock</tt> type does not support conditions.
      *
-     * @fixme Should this always return a new condition (which could be a
-     * "recycled" instance from a pool), or could a lock enforce, for example,
-     * a singleton condition? I can't think of an example where this might
-     * make sense but what should we say about the returned instance here?
-     * Anything? Nothing?
      **/
     public Condition newCondition();
 

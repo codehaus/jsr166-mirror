@@ -310,8 +310,6 @@ class Thread implements Runnable {
         if (parent.inheritableThreadLocals != null)
           this.inheritableThreadLocals = ThreadLocal.createInheritedMap(
               (ThreadLocal.ThreadLocalMap<Object>)parent.inheritableThreadLocals);
-        uncaughtExceptionHandler = defaultUncaughtExceptionHandler; // JSR166
-
         /* Stash the specified stack size in case the VM cares */
         this.stackSize = stackSize;
 
@@ -1400,38 +1398,66 @@ class Thread implements Runnable {
     // Added in JSR-166
 
     /**
-     * Interface for handlers invoked when a Thread abruptly terminates
-     * due to an uncaught exception. 
+     * Interface for handlers invoked when a <tt>Thread</tt> abruptly 
+     * terminates due to an uncaught exception. 
+     * <p>When a thread is about to terminate due to an uncaught exception
+     * the Java Virtual Machine will query the thread for its
+     * <tt>UncaughtExceptionHandler</tt> using 
+     * {@link Thread#getUncaughtExceptionHandler} and will invoke the handler's
+     * <tt>uncaughtException</tt> method, passing the thread and the
+     * exception as arguments.
+     * If a thread has not had its <tt>UncaughtExceptionHandler</tt>
+     * explicitly set, then its <tt>ThreadGroup</tt> object acts as its
+     * <tt>UncaughtExceptionHandler</tt>. If the <tt>ThreadGroup</tt> object
+     * has no
+     * special requirements for dealing with the exception, it can forward 
+     * the invocation to the {@linkplain #getDefaultUncaughtExceptionHandler 
+     * default uncaught exception handler}.
+     *
      * @see #setDefaultUncaughtExceptionHandler
      * @see #setUncaughtExceptionHandler
+     * @see ThreadGroup#uncaughtException
      * @since 1.5
      */
     public interface UncaughtExceptionHandler { 
         /** 
          * Method invoked when the given thread terminates due to the
          * given uncaught exception.
+         * <p>Any exception thrown by this method will be ignored by the
+         * Java Virtual Machine.
          * @param t the thread
          * @param e the exception
          */
         void uncaughtException(Thread t, Throwable e);
     }
 
-    private volatile UncaughtExceptionHandler uncaughtExceptionHandler; 
+    // null unless explicitily set
+    private volatile UncaughtExceptionHandler uncaughtExceptionHandler;
 
+    // null unless explictily set
     private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
     /**
      * Set the default handler invoked when a thread abruptly terminates
-     * due to an uncaught exception. 
+     * due to an uncaught exception, and no other handler has been defined
+     * for that thread. 
      *
-     * <p> When a thread is created its uncaught exception handler is set to 
-     * the current default uncaught exception handler. 
-     * This can be overridden by setting the thread's uncaught
-     * exception handler explicitly. 
-     * Any thread whose uncaught exception handler is <tt>null</tt> when it 
-     * is needed will use the current default uncaught exception handler;
-     * or if that is also <tt>null</tt> then the thread's
-     * <tt>ThreadGroup</tt> object acts as its handler.
+     * <p>Uncaught exception handling is controlled first by the thread, then
+     * by the thread's <tt>ThreadGroup</tt> object and finally by the default
+     * uncaught exception handler. If the thread does not have an explicit
+     * uncaught exception handler set, and the thread's thread group
+     * (including parent thread groups)  does not specialise its 
+     * <tt>uncaughtException</tt> method, then the default handler's
+     * <tt>uncaughtException</tt> method will be invoked.
+     * <p>By setting the default uncaught exception handler, an application
+     * can change the way in which uncaught exceptions are handled (such as
+     * logging to a specific device, or file) for those thread's that would
+     * already accept whatever &quot;default&quot; behavior the system
+     * provided.
+     *
+     * <p>Note that the default uncaught exception handler should not usually
+     * defer to the thread's <tt>ThreadGroup</tt> object, as that could cause
+     * infinite recursion.
      *
      * @param eh the object to use as the default uncaught exception handler.
      * If <tt>null</tt> then there is no default handler.
@@ -1442,6 +1468,7 @@ class Thread implements Runnable {
      *
      * @see #setUncaughtExceptionHandler
      * @see #getUncaughtExceptionHandler
+     * @see ThreadGroup#uncaughtException
      * @since 1.5
      */
     public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
@@ -1456,43 +1483,42 @@ class Thread implements Runnable {
      }
 
     /**
-     * Returns the default handler invoked when a Thread abruptly terminates
+     * Returns the default handler invoked when a thread abruptly terminates
      * due to an uncaught exception. If the returned value is <tt>null</tt>,
      * there is no default.
      * @since 1.5
+     * @see #setDefaultUncaughtExceptionHandler
      */
     public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler(){
         return defaultUncaughtExceptionHandler;
     }
 
     /**
-     * Returns the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception. If this thread's handler is 
-     * <tt>null</tt> then the current 
-     * {@link #setDefaultUncaughtExceptionHandler default handler} is
-     * returned. If there is no default handler then the thread's
-     * <tt>ThreadGroup</tt> object is returned unless this thread
-     * has died, in which case <tt>null</tt> is returned.
+     * Returns the handler invoked when this thread abruptly terminates
+     * due to an uncaught exception. If this thread has not had an
+     * uncaught exception handler explicitly set then this thread's
+     * <tt>ThreadGroup</tt> object is returned, unless this thread
+     * has terminated, in which case <tt>null</tt> is returned.
      * @since 1.5
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() { 
         return uncaughtExceptionHandler != null ?
-            uncaughtExceptionHandler : 
-            (defaultUncaughtExceptionHandler != null ?
-             defaultUncaughtExceptionHandler : group);
+            uncaughtExceptionHandler : group;
     }
 
     /**
-     * Set the handler invoked when this Thread abruptly terminates
+     * Set the handler invoked when this thread abruptly terminates
      * due to an uncaught exception. 
-     * <p> When a thread is created its uncaught exception handler is set to 
-     * the current 
-     * {@link #setDefaultUncaughtExceptionHandler default uncaught exception handler}. 
+     * <p>A thread can take full control of how it responds to uncaught
+     * exceptions by having it's uncaught exception handler explicitly set.
+     * If no such handler is set then the thread's <tt>ThreadGroup</tt>
+     * object acts as its handler.
      * @param eh the object to use as this thread's uncaught exception
      * handler. If <tt>null</tt> then this thread has no explicit handler.
      * @throws  SecurityException  if the current thread is not allowed to
      *          modify this thread.
      * @see #setDefaultUncaughtExceptionHandler
+     * @see ThreadGroup#uncaughtException
      * @since 1.5
      */
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) { 

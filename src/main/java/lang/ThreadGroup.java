@@ -879,7 +879,9 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 
     /**
      * Called by the Java Virtual Machine when a thread in this 
-     * thread group stops because of an uncaught exception. 
+     * thread group stops because of an uncaught exception, and the thread 
+     * does not have a specific {@link Thread.UncaughtExceptionHandler} 
+     * installed.
      * <p>
      * The <code>uncaughtException</code> method of 
      * <code>ThreadGroup</code> does the following: 
@@ -887,6 +889,11 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * <li>If this thread group has a parent thread group, the
      *     <code>uncaughtException</code> method of that parent is called
      *     with the same two arguments. 
+     * <li>Otherwise, this method checks to see if there is a {
+     *     {@linkplain Thread#getDefaultUncaughtExceptionHandler default
+     *     uncaught exception handler} installed, and if so, it's
+     *     <code>uncaughtException</code> method is called with the same 
+     *     two arguments.
      * <li>Otherwise, this method determines if the <code>Throwable</code>
      *     argument is an instance of <code>ThreadDeath</code>. If so, nothing
      *     special is done. Otherwise, the <code>Throwable</code>'s
@@ -903,14 +910,22 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @see     java.lang.System#err
      * @see     java.lang.ThreadDeath
      * @see     java.lang.Throwable#printStackTrace(java.io.PrintStream)
+     * @see     java.lang.Thread#getDefaultUncaughtExceptionHandler
      * @since   JDK1.0
      */
     public void uncaughtException(Thread t, Throwable e) {
 	if (parent != null) {
 	    parent.uncaughtException(t, e);
-	} else if (!(e instanceof ThreadDeath)) {
-	    e.printStackTrace(System.err);
-	}
+	} else {
+            Thread.UncaughtExceptionHandler ueh = 
+                Thread.getDefaultUncaughtExceptionHandler();
+            if (ueh != null) {
+                ueh.uncaughtException(t, e);
+            }
+            else if (!(e instanceof ThreadDeath)) {
+                e.printStackTrace(System.err);
+            }
+        }
     }
 
     /**

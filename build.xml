@@ -134,6 +134,22 @@
   </target>
 
 
+  <!-- Anthill targets -->
+
+  <!-- Should really run the tests instead of just the jar target -->
+  <target name="anthill-build" depends="jar, docs, dist-docs"
+          description="Build the jar and both the external and internal docs"/>
+
+  <target name="anthill-publish">
+    <copy todir="${deployDir}/docs/private">
+      <fileset dir="${build.javadocs.dir}"/>
+    </copy>
+    <copy todir="${deployDir}/docs/public">
+      <fileset dir="${dist.javadocs.dir}"/>
+    </copy>
+  </target>
+
+
   <!-- Internal targets -->
 
   <target name="set-warnings-if" if="build.warnings">

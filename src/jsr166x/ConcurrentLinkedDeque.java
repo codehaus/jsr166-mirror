@@ -473,14 +473,12 @@ public class ConcurrentLinkedDeque<E>
      * Prepends the given element at the beginning of this deque.
      *
      * @param o the element to be inserted at the beginning of this deque.
-     * @return <tt>true</tt> always
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
-    public boolean addFirst(E o) {
+    public void addFirst(E o) {
         checkNullArg(o);
 	while (header.append(o) == null) 
             ;
-        return true;
     }
 
     /**
@@ -488,14 +486,12 @@ public class ConcurrentLinkedDeque<E>
      * identical in function to the <tt>add</tt> method.
      *
      * @param o the element to be inserted at the end of this deque.
-     * @return <tt>true</tt> always
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
-    public boolean addLast(E o) {
+    public void addLast(E o) {
         checkNullArg(o);
         while (trailer.prepend(o) == null) 
             ;
-        return true;
     }
 
     /**
@@ -506,7 +502,8 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     public boolean offerFirst(E o) {
-        return addFirst(o);
+        addFirst(o);
+        return true;
     }
 
     /**
@@ -518,7 +515,8 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     public boolean offerLast(E o) {
-        return addLast(o);
+        addLast(o);
+        return true;
     }
 
     /**
@@ -548,7 +546,7 @@ public class ConcurrentLinkedDeque<E>
      * @return the first element in this deque.
      * @throws    NoSuchElementException if this deque is empty.
      */
-    public E getFirst() {
+    public E firstElement() {
         return screenNullResult(peekFirst());
     }
 
@@ -558,7 +556,7 @@ public class ConcurrentLinkedDeque<E>
      * @return the last element in this deque.
      * @throws    NoSuchElementException if this deque is empty.
      */
-    public E getLast()  {
+    public E lastElement()  {
         return screenNullResult(peekLast());
     }
 
@@ -611,6 +609,16 @@ public class ConcurrentLinkedDeque<E>
     public E removeLast() {
         return screenNullResult(pollLast());
     }
+
+    // *** Queue and stack methods ***
+    public boolean offer(E e) { return offerLast(e); }
+    public boolean add(E e)   { return offerLast(e); }
+    public E poll()           { return pollFirst(); }
+    public E remove()         { return removeFirst(); }
+    public E peek()           { return peekFirst(); }
+    public E element()        { return firstElement(); }
+    public void push(E e)     { addFirst(e);  }
+    public E pop()            { return removeFirst(); }
 
     /**
      * Removes the first element <tt>e</tt> such that
@@ -669,82 +677,15 @@ public class ConcurrentLinkedDeque<E>
         }
     }
 
-    // Replace methods non-public pending deciding whether
-    // visibility consequences OK
-
-    /**
-     * Replaces the first element <tt>e</tt> such that
-     * <tt>oldElement.equals(e)</tt>, if such an element exists in
-     * this deque.  If the deque does not contain the element, it is
-     * unchanged.
-     *
-     * @param oldElement element to be replaced in this deque, if present.
-     * @param newElement replacement element
-     * @return <tt>true</tt> if an element was replaced
-     * @throws NullPointerException if the specified element is <tt>null</tt>
-     */
-    boolean replaceFirstOccurrence(E oldElement, E newElement) {
-        if (oldElement == null || newElement == null) 
-            throw new NullPointerException();
-        for (;;) {
-            Node<E> n = header.forward(); 
-            for (;;) {
-                if (n == null)
-                    return false;
-                if (oldElement.equals(n.element)) {
-                    if (n.replace(newElement) != null)
-                        return true;
-                    else
-                        break; // restart if interference
-                }
-                n = n.forward();
-            }
-        }
-    }
-
-    /**
-     * Replaces the last element <tt>e</tt> such that
-     * <tt>oldElement.equals(e)</tt>, if such an element exists in
-     * this deque.  If the deque does not contain the element, it is
-     * unchanged.
-     *
-     * @param oldElement element to be replaced in this deque, if present.
-     * @param newElement replacement element
-     * @return <tt>true</tt> if an element was replaced
-     * @throws NullPointerException if the specified element is <tt>null</tt>
-     */
-    boolean replaceLastOccurrence(E oldElement, E newElement) {
-        if (oldElement == null || newElement == null) 
-            throw new NullPointerException();
-        for (;;) {
-            Node<E> s = trailer;
-            for (;;) {
-                Node<E> n = s.back(); 
-                if (s.isDeleted() || (n != null && n.successor() != s))
-                    break; // restart if pred link is suspect.
-                if (n == null)
-                    return false;
-                if (oldElement.equals(n.element)) {
-                    if (n.replace(newElement) != null)
-                        return true;
-                    else
-                        break; // restart if interference
-                }
-                s = n;
-            }
-        }
-    }
-
     /**
      * Returns <tt>true</tt> if this deque contains at least one
      * element <tt>e</tt> such that <tt>o.equals(e)</tt>.
      *
      * @param o element whose presence in this deque is to be tested.
      * @return <tt>true</tt> if this deque contains the specified element.
-     * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     public boolean contains(Object o) {
-        checkNullArg(o);
+        if (o == null) return false;
         for (Node<E> n = header.forward(); n != null; n = n.forward()) 
             if (o.equals(n.element))
                 return true;
@@ -781,18 +722,6 @@ public class ConcurrentLinkedDeque<E>
         for (Node<E> n = header.forward(); n != null; n = n.forward()) 
             ++count;
         return (count >= Integer.MAX_VALUE)? Integer.MAX_VALUE : (int)count;
-    }
-
-    /**
-     * Appends the specified element to the end of this deque.
-     *
-     * @param o element to be appended to this deque.
-     * @return <tt>true</tt> (as per the general contract of
-     * <tt>Collection.add</tt>).
-     * @throws NullPointerException if the specified element is <tt>null</tt>
-     */
-    public boolean add(E o) {
-	return addLast(o);
     }
 
     /**
@@ -915,63 +844,4 @@ public class ConcurrentLinkedDeque<E>
         }
     }
 
-    /**
-     * Returns a view of this deque as a first-in-first-out queue,
-     * mapping {@link Queue#offer} to <tt>offerLast</tt>, {@link
-     * Queue#poll} to <tt>pollFirst</tt>, and other operations
-     * accordingly. Ths returned queue does not allow null elements.
-     * @return a first-in-first-out view of this deque.
-     */
-    public Queue<E> asFifoQueue() {
-        return new AsFIFO(this);
-    }
-
-    /**
-     * Returns a view of this deque as a last-in-first-out stack,
-     * mapping {@link Queue#offer} to <tt>offerFirst</tt>, {@link
-     * Queue#poll} to <tt>pollFirst</tt>, and other operations
-     * accordingly. Ths returned queue does not allow null elements.
-     * @return a first-in-last-out view of this deque.
-     */
-    public Queue<E> asLifoQueue() {
-        return new AsLIFO(this);
-    }
-
-    static class AsFIFO<E> extends AbstractQueue<E> {
-        private final ConcurrentLinkedDeque<E> q;
-        AsFIFO(ConcurrentLinkedDeque<E> q) { this.q = q; }
-        public boolean offer(E o)          { return q.offerLast(o); }
-        public E poll()                    { return q.pollFirst(); }
-        public E remove()                  { return q.removeFirst(); }
-        public E peek()                    { return q.peekFirst(); }
-        public E Element()                 { return q.getFirst(); }
-        public int size()                  { return q.size(); }
-        public boolean isEmpty()           { return q.isEmpty(); }
-        public boolean contains(Object o)  { return q.contains(o); }
-        public Iterator<E> iterator()      { return q.iterator(); }
-        public Object[] toArray()          { return q.toArray(); }
-        public <T> T[] toArray(T[] a)      { return q.toArray(a); }
-        public boolean add(E o)            { return q.addLast(o); }
-        public boolean remove(Object o)    { return q.remove(o); }
-        public void clear()                { q.clear(); }
-    }
-
-    static class AsLIFO<E> extends AbstractQueue<E> {
-        private final ConcurrentLinkedDeque<E> q;
-        AsLIFO(ConcurrentLinkedDeque<E> q) { this.q = q; }
-        public boolean offer(E o)          { return q.offerFirst(o); }
-        public E poll()                    { return q.pollFirst(); }
-        public E remove()                  { return q.removeFirst(); }
-        public E peek()                    { return q.peekFirst(); }
-        public E Element()                 { return q.getFirst(); }
-        public int size()                  { return q.size(); }
-        public boolean isEmpty()           { return q.isEmpty(); }
-        public boolean contains(Object o)  { return q.contains(o); }
-        public Iterator<E> iterator()      { return q.iterator(); }
-        public Object[] toArray()          { return q.toArray(); }
-        public <T> T[] toArray(T[] a)      { return q.toArray(a); }
-        public boolean add(E o)            { return q.addFirst(o); }
-        public boolean remove(Object o)    { return q.remove(o); }
-        public void clear()                { q.clear(); }
-    }
 }

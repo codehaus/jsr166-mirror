@@ -146,7 +146,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
 
     /**
-     * Create a <tt>LinkedBlockingQueue</tt> with a capacity of
+     * Creates a <tt>LinkedBlockingQueue</tt> with a capacity of
      * {@link Integer#MAX_VALUE}.
      */
     public LinkedBlockingQueue() {
@@ -154,7 +154,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity
+     * Creates a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity
      * @param capacity the capacity of this queue.
      * @throws IllegalArgumentException if <tt>capacity</tt> is not greater
      * than zero.
@@ -166,7 +166,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>LinkedBlockingQueue</tt> with a capacity of
+     * Creates a <tt>LinkedBlockingQueue</tt> with a capacity of
      * {@link Integer#MAX_VALUE}, initially holding the elements of the
      * given collection,
      * added in traversal order of the collection's iterator.
@@ -203,7 +203,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     // this doc comment is overridden to remove the reference to collections
     // greater in size than Integer.MAX_VALUE
     /**
-     * Return the number of elements in this collection.
+     * Returns the number of elements in this collection.
      */
     public int size() {
         return count.get();
@@ -212,7 +212,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     // this doc comment is a modified copy of the inherited doc comment,
     // without the reference to unlimited queues.
     /**
-     * Return the number of elements that this queue can ideally (in
+     * Returns the number of elements that this queue can ideally (in
      * the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue
      * less the current <tt>size</tt> of this queue.
@@ -227,7 +227,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if
+     * Adds the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
@@ -268,7 +268,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if
+     * Adds the specified element to the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
@@ -308,7 +308,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
    /**
-    * Add the specified element to the tail of this queue if possible,
+    * Adds the specified element to the tail of this queue if possible,
     * returning immediately if this queue is full.
     *
     * @throws NullPointerException {@inheritDoc}

@@ -20,8 +20,8 @@ import java.util.*;
  * <p>This is a classic &quot;bounded buffer&quot;, in which a
  * fixed-sized array holds elements inserted by producers and
  * extracted by consumers.  Once created, the capacity cannot be
- * increased.  Attempts to offer an element to a full queue will
- * result in the offer operation blocking; attempts to retrieve an
+ * increased.  Attempts to put an element to a full queue will
+ * result in the put operation blocking; attempts to retrieve an
  * element from an empty queue will similarly block.
  *
  * <p> This class supports an optional fairness policy for ordering

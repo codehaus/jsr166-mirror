@@ -254,6 +254,88 @@ public class Executors {
         return new PrivilegedThreadFactory();
     }
 
+
+    /**
+     * Creates and returns a {@link Callable} object that, when
+     * called, runs the given task and returns the given result.  This
+     * can be useful when applying methods requiring a
+     * <tt>Callable</tt> to an otherwise resultless action.
+     * @param task the task to run
+     * @param result the result to return
+     */
+    public static <T> Callable<T> callable(Runnable task, T result) {
+        return new RunnableAdapter<T>(task, result);
+    }
+
+    /**
+     * Creates and returns a {@link Callable} object that, when
+     * called, runs the given task and returns <tt>null</tt>
+     * @param task the task to run
+     */
+    public static Callable<Object> callable(Runnable task) {
+        return new RunnableAdapter<Object>(task, null);
+    }
+
+    /**
+     * Creates and returns a {@link Callable} object that, when
+     * called, runs the given privileged action and returns its result
+     * @param action the privileged action to run
+     */
+    public static Callable<Object> callable(PrivilegedAction action) {
+        return new PrivilegedActionAdapter(action);
+    }
+
+    /**
+     * Creates and returns a {@link Callable} object that, when
+     * called, runs the given privileged exception action and returns its result
+     * @param action the privileged exception action to run
+     */
+    public static Callable<Object> callable(PrivilegedExceptionAction action) {
+        return new PrivilegedExceptionActionAdapter(action);
+    }
+
+    /**
+     * A callable that runs given task and returns given result
+     */
+    static class RunnableAdapter<T> implements Callable<T> {
+        private final Runnable task;
+        private final T result;
+        RunnableAdapter(Runnable  task, T result) {
+            this.task = task; 
+            this.result = result;
+        }
+        public T call() { 
+            task.run(); 
+            return result; 
+        }
+    }
+
+    /**
+     * A callable that runs given privileged action and returns its result
+     */
+    static class PrivilegedActionAdapter implements Callable<Object> {
+        PrivilegedActionAdapter(PrivilegedAction action) {
+            this.action = action;
+        }
+        public Object call () {
+            return action.run();
+        }
+        private final PrivilegedAction action;
+    }
+
+    /**
+     * A callable that runs given privileged exception action and returns its result
+     */
+    static class PrivilegedExceptionActionAdapter implements Callable<Object> {
+        PrivilegedExceptionActionAdapter(PrivilegedExceptionAction action) {
+            this.action = action;
+        }
+        public Object call () throws Exception {
+            return action.run();
+        }
+        private final PrivilegedExceptionAction action;
+    }
+
     static class DefaultThreadFactory implements ThreadFactory {
         static final AtomicInteger poolNumber = new AtomicInteger(1);
         final ThreadGroup group;
@@ -308,7 +390,6 @@ public class Executors {
         
     }
 
-
    /**
      * A wrapper class that exposes only the ExecutorService methods
      * of an implementation.
@@ -325,33 +406,15 @@ public class Executors {
             throws InterruptedException {
             return e.awaitTermination(timeout, unit);
         }
-        public <T> Future<T> submit(Runnable task, T result) {
-            return e.submit(task, result);
+        public Future<?> submit(Runnable task) {
+            return e.submit(task);
         }
         public <T> Future<T> submit(Callable<T> task) {
             return e.submit(task);
         }
 
-        public void invoke(Runnable task) throws ExecutionException, InterruptedException {
-            e.invoke(task);
-        }
         public <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException {
             return e.invoke(task);
-        }
-        public Future<Object> submit(PrivilegedAction action) {
-            return e.submit(action);
-        }
-        public Future<Object> submit(PrivilegedExceptionAction action) {
-            return e.submit(action);
-        }
-        public  <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result)
-            throws InterruptedException {
-            return e.invokeAll(tasks, result);
-        }
-        public <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result,
-                                             long timeout, TimeUnit unit) 
-            throws InterruptedException {
-            return e.invokeAll(tasks, result, timeout, unit);
         }
         public     <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
             throws InterruptedException {
@@ -370,15 +433,6 @@ public class Executors {
                                long timeout, TimeUnit unit) 
             throws InterruptedException, ExecutionException, TimeoutException {
             return e.invokeAny(tasks, timeout, unit);
-        }
-        public <T> T invokeAny(Collection<Runnable> tasks, T result)
-            throws InterruptedException, ExecutionException {
-            return e.invokeAny(tasks, result);
-        }
-        public <T> T invokeAny(Collection<Runnable> tasks, T result,
-                               long timeout, TimeUnit unit) 
-            throws InterruptedException, ExecutionException, TimeoutException {
-            return e.invokeAny(tasks, result, timeout, unit);
         }
     }
     

@@ -29,8 +29,8 @@ import java.util.concurrent.locks.*;
  */
 public abstract class AbstractExecutorService implements ExecutorService {
 
-    public <T> Future<T> submit(Runnable task, T result) {
-        FutureTask<T> ftask = new FutureTask<T>(task, result);
+    public Future<?> submit(Runnable task) {
+        FutureTask<Object> ftask = new FutureTask<Object>(task, null);
         execute(ftask);
         return ftask;
     }
@@ -41,50 +41,10 @@ public abstract class AbstractExecutorService implements ExecutorService {
         return ftask;
     }
 
-    public void invoke(Runnable task) throws ExecutionException, InterruptedException {
-        FutureTask<?> ftask = new FutureTask<Boolean>(task, null);
-        execute(ftask);
-        ftask.get();
-    }
-
     public <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException {
         FutureTask<T> ftask = new FutureTask<T>(task);
         execute(ftask);
         return ftask.get();
-    }
-
-    public Future<Object> submit(PrivilegedAction action) {
-        Callable<Object> task = new PrivilegedActionAdapter(action);
-        FutureTask<Object> future = new PrivilegedFutureTask<Object>(task);
-        execute(future);
-        return future;
-    }
-
-    public Future<Object> submit(PrivilegedExceptionAction action) {
-        Callable<Object> task = new PrivilegedExceptionActionAdapter(action);
-        FutureTask<Object> future = new PrivilegedFutureTask<Object>(task);
-        execute(future);
-        return future;
-    }
-
-    private static class PrivilegedActionAdapter implements Callable<Object> {
-        PrivilegedActionAdapter(PrivilegedAction action) {
-            this.action = action;
-        }
-        public Object call () {
-            return action.run();
-        }
-        private final PrivilegedAction action;
-    }
-    
-    private static class PrivilegedExceptionActionAdapter implements Callable<Object> {
-        PrivilegedExceptionActionAdapter(PrivilegedExceptionAction action) {
-            this.action = action;
-        }
-        public Object call () throws Exception {
-            return action.run();
-        }
-        private final PrivilegedExceptionAction action;
     }
 
     // any/all methods, each a little bit different than the other
@@ -167,158 +127,6 @@ public abstract class AbstractExecutorService implements ExecutorService {
         } finally {
             for (Future<T> f : futures) 
                 f.cancel(true);
-        }
-    }
-
-
-    public <T> T invokeAny(Collection<Runnable> tasks, T result)
-        throws InterruptedException, ExecutionException {
-        if (tasks == null)
-            throw new NullPointerException();
-        int n = tasks.size();
-        if (n == 0)
-            throw new IllegalArgumentException();
-        List<Future<T>> futures= new ArrayList<Future<T>>(n);
-        ExecutorCompletionService<T> ecs = 
-            new ExecutorCompletionService<T>(this);
-        try {
-            for (Runnable t : tasks) 
-                futures.add(ecs.submit(t, result));
-            ExecutionException ee = null;
-            RuntimeException re = null;
-            while (n-- > 0) {
-                Future<T> f = ecs.take();
-                try {
-                    return f.get();
-                } catch(ExecutionException eex) {
-                    ee = eex;
-                } catch(RuntimeException rex) {
-                    re = rex;
-                }
-            }    
-            if (ee != null)
-                throw ee;
-            if (re != null)
-                throw new ExecutionException(re);
-            throw new ExecutionException();
-        } finally {
-            for (Future<T> f : futures) 
-                f.cancel(true);
-        }
-    }
-
-    public <T> T invokeAny(Collection<Runnable> tasks, T result,
-                           long timeout, TimeUnit unit) 
-        throws InterruptedException, ExecutionException, TimeoutException {
-        if (tasks == null || unit == null)
-            throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
-        int n = tasks.size();
-        if (n == 0)
-            throw new IllegalArgumentException();
-        List<Future<T>> futures= new ArrayList<Future<T>>(n);
-        ExecutorCompletionService<T> ecs = 
-            new ExecutorCompletionService<T>(this);
-        try {
-            for (Runnable t : tasks) 
-                futures.add(ecs.submit(t, result));
-            ExecutionException ee = null;
-            RuntimeException re = null;
-            long lastTime = System.nanoTime();
-            while (n-- > 0) {
-                Future<T> f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
-                if (f == null)
-                    throw new TimeoutException();
-                try {
-                    return f.get();
-                } catch(ExecutionException eex) {
-                    ee = eex;
-                } catch(RuntimeException rex) {
-                    re = rex;
-                }
-                long now = System.nanoTime();
-                nanos -= now - lastTime;
-                lastTime = now;
-            }    
-            if (ee != null)
-                throw ee;
-            if (re != null)
-                throw new ExecutionException(re);
-            throw new ExecutionException();
-        } finally {
-            for (Future<T> f : futures) 
-                f.cancel(true);
-        }
-    }
-
-
-    public <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result)
-        throws InterruptedException {
-        if (tasks == null)
-            throw new NullPointerException();
-        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
-        boolean done = false;
-        try {
-            for (Runnable t : tasks) {
-                FutureTask<T> f = new FutureTask<T>(t, result);
-                futures.add(f);
-                execute(f);
-            }
-            for (Future<T> f : futures) {
-                if (!f.isDone()) {
-                    try { 
-                        f.get(); 
-                    } catch(CancellationException ignore) {
-                    } catch(ExecutionException ignore) {
-                    }
-                }
-            }
-            done = true;
-            return futures;
-        } finally {
-            if (!done)
-                for (Future<T> f : futures) 
-                    f.cancel(true);
-        }
-    }
-
-    public <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result,
-                                         long timeout, TimeUnit unit) 
-        throws InterruptedException {
-        if (tasks == null || unit == null)
-            throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
-        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
-        boolean done = false;
-        try {
-            for (Runnable t : tasks) {
-                FutureTask<T> f = new FutureTask<T>(t, result);
-                futures.add(f);
-                execute(f);
-            }
-            long lastTime = System.nanoTime();
-            for (Future<T> f : futures) {
-                if (!f.isDone()) {
-                    if (nanos < 0) 
-                        return futures;
-                    try { 
-                        f.get(nanos, TimeUnit.NANOSECONDS); 
-                    } catch(CancellationException ignore) {
-                    } catch(ExecutionException ignore) {
-                    } catch(TimeoutException toe) {
-                        return futures;
-                    }
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
-                }
-            }
-            done = true;
-            return futures;
-        } finally {
-            if (!done)
-                for (Future<T> f : futures) 
-                    f.cancel(true);
         }
     }
 

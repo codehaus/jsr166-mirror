@@ -630,7 +630,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Return true if given key greater than or equal to least and
      * strictly less than fence, bypassing either test if least or
-     * fence oare null. Needed mainly in submap operations.
+     * fence are null. Needed mainly in submap operations.
      */
     boolean inHalfOpenRange(K key, K least, K fence) {
         if (key == null) 
@@ -1414,7 +1414,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Return SimpleImmutableEntry or key for results of findNear
-     * ofter screening to ensure result is in given range. Needed by
+     * after screening to ensure result is in given range. Needed by
      * submaps.
      * @param kkey the key
      * @param rel the relation -- OR'ed combination of EQ, LT, GT
@@ -1858,7 +1858,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public Set<K> keySet() {
         /*
-         * Note: Lazy intialization works here and for other views
+         * Note: Lazy initialization works here and for other views
          * because view classes are stateless/immutable so it doesn't
          * matter wrt correctness if more than one is created (which
          * will only rarely happen).  Even so, the following idiom
@@ -1889,7 +1889,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public Set<K> descendingKeySet() {
         /*
-         * Note: Lazy intialization works here and for other views
+         * Note: Lazy initialization works here and for other views
          * because view classes are stateless/immutable so it doesn't
          * matter wrt correctness if more than one is created (which
          * will only rarely happen).  Even so, the following idiom

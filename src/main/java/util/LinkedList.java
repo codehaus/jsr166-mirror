@@ -19,7 +19,7 @@ package java.util;
  *
  * The class implements the <tt>Deque</tt> interface, providing
  * first-in-first-out queue operations for <tt>add</tt>,
- * <tt>poll</tt>, along with other stack and deque operations.
+ * <tt>poll</tt>, along with other stack and deque operations.<p>
  *
  * All of the operations perform as could be expected for a doubly-linked
  * list.  Operations that index into the list will traverse the list from
@@ -499,24 +499,24 @@ public class LinkedList<E>
     /**
      * Inserts the specified element to the front of this list.
      *
-     * @param e the element to insert
+     * @param o the element to insert
      * @return <tt>true</tt> (as per the spec for {@link Deque#offerFirst})
      * @since 1.6
      */
-    public boolean offerFirst(E e) {
-        addFirst(e);
+    public boolean offerFirst(E o) {
+        addFirst(o);
         return true;
     }
 
     /**
      * Inserts the specified element to the end of this list.
      *
-     * @param e the element to insert
+     * @param o the element to insert
      * @return <tt>true</tt> (as per the spec for {@link Deque#offerLast})
      * @since 1.6
      */
-    public boolean offerLast(E e) {
-        addLast(e);
+    public boolean offerLast(E o) {
+        addLast(o);
         return true;
     }
 
@@ -582,11 +582,11 @@ public class LinkedList<E>
      *
      * <p>This method is equivalent to {@link #addFirst}.
      *
-     * @param e the element to push
+     * @param o the element to push
      * @since 1.6
      */
-    public void push(E e) {
-        addFirst(e);
+    public void push(E o) {
+        addFirst(o);
     }
 
     /**
@@ -609,12 +609,12 @@ public class LinkedList<E>
      * list (when traversing the list from head to tail).  If the list
      * does not contain the element, it is unchanged.
      *
-     * @param e element to be removed from this list, if present
+     * @param o element to be removed from this list, if present
      * @return <tt>true</tt> if the list contained the specified element
      * @since 1.6
      */
-    public boolean removeFirstOccurrence(Object e) {
-        return remove(e);
+    public boolean removeFirstOccurrence(Object o) {
+        return remove(o);
     }
 
     /**

@@ -624,8 +624,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * and with default load factor (<tt>0.75f</tt>)
      * and concurrencyLevel (<tt>16</tt>).
      *
-     * @param initialCapacity The implementation performs internal
-     * sizing to accommodate this many elements.
+     * @param initialCapacity the initial capacity. The implementation
+     * performs internal sizing to accommodate this many elements.
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative.
      */

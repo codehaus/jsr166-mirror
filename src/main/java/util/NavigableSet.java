@@ -44,7 +44,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt> 
-     * and this set deas not permit <tt>null</tt> elements
+     * and this set does not permit <tt>null</tt> elements
      */
     public E ceiling(E o);
 
@@ -58,7 +58,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>
-     * and this set deas not permit <tt>null</tt> elements
+     * and this set does not permit <tt>null</tt> elements
      */
     public E lower(E o);
 
@@ -72,7 +72,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
-     * and this set deas not permit <tt>null</tt> elements
+     * and this set does not permit <tt>null</tt> elements
      */
     public E floor(E o);
 
@@ -86,7 +86,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>
-     * and this set deas not permit <tt>null</tt> elements
+     * and this set does not permit <tt>null</tt> elements
      */
     public E higher(E o);
 
@@ -132,7 +132,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * greater than <tt>toElement</tt>.
      * @throws NullPointerException if <tt>fromElement</tt> or
      *	       <tt>toElement</tt> is <tt>null</tt> 
-     * and this set deas not permit <tt>null</tt> elements
+     * and this set does not permit <tt>null</tt> elements
      */
     public NavigableSet<E> subSet(E fromElement, E toElement);
 
@@ -148,7 +148,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>
-     * and this set deas not permit <tt>null</tt> elements
+     * and this set does not permit <tt>null</tt> elements
      */
     public NavigableSet<E> headSet(E toElement);
 
@@ -165,7 +165,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * comparator, if <tt>fromElement</tt> does not implement
      * <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
-     * and this set deas not permit <tt>null</tt> elements
+     * and this set does not permit <tt>null</tt> elements
      */
     public NavigableSet<E> tailSet(E fromElement);
 }

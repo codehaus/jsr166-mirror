@@ -664,7 +664,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
          *
          * @param entry the entry to copy.
          */
-	public SimpleEntry(Entry<K,V> entry) {
+	public SimpleEntry(Entry<? extends K, ? extends V> entry) {
 	    this.key   = entry.getKey();
             this.value = entry.getValue();
 	}
@@ -754,7 +754,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
          *
          * @param entry the entry to copy.
          */
-	public SimpleImmutableEntry(Entry<K,V> entry) {
+	public SimpleImmutableEntry(Entry<? extends K, ? extends V> entry) {
 	    this.key   = entry.getKey();
             this.value = entry.getValue();
 	}

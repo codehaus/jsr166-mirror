@@ -378,7 +378,7 @@ public interface Condition {
      * synchronized boolean aMethod(Date deadline) {
      *   boolean stillWaiting = true;
      *   while (!conditionBeingWaitedFor) {
-     *     if (stillwaiting)
+     *     if (stillWaiting)
      *         stillWaiting = theCondition.awaitUntil(deadline);
      *      else
      *        return false;

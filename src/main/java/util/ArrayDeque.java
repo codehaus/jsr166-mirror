@@ -12,7 +12,7 @@ import java.io.*;
  * usage.  They are not thread-safe; in the absence of external
  * synchronization, they do not support concurrent access by multiple threads.
  * Null elements are prohibited.  This class is likely to be faster than
- * {@link Stack} when used as as a stack, and faster than {@link LinkedList}
+ * {@link Stack} when used as a stack, and faster than {@link LinkedList}
  * when used as a queue.
  *
  * <p>Most <tt>ArrayDeque</tt> operations run in amortized constant time.
@@ -503,7 +503,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Pops an element from the stack represented by this deque.  In other
-     * words, removes and returns the the first element of this deque.
+     * words, removes and returns the first element of this deque.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
      *
@@ -521,7 +521,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * motion of elements backwards or forwards in the array.
      *
      * <p>This method is called delete rather than remove to emphasize the
-     * that that its semantics differ from those of List.remove(int).
+     * that its semantics differ from those of List.remove(int).
      * 
      * @return true if elements moved backwards
      */

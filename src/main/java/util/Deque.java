@@ -24,8 +24,8 @@ package java.util;
  * <tt>Deque</tt> implementations; in most implementations, insert
  * operations cannot fail.
  *
- * <p>The twelve methods described above are are summarized in the 
- * follwoing table:<p>
+ * <p>The twelve methods described above are summarized in the 
+ * following table:<p>
  * 
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
@@ -131,7 +131,7 @@ package java.util;
  * a deque is used as a queue or a stack; in either case, elements are
  * drawn from the beginning of the deque.
  *
- * <p>This inteface provides two methods to to remove interior
+ * <p>This interface provides two methods to remove interior
  * elements, {@link #removeFirstOccurrence removeFirstOccurrence} and
  * {@link #removeLastOccurrence removeLastOccurrence}.  Unlike the
  * {@link List} interface, this interface does not provide support for
@@ -419,7 +419,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Pops an element from the stack represented by this deque.  In other
-     * words, removes and returns the the first element of this deque.
+     * words, removes and returns the first element of this deque.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
      *

@@ -708,7 +708,7 @@ public class LinkedBlockingDeque<E>
                 throw new IllegalStateException();
             last = null;
             // Note: removeNode rescans looking for this node to make
-            // sure it was not already removed. Otherwwise, trying to
+            // sure it was not already removed. Otherwise, trying to
             // re-remove could corrupt list.
             removeNode(n);
         }

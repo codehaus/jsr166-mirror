@@ -531,6 +531,10 @@ class Thread implements Runnable {
      * current thread (which returns from the call to the 
      * <code>start</code> method) and the other thread (which executes its 
      * <code>run</code> method). 
+     * <p>
+     * It is never legal to start a thread more than once.
+     * In particular, a thread may not be restarted once it has completed
+     * execution.
      *
      * @exception  IllegalThreadStateException  if the thread was already
      *               started.

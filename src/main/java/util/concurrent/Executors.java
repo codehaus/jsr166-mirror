@@ -405,7 +405,7 @@ public class Executors {
     /**
      * A callable that runs given task and returns given result
      */
-    static class RunnableAdapter<T> implements Callable<T> {
+    private static class RunnableAdapter<T> implements Callable<T> {
         private final Runnable task;
         private final T result;
         RunnableAdapter(Runnable  task, T result) {
@@ -421,7 +421,7 @@ public class Executors {
     /**
      * A callable that runs given privileged action and returns its result
      */
-    static class PrivilegedActionAdapter implements Callable<Object> {
+    private static class PrivilegedActionAdapter implements Callable<Object> {
         PrivilegedActionAdapter(PrivilegedAction action) {
             this.action = action;
         }
@@ -434,7 +434,7 @@ public class Executors {
     /**
      * A callable that runs given privileged exception action and returns its result
      */
-    static class PrivilegedExceptionActionAdapter implements Callable<Object> {
+    private static class PrivilegedExceptionActionAdapter implements Callable<Object> {
         PrivilegedExceptionActionAdapter(PrivilegedExceptionAction action) {
             this.action = action;
         }
@@ -448,7 +448,7 @@ public class Executors {
     /**
      * A callable that runs under established access control settings
      */
-    static class PrivilegedCallable<T> implements Callable<T> {
+    private static class PrivilegedCallable<T> implements Callable<T> {
         private final AccessControlContext acc;
         private final Callable<T> task;
         private T result;
@@ -480,7 +480,7 @@ public class Executors {
      * A callable that runs under established access control settings and
      * current ClassLoader
      */
-    static class PrivilegedCallableUsingCurrentClassLoader<T> implements Callable<T> {
+    private static class PrivilegedCallableUsingCurrentClassLoader<T> implements Callable<T> {
         private final ClassLoader ccl;
         private final AccessControlContext acc;
         private final Callable<T> task;
@@ -525,7 +525,7 @@ public class Executors {
     /**
      * The default thread factory
      */
-    static class DefaultThreadFactory implements ThreadFactory {
+    private static class DefaultThreadFactory implements ThreadFactory {
         static final AtomicInteger poolNumber = new AtomicInteger(1);
         final ThreadGroup group;
         final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -555,7 +555,7 @@ public class Executors {
     /**
      *  Thread factory capturing access control and class loader
      */
-    static class PrivilegedThreadFactory extends DefaultThreadFactory {
+    private static class PrivilegedThreadFactory extends DefaultThreadFactory {
         private final ClassLoader ccl;
         private final AccessControlContext acc;
 
@@ -586,7 +586,7 @@ public class Executors {
      * A wrapper class that exposes only the ExecutorService methods
      * of an implementation.
      */
-    static class DelegatedExecutorService extends AbstractExecutorService {
+    private static class DelegatedExecutorService extends AbstractExecutorService {
         private final ExecutorService e;
         DelegatedExecutorService(ExecutorService executor) { e = executor; }
         public void execute(Runnable command) { e.execute(command); }
@@ -631,7 +631,7 @@ public class Executors {
      * A wrapper class that exposes only the ExecutorService and 
      * ScheduleExecutor methods of a ScheduledExecutorService implementation.
      */
-    static class DelegatedScheduledExecutorService
+    private static class DelegatedScheduledExecutorService
             extends DelegatedExecutorService 
             implements ScheduledExecutorService {
         private final ScheduledExecutorService e;

@@ -64,42 +64,56 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Insert element at current put position and advance.
+     * Insert element at current put position, advance, and signal.
+     * Call only when holding lock.
      */
     private void insert(E x) {
         items[putIndex] = x;
         putIndex = inc(putIndex);
         ++count;
+        notEmpty.signal();
     }
     
     /**
-     * Extract element at current take position and advance.
+     * Extract element at current take position, advance, and signal.
+     * Call only when holding lock.
      */
     private  E extract() {
         E x = items[takeIndex];
         items[takeIndex] = null;
         takeIndex = inc(takeIndex);
         --count;
+        notFull.signal();
         return x;
     }
 
     /**
-     * Utility for remove and iterator.remove: Delete item at position
-     * i by sliding over all others up through putIndex.
+     * Utility for remove and iterator.remove: Delete item at position i. 
+     * Call only when holding lock.
      */
     void removeAt(int i) {
-        for (;;) {
-            int nexti = inc(i);
-            items[i] = items[nexti];
-            if (nexti != putIndex) 
-                i = nexti;
-            else {
-                items[nexti] = null;
-                putIndex = i;
-                --count;
-                return;
+        // if removing front item, just advance
+        if (i == takeIndex) {
+            items[takeIndex] = null;
+            takeIndex = inc(takeIndex);
+        }
+        else {
+            // slide over all others up through putIndex.
+            for (;;) {
+                int nexti = inc(i);
+                if (nexti != putIndex) {
+                    items[i] = items[nexti];
+                    i = nexti;
+                }
+                else {
+                    items[i] = null;
+                    putIndex = i;
+                    break;
+                }
             }
         }
+        --count;
+        notFull.signal();
     }
 
     /**
@@ -188,7 +202,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 throw ie;
             }
             insert(x);
-            notEmpty.signal();
         }
         finally {
             lock.unlock();
@@ -210,7 +223,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 throw ie;
             }
             E x = extract();
-            notFull.signal();
             return x;
         }
         finally {
@@ -231,7 +243,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 return false;
             else {
                 insert(x);
-                notEmpty.signal();
                 return true;
             }
         }
@@ -251,7 +262,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (count == 0)
                 return null;
             E x = extract();
-            notFull.signal();
             return x;
         }
         finally {
@@ -279,7 +289,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             for (;;) {
                 if (count != items.length) {
                     insert(x);
-                    notEmpty.signal();
                     return true;
                 }
                 if (nanos <= 0)
@@ -318,7 +327,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             for (;;) {
                 if (count != 0) {
                     E x = extract();
-                    notFull.signal();
                     return x;
                 }
                 if (nanos <= 0)
@@ -541,8 +549,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     throw new IllegalStateException();
                 lastRet = -1;
                 
-                nextIndex = i;   // back up cursor
+                int ti = takeIndex;
                 removeAt(i);
+                // back up cursor (reset to front if was first element)
+                nextIndex = (i == ti) ? takeIndex : i;   
                 checkNext();
             }
             finally {

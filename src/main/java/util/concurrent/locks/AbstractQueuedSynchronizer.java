@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 
 /**
  * Provides a framework for creating blocking locks and related
- * synchronization aids that relying on First-in-first-out wait
+ * synchronization aids that rely on First-in-first-out wait
  * queues.  This class is designed to be a suitable superclass for
  * most kinds of synchronizers that rely on a single atomic
  * <tt>int</tt> value to represent status. Subclasses must define the

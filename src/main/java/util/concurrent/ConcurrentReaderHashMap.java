@@ -10,24 +10,16 @@ import java.io.*;
 
 /** 
  * A version of Hashtable that supports mostly-concurrent reading, but
- * exclusive writing.  Because reads are not limited to periods
- * without writes, a concurrent reader policy is weaker than a classic
- * reader/writer policy, but is generally faster and allows more
- * concurrency. This class is a good choice especially for tables that
- * are mainly created by one thread during the start-up phase of a
- * program, and from then on, are mainly read (with perhaps occasional
- * additions or removals) in many threads.  If you also need concurrency
- * among writes, consider instead using ConcurrentHashMap.
- * <p>
- *
- * Successful retrievals using get(key) and containsKey(key) usually
- * run without locking. Unsuccessful ones (i.e., when the key is not
- * present) do involve brief synchronization (locking).  Also, the
- * size and isEmpty methods are always synchronized.
- *
+ * exclusive writing.  This class obeys the same specification as
+ * <tt>java.util.Hashtable</tt>. However, even though all operations
+ * are thread-safe, most read operations do <em>not</em> entail
+ * locking. This class is fully interoperable with Hashtable except in
+ * programs that rely on synchronization of read-methods for
+ * coordination rather than thread-safety.
+ * 
  * <p> Because retrieval operations can ordinarily overlap with
  * writing operations (i.e., put, remove, and their derivatives),
- * retrievals can only be guaranteed to return the results of the most
+ * retrievals are guaranteed to return the results of the most
  * recently <em>completed</em> operations holding upon their
  * onset. Retrieval operations may or may not return results
  * reflecting in-progress writing operations.  However, the retrieval
@@ -74,11 +66,11 @@ public class ConcurrentReaderHashMap<K,V>  extends Dictionary<K,V>
      *     the "count" field, and generally, should not look at table if 0.
      *     
      *   - All synchronized write operations should write to
-     *     the "count" field after updating. The operations may not
+     *     the "count" field after updating. The operations must not
      *     take any action that could even momentarily cause
      *     a concurrent read operation to see inconsistent
      *     data. This is made easier by the nature of the read
-     *     operations in ConcurrentReaderHashMap. For example, no operation
+     *     operations in Map. For example, no operation
      *     can reveal that the table has grown but the threshold
      *     has not yet been updated, so there are no atomicity
      *     requirements for this with respect to reads.
@@ -88,7 +80,7 @@ public class ConcurrentReaderHashMap<K,V>  extends Dictionary<K,V>
      */
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
-    private static final long serialVersionUID = 1421746759512286392L;
+    //    private static final long serialVersionUID = 1421746759512286392L;
 
     /**
      * The default initial number of table slots for this table (32).
@@ -702,10 +694,10 @@ public class ConcurrentReaderHashMap<K,V>  extends Dictionary<K,V>
           handling the case without any other field changes.
 
           Even though hashCodes of cyclic structures can be computed,
-          programs should NOT insert a ConcurrentReaderHashMap into itself. Because
-          its hashCode changes as a result of entering itself, it is
-          normally impossible to retrieve the embedded ConcurrentReaderHashMap using
-          get().
+          programs should NOT insert a ConcurrentReaderHashMap into
+          itself. Because its hashCode changes as a result of entering
+          itself, it is normally impossible to retrieve the embedded
+          ConcurrentReaderHashMap using get().
         */
         int h = 0;
         float lf = loadFactor;
@@ -806,8 +798,6 @@ public class ConcurrentReaderHashMap<K,V>  extends Dictionary<K,V>
      */
 
     private abstract class HashEnumerator {
-
-
         HashEntry<K,V> next;                  // next entry to return
         final HashEntry[] tab;           // snapshot of table
         int index;                   // current slot 

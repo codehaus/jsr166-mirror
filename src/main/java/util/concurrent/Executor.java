@@ -77,35 +77,12 @@ package java.util.concurrent;
  * thread pool implementation. The <tt>Executors</tt> class provides
  * convenient factory methods for these executors.
  *
- * @fixme Move the following to package documentation.
- *
- * <p> An Executor can be thought of as a framework for executing
- * Runnables.  The Executor manages queueing and scheduling of tasks,
- * and creation and teardown of threads.  Depending on which concrete
- * Executor class is being used, tasks may execute in a newly created
- * thread, an existing task-execution thread, or the thread calling
- * execute(), and may execute sequentially or concurrently.
- *
- * <p> Several concrete implementations of Executor are included in
- * java.util.concurrent, including ThreadPoolExecutor, a flexible
- * thread pool, SingleThreadedExecutor, which executes commands
- * sequentially in a background thread, and ScheduledExecutor, which
- * adds support for timed, delayed and periodic task execution.
- * Executor can be used in conjunction with FutureTask (which
- * implements Runnable) to asynchronously start a potentially
- * long-running computation and query the FutureTask to determine if
- * its execution has completed.
- *
- * <p> The <tt>Executors</tt> class provides factory methods for all
- * of the types of executors provided in
- * <tt>java.util.concurrent</tt>.
- *
  * @since 1.5
  * @see Executors
  * @see FutureTask
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:40 $
+ * @revised $Date: 2003/06/04 11:34:19 $
  * @editor $Author: dl $
  */
 public interface Executor {

@@ -5,34 +5,40 @@
 
 <body>
 
-
 This package contains classes that support lock-free thread-safe
 programming on single variables. All provide an operation of the form:
 
 <pre>
-  boolean attemptUpdate(expectedValue, updateValue);
+  boolean compareAndSet(expectedValue, updateValue);
 </pre>
 
 <p> This method (which varies in argument types across different
 classes) is used to atomically set a variable to the
 <code>updateValue</code> if it currently holds the
 <code>expectedValue</code>, reporting <code>true</code> on success.
-Calls to <code>attemptUpdate</code> should almost always appear in
-loops of some sort.  Any given invocation of
-<code>attemptUpdate</code> method may fail, even spuriously (that is,
-for no apparent reason). A <code>false</code> return means only that
-the operation may be retried if desired, relying on the guarantee that
-repeated invocation when the variable holds <code>expectedValue</code>
-and no other thread is also attempting to set the variable will
-eventually succeed.
 
-<p>This specification of <code>attemptUpdate</code> enables
-implementations to employ efficient machine-level atomic instructions
-that are available on contemporary processors. However on some
-platforms support may entail some form of internal locking. Thus the
-method is not strictly guaranteed to be non-blocking.
+<p> The classes additionally support a weaker version of this
+operation:
 
-<p> Method <code>attemptUpdate</code>, along with method
+<pre>
+  boolean weakCompareAndSet(expectedValue, updateValue);
+</pre>
+
+This method may be more efficient in the normal case, but differs in
+that any given invocation of <code>weakCompareAndSet</code> method may
+fail, even spuriously (that is, for no apparent reason). A
+<code>false</code> return means only that the operation may be retried
+if desired, relying on the guarantee that repeated invocation when the
+variable holds <code>expectedValue</code> and no other thread is also
+attempting to set the variable will eventually succeed.
+
+<p>The specifications of these methods enable implementations to
+employ efficient machine-level atomic instructions that are available
+on contemporary processors. However on some platforms, support may
+entail some form of internal locking. Thus the methods are not
+strictly guaranteed to be non-blocking.
+
+<p> Method <code>compareAndSet</code>, along with method
 <code>get</code> that returns current value, minimally suffice for
 programming with atomic operations. The classes and methods in this
 package provide a few related operations to form a small toolkit of
@@ -55,6 +61,19 @@ class Sequencer {
 }
 </pre>
 
+<p>In addition to classes representing single values, this package
+also contains Updater classes that can be used to obtain
+compareAndSwap operations on any selected volatile field of any
+selected class.  <code>AtomicReferenceFieldUpdater</code>,
+<code>AtomicIntegerFieldUpdater</code>, and
+<code>AtomicLongFieldUpdater</code> are reflection-based utilities
+that perform atomic updates to designated reference fields of
+designated classes. They are mainly of use in atomic data structures
+in which several reference fields of the same node (for example, the
+links of a tree node) are independently subject to atomic
+updates. These classes enable greater flexibility in how and when to
+use atomic updates, at the expense of more awkward reflection-based
+setup, less convenient usage, and weaker guarantees.
 
 <p>Atomic references find use in constructions that require additional
 utility classes, not utility methods.  The
@@ -64,19 +83,12 @@ structure to mean that the object being referenced has logically been
 deleted. The <code>AtomicStampedReference</code> class associates an
 integer value with a reference. This may be used for example, to
 represent version numbers corresponding to series of updates.
-Finally, <code>AtomicReferenceFieldUpdater</code> is a
-reflection-based utility that enables atomic updates to designated
-reference fields of designated classes. It may be of use in atomic
-data structures in which several reference fields of the same node
-(for example, the links of a tree node) are independently subject to
-atomic updates. This class enables greater flexibility in how and when
-to use atomic updates, at the expense of more awkward reflection-based
-setup, less convenient usage, and weaker guarantees.
+Finally,
 
-<p> Atomics are not used very often in application-level classes.  They
-are designed primarily as building blocks for implementing
+<p> Atomics are not used very often in application-level classes.
+They are designed primarily as building blocks for implementing
 non-blocking data structures and related infrastructure classes.  The
-<code>attemptUpdate</code> method is not a general replacement for
+<code>compareAndSet</code> method is not a general replacement for
 locking. It applies only when critical updates for an object are
 confined to a <em>single</em> variable.  And atomic classes are not
 general purpose replacements for <code>java.lang.Integer</code>,
@@ -92,9 +104,4 @@ do so, you can use an <code>AtomicInteger</code> to hold
 hold floating point types using <code>Float.floatToIntBits</code> and
 <code>Float.intBitstoFloat</code> conversions.
 
-
-
-<hr>
-<address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
-<!-- hhmts start --> Last modified: Mon Jan 20 11:01:01 EST 2003 <!-- hhmts end -->
 </body> </html>

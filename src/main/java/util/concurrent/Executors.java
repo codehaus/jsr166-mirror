@@ -24,7 +24,7 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/03 16:44:36 $
+ * @revised $Date: 2003/06/04 11:34:19 $
  * @editor $Author: dl $
  */
 public class Executors {
@@ -41,7 +41,6 @@ public class Executors {
         public List shutdownNow() { return e.shutdownNow(); }
         public boolean isShutdown() { return e.isShutdown(); }
         public boolean isTerminated() { return e.isTerminated(); }
-        public boolean remove(Runnable r) { return e.remove(r) ; }
         public boolean awaitTermination(long timeout, TimeUnit unit)
             throws InterruptedException {
             return e.awaitTermination(timeout, unit);
@@ -159,12 +158,12 @@ public class Executors {
      * @param task the task to submit
      * @param value the value which will become the return value of
      * the task upon task completion
-     * @return a CancellableTask that allows cancellation.
+     * @return a Future representing pending completion of the task
      * @throws CannotExecuteException if the task cannot be scheduled
      * for execution
      */
-    public static CancellableTask execute(Executor executor, Runnable task) {
-        CancellableTask ftask = new CancellableTask(task);
+    public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
+        FutureTask<T> ftask = new FutureTask<T>(task, value);
         executor.execute(ftask);
         return ftask;
     }

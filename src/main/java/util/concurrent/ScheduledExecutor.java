@@ -25,21 +25,21 @@ import java.util.*;
 public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
+     * Sequence number to break scheduling ties, and in turn to
+     * guarantee FIFO order among tied entries.
+     */
+    private static final AtomicLong sequencer = new AtomicLong(0);
+
+    /**
      * A delayed or periodic action.
      */
-    public static class DelayedTask extends CancellableTask implements Delayed {
-        /**
-         * Sequence number to break ties, and in turn to guarantee
-         * FIFO order among tied entries.
-         */
-        private static final AtomicLong sequencer = new AtomicLong(0);
-
+    public class DelayedTask extends CancellableTask implements Delayed {
         private final long sequenceNumber;
         private final long time;
         private final long period;
 
         /**
-         * Creates a one-shot action with given nanosecond delay
+         * Creates a one-shot action with given nanoTime-based trigger time
          */
         DelayedTask(Runnable r, long ns) {
             super(r);
@@ -49,7 +49,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * Creates a periodic action with given nanosecond delay and period
+         * Creates a periodic action with given nano time and period
          */
         DelayedTask(Runnable r, long ns,  long period) {
             super(r);
@@ -78,6 +78,12 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                 return 1;
         }
 
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (!isDone()) 
+                ScheduledExecutor.this.remove(this);
+            return super.cancel(mayInterruptIfRunning);
+        }
+
         /**
          * Return true if this is a periodic (not a one-shot) action.
          */
@@ -97,7 +103,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
          * subsequent to current task, or null if non-periodic
          * or canceled.
          */
-        public  DelayedTask nextTask() {
+        DelayedTask nextTask() {
             if (period <= 0 || isCancelled())
                 return null;
             return new DelayedTask(getRunnable(), time+period, period);
@@ -108,7 +114,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * A delayed result-bearing action.
      */
-    public static class DelayedFutureTask<V> extends DelayedTask implements Future<V> {
+    public class DelayedFutureTask<V> extends DelayedTask implements Future<V> {
         /**
          * Creates a Future that may trigger after the given delay.
          */

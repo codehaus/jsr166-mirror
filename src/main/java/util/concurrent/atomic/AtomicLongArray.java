@@ -36,14 +36,15 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
 
     /**
-     * Return the length of the array
+     * Return the length of the array.
      */
     public int length() {
         return array.length;
     }
 
     /**
-     * Get the current value at position i
+     * Get the current value at position <tt>i</tt>.
+     *
      * @param i the index
      * @return the current value
      */
@@ -52,7 +53,8 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
  
     /**
-     * Set the element at position i to the given value
+     * Set the element at position <tt>i</tt> to the given value.
+     *
      * @param i the index
      * @param newValue the new value
      */
@@ -61,8 +63,9 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
   
     /**
-     * Set the element at position i to the given value and return the
-     * old value
+     * Set the element at position <tt>i</tt> to the given value and return the
+     * old value.
+     *
      * @param i the index
      * @param newValue the new value
      * @return the previous value
@@ -76,7 +79,8 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
   
     /**
-     * Atomically increment the element at index i
+     * Atomically increment the element at index <tt>i</tt>.
+     *
      * @param i the index
      * @return the previous value;
      */
@@ -90,7 +94,8 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
   
     /**
-     * Atomically decrement the element at index i
+     * Atomically decrement the element at index <tt>i</tt>.
+     *
      * @param i the index
      * @return the previous value;
      */
@@ -104,7 +109,8 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
   
     /**
-     * Atomically add the given value to element at index i
+     * Atomically add the given value to element at index <tt>i</tt>.
+     *
      * @param i the index
      * @param delta the value to add
      * @return the previous value;

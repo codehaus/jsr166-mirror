@@ -29,7 +29,8 @@ public final class AtomicInteger implements java.io.Serializable {
     private volatile int value;
 
     /**
-     * Create a new AtomicInteger with the given initial value;
+     * Create a new AtomicInteger with the given initial value.
+     *
      * @param initialValue the initial value
      */
     public AtomicInteger(int initialValue) {
@@ -37,7 +38,8 @@ public final class AtomicInteger implements java.io.Serializable {
     }
 
     /**
-     * Get the current value
+     * Get the current value.
+     *
      * @return the current value
      */
     public int get() {
@@ -45,7 +47,8 @@ public final class AtomicInteger implements java.io.Serializable {
     }
   
     /**
-     * Set to the given value
+     * Set to the given value.
+     *
      * @param newValue the new value
      */
     public void set(int newValue) {
@@ -53,7 +56,8 @@ public final class AtomicInteger implements java.io.Serializable {
     }
 
     /**
-     * Set to the give value and return the old value
+     * Set to the give value and return the old value.
+     *
      * @param newValue the new value
      * @return the previous value
      */

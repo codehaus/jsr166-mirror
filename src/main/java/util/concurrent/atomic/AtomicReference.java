@@ -27,7 +27,8 @@ public class AtomicReference<V>  implements java.io.Serializable {
     private volatile V value;
 
     /**
-     * Create a new AtomicReference with the given initial value;
+     * Create a new AtomicReference with the given initial value.
+     *
      * @param initialValue the initial value
      */
     public AtomicReference(V initialValue) {
@@ -35,13 +36,14 @@ public class AtomicReference<V>  implements java.io.Serializable {
     }
 
     /**
-     * Create a new AtomicReference with null initial value;
+     * Create a new AtomicReference with null initial value.
      */
     public AtomicReference() {
     }
   
     /**
-     * Get the current value
+     * Get the current value.
+     *
      * @return the current value
      */
     public final V get() {
@@ -49,7 +51,8 @@ public class AtomicReference<V>  implements java.io.Serializable {
     }
   
     /**
-     * Set to the given value
+     * Set to the given value.
+     *
      * @param newValue the new value
      */
     public final void set(V newValue) {
@@ -81,7 +84,8 @@ public class AtomicReference<V>  implements java.io.Serializable {
     }
 
     /**
-     * Set to the given value and return the old value
+     * Set to the given value and return the old value.
+     *
      * @param newValue the new value
      * @return the previous value
      */

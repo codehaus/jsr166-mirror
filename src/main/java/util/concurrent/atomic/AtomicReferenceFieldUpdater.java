@@ -19,9 +19,9 @@ import java.lang.reflect.*;
  * class Node {
  *   private volatile Node left, right;
  *
- *   private static final AtomicReferenceFieldUpdater<Node, Node> leftUpdater =
+ *   private static final AtomicReferenceFieldUpdater&lt;Node, Node&gt; leftUpdater =
  *     AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "left");
- *   private static AtomicReferenceFieldUpdater<Node, Node> rightUpdater =
+ *   private static AtomicReferenceFieldUpdater&lt;Node, Node&gt; rightUpdater =
  *     AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "right");
  *
  *   Node getLeft() { return left;  }
@@ -143,7 +143,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
     }
 
     /**
-     * Set to the given value and return the old value
+     * Set to the given value and return the old value.
+     *
      * @param obj An object whose field to get and set
      * @param newValue the new value
      * @return the previous value

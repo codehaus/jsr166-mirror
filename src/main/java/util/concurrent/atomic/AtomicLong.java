@@ -28,7 +28,8 @@ public final class AtomicLong implements java.io.Serializable {
     private volatile long value;
 
     /**
-     * Create a new AtomicLong with the given initial value;
+     * Create a new AtomicLong with the given initial value.
+     *
      * @param initialValue the initial value
      */
     public AtomicLong(long initialValue) {
@@ -36,7 +37,8 @@ public final class AtomicLong implements java.io.Serializable {
     }
   
     /**
-     * Get the current value
+     * Get the current value.
+     *
      * @return the current value
      */
     public long get() {
@@ -44,7 +46,8 @@ public final class AtomicLong implements java.io.Serializable {
     }
  
     /**
-     * Set to the given value
+     * Set to the given value.
+     *
      * @param newValue the new value
      */
     public void set(long newValue) {
@@ -56,7 +59,8 @@ public final class AtomicLong implements java.io.Serializable {
     }
   
     /**
-     * Set to the give value and return the old value
+     * Set to the give value and return the old value.
+     *
      * @param newValue the new value
      * @return the previous value
      */

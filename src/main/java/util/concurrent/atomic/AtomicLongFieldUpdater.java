@@ -134,7 +134,8 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     }
 
     /**
-     * Set to the given value and return the old value
+     * Set to the given value and return the old value.
+     *
      * @param obj An object whose field to get and set
      * @param newValue the new value
      * @return the previous value

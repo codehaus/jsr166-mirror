@@ -920,9 +920,12 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Sets the thread factory used to create new threads.
      *
      * @param threadFactory the new thread factory
+     * @throws NullPointerException if threadFactory is null
      * @see #getThreadFactory
      */
     public void setThreadFactory(ThreadFactory threadFactory) {
+        if (threadFactory == null)
+            throw new NullPointerException();
         this.threadFactory = threadFactory;
     }
 

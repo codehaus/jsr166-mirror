@@ -31,14 +31,16 @@ import java.util.*;
  *
  * <p>All <t>schedule</tt> methods accept <em>relative</em> delays and
  * periods as arguments, not absolute times or dates. It is a simple
- * matter to transform an absolute time represented as a
- * {@link java.util.Date}, to the required form. For example, to
- * schedule at a certain future <tt>date</tt>, you can use:
- * <tt>schedule(task, date.getTime() - System.currentTimeMillis(),
+ * matter to transform an absolute time represented as a {@link
+ * java.util.Date}, to the required form. For example, to schedule at
+ * a certain future <tt>date</tt>, you can use: <tt>schedule(task,
+ * date.getTime() - System.currentTimeMillis(),
  * TimeUnit.MILLISECONDS)</tt>. Beware however that expiration of a
  * relative delay need not coincide with the current <tt>Date</tt> at
  * which the task is enabled due to network time synchronization
- * protocols, clock drift, or other factors.
+ * protocols, clock drift, or other factors. Negative relative delays
+ * (but not periods) are allowed in <tt>schedule</tt> methods, and are
+ * treated as requests for immediate execution.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not especially useful for
@@ -110,8 +112,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
          */
         ScheduledCancellableTask(Runnable r, long ns,  long period, boolean rateBased) {
             super(r);
-            if (period <= 0)
-                throw new IllegalArgumentException();
             this.time = ns;
             this.period = period;
             this.rateBased = rateBased;
@@ -243,6 +243,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         public Runnable remove() { return dq.remove(); }
         public Runnable element() { return dq.element(); }
         public void clear() { dq.clear(); }
+        public int drainTo(Collection<? super Runnable> c) { return dq.drainTo(c); }
+        public int drainTo(Collection<? super Runnable> c, int maxElements) { 
+            return dq.drainTo(c, maxElements); 
+        }
 
         public int remainingCapacity() { return dq.remainingCapacity(); }
         public boolean remove(Object x) { return dq.remove(x); }
@@ -266,6 +270,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * 
      * @param corePoolSize the number of threads to keep in the pool,
      * even if they are idle.
+     * @throws IllegalArgumentException if corePoolSize less than or
+     * equal to zero
      */
     public ScheduledExecutor(int corePoolSize) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
@@ -393,10 +399,13 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      * @throws NullPointerException if command is null
+     * @throws IllegalArgumentException if period less than or equal to zero.
      */
     public ScheduledCancellable scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
+        if (period <= 0)
+            throw new IllegalArgumentException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
         ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,
@@ -421,10 +430,13 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      * @throws NullPointerException if command is null
+     * @throws IllegalArgumentException if delay less than or equal to zero.
      */
     public ScheduledCancellable scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
         if (command == null)
             throw new NullPointerException();
+        if (delay <= 0)
+            throw new IllegalArgumentException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
         ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,

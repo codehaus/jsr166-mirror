@@ -18,8 +18,6 @@ import java.util.*;
  *       to prevent interference among threads during traversal.
  *  <li>Mutative operations(add, set, remove, etc) are expensive
  *      since they usually entail copying the entire underlying array.
- *  <li>Loops involving repeated element-by-element mutative operations
- *      are so expensive that they should generally be avoided.
  *  <li>Iterators do not support the mutative remove operation
  *  <li>Traversal via iterators is very fast and cannot ever encounter
  *      interference from other threads. Iterators rely on

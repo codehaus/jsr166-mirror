@@ -482,6 +482,85 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+
+    public void clear() {
+        lock.lock();
+        try {
+            int i = takeIndex;
+            int k = count;
+            while (k-- > 0) {
+                items[i] = null;
+                i = inc(i);
+            }
+            count = 0;
+            putIndex = 0;
+            takeIndex = 0;
+            notFull.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public int drainTo(Collection<? super E> c) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        lock.lock();
+        try {
+            int i = takeIndex;
+            int n = 0;
+            int max = count;
+            while (n < max) {
+                c.add(items[i]);
+                items[i] = null;
+                i = inc(i);
+                ++n;
+            }
+            if (n > 0) {
+                count = 0;
+                putIndex = 0;
+                takeIndex = 0;
+                notFull.signalAll();
+            }
+            return n;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+
+    public int drainTo(Collection<? super E> c, int maxElements) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        if (maxElements <= 0)
+            return 0;
+        lock.lock();
+        try {
+            int i = takeIndex;
+            int n = 0;
+            int sz = count;
+            int max = (maxElements < count)? maxElements : count;
+            while (n < max) {
+                c.add(items[i]);
+                items[i] = null;
+                i = inc(i);
+                ++n;
+            }
+            if (n > 0) {
+                count -= n;
+                takeIndex = i;
+                notFull.signalAll();
+            }
+            return n;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that

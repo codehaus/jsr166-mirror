@@ -197,6 +197,54 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    public int drainTo(Collection<? super E> c) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        lock.lock();
+        try {
+            int n = 0;
+            for (;;) {
+                E first = q.peek();
+                if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
+                    break;
+                c.add(q.poll());
+                ++n;
+            }
+            if (n > 0)
+                available.signalAll();
+            return n;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public int drainTo(Collection<? super E> c, int maxElements) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        if (maxElements <= 0)
+            return 0;
+        lock.lock();
+        try {
+            int n = 0;
+            while (n < maxElements) {
+                E first = q.peek();
+                if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
+                    break;
+                c.add(q.poll());
+                ++n;
+            }
+            if (n > 0)
+                available.signalAll();
+            return n;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
      * Atomically removes all of the elements from this delay queue.
      * The queue will be empty after this call returns.

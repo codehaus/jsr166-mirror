@@ -116,8 +116,8 @@ public final class TimeUnit implements java.io.Serializable {
     }
 
     /**
-     * Convert the given time duration in the given unit to the
-     * current unit.  Conversions from finer to coarser granularities
+     * Convert the given time duration in the given unit to this
+     * unit.  Conversions from finer to coarser granularities
      * truncate, so lose precision. For example converting
      * <tt>999</tt> milliseconds to seconds results in
      * <tt>0</tt>. Conversions from coarser to finer granularities
@@ -127,7 +127,7 @@ public final class TimeUnit implements java.io.Serializable {
      *
      * @param duration the time duration in the given <tt>unit</tt>
      * @param unit the unit of the <tt>duration</tt> argument
-     * @return the converted duration in the current unit,
+     * @return the converted duration in this unit,
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      */
@@ -182,7 +182,7 @@ public final class TimeUnit implements java.io.Serializable {
     }
 
     /**
-     * Perform a timed <tt>Object.wait</tt> using the current time unit.
+     * Perform a timed <tt>Object.wait</tt> using this time unit.
      * This is a convenience method that converts timeout arguments into the
      * form required by the <tt>Object.wait</tt> method. 
      * <p>For example, you could implement a blocking <tt>poll</tt> method (see
@@ -208,7 +208,7 @@ public final class TimeUnit implements java.io.Serializable {
     }
 
     /**
-     * Perform a timed <tt>Thread.join</tt> using the current time unit.
+     * Perform a timed <tt>Thread.join</tt> using this time unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.join</tt> method.
      * @param thread the thread to wait for
@@ -226,7 +226,7 @@ public final class TimeUnit implements java.io.Serializable {
     }
 
     /**
-     * Perform a <tt>Thread.sleep</tt> using the current time unit.
+     * Perform a <tt>Thread.sleep</tt> using this unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.sleep</tt> method.
      * @param timeout the minimum time to sleep

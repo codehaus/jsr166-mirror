@@ -492,6 +492,72 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    public void clear() {
+        fullyLock();
+        try {
+            head.next = null;
+            if (count.getAndSet(0) == capacity)
+                notFull.signalAll();
+        } finally {
+            fullyUnlock();
+        }
+    }
+
+    public int drainTo(Collection<? super E> c) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        Node first;
+        fullyLock();
+        try {
+            first = head.next;
+            head.next = null;
+            if (count.getAndSet(0) == capacity)
+                notFull.signalAll();
+        } finally {
+            fullyUnlock();
+        }
+        // Transfer the elements outside of locks
+        int n = 0;
+        for (Node p = first; p != null; p = p.next) {
+            c.add((E)p.item);
+            p.item = null;
+            ++n;
+        }
+        return n;
+    }
+        
+    public int drainTo(Collection<? super E> c, int maxElements) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        if (maxElements <= 0)
+            return 0;
+        fullyLock();
+        try {
+            int n = 0;
+            Node p = head.next;
+            while (p != null && n < maxElements) {
+                c.add((E)p.item);
+                p.item = null;
+                p = p.next;
+                ++n;
+            }
+            if (n != 0) {
+                head.next = p;
+                if (count.getAndAdd(-n) == capacity)
+                    notFull.signalAll();
+            }
+            return n;
+        } finally {
+            fullyUnlock();
+        }
+    }
+        
+
+
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that

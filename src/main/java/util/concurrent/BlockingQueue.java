@@ -33,9 +33,9 @@ import java.util.Queue;
  * <tt>remove(x)</tt>. However, such operations are in general
  * <em>not</em> performed very efficiently, and are intended for only
  * occasional use, such as when a queued message is cancelled.  Also,
- * the bulk operations, most notably <tt>addAll</tt> are <em>not</em>
- * necessarily performed atomically, so it is possible for
- * <tt>addAll(c)</tt> to fail (throwing an exception) after adding
+ * the bulk Collection operations, most notably <tt>addAll</tt> are
+ * <em>not</em> necessarily performed atomically, so it is possible
+ * for <tt>addAll(c)</tt> to fail (throwing an exception) after adding
  * only some of the elements in <tt>c</tt>.
  *
  * <p>A <tt>BlockingQueue</tt> does <em>not</em> intrinsically support
@@ -182,19 +182,41 @@ public interface BlockingQueue<E> extends Queue<E> {
     boolean add(E o);
 
     /**
-     * Adds all of the elements in the specified collection to this
-     * queue if it is possible to do so.  The behavior of this
-     * operation need not be atomic; a failure may occur after
-     * adding only some elements.
+     * Removes all available elements from this queue and adds them
+     * into the given collection.  This operation may be more
+     * efficient than repeatedly polling this queue.  A failure
+     * encountered while attempting to <tt>add</tt> elements to
+     * collection <tt>c</tt> may result in elements being in neither,
+     * either or both collections when the associated exception is
+     * thrown. Attempts to drain a queue to itself result in
+     * <tt>IllegalArgumentException</tt>. Further, the behavior of
+     * this operation is undefined if the specified collection is
+     * modified while the operation is in progress.
      *
-     * @param c collection whose elements are to be added to this queue
-     * @return <tt>true</tt> if this queue changed as a result of the
-     *         call.
-     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
-     * is <tt>null</tt>
-     * @throws IllegalStateException if any element cannot be added.
+     * @param c the collection to transfer elements into
+     * @return the number of elements transferred.
+     * @throws NullPointerException if c is null
+     * @throws IllegalArgumentException if c is this queue
      * 
      */
-    boolean addAll(Collection<? extends E> c);
-
+    int drainTo(Collection<? super E> c);
+    
+    /**
+     * Removes at most the given number of available elements from
+     * this queue and adds them into the given collection.  A failure
+     * encountered while attempting to <tt>add</tt> elements to
+     * collection <tt>c</tt> may result in elements being in neither,
+     * either or both collections when the associated exception is
+     * thrown. Attempts to drain a queue to itself result in
+     * <tt>IllegalArgumentException</tt>. Further, the behavior of
+     * this operation is undefined if the specified collection is
+     * modified while the operation is in progress.
+     *
+     * @param c the collection to transfer elements into
+     * @param maxElements the maximum number of elements to transfer
+     * @return the number of elements transferred.
+     * @throws NullPointerException if c is null
+     * @throws IllegalArgumentException if c is this queue
+     */
+    int drainTo(Collection<? super E> c, int maxElements);
 }

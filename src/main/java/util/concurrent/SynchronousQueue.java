@@ -550,6 +550,35 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             a[0] = null;
         return a;
     }
+
+
+    public int drainTo(Collection<? super E> c) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        int n = 0;
+        E e;
+        while ( (e = poll()) != null) {
+            c.add(e);
+            ++n;
+        }
+        return n;
+    }
+
+    public int drainTo(Collection<? super E> c, int maxElements) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        int n = 0;
+        E e;
+        while (n < maxElements && (e = poll()) != null) {
+            c.add(e);
+            ++n;
+        }
+        return n;
+    }
 }
 
 

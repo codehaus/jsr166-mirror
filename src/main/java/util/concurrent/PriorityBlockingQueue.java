@@ -296,6 +296,46 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    public int drainTo(Collection<? super E> c) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        lock.lock();
+        try {
+            int n = 0;
+            E e;
+            while ( (e = q.poll()) != null) {
+                c.add(e);
+                ++n;
+            }
+            return n;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public int drainTo(Collection<? super E> c, int maxElements) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        if (maxElements <= 0)
+            return 0;
+        lock.lock();
+        try {
+            int n = 0;
+            E e;
+            while (n < maxElements && (e = q.poll()) != null) {
+                c.add(e);
+                ++n;
+            }
+            return n;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
      * Atomically removes all of the elements from this delay queue.
      * The queue will be empty after this call returns.

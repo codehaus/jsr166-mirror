@@ -369,16 +369,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         protected final int tryAcquireShared(int acquires) {
             Thread current = Thread.currentThread();
             for (;;) {
-                Thread first = getFirstQueuedThread();
-                if (first != null && first != current)
-                    return -1;
                 int c = getState();
                 int nextc = c + (acquires << SHARED_SHIFT);
+                if (exclusiveCount(c) != 0) {
+                    if (owner != current)
+                        return -1;
+                } else {
+                    Thread first = getFirstQueuedThread();
+                    if (first != null && first != current)
+                        return -1;
+                }
                 if (nextc < c)
                     throw new Error("Maximum lock count exceeded");
-                if (exclusiveCount(c) != 0 && 
-                    owner != Thread.currentThread())
-                    return -1;
                 if (compareAndSetState(c, nextc)) 
                     return 1;
                 // Recheck count if lost CAS

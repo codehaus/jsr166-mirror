@@ -712,11 +712,9 @@
   <target name="j1" depends="compile-j1"
           description="Runs a standalone JavaOne program">
 
-    <java classname="jsr166.bbuf.BoundedBufferDemo" fork="true">
+    <java classname="jsr166.random.TestRandom" fork="true">
       <classpath refid="j1.classpath"/>
-      <jvmarg value="-server"/>
-      <arg value="http://www.perl.com/"/>
-      <arg value="1"/>
+      <jvmarg value="-client"/>
     </java>
 
   </target>

@@ -1,16 +1,16 @@
 package jsr166.bbuf;
 
-import java.util.concurrent.locks.*;
+import EDU.oswego.cs.dl.util.concurrent.*;
 
-public final class ConditionBoundedBuffer<E> implements BoundedBuffer<E> {
+public final class BoundedBufferUsingCondVar<E> implements BoundedBuffer<E> {
 
-    public ConditionBoundedBuffer(int capacity) {
+    public BoundedBufferUsingCondVar(int capacity) {
         this.capacity = capacity;
         this.items = (E[]) new Object[capacity];
     }
 
     public void put(E element) throws InterruptedException {
-        lock.lock();
+        mutex.acquire();
         try {
             while (count == capacity)
                 notFull.await();
@@ -20,12 +20,12 @@ public final class ConditionBoundedBuffer<E> implements BoundedBuffer<E> {
             notEmpty.signal();
         }
         finally {
-            lock.unlock();
+            mutex.release();
         }
     }
 
     public E take() throws InterruptedException {
-        lock.lock();
+        mutex.acquire();
         try {
             while (count == 0)
                 notEmpty.await();
@@ -36,7 +36,7 @@ public final class ConditionBoundedBuffer<E> implements BoundedBuffer<E> {
             return element;
         }
         finally {
-            lock.unlock();
+            mutex.release();
         }
     }
 
@@ -46,7 +46,7 @@ public final class ConditionBoundedBuffer<E> implements BoundedBuffer<E> {
 
     private final E[] items;
     private final int capacity;
-    private final Lock lock = new ReentrantLock();
-    private final Condition notFull = lock.newCondition();
-    private final Condition notEmpty = lock.newCondition();
+    private final Mutex mutex = new Mutex();
+    private final CondVar notFull = new CondVar(mutex);
+    private final CondVar notEmpty = new CondVar(mutex);
 }

@@ -18,7 +18,7 @@ package java.util.concurrent;
  *     Future futureImage =
  *       new FutureTask(new Callable() {
  *         public Object call() {
- *           return renderer.render(rawImage); 
+ *           return renderer.render(rawImage);
  *       }});
  *     executor.execute(futureImage);
  *     drawBorders(); // do other things while executing
@@ -33,30 +33,30 @@ package java.util.concurrent;
  **/
 public interface Future  {
 
-  /**
-   * Return true if the underlying task has completed.
-   **/
-  public boolean isDone();
+    /**
+     * Return true if the underlying task has completed.
+     **/
+    public boolean isDone();
 
-  /** 
-   * Wait if necessary for object to exist, then get it 
-   * @throws InterruptedException if current thread was interrupted while waiting
-   * @throws ExecutionException if the underlying computation
-   * threw an exception.
-   **/
-  public Object get() 
-    throws InterruptedException, ExecutionException;
+    /**
+     * Wait if necessary for object to exist, then get it
+     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws ExecutionException if the underlying computation
+     * threw an exception.
+     **/
+    public Object get() throws InterruptedException, ExecutionException;
 
-  /** 
-   * Wait if necessary for at most the given time for object to exist,
-   * then get it.
-   * @param time the maximum time to wait
-   * @param granularity the time unit of the time argument
-   * @throws InterruptedException if current thread was interrupted while waiting
-   * @throws TimeOutException if the wait timed out
-   * @throws ExecutionException if the underlying computation
-   * threw an exception.
-   **/
-  public Object get(long time, Clock granularity) 
-    throws InterruptedException, ExecutionException;
+    /**
+     * Wait if necessary for at most the given time for object to exist,
+     * then get it.
+     * @param time the maximum time to wait
+     * @param granularity the time unit of the time argument
+     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws TimeOutException if the wait timed out
+     * @throws ExecutionException if the underlying computation
+     * threw an exception.
+     **/
+    public Object get(long time, Clock granularity)
+        throws InterruptedException, ExecutionException;
+
 }

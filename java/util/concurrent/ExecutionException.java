@@ -5,18 +5,19 @@ package java.util.concurrent;
  * failing to produce a result.
  */
 public class ExecutionException extends Exception {
-     /**
-     * This field holds the target if the 
-     * ExecutionException(Throwable target) constructor was
-     * used to instantiate the object
-     * 
-     * @serial 
-     * 
-     */
-    private Throwable target;
 
     /**
-     * Constructs an <code>ExecutionException</code> with 
+     * This field holds the target if the
+     * ExecutionException(Throwable target) constructor was
+     * used to instantiate the object
+     *
+     * @serial
+     *
+     */
+    private Throwable target;
+    
+    /**
+     * Constructs an <code>ExecutionException</code> with
      * <code>null</code> as the target exception.
      */
     protected ExecutionException() {
@@ -25,7 +26,7 @@ public class ExecutionException extends Exception {
 
     /**
      * Constructs a ExecutionException with a target exception.
-     * 
+     *
      * @param target the target exception
      */
     public ExecutionException(Throwable target) {

@@ -1,4 +1,5 @@
 package java.util.concurrent;
+
 import java.util.List;
 
 /**
@@ -13,45 +14,43 @@ import java.util.List;
  **/
 public interface Executor {
 
-  /**
-   * Execute the given command sometime in the future
-   **/
-  public void execute(Runnable command);
+    /**
+     * Execute the given command sometime in the future
+     **/
+    public void execute(Runnable command);
 
-  /** 
-   * Cause tasks submitted in subsequent calls to <tt>execute</tt> not
-   * to be processed. However, all previously submitted tasks will
-   * complete.  The exact fate of tasks submitted in subsequent calls
-   * to <tt>execute</tt> is left unspecified in this
-   * interface. Implementations may provide different options, such as
-   * ignoring them, or causing <tt>execute</tt> to throw an
-   * (unchecked) <tt>IllegalStateException</tt>. 
-   **/
-  public void shutdown();
+    /**
+     * Cause tasks submitted in subsequent calls to <tt>execute</tt> not
+     * to be processed. However, all previously submitted tasks will
+     * complete.  The exact fate of tasks submitted in subsequent calls
+     * to <tt>execute</tt> is left unspecified in this
+     * interface. Implementations may provide different options, such as
+     * ignoring them, or causing <tt>execute</tt> to throw an
+     * (unchecked) <tt>IllegalStateException</tt>.
+     **/
+    public void shutdown();
 
-  /** 
-   * Attempt to stop processing all actively executing tasks, never
-   * start processing previously submitted tasks that have not yet
-   * commenced execution, and cause subsequently submitted tasks
-   * not to be processed.  The exact fate of tasks submitted in
-   * subsequent calls to <tt>execute</tt> is left unspecified in this
-   * interface. Implementations may provide different options, such as
-   * ignoring them, or causing <tt>execute</tt> to throw an
-   * (unchecked) <tt>IllegalStateException</tt>.  Similarly, there are
-   * no guarantees beyond best-effort attempts to stop processing
-   * actively executing tasks.  For example typical thread-based
-   * Executors will cancel via <tt>Thread.interrupt</tt>, so if any
-   * tasks mask or fail to respond to interrupts, they might never
-   * terminate.
-   * @return a list of all tasks that never commenced execution.
-   **/
-  public List shutdownNow();
+    /**
+     * Attempt to stop processing all actively executing tasks, never
+     * start processing previously submitted tasks that have not yet
+     * commenced execution, and cause subsequently submitted tasks
+     * not to be processed.  The exact fate of tasks submitted in
+     * subsequent calls to <tt>execute</tt> is left unspecified in this
+     * interface. Implementations may provide different options, such as
+     * ignoring them, or causing <tt>execute</tt> to throw an
+     * (unchecked) <tt>IllegalStateException</tt>.  Similarly, there are
+     * no guarantees beyond best-effort attempts to stop processing
+     * actively executing tasks.  For example typical thread-based
+     * Executors will cancel via <tt>Thread.interrupt</tt>, so if any
+     * tasks mask or fail to respond to interrupts, they might never
+     * terminate.
+     * @return a list of all tasks that never commenced execution.
+     **/
+    public List shutdownNow();
 
-  /**
-   * Return true if the Executor has been shut down.
-   **/
-  public boolean isShutdown();
-
-
-
+    /**
+     * Return true if the Executor has been shut down.
+     **/
+    public boolean isShutdown();
+    
 }

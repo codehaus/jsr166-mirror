@@ -6,5 +6,5 @@ package java.util.concurrent;
  * 
  **/
 public class FifoSemaphore extends Semaphore {
-  public FifoSemaphore(long initialCount) { super(initialCount); }
+    public FifoSemaphore(long initialCount) { super(initialCount); }
 }

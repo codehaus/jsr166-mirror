@@ -56,37 +56,37 @@ package java.util.concurrent;
  * 
  **/
 public class Exchanger {
-  /**
-   * Create a new Exchanger
-   **/
-  public Exchanger() {
-  }
 
-  /**
-   * Wait for another thread to arrive at this exchange point,
-   * and then transfer the given Object to it, and vice versa.
-   * @param x the object to exchange
-   * @return the value provided by the other thread.
-   * @throws InterruptedException if current thread was interrupted while waiting
-   **/
-  public Object exchange(Object x) throws InterruptedException {
-    return null; // for now
-  }
+    /**
+     * Create a new Exchanger
+     **/
+    public Exchanger() {
+    }
 
-  /**
-   * Wait for another thread to arrive at this exchange point,
-   * and then transfer the given Object to it, and vice versa,
-   * unless time-out occurs first.
-   * @param x the object to exchange
-   * @param time the maximum time to wait
-   * @param granularity the time unit of the time argument.
-   * @return the value provided by the other thread.
-   * @throws InterruptedException if current thread was interrupted while waiting
-   * @throws TimeoutException if timed out while waiting.
-   **/
-  public Object exchange(Object x, long time, Clock granularity) throws InterruptedException {
-    return null; // for now
-  }
+    /**
+     * Wait for another thread to arrive at this exchange point,
+     * and then transfer the given Object to it, and vice versa.
+     * @param x the object to exchange
+     * @return the value provided by the other thread.
+     * @throws InterruptedException if current thread was interrupted while waiting
+     **/
+    public Object exchange(Object x) throws InterruptedException {
+        return null; // for now
+    }
 
+    /**
+     * Wait for another thread to arrive at this exchange point,
+     * and then transfer the given Object to it, and vice versa,
+     * unless time-out occurs first.
+     * @param x the object to exchange
+     * @param time the maximum time to wait
+     * @param granularity the time unit of the time argument.
+     * @return the value provided by the other thread.
+     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws TimeoutException if timed out while waiting.
+     **/
+    public Object exchange(Object x, long time, Clock granularity) throws InterruptedException {
+        return null; // for now
+    }
 
 }

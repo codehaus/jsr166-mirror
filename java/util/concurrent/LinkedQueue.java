@@ -1,4 +1,5 @@
 package java.util.concurrent;
+
 import java.util.*;
 
 /**
@@ -11,31 +12,30 @@ import java.util.*;
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.)
  *
  **/
-
 public class LinkedQueue implements  Queue, java.io.Serializable {
 
-  public LinkedQueue() {}
-  public boolean add(Object x) {
-    return false;
-  }
-  public Object poll() {
-    return null;
-  }
-  public Object peek() {
-    return null;
-  }
-  public boolean isEmpty() {
-    return false;
-  }
-  public int size() {
-    return 0;
-  }
-  public Object[] toArray() {
-    return null;
-  }
+    public LinkedQueue() {}
+    public boolean add(Object x) {
+        return false;
+    }
+    public Object poll() {
+        return null;
+    }
+    public Object peek() {
+        return null;
+    }
+    public boolean isEmpty() {
+        return false;
+    }
+    public int size() {
+        return 0;
+    }
+    public Object[] toArray() {
+        return null;
+    }
 
-  public Object[] toArray(Object[] array) {
-    return null;
-  }
+    public Object[] toArray(Object[] array) {
+        return null;
+    }
 
 }

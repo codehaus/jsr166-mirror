@@ -1,4 +1,7 @@
-package java.util.concurrent;
+package jsr166.test;
+
+import java.util.*;
+import java.util.concurrent.*;
 
 import junit.framework.TestCase;
 
@@ -8,9 +11,8 @@ import junit.framework.TestCase;
 public class ScheduledExecutorTest extends TestCase {
 
     public void testScheduleSleepGet () {
-        /*
         try {
-            ScheduledExecutor se = new ScheduledExecutor(1);
+            ScheduledExecutor se = Executors.newScheduledThreadPool(1);
             StringTask task = new StringTask();
 
             assertFalse("task should not be complete", task.isCompleted());
@@ -34,7 +36,6 @@ public class ScheduledExecutorTest extends TestCase {
         catch (InterruptedException ex) {
             fail("Unexpected interruption exception: " + ex);
         }
-        */
     }
 
     private static final String TEST_STRING = "a test string";

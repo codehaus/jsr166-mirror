@@ -1,4 +1,6 @@
-package java.util.concurrent;
+package jsr166.test;
+
+import java.util.concurrent.*;
 
 public class TimedCallable<T> implements Callable<T> {
 

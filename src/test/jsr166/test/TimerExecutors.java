@@ -1,9 +1,7 @@
-package java.util.concurrent;
+package jsr166.test;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class TimerExecutors {
 

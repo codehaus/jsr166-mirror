@@ -1,4 +1,6 @@
-package java.util;
+package jsr166.test;
+
+import java.util.*;
 
 import junit.framework.TestCase;
 

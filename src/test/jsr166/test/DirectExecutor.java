@@ -1,4 +1,7 @@
-package java.util.concurrent;
+package jsr166.test;
+
+import java.util.concurrent.Executor;
+
 
 /**
  * Trivial executor for use in testing

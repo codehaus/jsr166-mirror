@@ -1,8 +1,7 @@
-package java.util.concurrent;
+package jsr166.test;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.util.ConcurrentModificationException;
+import java.util.*;
+import java.util.concurrent.*;
 
 import junit.framework.TestCase;
 

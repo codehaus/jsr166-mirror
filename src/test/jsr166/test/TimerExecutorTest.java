@@ -1,8 +1,10 @@
-package java.util.concurrent;
+package jsr166.test;
 
-import java.util.Date;
-import java.util.TimerTask;
+import java.util.*;
+import java.util.concurrent.*;
+
 import junit.framework.TestCase;
+
 
 /**
  * Tests the TimerExecutor method

@@ -1,8 +1,8 @@
-package java.util.concurrent;
+package jsr166.test;
 
 import java.math.BigInteger;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.concurrent.*;
 
 import junit.framework.TestCase;
 

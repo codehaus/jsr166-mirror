@@ -1,8 +1,7 @@
 package jsr166.test;
 
-import static java.lang.Math.*;
-import java.nio.*;
 import java.util.*;
+import static java.lang.Math.*;
 
 import junit.framework.TestCase;
 
@@ -133,54 +132,6 @@ public class SyntaxTest extends TestCase {
         }
         Color2() {
             colorMap().put(toString(), this);
-        }
-    }
-
-
-    public void testIterable () {
-        ByteBuffer buf = ByteBuffer.wrap(new byte[] { 0x12, 0x13, 0x14 });
-        for (Byte b : Iterables.asIterable(buf)) printByte(b);
-
-        for (Character c : Iterables.asIterable("klmnopq")) printChar(c);
-    }
-
-    private static void printByte (byte b) {
-        System.out.println("buf.get() returns " + b);
-    }
-
-    private static void printChar (char c) {
-        System.out.println("charAt returns " + c);
-    }
-
-    public static class Iterables {
-        public static Iterable<Byte> asIterable(final ByteBuffer buf) {
-            return new Iterable<Byte>() {
-                public SimpleIterator<Byte> iterator() {
-                    return new SimpleIterator<Byte>() {
-                        public boolean hasNext() {
-                            return buf.hasRemaining();
-                        }
-                        public Byte next() {
-                            return Byte.valueOf(buf.get());
-                        }
-                    };
-                }
-            };
-        }
-        public static Iterable<Character> asIterable(final CharSequence s) {
-            return new Iterable<Character>() {
-                public SimpleIterator<Character> iterator() {
-                    return new SimpleIterator<Character>() {
-                        public boolean hasNext() {
-                            return index < s.length();
-                        }
-                        public Character next() {
-                            return Character.valueOf(s.charAt(index++));
-                        }
-                        private int index = 0;
-                    };
-                }
-            };
         }
     }
 }

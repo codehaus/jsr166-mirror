@@ -1,4 +1,6 @@
-package java.util.concurrent.atomic;
+package jsr166.test;
+
+import java.util.concurrent.atomic.*;
 
 import junit.framework.TestCase;
 

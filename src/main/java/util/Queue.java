@@ -23,10 +23,14 @@ package java.util;
  * failure. It is designed for use in collections in which failure to
  * add is a normal, rather than exceptional occurrence, for example,
  * in fixed-capacity (or &ldquo;bounded&rdquo;) queues.
+
  * 
  * <p>The {@link #remove()} and {@link #poll()} methods remove and return an
- * element in accord with the implementation's ordering policy. For example,
- * in FIFO queues, they remove and return the oldest element in the queue.
+ * element in accord with the implementation's ordering policy. 
+ * Exactly which element is removed from the queue is a function
+ * of the queue's ordering policy, which differs from implementation
+ * to implementation.  Possible orderings include (but are not limited
+ * to) first-in-first-out (FIFO), element priority, and arbitrary.
  * The <tt>remove()</tt> and <tt>poll()</tt> methods differ only in their
  * behavior when the queue is empty: the <tt>remove()</tt> method throws an
  * exception, while the <tt>poll()</tt> method returns <tt>null</tt>.
@@ -71,10 +75,6 @@ public interface Queue<E> extends Collection<E> {
 
     /**
      * Remove and return an element from the queue if one is available.
-     * Exactly which element is removed from the queue is a function
-     * of the queue's ordering policy, which differs from implementation
-     * to implementation.  Possible orderings include (but are not limited
-     * to) first-in-first-out (FIFO), element priority, and arbitrary.
      *
      * @return an element previously on the queue, or <tt>null</tt> if the
      *         queue is empty. 

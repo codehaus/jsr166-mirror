@@ -159,6 +159,8 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(TimeUnitTest.class));
         suite.addTest(new TestSuite(TreeMapTest.class));
         suite.addTest(new TestSuite(TreeSetTest.class));
+        suite.addTest(new TestSuite(TreeSubMapTest.class));
+        suite.addTest(new TestSuite(TreeSubSetTest.class));
 		
         return suite;
     }

@@ -182,12 +182,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         return super.add(x);
     }
 
-    /**
-     * @throws IllegalStateException {@inheritDoc}
-     */
-    public boolean addAll(Collection c) {
-        return super.addAll(c);
-    }
+    //    /**
+    //     * @throws IllegalStateException {@inheritDoc}
+    //     */
+    //    public boolean addAll(Collection<? extends E> c) {
+    //        return super.addAll(c);
+    //    }
 
    /** 
     * Add the specified element to the tail of this queue if possible,

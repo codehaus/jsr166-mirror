@@ -199,17 +199,17 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return super.add(element);
     }
 
-    /**
-     * @throws NullPointerException if any element is <tt>null</tt>.
-     */
-    public boolean addAll(Collection c) {
-        return super.addAll(c);
-    }
+    //    /**
+    //     * @throws NullPointerException if any element is <tt>null</tt>.
+    //     */
+    //    public boolean addAll(Collection c) {
+    //        return super.addAll(c);
+    //    }
 
     /**
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean remove(E o) {
+    public boolean remove(Object o) {
         if (o == null)
             throw new NullPointerException();
 
@@ -222,7 +222,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             }
         } else {
             for (int i = 1; i <= size; i++) {
-                if (comparator.compare(queue[i], o) == 0) {
+                if (comparator.compare(queue[i], (E)o) == 0) {
                     remove(i);
                     return true;
                 }

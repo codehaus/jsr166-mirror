@@ -92,12 +92,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return super.add(element);
     }
 
-    /**
-     * @throws NullPointerException if any element is <tt>null</tt>.
-     */
-    public boolean addAll(Collection c) {
-        return super.addAll(c);
-    }
+    //    /**
+    //     * @throws NullPointerException if any element is <tt>null</tt>.
+    //     */
+    //    public boolean addAll(Collection c) {
+    //        return super.addAll(c);
+    //    }
 
     public Comparator comparator() {
         return q.comparator();

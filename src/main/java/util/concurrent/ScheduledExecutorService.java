@@ -38,6 +38,30 @@ import java.util.*;
  * The {@link Executors} class provides convenient factory methods for
  * the ScheduledExecutorService implementations provided in this package.
  *
+ * <h3>Usage Example</h3>
+ * 
+ * Here is a class with a method that sets up a ScheduledExecutorService
+ * to beep every ten seconds for an hour:
+ *
+ * <pre>
+ * import static java.util.concurrent.TimeUnit;
+ * class BeeperControl {
+ *    private final ScheduledExecutorService scheduler = 
+ *       Executors.newSingleThreadScheduledExecutor();
+ *
+ *    public void beepForAnHour() {
+ *        final Runnable beeper = new Runnable() {
+ *                public void run() { System.out.println("beep"); }
+ *            };
+ *        final ScheduledFuture<?> beeperHandle = 
+ *            scheduler.scheduleAtFixedRate(beeper, 10, 10, SECONDS);
+ *        scheduler.schedule(new Runnable() {
+ *                public void run() { beeperHandle.cancel(true); }
+ *            }, 60 * 60, SECONDS);
+ *    }
+ * }
+ * </pre>
+ *
  * @since 1.5
  * @author Doug Lea
  */

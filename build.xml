@@ -7,7 +7,7 @@
   Usage: ant [target]
 
   User-specific settings are read from user.properties.
-  See user.properties.sample for examples.
+  See user.properties.sample for an explanation of some useful settings.
 ------------------------------------------------------------------------------
   </description>
 
@@ -26,7 +26,6 @@
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
-  <property name="build.novariance.arg" value=""/>
 
   <!-- Build locations -->
   <property name="build.dir"            location="build"/>
@@ -55,54 +54,8 @@
 
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
-  <property name="javac.jar"            location="${lib.dir}/javac.jar"/>
-  <property name="collect.jar"          location="${lib.dir}/collect.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
-
-
-
-  <!--
-   ! Bootclasspath munging for source compilation.
-   -->
-
-  <path id="javac.bootclasspath.prefix">
-    <!-- <pathelement location="${src.dir}"/> -->
-    <pathelement location="${javac.jar}"/>
-  </path>
-
-  <path id="javac.bootclasspath">
-    <!-- <pathelement location="${src.dir}"/> -->
-    <pathelement location="${collect.jar}"/>
-    <pathelement location="${rt.jar}"/>
-  </path>
-
-  <!-- Flatten bootclasspath prefix into a platform-appropriate string -->
-  <property name="javac.bootclasspath.prefix"
-           refid="javac.bootclasspath.prefix"/>
-
-  <!-- Turn the flattened bootclasspath prefix into a javac argument -->
-  <property name="build.bootclasspath.arg"
-           value='-J-Xbootclasspath/p:${javac.bootclasspath.prefix}'/>
-
-
-  <!--
-   ! Bootclasspath munging for testing, so JUnit can test our local
-   ! modifications to java.*.
-   -->
-
-  <path id="test.classpath">
-    <pathelement location="${product.jar}"/>
-    <pathelement location="${build.testcases.dir}"/>
-    <pathelement location="${junit.jar}"/>
-  </path>
-
-  <!-- Flatten test classpath into a platform-appropriate string -->
-  <property name="test.classpath" refid="test.classpath"/>
-
-  <!-- Turn the flattened test classpath into a javac argument -->
-  <property name="test.bootclasspath.arg"
-           value='-Xbootclasspath/p:${test.classpath}'/>
 
 
 
@@ -117,7 +70,7 @@
   <!-- Main targets -->
 
   <target name="compile"
-          depends="init"
+          depends="init, configure-compiler"
           description="Compiles main sources to build folder">
 
     <mkdir dir="${build.classes.dir}"/>
@@ -139,12 +92,12 @@
 
 
   <target name="jar"
-          depends="check-emulation, init-jar, native-jar, emulation-jar"
+          depends="configure-emulation, init-jar, native-jar, emulation-jar"
           description="Builds library jar from compiled sources"/>
 
 
   <target name="test"
-          depends="init, check-junit, report-tests"
+          depends="init, configure-tests, report-tests"
           description="Runs all tests (requires JUnit 3.8.1 in ${ant.home}/lib)" />
 
 
@@ -204,7 +157,7 @@
 
 
   <target name="strip"
-          depends="init"
+          depends="init, configure-compiler"
           description="Strip generics from java source (not working yet)">
 
     <mkdir dir="${build.stripped.dir}"/>
@@ -275,30 +228,12 @@
 
   <!-- Internal targets -->
 
-  <target name="set-warnings-if" if="build.warnings">
 
-    <property name="build.warnings.arg" value="-warnunchecked"/>
-
-  </target>
-
-
-  <target name="set-warnings-unless" unless="build.warnings">
-
-    <property name="build.warnings.arg" value=""/>
-
-  </target>
-
-
-  <target name="init"
-          depends="set-warnings-if, set-warnings-unless">
+  <target name="init">
 
     <!-- Version is kept in a separate file -->
     <loadfile property="version" srcFile="version.properties"/>
     <echo>Building JSR-166 version ${version}</echo>
-
-    <!-- Common options in javac invocations -->
-    <property name="build.javac.args"
-             value="${build.bootclasspath.arg} ${build.warnings.arg} ${build.novariance.arg}"/>
 
   </target>
 
@@ -322,7 +257,7 @@
 
 
   <target name="compile-emulation"
-          depends="init"
+          depends="init, configure-compiler"
           if="build.emulation.true">
 
     <mkdir dir="${build.emulation.dir}"/>
@@ -509,7 +444,96 @@
   </target>
 
 
-  <target name="check-junit">
+  <target name="configure-compiler">
+
+    <property name="gjc.version"
+             value="1.3"/>
+
+    <condition property="build.novariance" value="-novariance">
+      <and>
+        <equals arg1="${gjc.version}" arg2="2.0"/>
+        <or>
+          <not><isset property="gjc.novariance"/></not>
+          <istrue value="${gjc.novariance}"/>
+        </or>
+      </and>
+    </condition>
+
+    <property name="build.novariance"
+             value=""/>
+
+    <property name="gjc.dir"
+             value="${lib.dir}/gjc"/>
+
+    <property name="javac.jar"
+          location="${gjc.dir}/${gjc.version}/javac.jar"/>
+
+    <property name="collect.jar"
+          location="${gjc.dir}/${gjc.version}/collect${build.novariance}.jar"/>
+
+
+    <condition property="build.warnunchecked" value="-warnunchecked">
+      <istrue value="${gjc.warnunchecked}"/>
+    </condition>
+
+    <property name="build.warnunchecked" value=""/>
+
+
+    <!--
+     ! Bootclasspath munging for source compilation.
+     -->
+
+    <path id="javac.bootclasspath.prefix">
+      <!-- <pathelement location="${src.dir}"/> -->
+      <pathelement location="${javac.jar}"/>
+    </path>
+
+    <path id="javac.bootclasspath">
+      <!-- <pathelement location="${src.dir}"/> -->
+      <pathelement location="${collect.jar}"/>
+      <pathelement location="${rt.jar}"/>
+    </path>
+
+    <!-- Flatten bootclasspath prefix into a platform-appropriate string -->
+    <property name="javac.bootclasspath.prefix"
+             refid="javac.bootclasspath.prefix"/>
+
+    <!-- Turn the flattened bootclasspath prefix into a javac argument -->
+    <property name="build.bootclasspath.arg"
+             value='-J-Xbootclasspath/p:${javac.bootclasspath.prefix}'/>
+
+    <!-- Flatten bootclasspath for trace message -->
+    <property name="javac.bootclasspath"
+             refid="javac.bootclasspath"/>
+
+    <!-- Common options in javac invocations -->
+    <property name="build.javac.args"
+             value="${build.bootclasspath.arg} ${build.warnunchecked} ${build.novariance}"/>
+
+    <echo>javac ${build.javac.args}
+bootclasspath is ${javac.bootclasspath}</echo>
+
+  </target>
+
+
+  <target name="configure-emulation">
+
+    <condition property="build.emulation.true">
+      <or>
+        <and>
+          <os family="windows"/>
+          <not>
+            <isset property="build.emulation"/>
+          </not>
+        </and>
+        <istrue value="${build.emulation}"/>
+      </or>
+    </condition>
+
+  </target>
+
+
+  <target name="configure-tests">
 
     <!-- junit.framework.Protectable is in JUnit 3.8.1 but not in 3.7 -->
     <available property="junit.available"
@@ -518,16 +542,25 @@
     <fail message="Need JUnit 3.8.1 in ${ant.home}${file.separator}lib to run tests"
           unless="junit.available"/>
 
-  </target>
 
+    <!--
+     ! Bootclasspath munging for testing, so JUnit can test our local
+     ! modifications to java.*.
+     -->
 
-  <target name="check-emulation">
-    <condition property="build.emulation.true">
-      <or>
-        <isset property="build.emulation"/>
-        <os family="windows"/>
-      </or>
-    </condition>
+    <path id="test.classpath">
+      <pathelement location="${product.jar}"/>
+      <pathelement location="${build.testcases.dir}"/>
+      <pathelement location="${junit.jar}"/>
+    </path>
+
+    <!-- Flatten test classpath into a platform-appropriate string -->
+    <property name="test.classpath" refid="test.classpath"/>
+
+    <!-- Turn the flattened test classpath into a javac argument -->
+    <property name="test.bootclasspath.arg"
+             value='-Xbootclasspath/p:${test.classpath}'/>
+
   </target>
 
 

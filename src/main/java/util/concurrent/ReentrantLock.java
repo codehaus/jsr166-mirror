@@ -53,8 +53,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/10 00:04:53 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/06/11 02:09:28 $
+ * @editor $Author: dl $
  * @author Doug Lea
  * 
  **/
@@ -616,10 +616,15 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      */
     public void lockInterruptibly() throws InterruptedException { 
         Thread current = Thread.currentThread();
-        if (Thread.interrupted() ||
-            (!canBarge() || !acquireOwner(current)) &&
-            !doLock(current, null, true, 0))
-            throw new InterruptedException();
+        if (!Thread.interrupted()) {
+            if (canBarge() && !acquireOwner(current))
+                return;
+            if (doLock(current, null, true, 0))
+                return;
+            else
+                Thread.interrupted(); // clear interrupt ststus
+        }
+        throw new InterruptedException();
     }
 
     /**

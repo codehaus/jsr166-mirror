@@ -27,9 +27,17 @@ import java.lang.reflect.*;
  * @author Doug Lea
  */
 
-public class  AtomicLongFieldUpdater<T>  {
+public abstract class  AtomicLongFieldUpdater<T>  { 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
+
+    // Standin for upcoming synthesized version
+    static class AtomicLongFieldUpdaterImpl<T> extends AtomicLongFieldUpdater {
+        AtomicLongFieldUpdaterImpl(Class<T> tclass, String fieldName) {
+            super(tclass, fieldName);
+        }
+    }
+
 
     /**
      * Create an updater for objects with the given field.
@@ -42,7 +50,13 @@ public class  AtomicLongFieldUpdater<T>  {
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
-    public AtomicLongFieldUpdater(Class<T> tclass, String fieldName) {
+
+    public static <U> AtomicLongFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
+        return new AtomicLongFieldUpdaterImpl(tclass, fieldName);
+    }
+
+
+    AtomicLongFieldUpdater(Class<T> tclass, String fieldName) {
         Field field = null;
         try {
             field = tclass.getDeclaredField(fieldName);

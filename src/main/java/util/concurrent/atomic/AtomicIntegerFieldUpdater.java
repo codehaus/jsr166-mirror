@@ -23,9 +23,16 @@ import java.lang.reflect.*;
  * @since 1.5
  * @author Doug Lea
  */
-public class AtomicIntegerFieldUpdater<T>  {
+public abstract class  AtomicIntegerFieldUpdater<T>  { 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
+
+    // Standin for upcoming synthesized version
+    static class AtomicIntegerFieldUpdaterImpl<T> extends AtomicIntegerFieldUpdater {
+        AtomicIntegerFieldUpdaterImpl(Class<T> tclass, String fieldName) {
+            super(tclass, fieldName);
+        }
+    }
 
     /**
      * Create an updater for objects with the given field.
@@ -33,12 +40,17 @@ public class AtomicIntegerFieldUpdater<T>  {
      * that reflective types and generic types match.
      * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
+     * @return the updater
      * @throws IllegalArgumentException if the field is not a
      * volatile integer type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
-    public AtomicIntegerFieldUpdater(Class<T> tclass, String fieldName) {
+    public static <U> AtomicIntegerFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
+        return new AtomicIntegerFieldUpdaterImpl(tclass, fieldName);
+    }
+
+    AtomicIntegerFieldUpdater(Class<T> tclass, String fieldName) {
         Field field = null;
         try {
             field = tclass.getDeclaredField(fieldName);

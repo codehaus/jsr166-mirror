@@ -90,8 +90,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/28 06:56:53 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/04/25 13:27:07 $
+ * @editor $Author: dl $
  *
  * @fixme Is the above property actually true in this implementation?
  * @fixme Should we have a timeout version of await()?
@@ -201,7 +201,7 @@ public class CyclicBarrier {
     /**
      * Reset the barrier to its initial state.  If any parties are
      * currently waiting at the barrier, they will return with a
-     * {@link BrokenBarrierException} before the barrier is fully reset.
+     * {@link BrokenBarrierException}.
      */
     public void reset() {
         // for now

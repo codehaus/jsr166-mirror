@@ -118,246 +118,46 @@ import java.util.concurrent.atomic.*;
  *
  */
 
-public class Semaphore implements java.io.Serializable {
-    /*
-     * The underlying algorithm here is a simplified adaptation of
-     * that used for ReentrantLock. See the internal documentation of
-     * lock package classes for detailed explanation.
-     */
-
+public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Serializable {
     private static final long serialVersionUID = -3222578661600680210L;
-
-    /** Node status value to indicate thread has cancelled */
-    private static final int CANCELLED =  1;
-    /** Node status value to indicate successor needs unparking */
-    private static final int SIGNAL    = -1;
-    /** Node class for waiting threads */
-    private static class Node {
-        volatile int status;
-        volatile Node prev;
-        volatile Node next;
-        Thread thread;
-        Node(Thread t) { thread = t; }
-    }
-
-    /** Number of available permits held in a separate AtomicInteger */
-    private final AtomicInteger perms;
-    /**  Head of the wait queue, lazily initialized.  */
-    private transient volatile Node head;
-    /**  Tail of the wait queue, lazily initialized.  */
-    private transient volatile Node tail;
-    /** true if barging disabled */
     private final boolean fair;
 
-    // Atomic update support
+    // Implement abstract methods
 
-    private static final 
-        AtomicReferenceFieldUpdater<Semaphore, Node> tailUpdater = 
-        AtomicReferenceFieldUpdater.<Semaphore, Node>newUpdater 
-        (Semaphore.class, Node.class, "tail");
-    private static final 
-        AtomicReferenceFieldUpdater<Semaphore, Node> headUpdater = 
-        AtomicReferenceFieldUpdater.<Semaphore, Node>newUpdater 
-        (Semaphore.class,  Node.class, "head");
-    private static final 
-        AtomicIntegerFieldUpdater<Node> statusUpdater = 
-        AtomicIntegerFieldUpdater.<Node>newUpdater 
-        (Node.class, "status");
-
-
-    /**
-     * Insert node into queue, initializing head and tail if necessary.
-     * @param node the node to insert
-     */
-    private void enq(Node node) {
-        Node t = tail;
-        if (t == null) {         // Must initialize first
-            Node h = new Node(null);
-            while ((t = tail) == null) {     
-                if (headUpdater.compareAndSet(this, null, h)) 
-                    tail = h;
-            }
-        }
-
-        for (;;) {
-            node.prev = t;      // Prev field must be valid before/upon CAS
-            if (tailUpdater.compareAndSet(this, t, node)) {
-                t.next = node;  // Next field assignment lags CAS
-                return;
-            }
-            t = tail;
-        } 
-    }
-
-    /**
-     * Unblock the successor of node
-     * @param node the node
-     */
-    private void unparkSuccessor(Node node) {
-        statusUpdater.compareAndSet(node, SIGNAL, 0);
-        Node s = node.next;
-        if (s == null || s.status == CANCELLED) {
-            s = tail;
-            if (s != null && s != node) {
-                Node p = s.prev;
-                while (p != null && p != node) {
-                    if (p.status != CANCELLED) 
-                        s = p; 
-                    p = p.prev;
-                }
-            }
-        }
-        if (s != null && s != node)
-            LockSupport.unpark(s.thread);
-    }
-
-
-    /**
-     * Internal version of tryAcquire returning number of remaining
-     * permits, which is nonnegative only if the acquire succeeded.
-     * @param permits requested number of permits
-     * @return remaining number of permits
-     */
-    private int doTryAcquire(int permits) {
-        final AtomicInteger perms = this.perms;
+    protected int acquireSharedState(boolean isQueued, int acquires, 
+                                     Thread current) {
+        final AtomicInteger perms = getState();
+        if (!isQueued && fair && hasWaiters())
+            return -1;
         for (;;) {
             int available = perms.get();
-            int remaining = available - permits;
+            int remaining = available - acquires;
             if (remaining < 0 ||
                 perms.compareAndSet(available, remaining))
                 return remaining;
         }
     }
-
-    /**
-     * Main code for untimed acquires. 
-     * @param permits number of permits requested
-     * @param interrupts interrupt control: -1 for abort on interrupt,
-     * 0 for continue on interrupt
-     * @return true if lock acquired (can be false only if interruptible)
-     */
-    private boolean doAcquire(int permits, int interrupts) {
-        // Fast path bypasses queue
-        if ((!fair || head == tail) && doTryAcquire(permits) >= 0) 
-            return true;
-        Thread current = Thread.currentThread();
-        Node node = new Node(current);
-        // Retry fast path before enqueuing
-        if (!fair && doTryAcquire(permits) >= 0) 
-            return true;
-        enq(node);
-
-        for (;;) {
-            Node p = node.prev; 
-            if (p == head) {
-                int remaining = doTryAcquire(permits);
-                if (remaining >= 0) {
-                    p.next = null; 
-                    node.thread = null;
-                    node.prev = null; 
-                    head = node;
-                    // if still some permits left, wake up successor
-                    if (remaining > 0 && node.status < 0) 
-                        unparkSuccessor(node);
-                    if (interrupts > 0) // Re-interrupt on normal exit
-                        current.interrupt();
-                    return true;
-                }
-            }
-            int status = p.status;
-            if (status == 0) 
-                statusUpdater.compareAndSet(p, 0, SIGNAL);
-            else if (status == CANCELLED) 
-                node.prev = p.prev;
-            else { 
-                assert (status == SIGNAL);
-                LockSupport.park();
-                if (Thread.interrupted()) {
-                    if (interrupts < 0)  {  
-                        node.thread = null;      
-                        node.status = CANCELLED;
-                        unparkSuccessor(node);
-                        return false;
-                    }
-                    interrupts = 1; // set to re-interrupt on exit
-                }
-            }
-        }
-    }
-
-    /**
-     * Main code for timed acquires. Same as doAcquire but with
-     * interspersed time checks.
-     * @param permits number of permits requested
-     * @param nanos timeout in nanosecs
-     * @return true if lock acquired 
-     */
-    private boolean doTimedAcquire(int permits, long nanos) throws InterruptedException {
-        if ((!fair || head == tail) && doTryAcquire(permits) >= 0)
-            return true;
-        Thread current = Thread.currentThread();
-        long lastTime = System.nanoTime();
-        Node node = new Node(current);
-        // Retry fast path before enqueuing
-        if (!fair && doTryAcquire(permits) >= 0) 
-            return true;
-        enq(node);
-
-        for (;;) {
-            Node p = node.prev;
-            if (p == head) {
-                int remaining =  doTryAcquire(permits);
-                if (remaining >= 0) {
-                    p.next = null; 
-                    node.thread = null;
-                    node.prev = null; 
-                    head = node;
-                    if (remaining > 0 && node.status < 0) 
-                        unparkSuccessor(node);
-                    return true;
-                }
-            }
-            if (nanos <= 0L) {     
-                node.thread = null;      
-                node.status = CANCELLED;
-                unparkSuccessor(node);
-                return false;
-            }
-
-            int status = p.status;
-            if (status == 0) 
-                statusUpdater.compareAndSet(p, 0, SIGNAL);
-            else if (status == CANCELLED) 
-                node.prev = p.prev;
-            else {                      
-                LockSupport.parkNanos(nanos);
-                if (Thread.interrupted()) {
-                    node.thread = null;      
-                    node.status = CANCELLED;
-                    unparkSuccessor(node);
-                    throw new InterruptedException();
-                }
-                long now = System.nanoTime();
-                nanos -= now - lastTime;
-                lastTime = now;
-            }
-        }
-    }
-
-    /**
-     * Internal version of release
-     */
-    private void doRelease(int permits) {
-        final AtomicInteger perms = this.perms;
+     
+    protected boolean releaseSharedState(int releases) {
+        final AtomicInteger perms = getState();
         for (;;) {
             int p = perms.get();
-            if (perms.compareAndSet(p, p + permits)) {
-                Node h = head;
-                if (h != null  && h.status < 0)
-                    unparkSuccessor(h);
-                return;
-            }
+            if (perms.compareAndSet(p, p + releases)) 
+                return true;
         }
+    }
+
+    protected int acquireExclusiveState(boolean isQueued, int acquires, 
+                                        Thread current) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected boolean releaseExclusiveState(int releases) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void checkConditionAccess(Thread thread, boolean waiting) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -371,7 +171,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public Semaphore(int permits, boolean fair) { 
         this.fair = fair;
-        perms = new AtomicInteger(permits);
+        getState().set(permits);
     }
 
     /**
@@ -404,8 +204,7 @@ public class Semaphore implements java.io.Serializable {
      * @see Thread#interrupt
      */
     public void acquire() throws InterruptedException {
-        if (Thread.interrupted() || !doAcquire(1, -1))
-            throw new InterruptedException();
+        acquireSharedInterruptibly(1);
     }
 
     /**
@@ -428,7 +227,7 @@ public class Semaphore implements java.io.Serializable {
      *
      */
     public void acquireUninterruptibly() {
-        doAcquire(1, 0);
+        acquireSharedUninterruptibly(1);
     }
 
     /**
@@ -445,7 +244,7 @@ public class Semaphore implements java.io.Serializable {
      * otherwise.
      */
     public boolean tryAcquire() {
-        return doTryAcquire(1) >= 0;
+        return acquireSharedState(false, 1, null) >= 0;
     }
 
     /**
@@ -491,11 +290,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(long timeout, TimeUnit unit) 
         throws InterruptedException {
-        if (unit == null)
-            throw new NullPointerException();
-        if (Thread.interrupted())
-            throw new InterruptedException();
-        return doTimedAcquire(1, unit.toNanos(timeout));
+        return acquireSharedTimed(1, unit.toNanos(timeout));
     }
 
     /**
@@ -511,7 +306,7 @@ public class Semaphore implements java.io.Serializable {
      * in the application.
      */
     public void release() {
-        doRelease(1);
+        releaseShared(1);
     }
        
     /**
@@ -555,8 +350,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquire(int permits) throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-        if (Thread.interrupted() || !doAcquire(permits, -1))
-            throw new InterruptedException();
+        acquireSharedInterruptibly(permits);
     }
 
     /**
@@ -585,7 +379,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquireUninterruptibly(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        doAcquire(permits, 0);
+        acquireSharedUninterruptibly(permits);
     }
 
     /**
@@ -607,7 +401,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return doTryAcquire(permits) >= 0;
+        return acquireSharedState(false, permits, null) >= 0;
     }
 
     /**
@@ -664,11 +458,7 @@ public class Semaphore implements java.io.Serializable {
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-        if (unit == null)
-            throw new NullPointerException();
-        if (Thread.interrupted())
-            throw new InterruptedException();
-        return doTimedAcquire(permits, unit.toNanos(timeout));
+        return acquireSharedTimed(permits, unit.toNanos(timeout));
     }
 
 
@@ -698,7 +488,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void release(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        doRelease(permits);
+        releaseShared(permits);
     }
 
     /**
@@ -707,7 +497,7 @@ public class Semaphore implements java.io.Serializable {
      * @return the number of permits available in this semaphore.
      */
     public int availablePermits() {
-        return perms.get();
+        return getState().get();
     }
 
     /**
@@ -722,7 +512,7 @@ public class Semaphore implements java.io.Serializable {
      */
     protected void reducePermits(int reduction) {
 	if (reduction < 0) throw new IllegalArgumentException();
-        perms.getAndAdd(-reduction);
+        getState().getAndAdd(-reduction);
     }
 
     /**
@@ -731,42 +521,6 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean isFair() {
         return fair;
-    }
-
-    /**
-     * Returns an estimate of the number of threads waiting to acquire
-     * a permit. The value is only an estimate because the number of
-     * threads may change dynamically while this method traverses
-     * internal data structures.  This method is designed for use in
-     * monitoring of the system state, not for synchronization
-     * control.
-     * @return the estimated number of threads waiting for a permit
-     */
-    public int getQueueLength() {
-        int n = 0;
-        for (Node p = tail; p != null && p != head; p = p.prev)
-            ++n;
-        return n;
-    }
-
-    /**
-     * Returns a collection containing threads that may be waiting to
-     * acquire a permit.  Because the actual set of threads may
-     * change dynamically while constructing this result, the returned
-     * collection is only a best-effort estimate.  The elements of the
-     * returned collection are in no particular order.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive monitoring facilities.
-     * @return the collection of threads
-     */
-    protected Collection<Thread> getQueuedThreads() {
-        ArrayList<Thread> list = new ArrayList<Thread>();
-        for (Node p = tail; p != null; p = p.prev) {
-            Thread t = p.thread;
-            if (t != null)
-                list.add(t);
-        }
-        return list;
     }
 
 }

@@ -39,8 +39,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/06 18:22:09 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/07 16:00:28 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public final class TimeUnit implements java.io.Serializable {
@@ -58,7 +58,7 @@ public final class TimeUnit implements java.io.Serializable {
     public long convert(long duration, TimeUnit unit) {
         if (unit == this)
             return duration;
-        if (index > unit.index)
+        else if (index > unit.index)
             return duration / multipliers[index - unit.index];
         else
             return duration * multipliers[unit.index - index];
@@ -130,6 +130,15 @@ public final class TimeUnit implements java.io.Serializable {
         Thread.sleep(ms, ns);
     }
 
+    /**
+     * Return the common name for this unit.
+     */
+    public String toString() {
+        return unitName;
+    }
+
+    private final String unitName;
+
     /* ordered indices for each time unit */
     private static final int NS = 0;
     private static final int US = 1;
@@ -143,7 +152,10 @@ public final class TimeUnit implements java.io.Serializable {
     int index;
 
     /** private constructor */
-    TimeUnit(int index) { this.index = index; }
+    TimeUnit(int index, String name) { 
+        this.index = index; 
+        this.unitName = name;
+    }
 
     /**
      * Utility method to compute the excess-nanosecond argument to
@@ -161,15 +173,15 @@ public final class TimeUnit implements java.io.Serializable {
     }
 
     /** Unit for one-second granularities. */
-    public static final TimeUnit SECONDS = new TimeUnit(S);
+    public static final TimeUnit SECONDS = new TimeUnit(S, "seconds");
 
     /** Unit for one-millisecond granularities. */
-    public static final TimeUnit MILLISECONDS = new TimeUnit(MS);
+    public static final TimeUnit MILLISECONDS = new TimeUnit(MS, "milliseconds");
 
     /** Unit for one-microsecond granularities. */
-    public static final TimeUnit MICROSECONDS = new TimeUnit(US);
+    public static final TimeUnit MICROSECONDS = new TimeUnit(US, "microseconds");
 
     /** Unit for one-nanosecond granularities. */
-    public static final TimeUnit NANOSECONDS = new TimeUnit(NS);
+    public static final TimeUnit NANOSECONDS = new TimeUnit(NS, "nanoseconds");
 
 }

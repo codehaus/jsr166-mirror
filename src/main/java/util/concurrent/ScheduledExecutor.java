@@ -85,8 +85,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
 
         public long getDelay(TimeUnit unit) {
-            return unit.convert(time - System.nanoTime(), 
+            long d =  unit.convert(time - System.nanoTime(), 
                                 TimeUnit.NANOSECONDS);
+            return d;
         }
 
         public int compareTo(Object other) {
@@ -179,7 +180,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * An annoying wrapper class to convince generics compiler to
      * use a DelayQueue<DelayedTask> as a BlockingQueue<Runnable>
      */ 
-    private static class DelayedWorkQueue extends AbstractQueue<Runnable> implements BlockingQueue<Runnable> {
+    private static class DelayedWorkQueue extends AbstractCollection<Runnable> implements BlockingQueue<Runnable> {
         private final DelayQueue<DelayedTask> dq = new DelayQueue<DelayedTask>();
         public Runnable poll() { return dq.poll(); }
         public Runnable peek() { return dq.peek(); }
@@ -187,6 +188,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         public Runnable poll(long timeout, TimeUnit unit) throws InterruptedException {
             return dq.poll(timeout, unit);
         }
+
+        public boolean add(Runnable x) { return dq.add((DelayedTask)x); }
         public boolean offer(Runnable x) { return dq.offer((DelayedTask)x); }
         public void put(Runnable x) throws InterruptedException {
             dq.put((DelayedTask)x); 
@@ -194,6 +197,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         public boolean offer(Runnable x, long timeout, TimeUnit unit) throws InterruptedException {
             return dq.offer((DelayedTask)x, timeout, unit);
         }
+
+        public Runnable remove() { return dq.remove(); }
+        public Runnable element() { return dq.element(); }
+        public void clear() { dq.clear(); }
+
         public int remainingCapacity() { return dq.remainingCapacity(); }
         public boolean remove(Object x) { return dq.remove(x); }
         public boolean contains(Object x) { return dq.contains(x); }
@@ -218,6 +226,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     public ScheduledExecutor(int corePoolSize) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue());
+        prestartCoreThreads();
     }
 
     /**
@@ -232,6 +241,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                              ThreadFactory threadFactory) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue(), threadFactory);
+        prestartCoreThreads();
     }
 
     /**
@@ -246,6 +256,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                               RejectedExecutionHandler handler) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue(), handler);
+        prestartCoreThreads();
     }
 
     /**
@@ -263,6 +274,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                               RejectedExecutionHandler handler) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
               new DelayedWorkQueue(), threadFactory, handler);
+        prestartCoreThreads();
     }
 
     /**
@@ -452,7 +464,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         if (next == null) 
             return;
         try {
-            super.execute(next);
+            execute(next);
         }
         catch(RejectedExecutionException ex) {
             // lost race to detect shutdown; ignore

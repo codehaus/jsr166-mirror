@@ -103,12 +103,14 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         try {
             for (;;) {
                 E first = q.peek();
-                if (first == null)
+                if (first == null) {
                     available.await();
+                }
                 else {
                     long delay =  first.getDelay(TimeUnit.NANOSECONDS);
-                    if (delay > 0)
-                        available.awaitNanos(delay);
+                    if (delay > 0) {
+                        long tl = available.awaitNanos(delay);
+                    }
                     else {
                         E x = q.poll();
                         assert x != null;

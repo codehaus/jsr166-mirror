@@ -30,7 +30,7 @@ import java.util.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces. 
+ * Iterator} interfaces.
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -57,7 +57,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * items have been entered since the signal. And symmetrically for
      * takes signalling puts. Operations such as remove(Object) and
      * iterators acquire both locks.
-    */
+     */
 
     /**
      * Linked list node class
@@ -189,8 +189,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      */
     public LinkedBlockingQueue(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
-        for (Iterator<? extends E> it = c.iterator(); it.hasNext();)
-            add(it.next());
+        for (E e : c)
+            add(e);
     }
 
 
@@ -525,8 +525,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         fullyLock();
         try {
             head.next = null;
-            head.item = null;
-            last = head;
+	    assert head.item == null;
+	    last = head;
             if (count.getAndSet(0) == capacity)
                 notFull.signalAll();
         } finally {
@@ -544,7 +544,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         try {
             first = head.next;
             head.next = null;
-            last = head;
+	    assert head.item == null;
+	    last = head;
             if (count.getAndSet(0) == capacity)
                 notFull.signalAll();
         } finally {
@@ -557,7 +558,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             p.item = null;
             ++n;
         }
-        head.item = null; // Just for GC, so OK if not within lock
         return n;
     }
         
@@ -566,8 +566,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             throw new NullPointerException();
         if (c == this)
             throw new IllegalArgumentException();
-        if (maxElements <= 0)
-            return 0;
         fullyLock();
         try {
             int n = 0;
@@ -580,9 +578,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             }
             if (n != 0) {
                 head.next = p;
-                head.item = null;
-                if (p == null)
-                    last = head;
+		assert head.item == null;
+		if (p == null)
+		    last = head;
                 if (count.getAndAdd(-n) == capacity)
                     notFull.signalAll();
             }

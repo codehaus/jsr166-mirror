@@ -484,14 +484,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <pre>
      * class X {
      *   ReentrantLock lock = new ReentrantLock();
-     *   // ...     *
+     *   // ...     
      *   public void m() { 
      *     assert lock.getHoldCount() == 0;
      *     lock.lock();
      *     try {
      *       // ... method body
      *     } finally {
-     *       lock.unlock()
+     *       lock.unlock();
      *     }
      *   }
      * }

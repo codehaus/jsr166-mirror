@@ -99,7 +99,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Implements AQS base release to always signal.
          * Status is changed in ack or cancel methods before calling,
-         * which is needed to handle cancellation races.
+         * Which we need to do because we need their return values.
          */
         public boolean releaseExclusiveState(int ignore) {
             return true; 
@@ -149,63 +149,37 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * to continue.
          */
         Object getItem() {
-            if (!ack())
-                return null;
-            return extract();
+            return (ack())? extract() : null;
         }
 
         /**
-         * Wait for a taker to take item placed by putter.
+         * Wait for a taker to take item placed by putter or time out.
          */
-        boolean waitForTake() throws InterruptedException {
+        boolean waitForTake(boolean timed, long nanos) throws InterruptedException {
             try {
-                acquireExclusiveInterruptibly(0);
+                if (!timed) 
+                    acquireExclusiveInterruptibly(0);
+                else if (!acquireExclusiveTimed(0, nanos) && cancel())
+                    return false;
                 return true;
             } catch (InterruptedException ie) {
                 if (cancel())
                     throw ie;
                 Thread.currentThread().interrupt();
                 return true;
-            }
-        }
-
-        /**
-         * Wait for a taker to take item placed by putter, or time out.
-         */
-        boolean waitForTake(long nanos) throws InterruptedException {
-            try {
-                return acquireExclusiveTimed(0, nanos) || !cancel();
-            } catch (InterruptedException ie) {
-                if (cancel())
-                    throw ie;
-                Thread.currentThread().interrupt();
-                return true;
-            }
-        }
-
-        /**
-         * Wait for a putter to put item placed by taker.
-         */
-        Object waitForPut() throws InterruptedException {
-            try {
-                acquireExclusiveInterruptibly(0);
-                return extract();
-            } catch (InterruptedException ie) {
-                if (cancel()) 
-                    throw ie;
-                Thread.currentThread().interrupt();
-                return extract();
             }
         }
 
         /**
          * Wait for a putter to put item placed by taker, or time out.
          */
-        Object waitForPut(long nanos) throws InterruptedException {
+        Object waitForPut(boolean timed, long nanos) throws InterruptedException {
             try {
-                if (acquireExclusiveTimed(0, nanos) || !cancel()) 
-                    return extract();
-                return null;
+                if (!timed) 
+                    acquireExclusiveInterruptibly(0);
+                else if (!acquireExclusiveTimed(0, nanos) && cancel()) 
+                    return null;
+                return extract();
             } catch (InterruptedException ie) {
                 if (cancel()) 
                     throw ie;
@@ -213,6 +187,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 return extract();
             }
         }
+
     }
 
     /**
@@ -258,7 +233,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             if (mustWait) 
-                return timed? node.waitForTake(nanos) : node.waitForTake();
+                return  node.waitForTake(timed, nanos);
 
             else if (node.setItem(x))
                 return true;
@@ -286,7 +261,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             if (mustWait) {
-                Object x = timed? node.waitForPut(nanos) : node.waitForPut();
+                Object x = node.waitForPut(timed, nanos);
                 return (E)x;
             }
             else {

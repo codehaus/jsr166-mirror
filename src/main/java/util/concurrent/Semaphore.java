@@ -139,9 +139,9 @@ public class Semaphore implements java.io.Serializable {
         }
 
         public int tryAcquireSharedState(boolean isQueued, int acquires) {
-            if (!isQueued && fair && hasQueuedThreads())
-                return -1;
             for (;;) {
+                if (!isQueued && fair && hasQueuedThreads())
+                    return -1;
                 int available = getState();
                 int remaining = available - acquires;
                 if (remaining < 0 ||

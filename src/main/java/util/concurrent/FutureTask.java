@@ -7,7 +7,6 @@
 package java.util.concurrent;
 import java.util.concurrent.locks.*;
 
-
 /**
  * A cancellable asynchronous computation.  This class provides a base
  * implementation of {@link Future}, with methods to start and cancel
@@ -32,34 +31,8 @@ import java.util.concurrent.locks.*;
  * @param <V> The result type returned by this FutureTask's <tt>get</tt> method
  */
 public class FutureTask<V> implements Future<V>, Runnable {
-    /**
-     * Special value for "runState" indicating task is cancelled
-     */
-    private static final Object CANCELLED = new Object();
-
-    /**
-     * Special value for "runState" indicating task is completed
-     */
-    private static final Object DONE = new Object();
-
-    /** 
-     * Holds the run-state, taking on values:
-     *   null              = not yet started,
-     *   [some thread ref] = running,
-     *   DONE              = completed normally,
-     *   CANCELLED         = cancelled (may or may not have ever run).
-     */
-    private volatile Object runState;
-
-    /** The underlying callable */
-    private final Callable<V> callable;
-    /** The result to return from get() */
-    private V result;
-    /** The exception to throw from get() */
-    private Throwable exception;
-
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Condition accessible = lock.newCondition();
+    /** Synchronization control for FutureTask */
+    private final Sync sync;
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the
@@ -71,7 +44,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
     public FutureTask(Callable<V> callable) {
         if (callable == null)
             throw new NullPointerException();
-        this.callable = callable;
+        sync = new Sync(callable);
     }
 
     /**
@@ -87,38 +60,19 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @throws NullPointerException if runnable is null
      */
     public FutureTask(Runnable runnable, V result) {
-        this.callable = Executors.callable(runnable, result);
+        sync = new Sync(Executors.callable(runnable, result));
     }
 
     public boolean isCancelled() {
-        return runState == CANCELLED;
+        return sync.doIsCancelled();
     }
     
     public boolean isDone() {
-        Object r = runState;
-        return r == DONE || r == CANCELLED;
+        return sync.doIsDone();
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
-        final ReentrantLock lock = this.lock;
-        Thread interruptThread = null;
-        lock.lock();
-        try {
-            Object r = runState;
-            if (r == DONE || r == CANCELLED)
-                return false;
-            if (mayInterruptIfRunning && r != null && r instanceof Thread)
-                interruptThread = (Thread)r;
-            accessible.signalAll();
-            runState = CANCELLED;
-        }
-        finally{
-            lock.unlock();
-        }
-        if (interruptThread != null)
-            interruptThread.interrupt();
-        done();
-        return true;
+        return sync.doCancel(mayInterruptIfRunning);
     }
     
     /**
@@ -134,24 +88,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * while waiting
      */
     public V get() throws InterruptedException, ExecutionException {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            for (;;) {
-                Object r = runState;
-                if (r == CANCELLED)
-                    throw new CancellationException();
-                if (r == DONE) {
-                    if (exception != null)
-                        throw new ExecutionException(exception);
-                    else
-                        return result;
-                }
-                accessible.await();
-            }
-        } finally {
-            lock.unlock();
-        }
+        return sync.doGet();
     }
 
     /**
@@ -171,27 +108,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        long nanos = unit.toNanos(timeout);
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            for (;;) {
-                Object r = runState;
-                if (r == CANCELLED)
-                    throw new CancellationException();
-                if (r == DONE) {
-                    if (exception != null)
-                        throw new ExecutionException(exception);
-                    else
-                        return result;
-                }
-                if (nanos <= 0)
-                    throw new TimeoutException();
-                nanos = accessible.awaitNanos(nanos);
-            }
-        } finally {
-            lock.unlock();
-        }
+        return sync.doGet(unit.toNanos(timeout));
     }
 
     /**
@@ -207,117 +124,180 @@ public class FutureTask<V> implements Future<V>, Runnable {
 
     /**
      * Sets the result of this Future to the given value unless
-     * this future has been cancelled
+     * this future has already been set or has been cancelled
      * @param v the value
      */ 
     protected void set(V v) {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (runState == CANCELLED) 
-                return;
-            result = v;
-            accessible.signalAll();
-            runState = DONE;
-        } finally {
-            lock.unlock();
-        }
-        done();
+        sync.doSet(v);
     }
 
     /**
      * Causes this future to report an <tt>ExecutionException</tt>
      * with the given throwable as its cause, unless this Future has
-     * been cancelled.
+     * already been set or has been cancelled.
      * @param t the cause of failure.
      */ 
     protected void setException(Throwable t) {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (runState == CANCELLED) 
-                return;
-            exception = t;
-            accessible.signalAll();
-            runState = DONE;
-        } finally {
-            lock.unlock();
-        }
-        done();
+        sync.doSetException(t);
     }
     
-    /**
-     * Attempts to set the state of this task to Running, succeeding
-     * only if the state is currently NOT Done, Running, or Cancelled.
-     * @return true if successful
-     */ 
-   private boolean setRunning() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (runState != null)
-                return false;
-            runState = Thread.currentThread();
-            return true;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Resets the run state of this task to its initial state unless
-     * it has been cancelled. (Note that a cancelled task cannot be
-     * reset.)
-     * @return true if successful
-     */
-    private boolean reset() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (runState == CANCELLED) 
-                return false;
-            runState = null;
-            return true;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
     /**
      * Sets this Future to the result of computation unless
      * it has been cancelled.
      */
     public void run() {
-        if (setRunning()) {
-            try {
-                set(callable.call());
-            } catch(Throwable ex) {
-                setException(ex);
-            }
-        }
+        sync.doRun();
     }
 
     /**
-     * Executes the computation and then resets this Future to initial
-     * state; failing to do so if the computation encounters an
-     * exception or is cancelled.  This is designed for use with tasks
-     * that intrinsically execute more than once.
+     * Executes the computation without setting result, and then
+     * resets this Future to initial state; failing to do so if the
+     * computation encounters an exception or is cancelled.  This is
+     * designed for use with tasks that intrinsically execute more
+     * than once.
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        if (setRunning()) {
-            try {
-                // don't bother to set result; it can't be accessed
-                callable.call();
-                return reset();
-            } catch(Throwable ex) {
-                setException(ex);
-            } 
-        }
-        return false;
+        return sync.doRunAndReset();
     }
 
-}
+    /**
+     * Synchronization control for FutureTask. Note that this must be
+     * a non-static inner class in order to invoke protected
+     * <tt>done</tt> method. For clarity, all inner class support
+     * methods are same as outer, prefixed with "do".
+     *
+     * Uses AQS sync state to represent run status
+     */
+    private final class Sync extends AbstractQueuedSynchronizer {
+        /** State value representing that task is running */
+        private static final int RUNNING   = 1;
+        /** State value representing that task ran */
+        private static final int RAN       = 2;
+        /** State value representing that task was cancelled */
+        private static final int CANCELLED = 4;
 
+        /** The underlying callable */
+        private final Callable<V> callable;
+        /** The result to return from get() */
+        private V result;
+        /** The exception to throw from get() */
+        private Throwable exception;
+
+        /** 
+         * The thread running task. When nulled after set/cancel, this
+         * indicates that the results are accessible.  Must be
+         * volatile, to serve as write barrier on completion.
+         */
+        private volatile Thread runner;
+
+        Sync(Callable<V> callable) {
+            this.callable = callable;
+        }
+
+        private boolean ranOrCancelled(int state) {
+            return (state & (RAN | CANCELLED)) != 0;
+        }
+
+        /**
+         * Implements AQS base acquire to succeed if Done/cancelled
+         */
+        protected int tryAcquireSharedState(boolean b, int ignore) {
+            return doIsDone()? 1 : -1;
+        }
+
+        /**
+         * Implements AQS base release to always signal after setting
+         * final done status by nulling runner thread.
+         */
+        protected boolean releaseSharedState(int ignore) {
+            runner = null;
+            return true; 
+        }
+
+        boolean doIsCancelled() {
+            return getState() == CANCELLED;
+        }
+        
+        boolean doIsDone() {
+            return ranOrCancelled(getState()) && runner == null;
+        }
+
+        V doGet() throws InterruptedException, ExecutionException {
+            acquireSharedInterruptibly(0);
+            if (getState() == CANCELLED)
+                throw new CancellationException();
+            if (exception != null)
+                throw new ExecutionException(exception);
+            return result;
+        }
+
+        V doGet(long nanosTimeout) throws InterruptedException, ExecutionException, TimeoutException {
+            if (!acquireSharedTimed(0, nanosTimeout))
+                throw new TimeoutException();                
+            if (getState() == CANCELLED)
+                throw new CancellationException();
+            if (exception != null)
+                throw new ExecutionException(exception);
+            return result;
+        }
+
+        void doSet(V v) {
+            int s = getState();
+            if (ranOrCancelled(s) || !compareAndSetState(s, RAN))
+                return;
+            result = v;
+            releaseShared(0);
+            done();
+        }
+
+        void doSetException(Throwable t) {
+            int s = getState();
+            if (ranOrCancelled(s) || !compareAndSetState(s, RAN)) 
+                return;
+            exception = t;
+            result = null;
+            releaseShared(0);
+            done();
+        }
+
+        boolean doCancel(boolean mayInterruptIfRunning) {
+            int s = getState();
+            if (ranOrCancelled(s) || !compareAndSetState(s, CANCELLED)) 
+                return false;
+            if (mayInterruptIfRunning) {
+                Thread r = runner;
+                if (r != null)
+                    r.interrupt();
+            }
+            releaseShared(0);
+            done();
+            return true;
+        }
+
+        void doRun() {
+            if (!compareAndSetState(0, RUNNING)) 
+                return;
+            try {
+                runner = Thread.currentThread();
+                doSet(callable.call());
+            } catch(Throwable ex) {
+                doSetException(ex);
+            } 
+        }
+
+        boolean doRunAndReset() {
+            if (!compareAndSetState(0, RUNNING)) 
+                return false;
+            try {
+                runner = Thread.currentThread();
+                callable.call(); // don't set result
+                runner = null;
+                return compareAndSetState(RUNNING, 0);
+            } catch(Throwable ex) {
+                doSetException(ex);
+                return false;
+            } 
+        }
+    }
+}

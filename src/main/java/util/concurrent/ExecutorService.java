@@ -34,6 +34,41 @@ import java.security.PrivilegedExceptionAction;
  * <p>The {@link Executors} class provides factory methods for the
  * executor services provided in this package.
  *
+ * <h3>Usage Example</h3>
+ *
+ * Here is a sketch of a network service in which threads in a thread
+ * pool service incoming requests. It uses the preconfigured {@link
+ * Executors#newFixedThreadPool} factory method:
+ *
+ * <pre>
+ * class NetworkService {
+ *    private final ServerSocket serverSocket;
+ *    private final ExecutorService pool;
+ *
+ *    public NetworkService(int port, int poolSize) throws IOException {
+ *      serverSocket = new ServerSocket(port);
+ *      pool = Executors.newFixedThreadPool(poolSize);
+ *    }
+ * 
+ *    public void serve() {
+ *      try {
+ *        for (;;) {
+ *          pool.execute(new Handler(serverSocket.accept()));
+ *        }
+ *      } catch (IOException ex) {
+ *        pool.shutdown();
+ *      }
+ *    }
+ *  }
+ *
+ *  class Handler implements Runnable {
+ *    private final Socket socket;
+ *    Handler(Socket socket) { this.socket = socket; }
+ *    public void run() {
+ *      // read and service request
+ *    }
+ * }
+ * </pre>
  * @since 1.5
  * @author Doug Lea
  */

@@ -598,12 +598,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Acquire in exclusive mode, aborting if interrupted or the given
      * timeout elapses.  Implemented by first checking interrupt
      * status, then invoking {@link #acquireExclusiveState} with
-     * <tt>isQueued</tt> false, returning on success.  Otherwise, if
-     * the timeout is positive, the thread is queued, possibly
-     * repeatedly blocking and unblocking, invoking {@link
-     * #acquireExclusiveState} until success or the thread is
-     * interrupted or the timeout elapses.  With an argument of 1,
-     * this can be used to implement method {@link
+     * <tt>isQueued</tt> false, returning on success.  Otherwise, the
+     * thread is queued, possibly repeatedly blocking and unblocking,
+     * invoking {@link #acquireExclusiveState} until success or the
+     * thread is interrupted or the timeout elapses.  With an argument
+     * of 1, this can be used to implement method {@link
      * Lock#lockInterruptibly}
      * @param acquires the number of times to acquire
      * @param nanosTimeout the maximum number of nanoseconds to wait
@@ -614,8 +613,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
        if (!Thread.interrupted()) {
             if (acquireExclusiveState(false, acquires) >= 0)
                 return true;
-           if (nanosTimeout <= 0)
-               return false;
            int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, 
                              nanosTimeout);
            if (s == UNINTERRUPTED)
@@ -679,12 +676,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Acquire in shared mode, aborting if interrupted or the given
      * timeout elapses.  Implemented by first checking interrupt
      * status, then invoking {@link #acquireSharedState} with
-     * <tt>isQueued</tt> false, returning on success.  Otherwise, if
-     * the timeout is positive, the thread is queued, possibly
-     * repeatedly blocking and unblocking, invoking {@link
-     * #acquireSharedState} until success or the thread is interrupted
-     * or the timeout elapses.  With an argument of 1, this can be
-     * used to implement method {@link Lock#lockInterruptibly}
+     * <tt>isQueued</tt> false, returning on success.  Otherwise, the
+     * thread is queued, possibly repeatedly blocking and unblocking,
+     * invoking {@link #acquireSharedState} until success or the
+     * thread is interrupted or the timeout elapses.  With an argument
+     * of 1, this can be used to implement method {@link
+     * Lock#lockInterruptibly}
      * @param acquires the number of times to acquire
      * @param nanosTimeout the maximum number of nanoseconds to wait
      * @return true if acquired; false if timed out
@@ -694,8 +691,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
        if (!Thread.interrupted()) {
            if (acquireSharedState(false, acquires) >= 0)
                return true;
-           if (nanosTimeout <= 0)
-               return false;
            int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, 
                              nanosTimeout);
            if (s == UNINTERRUPTED)

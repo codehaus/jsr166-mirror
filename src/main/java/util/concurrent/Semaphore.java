@@ -247,11 +247,21 @@ public class Semaphore implements java.io.Serializable {
      * <p>If no permit is available then this method will return
      * immediately with the value <tt>false</tt>.
      *
+     * <p>Even when this semaphore has been set to use a
+     * fair ordering policy, a call to <tt>tryAcquire()</tt> <em>will</em>
+     * immediately acquire a permit if one is available, whether or not
+     * other threads are currently waiting. 
+     * This &quot;barging&quot; behavior can be useful in certain 
+     * circumstances, even though it breaks fairness. If you want to honor
+     * the fairness setting, then use 
+     * {@link #tryAcquire(long, TimeUnit) tryAcquire(0, TimeUnit.SECONDS) }
+     * which is almost equivalent (it also detects interruption).
+     *
      * @return <tt>true</tt> if a permit was acquired and <tt>false</tt>
      * otherwise.
      */
     public boolean tryAcquire() {
-        return sync.acquireSharedState(false, 1) >= 0;
+        return sync.acquireSharedState(true, 1) >= 0;
     }
 
     /**
@@ -400,6 +410,16 @@ public class Semaphore implements java.io.Serializable {
      * immediately with the value <tt>false</tt> and the number of available
      * permits is unchanged.
      *
+     * <p>Even when this semaphore has been set to use a fair ordering
+     * policy, a call to <tt>tryAcquire</tt> <em>will</em>
+     * immediately acquire a permit if one is available, whether or
+     * not other threads are currently waiting.  This
+     * &quot;barging&quot; behavior can be useful in certain
+     * circumstances, even though it breaks fairness. If you want to
+     * honor the fairness setting, then use {@link #tryAcquire(int,
+     * long, TimeUnit) tryAcquire(permits, 0, TimeUnit.SECONDS) }
+     * which is almost equivalent (it also detects interruption).
+     *
      * @param permits the number of permits to acquire
      *
      * @return <tt>true</tt> if the permits were acquired and <tt>false</tt>
@@ -408,7 +428,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.acquireSharedState(false, permits) >= 0;
+        return sync.acquireSharedState(true, permits) >= 0;
     }
 
     /**

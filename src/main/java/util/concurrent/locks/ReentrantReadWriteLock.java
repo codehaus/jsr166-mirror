@@ -1100,7 +1100,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * Returns a string identifying this lock, as well as its lock state.
      * The state, in brackets, includes the String &quot;Write locks =&quot;
-     * follwed by the number of reentrantly held write locks, and the
+     * followed by the number of reentrantly held write locks, and the
      * String &quot;Read locks =&quot; followed by the number of held
      * read locks.
      * @return a string identifying this lock, as well as its lock state.

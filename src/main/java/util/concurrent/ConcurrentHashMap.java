@@ -859,17 +859,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *         if there was no mapping for key.  A <tt>null</tt> return can
-     *         also indicate that the map previously associated <tt>null</tt>
-     *         with the specified key, if the implementation supports
-     *         <tt>null</tt> values.
-     *
-     * @throws ClassCastException if the class of the specified key or value
-     *            prevents it from being stored in this map.
+     *         if there was no mapping for key. 
      * @throws NullPointerException if the specified key or value is
      *            <tt>null</tt>.
-     *
-     **/
+     */
     public V putIfAbsent(K key, V value) {
         if (value == null)
             throw new NullPointerException();

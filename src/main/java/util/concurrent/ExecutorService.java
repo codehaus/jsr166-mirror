@@ -230,7 +230,7 @@ public interface ExecutorService extends Executor {
      * @return A list of Futures representing the tasks, in the same
      * sequential order as produced by the iterator for the given
      * task list. If the operation did not time out, each task will
-     * have completed. If it did time out, some of thiese tasks will
+     * have completed. If it did time out, some of these tasks will
      * not have completed.
      * @throws InterruptedException if interrupted while waiting, in
      * which case unfinished tasks are cancelled.

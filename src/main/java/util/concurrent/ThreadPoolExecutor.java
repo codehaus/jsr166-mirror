@@ -206,7 +206,7 @@ import java.util.*;
  * ThreadPoolExecutor#beforeExecute} and {@link
  * ThreadPoolExecutor#afterExecute} methods that are called before and
  * after execution of each task.  These can be used to manipulate the
- * execution environment, for example, reinitializing ThreadLocals,
+ * execution environment; for example, reinitializing ThreadLocals,
  * gathering statistics, or adding log entries. Additionally, method
  * {@link ThreadPoolExecutor#terminated} can be overridden to perform
  * any special processing that needs to be done once the Executor has
@@ -883,7 +883,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      */
     public void shutdown() {
         // Fail if caller doesn't have modifyThread permission. We
-        // explicity chack permissions directly because we can't trust
+        // explicitly chack permissions directly because we can't trust
         // implementations of SecurityManager to correctly override
         // the "check access" methods such that our documented
         // security policy is implemented.

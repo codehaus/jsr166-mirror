@@ -41,32 +41,30 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:40 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/09 23:42:27 $
+ * @editor $Author: dholmes $
  *
- * @fixme The previous version created singleton subclass instances. I could
- * not see any reason to create subclasses instead of just instances.
- * Neither approach allows creation of your own units.
  */
 public final class TimeUnit implements java.io.Serializable {
 
     /**
      * Return the current value of the system high resolution timer, in
-     * nanoseconds. This method can only be used to measure elapsed time
+     * nanoseconds. 
+     * <p>This method can only be used to measure elapsed time
      * and is not related to any notion of system, or wall-clock time.
      * Although the value returned represents nanoseconds since some
      * arbitrary start time in the past, the resolution at which this value
-     * is updated is not specified. It provides have nanosecond precision, but
+     * is updated is not specified. It provides nanosecond precision, but
      * not necessarily nanosecond accuracy.
-     * It is guaranteed that successive return
+     * <p>It is guaranteed that successive return
      * values from this method will not decrease.
      *
-     * <p> For example to measure how long some code takes to execute, 
+     * <p> For example, to measure how long some code takes to execute, 
      * with nanosecond precision:
      * <pre>
-     * long startTime = TimeUnit.nanoTime();
-     * // ... the code being measured ...
-     * long estimatedTime = TimeUnit.nanoTime() - startTime;
+     *   long startTime = TimeUnit.nanoTime();
+     *   // ... the code being measured ...
+     *   long estimatedTime = TimeUnit.nanoTime() - startTime;
      * </pre>
      * 
      * @return The current value of the system high resolution timer, in
@@ -99,7 +97,7 @@ public final class TimeUnit implements java.io.Serializable {
     }
 
     /**
-     * Equivalent to <code>NANOOSECONDS.convert(duration, this)</code>.
+     * Equivalent to <code>NANOSECONDS.convert(duration, this)</code>.
      * @param duration the duration
      * @return the converted duration.
      **/

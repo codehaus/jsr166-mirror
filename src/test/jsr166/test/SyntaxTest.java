@@ -54,8 +54,8 @@ public class SyntaxTest extends TestCase {
             private final int ival;
         };
 
-        List<Color> colors = Color.red.family();
-
+        List<Color> colors = Arrays.asList(Color.values());
+        
         assertEquals("should get expected list of colors",
                      "[red, green, blue, yellow, magenta, cyan]",
                      colors.toString());
@@ -63,8 +63,8 @@ public class SyntaxTest extends TestCase {
         int total = 0;
         for (Color c : colors) {
             switch (c) {
-            case Color.red:
-            case Color.yellow:
+            case red:
+            case yellow:
                 System.out.println("skipping " + c);
                 continue;
             default:

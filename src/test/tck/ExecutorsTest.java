@@ -14,10 +14,10 @@ import java.security.*;
 
 public class ExecutorsTest extends JSR166TestCase{
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+        junit.textui.TestRunner.run (suite());  
     }
     public static Test suite() {
-	return new TestSuite(ExecutorsTest.class);
+        return new TestSuite(ExecutorsTest.class);
     }
 
     private static final String TEST_STRING = "a test string";
@@ -195,10 +195,9 @@ public class ExecutorsTest extends JSR166TestCase{
             Executor e = new DirectExecutor();
             TrackedShortRunnable task = new TrackedShortRunnable();
             assertFalse(task.done);
-            Future<String> future = Executors.execute(e, task, TEST_STRING);
-            String result = future.get();
+            Future<?> future = Executors.execute(e, task);
+            future.get();
             assertTrue(task.done);
-            assertSame(TEST_STRING, result);
         }
         catch (ExecutionException ex) {
             unexpectedException();
@@ -250,17 +249,17 @@ public class ExecutorsTest extends JSR166TestCase{
      * execute of a privileged action runs it to completion
      */
     public void testExecutePrivilegedAction() {
-	Policy savedPolicy = Policy.getPolicy();
+        Policy savedPolicy = Policy.getPolicy();
         AdjustablePolicy policy = new AdjustablePolicy();
         policy.addPermission(new RuntimePermission("getContextClassLoader"));
         policy.addPermission(new RuntimePermission("setContextClassLoader"));
-	Policy.setPolicy(policy);
+        Policy.setPolicy(policy);
         try {
             Executor e = new DirectExecutor();
             Future future = Executors.execute(e, new PrivilegedAction() {
-		    public Object run() {
-			return TEST_STRING;
-		    }});
+                    public Object run() {
+                        return TEST_STRING;
+                    }});
 
             Object result = future.get();
             assertSame(TEST_STRING, result);
@@ -271,26 +270,26 @@ public class ExecutorsTest extends JSR166TestCase{
         catch (InterruptedException ex) {
             unexpectedException();
         }
-	finally {
-	    Policy.setPolicy(savedPolicy);
-	}
+        finally {
+            Policy.setPolicy(savedPolicy);
+        }
     }
 
     /**
      * execute of a privileged exception action runs it to completion
      */
     public void testExecutePrivilegedExceptionAction() {
-	Policy savedPolicy = Policy.getPolicy();
+        Policy savedPolicy = Policy.getPolicy();
         AdjustablePolicy policy = new AdjustablePolicy();
         policy.addPermission(new RuntimePermission("getContextClassLoader"));
         policy.addPermission(new RuntimePermission("setContextClassLoader"));
-	Policy.setPolicy(policy);
+        Policy.setPolicy(policy);
         try {
             Executor e = new DirectExecutor();
             Future future = Executors.execute(e, new PrivilegedExceptionAction() {
-		    public Object run() {
-			return TEST_STRING;
-		    }});
+                    public Object run() {
+                        return TEST_STRING;
+                    }});
 
             Object result = future.get();
             assertSame(TEST_STRING, result);
@@ -301,26 +300,26 @@ public class ExecutorsTest extends JSR166TestCase{
         catch (InterruptedException ex) {
             unexpectedException();
         }
-	finally {
-	    Policy.setPolicy(savedPolicy);
-	}
+        finally {
+            Policy.setPolicy(savedPolicy);
+        }
     }
 
     /**
      * execute of a failed privileged exception action reports exception
      */
     public void testExecuteFailedPrivilegedExceptionAction() {
-	Policy savedPolicy = Policy.getPolicy();
+        Policy savedPolicy = Policy.getPolicy();
         AdjustablePolicy policy = new AdjustablePolicy();
         policy.addPermission(new RuntimePermission("getContextClassLoader"));
         policy.addPermission(new RuntimePermission("setContextClassLoader"));
-	Policy.setPolicy(policy);
+        Policy.setPolicy(policy);
         try {
             Executor e = new DirectExecutor();
             Future future = Executors.execute(e, new PrivilegedExceptionAction() {
-		    public Object run() throws Exception {
-			throw new IndexOutOfBoundsException();
-		    }});
+                    public Object run() throws Exception {
+                        throw new IndexOutOfBoundsException();
+                    }});
 
             Object result = future.get();
             shouldThrow();
@@ -330,9 +329,9 @@ public class ExecutorsTest extends JSR166TestCase{
         catch (InterruptedException ex) {
             unexpectedException();
         }
-	finally {
-	    Policy.setPolicy(savedPolicy);
-	}
+        finally {
+            Policy.setPolicy(savedPolicy);
+        }
     }
 
     /**
@@ -360,7 +359,7 @@ public class ExecutorsTest extends JSR166TestCase{
         try {
             TrackedShortRunnable task = new TrackedShortRunnable();
             assertFalse(task.done);
-            Future<String> future = Executors.execute(null, task, TEST_STRING);
+            Future<?> future = Executors.execute(null, task);
             shouldThrow();
         }
         catch (NullPointerException success) {
@@ -377,7 +376,7 @@ public class ExecutorsTest extends JSR166TestCase{
         try {
             Executor e = new DirectExecutor();
             TrackedShortRunnable task = null;
-            Future<String> future = Executors.execute(e, task, TEST_STRING);
+            Future<?> future = Executors.execute(e, task);
             shouldThrow();
         }
         catch (NullPointerException success) {
@@ -447,7 +446,7 @@ public class ExecutorsTest extends JSR166TestCase{
         try {
             
             for(int i = 0; i < 5; ++i){
-                Executors.execute(p, new MediumRunnable(), Boolean.TRUE);
+                Executors.execute(p, new MediumRunnable());
             }
             shouldThrow();
         } catch(RejectedExecutionException success){}
@@ -648,33 +647,33 @@ public class ExecutorsTest extends JSR166TestCase{
      * specified group, priority, daemon status, and name
      */
     public void testDefaultThreadFactory() {
-	final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
-	Runnable r = new Runnable() {
-		public void run() {
-		    Thread current = Thread.currentThread();
-		    threadAssertTrue(!current.isDaemon());
-		    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
-		    ThreadGroup g = current.getThreadGroup();
-		    SecurityManager s = System.getSecurityManager();
-		    if (s != null)
-			threadAssertTrue(g == s.getThreadGroup());
-		    else
-			threadAssertTrue(g == egroup);
-		    String name = current.getName();
-		    threadAssertTrue(name.endsWith("thread-1"));
-		}
-	    };
-	ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
-	
-	e.execute(r);
-	e.shutdown();
-	try {
-	    Thread.sleep(SHORT_DELAY_MS);
-	} catch (Exception eX) {
-	    unexpectedException();
-	} finally {
-	    joinPool(e);
-	}
+        final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
+        Runnable r = new Runnable() {
+                public void run() {
+                    Thread current = Thread.currentThread();
+                    threadAssertTrue(!current.isDaemon());
+                    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
+                    ThreadGroup g = current.getThreadGroup();
+                    SecurityManager s = System.getSecurityManager();
+                    if (s != null)
+                        threadAssertTrue(g == s.getThreadGroup());
+                    else
+                        threadAssertTrue(g == egroup);
+                    String name = current.getName();
+                    threadAssertTrue(name.endsWith("thread-1"));
+                }
+            };
+        ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
+        
+        e.execute(r);
+        e.shutdown();
+        try {
+            Thread.sleep(SHORT_DELAY_MS);
+        } catch (Exception eX) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
     }
 
     /**
@@ -683,43 +682,43 @@ public class ExecutorsTest extends JSR166TestCase{
      * access control context and context class loader
      */
     public void testPrivilegedThreadFactory() {
-	Policy savedPolicy = Policy.getPolicy();
+        Policy savedPolicy = Policy.getPolicy();
         AdjustablePolicy policy = new AdjustablePolicy();
         policy.addPermission(new RuntimePermission("getContextClassLoader"));
         policy.addPermission(new RuntimePermission("setContextClassLoader"));
-	Policy.setPolicy(policy);
-	final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
-	final ClassLoader thisccl = Thread.currentThread().getContextClassLoader();
+        Policy.setPolicy(policy);
+        final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
+        final ClassLoader thisccl = Thread.currentThread().getContextClassLoader();
         final AccessControlContext thisacc = AccessController.getContext();
-	Runnable r = new Runnable() {
-		public void run() {
-		    Thread current = Thread.currentThread();
-		    threadAssertTrue(!current.isDaemon());
-		    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
-		    ThreadGroup g = current.getThreadGroup();
-		    SecurityManager s = System.getSecurityManager();
-		    if (s != null)
-			threadAssertTrue(g == s.getThreadGroup());
-		    else
-			threadAssertTrue(g == egroup);
-		    String name = current.getName();
-		    threadAssertTrue(name.endsWith("thread-1"));
-		    threadAssertTrue(thisccl == current.getContextClassLoader());
-		    threadAssertTrue(thisacc.equals(AccessController.getContext()));
-		}
-	    };
-	ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
-	
-	Policy.setPolicy(savedPolicy);
-	e.execute(r);
-	e.shutdown();
-	try {
-	    Thread.sleep(SHORT_DELAY_MS);
-	} catch (Exception ex) {
-	    unexpectedException();
-	} finally {
-	    joinPool(e);
-	}
+        Runnable r = new Runnable() {
+                public void run() {
+                    Thread current = Thread.currentThread();
+                    threadAssertTrue(!current.isDaemon());
+                    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
+                    ThreadGroup g = current.getThreadGroup();
+                    SecurityManager s = System.getSecurityManager();
+                    if (s != null)
+                        threadAssertTrue(g == s.getThreadGroup());
+                    else
+                        threadAssertTrue(g == egroup);
+                    String name = current.getName();
+                    threadAssertTrue(name.endsWith("thread-1"));
+                    threadAssertTrue(thisccl == current.getContextClassLoader());
+                    threadAssertTrue(thisacc.equals(AccessController.getContext()));
+                }
+            };
+        ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
+        
+        Policy.setPolicy(savedPolicy);
+        e.execute(r);
+        e.shutdown();
+        try {
+            Thread.sleep(SHORT_DELAY_MS);
+        } catch (Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
 
     }
 

@@ -16,11 +16,10 @@ public class ExecutorsTest extends TestCase {
 
             assertFalse("task should not be complete", task.isCompleted());
 
-            Future<String> future = Executors.execute(e, task, TEST_STRING);
-            String result = future.get();
+            Future<?> future = Executors.execute(e, task);
+            future.get();
 
             assertTrue("task should be complete", task.isCompleted());
-            assertSame("should return test string", TEST_STRING, result);
         }
         catch (ExecutionException ex) {
             fail("Unexpected execution exception: " + ex);

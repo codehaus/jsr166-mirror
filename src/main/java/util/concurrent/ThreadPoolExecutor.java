@@ -624,7 +624,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
 
         /**
-         * Cause thread to die even if running a task.
+         * Interrupt thread even if running a task.
          */
         void interruptNow() {
             thread.interrupt();
@@ -648,6 +648,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 try {
                     task.run();
                     ran = true;
+                    // re-clear to avoid needlessly throwing away thread
+                    Thread.interrupted(); 
                     afterExecute(task, null);
                     ++completedTasks;
                 } catch(RuntimeException ex) {

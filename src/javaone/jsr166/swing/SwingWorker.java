@@ -133,7 +133,7 @@ public abstract class SwingWorker<V> implements Future<V>, Runnable {
      * Sets executor to be used when worker is started. 
      * @param e executor for this worker
      */
-    public synchronized setExecutor(Executor e) {
+    public synchronized void setExecutor(Executor e) {
         executor = e;
     }
 

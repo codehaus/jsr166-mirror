@@ -776,7 +776,7 @@ public abstract class AbstractReentrantLock {
     /**
      * Condition implementation for use with <tt>AbstractReentrantLock</tt>.
      * Instances of this class can be constructed only using method
-     * {@link AbstractReentrantLock#newCondition}.
+     * {@link Lock#newCondition}.
      * 
      * <p>This class supports the same basic semantics and styles of
      * usage as the {@link Object} monitor methods.  Methods may be
@@ -790,7 +790,6 @@ public abstract class AbstractReentrantLock {
      * <tt>protected</tt> access methods, that may be useful for
      * instrumentation and monitoring.
      */
-
     public static class ConditionObject implements Condition, java.io.Serializable {
 
         private static final long serialVersionUID = 1173984872572414699L;

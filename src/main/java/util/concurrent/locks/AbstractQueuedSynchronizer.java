@@ -32,7 +32,7 @@ import sun.misc.Unsafe;
  * synchronization interface.  Instead it defines methods such as
  * {@link #acquireInterruptibly} that can be invoked as
  * appropriate by concrete locks and related synchronizers to
- * implement their public methods. 
+ * implement their public methods.
  *
  * <p>This class supports either or both a default <em>exclusive</em>
  * mode and a <em>shared</em> mode. When acquired in exclusive mode,
@@ -59,7 +59,7 @@ import sun.misc.Unsafe;
  * condition, so if this constraint cannot be met, do not use it.  The
  * behavior of {@link ConditionObject} depends of course on the
  * semantics of its synchronizer implementation.
- * 
+ *
  * <p> This class provides inspection, instrumentation, and monitoring
  * methods for the internal queue, as well as similar methods for
  * condition objects. These can be exported as desired into classes
@@ -77,7 +77,7 @@ import sun.misc.Unsafe;
  * <p> To use this class as the basis of a synchronizer, redefine the
  * following methods, as applicable, by inspecting and/or modifying
  * the synchronization state using {@link #getState}, {@link
- * #setState} and/or {@link #compareAndSetState}: 
+ * #setState} and/or {@link #compareAndSetState}:
  *
  * <ul>
  * <li> {@link #tryAcquire}
@@ -152,7 +152,7 @@ import sun.misc.Unsafe;
  * {@link java.util.concurrent.atomic atomic} classes, your own custom
  * {@link java.util.Queue} classes, and {@link LockSupport} blocking
  * support.
- * 
+ *
  * <h3>Usage Examples</h3>
  *
  * <p>Here is a non-reentrant mutual exclusion lock class that uses
@@ -166,8 +166,8 @@ import sun.misc.Unsafe;
  *    // Our internal helper class
  *    private static class Sync extends AbstractQueuedSynchronizer {
  *      // Report whether in locked state
- *      protected boolean isHeldExclusively() { 
- *        return getState() == 1; 
+ *      protected boolean isHeldExclusively() {
+ *        return getState() == 1;
  *      }
  *
  *      // Acquire the lock if state is zero
@@ -183,7 +183,7 @@ import sun.misc.Unsafe;
  *        setState(0);
  *        return true;
  *      }
- *       
+ *
  *      // Provide a Condition
  *      Condition newCondition() { return new ConditionObject(); }
  *
@@ -203,7 +203,7 @@ import sun.misc.Unsafe;
  *    public Condition newCondition()   { return sync.newCondition(); }
  *    public boolean isLocked()         { return sync.isHeldExclusively(); }
  *    public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
- *    public void lockInterruptibly() throws InterruptedException { 
+ *    public void lockInterruptibly() throws InterruptedException {
  *      sync.acquireInterruptibly(1);
  *    }
  *    public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
@@ -226,7 +226,7 @@ import sun.misc.Unsafe;
  *      protected int tryAcquireShared(int ignore) {
  *        return isSignalled()? 1 : -1;
  *      }
- *        
+ *
  *      protected boolean tryReleaseShared(int ignore) {
  *        setState(1);
  *        return true;
@@ -274,7 +274,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * contender thread may need to rewait.
      *
      * <p>To enqueue into a CLH lock, you atomically splice it in as new
-     * tail. To dequeue, you just set the head field.  
+     * tail. To dequeue, you just set the head field.
      * <pre>
      *      +------+  prev +-----+       +-----+
      * head |      | <---- |     | <---- |     |  tail
@@ -295,7 +295,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * predecessor. For explanation of similar mechanics in the case
      * of spin locks, see the papers by Scott and Scherer at
      * http://www.cs.rochester.edu/u/scott/synchronization/
-     * 
+     *
      * <p>We also use "next" links to implement blocking mechanics.
      * The thread id for each node is kept in its own node, so a
      * predecessor signals the next node to wake up by traversing
@@ -347,12 +347,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         /**
          * Status field, taking on only the values:
-         *   SIGNAL:     The successor of this node is (or will soon be) 
-         *               blocked (via park), so the current node must 
-         *               unpark its successor when it releases or 
+         *   SIGNAL:     The successor of this node is (or will soon be)
+         *               blocked (via park), so the current node must
+         *               unpark its successor when it releases or
          *               cancels. To avoid races, acquire methods must
-         *               first indicate they need a signal, 
-         *               then retry the atomic acquire, and then, 
+         *               first indicate they need a signal,
+         *               then retry the atomic acquire, and then,
          *               on failure, block.
          *   CANCELLED:  Node is cancelled due to timeout or interrupt
          *               Nodes never leave this state. In particular,
@@ -404,11 +404,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         /**
          * The thread that enqueued this node.  Initialized on
-         * construction and nulled out after use. 
+         * construction and nulled out after use.
          */
         volatile Thread thread;
 
-        /** 
+        /**
          * Link to next node waiting on condition, or the special
          * value SHARED.  Because condition queues are accessed only
          * when holding in exclusive mode, we just need a simple
@@ -435,7 +435,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         final Node predecessor() throws NullPointerException {
             Node p = prev;
             if (p == null)
-                throw new NullPointerException(); 
+                throw new NullPointerException();
             else
                 return p;
         }
@@ -450,11 +450,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         Node(Thread thread, int waitStatus) { // Used by Condition
             this.waitStatus = waitStatus;
-            this.thread = thread; 
+            this.thread = thread;
         }
     }
 
-    /** 
+    /**
      * Head of the wait queue, lazily initialized.  Except for
      * initialization, it is modified only via method setHead.  Note:
      * If head exists, its waitStatus is guaranteed not to be
@@ -462,11 +462,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      */
     private transient volatile Node head;
 
-    /** 
+    /**
      * Tail of the wait queue, lazily initialized.  Modified only via
      * method enq to add new wait node.
      */
-    private transient volatile Node tail; 
+    private transient volatile Node tail;
 
     /**
      * The synchronization state.
@@ -526,10 +526,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 }
             }
             else {
-                node.prev = t;     
+                node.prev = t;
                 if (compareAndSetTail(t, node)) {
-                    t.next = node; 
-                    return t; 
+                    t.next = node;
+                    return t;
                 }
             }
         }
@@ -546,9 +546,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         // Try the fast path of enq; backup to full enq on failure
         Node pred = tail;
         if (pred != null) {
-            node.prev = pred;     
+            node.prev = pred;
             if (compareAndSetTail(pred, node)) {
-                pred.next = node; 
+                pred.next = node;
                 return node;
             }
         }
@@ -560,12 +560,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Set head of queue to be node, thus dequeuing. Called only by
      * acquire methods.  Also nulls out unused fields for sake of GC
      * and to suppress unnecessary signals and traversals.
-     * @param node the node 
+     * @param node the node
      */
     private void setHead(Node node) {
         head = node;
         node.thread = null;
-        node.prev = null; 
+        node.prev = null;
     }
 
     /**
@@ -578,7 +578,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * OK if this fails or if status is changed by waiting thread.
          */
         compareAndSetWaitStatus(node, Node.SIGNAL, 0);
-        
+
         /*
          * Thread to unpark is held in successor, which is normally
          * just the next node.  But if cancelled or apparently null,
@@ -591,7 +591,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             thread = s.thread;
         else {
             thread = null;
-            for (s = tail; s != null && s != node; s = s.prev) 
+            for (s = tail; s != null && s != node; s = s.prev)
                 if (s.waitStatus <= 0)
                     thread = s.thread;
         }
@@ -602,7 +602,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Set head of queue, and check if successor may be waiting
      * in shared mode, if so propagating if propagate > 0.
      * @param pred the node holding waitStatus for node
-     * @param node the node 
+     * @param node the node
      * @param propagate the return value from a tryAcquireShared
      */
     private void setHeadAndPropagate(Node node, int propagate) {
@@ -612,7 +612,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
              * Don't bother fully figuring out successor.  If it
              * looks null, call unparkSuccessor anyway to be safe.
              */
-            Node s = node.next; 
+            Node s = node.next;
             if (s == null || s.isShared())
                 unparkSuccessor(node);
         }
@@ -638,7 +638,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Returns true if thread should block. This is the main signal
      * control in all acquire loops.  Requires that pred == node.prev
      * @param pred node's predecessor holding status
-     * @param node the node 
+     * @param node the node
      * @return true if thread should block
      */
     private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
@@ -649,7 +649,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
              * to signal it, so it can safely park
              */
             return true;
-        if (s > 0) 
+        if (s > 0)
             /*
              * Predecessor was cancelled. Move up to its predecessor
              * and indicate retry.
@@ -687,7 +687,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * different.  Only a little bit of factoring is possible due to
      * interactions of exception mechanics (including ensuring that we
      * cancel if tryAcquire throws exception) and other control, at
-     * least not without hurting performance too much. 
+     * least not without hurting performance too much.
      */
 
     /**
@@ -707,8 +707,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     p.next = null; // help GC
                     return interrupted;
                 }
-                if (shouldParkAfterFailedAcquire(p, node) && 
-                    parkAndCheckInterrupt()) 
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    parkAndCheckInterrupt())
                     interrupted = true;
             }
         } catch (RuntimeException ex) {
@@ -717,11 +717,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         }
     }
 
-    /** 
+    /**
      * Acquire in exclusive interruptible mode
      * @param arg the acquire argument
      */
-    private void doAcquireInterruptibly(int arg) 
+    private void doAcquireInterruptibly(int arg)
         throws InterruptedException {
         final Node node = addWaiter(Node.EXCLUSIVE);
         try {
@@ -732,8 +732,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     p.next = null; // help GC
                     return;
                 }
-                if (shouldParkAfterFailedAcquire(p, node) && 
-                    parkAndCheckInterrupt()) 
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    parkAndCheckInterrupt())
                     break;
             }
         } catch (RuntimeException ex) {
@@ -745,13 +745,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         throw new InterruptedException();
     }
 
-    /** 
+    /**
      * Acquire in exclusive timed mode
      * @param arg the acquire argument
      * @param nanosTimeout max wait time
      * @return true if acquired
      */
-    private boolean doAcquireNanos(int arg, long nanosTimeout) 
+    private boolean doAcquireNanos(int arg, long nanosTimeout)
         throws InterruptedException {
         long lastTime = System.nanoTime();
         final Node node = addWaiter(Node.EXCLUSIVE);
@@ -769,7 +769,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 }
                 if (shouldParkAfterFailedAcquire(p, node)) {
                     LockSupport.parkNanos(nanosTimeout);
-                    if (Thread.interrupted()) 
+                    if (Thread.interrupted())
                         break;
                     long now = System.nanoTime();
                     nanosTimeout -= now - lastTime;
@@ -785,7 +785,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         throw new InterruptedException();
     }
 
-    /** 
+    /**
      * Acquire in shared uninterruptible mode
      * @param arg the acquire argument
      */
@@ -805,8 +805,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                         return;
                     }
                 }
-                if (shouldParkAfterFailedAcquire(p, node) && 
-                    parkAndCheckInterrupt()) 
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    parkAndCheckInterrupt())
                     interrupted = true;
             }
         } catch (RuntimeException ex) {
@@ -815,11 +815,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         }
     }
 
-    /** 
+    /**
      * Acquire in shared interruptible mode
      * @param arg the acquire argument
      */
-    private void doAcquireSharedInterruptibly(int arg) 
+    private void doAcquireSharedInterruptibly(int arg)
         throws InterruptedException {
         final Node node = addWaiter(Node.SHARED);
         try {
@@ -833,8 +833,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                         return;
                     }
                 }
-                if (shouldParkAfterFailedAcquire(p, node) && 
-                    parkAndCheckInterrupt()) 
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    parkAndCheckInterrupt())
                     break;
             }
         } catch (RuntimeException ex) {
@@ -846,13 +846,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         throw new InterruptedException();
     }
 
-    /** 
+    /**
      * Acquire in shared timed mode
      * @param arg the acquire argument
      * @param nanosTimeout max wait time
      * @return true if acquired
      */
-    private boolean doAcquireSharedNanos(int arg, long nanosTimeout) 
+    private boolean doAcquireSharedNanos(int arg, long nanosTimeout)
         throws InterruptedException {
 
         long lastTime = System.nanoTime();
@@ -874,7 +874,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 }
                 if (shouldParkAfterFailedAcquire(p, node)) {
                     LockSupport.parkNanos(nanosTimeout);
-                    if (Thread.interrupted()) 
+                    if (Thread.interrupted())
                         break;
                     long now = System.nanoTime();
                     nanosTimeout -= now - lastTime;
@@ -890,7 +890,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         throw new InterruptedException();
     }
 
-    // Main exported methods 
+    // Main exported methods
 
     /**
      * Attempts to acquire in exclusive mode. This method should query
@@ -901,7 +901,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * acquire.  If this method reports failure, the acquire method
      * may queue the thread, if it is not already queued, until it is
      * signalled by a release from some other thread. This can be used
-     * to implement method {@link Lock#tryLock()}. 
+     * to implement method {@link Lock#tryLock()}.
      *
      * <p>The default
      * implementation throws {@link UnsupportedOperationException}
@@ -926,7 +926,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Attempts to set the state to reflect a release in exclusive
      * mode.  <p>This method is always invoked by the thread
-     * performing release.  
+     * performing release.
      *
      * <p>The default implementation throws
      * {@link UnsupportedOperationException}
@@ -935,7 +935,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * or the current state value upon entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return <tt>true</tt> if this object is now in a fully released state, 
+     * @return <tt>true</tt> if this object is now in a fully released state,
      * so that any waiting threads may attempt to acquire; and <tt>false</tt>
      * otherwise.
      * @throws IllegalMonitorStateException if releasing would place
@@ -951,7 +951,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Attempts to acquire in shared mode. This method should query if
      * the state of the object permits it to be acquired in the shared
-     * mode, and if so to acquire it.  
+     * mode, and if so to acquire it.
      *
      * <p>This method is always invoked by the thread performing
      * acquire.  If this method reports failure, the acquire method
@@ -986,14 +986,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Attempts to set the state to reflect a release in shared mode.
      * <p>This method is always invoked by the thread performing release.
-     * <p> The default implementation throws 
+     * <p> The default implementation throws
      * {@link UnsupportedOperationException}
      * @param arg the release argument. This value
      * is always the one passed to a release method,
      * or the current state value upon entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return <tt>true</tt> if this object is now in a fully released state, 
+     * @return <tt>true</tt> if this object is now in a fully released state,
      * so that any waiting threads may attempt to acquire; and <tt>false</tt>
      * otherwise.
      * @throws IllegalMonitorStateException if releasing would place
@@ -1035,7 +1035,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * This value is conveyed to {@link #tryAcquire} but is
      * otherwise uninterpreted and can represent anything
      * you like.
-     */ 
+     */
     public final void acquire(int arg) {
         if (!tryAcquire(arg) &&
             acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
@@ -1095,12 +1095,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * This value is conveyed to {@link #tryRelease} but is
      * otherwise uninterpreted and can represent anything
      * you like.
-     * @return the value returned from {@link #tryRelease} 
+     * @return the value returned from {@link #tryRelease}
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
             Node h = head;
-            if (h != null && h.waitStatus != 0) 
+            if (h != null && h.waitStatus != 0)
                 unparkSuccessor(h);
             return true;
         }
@@ -1112,7 +1112,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * first invoking at least once {@link #tryAcquireShared},
      * returning on success.  Otherwise the thread is queued, possibly
      * repeatedly blocking and unblocking, invoking {@link
-     * #tryAcquireShared} until success.  
+     * #tryAcquireShared} until success.
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireShared} but is
      * otherwise uninterpreted and can represent anything
@@ -1129,7 +1129,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * {@link #tryAcquireShared}, returning on success.  Otherwise the
      * thread is queued, possibly repeatedly blocking and unblocking,
      * invoking {@link #tryAcquireShared} until success or the thread
-     * is interrupted.  
+     * is interrupted.
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireShared} but is
      * otherwise uninterpreted and can represent anything
@@ -1168,17 +1168,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Releases in shared mode.  Implemented by unblocking one or more
-     * threads if {@link #tryReleaseShared} returns true. 
+     * threads if {@link #tryReleaseShared} returns true.
      * @param arg the release argument.
      * This value is conveyed to {@link #tryReleaseShared} but is
      * otherwise uninterpreted and can represent anything
      * you like.
-     * @return the value returned from {@link #tryReleaseShared} 
+     * @return the value returned from {@link #tryReleaseShared}
      */
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
             Node h = head;
-            if (h != null && h.waitStatus != 0) 
+            if (h != null && h.waitStatus != 0)
                 unparkSuccessor(h);
             return true;
         }
@@ -1199,7 +1199,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @return true if there may be other threads waiting to acquire
      * the lock.
      */
-    public final boolean hasQueuedThreads() { 
+    public final boolean hasQueuedThreads() {
         return head != tail;
     }
 
@@ -1266,7 +1266,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
              * if tail is actually first node, in almost the same way
              * as above.
              */
-            Node t = tail; 
+            Node t = tail;
             if (t == h)                       // Empty queue
                 return null;
 
@@ -1280,7 +1280,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Returns true if the given thread is currently queued. 
+     * Returns true if the given thread is currently queued.
      *
      * <p> This implementation traverses the queue to determine
      * presence of the given thread.
@@ -1389,7 +1389,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     public String toString() {
         int s = getState();
         String q  = hasQueuedThreads()? "non" : "";
-        return super.toString() + 
+        return super.toString() +
             "[State = " + s + ", " + q + "empty queue]";
     }
 
@@ -1416,7 +1416,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * there, so we hardly ever traverse much.
          */
         return findNodeFromTail(node);
-    } 
+    }
 
     /**
      * Returns true if node is on sync queue by searching backwards from tail.
@@ -1424,7 +1424,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @return true if present
      */
     private boolean findNodeFromTail(Node node) {
-        Node t = tail; 
+        Node t = tail;
         for (;;) {
             if (t == node)
                 return true;
@@ -1435,7 +1435,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Transfers a node from a condition queue onto sync queue. 
+     * Transfers a node from a condition queue onto sync queue.
      * Returns true if successful.
      * @param node the node
      * @return true if successfully transferred (else the node was
@@ -1456,7 +1456,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          */
         Node p = enq(node);
         int c = p.waitStatus;
-        if (c > 0 || !compareAndSetWaitStatus(p, c, Node.SIGNAL)) 
+        if (c > 0 || !compareAndSetWaitStatus(p, c, Node.SIGNAL))
             LockSupport.unpark(node.thread);
         return true;
     }
@@ -1480,7 +1480,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * incomplete transfer is both rare and transient, so just
          * spin.
          */
-        while (!isOnSyncQueue(node)) 
+        while (!isOnSyncQueue(node))
             Thread.yield();
         return false;
     }
@@ -1508,7 +1508,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     // Instrumentation methods for conditions
 
     /**
-     * Queries whether the given ConditionObject 
+     * Queries whether the given ConditionObject
      * uses this synchronizer as its lock.
      * @param condition the condition
      * @return <tt>true</tt> if owned
@@ -1529,12 +1529,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * monitoring of the system state.
      * @param condition the condition
      * @return <tt>true</tt> if there are any waiting threads.
-     * @throws IllegalMonitorStateException if exclusive synchronization 
+     * @throws IllegalMonitorStateException if exclusive synchronization
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this synchronizer
      * @throws NullPointerException if condition null
-     */ 
+     */
     public final boolean hasWaiters(ConditionObject condition) {
         if (!owns(condition))
             throw new IllegalArgumentException("Not owner");
@@ -1550,12 +1550,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * system state, not for synchronization control.
      * @param condition the condition
      * @return the estimated number of waiting threads.
-     * @throws IllegalMonitorStateException if exclusive synchronization 
+     * @throws IllegalMonitorStateException if exclusive synchronization
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this synchronizer
      * @throws NullPointerException if condition null
-     */ 
+     */
     public final int getWaitQueueLength(ConditionObject condition) {
         if (!owns(condition))
             throw new IllegalArgumentException("Not owner");
@@ -1568,10 +1568,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * synchronizer.  Because the actual set of threads may change
      * dynamically while constructing this result, the returned
      * collection is only a best-effort estimate. The elements of the
-     * returned collection are in no particular order.  
+     * returned collection are in no particular order.
      * @param condition the condition
      * @return the collection of threads
-     * @throws IllegalMonitorStateException if exclusive synchronization 
+     * @throws IllegalMonitorStateException if exclusive synchronization
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this synchronizer
@@ -1594,7 +1594,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * general need to be accompanied by documentation describing
      * condition semantics that rely on those of the associated
      * <tt>AbstractQueuedSynchronizer</tt>.
-     * 
+     *
      * <p> This class is Serializable, but all fields are transient,
      * so deserialized conditions have no waiters.
      */
@@ -1619,9 +1619,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         private Node addConditionWaiter() {
             Node node = new Node(Thread.currentThread(), Node.CONDITION);
             Node t = lastWaiter;
-            if (t == null) 
+            if (t == null)
                 firstWaiter = node;
-            else 
+            else
                 t.nextWaiter = node;
             lastWaiter = node;
             return node;
@@ -1635,7 +1635,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          */
         private void doSignal(Node first) {
             do {
-                if ( (firstWaiter = first.nextWaiter) == null) 
+                if ( (firstWaiter = first.nextWaiter) == null)
                     lastWaiter = null;
                 first.nextWaiter = null;
             } while (!transferForSignal(first) &&
@@ -1666,13 +1666,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * returns false
          */
         public final void signal() {
-            if (!isHeldExclusively()) 
+            if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
             Node first = firstWaiter;
             if (first != null)
                 doSignal(first);
         }
-         
+
         /**
          * Moves all threads from the wait queue for this condition to
          * the wait queue for the owning lock.
@@ -1680,19 +1680,19 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * returns false
          */
         public final void signalAll() {
-            if (!isHeldExclusively()) 
+            if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
             Node first = firstWaiter;
-            if (first != null) 
+            if (first != null)
                 doSignalAll(first);
         }
 
         /**
          * Implements uninterruptible condition wait.
          * <ol>
-         * <li> Save lock state returned by {@link #getState} 
-         * <li> Invoke {@link #release} with 
-         *      saved state as argument, throwing 
+         * <li> Save lock state returned by {@link #getState}
+         * <li> Invoke {@link #release} with
+         *      saved state as argument, throwing
          *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled
          * <li> Reacquire by invoking specialized version of
@@ -1705,7 +1705,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             boolean interrupted = false;
             while (!isOnSyncQueue(node)) {
                 LockSupport.park();
-                if (Thread.interrupted()) 
+                if (Thread.interrupted())
                     interrupted = true;
             }
             if (acquireQueued(node, savedState) || interrupted)
@@ -1739,21 +1739,21 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Throw InterruptedException, reinterrupt current thread, or
          * do nothing, depending on mode.
          */
-        private void reportInterruptAfterWait(int interruptMode) 
+        private void reportInterruptAfterWait(int interruptMode)
             throws InterruptedException {
             if (interruptMode == THROW_IE)
                 throw new InterruptedException();
             else if (interruptMode == REINTERRUPT)
-                Thread.currentThread().interrupt();
+                selfInterrupt();
         }
 
         /**
          * Implements interruptible condition wait.
          * <ol>
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #getState} 
-         * <li> Invoke {@link #release} with 
-         *      saved state as argument, throwing 
+         * <li> Save lock state returned by {@link #getState}
+         * <li> Invoke {@link #release} with
+         *      saved state as argument, throwing
          *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled or interrupted
          * <li> Reacquire by invoking specialized version of
@@ -1762,7 +1762,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * </ol>
          */
         public final void await() throws InterruptedException {
-            if (Thread.interrupted()) 
+            if (Thread.interrupted())
                 throw new InterruptedException();
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
@@ -1782,9 +1782,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Implements timed condition wait.
          * <ol>
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #getState} 
-         * <li> Invoke {@link #release} with 
-         *      saved state as argument, throwing 
+         * <li> Save lock state returned by {@link #getState}
+         * <li> Invoke {@link #release} with
+         *      saved state as argument, throwing
          *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled, interrupted, or timed out
          * <li> Reacquire by invoking specialized version of
@@ -1793,7 +1793,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * </ol>
          */
         public final long awaitNanos(long nanosTimeout) throws InterruptedException {
-            if (Thread.interrupted()) 
+            if (Thread.interrupted())
                 throw new InterruptedException();
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
@@ -1801,7 +1801,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
-                    transferAfterCancelledWait(node); 
+                    transferAfterCancelledWait(node);
                     break;
                 }
                 LockSupport.parkNanos(nanosTimeout);
@@ -1822,9 +1822,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Implements absolute timed condition wait.
          * <ol>
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #getState} 
-         * <li> Invoke {@link #release} with 
-         *      saved state as argument, throwing 
+         * <li> Save lock state returned by {@link #getState}
+         * <li> Invoke {@link #release} with
+         *      saved state as argument, throwing
          *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled, interrupted, or timed out
          * <li> Reacquire by invoking specialized version of
@@ -1837,7 +1837,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             if (deadline == null)
                 throw new NullPointerException();
             long abstime = deadline.getTime();
-            if (Thread.interrupted()) 
+            if (Thread.interrupted())
                 throw new InterruptedException();
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
@@ -1845,7 +1845,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (System.currentTimeMillis() > abstime) {
-                    timedout = transferAfterCancelledWait(node); 
+                    timedout = transferAfterCancelledWait(node);
                     break;
                 }
                 LockSupport.parkUntil(abstime);
@@ -1858,14 +1858,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 reportInterruptAfterWait(interruptMode);
             return !timedout;
         }
-        
+
         /**
-         * Implements timed condition wait. 
+         * Implements timed condition wait.
          * <ol>
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #getState} 
-         * <li> Invoke {@link #release} with 
-         *      saved state as argument, throwing 
+         * <li> Save lock state returned by {@link #getState}
+         * <li> Invoke {@link #release} with
+         *      saved state as argument, throwing
          *      IllegalMonitorStateException  if it fails.
          * <li> Block until signalled, interrupted, or timed out
          * <li> Reacquire by invoking specialized version of
@@ -1878,7 +1878,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             if (unit == null)
                 throw new NullPointerException();
             long nanosTimeout = unit.toNanos(time);
-            if (Thread.interrupted()) 
+            if (Thread.interrupted())
                 throw new InterruptedException();
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
@@ -1887,7 +1887,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
-                    timedout = transferAfterCancelledWait(node); 
+                    timedout = transferAfterCancelledWait(node);
                     break;
                 }
                 LockSupport.parkNanos(nanosTimeout);
@@ -1921,9 +1921,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * @return <tt>true</tt> if there are any waiting threads.
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          * returns false
-         */ 
+         */
         protected final boolean hasWaiters() {
-            if (!isHeldExclusively()) 
+            if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.waitStatus == Node.CONDITION)
@@ -1934,14 +1934,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         /**
          * Returns an estimate of the number of threads waiting on
-         * this condition. 
+         * this condition.
          * Implements {@link AbstractQueuedSynchronizer#getWaitQueueLength}
          * @return the estimated number of waiting threads.
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          * returns false
-         */ 
+         */
         protected final int getWaitQueueLength() {
-            if (!isHeldExclusively()) 
+            if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
             int n = 0;
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
@@ -1953,14 +1953,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         /**
          * Returns a collection containing those threads that may be
-         * waiting on this Condition.  
+         * waiting on this Condition.
          * Implements {@link AbstractQueuedSynchronizer#getWaitingThreads}
          * @return the collection of threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          * returns false
          */
         protected final Collection<Thread> getWaitingThreads() {
-            if (!isHeldExclusively()) 
+            if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
             ArrayList<Thread> list = new ArrayList<Thread>();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
@@ -1999,7 +1999,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
             waitStatusOffset = unsafe.objectFieldOffset
                 (Node.class.getDeclaredField("waitStatus"));
-            
+
         } catch(Exception ex) { throw new Error(ex); }
     }
 
@@ -2009,7 +2009,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     private final boolean compareAndSetHead(Node update) {
         return unsafe.compareAndSwapObject(this, headOffset, null, update);
     }
-    
+
     /**
      * CAS tail field. Used only by enq
      */
@@ -2020,10 +2020,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * CAS waitStatus field of a node.
      */
-    private final static boolean compareAndSetWaitStatus(Node node, 
-                                                         int expect, 
+    private final static boolean compareAndSetWaitStatus(Node node,
+                                                         int expect,
                                                          int update) {
-        return unsafe.compareAndSwapInt(node, waitStatusOffset, 
+        return unsafe.compareAndSwapInt(node, waitStatusOffset,
                                         expect, update);
     }
 

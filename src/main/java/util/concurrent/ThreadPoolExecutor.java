@@ -76,9 +76,9 @@ import java.util.*;
  * be in the same {@link ThreadGroup} and with the same
  * <tt>NORM_PRIORITY</tt> priority and non-daemon status. By supplying
  * a different ThreadFactory, you can alter the thread's name, thread
- * group, priority, daemon status, etc. If a ThreadFactory fails to create
- * a thread when asked (i.e., if it returns <tt>null</tt> or throws
- * a <tt>RuntimeException</tt>), the executor will continue, but might
+ * group, priority, daemon status, etc. If a <tt>ThreadFactory</tt> fails to create
+ * a thread when asked by returning null from <tt>newThread</tt>, 
+ * the executor will continue, but might
  * not be able to execute any tasks. </dd>
  *
  * <dt>Keep-alive times</dt>
@@ -210,7 +210,11 @@ import java.util.*;
  * gathering statistics, or adding log entries. Additionally, method
  * {@link ThreadPoolExecutor#terminated} can be overridden to perform
  * any special processing that needs to be done once the Executor has
- * fully terminated.</dd>
+ * fully terminated. 
+ *
+ * <p>If hook or callback methods throw 
+ * exceptions, internal worker threads may in turn fail and
+ * abruptly terminate.</dd> 
  *
  * <dt>Queue maintenance</dt>
  *
@@ -388,12 +392,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      */
     private Thread addThread(Runnable firstTask) {
         Worker w = new Worker(firstTask);
-        Thread t = null;
-        try {
-            t = threadFactory.newThread(w);
-        }
-        catch(RuntimeException ex) { // fall through
-        }
+        Thread t = threadFactory.newThread(w);
         if (t != null) {
             w.thread = t;
             workers.add(w);

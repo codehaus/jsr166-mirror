@@ -14,6 +14,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
+ *
+ * @fixme public getQueue?
  */
 public class SingleThreadedExecutor extends ThreadExecutor {
 

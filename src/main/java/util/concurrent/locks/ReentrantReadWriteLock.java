@@ -344,8 +344,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             int w = exclusiveCount(c);
             if (w + acquires >= SHARED_UNIT)
                 throw new Error("Maximum lock count exceeded");
+            Thread first = getFirstQueuedThread();
             if ((w == 0 || current != owner) &&
-                (c != 0 || !isFirst(current)))
+                (c != 0 || (first != null && first != current)))
                 return false;
             if (!compareAndSetState(c, c + acquires)) 
                 return false;
@@ -357,7 +358,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         protected final int tryAcquireShared(int acquires) {
             Thread current = Thread.currentThread();
             for (;;) {
-                if (!isFirst(current))
+                Thread first = getFirstQueuedThread();
+                if (first != null && first != current)
                     return -1;
                 int c = getState();
                 int nextc = c + (acquires << SHARED_SHIFT);

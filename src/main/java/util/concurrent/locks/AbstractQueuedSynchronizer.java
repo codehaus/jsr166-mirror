@@ -238,7 +238,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      *    threads.
      *
      * * "Fair" variants differ only in that they can disable barging
-     *    in the fast path if there is contention (see "isFirst")
+     *    in the fast path if there is contention (see "getFirstQueuedThread")
      *    There can be races in detecting contention, but it is still
      *    FIFO from a definable (although complicated to describe)
      *    single point, so qualifies as a FIFO lock.
@@ -1335,33 +1335,27 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Queries whether the given thread is the first (longest-waiting)
-     * element of the queue, or no other threads are queued at the
-     * point of this call. This can be used when implementing a
-     * fairness policy: Generally, a fair synchronizer will return
+     * Returns the first (longest-waiting) thread in the queue,
+     * <tt>null</tt> if no other threads are queued at the point of
+     * this call. This can be used when implementing a fairness
+     * policy: Generally, a fair synchronizer will return
      * <tt>false</tt> in its {@link #tryAcquireExclusive} and/or
-     * {@link #tryAcquireShared} methods if this method returns
-     * <tt>false</tt>.  However, this class does not enforce strict
-     * FIFO ordering of calls to acquire methods.  In particular,
-     * several threads may be tied for first, all reporting
-     * <tt>true</tt>, if none have yet failed and blocked. If you need
-     * stricter control, you can distinguish cases by also invoking
-     * {@link #hasQueuedThreads} to determine whether any threads have
-     * been queued.
+     * {@link #tryAcquireShared} methods if this method returns a
+     * non-null value different than the current thread.  However,
+     * this class does not enforce strict FIFO ordering of calls to
+     * acquire methods.  In particular, several acquiring threads may
+     * see that there are no queued threads if none have yet failed
+     * and blocked.
      *
      * <p> In this implementation, this operation normally returns in
      * constant time, but may iterate if other threads are
      * concurrently modifying the queue.
      *
-     * @param thread the thread
-     *
-     * @return true if this is the first thread or there are no other
-     * blocked threads.
-     * @throws NullPointerException if thread null
+     * @return the first (longest-waiting) thread in the queue,
+     * <tt>null</tt> if no other threads are queued at the point of
+     * this call.
      */
-    public final boolean isFirst(Thread thread) {
-        if (thread == null)
-            throw new NullPointerException();
+    public final Thread getFirstQueuedThread() {
         /*
          * This loops only in some infrequent cases of contention
          * where we get an inconsistent set of reads while other
@@ -1372,19 +1366,19 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         for (;;) {
             Node h = head;
             if (h == null)                    // No queue
-                return true;
+                return null;
 
             Node s = h.next;                  // Probe first == n.next
             // Ensure consistent reads
             if (s != null && (z = s.thread) != null && s.prev == head)
-                return z == thread;
+                return z;
             
             // Maybe h.next is not set yet, so retry with first as tail
             s = tail; 
             if (s == h)                       // Empty queue
-                return true;
+                return null;
             if (s != null && (z = s.thread) != null && s.prev == head)
-                return z == thread;
+                return z;
 
             // Retry if we got an inconsistent set of reads
         }

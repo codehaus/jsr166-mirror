@@ -197,7 +197,8 @@ public class Semaphore implements java.io.Serializable {
         protected int tryAcquireShared(int acquires) {
             Thread current = Thread.currentThread();
             for (;;) {
-                if (!isFirst(current))
+                Thread first = getFirstQueuedThread();
+                if (first != null && first != current)
                     return -1;
                 int available = getState();
                 int remaining = available - acquires;

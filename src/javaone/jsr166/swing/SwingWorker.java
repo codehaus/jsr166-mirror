@@ -23,8 +23,7 @@ import java.util.concurrent.*;
  * - http://java.sun.com/products/jfc/tsc/articles/threads/threads3.html
  * <p>
  * This SwingWorker implements Future and Runnable. The default executor
- * creates a new thread per task, but this choice can be overridden using
- * the alternate constructor.
+ * creates a new thread per task, but this choice can be overridden.
  * <p>
  * <b>Sample Usage</b> <p>
  * <pre>
@@ -105,38 +104,50 @@ public abstract class SwingWorker<V> implements Future<V>, Runnable {
     /**
      * Default executor. Executes each task in a new thread.
      */
-    protected static final Executor EXECUTOR = new Executor() {
+    private static final Executor EXECUTOR = new Executor() {
         public void execute(Runnable command) {
             new Thread(command).start();
         }
     };
 
     /** Executor instance. */
-    protected final Executor executor;
+    private Executor executor;
 
     /** <tt>true</tt> if <tt>start</tt> method was called. */
-    protected boolean started;
+    private boolean started;
 
     /** Creates new SwingWorker with default executor. */
     public SwingWorker() {
         this(EXECUTOR);
     }
-  
+
     /**
      * Creates new SwingWorker with specified executor.
      * @param e executor for this worker
-     * @throws NullPointerException if e is null
      */
-    protected SwingWorker(Executor e) {
-        if (e == null) {
-            throw new NullPointerException("executor");
-        }
+    public SwingWorker(Executor e) {
+        setExecutor(e);
+    }
+
+    /**
+     * Sets executor to be used when worker is started. 
+     * @param e executor for this worker
+     */
+    public synchronized setExecutor(Executor e) {
         executor = e;
     }
 
     /**
+     * Returns executor to be used when worker is started. 
+     * @return executor
+     */
+    public synchronized Executor getExecutor() {
+        return executor;
+    }
+
+    /**
      * Submits this worker to executor for execution.
-     * @throws RejectedExecutionException if the executor balks.  
+     * @throws RejectedExecutionException if the executor balks  
      */
     public synchronized void start() {
         if (!started) {
@@ -146,11 +157,11 @@ public abstract class SwingWorker<V> implements Future<V>, Runnable {
     }
 
     /**
-     * Calls the <code>construct</code> method
-     * to compute the result, then invokes the <code>finished</code>
-     * method on the event dispatch thread.
+     * Calls the <code>construct</code> method to compute the
+     * result, then invokes the <code>finished</code> method on
+     * the event dispatch thread.
      */
-    protected final FutureTask<V> task =
+    private final FutureTask<V> task =
         new FutureTask<V>(new Callable<V>() {
             public V call() throws Exception {
                 return construct();

@@ -1,5 +1,5 @@
 package java.util.concurrent;
-
+import java.util.concurrent.locks.*;
 
 /**
  * Package-private native methods for classes introduced in JSR166
@@ -77,7 +77,7 @@ public final class JSR166Support {
      * @param time the deadline or timeout. If zero and isAbsolute is
      * false, means to wait forever.
      */
-    public static void park(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
+    public static void park(ReentrantLock.ReentrantLockQueueNode node, boolean isAbsolute, long time) {
         try {
             synchronized(node) {
                 int s = node.parkSemaphore;
@@ -112,7 +112,7 @@ public final class JSR166Support {
      * subsequent call to park not to block. 
      * @param thread the thread to unpark (no-op if null).
      */
-    public static void unpark(ReentrantLockQueueNode node, Thread thread) {
+    public static void unpark(ReentrantLock.ReentrantLockQueueNode node, Thread thread) {
         if (node == null)
             return;
         synchronized(node) {

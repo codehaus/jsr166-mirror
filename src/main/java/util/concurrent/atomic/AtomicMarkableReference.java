@@ -15,8 +15,8 @@ package java.util.concurrent.atomic;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:49 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/31 16:26:57 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public class AtomicMarkableReference<V>  {
@@ -29,7 +29,7 @@ public class AtomicMarkableReference<V>  {
         }
     }
 
-    private final AtomicReference  atomicRef;
+    private final AtomicReference<ReferenceBooleanPair>  atomicRef;
 
     /**
      * Creates a new <tt>AtomicMarkableReference</tt> with the given
@@ -39,7 +39,7 @@ public class AtomicMarkableReference<V>  {
      * @param initialMark the intial mark
      */
     public AtomicMarkableReference(V initialRef, boolean initialMark) {
-        atomicRef = new AtomicReference (new ReferenceBooleanPair(initialRef, initialMark));
+        atomicRef = new AtomicReference<ReferenceBooleanPair> (new ReferenceBooleanPair(initialRef, initialMark));
     }
 
     /**
@@ -48,7 +48,7 @@ public class AtomicMarkableReference<V>  {
      * @return the current value of the reference
      */
     public V getReference() {
-        return ((ReferenceBooleanPair)(atomicRef.get())).reference;
+        return atomicRef.get().reference;
     }
 
     /**
@@ -57,7 +57,7 @@ public class AtomicMarkableReference<V>  {
      * @return the current value of the mark
      */
     public boolean isMarked() {
-        return ((ReferenceBooleanPair)(atomicRef.get())).bit;
+        return atomicRef.get().bit;
     }
 
     /**
@@ -69,7 +69,7 @@ public class AtomicMarkableReference<V>  {
      * @return the current value of the reference
      */
     public V get(boolean[] markHolder) {
-        ReferenceBooleanPair p = (ReferenceBooleanPair)(atomicRef.get());
+        ReferenceBooleanPair p = atomicRef.get();
         markHolder[0] = p.bit;
         return p.reference;
     }
@@ -94,7 +94,7 @@ public class AtomicMarkableReference<V>  {
                                  V       newReference,
                                  boolean expectedMark,
                                  boolean newMark) {
-        ReferenceBooleanPair current = (ReferenceBooleanPair)(atomicRef.get());
+        ReferenceBooleanPair current = atomicRef.get();
         return  expectedReference == current.reference &&
             expectedMark == current.bit &&
             ((newReference == current.reference && newMark == current.bit) ||
@@ -110,7 +110,7 @@ public class AtomicMarkableReference<V>  {
      * @param newMark the new value for the mark
      */
     public void set(V newReference, boolean newMark) {
-        ReferenceBooleanPair current = (ReferenceBooleanPair)(atomicRef.get());
+        ReferenceBooleanPair current = atomicRef.get();
         if (newReference != current.reference || newMark != current.bit)
             atomicRef.set(new ReferenceBooleanPair(newReference, newMark));
     }
@@ -129,7 +129,7 @@ public class AtomicMarkableReference<V>  {
      * @return true if successful
      */
     public boolean attemptMark(V expectedReference, boolean newMark) {
-        ReferenceBooleanPair current = (ReferenceBooleanPair)(atomicRef.get());
+        ReferenceBooleanPair current = atomicRef.get();
         return  expectedReference == current.reference &&
             (newMark == current.bit ||
              atomicRef.compareAndSet

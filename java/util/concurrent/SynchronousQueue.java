@@ -42,10 +42,10 @@ public class SynchronousQueue<E> extends AbstractCollection<E>
     public E poll() {
         return null;
     }
-    public boolean offer(E x, long time, Clock granularity) throws InterruptedException {
+    public boolean offer(E x, long timeout, TimeUnit granularity) throws InterruptedException {
         return false;
     }
-    public E poll(long time, Clock granularity) throws InterruptedException {
+    public E poll(long timeout, TimeUnit granularity) throws InterruptedException {
         return null;
     }
     public E peek() {

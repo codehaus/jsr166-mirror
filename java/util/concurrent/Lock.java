@@ -50,7 +50,7 @@ package java.util.concurrent;
  * of <tt>synchronized</tt> methods and statements by providing a non-blocking
  * attempt to acquire a lock ({@link #tryLock()}), an attempt to acquire the
  * lock that can be interrupted ({@link #lockInterruptibly}, and an attempt
- * to acquire the lock that can timeout ({@link #tryLock(long, Clock)}).
+ * to acquire the lock that can timeout ({@link #tryLock(long, TimeUnit)}).
  * This additionally functionality is also extended to built-in monitor
  * locks through the methods of the {@link Locks} utility class.
  *
@@ -111,8 +111,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/16 01:12:33 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/01/09 17:56:51 $
+ * @editor $Author: dl $
  *
  **/
 public interface Lock {
@@ -244,8 +244,8 @@ public interface Lock {
      * The circumstances and the exception type must be documented by that 
      * <tt>Lock</tt> implementation.
      *
-     * @param time the maximum time to wait for the lock
-     * @param granularity the time unit of the <tt>time</tt> argument.
+     * @param timeout the maximum time to wait for the lock
+     * @param granularity the time unit of the <tt>timeout</tt> argument.
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
      * if the waiting time elapsed before the lock was acquired.
      *
@@ -256,7 +256,7 @@ public interface Lock {
      * @see Thread#interrupt
      *
      **/
-    public boolean tryLock(long time, Clock granularity) throws InterruptedException;
+    public boolean tryLock(long timeout, TimeUnit granularity) throws InterruptedException;
 
     /**
      * Releases the lock.

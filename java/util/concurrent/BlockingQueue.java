@@ -68,14 +68,14 @@ public interface BlockingQueue<E> extends Queue<E> {
     public E take() throws InterruptedException;
 
     /**
-     * Take an object from the queue if one is available within given wait time
-     * @param time the maximum time to wait
-     * @param granularity the time unit of the time argument.
+     * Take an object from the queue if one is available within given wait timeout
+     * @param timeout the maximum time to wait
+     * @param granularity the time unit of the timeout argument.
      * @return the object, or null if the queue is empty.
      * @throws InterruptedException if interrupted while waiting.
      * @throws TimeoutException if timed out while waiting.
      **/
-    public E poll(long time, Clock granularity) throws InterruptedException;
+    public E poll(long timeout, TimeUnit granularity) throws InterruptedException;
 
     /**
      * Add the given object to the queue, waiting if necessary for
@@ -89,12 +89,12 @@ public interface BlockingQueue<E> extends Queue<E> {
      * Add the given object to the queue if space is available within
      * given wait time.
      * @param x the object to add
-     * @param time the maximum time to wait
-     * @param granularity the time unit of the time argument.
+     * @param timeout the maximum time to wait
+     * @param granularity the time unit of the timeout argument.
      * @return true if successful
      * @throws InterruptedException if interrupted while waiting.
      * @throws TimeoutException if timed out while waiting.
      **/
-    public boolean offer(E x, long time, Clock granularity) throws InterruptedException;
+    public boolean offer(E x, long timeout, TimeUnit granularity) throws InterruptedException;
 
 }

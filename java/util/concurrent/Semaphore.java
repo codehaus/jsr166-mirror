@@ -72,7 +72,7 @@ public class Semaphore {
     public boolean tryAcquire() {
         return false;
     }
-    public boolean tryAcquire(long time, Clock granularity) throws InterruptedException {
+    public boolean tryAcquire(long timeout, TimeUnit granularity) throws InterruptedException {
         return false;
     }
     public void release() {}

@@ -18,7 +18,7 @@ public class DelayQueue<E> extends AbstractCollection<E>
      * @param unit the granularity of the time unit
      * @param x the element
      */
-    public boolean add(long delay, Clock granularity, E x) {
+    public boolean add(long delay, TimeUnit granularity, E x) {
         return false;
     }
 
@@ -29,7 +29,7 @@ public class DelayQueue<E> extends AbstractCollection<E>
      * @param granularity the time granularity
      * @throws NoSuchElementException if element not present
      */
-    public long getDelay(E element, Clock granularity) {
+    public long getDelay(E element, TimeUnit granularity) {
         return 0;
     }
 
@@ -39,7 +39,7 @@ public class DelayQueue<E> extends AbstractCollection<E>
      * @param granularity the time granularity
      * @throws NoSuchElementException if empty
      */
-    public long getEarliestDelay(Clock granularity) {
+    public long getEarliestDelay(TimeUnit granularity) {
         return 0;
     }
 
@@ -52,7 +52,7 @@ public class DelayQueue<E> extends AbstractCollection<E>
     /**
      * Equivalent to add(0, [any time unit], x).
      **/
-    public boolean offer(E x, long time, Clock granularity) {
+    public boolean offer(E x, long time, TimeUnit granularity) {
         return false;
     }
     /**
@@ -88,7 +88,7 @@ public class DelayQueue<E> extends AbstractCollection<E>
     public E poll() {
         return null;
     }
-    public E poll(long time, Clock granularity) throws InterruptedException {
+    public E poll(long time, TimeUnit granularity) throws InterruptedException {
         return null;
     }
     public E peek() {

@@ -48,8 +48,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/16 01:12:33 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/01/09 17:56:51 $
+ * @editor $Author: dl $
  *
  * @fixme add implementation notes for any performance issues related to
  * timeouts or interrupts
@@ -128,8 +128,8 @@ public class Locks {
      *
      * @param lock the object whose monitor lock must be acquired
      * @param action the code to run while holding the monitor lock
-     * @param time the maximum time to wait for the monitor lock
-     * @param granularity the time unit of the <tt>time</tt> argument.
+     * @param timeout the maximum time to wait for the monitor lock
+     * @param granularity the time unit of the <tt>timeout</tt> argument.
      * @return <tt>true</tt> if the monitor lock was acquired and the
      * action executed, and <tt>false</tt>
      * if the waiting time elapsed before the monitor lock was acquired.
@@ -141,7 +141,7 @@ public class Locks {
      *
      **/
     public static boolean attempt(Object lock, Runnable action, 
-                                  long time, Clock granularity)
+                                  long timeout, TimeUnit granularity)
         throws InterruptedException {
 
         return false; // for now;

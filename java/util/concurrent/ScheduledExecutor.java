@@ -16,7 +16,7 @@ public class ScheduledExecutor extends ThreadExecutor  {
     public ScheduledExecutor(int minThreads,
     int maxThreads,
     long keepAliveTime,
-    Clock granularity,
+    TimeUnit granularity,
     ExecutorIntercepts handler) {
         super(minThreads, maxThreads, keepAliveTime, granularity,
         new PriorityBlockingQueue(), handler);
@@ -30,7 +30,7 @@ public class ScheduledExecutor extends ThreadExecutor  {
         /** Return the time this task can run next,
          * in requested units.
          */
-        long getExecutionTime(Clock unit) {
+        long getExecutionTime(TimeUnit unit) {
             return 0;
         }
         ScheduledTask() {}
@@ -44,19 +44,19 @@ public class ScheduledExecutor extends ThreadExecutor  {
         ScheduledFutureTask() {}
     }
 
-    public static ScheduledTask newDelayedTask(Runnable r, long delay, Clock unit) {
+    public static ScheduledTask newDelayedTask(Runnable r, long delay, TimeUnit unit) {
         return null;
     }
 
-    public static ScheduledTask newPeriodicTask(Runnable r, long delay, long period, Clock unit) {
+    public static ScheduledTask newPeriodicTask(Runnable r, long delay, long period, TimeUnit unit) {
         return null;
     }
 
-    public static ScheduledTask newFixedRateTask(Runnable r, long delay, long period, Clock unit) {
+    public static ScheduledTask newFixedRateTask(Runnable r, long delay, long period, TimeUnit unit) {
         return null;
     }
 
-    public static ScheduledFutureTask newDelayedFutureTask(Callable c, long delay, Clock unit) {
+    public static ScheduledFutureTask newDelayedFutureTask(Callable c, long delay, TimeUnit unit) {
         return null;
     }
 

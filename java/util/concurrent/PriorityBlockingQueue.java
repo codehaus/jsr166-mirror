@@ -30,7 +30,7 @@ public class PriorityBlockingQueue<E> extends AbstractCollection<E>
     public E element() {
         return null;
     }
-    public boolean offer(E x, long time, Clock granularity) {
+    public boolean offer(E x, long timeout, TimeUnit granularity) {
         return false;
     }
     public E take() throws InterruptedException {
@@ -42,7 +42,7 @@ public class PriorityBlockingQueue<E> extends AbstractCollection<E>
     public E poll() {
         return null;
     }
-    public E poll(long time, Clock granularity) throws InterruptedException {
+    public E poll(long timeout, TimeUnit granularity) throws InterruptedException {
         return null;
     }
     public E peek() {

@@ -79,13 +79,13 @@ public class Exchanger<V> {
      * and then transfer the given Object to it, and vice versa,
      * unless time-out occurs first.
      * @param x the object to exchange
-     * @param time the maximum time to wait
-     * @param granularity the time unit of the time argument.
+     * @param timeout the maximum time to wait
+     * @param granularity the time unit of the timeout argument.
      * @return the value provided by the other thread.
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws TimeoutException if timed out while waiting.
      **/
-    public V exchange(V x, long time, Clock granularity) throws InterruptedException {
+    public V exchange(V x, long timeout, TimeUnit granularity) throws InterruptedException {
         return null; // for now
     }
 

@@ -56,8 +56,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/16 01:12:33 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/01/09 17:56:51 $
+ * @editor $Author: dl $
  * 
  * @fixme (1) We need a non-nested example to motivate this
  * @fixme (2) Describe performance aspects of interruptible locking for the RI
@@ -184,7 +184,7 @@ public class ReentrantLock implements Lock {
      *
      * @throws InterruptedException if the current thread is interrupted
      */
-    public boolean tryLock(long time, Clock granularity) throws InterruptedException {
+    public boolean tryLock(long timeout, TimeUnit granularity) throws InterruptedException {
         return false;
     }
 

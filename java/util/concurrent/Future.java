@@ -49,14 +49,14 @@ public interface Future<V> {
     /**
      * Wait if necessary for at most the given time for object to exist,
      * then get it.
-     * @param time the maximum time to wait
-     * @param granularity the time unit of the time argument
+     * @param timeout the maximum time to wait
+     * @param granularity the time unit of the timeout argument
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws TimeOutException if the wait timed out
      * @throws ExecutionException if the underlying computation
      * threw an exception.
      **/
-    public V get(long time, Clock granularity)
+    public V get(long timeout, TimeUnit granularity)
         throws InterruptedException, ExecutionException;
 
 }

@@ -164,8 +164,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/16 01:12:33 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/01/09 17:56:50 $
+ * @editor $Author: dl $
  **/
 public interface Condition {
 
@@ -280,8 +280,6 @@ public interface Condition {
      * re-acquire the lock associated with this condition. When the
      * thread returns it is <em>guaranteed</em> to hold this lock.
      *
-     * <p>If the thread is signalled while waiting, or experiences a
-     * spurious wakeup, then the value <tt>true</tt> is returned.
      *
      * <p>If the current thread:
      * <ul>
@@ -294,14 +292,38 @@ public interface Condition {
      * case, whether or not the test for interruption occurs before the lock
      * is released.
      *
-     * <p>If the specified waiting time elapses then the value <tt>false</tt>
-     * is returned.
-     * 
      * <p>The circumstances under which the wait completes are mutually 
      * exclusive. For example, if the thread is signalled then it will
      * never return by throwing {@link InterruptedException}; conversely
      * a thread that is interrupted and throws {@link InterruptedException}
      * will never consume a {@link #signal}.
+     *
+     * <p>The method returns an estimate of the number of nanoseconds
+     * remaining to wait given the supplied <tt>nanosTimeout</tt>
+     * value upon return, or a value less than or equal to zero if it
+     * timed out. This value can be used to determine whether and how
+     * long to re-wait in cases where the wait returns but an awaited
+     * condition still does not hold. Typical uses of this method take
+     * the following form:
+     *
+     * <pre>
+     * synchronized boolean aMethod(long timeout, TimeUnit unit) {
+     *   long nanosTimeout = unit.toNanos(timeout);
+     *   while (!conditionBeingWaitedFor) {
+     *     if (nanosTimeout &gt; 0)
+     *         nanosTimeout = theCondition.awaitNanos(nanosTimeout);
+     *      else
+     *        return false;
+     *   }
+     *   // ... 
+     * }
+     * </pre>
+     *
+     * <p> Design note: This method requires a nanosecond argument so
+     * as to avoid truncation errors in reporting remaining times.
+     * Such precision loss would make it difficult for programmers to
+     * ensure that total waiting times are not systematically shorter
+     * than specified when re-waits occur.
      *
      * <p><b>Implementation Considerations</b>
      * <p>The current thread is assumed to hold the lock associated with this
@@ -312,16 +334,16 @@ public interface Condition {
      * implementation must document that fact.
      *
      *
-     * @param time the maximum time to wait
-     * @param granularity the time unit of the <tt>time</tt> argument.
-     * @return <tt>true</tt> if the current thread was signalled while
-     * waiting, and <tt>false</tt> if the waiting time elapsed before
-     * a signal occurred.
+     * @param nanosTimeout the maximum time to wait, in nanoseconds
+     * @return A value less than or equal to zero if the wait has
+     * timed out; otherwise an estimate, that
+     * is strictly less than the <tt>nanosTimeout</tt> argument,
+     * of the time still remaining when this method returned.
      *
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
      */
-    public boolean await(long time, Clock granularity) throws InterruptedException;
+    public long awaitNanos(long nanosTimeout) throws InterruptedException;
 
     /**
      * Wakes up one waiting thread.

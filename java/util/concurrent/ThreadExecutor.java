@@ -60,7 +60,7 @@ public class ThreadExecutor implements Executor {
     public ThreadExecutor(int minThreads,
         int maxThreads,
         long keepAliveTime,
-        Clock granularity,
+        TimeUnit granularity,
         BlockingQueue workQueue,
         ExecutorIntercepts handler) {}
 
@@ -84,7 +84,7 @@ public class ThreadExecutor implements Executor {
         return new ThreadExecutor(nthreads,
             nthreads,
             0,
-            Clock.MILLISECONDS,
+            TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue(),
             new ExecutorIntercepts());
     }
@@ -108,7 +108,7 @@ public class ThreadExecutor implements Executor {
         return new ThreadExecutor(1,
             1,
             0,
-            Clock.MILLISECONDS,
+            TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue(),
             new ExecutorIntercepts());
     }
@@ -137,7 +137,7 @@ public class ThreadExecutor implements Executor {
         return new ThreadExecutor(0,
             Integer.MAX_VALUE,
             60000,
-            Clock.MILLISECONDS,
+            TimeUnit.MILLISECONDS,
             new SynchronousQueue(),
             new ExecutorIntercepts());
     }
@@ -154,7 +154,7 @@ public class ThreadExecutor implements Executor {
         return new ThreadExecutor(0,
             Integer.MAX_VALUE,
             0,
-            Clock.MILLISECONDS,
+            TimeUnit.MILLISECONDS,
             new SynchronousQueue(),
             new ExecutorIntercepts());
     }
@@ -188,7 +188,7 @@ public class ThreadExecutor implements Executor {
      * @throws IllegalArgumentException if msecs less than zero
      *
      */
-    public void setKeepAliveTime(long time, Clock granularity) {}
+    public void setKeepAliveTime(long time, TimeUnit granularity) {}
 
     /**
      * Get the minimum allowed number of threads.
@@ -213,7 +213,7 @@ public class ThreadExecutor implements Executor {
      * @return the time limit
      *
      */
-    public long getKeepAliveTime(Clock granularity) { return 0; }
+    public long getKeepAliveTime(TimeUnit granularity) { return 0; }
 
     // statistics
 
@@ -308,12 +308,12 @@ public class ThreadExecutor implements Executor {
      * request, or the timeout occurs, or the current Thread is
      * interrupted, whichever happens first.
      *
-     * @param time the maximum time to wait
-     * @param granularity the time unit of the time argument.
+     * @param timeout the maximum time to wait
+     * @param granularity the time unit of the timeout argument.
      * @throws InterruptedException if interrupted while waiting.
      * @throws IllegalStateException if not shut down.
      **/
-    public void awaitTermination(long time, Clock granularity) throws InterruptedException {}
+    public void awaitTermination(long timeout, TimeUnit granularity) throws InterruptedException {}
 
     // Executor methods
 

@@ -66,26 +66,26 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
     /**
      * Wait if necessary for at most the given time for object to exist,
      * then get it.
-     * @param time the maximum time to wait
-     * @param granularity the time unit of the time argument
+     * @param timeout the maximum time to wait
+     * @param granularity the time unit of the timeout argument
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws TimeOutException if the wait timed out
      * @throws CancellationException if task producing this value was cancelled before completion.
      * @throws ExecutionException if the underlying computation
      * threw an exception.
      **/
-    public synchronized V get(long time, Clock granularity)
+    public synchronized V get(long timeout, TimeUnit granularity)
         throws InterruptedException, ExecutionException {
 
         if (!ready) {
-            long startTime = granularity.currentTime();
-            long waitTime = time;
+            long startTime = granularity.now();
+            long waitTime = timeout;
             for (;;) {
                 granularity.timedWait(this, waitTime);
                 if (ready)
                     break;
                 else {
-                    waitTime = granularity.currentTime() - startTime;
+                    waitTime = granularity.elapsed(startTime);
                     if (waitTime <= 0)
                         throw new TimeoutException();
                 }

@@ -1,0 +1,223 @@
+<project name="jsr166" default="jar">
+
+  <description>
+    Build file for JSR-166
+  </description>
+
+  <!-- Compilation options -->
+  <property name="build.debug"          value="true"/>
+  <property name="build.debuglevel"     value="source,lines,vars"/>
+  <property name="build.deprecation"    value="false"/>
+  <property name="build.sourcelevel"    value="1.4"/>
+
+  <!-- Build locations -->
+  <property name="build.dir"            location="build"/>
+  <property name="build.classes.dir"    location="${build.dir}/classes"/>
+  <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
+  <property name="build.lib.dir"        location="${build.dir}/lib"/>
+  <property name="build.ant.dir"        location="${build.dir}/ant"/>
+  <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
+  <property name="build.reports.dir"    location="${build.dir}/reports"/>
+  <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
+
+  <!-- Source locations -->
+  <property name="src.dir"              location="${basedir}"/>
+  <property name="test.src.dir"         location="${basedir}/etc/testcases"/>
+  <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
+  <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
+  <property name="lib.dir"              location="${basedir}/lib"/>
+
+  <!-- Jar locations -->
+  <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
+  <property name="javac.jar"            location="${lib.dir}/javac.jar"/>
+  <property name="collect.jar"          location="${lib.dir}/collect.jar"/>
+  <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
+  <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
+
+  <property name="gj.compiler.args"
+           value='-J-Xbootclasspath/p:${javac.jar} -bootclasspath ${collect.jar};${rt.jar} -gj'
+  />
+
+
+  <target name="compile">
+    <mkdir dir="${build.classes.dir}"/>
+    <javac srcdir="${src.dir}"
+          destdir="${build.classes.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <compilerarg line="${gj.compiler.args}"/>
+
+      <!-- need this because srcdir is basedir! -->
+      <include name="java/**/*.java"/>
+
+    </javac>
+  </target>
+
+
+  <target name="jar" depends="compile">
+    <mkdir dir="${build.lib.dir}"/>
+    <jar basedir="${build.classes.dir}"
+        destfile="${product.jar}"
+    />
+  </target>
+
+
+  <target name="test" depends="report-tests"/>
+
+
+  <target name="docs" depends="filter-src">
+    <delete dir="${build.javadocs.dir}"/>
+    <mkdir dir="${build.javadocs.dir}"/>
+    <javadoc destdir="${build.javadocs.dir}"
+                link="http://java.sun.com/j2se/1.4.1/docs/api"
+            overview="${src.dir}/intro.html"
+              source="${build.sourcelevel}">
+
+      <tag name="revised" description="Last revised:"/>
+      <tag name="spec" description="Specified by:"/>
+
+      <packageset dir="${build.filter.src.dir}">
+        <include name="java/**"/>
+      </packageset>
+
+    </javadoc>
+  </target>
+
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete dir="${build.classes.dir}"/>
+    <delete dir="${build.lib.dir}"/>
+    <delete dir="${build.javadocs.dir}"/>
+  </target>
+
+
+  <!-- Internal targets used by docs target -->
+
+  <target name="compile-ant">
+    <mkdir dir="${build.ant.dir}"/>
+    <javac srcdir="${ant.src.dir}"
+          destdir="${build.ant.dir}"
+           source="1.4"
+    />
+  </target>
+
+
+  <target name="filter-src" depends="compile-ant">
+    <mkdir dir="${build.filter.src.dir}"/>
+    <copy todir="${build.filter.src.dir}">
+      <fileset dir="${src.dir}">
+        <include name="**/*.java"/>
+      </fileset>
+      <filterchain>
+        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
+                      classpath="${build.ant.dir}">
+          <!--
+           # These arguments are to get rid of angle-bracketed type
+           # parameters so that javadoc can run on the result. The
+           # following heuristic that seems to work:
+           #
+           # For all lines not starting with space(s)-asterisk-space(s),
+           #   replace <something> with a space, where there may be more
+           #   than one right angle bracket at the end, and "something"
+           #   must not contain parens or pipes. (This may need some
+           #   tweaking.)
+           -->
+          <param name="notmatching" value="^\s+\*\s.*$"/>
+          <param name="pattern" value="&lt;[^|>()]+?>+"/>
+          <param name="replacement" value=" "/>
+        </filterreader>
+        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
+                      classpath="${build.ant.dir}">
+          <!--
+           # These arguments are to uncomment lines beginning with
+           # "//@" so that javadoc can see imports that are needed
+           # to resolve links but that shouldn't be in the compiled
+           # code.
+           -->
+          <param name="matching" value="^//@.*$"/>
+          <param name="pattern" value="^//@"/>
+          <param name="replacement" value=""/>
+        </filterreader>
+      </filterchain>
+    </copy>
+  </target>
+
+
+  <!-- Internal targets used by test target -->
+
+  <target name="compile-tests" depends="jar">
+    <mkdir dir="${build.testcases.dir}"/>
+    <javac srcdir="${test.src.dir}"
+          destdir="${build.testcases.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <compilerarg line="${gj.compiler.args}"/>
+
+      <classpath id="test.classpath">
+        <pathelement location="${product.jar}"/>
+        <pathelement location="${junit.jar}"/>
+      </classpath>
+
+      <include name="**/*Test.java"/>
+
+    </javac>
+  </target>
+
+  <target name="run-tests" depends="compile-tests">
+    <mkdir dir="${build.reports.dir}"/>
+    <junit printsummary="true"
+             showoutput="true"
+          errorProperty="junit.failed"
+        failureProperty="junit.failed"
+                    dir="${build.reports.dir}">
+
+      <classpath>
+        <path refid="test.classpath"/>
+        <pathelement location="${build.testcases.dir}"/>
+      </classpath>
+
+      <formatter type="xml"/>
+
+      <batchtest todir="${build.reports.dir}">
+        <fileset dir="${test.src.dir}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+
+    </junit>
+  </target>
+
+
+  <target name="report-tests" depends="run-tests">
+    <!-- Sets junit.report.format to frames if Xalan is present,
+         otherwise sets it to noframes. -->
+    <available property="junit.report.format"
+                  value="frames"
+              classname="org.apache.xalan.lib.Redirect"
+    />
+    <property name="junit.report.format" value="noframes"/>
+
+    <junitreport todir="${build.reports.dir}">
+      <fileset dir="${build.reports.dir}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report styledir="${stylesheet.dir}"
+                format="${junit.report.format}"
+                 todir="${build.reports.dir}"
+      />
+    </junitreport>
+
+    <fail message="Test Cases Failed" if="junit.failed"/>
+  </target>
+
+
+</project>

@@ -28,7 +28,7 @@ import java.util.*;
  *
  * @since 1.5
  * @author Doug Lea
- * @param <E> the base class of all elements held in this collection
+ * @param <E> the type of elements held in this collection
  */
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     implements BlockingQueue<E>, java.io.Serializable {

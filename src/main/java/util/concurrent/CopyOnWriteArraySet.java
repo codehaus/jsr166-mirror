@@ -53,7 +53,7 @@ import java.util.*;
  * @see CopyOnWriteArrayList
  * @since 1.5
  * @author Doug Lea
- * @param <E> the base class of all elements held in this collection
+ * @param <E> the type of elements held in this collection
  */
 public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         implements Cloneable, java.io.Serializable {

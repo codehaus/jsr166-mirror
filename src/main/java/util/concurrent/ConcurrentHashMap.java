@@ -61,8 +61,8 @@ import java.io.ObjectOutputStream;
  *
  * @since 1.5
  * @author Doug Lea
- * @param <K> the base class of all keys maintained by this map
- * @param <V> the base class of all mapped values 
+ * @param <K> the type of keys maintained by this map
+ * @param <V> the type of mapped values 
  */
 public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         implements ConcurrentMap<K, V>, Cloneable, Serializable {

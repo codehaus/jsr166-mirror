@@ -79,7 +79,7 @@ package java.util;
  * @see java.util.concurrent.PriorityBlockingQueue
  * @since 1.5
  * @author Doug Lea
- * @param <E> the base class of all elements held in this collection
+ * @param <E> the type of elements held in this collection
  */
 public interface Queue<E> extends Collection<E> {
 

@@ -33,13 +33,15 @@ public interface ExecutorService extends Executor {
      * representing that task.
      *
      * @param task the task to submit
+     * @param result the result to return upon completion
+     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
      * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return an arbitrary value 
+     * and whose <tt>get()</tt> method will return the given value 
      * upon completion
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      */
-    Future<?> submit(Runnable task);
+    <T> Future<T> submit(Runnable task, T result);
 
     /**
      * Submits a value-returning task for execution and returns a Future
@@ -166,6 +168,8 @@ public interface ExecutorService extends Executor {
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
+     * @param result value for each task to return upon completion.
+     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
      * @return A list of Futures representing the tasks, in the same
      * sequential order as the given task list. If the task list is
      * non-empty, at least one element of this list is known to have
@@ -176,7 +180,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    List<Future<?>> runAny(List<Runnable> tasks)
+    <T> List<Future<T>> invokeAny(List<Runnable> tasks, T result)
         throws InterruptedException;
 
     /**
@@ -186,6 +190,8 @@ public interface ExecutorService extends Executor {
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
+     * @param result value for each task to return upon completion.
+     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
      * @return A list of Futures representing the tasks, in the same
@@ -199,8 +205,8 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    List<Future<?>> runAny(List<Runnable> tasks, 
-                           long timeout, TimeUnit unit) 
+    <T> List<Future<T>> invokeAny(List<Runnable> tasks, T result,
+                               long timeout, TimeUnit unit) 
         throws InterruptedException;
 
 
@@ -210,6 +216,8 @@ public interface ExecutorService extends Executor {
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
+     * @param result value for each task to return upon completion.
+     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
      * @return A list of Futures representing the tasks, in the same
      * sequential order as the given task list, each of which has
      * completed.
@@ -219,7 +227,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    List<Future<?>> runAll(List<Runnable> tasks)
+    <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result)
         throws InterruptedException;
 
     /**
@@ -230,6 +238,8 @@ public interface ExecutorService extends Executor {
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
+     * @param result value for each task to return upon completion.
+     * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
      * @param timeout the maximum time to wait
      * @return A list of Futures representing the tasks, in the same
      * sequential order as the given task list. If the operation did
@@ -242,8 +252,8 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    List<Future<?>> runAll(List<Runnable> tasks, 
-                              long timeout, TimeUnit unit) 
+    <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result,
+                               long timeout, TimeUnit unit) 
         throws InterruptedException;
 
     /**
@@ -264,7 +274,7 @@ public interface ExecutorService extends Executor {
      * for execution
      */
 
-    <T> List<Future<T>> callAny(List<Callable<T>> tasks)
+    <T> List<Future<T>> invokeAny(List<Callable<T>> tasks)
         throws InterruptedException;
 
     /**
@@ -288,7 +298,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    <T> List<Future<T>> callAny(List<Callable<T>> tasks, 
+    <T> List<Future<T>> invokeAny(List<Callable<T>> tasks, 
                                 long timeout, TimeUnit unit) 
         throws InterruptedException;
 
@@ -308,7 +318,7 @@ public interface ExecutorService extends Executor {
      * for execution
      */
 
-    <T> List<Future<T>> callAll(List<Callable<T>> tasks)
+    <T> List<Future<T>> invokeAll(List<Callable<T>> tasks)
         throws InterruptedException;
 
     /**
@@ -331,7 +341,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    <T> List<Future<T>> callAll(List<Callable<T>> tasks, 
+    <T> List<Future<T>> invokeAll(List<Callable<T>> tasks, 
                                 long timeout, TimeUnit unit) 
         throws InterruptedException;
 

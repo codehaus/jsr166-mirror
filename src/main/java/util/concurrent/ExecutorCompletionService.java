@@ -18,10 +18,10 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
     /**
      * FutureTask extension to enqueue upon completion
      */
-    private class QueueingFuture<T> extends FutureTask<T> {
-        QueueingFuture(Callable<T> c) { super(c); }
-        QueueingFuture(Runnable t, T r) { super(t, r); }
-        protected void done() { completionQueue.add((Future<V>)this); }
+    private class QueueingFuture extends FutureTask<V> {
+        QueueingFuture(Callable<V> c) { super(c); }
+        QueueingFuture(Runnable t, V r) { super(t, r); }
+        protected void done() { completionQueue.add(this); }
     }
 
     /**
@@ -58,13 +58,13 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
     }
 
     public Future<V> submit(Callable<V> task) {
-        QueueingFuture<V> f = new QueueingFuture<V>(task);
+        QueueingFuture f = new QueueingFuture(task);
         executor.execute(f);
         return f;
     }
 
     public Future<V> submit(Runnable task, V result) {
-        QueueingFuture<V> f = new QueueingFuture<V>(task, result);
+        QueueingFuture f = new QueueingFuture(task, result);
         executor.execute(f);
         return f;
     }

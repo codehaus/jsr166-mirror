@@ -29,8 +29,8 @@ import java.util.concurrent.locks.*;
  */
 public abstract class AbstractExecutorService implements ExecutorService {
 
-    public Future<?> submit(Runnable task) {
-        FutureTask<?> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
+    public <T> Future<T> submit(Runnable task, T result) {
+        FutureTask<T> ftask = new FutureTask<T>(task, result);
         execute(ftask);
         return ftask;
     }
@@ -88,189 +88,24 @@ public abstract class AbstractExecutorService implements ExecutorService {
     }
 
     /**
-     * Helper class to wait for tasks in bulk-execute methods
-     */
-    private static class TaskGroupWaiter {
-        private final ReentrantLock lock = new ReentrantLock();
-        private final Condition done = lock.newCondition();
-        private int firstIndex = -1;
-        private int countDown;
-        TaskGroupWaiter(int ntasks) { countDown = ntasks; }
-
-        void signalDone(int index) {
-            lock.lock();
-            try {
-                if (firstIndex < 0)
-                    firstIndex = index;
-                if (--countDown == 0)
-                    done.signalAll();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        int await() throws InterruptedException {
-            lock.lock();
-            try {
-                while (countDown > 0)
-                    done.await();
-                return firstIndex;
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        int awaitNanos(long nanos) throws InterruptedException {
-            lock.lock();
-            try {
-                while (countDown > 0 && nanos > 0)
-                    nanos = done.awaitNanos(nanos);
-                return firstIndex;
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        boolean isDone() {
-            lock.lock();
-            try {
-                return countDown <= 0;
-            } finally {
-                lock.unlock();
-            }
-        }
-    }
-
-    /**
      * FutureTask extension to provide signal when task completes
      */
     private static class SignallingFuture<T> extends FutureTask<T> {
-        private final TaskGroupWaiter waiter;
-        private final int index;
-        SignallingFuture(Callable<T> c, TaskGroupWaiter w, int i) { 
-            super(c); waiter = w; index = i;
+        private final CountDownLatch signal;
+        SignallingFuture(Callable<T> c, CountDownLatch l) {
+            super(c); signal = l;
         }
-        SignallingFuture(Runnable t, T r, TaskGroupWaiter w, int i) {
-            super(t, r); waiter = w; index = i;
+        SignallingFuture(Runnable t, T r, CountDownLatch l) {
+            super(t, r); signal = l;
         }
         protected void done() {
-            waiter.signalDone(index);
+            signal.countDown();
         }
     }
 
     // any/all methods, each a little bit different than the other
 
-    public List<Future<?>> runAny(List<Runnable> tasks)
-        throws InterruptedException {
-        if (tasks == null)
-            throw new NullPointerException();
-        int n = tasks.size();
-        List<Future<?>> futures = new ArrayList<Future<?>>(n);
-        if (n == 0)
-            return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(1);
-        try {
-            int i = 0;
-            for (Runnable t : tasks) {
-                SignallingFuture<Boolean> f = 
-                    new SignallingFuture<Boolean>(t, Boolean.TRUE, waiter, i++);
-                futures.add(f);
-                if (!waiter.isDone())
-                    execute(f);
-            }
-            int first = waiter.await();
-            return futures;
-        } finally {
-            for (Future<?> f : futures) 
-                f.cancel(true);
-        }
-    }
-
-    public List<Future<?>> runAny(List<Runnable> tasks, 
-                                  long timeout, TimeUnit unit) 
-        throws InterruptedException {
-        if (tasks == null || unit == null)
-            throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
-        int n = tasks.size();
-        List<Future<?>> futures = new ArrayList<Future<?>>(n);
-        if (n == 0)
-            return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(1);
-        try {
-            int i = 0;
-            for (Runnable t : tasks) {
-                SignallingFuture<Boolean> f = 
-                    new SignallingFuture<Boolean>(t, Boolean.TRUE, waiter, i++);
-                futures.add(f);
-                if (!waiter.isDone())
-                    execute(f);
-            }
-            int first = waiter.awaitNanos(nanos);
-            return futures;
-        } finally {
-            for (Future<?> f : futures) 
-                f.cancel(true);
-        }
-    }
-
-
-
-    public List<Future<?>> runAll(List<Runnable> tasks)
-        throws InterruptedException {
-        if (tasks == null)
-            throw new NullPointerException();
-        int n = tasks.size();
-        List<Future<?>> futures = new ArrayList<Future<?>>(n);
-        if (n == 0)
-            return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(n);
-        int i = 0;
-        try {
-            for (Runnable t : tasks) {
-                SignallingFuture<Boolean> f = 
-                    new SignallingFuture<Boolean>(t, Boolean.TRUE, waiter, i++);
-                futures.add(f);
-                execute(f);
-            }
-            waiter.await();
-            return futures;
-        } finally {
-            if (!waiter.isDone())
-                for (Future<?> f : futures) 
-                    f.cancel(true);
-        }
-    }
-
-    public List<Future<?>> runAll(List<Runnable> tasks, 
-                                  long timeout, TimeUnit unit) 
-        throws InterruptedException {
-        if (tasks == null || unit == null)
-            throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
-        int n = tasks.size();
-        List<Future<?>> futures = new ArrayList<Future<?>>(n);
-        if (n == 0)
-            return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(n);
-        try {
-            int i = 0;
-            for (Runnable t : tasks) {
-                SignallingFuture<Boolean> f = 
-                    new SignallingFuture<Boolean>(t, Boolean.TRUE, waiter, i++);
-                futures.add(f);
-                execute(f);
-            }
-            waiter.awaitNanos(nanos);
-            return futures;
-        } finally {
-            if (!waiter.isDone())
-                for (Future<?> f : futures) 
-                    f.cancel(true);
-        }
-    }
-
-    public <T> List<Future<T>> callAny(List<Callable<T>> tasks)
+    public <T> List<Future<T>> invokeAny(List<Runnable> tasks, T result)
         throws InterruptedException {
         if (tasks == null)
             throw new NullPointerException();
@@ -278,16 +113,16 @@ public abstract class AbstractExecutorService implements ExecutorService {
         List<Future<T>> futures = new ArrayList<Future<T>>(n);
         if (n == 0)
             return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(1);
-        int i = 0;
+        CountDownLatch waiter = new CountDownLatch(1);;
         try {
-            for (Callable<T> t : tasks) {
-                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter, i++);
+            for (Runnable t : tasks) {
+                SignallingFuture<T> f = 
+                    new SignallingFuture<T>(t, result, waiter);
                 futures.add(f);
-                if (!waiter.isDone())
+                if (waiter.getCount() > 0)
                     execute(f);
             }
-            int first = waiter.await();
+            waiter.await();
             return futures;
         } finally {
             for (Future<T> f : futures) 
@@ -295,26 +130,74 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
     }
 
-    public <T> List<Future<T>> callAny(List<Callable<T>> tasks, 
+    public <T> List<Future<T>> invokeAny(List<Runnable> tasks, T result,
+                                         long timeout, TimeUnit unit) 
+        throws InterruptedException {
+        if (tasks == null || unit == null)
+            throw new NullPointerException();
+        int n = tasks.size();
+        List<Future<T>> futures = new ArrayList<Future<T>>(n);
+        if (n == 0)
+            return futures;
+        CountDownLatch waiter = new CountDownLatch(1);;
+        try {
+            for (Runnable t : tasks) {
+                SignallingFuture<T> f = 
+                    new SignallingFuture<T>(t, result, waiter);
+                futures.add(f);
+                if (waiter.getCount() > 0)
+                    execute(f);
+            }
+            waiter.await(timeout, unit);
+            return futures;
+        } finally {
+            for (Future<T> f : futures) 
+                f.cancel(true);
+        }
+    }
+
+    public <T> List<Future<T>> invokeAny(List<Callable<T>> tasks)
+        throws InterruptedException {
+        if (tasks == null)
+            throw new NullPointerException();
+        int n = tasks.size();
+        List<Future<T>> futures = new ArrayList<Future<T>>(n);
+        if (n == 0)
+            return futures;
+        CountDownLatch waiter = new CountDownLatch(1);;
+        try {
+            for (Callable<T> t : tasks) {
+                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter);
+                futures.add(f);
+                if (waiter.getCount() > 0)
+                    execute(f);
+            }
+            waiter.await();
+            return futures;
+        } finally {
+            for (Future<T> f : futures) 
+                f.cancel(true);
+        }
+    }
+
+    public <T> List<Future<T>> invokeAny(List<Callable<T>> tasks, 
                                        long timeout, TimeUnit unit) 
         throws InterruptedException {
         if (tasks == null || unit == null)
             throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
         int n = tasks.size();
         List<Future<T>> futures= new ArrayList<Future<T>>(n);
         if (n == 0)
             return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(1);
+        CountDownLatch waiter = new CountDownLatch(1);;
         try {
-            int i = 0;
             for (Callable<T> t : tasks) {
-                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter, i++);
+                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter);
                 futures.add(f);
-                if (!waiter.isDone())
+                if (waiter.getCount() > 0)
                     execute(f);
             }
-            int first = waiter.awaitNanos(nanos);
+            waiter.await(timeout, unit);
             return futures;
         } finally {
             for (Future<T> f : futures) 
@@ -323,53 +206,141 @@ public abstract class AbstractExecutorService implements ExecutorService {
     }
 
 
-    public <T> List<Future<T>> callAll(List<Callable<T>> tasks)
+    public <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result)
         throws InterruptedException {
         if (tasks == null)
             throw new NullPointerException();
-        int n = tasks.size();
-        List<Future<T>> futures = new ArrayList<Future<T>>(n);
-        if (n == 0)
-            return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(n);
+        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
+        boolean done = false;
         try {
-            int i = 0;
-            for (Callable<T> t : tasks) {
-                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter, i++);
+            for (Runnable t : tasks) {
+                FutureTask<T> f = new FutureTask<T>(t, result);
                 futures.add(f);
                 execute(f);
             }
-            waiter.await();
+            for (Future<T> f : futures) {
+                if (!f.isDone()) {
+                    try { 
+                        f.get(); 
+                    } catch(CancellationException ignore) {
+                    } catch(ExecutionException ignore) {
+                    }
+                }
+            }
+            done = true;
             return futures;
         } finally {
-            if (!waiter.isDone())
+            if (!done)
                 for (Future<T> f : futures) 
                     f.cancel(true);
         }
     }
 
-    public <T> List<Future<T>> callAll(List<Callable<T>> tasks, 
-                                       long timeout, TimeUnit unit) 
+    public <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result,
+                                         long timeout, TimeUnit unit) 
         throws InterruptedException {
         if (tasks == null || unit == null)
             throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
-        int n = tasks.size();
-        List<Future<T>> futures = new ArrayList<Future<T>>(n);
-        if (n == 0)
-            return futures;
-        TaskGroupWaiter waiter = new TaskGroupWaiter(n);
+        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
+        boolean done = false;
         try {
-            int i = 0;
-            for (Callable<T> t : tasks) {
-                SignallingFuture<T> f = new SignallingFuture<T>(t, waiter, i++);
+            for (Runnable t : tasks) {
+                FutureTask<T> f = new FutureTask<T>(t, result);
                 futures.add(f);
                 execute(f);
             }
-            waiter.awaitNanos(nanos);
+            long lastTime = System.nanoTime();
+            for (Future<T> f : futures) {
+                if (!f.isDone()) {
+                    if (nanos < 0) 
+                        return futures;
+                    try { 
+                        f.get(nanos, TimeUnit.NANOSECONDS); 
+                        long now = System.nanoTime();
+                        nanos -= now - lastTime;
+                        lastTime = now;
+                    } catch(CancellationException ignore) {
+                    } catch(ExecutionException ignore) {
+                    } catch(TimeoutException toe) {
+                        return futures;
+                    }
+                }
+            }
+            done = true;
             return futures;
         } finally {
-            if (!waiter.isDone())
+            if (!done)
+                for (Future<T> f : futures) 
+                    f.cancel(true);
+        }
+    }
+
+    public <T> List<Future<T>> invokeAll(List<Callable<T>> tasks)
+        throws InterruptedException {
+        if (tasks == null)
+            throw new NullPointerException();
+        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
+        boolean done = false;
+        try {
+            for (Callable<T> t : tasks) {
+                FutureTask<T> f = new FutureTask<T>(t);
+                futures.add(f);
+                execute(f);
+            }
+            for (Future<T> f : futures) {
+                if (!f.isDone()) {
+                    try { 
+                        f.get(); 
+                    } catch(CancellationException ignore) {
+                    } catch(ExecutionException ignore) {
+                    }
+                }
+            }
+            done = true;
+            return futures;
+        } finally {
+            if (!done)
+                for (Future<T> f : futures) 
+                    f.cancel(true);
+        }
+    }
+
+    public <T> List<Future<T>> invokeAll(List<Callable<T>> tasks, 
+                                         long timeout, TimeUnit unit) 
+        throws InterruptedException {
+        if (tasks == null || unit == null)
+            throw new NullPointerException();
+        long nanos = unit.toNanos(timeout);
+        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
+        boolean done = false;
+        try {
+            for (Callable<T> t : tasks) {
+                FutureTask<T> f = new FutureTask<T>(t);
+                futures.add(f);
+                execute(f);
+            }
+            long lastTime = System.nanoTime();
+            for (Future<T> f : futures) {
+                if (!f.isDone()) {
+                    if (nanos < 0) 
+                        return futures; 
+                    try { 
+                        f.get(nanos, TimeUnit.NANOSECONDS); 
+                        long now = System.nanoTime();
+                        nanos -= now - lastTime;
+                        lastTime = now;
+                    } catch(CancellationException ignore) {
+                    } catch(ExecutionException ignore) {
+                    } catch(TimeoutException toe) {
+                        return futures;
+                    }
+                }
+            }
+            done = true;
+            return futures;
+        } finally {
+            if (!done)
                 for (Future<T> f : futures) 
                     f.cancel(true);
         }

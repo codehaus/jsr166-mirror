@@ -137,7 +137,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/07/31 20:32:00 $
+ * @revised $Date: 2003/08/06 19:22:36 $
  * @editor $Author: tim $
  * @author Doug Lea
  */
@@ -740,6 +740,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Sets the thread factory used to create new threads.
      *
      * @param threadFactory the new thread factory
+     * @see #getThreadFactory
      */
     public void setThreadFactory(ThreadFactory threadFactory) {
         this.threadFactory = threadFactory;
@@ -749,6 +750,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Returns the thread factory used to create new threads.
      *
      * @return the current thread factory
+     * @see #setThreadFactory
      */
     public ThreadFactory getThreadFactory() {
         return threadFactory;
@@ -758,6 +760,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Sets a new handler for unexecutable tasks.
      *
      * @param handler the new handler
+     * @see #getRejectedExecutionHandler
      */
     public void setRejectedExecutionHandler(RejectedExecutionHandler handler) {
         this.handler = handler;
@@ -767,6 +770,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Returns the current handler for unexecutable tasks.
      *
      * @return the current handler
+     * @see #setRejectedExecutionHandler
      */
     public RejectedExecutionHandler getRejectedExecutionHandler() {
         return handler;
@@ -827,6 +831,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * @param corePoolSize the new core size
      * @throws IllegalArgumentException if <tt>corePoolSize</tt>
      * less than zero
+     * @see #getCorePoolSize
      */
     public void setCorePoolSize(int corePoolSize) {
         if (corePoolSize < 0)
@@ -856,6 +861,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Returns the core number of threads.
      *
      * @return the core number of threads
+     * @see #setCorePoolSize
      */
     public int getCorePoolSize() {
         return corePoolSize;
@@ -870,6 +876,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * @param maximumPoolSize the new maximum
      * @throws IllegalArgumentException if maximumPoolSize less than zero or
      * the {@link #getCorePoolSize core pool size}
+     * @see #getMaximumPoolSize
      */
     public void setMaximumPoolSize(int maximumPoolSize) {
         if (maximumPoolSize <= 0 || maximumPoolSize < corePoolSize)
@@ -897,6 +904,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Returns the maximum allowed number of threads.
      *
      * @return the maximum allowed number of threads
+     * @see #setMaximumPoolSize
      */
     public int getMaximumPoolSize() {
         return maximumPoolSize;
@@ -912,6 +920,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * excess threads to terminate immediately after executing tasks.
      * @param unit  the time unit of the time argument
      * @throws IllegalArgumentException if msecs less than zero
+     * @see #getKeepAliveTime
      */
     public void setKeepAliveTime(long time, TimeUnit unit) {
         if (time < 0)
@@ -926,6 +935,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @param unit the desired time unit of the result
      * @return the time limit
+     * @see #setKeepAliveTime
      */
     public long getKeepAliveTime(TimeUnit unit) {
         return unit.convert(keepAliveTime, TimeUnit.NANOSECONDS);

@@ -46,6 +46,7 @@ import java.util.*;
  */
 public class CopyOnWriteArrayList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
+    private static final long serialVersionUID = 8673264195747942595L;
 
     /**
      * The held array. Directly accessed only within synchronized

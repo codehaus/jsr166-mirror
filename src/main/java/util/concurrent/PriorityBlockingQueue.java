@@ -27,6 +27,7 @@ import java.util.*;
 */
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     implements BlockingQueue<E>, java.io.Serializable {
+    private static final long serialVersionUID = 5595510919245408276L;
 
     private final PriorityQueue<E> q;
     private final ReentrantLock lock = new ReentrantLock(true);

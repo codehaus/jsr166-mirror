@@ -15,12 +15,14 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
+ * @revised $Date: 2003/08/25 19:27:58 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
  */
 public class BrokenBarrierException extends Exception {
+    private static final long serialVersionUID = 7117394618823254244L;
+
     /**
      * Constructs a <tt>BrokenBarrierException</tt> with no specified detail
      * message.

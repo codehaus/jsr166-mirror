@@ -57,6 +57,7 @@ import java.io.ObjectOutputStream;
  */
 public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         implements ConcurrentMap<K, V>, Cloneable, Serializable {
+    private static final long serialVersionUID = 7249069246763182397L;
 
     /*
      * The basic strategy is to subdivide the table among Segments,

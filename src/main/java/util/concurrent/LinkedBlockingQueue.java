@@ -32,6 +32,7 @@ import java.util.*;
  **/
 public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
+    private static final long serialVersionUID = -6903933977591709194L;
 
     /*
      * A variant of the "two lock queue" algorithm.  The putLock gates
@@ -440,10 +441,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * elements.  Returns <tt>true</tt> if the queue contained the
      * specified element (or equivalently, if the queue changed as a
      * result of the call).
-     *
-     * <p>This implementation iterates over the queue looking for the
-     * specified element.  If it finds the element, it removes the element
-     * from the queue using the iterator's remove method.<p>
      *
      */
     public boolean remove(Object o) {

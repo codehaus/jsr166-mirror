@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.*;
  **/
 public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {
+    private static final long serialVersionUID = 196745693267521676L;
 
     /*
      * This is a straight adaptation of Michael & Scott algorithm.

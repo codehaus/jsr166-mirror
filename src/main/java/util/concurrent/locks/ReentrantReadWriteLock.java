@@ -114,12 +114,14 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/16 20:47:25 $
+ * @revised $Date: 2003/08/25 19:28:06 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
  */
 public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializable  {
+
+    private static final long serialVersionUID = -6992448646407690164L;
 
     /**
      * Creates a new <tt>ReentrantReadWriteLock</tt> with

@@ -15,11 +15,12 @@ package java.util.concurrent;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/24 14:47:31 $
+ * @revised $Date: 2003/08/25 19:27:58 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
 public class ExecutionException extends Exception {
+    private static final long serialVersionUID = 7830266012832686185L;
 
     /**
      * Constructs a <tt>ExecutionException</tt> with no detail message.

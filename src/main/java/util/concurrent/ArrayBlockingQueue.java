@@ -37,6 +37,7 @@ import java.util.*;
  */
 public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
+    private static final long serialVersionUID = -817911632652898425L;
 
     /** The queued items */
     private transient final E[] items;

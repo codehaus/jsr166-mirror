@@ -32,6 +32,7 @@ import java.util.*;
 **/
 public class SynchronousQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
+    private static final long serialVersionUID = -3223113410248163686L;
 
     /*
       This implementation divides actions into two cases for puts:

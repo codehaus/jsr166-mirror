@@ -13,11 +13,12 @@ package java.util.concurrent;
  * @see Executor#execute
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
+ * @revised $Date: 2003/08/25 19:27:58 $
  * @editor $Author: dl $
 
  */
 public class RejectedExecutionException extends RuntimeException {
+    private static final long serialVersionUID = -375805702767069545L;
 
     /**
      * Constructs a <tt>RejectedExecutionException</tt> with no detail message.

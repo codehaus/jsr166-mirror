@@ -15,7 +15,9 @@ import sun.misc.Unsafe;
  * @author Doug Lea
  */
 public final class AtomicIntegerArray implements java.io.Serializable { 
-    // setup to use Unsafe.compareAndSwapInt for updates
+    private static final long serialVersionUID = 2862133569453604235L;
+
+   // setup to use Unsafe.compareAndSwapInt for updates
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private static final int base = unsafe.arrayBaseOffset(int[].class);
     private static final int scale = unsafe.arrayIndexScale(int[].class);

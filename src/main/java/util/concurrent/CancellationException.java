@@ -16,11 +16,12 @@ package java.util.concurrent;
  * @see FutureTask#get(long, TimeUnit)
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
+ * @revised $Date: 2003/08/25 19:27:58 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
 public class CancellationException extends IllegalStateException {
+    private static final long serialVersionUID = -9202173006928992231L;
 
     /**
      * Constructs a <tt>CancellationException</tt> with no detail message.

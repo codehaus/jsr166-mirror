@@ -13,6 +13,8 @@ import sun.misc.Unsafe;
  * @author Doug Lea
 */
 public class AtomicReference<V>  implements java.io.Serializable { 
+    private static final long serialVersionUID = -1848883965231344442L;
+
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private static final long valueOffset;
 

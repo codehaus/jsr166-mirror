@@ -72,9 +72,9 @@ public class MapPerformanceTest extends TestCase {
             stest(newMap(mapClass), size);
     }
 
-    static Map newMap(Class cl) {
+    static Map<Object, Object> newMap(Class cl) {
         try {
-            Map m = (Map)cl.newInstance();
+            Map<Object, Object> m = (Map<Object, Object>)cl.newInstance();
             return m;
         } catch(Exception e) {
             throw new RuntimeException("Can't instantiate " + cl + ": " + e);
@@ -82,7 +82,7 @@ public class MapPerformanceTest extends TestCase {
     }
 
 
-    static void runTest(Map s, Object[] key) {
+    static void runTest(Map<Object, Object> s, Object[] key) {
         shuffle(key);
         int size = key.length;
         long startTime = System.currentTimeMillis();
@@ -103,7 +103,7 @@ public class MapPerformanceTest extends TestCase {
     }
 
 
-    static void t1(String nm, int n, Map s, Object[] key, int expect) {
+    static void t1(String nm, int n, Map<Object, Object> s, Object[] key, int expect) {
         int sum = 0;
         int iters = 4;
         timer.start(nm, n * iters);
@@ -116,7 +116,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == expect * iters", expect * iters, sum);
     }
 
-    static void t2(String nm, int n, Map s, Object[] key, int expect) {
+    static void t2(String nm, int n, Map<Object, Object> s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
@@ -126,7 +126,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == expect", expect, sum);
     }
 
-    static void t3(String nm, int n, Map s, Object[] key, int expect) {
+    static void t3(String nm, int n, Map<Object, Object> s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
@@ -136,7 +136,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == expect", expect, sum);
     }
 
-    static void t4(String nm, int n, Map s, Object[] key, int expect) {
+    static void t4(String nm, int n, Map<Object, Object> s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
@@ -146,7 +146,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == expect", expect, sum);
     }
 
-    static void t5(String nm, int n, Map s, Object[] key, int expect) {
+    static void t5(String nm, int n, Map<Object, Object> s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n/2);
         for (int i = n-2; i >= 0; i-=2) {
@@ -156,7 +156,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == expect", expect, sum);
     }
 
-    static void t6(String nm, int n, Map s, Object[] k1, Object[] k2) {
+    static void t6(String nm, int n, Map<Object, Object> s, Object[] k1, Object[] k2) {
         int sum = 0;
         timer.start(nm, n * 2);
         for (int i = 0; i < n; i++) {
@@ -167,7 +167,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == n", n, sum);
     }
 
-    static void t7(String nm, int n, Map s, Object[] k1, Object[] k2) {
+    static void t7(String nm, int n, Map<Object, Object> s, Object[] k1, Object[] k2) {
         int sum = 0;
         timer.start(nm, n * 2);
         for (int i = 0; i < n; i++) {
@@ -178,7 +178,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == n", n, sum);
     }
 
-    static void t8(String nm, int n, Map s, Object[] key, int expect) {
+    static void t8(String nm, int n, Map<Object, Object> s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
@@ -201,7 +201,7 @@ public class MapPerformanceTest extends TestCase {
     }
 
 
-    static void ktest(Map s, int size, Object[] key) {
+    static void ktest(Map<Object, Object> s, int size, Object[] key) {
         timer.start("ContainsKey            ", size);
         Set ks = s.keySet();
         int sum = 0;
@@ -213,7 +213,7 @@ public class MapPerformanceTest extends TestCase {
     }
 
 
-    static void ittest1(Map s, int size) {
+    static void ittest1(Map<Object, Object> s, int size) {
         int sum = 0;
         timer.start("Iter Key               ", size);
         for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
@@ -224,7 +224,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == size", size, sum);
     }
 
-    static void ittest2(Map s, int size) {
+    static void ittest2(Map<Object, Object> s, int size) {
         int sum = 0;
         timer.start("Iter Value             ", size);
         for (Iterator it = s.values().iterator(); it.hasNext(); ) {
@@ -234,7 +234,7 @@ public class MapPerformanceTest extends TestCase {
         timer.finish();
         assertEquals("sum == size", size, sum);
     }
-    static void ittest3(Map s, int size) {
+    static void ittest3(Map<Object, Object> s, int size) {
         int sum = 0;
         timer.start("Iter Entry             ", size);
         for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
@@ -245,8 +245,8 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == size", size, sum);
     }
 
-    static void ittest4(Map s, int size, int pos) {
-        IdentityHashMap seen = new IdentityHashMap(size);
+    static void ittest4(Map<Object, Object> s, int size, int pos) {
+        IdentityHashMap<Object, Object> seen = new IdentityHashMap<Object, Object>(size);
         assertEquals("s.size() == size", size, s.size());
         int sum = 0;
         timer.start("Iter XEntry            ", size);
@@ -281,7 +281,7 @@ public class MapPerformanceTest extends TestCase {
     }
 
 
-    static void ittest(Map s, int size) {
+    static void ittest(Map<Object, Object> s, int size) {
         ittest1(s, size);
         ittest2(s, size);
         ittest3(s, size);
@@ -338,7 +338,7 @@ public class MapPerformanceTest extends TestCase {
         assertEquals("sum == size", size, sum);
     }
 
-    static void entest(Map s, int size) {
+    static void entest(Map<Object, Object> s, int size) {
         if (s instanceof Hashtable) {
             Hashtable ht = (Hashtable)s;
             //            entest3(ht, size);
@@ -352,7 +352,7 @@ public class MapPerformanceTest extends TestCase {
         }
     }
 
-    static void rtest(Map s, int size) {
+    static void rtest(Map<Object, Object> s, int size) {
         timer.start("Remove (iterator)      ", size);
         for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
             it.next();
@@ -361,7 +361,7 @@ public class MapPerformanceTest extends TestCase {
         timer.finish();
     }
 
-    static void rvtest(Map s, int size) {
+    static void rvtest(Map<Object, Object> s, int size) {
         timer.start("Remove (iterator)      ", size);
         for (Iterator it = s.values().iterator(); it.hasNext(); ) {
             it.next();
@@ -371,11 +371,11 @@ public class MapPerformanceTest extends TestCase {
     }
 
 
-    static void dtest(Map s, int size, Object[] key) {
+    static void dtest(Map<Object, Object> s, int size, Object[] key) {
         timer.start("Put (putAll)           ", size * 2);
-        Map s2 = null;
+        Map<Object, Object> s2 = null;
         try {
-            s2 = (Map) (s.getClass().newInstance());
+            s2 = (Map<Object, Object>) (s.getClass().newInstance());
             s2.putAll(s);
         }
         catch (Exception e) { e.printStackTrace(); return; }
@@ -437,7 +437,7 @@ public class MapPerformanceTest extends TestCase {
         assertTrue("s2.isEmpty() && s.isEmpty()", s2.isEmpty() && s.isEmpty());
     }
 
-    static void stest(Map s, int size) throws Exception {
+    static void stest(Map<Object, Object> s, int size) throws Exception {
         if (!(s instanceof Serializable))
             return;
         System.out.print("Serialize              : ");
@@ -467,7 +467,7 @@ public class MapPerformanceTest extends TestCase {
     }
 
 
-    static void test(Map s, Object[] key) {
+    static void test(Map<Object, Object> s, Object[] key) {
         int size = key.length;
 
         t3("Put (absent)           ", size, s, key, size);
@@ -500,7 +500,7 @@ public class MapPerformanceTest extends TestCase {
         private long startTime;
         private String cname;
 
-        static final java.util.TreeMap accum = new java.util.TreeMap();
+        static final java.util.TreeMap<Object, Object> accum = new java.util.TreeMap<Object, Object>();
 
         static void printStats() {
             for (Iterator it = accum.entrySet().iterator(); it.hasNext(); ) {

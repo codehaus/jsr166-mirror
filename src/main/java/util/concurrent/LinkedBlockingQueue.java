@@ -154,10 +154,11 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity
+     * Creates a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity.
+     *
      * @param capacity the capacity of this queue.
      * @throws IllegalArgumentException if <tt>capacity</tt> is not greater
-     * than zero.
+     *         than zero.
      */
     public LinkedBlockingQueue(int capacity) {
         if (capacity <= 0) throw new IllegalArgumentException();

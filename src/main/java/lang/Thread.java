@@ -766,8 +766,8 @@ class Thread implements Runnable {
      * will receive an {@link InterruptedException}.
      *
      * <p> If this thread is blocked in an I/O operation upon an {@link
-     * java.nio.channels.InterruptibleChannel </code>interruptible
-     * channel<code>} then the channel will be closed, the thread's interrupt
+     * java.nio.channels.InterruptibleChannel <code>interruptible
+     * channel</code>} then the channel will be closed, the thread's interrupt
      * status will be set, and the thread will receive a {@link
      * java.nio.channels.ClosedByInterruptException}.
      *

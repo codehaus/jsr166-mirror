@@ -78,7 +78,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * Adds the specified element to this priority queue. As the queue is
      * unbounded this method will never block.
      * @param o {@inheritDoc}
-     * @param timeout This parameter is ignored as the method never blocks
+     * @param time This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
      * @throws NullPointerException {@inheritDoc}
      * @return <tt>true</tt>

@@ -60,8 +60,7 @@ public class CopyOnWriteArrayList<E>
     private E[] array() { return array_; }
 
     /**
-     * Constructs an empty list
-     *
+     * Constructs an empty list.
      */
     public CopyOnWriteArrayList() {
         array_ = (E[]) new Object[0];
@@ -82,9 +81,10 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Create a new CopyOnWriteArrayList holding a copy of given array
-     * @param toCopyIn the array. A copy of this array is used as the
-     * internal array.
+     * Create a new CopyOnWriteArrayList holding a copy of given array.
+     *
+     * @param toCopyIn the array (a copy of this array is used as the
+     *        internal array)
      **/
     public CopyOnWriteArrayList(E[] toCopyIn) {
         copyIn(toCopyIn, 0, toCopyIn.length);
@@ -968,7 +968,7 @@ public class CopyOnWriteArrayList<E>
      * List, so changes in the returned List are reflected in this List, and
      * vice-versa.  While mutative operations are supported, they are
      * probably not very useful for CopyOnWriteArrays.
-     * </p>
+     * <p>
      * The semantics of the List returned by this method become undefined if
      * the backing list (i.e., this List) is <i>structurally modified</i> in
      * any way other than via the returned List.  (Structural modifications are

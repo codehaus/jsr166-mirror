@@ -303,7 +303,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>SynchronousQueue</tt>
+     * Creates a <tt>SynchronousQueue</tt>.
      */
     public SynchronousQueue() {}
 
@@ -525,7 +525,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Returns an empty iterator: <tt>hasNext</tt> always returns
-     * <tt>false</tt>
+     * <tt>false</tt>.
+     *
      * @return an empty iterator
      */
     public Iterator<E> iterator() {

@@ -95,6 +95,7 @@ public class CancellableTask implements Cancellable, Runnable {
     /**
      * Return the Runnable forming the basis of this task.
      * @return the runnable action
+     * @see #setRunnable
      */
     protected Runnable getRunnable() {
         return runnable;
@@ -103,13 +104,14 @@ public class CancellableTask implements Cancellable, Runnable {
     /**
      * Set the Runnable forming the basis of this task.
      * @param r the runnable action
+     * @see #getRunnable
      */
     protected void setRunnable(Runnable r) {
         runnable = r;
     }
 
     /**
-     * Set the state of this task to Cancelled
+     * Set the state of this task to Cancelled.
      */
     protected void setCancelled() {
         runnerUpdater.set(this, CANCELLED);

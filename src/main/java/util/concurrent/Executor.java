@@ -38,7 +38,7 @@ package java.util.concurrent;
  *
  * <pre>
  * class SerialExecutor implements Executor {
- *     LinkedBlockingQueue tasks = new LinkedBlockingQueue<Runnable>();
+ *     LinkedBlockingQueue tasks = new LinkedBlockingQueue&lt;Runnable&gt;();
  *     Executor executor;
  *     Runnable active;
  *
@@ -69,10 +69,10 @@ package java.util.concurrent;
  * }</pre>
  *
  * The <tt>Executor</tt> implementations provided in
- * <tt>java.util.concurrent</tt> implement <tt>ExecutorService</tt>,
+ * <tt>java.util.concurrent</tt> implement {@link ExecutorService},
  * which is a more extensive interface.  For more advanced users, the
- * <tt>ThreadPoolExecutor</tt> class provides a powerful, extensible
- * thread pool implementation. The <tt>Executors</tt> class provides
+ * {@link ThreadPoolExecutor} class provides a powerful, extensible
+ * thread pool implementation. The {@link Executors} class provides
  * convenient factory methods for these executors.
  *
  * @since 1.5
@@ -80,8 +80,8 @@ package java.util.concurrent;
  * @see FutureTask
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/26 10:47:35 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/06 18:22:09 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface Executor {

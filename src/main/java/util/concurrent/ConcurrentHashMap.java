@@ -523,7 +523,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Constructs a new, empty map with a default initial capacity,
-     * load factor, and number of segments
+     * load factor, and number of segments.
      */
     public ConcurrentHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_SEGMENTS);

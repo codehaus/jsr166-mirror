@@ -81,7 +81,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Creates a <tt>PriorityQueue</tt> with the default initial capacity
      * (11) that orders its elements according to their natural
-     * ordering (using <tt>Comparable</tt>.)
+     * ordering (using <tt>Comparable</tt>).
      */
     public PriorityQueue() {
         this(DEFAULT_INITIAL_CAPACITY, null);
@@ -90,7 +90,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Creates a <tt>PriorityQueue</tt> with the specified initial capacity
      * that orders its elements according to their natural ordering
-     * (using <tt>Comparable</tt>.)
+     * (using <tt>Comparable</tt>).
      *
      * @param initialCapacity the initial capacity for this priority queue.
      * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
@@ -531,7 +531,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Returns the comparator used to order this collection, or <tt>null</tt>
      * if this collection is sorted according to its elements natural ordering
-     * (using <tt>Comparable</tt>.)
+     * (using <tt>Comparable</tt>).
      *
      * @return the comparator used to order this collection, or <tt>null</tt>
      * if this collection is sorted according to its elements natural ordering.

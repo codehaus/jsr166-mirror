@@ -35,7 +35,7 @@ import java.util.*;
  * lock while sending a message, and where traversals normally
  * vastly overwhelm additions.
  * <pre>
- * class  Handler { void handle(); ... }
+ * class Handler { void handle(); ... }
  *
  * class X {
  *    private final CopyOnWriteArraySet handlers = new CopyOnWriteArraySet();
@@ -51,6 +51,7 @@ import java.util.*;
  *          ((Handler)(it.next()).handle();
  *    }
  * }
+ * </pre>
  * @see CopyOnWriteArrayList
  * @since 1.5
  * @author Doug Lea
@@ -61,7 +62,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     private final CopyOnWriteArrayList<E> al;
 
     /**
-     * Constructs an empty set
+     * Constructs an empty set.
      */
     public CopyOnWriteArraySet() {
         al = new CopyOnWriteArrayList<E>();

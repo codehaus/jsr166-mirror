@@ -111,7 +111,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * Returns the period, or zero if non-periodic
+         * Returns the period, or zero if non-periodic.
+         *
          * @return the period
          */
         public long getPeriod(TimeUnit unit) {
@@ -197,7 +198,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         public boolean remove(Object x) { return dq.remove(x); }
         public boolean contains(Object x) { return dq.contains(x); }
         public int size() { return dq.size(); }
-	public boolean isEmpty() { return dq.isEmpty(); }
+        public boolean isEmpty() { return dq.isEmpty(); }
         public Iterator<Runnable> iterator() { 
             return new Iterator<Runnable>() {
                 private Iterator<DelayedTask> it = dq.iterator();
@@ -425,7 +426,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Execute command with zero required delay
+     * Execute command with zero required delay.
+     *
      * @param command the task to execute
      * @throws RejectedExecutionException at discretion of
      * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted

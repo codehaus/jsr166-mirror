@@ -64,8 +64,8 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/09 23:23:17 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/06 18:22:09 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public class Exchanger<V> {
@@ -157,7 +157,7 @@ public class Exchanger<V> {
     }
 
     /**
-     * Create a new Exchanger
+     * Create a new Exchanger.
      **/
     public Exchanger() {
     }

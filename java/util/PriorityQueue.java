@@ -1,4 +1,5 @@
 package java.util;
+
 import java.util.*;
 
 /**
@@ -11,36 +12,35 @@ import java.util.*;
  * Comparable, or a Comparator must be supplied. Comparison failures
  * throw ClassCastExceptions during insertions and extractions.
  **/
-
 public class PriorityQueue implements Queue {
-  public PriorityQueue(int initialCapacity) {}
-  public PriorityQueue(int initialCapacity, Comparator comparator) {}
+    public PriorityQueue(int initialCapacity) {}
+    public PriorityQueue(int initialCapacity, Comparator comparator) {}
 
-  public PriorityQueue(int initialCapacity, Collection initialElements) {}
+    public PriorityQueue(int initialCapacity, Collection initialElements) {}
 
-  public PriorityQueue(int initialCapacity, Comparator comparator, Collection initialElements) {}
+    public PriorityQueue(int initialCapacity, Comparator comparator, Collection initialElements) {}
   
-  public boolean add(Object x) {
-    return false;
-  }
-  public Object poll() {
-    return null;
-  }
-  public Object peek() {
-    return null;
-  }
-  public boolean isEmpty() {
-    return false;
-  }
-  public int size() {
-    return 0;
-  }
-  public Object[] toArray() {
-    return null;
-  }
+    public boolean add(Object x) {
+        return false;
+    }
+    public Object poll() {
+        return null;
+    }
+    public Object peek() {
+        return null;
+    }
+    public boolean isEmpty() {
+        return false;
+    }
+    public int size() {
+        return 0;
+    }
+    public Object[] toArray() {
+        return null;
+    }
 
-  public Object[] toArray(Object[] array) {
-    return null;
-  }
+    public Object[] toArray(Object[] array) {
+        return null;
+    }
 
 }

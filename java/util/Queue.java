@@ -1,4 +1,5 @@
 package java.util;
+
 /**
  * Queues support a means to <tt>add</tt> elements, and to <tt>poll</tt>
  * elements (to remove one if any exist).
@@ -33,50 +34,49 @@ package java.util;
  * <tt>poll</tt> to indicate that no elements exist.
  **/
 public interface Queue {
-  /**
-   * Add the given object to the queue if space is currently
-   * available.
-   * @param x the object to add
-   * @return true if successful
-   **/
-  public boolean add(Object x); 
+    /**
+     * Add the given object to the queue if space is currently
+     * available.
+     * @param x the object to add
+     * @return true if successful
+     **/
+    public boolean add(Object x);
 
-  /**
-   * Take an object from the queue if one is available.
-   * @return the object, or null if the queue is empty.
-   **/
-  public Object poll(); 
+    /**
+     * Take an object from the queue if one is available.
+     * @return the object, or null if the queue is empty.
+     **/
+    public Object poll();
 
 
-  /**
-   * Return but do not remove the element that will be returned by
-   * the next call to poll.
-   * @return an element, or null if empty
-   **/
-  public Object peek(); 
+    /**
+     * Return but do not remove the element that will be returned by
+     * the next call to poll.
+     * @return an element, or null if empty
+     **/
+    public Object peek();
 
-  /**
-   * Return true if there are no elements in this queue.
-   **/
-  public boolean isEmpty();
+    /**
+     * Return true if there are no elements in this queue.
+     **/
+    public boolean isEmpty();
 
-  /**
-   * Return the number of elements in this queue.
-   **/
-  public int size(); 
+    /**
+     * Return the number of elements in this queue.
+     **/
+    public int size();
 
-  /**
-   * Return a snapshot of the elements in this queue, in the
-   * order that they would be returned by poll().
-   **/
-  public Object[] toArray();
+    /**
+     * Return a snapshot of the elements in this queue, in the
+     * order that they would be returned by poll().
+     **/
+    public Object[] toArray();
 
-  /**
-   * Returns an array containing all of the elements in this queue;
-   * the runtime type of the returned array is that of the specified
-   * array.
-   **/
-  public Object[] toArray(Object[] array);
-
+    /**
+     * Returns an array containing all of the elements in this queue;
+     * the runtime type of the returned array is that of the specified
+     * array.
+     **/
+    public Object[] toArray(Object[] array);
 
 }

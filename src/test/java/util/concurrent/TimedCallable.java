@@ -16,6 +16,12 @@ public class TimedCallable<T> implements Callable<T> {
         FutureTask<T> ftask = Executors.execute(exec, func);
         try {
             return ftask.get(msecs, TimeUnit.MILLISECONDS);
+        //} catch (InterruptedException e) {
+        //    ftask.cancel(true);
+        //    throw e;
+        //} catch (TimeoutException e) {
+        //    ftask.cancel(true);
+        //    throw e;
         } finally {
             ftask.cancel(true);
         }

@@ -27,15 +27,17 @@ public final class TestResourcePool {
     }
 
     static class Shuffler {
+        public Shuffler(int id) { this.id = id; }
         public void shuffle(List<Card> deck) {
             Collections.shuffle(deck);
             ++useCount;
         }
+        public int id() { return id; }
+        public int useCount() { return useCount; }
+        public void clearUseCount() { useCount = 0; }
+        private int useCount = 0;
+        private final int id;
     }
-
-    static long useCount() { return useCount; }
-    static void resetUseCount() { useCount = 0; }
-    private static long useCount = 0;
 
     abstract enum Mode {
         SEMAPHORE {
@@ -52,41 +54,47 @@ public final class TestResourcePool {
         abstract ResourcePool<Shuffler> newResourcePool(Set<Shuffler> resources);
     }
 
+    final int count = 200;
+    final int NTRIALS = 200;
+    final int NRES = 2;
+    final int NTASKS = 5;
+
     void run() {
-        final int count = 200;
-        final int NTRIALS = 200;
-        final int NRES = 2;
 
         Set<Shuffler> shufflers = new HashSet<Shuffler>();
-        for (int r = 0; r < NRES; ++r) shufflers.add(new Shuffler());
+        for (int r = 0; r < NRES; ++r) shufflers.add(new Shuffler(r));
 
         System.out.println("ntrials="+NTRIALS);
         for (Mode mode : Mode.values()) {
             long elapsed = 0;
-            long uses = 0;
+            int totalUses = 0;
             for (int i = 0; i < NTRIALS; ++i) {
-                resetUseCount();
                 elapsed += trial(count, shufflers, mode);
-                uses += useCount();
+                int uses = 0;
+                for (Shuffler shuffler : shufflers) {
+                    uses += shuffler.useCount();
+                    shuffler.clearUseCount();
+                }
+                totalUses += uses;
             }
 
             long avg = elapsed / (NTRIALS * count);
-            System.out.println(""+mode+"\t"+avg+"\t"+(uses/NTRIALS));
+            System.out.println(""+mode+"\t"+avg+"\t"+(totalUses/(NTASKS*NTRIALS)));
         }
     }
 
-    private long trial(final int count, Set<Shuffler> shuffler, Mode mode) {
 
-        final ResourcePool<Shuffler> pool = mode.newResourcePool(shuffler);
+    private long trial(final int count, Set<Shuffler> shufflers, Mode mode) {
 
-        final int NTASKS = 5;
-        ExecutorService executor = Executors.newFixedThreadPool(NTASKS);
+        final ResourcePool<Shuffler> pool = mode.newResourcePool(shufflers);
+
+        ExecutorService executor = Executors.newCachedThreadPool();
         try {
             startSignal = new CountDownLatch(1);
-            doneSignal = new CountDownLatch(2);
+            doneSignal = new CountDownLatch(NTASKS);
 
             for (int t = 0; t < NTASKS; ++t)
-                executor.execute(new ShufflerTask(count, pool));
+                executor.execute(new ShufflerTask(t, count, pool));
 
             long start = System.nanoTime();
 
@@ -107,7 +115,8 @@ public final class TestResourcePool {
     volatile CountDownLatch doneSignal;
 
     class ShufflerTask implements Runnable {
-        ShufflerTask(int count, ResourcePool<Shuffler> pool) {
+        ShufflerTask(int id, int count, ResourcePool<Shuffler> pool) {
+            this.id = id;
             this.count = count;
             this.pool = pool;
         }
@@ -122,6 +131,7 @@ public final class TestResourcePool {
                 for (int c = 0; c < count; ++c) {
                     Shuffler shuffler = pool.getItem();
                     shuffler.shuffle(deck);
+                    //System.out.println("t="+id+", cnt="+c+", s="+shuffler.id()+", uses="+shuffler.useCount());
                     pool.returnItem(shuffler);
                 }
                 doneSignal.countDown();
@@ -129,6 +139,7 @@ public final class TestResourcePool {
             catch (InterruptedException e) {} // XXX ignored
         }
 
+        private final int id;
         private final int count;
         private final ResourcePool<Shuffler> pool;
         private final List<Card> deck = new ArrayList<Card>();

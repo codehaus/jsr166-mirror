@@ -33,14 +33,7 @@ public class ThreadTest extends TestCase {
         // dependencies across tests
         Thread current = Thread.currentThread();
         ThreadGroup tg = current.getThreadGroup();
-	assertNull(Thread.getDefaultUncaughtExceptionHandler());
-	assertEquals(tg, current.getUncaughtExceptionHandler());
         MyHandler eh = new MyHandler();
-        Thread.setDefaultUncaughtExceptionHandler(eh);
-	assertEquals(eh, current.getUncaughtExceptionHandler());
-	assertEquals(eh, Thread.getDefaultUncaughtExceptionHandler());
-        Thread.setDefaultUncaughtExceptionHandler(null);
-	assertNull(Thread.getDefaultUncaughtExceptionHandler());
 	assertEquals(tg, current.getUncaughtExceptionHandler());
         current.setUncaughtExceptionHandler(eh);
 	assertEquals(eh, current.getUncaughtExceptionHandler());

@@ -14,7 +14,8 @@ package java.util;
  * the <tt>LinkedList</tt> class provides uniformly named methods to
  * <tt>get</tt>, <tt>remove</tt> and <tt>insert</tt> an element at the
  * beginning and end of the list.  These operations allow linked lists to be
- * used as a stack, queue, or double-ended queue ({@link Deque}).<p>
+ * used as a stack, {@linkplain Queue queue}, or {@linkplain Deque
+ * double-ended queue}. <p>
  *
  * The class implements the <tt>Deque</tt> interface, providing
  * first-in-first-out queue operations for <tt>add</tt>,
@@ -442,7 +443,7 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the head (first element) of this list.
-     * @return the head of this queue, or <tt>null</tt> if this queue is empty.
+     * @return the head of this list, or <tt>null</tt> if this list is empty.
      * @since 1.5
      */
     public E peek() {
@@ -453,8 +454,8 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the head (first element) of this list.
-     * @return the head of this queue.
-     * @throws NoSuchElementException if this queue is empty.
+     * @return the head of this list.
+     * @throws NoSuchElementException if this list is empty.
      * @since 1.5
      */
     public E element() {
@@ -463,7 +464,7 @@ public class LinkedList<E>
 
     /**
      * Retrieves and removes the head (first element) of this list.
-     * @return the head of this queue, or <tt>null</tt> if this queue is empty.
+     * @return the head of this list, or <tt>null</tt> if this list is empty.
      * @since 1.5
      */
     public E poll() {
@@ -474,8 +475,8 @@ public class LinkedList<E>
 
     /**
      * Retrieves and removes the head (first element) of this list.
-     * @return the head of this queue.
-     * @throws NoSuchElementException if this queue is empty.
+     * @return the head of this list.
+     * @throws NoSuchElementException if this list is empty.
      * @since 1.5
      */
     public E remove() {
@@ -496,7 +497,7 @@ public class LinkedList<E>
 
     // Deque operations
     /**
-     * Inserts the specified element to the front this deque.
+     * Inserts the specified element to the front of this list.
      *
      * @param e the element to insert
      * @return <tt>true</tt> (as per the spec for {@link Deque#offerFirst})
@@ -508,7 +509,7 @@ public class LinkedList<E>
     }
 
     /**
-     * Inserts the specified element to the end this deque.
+     * Inserts the specified element to the end of this list.
      *
      * @param e the element to insert
      * @return <tt>true</tt> (as per the spec for {@link Deque#offerLast})
@@ -520,11 +521,11 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves, but does not remove, the first element of this deque,
-     * returning <tt>null</tt> if this deque is empty.
+     * Retrieves, but does not remove, the first element of this list,
+     * returning <tt>null</tt> if this list is empty.
      *
-     * @return the first element of this deque, or <tt>null</tt> if
-     *     this deque is empty
+     * @return the first element of this list, or <tt>null</tt> if
+     *     this list is empty
      * @since 1.6
      */
     public E peekFirst() {
@@ -534,10 +535,10 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves, but does not remove, the last element of this deque,
-     * returning <tt>null</tt> if this deque is empty.
+     * Retrieves, but does not remove, the last element of this list,
+     * returning <tt>null</tt> if this list is empty.
      *
-     * @return the last element of this deque, or <tt>null</tt> if this deque
+     * @return the last element of this list, or <tt>null</tt> if this list
      *     is empty
      * @since 1.6
      */
@@ -548,11 +549,11 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves and removes the first element of this deque, or
-     * <tt>null</tt> if this deque is empty.
+     * Retrieves and removes the first element of this list, or
+     * <tt>null</tt> if this list is empty.
      *
-     * @return the first element of this deque, or <tt>null</tt> if
-     *     this deque is empty
+     * @return the first element of this list, or <tt>null</tt> if
+     *     this list is empty
      * @since 1.6
      */
     public E pollFirst() {
@@ -562,11 +563,11 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves and removes the last element of this deque, or
-     * <tt>null</tt> if this deque is empty.
+     * Retrieves and removes the last element of this list, or
+     * <tt>null</tt> if this list is empty.
      *
-     * @return the last element of this deque, or <tt>null</tt> if
-     *     this deque is empty
+     * @return the last element of this list, or <tt>null</tt> if
+     *     this list is empty
      * @since 1.6
      */
     public E pollLast() {
@@ -576,8 +577,8 @@ public class LinkedList<E>
     }
 
     /**
-     * Pushes an element onto the stack represented by this deque.  In other
-     * words, inserts the element to the front this deque.
+     * Pushes an element onto the stack represented by this list.  In other
+     * words, inserts the element to the front this list.
      *
      * <p>This method is equivalent to {@link #addFirst}.
      *
@@ -589,14 +590,14 @@ public class LinkedList<E>
     }
 
     /**
-     * Pops an element from the stack represented by this deque.  In other
-     * words, removes and returns the the first element of this deque.
+     * Pops an element from the stack represented by this list.  In other
+     * words, removes and returns the the first element of this list.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
      *
-     * @return the element at the front of this deque (which is the top
-     *     of the stack represented by this deque)
-     * @throws NoSuchElementException if this deque is empty
+     * @return the element at the front of this list (which is the top
+     *     of the stack represented by this list)
+     * @throws NoSuchElementException if this list is empty
      * @since 1.6
      */
     public E pop() {
@@ -605,11 +606,11 @@ public class LinkedList<E>
 
     /**
      * Removes the first occurrence of the specified element in this
-     * deque (when traversing the deque from head to tail).  If the deque
+     * list (when traversing the list from head to tail).  If the list
      * does not contain the element, it is unchanged.
      *
-     * @param e element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @param e element to be removed from this list, if present
+     * @return <tt>true</tt> if the list contained the specified element
      * @since 1.6
      */
     public boolean removeFirstOccurrence(Object e) {
@@ -618,11 +619,11 @@ public class LinkedList<E>
 
     /**
      * Removes the last occurrence of the specified element in this
-     * deque (when traversing the deque from head to tail).  If the deque
+     * list (when traversing the list from head to tail).  If the list
      * does not contain the element, it is unchanged.
      *
-     * @param o element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @param o element to be removed from this list, if present
+     * @return <tt>true</tt> if the list contained the specified element
      * @since 1.6
      */
     public boolean removeLastOccurrence(Object o) {

@@ -539,12 +539,10 @@
      -->
 
     <path id="pre.bootclasspath">
-      <!-- <pathelement location="${src.dir}"/> -->
       <pathelement location="${javac.jar}"/>
     </path>
 
     <path id="compile.bootclasspath">
-      <!-- <pathelement location="${src.dir}"/> -->
       <pathelement location="${collect.jar}"/>
       <pathelement location="${rt.jar}"/>
     </path>

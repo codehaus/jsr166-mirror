@@ -24,8 +24,8 @@ import java.lang.reflect.*;
  *
  * @since 1.5
  * @author Doug Lea
+ * @param <T> The type of the object holding the updatable field
  */
-
 public abstract class  AtomicLongFieldUpdater<T>  {
     /**
      * Creates an updater for objects with the given field.  The Class

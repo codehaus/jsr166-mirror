@@ -41,6 +41,8 @@ import java.lang.reflect.*;
  * <tt>compareAndSet</tt> and <tt>set</tt>.
  * @since 1.5
  * @author Doug Lea
+ * @param <T> The type of the object holding the updatable field
+ * @param <V> The type of the field
  */
 public abstract class AtomicReferenceFieldUpdater<T, V>  {
 

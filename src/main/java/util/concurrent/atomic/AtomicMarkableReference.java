@@ -16,6 +16,7 @@ package java.util.concurrent.atomic;
  *
  * @since 1.5
  * @author Doug Lea
+ * @param <V> The type of object referred to by this reference
  */
 public class AtomicMarkableReference<V>  {
 

@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.*;
  *
  * @since 1.5
  * @author Doug Lea
+ * @param <E> the base class of all elements held in this collection
  *
  **/
 public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>

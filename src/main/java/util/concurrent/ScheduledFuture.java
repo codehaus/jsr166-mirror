@@ -13,6 +13,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @author Doug Lea
+ * @param <V> The result type returned by this Future
  */
 public interface ScheduledFuture<V> extends Delayed, Future<V> {
 }

@@ -12,6 +12,8 @@ import java.util.Map;
  * <tt>putIfAbsent</tt> and <tt>remove</tt> methods.
  * @since 1.5
  * @author Doug Lea
+ * @param <K> the base class of all keys maintained by this map
+ * @param <V> the base class of all mapped values 
  */
 public interface ConcurrentMap<K, V> extends Map<K, V> {
     /**

@@ -36,7 +36,7 @@ import java.util.*;
  * class Handler { void handle(); ... }
  *
  * class X {
- *    private final CopyOnWriteArraySet handlers = new CopyOnWriteArraySet();
+ *    private final CopyOnWriteArraySet<Handler> handlers = new CopyOnWriteArraySet<Handler>();
  *    public void addHandler(Handler h) { handlers.add(h); }
  *
  *    private long internalState;
@@ -46,13 +46,14 @@ import java.util.*;
  *       changeState();
  *       Iterator it = handlers.iterator();
  *       while (it.hasNext())
- *          ((Handler)(it.next()).handle();
+ *          it.next().handle();
  *    }
  * }
  * </pre>
  * @see CopyOnWriteArrayList
  * @since 1.5
  * @author Doug Lea
+ * @param <E> the base class of all elements held in this collection
  */
 public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         implements Cloneable, java.io.Serializable {

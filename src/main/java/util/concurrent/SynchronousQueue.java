@@ -33,7 +33,8 @@ import java.util.*;
  * of the {@link Collection} and {@link Iterator} interfaces.
  * @since 1.5
  * @author Doug Lea
-**/
+ * @param <E> the base class of all elements held in this collection
+ */
 public class SynchronousQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
     private static final long serialVersionUID = -3223113410248163686L;

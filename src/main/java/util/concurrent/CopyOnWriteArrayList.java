@@ -38,6 +38,7 @@ import java.util.*;
  * <tt>UnsupportedOperationException</tt>.
  * @since 1.5
  * @author Doug Lea
+ * @param <E> the base class of all elements held in this collection
  */
 public class CopyOnWriteArrayList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable {

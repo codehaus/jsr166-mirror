@@ -68,6 +68,7 @@ package java.util;
  * @see	    Vector
  * @see	    Collections#synchronizedList(List)
  * @since 1.2
+ * @param <E> the base class of all elements held in this collection
  */
 
 public class LinkedList<E>

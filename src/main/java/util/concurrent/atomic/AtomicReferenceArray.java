@@ -13,8 +13,9 @@ import sun.misc.Unsafe;
  * properties of atomic variables.
  * @since 1.5
  * @author Doug Lea
+ * @param <E> The base class of elements held in this array
  */
-public final class AtomicReferenceArray<V> implements java.io.Serializable { 
+public final class AtomicReferenceArray<E> implements java.io.Serializable { 
     private static final long serialVersionUID = -6209656149925076980L;
 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
@@ -52,8 +53,8 @@ public final class AtomicReferenceArray<V> implements java.io.Serializable {
      * @param i the index
      * @return the current value
      */
-    public V get(int i) {
-        return (V) unsafe.getObjectVolatile(array, rawIndex(i));
+    public E get(int i) {
+        return (E) unsafe.getObjectVolatile(array, rawIndex(i));
     }
  
     /**
@@ -62,7 +63,7 @@ public final class AtomicReferenceArray<V> implements java.io.Serializable {
      * @param i the index
      * @param newValue the new value
      */
-    public void set(int i, V newValue) {
+    public void set(int i, E newValue) {
         unsafe.putObjectVolatile(array, rawIndex(i), newValue);
     }
   
@@ -74,9 +75,9 @@ public final class AtomicReferenceArray<V> implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
-    public V getAndSet(int i, V newValue) {
+    public E getAndSet(int i, E newValue) {
         while (true) {
-            V current = get(i);
+            E current = get(i);
             if (compareAndSet(i, current, newValue))
                 return current;
         }
@@ -91,7 +92,7 @@ public final class AtomicReferenceArray<V> implements java.io.Serializable {
      * @return true if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
-    public boolean compareAndSet(int i, V expect, V update) {
+    public boolean compareAndSet(int i, E expect, E update) {
         return unsafe.compareAndSwapObject(array, rawIndex(i), 
                                          expect, update);
     }
@@ -105,7 +106,7 @@ public final class AtomicReferenceArray<V> implements java.io.Serializable {
      * @param update the new value
      * @return true if successful.
      */
-    public boolean weakCompareAndSet(int i, V expect, V update) {
+    public boolean weakCompareAndSet(int i, E expect, E update) {
         return compareAndSet(i, expect, update);
     }
 }

@@ -21,6 +21,7 @@ package java.util.concurrent;
  * @see FutureTask
  * @since 1.5
  * @author Doug Lea
+ * @param <V> the result type of method <tt>call</tt>
  */
 public interface Callable<V> {
     /**

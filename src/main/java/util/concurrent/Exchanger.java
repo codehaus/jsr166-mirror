@@ -60,6 +60,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @author Doug Lea
+ * @param <V> The type of objects that may be exchanged
  */
 public class Exchanger<V> {
     private final ReentrantLock lock = new ReentrantLock();

@@ -202,7 +202,7 @@ public class CyclicBarrier {
      * Create a new <tt>CyclicBarrier</tt> that will trip when the
      * given number of parties (threads) are waiting upon it, and which
      * will execute the given barrier action when the barrier is tripped,
-     * performed by the last thread enetering the barrier.
+     * performed by the last thread entering the barrier.
      *
      * @param parties the number of threads that must invoke {@link #await}
      * before the barrier is tripped.

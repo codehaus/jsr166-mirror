@@ -23,8 +23,25 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @author Doug Lea
+ * @param <V> The result type returned by this Future
  */
 public class FutureTask<V> extends CancellableTask implements Future<V> {
+
+    /** 
+     * Callable created in FutureTask(runnable, result) constructor
+     */
+    private static class RunnableAsCallable<V> implements Callable<V> {
+        private final Runnable runnable;
+        private final V result;
+        RunnableAsCallable(Runnable runnable, V result) {
+            this.runnable = runnable;
+            this.result = result;
+        }
+        public V call() {
+            runnable.run();
+            return result;
+        }
+    }
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the
@@ -57,12 +74,7 @@ public class FutureTask<V> extends CancellableTask implements Future<V> {
         if (runnable == null)
             throw new NullPointerException();
         setRunnable(new InnerCancellableFuture<V>
-                    (new Callable<V>() {
-                        public V call() {
-                            runnable.run();
-                            return result;
-                        }
-                    }));
+                    (new RunnableAsCallable<V>(runnable, result)));
     }
 
     /**

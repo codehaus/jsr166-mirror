@@ -96,7 +96,7 @@ public class LinkedList<E>
     public LinkedList(Collection<? extends E> c) {
         this();
         addAll(c);
-     }
+    }
 
     /**
      * Returns the first element in this list.

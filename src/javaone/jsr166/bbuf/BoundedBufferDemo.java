@@ -104,32 +104,25 @@ public final class BoundedBufferDemo {
             Runnable producer = new Runnable() {
                 public void run() {
                     try {
-                        Random random = new Random(SEED);
                         startSignal.await();
-                        for (int c = 0; c < count; ++c) {
-                            int i = random.nextInt(6);
-                            buf.put(i);
-                        }
+                        for (int c = 0; c < count; ++c)
+                            buf.put(random.nextInt(6));
                         doneSignal.countDown();
                     }
-                    catch (InterruptedException e) {
-                        Thread.currentThread().interrupt(); // propagate
-                    }
+                    catch (InterruptedException e) {} // XXX ignored
                 }
+                Random random = new Random(SEED);
             };
 
             Runnable consumer = new Runnable() {
                 public void run() {
                     try {
                         startSignal.await();
-                        for (int c = 0; c < count; ++c) {
-                            int i = buf.take();
-                        }
+                        for (int c = 0; c < count; ++c)
+                            buf.take();
                         doneSignal.countDown();
                     }
-                    catch (InterruptedException e) {
-                        Thread.currentThread().interrupt(); // propagate
-                    }
+                    catch (InterruptedException e) {} // XXX ignored
                 }
             };
 

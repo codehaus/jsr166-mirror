@@ -27,10 +27,10 @@ public abstract class AbstractQueue<E>
     // so we redefine each optional method to document that it is not optional
     // We also inherit, or define, all necessary @throws comments
 
-    /**
-     * @throws NullPointerException if the specified element is <tt>null</tt>
-     */
-    public abstract boolean offer(E o);
+    //    /**
+    //     * @throws NullPointerException if the specified element is <tt>null</tt>
+    //     */
+    //    public abstract boolean offer(E o);
 
     /**
      * Adds the specified element to this queue.

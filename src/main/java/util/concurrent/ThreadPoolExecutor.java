@@ -983,7 +983,7 @@ public class ThreadPoolExecutor implements ExecutorService {
 
 
     /**
-     * Tries to remove from the work queue all {@link Cancellable}
+     * Tries to remove from the work queue all {@link Future}
      * tasks that have been cancelled. This method can be useful as a
      * storage reclamation operation, that has no other impact on
      * functionality. Cancelled tasks are never executed, but may
@@ -999,8 +999,8 @@ public class ThreadPoolExecutor implements ExecutorService {
             Iterator<Runnable> it = getQueue().iterator();
             while (it.hasNext()) {
                 Runnable r = it.next();
-                if (r instanceof Cancellable) {
-                    Cancellable c = (Cancellable)r;
+                if (r instanceof Future<?>) {
+                    Future<?> c = (Future<?>)r;
                     if (c.isCancelled())
                         it.remove();
                 }

@@ -5,6 +5,8 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.locks.*;
+
 
 /**
  * A cancellable asynchronous computation.  This class provides a base
@@ -25,23 +27,32 @@ package java.util.concurrent;
  * @author Doug Lea
  * @param <V> The result type returned by this FutureTask's <tt>get</tt> method
  */
-public class FutureTask<V> extends CancellableTask implements Future<V> {
+public class FutureTask<V> implements Future<V>, Runnable {
+    /**
+     * Special value for "runner" indicating task is cancelled
+     */
+    private static final Object CANCELLED = new Object();
+
+    /**
+     * Special value for "runner" indicating task is completed
+     */
+    private static final Object DONE = new Object();
 
     /** 
-     * Callable created in FutureTask(runnable, result) constructor
+     * Holds the run-state, taking on values:
+     *   null              = not yet started,
+     *   [some thread ref] = running,
+     *   DONE              = completed normally,
+     *   CANCELLED         = cancelled (may or may not have ever run).
      */
-    private static class RunnableAsCallable<V> implements Callable<V> {
-        private final Runnable runnable;
-        private final V result;
-        RunnableAsCallable(Runnable runnable, V result) {
-            this.runnable = runnable;
-            this.result = result;
-        }
-        public V call() {
-            runnable.run();
-            return result;
-        }
-    }
+
+    private volatile Object runner;
+    final Runnable runnable;
+    final Callable<V> callable;
+    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock.ConditionObject accessible = lock.newCondition();
+    private V result;
+    private Throwable exception;
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the
@@ -51,11 +62,10 @@ public class FutureTask<V> extends CancellableTask implements Future<V> {
      * @throws NullPointerException if callable is null
      */
     public FutureTask(Callable<V> callable) {
-        // must set after super ctor call to use inner class
-        super();
         if (callable == null)
             throw new NullPointerException();
-        setRunnable(new InnerCancellableFuture<V>(callable));
+        this.callable = callable;
+        this.runnable = null;
     }
 
     /**
@@ -70,75 +80,236 @@ public class FutureTask<V> extends CancellableTask implements Future<V> {
      * @throws NullPointerException if runnable is null
      */
     public FutureTask(final Runnable runnable, final V result) {
-        super();
         if (runnable == null)
             throw new NullPointerException();
-        setRunnable(new InnerCancellableFuture<V>
-                    (new RunnableAsCallable<V>(runnable, result)));
+        this.runnable = runnable;
+        this.result = result;
+        this.callable = null;
+    }
+
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        lock.lock();
+        try {
+            Object r = runner;
+            if (r == DONE || r == CANCELLED)
+                return false;
+            if (mayInterruptIfRunning && r != null && r instanceof Thread)
+                ((Thread)r).interrupt();
+            runner = CANCELLED;
+        }
+        finally{
+            lock.unlock();
+        }
+        done();
+        return true;
+    }
+    
+    public boolean isCancelled() {
+        return runner == CANCELLED;
+    }
+    
+    public boolean isDone() {
+        Object r = runner;
+        return r == DONE || r == CANCELLED;
     }
 
     /**
-     * Waits if necessary for the computation to complete, and then retrieves
-     * its result.
+     * Sets the state of this task to Cancelled.
+     */
+    protected void setCancelled() {
+        lock.lock();
+        try {
+            runner = CANCELLED;
+        }
+        finally{
+            lock.unlock();
+        }
+    }
+    
+    /**
+     * Sets the state of this task to Done, unless already in a
+     * Cancelled state, in which case Cancelled status is preserved.
+     */
+    protected void setDone() {
+        lock.lock();
+        try {
+            Object r = runner;
+            if (r == DONE || r == CANCELLED) 
+                return;
+            runner = DONE;
+        }
+        finally{
+            lock.unlock();
+        }
+        done();
+    }
+
+    /**
+     * Attempts to set the state of this task to Running, succeeding
+     * only if the state is currently NOT Done, Running, or Cancelled.
+     * @return true if successful
+     */ 
+    protected boolean setRunning() {
+        lock.lock();
+        try {
+            if (runner != null)
+                return false;
+            runner = Thread.currentThread();
+            return true;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Sets this Future to the results of computation
+     */
+    public void run() {
+        if (setRunning()) {
+            try {
+                try {
+                    if (runnable != null)
+                        runnable.run();
+                    else if (callable != null)
+                        set(callable.call());
+                } catch(Throwable ex) {
+                    setException(ex);
+                }
+            } finally {
+                setDone();
+            }
+        }
+    }
+
+    /**
+     * Protected method invoked when this task transitions to state
+     * <tt>isDone</tt> (whether normally or via cancellation). The
+     * default implementation does nothing.  Subclasses may override
+     * this method to invoke completion callbacks or perform
+     * bookkeeping. Note that you can query status inside the
+     * implementation of this method to determine whether this task
+     * has been cancelled.
+     */
+    protected void done() { }
+
+    /**
+     * Resets the run state of this task to its initial state unless
+     * it has been cancelled. (Note that a cancelled task cannot be
+     * reset.)
+     * @return true if successful
+     */
+    protected boolean reset() {
+        lock.lock();
+        try {
+            if (runner == CANCELLED) 
+                return false;
+            runner = null;
+            return true;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Waits if necessary for the call to <tt>callable.call</tt> to
+     * complete, and then retrieves its result.
      *
-     * @return the computed result
-     * @throws CancellationException if task producing this value was
-     * cancelled before completion
-     * @throws ExecutionException if the underlying computation threw
-     * an exception
+     * @return computed result
+     * @throws CancellationException if underlying computation was
+     * cancelled
+     * @throws ExecutionException if underlying computation threw an
+     * exception
      * @throws InterruptedException if current thread was interrupted
      * while waiting
      */
     public V get() throws InterruptedException, ExecutionException {
-        return ((InnerCancellableFuture<V>)getRunnable()).get();
+        lock.lock();
+        try {
+            while (!isDone())
+                accessible.await();
+            if (isCancelled())
+                throw new CancellationException();
+            else if (exception != null)
+                throw new ExecutionException(exception);
+            else
+                return result;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
-     * Waits if necessary for at most the given time for the computation to
-     * complete, and then retrieves its result.
+     * Waits if necessary for at most the given time for the call to
+     * <tt>callable.call</tt> to complete, and then retrieves its
+     * result.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
-     * @return value of this task
-     * @throws CancellationException if task producing this value was
-     * cancelled before completion
-     * @throws ExecutionException if the underlying computation threw
-     * an exception.
+     * @return computed result
+     * @throws CancellationException if underlying computation was
+     * cancelled
+     * @throws ExecutionException if underlying computation threw an
+     * exception
      * @throws InterruptedException if current thread was interrupted
      * while waiting
      * @throws TimeoutException if the wait timed out
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        return ((InnerCancellableFuture<V>)getRunnable()).get(timeout, unit);
+        lock.lock();
+        try {
+            if (!isDone()) {
+                long nanos = unit.toNanos(timeout);
+                do {
+                    if (nanos <= 0)
+                        throw new TimeoutException();
+                    nanos = accessible.awaitNanos(nanos);
+                } while (!isDone());
+            }
+            if (isCancelled())
+                throw new CancellationException();
+            else if (exception != null)
+                throw new ExecutionException(exception);
+            else
+                return result;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
-     * Sets the value of this task to the given value.  After this
-     * method is called, the computation is assumed to be completed --
-     * threads already waiting for the result via <tt>get</tt> are
-     * unblocked, and future attempts to retrieve the result will not
-     * block. While not explicitly disallowed, it is rarely a good idea
-     * to invoke <tt>set</tt> more than once.
-     *
+     * Sets the result of this Future to the given value.
      * @param v the value
-     *
-     */
+     */ 
     protected void set(V v) {
-        ((InnerCancellableFuture<V>)getRunnable()).set(v);
+        lock.lock();
+        try {
+            result = v;
+            setDone();
+            accessible.signalAll();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
-     * Indicates that the computation has failed.  After this method
-     * is called, the computation is assumed to be completed, and any
-     * attempt to retrieve the result will throw an <tt>ExecutionException</tt>
-     * wrapping the exception provided here.
-     *
-     * @param t the throwable
-     */
+     * Causes this future to report an <tt>ExecutionException</tt>
+     * with the given throwable as its cause.
+     * @param t the cause of failure.
+     */ 
     protected void setException(Throwable t) {
-        ((InnerCancellableFuture<V>)getRunnable()).setException(t);
+        lock.lock();
+        try {
+            exception = t;
+            setDone();
+            accessible.signalAll();
+        } finally {
+            lock.unlock();
+        }
     }
+
 
 }
 

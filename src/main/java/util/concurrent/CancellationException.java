@@ -7,9 +7,9 @@
 package java.util.concurrent;
 
 /**
- * Exception indicating that the result of a value-producing {@link
- * Cancellable} task, such as a {@link FutureTask}, cannot be
- * retrieved because the task was cancelled.
+ * Exception indicating that the result of a value-producing task,
+ * such as a {@link FutureTask}, cannot be retrieved because the task
+ * was cancelled.
  *
  * @since 1.5
  * @author Doug Lea

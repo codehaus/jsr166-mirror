@@ -12,8 +12,10 @@ package java.util.concurrent;
  * complete, to wait for its completion, and to retrieve the result of
  * the computation.  The result can only be retrieved using method
  * <tt>get</tt> when the computation has completed, blocking if
- * necessary until it is ready.  Once the computation has completed,
- * the computation cannot be cancelled.
+ * necessary until it is ready.  Cancellation is performed by the
+ * <tt>cancel</tt> method.  Additional methods are provided to
+ * determine if the task completed normally or was cancelled. Once a
+ * computation has completed, the computation cannot be cancelled.
  *
  * <p>
  * <b>Sample Usage</b> (Note that the following classes are all
@@ -54,7 +56,45 @@ package java.util.concurrent;
  * @author Doug Lea
  * @param <V> The result type returned by this Future's <tt>get</tt> method
  */
-public interface Future<V> extends Cancellable {
+public interface Future<V> {
+
+    /**
+     * Attempts to cancel execution of this task.  This attempt will
+     * fail if the task has already completed, already been cancelled,
+     * or could not be cancelled for some other reason. If successful,
+     * and this task has not started when <tt>cancel</tt> is called,
+     * this task should never run.  If the task has already started,
+     * then the <tt>interruptIfRunning</tt> parameter determines
+     * whether the thread executing this task should be interrupted in
+     * an attempt to stop the task.
+     *
+     * @param mayInterruptIfRunning <tt>true</tt> if the thread executing this
+     * task should be interrupted; otherwise, in-progress tasks are allowed
+     * to complete
+     * @return <tt>false</tt> if the task could not be cancelled,
+     * typically because is has already completed normally;
+     * <tt>true</tt> otherwise
+     */
+    boolean cancel(boolean mayInterruptIfRunning);
+
+    /**
+     * Returns <tt>true</tt> if this task was cancelled before it completed
+     * normally.
+     *
+     * @return <tt>true</tt> if task was cancelled before it completed
+     */
+    boolean isCancelled();
+
+    /**
+     * Returns <tt>true</tt> if this task completed.  
+     *
+     * Completion may be due to normal termination, an exception, or
+     * cancellation -- in all of these cases, this method will return
+     * <tt>true</tt>.
+     * 
+     * @return <tt>true</tt> if this task completed.
+     */
+    boolean isDone();
 
     /**
      * Waits if necessary for computation to complete, and then

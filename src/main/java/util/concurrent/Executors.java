@@ -14,8 +14,8 @@ import java.security.PrivilegedExceptionAction;
 
 /**
  * Factory and utility methods for {@link Executor}, {@link
- * ExecutorService}, {@link ThreadFactory}, {@link Future}, and {@link
- * Cancellable} classes defined in this package.
+ * ExecutorService}, {@link ThreadFactory}, and {@link Future}
+ * classes defined in this package.
  *
  * @since 1.5
  * @author Doug Lea
@@ -150,16 +150,18 @@ public class Executors {
     }
 
     /**
-     * Executes a Runnable task and returns a Cancellable representing that
+     * Executes a Runnable task and returns a Future representing that
      * task.
      *
      * @param executor the Executor to which the task will be submitted
      * @param task the task to submit
-     * @return a Cancellable representing pending completion of the task
+     * @return a Future representing pending completion of the task,
+     * and whose <tt>get()</tt> method will return <tt>Boolean.TRUE</tt>
+     * upon completion
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      */
-    public static Cancellable execute(Executor executor, Runnable task) {
+    public static Future<Boolean> execute(Executor executor, Runnable task) {
         FutureTask<Boolean> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
         executor.execute(ftask);
         return ftask;

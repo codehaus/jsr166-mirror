@@ -468,6 +468,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             if (removed) {
                 p.item = null;
                 trail.next = p.next;
+                if (last == p)
+                    last = trail;
                 if (count.getAndDecrement() == capacity)
                     notFull.signalAll();
             }
@@ -672,6 +674,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 if (p == node) {
                     p.item = null;
                     trail.next = p.next;
+                    if (last == p)
+                        last = trail;
                     int c = count.getAndDecrement();
                     if (c == capacity)
                         notFull.signalAll();

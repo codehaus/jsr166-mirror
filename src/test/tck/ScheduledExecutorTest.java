@@ -312,7 +312,7 @@ public class ScheduledExecutorTest extends TestCase{
             assertEquals(0, two.getCompletedTaskCount());
             two.execute(newRunnable());
             try{
-                Thread.sleep(MEDIUM_DELAY_MS);
+                Thread.sleep(MEDIUM_DELAY_MS/2);
             } catch(Exception e){
                 fail("unexpected exception");
             }
@@ -344,7 +344,7 @@ public class ScheduledExecutorTest extends TestCase{
             two.execute(newRunnable());
             two.execute(newRunnable());
             try{
-                Thread.sleep(SHORT_DELAY_MS);
+                Thread.sleep(SHORT_DELAY_MS/2);
             } catch(Exception e){
                 fail("unexpected exception");
             }
@@ -378,7 +378,7 @@ public class ScheduledExecutorTest extends TestCase{
             for(int i = 0; i < 5; i++)
                 one.execute(newRunnable());
             try{
-                Thread.sleep(SHORT_DELAY_MS);
+                Thread.sleep(SHORT_DELAY_MS/2);
             } catch(Exception e){
                 fail("unexpected exception");
             }

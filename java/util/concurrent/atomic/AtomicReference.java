@@ -29,7 +29,7 @@ public class AtomicReference<V> implements java.io.Serializable {
      * current value is <code>==</code> to the expected value.  Any given
      * invocation of this operation may fail (return
      * <code>false</code>) spuriously, but repeated invocation when
-     * the current calue holds the expected value and no other thread
+     * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
      * @param expect the expected value
      * @param update the new value

@@ -75,7 +75,7 @@ public class  AtomicReferenceFieldUpdater {
      * <attemptUpdate</tt>, but not necessarily with respect to other
      * changes in the field.  Any given invocation of this operation
      * may fail (return <code>false</code>) spuriously, but repeated
-     * invocation when the current calue holds the expected value and
+     * invocation when the current value holds the expected value and
      * no other thread is also attempting to set the value will
      * eventually succeed.
      * @return true if successful.

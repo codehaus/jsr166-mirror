@@ -60,7 +60,7 @@ public class AtomicMarkableReference<V> {
      * and the current mark is equal to the expected mark.  Any given
      * invocation of this operation may fail (return
      * <code>false</code>) spuriously, but repeated invocation when
-     * the current calue holds the expected value and no other thread
+     * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference
@@ -97,7 +97,7 @@ public class AtomicMarkableReference<V> {
      * if the current reference is <code>==</code> to the expected
      * reference.  Any given invocation of this operation may fail
      * (return <code>false</code>) spuriously, but repeated invocation
-     * when the current calue holds the expected value and no other
+     * when the current value holds the expected value and no other
      * thread is also attempting to set the value will eventually
      * succeed.
      * @param expectedReference the expected value of the reference

@@ -126,9 +126,12 @@
   </target>
 
 
-  <target name="dist" depends="clean, jar, dist-docs">
-    <!-- nothing to do here yet -->
+  <target name="dist-jar" depends="clean, jar">
+    <copy file="${product.jar}" todir="${dist.dir}"/>
   </target>
+
+
+  <target name="dist" depends="dist-clean, dist-jar, dist-docs"/>
 
 
   <target name="clean">

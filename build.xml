@@ -196,6 +196,8 @@
     <copy todir="${deployDir}/docs/public">
       <fileset dir="${dist.javadocs.dir}"/>
     </copy>
+    <copy tofile="${deployDir}/index.html"
+          file="${basedir}/etc/anthill-index.html"/>
   </target>
 
 

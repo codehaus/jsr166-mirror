@@ -19,7 +19,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private static final int base = unsafe.arrayBaseOffset(int[].class);
     private static final int scale = unsafe.arrayIndexScale(int[].class);
-    private final long[] array;
+    private final int[] array;
 
     private final long rawIndex(int i) {
         if (i < 0 || i >= array.length)

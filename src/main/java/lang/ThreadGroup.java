@@ -44,6 +44,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
     boolean daemon;
     boolean vmAllowSuspension;
 
+    int nUnstartedThreads = 0;
     int nthreads;
     Thread threads[];
 
@@ -781,12 +782,31 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 	    if (nthreads == 0) {
 		notifyAll();
 	    }
-	    if (daemon && (nthreads == 0) && (ngroups == 0)) {
+            if (daemon && (nthreads == 0) &&  
+                (nUnstartedThreads == 0) && (ngroups == 0))  
+            { 
 		destroy();
 	    }
 	}
     }
     
+
+    /**
+     * Increments the count of unstarted threads in the thread group.
+     * Unstarted threads are not added to the thread group so that they
+     * can be collected if they are never started, but they must be
+     * counted so that daemon thread groups with unstarted threads in
+     * them are not destroyed.
+     */
+    void addUnstarted() {
+        synchronized(this) {
+            if (destroyed) {
+                throw new IllegalThreadStateException();
+            }
+            nUnstartedThreads++;
+        }
+    }
+
     /**
      * Adds the specified Thread to this group.
      * @param t the Thread to be added
@@ -809,6 +829,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 	    // This is done last so it doesn't matter in case the
 	    // thread is killed
 	    nthreads++;
+            nUnstartedThreads--;
 	}
     }
 
@@ -834,7 +855,9 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 	    if (nthreads == 0) {
 		notifyAll();
 	    }
-	    if (daemon && (nthreads == 0) && (ngroups == 0)) {
+            if (daemon && (nthreads == 0) &&  
+                (nUnstartedThreads == 0) && (ngroups == 0))  
+            { 
 		destroy();
 	    }
 	}
@@ -955,3 +978,4 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 	return getClass().getName() + "[name=" + getName() + ",maxpri=" + maxPriority + "]";
     }
 }
+

@@ -289,6 +289,35 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             return false;
         }
 
+        boolean replace(K key, int hash, V oldValue, V newValue) {
+            lock();
+            try {
+                int c = count;
+                HashEntry[] tab = table;
+                int index = hash & (tab.length - 1);
+                HashEntry<K,V> first = (HashEntry<K,V>) tab[index];
+                HashEntry<K,V> e = first;
+                for (;;) {
+                    if (e == null)
+                        return false;
+                    if (e.hash == hash && key.equals(e.key))
+                        break;
+                    e = e.next;
+                }
+
+                V v = e.value;
+                if (v == null || !oldValue.equals(v))
+                    return false;
+
+                e.value = newValue;
+                count = c; // write-volatile
+                return true;
+                
+            } finally {
+                unlock();
+            }
+        }
+
         V put(K key, int hash, V value, boolean onlyIfAbsent) {
             lock();
             try {
@@ -794,6 +823,31 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         int hash = hash(key);
         return segmentFor(hash).remove(key, hash, value) != null;
     }
+
+    /**
+     * Replace entry for key only if currently mapped to given value.
+     * Acts as
+     * <pre> 
+     *  if (map.get(key).equals(oldValue)) {
+     *     map.put(key, newValue);
+     *     return true;
+     * } else return false;
+     * </pre>
+     * except that the action is performed atomically.
+     * @param key key with which the specified value is associated.
+     * @param oldValue value expected to be associated with the specified key.
+     * @param newValue value to be associated with the specified key.
+     * @return true if the value was replaced
+     * @throws NullPointerException if the specified key or values are
+     * <tt>null</tt>.
+     */
+    public boolean replace(K key, V oldValue, V newValue) {
+        if (oldValue == null || newValue == null)
+            throw new NullPointerException();
+        int hash = hash(key);
+        return segmentFor(hash).replace(key, hash, oldValue, newValue);
+    }
+
 
     /**
      * Removes all mappings from this map.

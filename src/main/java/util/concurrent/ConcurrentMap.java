@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * A {@link java.util.Map} providing additional atomic
- * <tt>putIfAbsent</tt> and <tt>remove</tt> methods.
+ * <tt>putIfAbsent</tt>, <tt>remove</tt>, and <tt>replace</tt> methods.
  * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
@@ -52,7 +52,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * Remove entry for key only if currently mapped to given value.
      * Acts as
      * <pre> 
-     *  if (map.get(key).equals(value)) {
+     *  if ((map.containsKey(key) && map.get(key).equals(value)) {
      *     map.remove(key);
      *     return true;
      * } else return false;
@@ -66,5 +66,26 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *            <tt>null</tt>.
      */
     boolean remove(Object key, Object value);
+
+
+    /**
+     * Replace entry for key only if currently mapped to given value.
+     * Acts as
+     * <pre> 
+     *  if ((map.containsKey(key) && map.get(key).equals(oldValue)) {
+     *     map.put(key, newValue);
+     *     return true;
+     * } else return false;
+     * </pre>
+     * except that the action is performed atomically.
+     * @param key key with which the specified value is associated.
+     * @param oldValue value expected to be associated with the specified key.
+     * @param newValue value to be associated with the specified key.
+     * @return true if the value was replaced
+     * @throws NullPointerException if this map does not permit <tt>null</tt>
+     *            keys or values, and the specified key or value is
+     *            <tt>null</tt>.
+     */
+    boolean replace(K key, V oldValue, V newValue);
 
 }

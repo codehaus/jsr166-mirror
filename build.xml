@@ -1,19 +1,22 @@
 <project name="jsr166" default="jar">
 
   <description>
+
     Build file for JSR-166
 
     Note that junit.jar must be in ${ant.home}/lib for the
     test target to work. [FIXME: This should be automatically
     enforced by this build file by failing with a message if
     junit.jar is not in the right place.]
+
   </description>
 
   <!-- Compilation options -->
+  <property name="build.sourcelevel"    value="1.5"/>
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
-  <property name="build.deprecation"    value="false"/>
-  <property name="build.sourcelevel"    value="1.5"/>
+  <property name="build.deprecation"    value="true"/>
+  <property name="build.warnings"       value="true"/>
 
   <!-- Build locations -->
   <property name="build.dir"            location="build"/>
@@ -43,11 +46,9 @@
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
 
-  <property name="gj.compiler.args"
-           value='-J-Xbootclasspath/p:${javac.jar} -deprecation -warnunchecked'
-  />
+  <property name="javac.args"           value='-J-Xbootclasspath/p:${javac.jar}'/>
 
-  <path id="gj.compiler.bootclasspath">
+  <path id="javac.bootclasspath">
     <pathelement location="${collect.jar}"/>
     <pathelement location="${rt.jar}"/>
   </path>
@@ -57,7 +58,10 @@
   </path>
 
 
-  <target name="compile">
+  <!-- Main targets -->
+
+  <target name="compile" depends="init"
+          description="Compiles all sources to build folder">
     <mkdir dir="${build.classes.dir}"/>
     <javac srcdir="${src.dir}"
           destdir="${build.classes.dir}"
@@ -67,8 +71,8 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <bootclasspath refid="gj.compiler.bootclasspath"/>
-      <compilerarg line="${gj.compiler.args}"/>
+      <bootclasspath refid="javac.bootclasspath"/>
+      <compilerarg line="${javac.args} ${build.warnings.option}"/>
 
       <!-- need this because srcdir is basedir! -->
       <include name="java/**/*.java"/>
@@ -77,7 +81,8 @@
   </target>
 
 
-  <target name="jar" depends="compile">
+  <target name="jar" depends="compile"
+          description="Builds library jar from compiled sources">
     <mkdir dir="${build.lib.dir}"/>
     <jar basedir="${build.classes.dir}"
         destfile="${product.jar}"
@@ -85,10 +90,11 @@
   </target>
 
 
-  <target name="test" depends="report-tests"/>
+  <target name="test" depends="init, report-tests"
+          description="Runs all tests"/>
 
 
-  <target name="docs" depends="clean-filtered-src, filter-src"
+  <target name="docs" depends="init, clean-filtered-src, filter-src"
           description="Builds javadocs with custom tags to build folder">
     <delete dir="${build.javadocs.dir}"/>
     <mkdir dir="${build.javadocs.dir}"/>
@@ -109,6 +115,50 @@
   </target>
 
 
+  <target name="dist" depends="init, dist-clean, dist-jar, dist-docs"/>
+
+
+  <target name="clean"
+          description="Removes all build products">
+    <delete dir="${build.dir}"/>
+    <delete dir="${build.classes.dir}"/>
+    <delete dir="${build.lib.dir}"/>
+  </target>
+
+
+  <target name="dist-clean"
+          description="Removes all build and distribution products">
+    <delete dir="${dist.dir}"/>
+  </target>
+
+
+  <!-- Internal targets -->
+
+  <target name="set-warnings-if" if="build.warnings">
+    <property name="build.warnings.option" value="-warnunchecked"/>
+  </target>
+
+  <target name="set-warnings-unless" unless="build.warnings">
+    <property name="build.warnings.option" value=""/>
+  </target>
+
+  <target name="init" depends="set-warnings-if, set-warnings-unless">
+    <!-- Version is kept in a separate file -->
+    <loadfile property="version" srcFile="version.properties"/>
+    <echo>Building JSR-166 version ${version}</echo>
+  </target>
+
+
+  <target name="clean-filtered-src">
+    <delete dir="${build.filter.src.dir}"/>
+  </target>
+
+
+  <target name="dist-jar" depends="clean, jar">
+    <copy file="${product.jar}" todir="${dist.dir}"/>
+  </target>
+
+
   <target name="dist-docs" depends="clean-filtered-src, filter-src"
           description="Builds javadocs without custom tags to dist folder">
     <delete dir="${dist.javadocs.dir}"/>
@@ -126,34 +176,7 @@
   </target>
 
 
-  <target name="dist-jar" depends="clean, jar">
-    <copy file="${product.jar}" todir="${dist.dir}"/>
-  </target>
-
-
-  <target name="dist" depends="dist-clean, dist-jar, dist-docs"/>
-
-
-  <target name="clean">
-    <delete dir="${build.dir}"/>
-    <delete dir="${build.classes.dir}"/>
-    <delete dir="${build.lib.dir}"/>
-  </target>
-
-
-  <target name="dist-clean" depends="clean">
-    <delete dir="${dist.dir}"/>
-  </target>
-
-
-  <target name="clean-filtered-src">
-    <delete dir="${build.filter.src.dir}"/>
-  </target>
-
-
-  <!-- Internal targets used by docs target -->
-
-  <target name="compile-ant">
+  <target name="compile-ant-filter">
     <mkdir dir="${build.ant.dir}"/>
     <javac srcdir="${ant.src.dir}"
           destdir="${build.ant.dir}"
@@ -162,7 +185,7 @@
   </target>
 
 
-  <target name="filter-src" depends="compile-ant">
+  <target name="filter-src" depends="compile-ant-filter">
     <mkdir dir="${build.filter.src.dir}"/>
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
@@ -203,8 +226,6 @@
   </target>
 
 
-  <!-- Internal targets used by test target -->
-
   <target name="compile-tests" depends="jar">
     <mkdir dir="${build.testcases.dir}"/>
     <javac srcdir="${test.src.dir}"
@@ -215,13 +236,14 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <bootclasspath refid="gj.compiler.bootclasspath"/>
-      <compilerarg line="${gj.compiler.args}"/>
+      <bootclasspath refid="javac.bootclasspath"/>
+      <compilerarg line="${javac.args} ${build.warnings.option}"/>
       <classpath refid="test.classpath"/>
       <include name="**/*Test.java"/>
 
     </javac>
   </target>
+
 
   <target name="run-tests" depends="compile-tests">
     <mkdir dir="${build.reports.dir}"/>

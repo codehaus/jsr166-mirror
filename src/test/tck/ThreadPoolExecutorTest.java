@@ -769,6 +769,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             for(int i = 1; i < 5; ++i) {
                 assertTrue(tasks[i].done);
             }
+            try { p.shutdownNow(); } catch(SecurityException ok) { return; }
         } catch(RejectedExecutionException ex){
             unexpectedException();
         } finally {
@@ -795,6 +796,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             for(int i = 0; i < 5; ++i){
                 assertFalse(tasks[i].done);
             }
+            try { p.shutdownNow(); } catch(SecurityException ok) { return; }
         } catch(RejectedExecutionException ex){
             unexpectedException();
         } finally {
@@ -817,6 +819,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             p.execute(r3);
             assertFalse(p.getQueue().contains(r2));
             assertTrue(p.getQueue().contains(r3));
+            try { p.shutdownNow(); } catch(SecurityException ok) { return; }
         } catch(RejectedExecutionException ex){
             unexpectedException();
         } finally {

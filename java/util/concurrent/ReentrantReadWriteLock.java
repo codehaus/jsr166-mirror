@@ -54,10 +54,10 @@ package java.util.concurrent;
  *
 **/
 public class ReentrantReadWriteLock implements ReadWriteLock {
-  public Lock readLock() {
-    return null;
-  }
-  public Lock writeLock() {
-    return null;
-  }
+    public Lock readLock() {
+        return null;
+    }
+    public Lock writeLock() {
+        return null;
+    }
 }

@@ -66,21 +66,21 @@ package java.util.concurrent;
  * 
  **/
 public class Semaphore {
-  public Semaphore(long initialCount) {}
-  public void acquire()  throws InterruptedException {}
+    public Semaphore(long initialCount) {}
+    public void acquire()  throws InterruptedException {}
 
-  public boolean tryAcquire() {
-    return false;
-  }
-  public boolean tryAcquire(long time, Clock granularity) throws InterruptedException {
-    return false;
-  }
-  public void release() {}
+    public boolean tryAcquire() {
+        return false;
+    }
+    public boolean tryAcquire(long time, Clock granularity) throws InterruptedException {
+        return false;
+    }
+    public void release() {}
 
-  /**
-   * Return the current count value of the semaphore.
-   **/
-  public long getCount() {
-    return 0;
-  }
+    /**
+     * Return the current count value of the semaphore.
+     **/
+    public long getCount() {
+        return 0;
+    }
 }

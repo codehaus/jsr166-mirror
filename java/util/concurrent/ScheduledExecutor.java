@@ -1,4 +1,5 @@
 package java.util.concurrent;
+
 import java.util.*;
 
 /**
@@ -10,59 +11,56 @@ import java.util.*;
  * capabilities of <tt>ThreadExecutor</tt> (of which this is a
  * subclass.)
  */
+public class ScheduledExecutor extends ThreadExecutor  {
 
-public class ScheduledExecutor extends ThreadExecutor  { 
-
-  public ScheduledExecutor(int minThreads, 
-                           int maxThreads,
-                           long keepAliveTime,
-                           Clock granularity,
-                           ExecutorIntercepts handler) {
-    super(minThreads, maxThreads, keepAliveTime, granularity,
-          new PriorityBlockingQueue(), handler);
-  }
-
-  /**
-   * A ScheduledTask is a delayed or periodic task that can be run by
-   * a ScheduledExecutor.
-   **/
-  public abstract class ScheduledTask implements Runnable, Cancellable, Comparable {
-    /** Return the time this task can run next, 
-     * in requested units.
-     */
-    long getExecutionTime(Clock unit) { 
-      return 0; 
+    public ScheduledExecutor(int minThreads,
+    int maxThreads,
+    long keepAliveTime,
+    Clock granularity,
+    ExecutorIntercepts handler) {
+        super(minThreads, maxThreads, keepAliveTime, granularity,
+        new PriorityBlockingQueue(), handler);
     }
-    ScheduledTask() {}
-  }
 
-  /**
-   * A ScheduledFutureTask is a delayed result-bearing action that can
-   * be run by a ScheduledExecutor.
-   **/
-  public abstract class ScheduledFutureTask extends ScheduledTask implements Future {
-    ScheduledFutureTask() {}
-  }
+    /**
+     * A ScheduledTask is a delayed or periodic task that can be run by
+     * a ScheduledExecutor.
+     **/
+    public abstract class ScheduledTask implements Runnable, Cancellable, Comparable {
+        /** Return the time this task can run next,
+         * in requested units.
+         */
+        long getExecutionTime(Clock unit) {
+            return 0;
+        }
+        ScheduledTask() {}
+    }
 
-  public static ScheduledTask newDelayedTask(Runnable r, long delay, Clock unit) {
-    return null;
-  }
+    /**
+     * A ScheduledFutureTask is a delayed result-bearing action that can
+     * be run by a ScheduledExecutor.
+     **/
+    public abstract class ScheduledFutureTask extends ScheduledTask implements Future {
+        ScheduledFutureTask() {}
+    }
 
-  public static ScheduledTask newPeriodicTask(Runnable r, long delay, long period, Clock unit) {
-    return null;
-  }
+    public static ScheduledTask newDelayedTask(Runnable r, long delay, Clock unit) {
+        return null;
+    }
 
-  public static ScheduledTask newFixedRateTask(Runnable r, long delay, long period, Clock unit) {
-    return null;
-  }
+    public static ScheduledTask newPeriodicTask(Runnable r, long delay, long period, Clock unit) {
+        return null;
+    }
 
-  public static ScheduledFutureTask newDelayedFutureTask(Callable c, long delay, Clock unit) {
-    return null;
-  }
+    public static ScheduledTask newFixedRateTask(Runnable r, long delay, long period, Clock unit) {
+        return null;
+    }
 
+    public static ScheduledFutureTask newDelayedFutureTask(Callable c, long delay, Clock unit) {
+        return null;
+    }
 
-
-  public void schedule(ScheduledTask t) {}
+    public void schedule(ScheduledTask t) {}
 
 }
 

@@ -29,34 +29,34 @@ package java.util.concurrent;
  * 
  **/
 public class ReentrantLock implements Lock {
-  public ReentrantLock() {}
-  public void lock() {}
-  public void lockInterruptibly() throws InterruptedException { }
-  public boolean tryLock() {
-    return false;
-  }
-  public boolean tryLock(long time, Clock granularity) throws InterruptedException {
-    return false;
-  }
-  public void unlock() {}
+    public ReentrantLock() {}
+    public void lock() {}
+    public void lockInterruptibly() throws InterruptedException { }
+    public boolean tryLock() {
+        return false;
+    }
+    public boolean tryLock(long time, Clock granularity) throws InterruptedException {
+        return false;
+    }
+    public void unlock() {}
 
-  /**
-   * Return the number of holds of this lock by current Thread,
-   * or zero if lock not held by current thread.
-   **/
-  public int getHoldCount() { 
-    return 0;
-  }
+    /**
+     * Return the number of holds of this lock by current Thread,
+     * or zero if lock not held by current thread.
+     **/
+    public int getHoldCount() {
+        return 0;
+    }
 
-  /**
-   * Return true if current thread holds lock.
-   **/
-  public boolean isHeldByCurrentThread() { 
-    return false;
-  }
+    /**
+     * Return true if current thread holds lock.
+     **/
+    public boolean isHeldByCurrentThread() {
+        return false;
+    }
 
-  public Condition newCondition() {
-    return null;
-  }
+    public Condition newCondition() {
+        return null;
+    }
 
 }

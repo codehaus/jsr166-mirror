@@ -1,4 +1,5 @@
 package java.util.concurrent;
+
 /**
  *  ReadWriteLocks maintain a pair of associated locks. The readLock
  *  may be held simultanously by multiple reader threads, so long as
@@ -6,13 +7,13 @@ package java.util.concurrent;
  *
  **/
 public interface ReadWriteLock {
-  /** 
-   * Return the lock used for reading.
-   **/
-  public Lock readLock();
+    /**
+     * Return the lock used for reading.
+     **/
+    public Lock readLock();
 
-  /** 
-   * Return the lock used for writing.
-   **/
-  public Lock writeLock();
+    /**
+     * Return the lock used for writing.
+     **/
+    public Lock writeLock();
 }

@@ -20,18 +20,18 @@ package java.util.concurrent;
  *  }
  * </pre>
  **/
-public class TimeoutException extends InterruptedException {  
-  /**
-   * Constructs a TimeoutException with no specified detail
-   * message.
-   **/
-  public TimeoutException() {}
-
-  /**
-   * Constructs a TimeoutException with specified detail
-   * message.
-   **/
-  public TimeoutException(String detail) {
-    super(detail);
-  }
+public class TimeoutException extends InterruptedException {
+    /**
+     * Constructs a TimeoutException with no specified detail
+     * message.
+     **/
+    public TimeoutException() {}
+    
+    /**
+     * Constructs a TimeoutException with specified detail
+     * message.
+     **/
+    public TimeoutException(String detail) {
+        super(detail);
+    }
 }

@@ -21,7 +21,8 @@
   <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
-  <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
+  <property name="build.pubdocs.dir"    location="${build.dir}/javadocs"/>
+  <property name="build.privdocs.dir"   location="${build.dir}/privdocs"/>
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
 
@@ -83,11 +84,28 @@
 
   <target name="test" depends="report-tests"/>
 
+  <target name="docs" depends="public-docs, private-docs"/>
 
-  <target name="docs" depends="clean-docs, filter-src">
-    <delete dir="${build.javadocs.dir}"/>
-    <mkdir dir="${build.javadocs.dir}"/>
-    <javadoc destdir="${build.javadocs.dir}"
+  <target name="public-docs" depends="clean-docs, filter-src">
+    <delete dir="${build.pubdocs.dir}"/>
+    <mkdir dir="${build.pubdocs.dir}"/>
+    <javadoc destdir="${build.pubdocs.dir}"
+                link="http://java.sun.com/j2se/1.4.1/docs/api"
+            overview="${src.dir}/intro.html"
+              source="${build.sourcelevel}">
+
+      <packageset dir="${build.filter.src.dir}">
+        <include name="java/**"/>
+      </packageset>
+
+    </javadoc>
+  </target>
+
+
+  <target name="private-docs" depends="clean-docs, filter-src">
+    <delete dir="${build.privdocs.dir}"/>
+    <mkdir dir="${build.privdocs.dir}"/>
+    <javadoc destdir="${build.privdocs.dir}"
                 link="http://java.sun.com/j2se/1.4.1/docs/api"
             overview="${src.dir}/intro.html"
               source="${build.sourcelevel}">
@@ -113,7 +131,8 @@
 
   <target name="clean-docs">
     <delete dir="${build.filter.src.dir}"/>
-    <delete dir="${build.javadocs.dir}"/>
+    <delete dir="${build.pubdocs.dir}"/>
+    <delete dir="${build.privdocs.dir}"/>
   </target>
 
 

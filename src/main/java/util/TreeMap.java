@@ -1308,7 +1308,7 @@ public class TreeMap<K,V>
         }
 
         public boolean isEmpty() {
-            return entrySet.isEmpty();
+            return entrySet().isEmpty();
         }
 
         public boolean containsKey(Object key) {
@@ -1372,7 +1372,7 @@ public class TreeMap<K,V>
         public Map.Entry<K,V> pollFirstEntry() {
 	    TreeMap.Entry<K,V> e = fromStart ? 
                 getFirstEntry() : getCeilingEntry(fromKey);
-            if (e == null || (!fromStart && compare(e.key, fromKey) < 0))
+            if (e == null || (!toEnd && compare(e.key, toKey) >= 0))
                 return null;
             Map.Entry result = new AbstractMap.SimpleImmutableEntry(e);
             deleteEntry(e);
@@ -1382,7 +1382,7 @@ public class TreeMap<K,V>
         public Map.Entry<K,V> pollLastEntry() {
 	    TreeMap.Entry<K,V> e = toEnd ? 
                 getLastEntry() : getLowerEntry(toKey);
-            if (e == null || (!toEnd && compare(e.key, toKey) >= 0))
+            if (e == null || (!fromStart && compare(e.key, fromKey) < 0))
                 return null;
             Map.Entry result = new AbstractMap.SimpleImmutableEntry(e);
             deleteEntry(e);
@@ -1462,10 +1462,11 @@ public class TreeMap<K,V>
             return e == null? null : e.key;
         }
 
-        private transient Set<Map.Entry<K,V>> entrySet = new EntrySetView();
+        private transient Set<Map.Entry<K,V>> entrySet = null;
 
         public Set<Map.Entry<K,V>> entrySet() {
-            return entrySet;
+            Set<Map.Entry<K,V>> es = entrySet;
+            return (es != null)? es : (entrySet = new EntrySetView());
         }
 
         private class EntrySetView extends AbstractSet<Map.Entry<K,V>> {
@@ -2162,8 +2163,9 @@ public class TreeMap<K,V>
         // Write out size (number of Mappings)
         s.writeInt(size);
 
+        Set<Map.Entry<K,V>> es = entrySet();
         // Write out keys and values (alternating)
-        for (Iterator<Map.Entry<K,V>> i = entrySet().iterator(); i.hasNext(); ) {
+        for (Iterator<Map.Entry<K,V>> i = es.iterator(); i.hasNext(); ) {
             Map.Entry<K,V> e = i.next();
             s.writeObject(e.getKey());
             s.writeObject(e.getValue());

@@ -60,7 +60,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             return new PublicCondition(this);
         }
 
-        static class PublicCondition extends AbstractReentrantLock.ConditionObject {
+        static class PublicCondition extends ReentrantReadWriteLock.WriterConditionObject {
             PublicCondition(PublicReentrantReadWriteLock l) { super(l); }
             public Collection<Thread> getWaitingThreads() { 
                 return super.getWaitingThreads(); 
@@ -920,7 +920,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testHasWaiters() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();	
-        final AbstractReentrantLock.ConditionObject c = (AbstractReentrantLock.ConditionObject)(lock.writeLock().newCondition());
+        final ReentrantReadWriteLock.WriterConditionObject c = (ReentrantReadWriteLock.WriterConditionObject)(lock.writeLock().newCondition());
 	Thread t = new Thread(new Runnable() { 
 		public void run() {
 		    try {
@@ -962,7 +962,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLength() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();	
-        final AbstractReentrantLock.ConditionObject c = (AbstractReentrantLock.ConditionObject)(lock.writeLock().newCondition());
+        final ReentrantReadWriteLock.WriterConditionObject c = (ReentrantReadWriteLock.WriterConditionObject)(lock.writeLock().newCondition());
 	Thread t1 = new Thread(new Runnable() { 
 		public void run() {
 		    try {

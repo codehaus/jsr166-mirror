@@ -48,7 +48,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             ExecutorService e = new DirectExecutorService();
             TrackedShortRunnable task = new TrackedShortRunnable();
             assertFalse(task.done);
-            Future<?> future = e.submit(task);
+            Future<?> future = e.submit(task, null);
             future.get();
             assertTrue(task.done);
         }
@@ -212,7 +212,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         try {
             ExecutorService e = new DirectExecutorService();
             TrackedShortRunnable task = null;
-            Future<?> future = e.submit(task);
+            Future<?> future = e.submit(task, null);
             shouldThrow();
         }
         catch (NullPointerException success) {
@@ -282,7 +282,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         try {
 
             for(int i = 0; i < 5; ++i){
-                p.submit(new MediumRunnable());
+                p.submit(new MediumRunnable(), null);
             }
             shouldThrow();
         } catch(RejectedExecutionException success){}

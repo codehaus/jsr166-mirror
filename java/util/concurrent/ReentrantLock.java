@@ -44,7 +44,7 @@ package java.util.concurrent;
  * </pre>
  *
  * <p>This class supports the interruption of lock acquisition and provides a 
- * {@link #newCondition Condition} implemenatation that supports the 
+ * {@link #newCondition Condition} implementation that supports the 
  * interruption of thread suspension.
  *
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
@@ -56,8 +56,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/09 17:56:51 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/02/06 06:41:13 $
+ * @editor $Author: dholmes $
  * 
  * @fixme (1) We need a non-nested example to motivate this
  * @fixme (2) Describe performance aspects of interruptible locking for the RI

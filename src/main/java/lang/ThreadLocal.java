@@ -124,7 +124,7 @@ public class ThreadLocal<T> {
         Thread t = Thread.currentThread();
         ThreadLocalMap<T> map = getMap(t);
         if (map != null) 
-            return (T)map.get(this);
+            return map.get(this);
 
         // Maps are constructed lazily.  if the map for this thread
         // doesn't exist, create it, with this ThreadLocal and its

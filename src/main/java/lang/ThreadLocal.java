@@ -153,13 +153,14 @@ public class ThreadLocal<T> {
     }
 
     /**
-     * Removes the value for this ThreadLocal.  This may help reduce
-     * the storage requirements of ThreadLocals.  If this ThreadLocal
-     * is accessed again, it will by default have its
-     * <tt>initialValue</tt>.
+     * Removes the current thread's value for this thread-local variable.
+     * If this thread-local variable is subsequently read by the current
+     * thread, its initial value will be computed by invoking its
+     * {@link #initialValue} method again unless its value is set by
+     * the current thread in the interim.
+     * 
      * @since 1.5
-     **/
-
+     */
      public void remove() {
          ThreadLocalMap m = getMap(Thread.currentThread());
          if (m != null)

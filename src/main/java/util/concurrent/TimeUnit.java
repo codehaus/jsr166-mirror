@@ -12,10 +12,10 @@ package java.util.concurrent;
   * and to perform timing and delay operations in these units.  A
   * <tt>TimeUnit</tt> does not maintain time information, but only
   * helps organize and use time representations that may be maintained
-  * separately across various contexts.  A nanosecond is defined as
-  * one-billionth of a second, a microsecond is one-millionth of a
-  * second, a millisecond is one-thousandth of a second, a minute is
-  * sixty seconds, an hour is sixty minutes, and a day is twenty four
+  * separately across various contexts.  A nanosecond is defined as one
+  * thousandth of a microsecond, a microsecond as one thousandth of a
+  * millisecond, a millisecond as one thousandth of a second, a minute
+  * as sixty seconds, an hour as sixty minutes, and a day as twenty four
   * hours.
   *
   * <p>A <tt>TimeUnit</tt> is mainly used to inform time-based methods

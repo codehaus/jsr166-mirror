@@ -210,8 +210,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
      */
     public void testPutIfAbsent() {
         ConcurrentHashMap map = map5();
-	map.putIfAbsent(new Integer(6), "Z");
-        assertTrue(map.containsKey(new Integer(6)));
+	map.putIfAbsent(six, "Z");
+        assertTrue(map.containsKey(six));
     }
 
     /**
@@ -221,6 +221,46 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         ConcurrentHashMap map = map5();
         assertEquals("A", map.putIfAbsent(one, "Z"));
     }
+
+    /**
+     *   replace fails when the given key is not present
+     */
+    public void testReplace() {
+        ConcurrentHashMap map = map5();
+	assertFalse(map.replace(six, "Z"));
+        assertFalse(map.containsKey(six));
+    }
+
+    /**
+     *   replace succeeds if the key is already present
+     */
+    public void testReplace2() {
+        ConcurrentHashMap map = map5();
+        assertTrue(map.replace(one, "Z"));
+        assertEquals("Z", map.get(one));
+    }
+
+
+    /**
+     * replace value fails when the given key not mapped to expected value
+     */
+    public void testReplaceValue() {
+        ConcurrentHashMap map = map5();
+        assertEquals("A", map.get(one));
+	assertFalse(map.replace(one, "Z", "Z"));
+        assertEquals("A", map.get(one));
+    }
+
+    /**
+     * replace value succeeds when the given key mapped to expected value
+     */
+    public void testReplaceValue2() {
+        ConcurrentHashMap map = map5();
+        assertEquals("A", map.get(one));
+	assertTrue(map.replace(one, "A", "Z"));
+        assertEquals("Z", map.get(one));
+    }
+
 
     /**
      *   remove removes the correct key-value pair from the map
@@ -377,12 +417,68 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
     }
 
     /**
+     * replace(null, x) throws NPE
+     */
+    public void testReplace_NullPointerException() {
+        try {
+            ConcurrentHashMap c = new ConcurrentHashMap(5);
+            c.replace(null, "whatever");
+            shouldThrow();
+        } catch(NullPointerException e){}
+    }
+
+    /**
+     * replace(null, x, y) throws NPE
+     */
+    public void testReplaceValue_NullPointerException() {
+        try {
+            ConcurrentHashMap c = new ConcurrentHashMap(5);
+            c.replace(null, one, "whatever");
+            shouldThrow();
+        } catch(NullPointerException e){}
+    }
+
+    /**
      * putIfAbsent(x, null) throws NPE
      */
     public void testPutIfAbsent2_NullPointerException() {
         try {
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.putIfAbsent("whatever", null);
+            shouldThrow();
+        } catch(NullPointerException e){}
+    }
+
+
+    /**
+     * replace(x, null) throws NPE
+     */
+    public void testReplace2_NullPointerException() {
+        try {
+            ConcurrentHashMap c = new ConcurrentHashMap(5);
+            c.replace("whatever", null);
+            shouldThrow();
+        } catch(NullPointerException e){}
+    }
+
+    /**
+     * replace(x, null, y) throws NPE
+     */
+    public void testReplaceValue2_NullPointerException() {
+        try {
+            ConcurrentHashMap c = new ConcurrentHashMap(5);
+            c.replace("whatever", null, "A");
+            shouldThrow();
+        } catch(NullPointerException e){}
+    }
+
+    /**
+     * replace(x, y, null) throws NPE
+     */
+    public void testReplaceValue3_NullPointerException() {
+        try {
+            ConcurrentHashMap c = new ConcurrentHashMap(5);
+            c.replace("whatever", one, null);
             shouldThrow();
         } catch(NullPointerException e){}
     }

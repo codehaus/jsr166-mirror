@@ -25,7 +25,7 @@ package java.util;
  * <tt>descendingEntrySet</tt> return descending views. The
  * performance of ascending traversals is likely to be faster than
  * descending traversals.  Notice that it is possible to perform
- * subrannge traversals in either direction using <tt>SubMap</tt>.
+ * subrange traversals in either direction using <tt>SubMap</tt>.
  * 
  * <p>This interface additionally defines methods <tt>firstEntry</tt>,
  * <tt>pollFirstEntry</tt>, <tt>lastEntry</tt>, and

@@ -520,7 +520,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * adjusting head, tail, and size as necessary.  This can result in
      * motion of elements backwards or forwards in the array.
      *
-     * <p>This method is called delete rather than remove to emphasize the
+     * <p>This method is called delete rather than remove to emphasize 
      * that its semantics differ from those of List.remove(int).
      * 
      * @return true if elements moved backwards

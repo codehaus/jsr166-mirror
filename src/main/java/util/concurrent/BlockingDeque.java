@@ -186,7 +186,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
     /**
      * Adds the specified element as the last element of this deque,
      * waiting if necessary for space to become available.  This
-     * method is equivalent to putLast
+     * method is equivalent to putLast.
      * @param o the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
@@ -200,7 +200,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * <tt>offer</tt> is generally preferable to method {@link
      * Collection#add}, which can fail to insert an element only by
      * throwing an exception.  This method is equivalent to
-     * offerLast
+     * offerLast.
      *
      * @param o the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
@@ -213,7 +213,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
     /**
      * Retrieves and removes the first element of this deque, waiting
      * if no elements are present on this deque.
-     * This method is equivalent to takeFirst 
+     * This method is equivalent to takeFirst.
      * @return the head of this deque
      * @throws InterruptedException if interrupted while waiting.
      */
@@ -223,7 +223,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * Retrieves and removes the first element of this deque, waiting
      * if necessary up to the specified wait time if no elements are
      * present on this deque.  This method is equivalent to
-     * pollFirst
+     * pollFirst.
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the

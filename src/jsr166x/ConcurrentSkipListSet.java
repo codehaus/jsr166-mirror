@@ -24,7 +24,7 @@ import java.util.concurrent.*;
  * threads. Iterators are <i>weakly consistent</i>, returning elements
  * reflecting the state of the set at some point at or since the
  * creation of the iterator.  They do <em>not</em> throw {@link
- * ConcurrentModificationException}, and may procede concurrently with
+ * ConcurrentModificationException}, and may proceed concurrently with
  * other operations.
  *
  * <p>Beware that, unlike in most collections, the <tt>size</tt>

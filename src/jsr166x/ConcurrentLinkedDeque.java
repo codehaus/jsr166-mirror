@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.*;
  * <i>weakly consistent</i>, returning elements reflecting the state
  * of the deque at some point at or since the creation of the
  * iterator.  They do <em>not</em> throw {@link
- * ConcurrentModificationException}, and may procede concurrently with
+ * ConcurrentModificationException}, and may proceed concurrently with
  * other operations.
  *
  * <p>This class and its iterators implement all of the
@@ -811,7 +811,7 @@ public class ConcurrentLinkedDeque<E>
      * elements reflecting the state of the deque at some point at or
      * since the creation of the iterator.  The method does
      * <em>not</em> throw {@link ConcurrentModificationException}, and
-     * may procede concurrently with other operations.
+     * may proceed concurrently with other operations.
      *
      * @return an iterator over the elements in this deque 
      */

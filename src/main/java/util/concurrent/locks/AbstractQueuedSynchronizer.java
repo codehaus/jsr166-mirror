@@ -912,7 +912,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * The value is otherwise uninterpreted and can represent anything
      * you like.
      * @return true if successful. Upon success, this object has been
-     * acquired the requested number of times.
+     * acquired.
      * @throws IllegalMonitorStateException if acquiring would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
@@ -970,7 +970,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * availability. (Support for three different return values
      * enables this method to be used in contexts where acquires only
      * sometimes act exclusively.)  Upon success, this object has been
-     * acquired the requested number of times.
+     * acquired.
      * @throws IllegalMonitorStateException if acquiring would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work

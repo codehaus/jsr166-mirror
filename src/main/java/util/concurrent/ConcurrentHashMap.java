@@ -586,7 +586,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * map is created with a capacity of twice the number of mappings in
      * the given map or 11 (whichever is greater), and a default load factor.
      */
-    public <A extends K, B extends V> ConcurrentHashMap(Map<A,B> t) {
+    public ConcurrentHashMap(Map<? extends K, ? extends V> t) {
         this(Math.max((int) (t.size() / DEFAULT_LOAD_FACTOR) + 1,
                       11),
              DEFAULT_LOAD_FACTOR, DEFAULT_SEGMENTS);
@@ -1123,9 +1123,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         public boolean equals(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
-	    Map.Entry e = (Map.Entry)o;
-	    return eq(getKey(), e.getKey()) && eq(getValue(), e.getValue());
-	}
+            Map.Entry e = (Map.Entry)o;
+            return eq(getKey(), e.getKey()) && eq(getValue(), e.getValue());
+        }
 
         public int hashCode() {
             Object k = getKey();
@@ -1226,48 +1226,48 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * is made accessible.
      */
     static class SimpleEntry<K,V> implements Entry<K,V> {
-	K key;
-	V value;
+        K key;
+        V value;
 
-	public SimpleEntry(K key, V value) {
-	    this.key   = key;
+        public SimpleEntry(K key, V value) {
+            this.key   = key;
             this.value = value;
-	}
+        }
 
-	public SimpleEntry(Entry<K,V> e) {
-	    this.key   = e.getKey();
+        public SimpleEntry(Entry<K,V> e) {
+            this.key   = e.getKey();
             this.value = e.getValue();
-	}
+        }
 
-	public K getKey() {
-	    return key;
-	}
+        public K getKey() {
+            return key;
+        }
 
-	public V getValue() {
-	    return value;
-	}
+        public V getValue() {
+            return value;
+        }
 
-	public V setValue(V value) {
-	    V oldValue = this.value;
-	    this.value = value;
-	    return oldValue;
-	}
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
 
-	public boolean equals(Object o) {
-	    if (!(o instanceof Map.Entry))
-		return false;
-	    Map.Entry e = (Map.Entry)o;
-	    return eq(key, e.getKey()) && eq(value, e.getValue());
-	}
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry e = (Map.Entry)o;
+            return eq(key, e.getKey()) && eq(value, e.getValue());
+        }
 
-	public int hashCode() {
-	    return ((key   == null)   ? 0 :   key.hashCode()) ^
-		   ((value == null)   ? 0 : value.hashCode());
-	}
+        public int hashCode() {
+            return ((key   == null)   ? 0 :   key.hashCode()) ^
+                   ((value == null)   ? 0 : value.hashCode());
+        }
 
-	public String toString() {
-	    return key + "=" + value;
-	}
+        public String toString() {
+            return key + "=" + value;
+        }
 
         private static boolean eq(Object o1, Object o2) {
             return (o1 == null ? o2 == null : o1.equals(o2));

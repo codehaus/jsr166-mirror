@@ -73,7 +73,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * Collection.
      * @param c the collection
      */
-    public <T extends E> CopyOnWriteArraySet(Collection<T> c) {
+    public CopyOnWriteArraySet(Collection<? extends E> c) {
         al = new CopyOnWriteArrayList<E>();
         al.addAllAbsent(c);
     }

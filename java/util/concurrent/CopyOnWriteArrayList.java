@@ -28,26 +28,27 @@ import java.util.*;
  * on iterators (remove, set, and add) are not supported. These are
  * the only methods throwing UnsupportedOperationException.  <p>
  **/
-public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java.io.Serializable {
+public class CopyOnWriteArrayList<E>
+        implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
 
     /**
      * The held array. Directly access only within synchronized
      *  methods
      */
-    private transient Object[] array_;
+    private transient E[] array_;
 
     /**
      * Accessor to the array intended to be called from
      * within unsynchronized read-only methods
      **/
-    private synchronized Object[] array() { return array_; }
+    private synchronized E[] array() { return array_; }
 
     /**
      * Constructs an empty list
      *
      */
     public CopyOnWriteArrayList() {
-        array_ = new Object[0];
+        array_ = new E[0];
     }
 
     /**
@@ -55,9 +56,9 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * Collection, in the order they are returned by the Collection's
      * iterator.
      */
-    public CopyOnWriteArrayList(Collection c) {
-        array_ = new Object[c.size()];
-        Iterator i = c.iterator();
+    public CopyOnWriteArrayList(Collection<E> c) {
+        array_ = new E[c.size()];
+        Iterator<E> i = c.iterator();
         int size = 0;
         while (i.hasNext())
             array_[size++] = i.next();
@@ -68,7 +69,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @param toCopyIn the array. A copy of this array is used as the
      * internal array.
      **/
-    public CopyOnWriteArrayList(Object[] toCopyIn) {
+    public CopyOnWriteArrayList(E[] toCopyIn) {
         copyIn(toCopyIn, 0, toCopyIn.length);
     }
 
@@ -84,8 +85,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @param n the number of elements to copy. This will be the new size of
      * the list.
      **/
-    private synchronized void copyIn(Object[] toCopyIn, int first, int n) {
-        array_  = new Object[n];
+    private synchronized void copyIn(E[] toCopyIn, int first, int n) {
+        array_  = new E[n];
         System.arraycopy(toCopyIn, first, array_, 0, n);
     }
 
@@ -114,7 +115,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @param o element whose presence in this List is to be tested.
      */
     public boolean contains(Object elem) {
-        Object[] elementData = array();
+        E[] elementData = array();
         int len = elementData.length;
         return indexOf(elem, elementData, len) >= 0;
     }
@@ -129,7 +130,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @see     Object#equals(Object)
      */
     public int indexOf(Object elem) {
-        Object[] elementData = array();
+        E[] elementData = array();
         int len = elementData.length;
         return indexOf(elem, elementData, len);
     }
@@ -164,10 +165,10 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *          List; returns <code>-1</code> if the object is not found.
      * @see     Object#equals(Object)
      */
-    public int indexOf(Object elem, int index) {
-        Object[] elementData = array();
+    public int indexOf(E elem, int index) {
+        E[] elementData = array();
         int elementCount = elementData.length;
-        
+
         if (elem == null) {
             for (int i = index ; i < elementCount ; i++)
                 if (elementData[i]==null)
@@ -189,7 +190,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *          this list; returns -1 if the object is not found.
      */
     public int lastIndexOf(Object elem) {
-        Object[] elementData = array();
+        E[] elementData = array();
         int len = elementData.length;
         return lastIndexOf(elem, elementData, len);
     }
@@ -217,9 +218,9 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *          List at position less than index in the List;
      *          -1 if the object is not found.
      */
-    public int lastIndexOf(Object elem, int index) {
+    public int lastIndexOf(E elem, int index) {
         // needed in order to compile on 1.2b3
-        Object[] elementData = array();
+        E[] elementData = array();
         if (elem == null) {
             for (int i = index; i >= 0; i--)
                 if (elementData[i]==null)
@@ -240,9 +241,9 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      */
     public Object clone() {
         try {
-            Object[] elementData = array();
-            CopyOnWriteArrayList v = (CopyOnWriteArrayList)super.clone();
-            v.array_ = new Object[elementData.length];
+            E[] elementData = array();
+            CopyOnWriteArrayList<E> v = (CopyOnWriteArrayList)super.clone();
+            v.array_ = new E[elementData.length];
             System.arraycopy(elementData, 0, v.array_, 0, elementData.length);
             return v;
         } catch (CloneNotSupportedException e) {
@@ -283,11 +284,11 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @exception ArrayStoreException the runtime type of a is not a supertype
      * of the runtime type of every element in this list.
      */
-    public Object[] toArray(Object a[]) {
-        Object[] elementData = array();
+    public <T> T[] toArray(T a[]) {
+        E[] elementData = array();
 
         if (a.length < elementData.length)
-            a = (Object[])
+            a = (T[])
             java.lang.reflect.Array.newInstance(a.getClass().getComponentType(),
             elementData.length);
 
@@ -308,8 +309,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @exception IndexOutOfBoundsException index is out of range (index
      *              &lt; 0 || index &gt;= size()).
      */
-    public Object get(int index) {
-        Object[] elementData = array();
+    public E get(int index) {
+        E[] elementData = array();
         rangeCheck(index, elementData.length);
         return elementData[index];
     }
@@ -324,15 +325,15 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @exception IndexOutOfBoundsException index out of range
      *              (index &lt; 0 || index &gt;= size()).
      */
-    public synchronized Object set(int index, Object element) {
+    public synchronized E set(int index, E element) {
         int len = array_.length;
         rangeCheck(index, len);
-        Object oldValue = array_[index];
+        E oldValue = array_[index];
 
         boolean same = (oldValue == element ||
         (element != null && element.equals(oldValue)));
         if (!same) {
-            Object[] newArray = new Object[len];
+            E[] newArray = new E[len];
             System.arraycopy(array_, 0, newArray, 0, len);
             newArray[index] = element;
             array_ = newArray;
@@ -346,9 +347,9 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @param element element to be appended to this list.
      * @return true (as per the general contract of Collection.add).
      */
-    public synchronized boolean add(Object element) {
+    public synchronized boolean add(E element) {
         int len = array_.length;
-        Object[] newArray = new Object[len+1];
+        E[] newArray = new E[len+1];
         System.arraycopy(array_, 0, newArray, 0, len);
         newArray[len] = element;
         array_ = newArray;
@@ -365,12 +366,12 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @exception IndexOutOfBoundsException index is out of range
      *              (index &lt; 0 || index &gt; size()).
      */
-    public synchronized void add(int index, Object element) {
+    public synchronized void add(int index, E element) {
         int len = array_.length;
         if (index > len || index < 0)
             throw new IndexOutOfBoundsException("Index: "+index+", Size: "+len);
 
-        Object[] newArray = new Object[len+1];
+        E[] newArray = new E[len+1];
         System.arraycopy(array_, 0, newArray, 0, index);
         newArray[index] = element;
         System.arraycopy(array_, index, newArray, index+1, len - index);
@@ -386,11 +387,11 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *              &lt; 0 || index &gt;= size()).
      * @param index the index of the element to removed.
      */
-    public synchronized Object remove(int index) {
+    public synchronized E remove(int index) {
         int len = array_.length;
         rangeCheck(index, len);
-        Object oldValue = array_[index];
-        Object[] newArray = new Object[len-1];
+        E oldValue = array_[index];
+        E[] newArray = new E[len-1];
         System.arraycopy(array_, 0, newArray, 0, index);
         int numMoved = len - index - 1;
         if (numMoved > 0)
@@ -419,7 +420,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
         // This wins in the normal case of element being present
 
         int newlen = len-1;
-        Object[] newArray = new Object[newlen];
+        E[] newArray = new E[newlen];
 
         for (int i = 0; i < newlen; ++i) {
             if (element == array_[i] ||
@@ -467,7 +468,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
 
         int numMoved = len - toIndex;
         int newlen = len - (toIndex-fromIndex);
-        Object[] newArray = new Object[newlen];
+        E[] newArray = new E[newlen];
         System.arraycopy(array_, 0, newArray, 0, fromIndex);
         System.arraycopy(array_, toIndex, newArray, fromIndex, numMoved);
         array_ = newArray;
@@ -481,11 +482,11 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @param element element to be added to this Collection, if absent.
      * @return true if added
      **/
-    public synchronized boolean addIfAbsent(Object element) {
+    public synchronized boolean addIfAbsent(E element) {
         // Copy while checking if already present.
         // This wins in the most common case where it is not present
         int len = array_.length;
-        Object[] newArray = new Object[len + 1];
+        E[] newArray = new E[len + 1];
         for (int i = 0; i < len; ++i) {
             if (element == array_[i] ||
             (element != null && element.equals(array_[i])))
@@ -508,10 +509,10 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * true is returned, otherwise false.
      *
      */
-    public boolean containsAll(Collection c) {
-        Object[] elementData = array();
+    public <T> boolean containsAll(Collection<T> c) {
+        E[] elementData = array();
         int len = elementData.length;
-        Iterator e = c.iterator();
+        Iterator<T> e = c.iterator();
         while (e.hasNext())
             if(indexOf(e.next(), elementData, len) < 0)
                 return false;
@@ -528,16 +529,16 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *
      * @return true if this Collection changed as a result of the call.
      */
-    public synchronized boolean removeAll(Collection c) {
-        Object[] elementData = array_;
+    public synchronized <T> boolean removeAll(Collection<T> c) {
+        E[] elementData = array_;
         int len = elementData.length;
         if (len == 0) return false;
 
         // temp array holds those elements we know we want to keep
-        Object[] temp = new Object[len];
+        E[] temp = new E[len];
         int newlen = 0;
         for (int i = 0; i < len; ++i) {
-            Object element = elementData[i];
+            E element = elementData[i];
             if (!c.contains(element)) {
                 temp[newlen++] = element;
             }
@@ -546,7 +547,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
         if (newlen == len) return false;
 
         //  copy temp as new array
-        Object[] newArray = new Object[newlen];
+        E[] newArray = new E[newlen];
         System.arraycopy(temp, 0, newArray, 0, newlen);
         array_ = newArray;
         return true;
@@ -559,15 +560,15 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * specified Collection.
      * @return true if this Collection changed as a result of the call.
      */
-    public synchronized boolean retainAll(Collection c) {
-        Object[] elementData = array_;
+    public synchronized <T> boolean retainAll(Collection<T> c) {
+        E[] elementData = array_;
         int len = elementData.length;
         if (len == 0) return false;
 
-        Object[] temp = new Object[len];
+        E[] temp = new E[len];
         int newlen = 0;
         for (int i = 0; i < len; ++i) {
-            Object element = elementData[i];
+            E element = elementData[i];
             if (c.contains(element)) {
                 temp[newlen++] = element;
             }
@@ -575,7 +576,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
 
         if (newlen == len) return false;
 
-        Object[] newArray = new Object[newlen];
+        E[] newArray = new E[newlen];
         System.arraycopy(temp, 0, newArray, 0, newlen);
         array_ = newArray;
         return true;
@@ -590,18 +591,18 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @param c elements to be added into this list.
      * @return the number of elements added
      */
-    public synchronized int addAllAbsent(Collection c) {
+    public synchronized <T extends E> int addAllAbsent(Collection<T> c) {
         int numNew = c.size();
         if (numNew == 0) return 0;
 
-        Object[] elementData = array_;
+        E[] elementData = array_;
         int len = elementData.length;
 
-        Object[] temp = new Object[numNew];
+        E[] temp = new E[numNew];
         int added = 0;
-        Iterator e = c.iterator();
+        Iterator<T> e = c.iterator();
         while (e.hasNext()) {
-            Object element = e.next();
+            E element = e.next();
             if (indexOf(element, elementData, len) < 0) {
                 if (indexOf(element, temp, added) < 0) {
                     temp[added++] = element;
@@ -611,7 +612,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
 
         if (added == 0) return 0;
 
-        Object[] newArray = new Object[len+added];
+        E[] newArray = new E[len+added];
         System.arraycopy(elementData, 0, newArray, 0, len);
         System.arraycopy(temp, 0, newArray, len, added);
         array_ = newArray;
@@ -623,7 +624,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *
      */
     public synchronized void clear() {
-        array_ = new Object[0];
+        array_ = new E[0];
     }
 
     /**
@@ -633,14 +634,14 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *
      * @param c elements to be inserted into this list.
      */
-    public synchronized boolean addAll(Collection c) {
+    public synchronized <T extends E> boolean addAll(Collection<T> c) {
         int numNew = c.size();
         if (numNew == 0) return false;
 
         int len = array_.length;
-        Object[] newArray = new Object[len+numNew];
+        E[] newArray = new E[len+numNew];
         System.arraycopy(array_, 0, newArray, 0, len);
-        Iterator e = c.iterator();
+        Iterator<T> e = c.iterator();
         for (int i=0; i<numNew; i++)
             newArray[len++] = e.next();
         array_ = newArray;
@@ -662,7 +663,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @exception IndexOutOfBoundsException index out of range (index
      *              &lt; 0 || index &gt; size()).
      */
-    public synchronized boolean addAll(int index, Collection c) {
+    public synchronized <T extends E> boolean addAll(int index, Collection<T> c) {
         int len = array_.length;
         if (index > len || index < 0)
             throw new IndexOutOfBoundsException("Index: "+index+", Size: "+len);
@@ -670,16 +671,16 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
         int numNew = c.size();
         if (numNew == 0) return false;
 
-        Object[] newArray = new Object[len+numNew];
+        E[] newArray = new E[len+numNew];
         System.arraycopy(array_, 0, newArray, 0, len);
         int numMoved = len - index;
         if (numMoved > 0)
             System.arraycopy(array_, index, newArray, index + numNew, numMoved);
-        Iterator e = c.iterator();
+        Iterator<T> e = c.iterator();
         for (int i=0; i<numNew; i++)
             newArray[index++] = e.next();
         array_ = newArray;
-        
+
         return true;
     }
 
@@ -705,7 +706,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
         // Write out element count, and any hidden stuff
         s.defaultWriteObject();
 
-        Object[] elementData = array();
+        E[] elementData = array();
         // Write out array length
         s.writeInt(elementData.length);
 
@@ -722,14 +723,14 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
 
         // Read in size, and any hidden stuff
         s.defaultReadObject();
-        
+
         // Read in array length and allocate array
         int arrayLength = s.readInt();
-        Object[] elementData = new Object[arrayLength];
+        E[] elementData = new E[arrayLength];
 
         // Read in all elements in the proper order.
         for (int i=0; i<elementData.length; i++)
-            elementData[i] = s.readObject();
+            elementData[i] = (E) s.readObject();
         array_ = elementData;
     }
 
@@ -779,15 +780,15 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
         if (!(o instanceof List))
             return false;
 
-        List l2 = (List)(o);
+        List<E> l2 = (List)(o);
         if (size() != l2.size())
             return false;
 
-        ListIterator e1 = listIterator();
-        ListIterator e2 = l2.listIterator();
+        ListIterator<E> e1 = listIterator();
+        ListIterator<E> e2 = l2.listIterator();
         while(e1.hasNext()) {
-            Object o1 = e1.next();
-            Object o2 = e2.next();
+            E o1 = e1.next();
+            E o2 = e2.next();
             if (!(o1==null ? o2==null : o1.equals(o2)))
                 return false;
         }
@@ -802,9 +803,9 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      */
     public int hashCode() {
         int hashCode = 1;
-        Iterator i = iterator();
+        Iterator<E> i = iterator();
         while (i.hasNext()) {
-            Object obj = i.next();
+            E obj = i.next();
             hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
         }
         return hashCode;
@@ -817,8 +818,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * needed while traversing the iterator. The iterator does
      * <em>NOT</em> support the <code>remove</code> method.
      */
-    public Iterator iterator() {
-        return new COWIterator(array(), 0);
+    public Iterator<E> iterator() {
+        return new COWIterator<E>(array(), 0);
     }
 
     /**
@@ -830,8 +831,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * or <code>add</code> methods.
      *
      */
-    public ListIterator listIterator() {
-        return new COWIterator(array(), 0);
+    public ListIterator<E> listIterator() {
+        return new COWIterator<E>(array(), 0);
     }
 
     /**
@@ -849,26 +850,26 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @exception IndexOutOfBoundsException index is out of range
      *              (index &lt; 0 || index &gt; size()).
      */
-    public ListIterator listIterator(final int index) {
-        Object[] elementData = array();
+    public ListIterator<E> listIterator(final int index) {
+        E[] elementData = array();
         int len = elementData.length;
         if (index<0 || index>len)
             throw new IndexOutOfBoundsException("Index: "+index);
-        
-        return new COWIterator(array(), index);
+
+        return new COWIterator<E>(array(), index);
     }
 
-    private static class COWIterator implements ListIterator {
+    private static class COWIterator<E> implements ListIterator<E> {
 
         /** Snapshot of the array **/
-        private final Object[] array;
+        private final E[] array;
 
         /**
          * Index of element to be returned by subsequent call to next.
          */
         private int cursor;
 
-        private COWIterator(Object[] elementArray, int initialCursor) {
+        private COWIterator(E[] elementArray, int initialCursor) {
             array = elementArray;
             cursor = initialCursor;
         }
@@ -881,7 +882,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
             return cursor > 0;
         }
 
-        public Object next() {
+        public E next() {
             try {
                 return array[cursor++];
             }
@@ -890,7 +891,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
             }
         }
 
-        public Object previous() {
+        public E previous() {
             try {
                 return array[--cursor];
             } catch(IndexOutOfBoundsException e) {
@@ -921,7 +922,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
          * @exception UnsupportedOperationException set is not supported
          *            by this Iterator.
          */
-        public void set(Object o) {
+        public void set(E o) {
             throw new UnsupportedOperationException();
         }
 
@@ -930,7 +931,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
          * @exception UnsupportedOperationException add is not supported
          *            by this Iterator.
          */
-        public void add(Object o) {
+        public void add(E o) {
             throw new UnsupportedOperationException();
         }
     }
@@ -955,15 +956,15 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      * @exception IndexOutOfBoundsException Illegal endpoint index value
      *     (fromIndex &lt; 0 || toIndex &gt; size || fromIndex &gt; toIndex).
      */
-    public synchronized List subList(int fromIndex, int toIndex) {
+    public synchronized List<E> subList(int fromIndex, int toIndex) {
         // synchronized since sublist ctor depends on it.
         int len = array_.length;
         if (fromIndex<0 || toIndex>len  || fromIndex>toIndex)
             throw new IndexOutOfBoundsException();
-        return new COWSubList(this, fromIndex, toIndex);
+        return new COWSubList<E>(this, fromIndex, toIndex);
     }
 
-    private static class COWSubList extends AbstractList {
+    private static class COWSubList<E> extends AbstractList<E> {
 
         /*
           This is currently a bit sleazy. The class
@@ -985,12 +986,12 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
           even noticeable.
          */
 
-        private final CopyOnWriteArrayList l;
+        private final CopyOnWriteArrayList<E> l;
         private final int offset;
         private int size;
-        private Object[] expectedArray;
+        private E[] expectedArray;
 
-        private COWSubList(CopyOnWriteArrayList list,
+        private COWSubList(CopyOnWriteArrayList<E> list,
         int fromIndex, int toIndex) {
             l = list;
             expectedArray = l.array();
@@ -1011,17 +1012,17 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
         }
 
 
-        public Object set(int index, Object element) {
+        public E set(int index, E element) {
             synchronized(l) {
                 rangeCheck(index);
                 checkForComodification();
-                Object x = l.set(index+offset, element);
+                E x = l.set(index+offset, element);
                 expectedArray = l.array_;
                 return x;
             }
         }
 
-        public Object get(int index) {
+        public E get(int index) {
             synchronized(l) {
                 rangeCheck(index);
                 checkForComodification();
@@ -1036,7 +1037,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
             }
         }
 
-        public void add(int index, Object element) {
+        public void add(int index, E element) {
             synchronized(l) {
                 checkForComodification();
                 if (index<0 || index>size)
@@ -1047,25 +1048,25 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
             }
         }
 
-        public Object remove(int index) {
+        public E remove(int index) {
             synchronized(l) {
                 rangeCheck(index);
                 checkForComodification();
-                Object result = l.remove(index+offset);
+                E result = l.remove(index+offset);
                 expectedArray = l.array_;
                 size--;
                 return result;
             }
         }
 
-        public Iterator iterator() {
+        public Iterator<E> iterator() {
             synchronized(l) {
                 checkForComodification();
                 return new COWSubListIterator(0);
             }
         }
 
-        public ListIterator listIterator(final int index) {
+        public ListIterator<E> listIterator(final int index) {
             synchronized(l) {
                 checkForComodification();
                 if (index<0 || index>size)
@@ -1074,8 +1075,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
             }
         }
 
-        private class COWSubListIterator implements ListIterator {
-            private final ListIterator i;
+        private class COWSubListIterator implements ListIterator<E> {
+            private final ListIterator<E> i;
             private final int index;
             private COWSubListIterator(int index) {
                 this.index = index;
@@ -1086,7 +1087,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
                 return nextIndex() < size;
             }
 
-            public Object next() {
+            public E next() {
                 if (hasNext())
                     return i.next();
                 else
@@ -1097,7 +1098,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
                 return previousIndex() >= 0;
             }
 
-            public Object previous() {
+            public E previous() {
                 if (hasPrevious())
                     return i.previous();
                 else
@@ -1116,22 +1117,22 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
                 throw new UnsupportedOperationException();
             }
 
-            public void set(Object o) {
+            public void set(E o) {
                 throw new UnsupportedOperationException();
             }
 
-            public void add(Object o) {
+            public void add(E o) {
                 throw new UnsupportedOperationException();
             }
         }
 
 
-        public List subList(int fromIndex, int toIndex) {
+        public List<E> subList(int fromIndex, int toIndex) {
             synchronized(l) {
                 checkForComodification();
                 if (fromIndex<0 || toIndex>size)
                     throw new IndexOutOfBoundsException();
-                return new COWSubList(l, fromIndex+offset, toIndex+offset);
+                return new COWSubList<E>(l, fromIndex+offset, toIndex+offset);
             }
         }
 

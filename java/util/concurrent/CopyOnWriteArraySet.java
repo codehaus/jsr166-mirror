@@ -7,7 +7,7 @@ import java.util.*;
  * CopyOnWriteArrayList for all of its operations.
  * Thus, it shares the same basic properties:
  * <ul>
- *  <li> It is best suited for applications in which set sizes generally 
+ *  <li> It is best suited for applications in which set sizes generally
  *       stay small, read-only operations
  *       vastly outnumber mutative operations, and you need
  *       to prevent interference among threads during traversal.
@@ -18,11 +18,11 @@ import java.util.*;
  *  <li> Iterators do not support the mutative remove operation
  *  <li> Traversal via iterators is very fast and cannot ever encounter
  *      interference from other threads. Iterators rely on
- *      unchanging snapshots of the array at the time the iterators were 
+ *      unchanging snapshots of the array at the time the iterators were
  *     constructed.
  * </ul>
  * <p>
- * <b>Sample Usage.</b> Probably the main application 
+ * <b>Sample Usage.</b> Probably the main application
  * of copy-on-write sets are classes that maintain
  * sets of Handler objects
  * that must be multicasted to upon an update command. This
@@ -35,10 +35,10 @@ import java.util.*;
  * class X {
  *    private final CopyOnWriteArraySet handlers = new CopyOnWriteArraySet();
  *    public void addHandler(Handler h) { handlers.add(h); }
- *   
+ *
  *    private long internalState;
  *    private synchronized void changeState() { internalState = ...; }
- * 
+ *
  *    public void update() {
  *       changeState();
  *       Iterator it = handlers.iterator();
@@ -46,27 +46,28 @@ import java.util.*;
  *          ((Handler)(it.next()).handle();
  *    }
  * }
- * </pre>    
+ * </pre>
  * <p>[<a href="http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html"> Introduction to this package. </a>]
  * @see CopyOnWriteArrayList
  **/
-public class CopyOnWriteArraySet extends AbstractSet implements Cloneable, java.io.Serializable {
+public class CopyOnWriteArraySet<E> extends AbstractSet<E>
+        implements Cloneable, java.io.Serializable {
 
-    private final CopyOnWriteArrayList al;
+    private final CopyOnWriteArrayList<E> al;
 
     /**
      * Constructs an empty set
      */
     public CopyOnWriteArraySet() {
-        al = new CopyOnWriteArrayList();
+        al = new CopyOnWriteArrayList<E>();
     }
 
     /**
      * Constructs a set containing all of the elements of the specified
      * Collection.
      */
-    public CopyOnWriteArraySet(Collection c) {
-        al = new CopyOnWriteArrayList();
+    public <T extends E> CopyOnWriteArraySet(Collection<T> c) {
+        al = new CopyOnWriteArrayList<E>();
         al.addAllAbsent(c);
     }
 
@@ -75,14 +76,14 @@ public class CopyOnWriteArraySet extends AbstractSet implements Cloneable, java.
     public boolean  isEmpty()                 { return al.isEmpty(); }
     public boolean  contains(Object o)        { return al.contains(o); }
     public Object[] toArray()                 { return al.toArray(); }
-    public Object[] toArray(Object[] a)       { return al.toArray(a); }
+    public <T> T[]  toArray(T[] a)            { return al.toArray(a); }
     public void     clear()                   {        al.clear(); }
-    public Iterator iterator()                { return al.iterator(); }
+    public Iterator<E>  iterator()            { return al.iterator(); }
     public boolean  remove(Object o)          { return al.remove(o); }
-    public boolean  containsAll(Collection c) { return al.containsAll(c); }
-    public boolean  addAll(Collection c)      { return al.addAllAbsent(c) > 0; }
-    public boolean  removeAll(Collection c)   { return al.removeAll(c); }
-    public boolean  retainAll(Collection c)   { return al.retainAll(c); }
-    public boolean  add(Object o)             { return al.addIfAbsent(o); }
+    public boolean  add(E o)                  { return al.addIfAbsent(o); }
+    public <T> boolean  containsAll(Collection<T> c)      { return al.containsAll(c); }
+    public <T extends E> boolean  addAll(Collection<T> c) { return al.addAllAbsent(c) > 0; }
+    public <T> boolean  removeAll(Collection<T> c)        { return al.removeAll(c); }
+    public <T> boolean  retainAll(Collection<T> c)        { return al.retainAll(c); }
 
 }

@@ -17,7 +17,7 @@ public class Mutex implements Lock, java.io.Serializable {
     private static class Sync extends AbstractQueuedSynchronizer {
         public boolean isLocked() { return getState() == 1; }
 
-        public boolean tryAcquireExclusiveState(boolean isQueued, int acquires) {
+        public boolean tryAcquireExclusiveState(int acquires) {
             assert acquires == 1; // Does not use multiple acquires
             return compareAndSetState(0, 1);
         }
@@ -43,7 +43,7 @@ public class Mutex implements Lock, java.io.Serializable {
         sync.acquireExclusiveUninterruptibly(1);  
     }
     public boolean tryLock() { 
-        return sync.tryAcquireExclusiveState(false, 1);
+        return sync.tryAcquireExclusiveState(1);
     }
     public void lockInterruptibly() throws InterruptedException { 
         sync.acquireExclusiveInterruptibly(1);

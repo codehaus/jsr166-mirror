@@ -64,7 +64,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/04 12:46:45 $
+ * @revised $Date: 2003/08/05 00:38:42 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -319,11 +319,26 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     // Atomics support
 
-    private final static AtomicReferenceFieldUpdater<ReentrantLock, Thread>   ownerUpdater = new AtomicReferenceFieldUpdater<ReentrantLock, Thread> ( ReentrantLock.class, Thread.class, "owner");
-    private final static AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>  tailUpdater = new AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode> ( ReentrantLock.class, ReentrantLockQueueNode.class, "tail");
-    private final static AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>   headUpdater = new AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode> ( ReentrantLock.class,  ReentrantLockQueueNode.class, "head");
-    private final static AtomicIntegerFieldUpdater<ReentrantLockQueueNode>  releaseStatusUpdater = 
-        new AtomicIntegerFieldUpdater<ReentrantLockQueueNode> (ReentrantLockQueueNode.class, "releaseStatus");
+    private final static 
+        AtomicReferenceFieldUpdater<ReentrantLock, Thread>   
+        ownerUpdater = 
+        AtomicReferenceFieldUpdater.newUpdater
+        (ReentrantLock.class, Thread.class, "owner");
+    private final static 
+        AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>  
+        tailUpdater = 
+        AtomicReferenceFieldUpdater.newUpdater
+        (ReentrantLock.class, ReentrantLockQueueNode.class, "tail");
+    private final static 
+        AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>   
+        headUpdater = 
+        AtomicReferenceFieldUpdater.newUpdater 
+        (ReentrantLock.class,  ReentrantLockQueueNode.class, "head");
+    private final static 
+        AtomicIntegerFieldUpdater<ReentrantLockQueueNode>  
+        releaseStatusUpdater = 
+        AtomicIntegerFieldUpdater.newUpdater 
+        (ReentrantLockQueueNode.class, "releaseStatus");
 
     private boolean acquireOwner(Thread current) {
         return ownerUpdater.compareAndSet(this, null, current);
@@ -1141,7 +1156,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                         throw new InterruptedException();
                     return nanos - (System.nanoTime() - startTime);
                 }
-                LockSupport.parkNanos(w, timeLeft);
+                LockSupport.parkNanos(timeLeft);
             }
         }
 
@@ -1167,7 +1182,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                         throw new InterruptedException();
                     return true;
                 }
-                LockSupport.parkUntil(w, abstime);
+                LockSupport.parkUntil(abstime);
             }
         }
 

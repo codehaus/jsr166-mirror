@@ -6,6 +6,8 @@
 
 package java.util.concurrent.locks;
 import java.util.concurrent.*;
+import sun.misc.Unsafe;
+
 
 /**
  * Basic thread blocking primitives useful for creating lock and
@@ -21,6 +23,7 @@ import java.util.concurrent.*;
  */
 
 public class LockSupport {
+    private static final Unsafe unsafe =  Unsafe.getUnsafe();
 
     /**
      * Unblock the given thread blocked on <tt>park</tt>, or, if it is not
@@ -29,7 +32,9 @@ public class LockSupport {
      * @throws NullPointerException if thread is null
      */
     public static void unpark(Thread thread) {
-        JSR166Support.unpark(thread);
+        if (thread == null)
+            throw new NullPointerException();
+        unsafe.unpark(thread);
     }
 
     /**
@@ -42,7 +47,7 @@ public class LockSupport {
      * status of the thread upon return.
      */
     public static void park() {
-        JSR166Support.park(false, 0);
+        unsafe.park(false, 0);
     }
 
     /**
@@ -56,7 +61,7 @@ public class LockSupport {
      * @param nanos the maximum number of nanoseconds to block
      */
     public static void parkNanos(long nanos) {
-        JSR166Support.park(false, nanos);   
+        unsafe.park(false, nanos);   
     }
 
     /**
@@ -70,26 +75,7 @@ public class LockSupport {
      * @param deadline the maximum time, in milliseconds from the Epoch
      */
     public static void parkUntil(long deadline) {
-        JSR166Support.park(true, deadline);   
-    }
-
-
-    // Temporary versions for preliminary release to allow emulation
-
-    static void park(ReentrantLock.ReentrantLockQueueNode node) {
-        park();
-    }
-    
-    static void parkNanos(ReentrantLock.ReentrantLockQueueNode node, long nanos) {
-        parkNanos(nanos);
-    }
-
-    static void parkUntil(ReentrantLock.ReentrantLockQueueNode node, long deadline) {
-        parkUntil(deadline);
-    }
-    
-    static void unpark(ReentrantLock.ReentrantLockQueueNode node, Thread thread) {
-        unpark(thread);
+        unsafe.park(true, deadline);   
     }
 
 }

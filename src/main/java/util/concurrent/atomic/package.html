@@ -18,13 +18,9 @@ operation of the form:
 <p> This method (which varies in argument types across different
 classes) atomically sets a variable to the <tt>updateValue</tt> if it
 currently holds the <tt>expectedValue</tt>, reporting <tt>true</tt> on
-success.  The memory effects for accesses and updates of atomics
-follow the rules for volatiles, so an invocation of
-<tt>compareAndSet</tt> has the memory effects of a <tt>volatile</tt>
-read followed by a <tt>volatile</tt> write.
-
-<p>The classes in this package additionally support a weaker version
-of this operation:
+success.  The classes in this package also contain methods to get and
+unconditionally set values, as well as a weaker conditional atomic
+update operation:
 
 <pre>
   boolean weakCompareAndSet(expectedValue, updateValue);
@@ -62,6 +58,17 @@ class Sequencer {
   public long next() { return sequenceNumber.getAndIncrement(); }
 }
 </pre>
+
+<p>The memory effects for accesses and updates of atomics
+follow the rules for volatiles:
+<ul>
+<li> <tt>get</tt> has the memory effects of reading a <tt>volatile</tt> variable.
+<li> <tt>set</tt> has the memory effects of writing (assigning) a <tt>volatile</tt> variable.
+<li> <tt>compareAndSet</tt>, <tt>weakCompareAndSet</tt>,
+and other read-and-update operations 
+have the memory effects of both reading and
+writing <tt>volatile</tt> variables.
+</ul> 
 
 <p>In addition to classes representing single values, this package
 contains <em>Updater</em> classes that can be used to obtain

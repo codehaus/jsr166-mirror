@@ -56,13 +56,13 @@ public class ThreadPoolExecutorTest extends TestCase{
                     public void run(){
                         try{
                             Thread.sleep(SHORT_DELAY_MS);
-                        }catch(InterruptedException e){
+                        } catch(InterruptedException e){
                             fail("unexpected exception");
                         }
                     }
                 });
 	    Thread.sleep(SHORT_DELAY_MS * 2);
-        }catch(InterruptedException e){
+        } catch(InterruptedException e){
             fail("unexpected exception");
         } finally {
             one.shutdown();
@@ -77,7 +77,7 @@ public class ThreadPoolExecutorTest extends TestCase{
         try {
             assertEquals(0, two.getActiveCount());
             two.execute(newRunnable());
-            try{Thread.sleep(10);}catch(Exception e){}
+            try{Thread.sleep(10);} catch(Exception e){}
             assertEquals(1, two.getActiveCount());
         } finally {
             two.shutdown();
@@ -92,7 +92,7 @@ public class ThreadPoolExecutorTest extends TestCase{
         try {
             assertEquals(0, two.getCompletedTaskCount());
             two.execute(newRunnable());
-            try{Thread.sleep(2000);}catch(Exception e){}
+            try{Thread.sleep(2000);} catch(Exception e){}
             assertEquals(1, two.getCompletedTaskCount());
         } finally {
             two.shutdown();
@@ -174,7 +174,7 @@ public class ThreadPoolExecutorTest extends TestCase{
             assertEquals(0, one.getTaskCount());
             for(int i = 0; i < 5; i++)
                 one.execute(newRunnable());
-            try{Thread.sleep(SHORT_DELAY_MS);}catch(Exception e){}
+            try{Thread.sleep(SHORT_DELAY_MS);} catch(Exception e){}
             assertEquals(5, one.getTaskCount());
         } finally {
             one.shutdown();
@@ -212,7 +212,7 @@ public class ThreadPoolExecutorTest extends TestCase{
 	boolean flag = false;
 	try{
 	    flag = one.awaitTermination(10, TimeUnit.SECONDS);
-	}catch(Exception e){}	
+	} catch(Exception e){}	
 	assertTrue(one.isTerminated());
 	if(!flag)
 	    fail("ThreadPoolExecutor - thread pool did not terminate within suitable timeframe");
@@ -327,7 +327,7 @@ public class ThreadPoolExecutorTest extends TestCase{
         try{
             new ThreadPoolExecutor(-1,1,100L,TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10),new testThread());
             fail("ThreadPoolExecutor constructor should throw an IllegalArgumentException");		
-        }catch (IllegalArgumentException i6){}
+        } catch (IllegalArgumentException i6){}
     }
     
     //---- Tests if maximumPoolSize is less than zero
@@ -535,18 +535,18 @@ public class ThreadPoolExecutorTest extends TestCase{
         ThreadPoolExecutor tpe = null;
         try{
 	    tpe = new ThreadPoolExecutor(1,1,100,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(1));
-        }catch(Exception e){}
+        } catch(Exception e){}
         tpe.shutdown();
 	try{
 	    tpe.execute(new Runnable(){
 		    public void run(){
 			try{
 			    Thread.sleep(1000);
-			}catch(InterruptedException e){}
+			} catch(InterruptedException e){}
 		    }
 		});
 	    fail("ThreadPoolExecutor - void execute(Runnable) should throw RejectedExecutionException");
-	}catch(RejectedExecutionException sucess){}
+	} catch(RejectedExecutionException success){}
 	
 	
     }
@@ -559,11 +559,11 @@ public class ThreadPoolExecutorTest extends TestCase{
 	ThreadPoolExecutor tpe = null;
 	try{
 	    tpe = new ThreadPoolExecutor(1,2,100,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-	}catch(Exception e){}
+	} catch(Exception e){}
 	try{
 	    tpe.setCorePoolSize(-1);
 	    fail("ThreadPoolExecutor - void setCorePoolSize(int) should throw IllegalArgumentException");
-	}catch(IllegalArgumentException sucess){
+	} catch(IllegalArgumentException success){
         } finally {
             tpe.shutdown();
         }
@@ -578,11 +578,11 @@ public class ThreadPoolExecutorTest extends TestCase{
         ThreadPoolExecutor tpe = null;
         try{
             tpe = new ThreadPoolExecutor(2,3,100,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-        }catch(Exception e){}
+        } catch(Exception e){}
         try{
             tpe.setMaximumPoolSize(1);
             fail("ThreadPoolExecutor - void setMaximumPoolSize(int) should throw IllegalArgumentException");
-        }catch(IllegalArgumentException sucess){
+        } catch(IllegalArgumentException success){
         } finally {
             tpe.shutdown();
         }
@@ -596,11 +596,11 @@ public class ThreadPoolExecutorTest extends TestCase{
         ThreadPoolExecutor tpe = null;
         try{
             tpe = new ThreadPoolExecutor(2,3,100,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-        }catch(Exception e){}
+        } catch(Exception e){}
         try{
             tpe.setMaximumPoolSize(-1);
             fail("ThreadPoolExecutor - void setMaximumPoolSize(int) should throw IllegalArgumentException");
-        }catch(IllegalArgumentException sucess){
+        } catch(IllegalArgumentException success){
         } finally {
             tpe.shutdown();
         }
@@ -615,12 +615,12 @@ public class ThreadPoolExecutorTest extends TestCase{
 	ThreadPoolExecutor tpe = null;
         try{
             tpe = new ThreadPoolExecutor(2,3,100,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-        }catch(Exception e){}
+        } catch(Exception e){}
         
 	try{
             tpe.setKeepAliveTime(-1,TimeUnit.MILLISECONDS);
             fail("ThreadPoolExecutor - void setKeepAliveTime(long, TimeUnit) should throw IllegalArgumentException");
-        }catch(IllegalArgumentException sucess){
+        } catch(IllegalArgumentException success){
         } finally {
             tpe.shutdown();
         }

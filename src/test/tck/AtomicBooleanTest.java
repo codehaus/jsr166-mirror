@@ -7,6 +7,7 @@
 
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
+import java.io.*;
 
 public class AtomicBooleanTest extends TestCase {
     public static void main (String[] args) {
@@ -63,6 +64,26 @@ public class AtomicBooleanTest extends TestCase {
 	assertEquals(false,ai.getAndSet(false));
 	assertEquals(false,ai.getAndSet(true));
 	assertEquals(true,ai.get());
+    }
+
+    public void testSerialization() {
+        AtomicBoolean l = new AtomicBoolean();
+
+        try {
+            l.set(true);
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            AtomicBoolean r = (AtomicBoolean) in.readObject();
+            assertEquals(l.get(), r.get());
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
     }
 
 

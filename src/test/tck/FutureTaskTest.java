@@ -111,7 +111,7 @@ public class FutureTaskTest extends TestCase {
 		public Object call(){
 		    try{
 			Thread.sleep(MEDIUM_DELAY_MS);
-		    }catch(InterruptedException e){
+		    } catch(InterruptedException e){
                         fail("unexpected exception");
                     }
                     return Boolean.TRUE;
@@ -121,7 +121,7 @@ public class FutureTaskTest extends TestCase {
 		public void run(){
 		    try{
 			ft.get();
-		    }catch(Exception e){
+		    } catch(Exception e){
                         fail("unexpected exception");
                     }
 		}
@@ -146,7 +146,7 @@ public class FutureTaskTest extends TestCase {
 		public Object call(){
 		    try{
 			Thread.sleep(MEDIUM_DELAY_MS);
-		    }catch(InterruptedException e){
+		    } catch(InterruptedException e){
                         fail("unexpected exception");
                     }
                     return Boolean.TRUE;
@@ -182,7 +182,7 @@ public class FutureTaskTest extends TestCase {
 		public Object call(){
 		    try{
 			Thread.sleep(MEDIUM_DELAY_MS);
-		    }catch(InterruptedException e){
+		    } catch(InterruptedException e){
                         fail("unexpected exception");
                     }
                     return Boolean.TRUE;
@@ -195,7 +195,7 @@ public class FutureTaskTest extends TestCase {
 			try{
 			    ft.get();
 			    fail("should throw");
-			}catch(CancellationException success){
+			} catch(CancellationException success){
                         }
 			catch(Exception e){
                             fail("unexpected exception");
@@ -205,7 +205,7 @@ public class FutureTaskTest extends TestCase {
             t.start(); 
 	    ft.cancel(true);
 	    t.join();
-	}catch(InterruptedException sucess){
+	} catch(InterruptedException success){
             fail("unexpected exception");
         }
     }
@@ -228,7 +228,7 @@ public class FutureTaskTest extends TestCase {
 			try{
 			    ft.get(3 * SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 			    fail("should throw");
-			}catch(CancellationException success) {}
+			} catch(CancellationException success) {}
 			catch(Exception e){
                             fail("unexpected exception");
 			}
@@ -239,7 +239,7 @@ public class FutureTaskTest extends TestCase {
 	    ft.cancel(true);
 	    Thread.sleep(SHORT_DELAY_MS);
 	    t.join();
-	}catch(InterruptedException ie){
+	} catch(InterruptedException ie){
             fail("unexpected exception");
         }
     }
@@ -255,7 +255,7 @@ public class FutureTaskTest extends TestCase {
 	    ft.run();
 	    ft.get();
 	    fail("should throw");
-	}catch(ExecutionException success){
+	} catch(ExecutionException success){
         }
 	catch(Exception e){
             fail("unexpected exception");
@@ -273,8 +273,8 @@ public class FutureTaskTest extends TestCase {
 	    ft.run();
 	    ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    fail("should throw");
-	}catch(ExecutionException success) { 
-        }catch(TimeoutException success) { } // unlikely but OK
+	} catch(ExecutionException success) { 
+        } catch(TimeoutException success) { } // unlikely but OK
 	catch(Exception e){
             fail("unexpected exception");
 	}
@@ -319,7 +319,7 @@ public class FutureTaskTest extends TestCase {
 		    try{
 			ft.get(100,TimeUnit.SECONDS);
 			fail("should throw");
-		    }catch(InterruptedException success){}
+		    } catch(InterruptedException success){}
 		    catch(Exception e){
                         fail("unexpected exception");
 		    }
@@ -344,8 +344,8 @@ public class FutureTaskTest extends TestCase {
 	try{
 	    ft.get(1,TimeUnit.MILLISECONDS);
 	    fail("should throw");
-	}catch(TimeoutException success){}
-	catch(Exception sucess){
+	} catch(TimeoutException success){}
+	catch(Exception success){
 	    fail("unexpected exception");
 	}
 	

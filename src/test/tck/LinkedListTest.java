@@ -185,7 +185,7 @@ public class LinkedListTest extends TestCase {
             assertTrue(q.remove(new Integer(i)));
             assertFalse(q.remove(new Integer(i+1)));
         }
-        assert(q.isEmpty());
+        assertTrue(q.isEmpty());
     }
 	
     public void testContains(){

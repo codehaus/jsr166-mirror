@@ -7,6 +7,7 @@
 
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
+import java.io.*;
 
 public class AtomicReferenceArrayTest extends TestCase 
 {
@@ -83,5 +84,29 @@ public class AtomicReferenceArrayTest extends TestCase
         }
     }
 
+    public void testSerialization() {
+        AtomicReferenceArray l = new AtomicReferenceArray(10); 
+        for (int i = 0; i < 10; ++i) {
+            l.set(i, new Integer(-i));
+        }
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            AtomicReferenceArray r = (AtomicReferenceArray) in.readObject();
+            assertEquals(l.length(), r.length());
+            for (int i = 0; i < 10; ++i) {
+                assertEquals(r.get(i), l.get(i));
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
+    }
 
 }

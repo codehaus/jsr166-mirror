@@ -481,7 +481,7 @@ public class DelayQueueTest extends TestCase {
             assertTrue(q.remove(new PDelay(i)));
             assertFalse(q.remove(new PDelay(i+1)));
         }
-        assert(q.isEmpty());
+        assertTrue(q.isEmpty());
     }
 	
     public void testContains(){

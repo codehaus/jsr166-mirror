@@ -7,6 +7,7 @@
 
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
+import java.io.*;
 
 public class AtomicLongArrayTest extends TestCase 
 {
@@ -143,5 +144,29 @@ public class AtomicLongArrayTest extends TestCase
             assertEquals(1,ai.get(i));
         }
     }
+
+    public void testSerialization() {
+        AtomicLongArray l = new AtomicLongArray(N); 
+        for (int i = 0; i < N; ++i) 
+            l.set(i, -i);
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            AtomicLongArray r = (AtomicLongArray) in.readObject();
+            for (int i = 0; i < N; ++i) {
+                assertEquals(l.get(i), r.get(i));
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
+    }
+
 
 }

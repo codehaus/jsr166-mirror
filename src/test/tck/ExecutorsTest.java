@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.math.BigInteger;
 
 public class ExecutorsTest extends TestCase{
     
@@ -309,6 +310,90 @@ public class ExecutorsTest extends TestCase{
             r.run();
         }
     }
+
+    /**
+     * Check that timeouts from execute will time out if they compute
+     * too long.
+     */
+
+    public void testTimedCallable() {
+        int N = 10000;
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        List<Callable<BigInteger>> tasks = new ArrayList<Callable<BigInteger>>(N);
+        try {
+            long startTime = System.currentTimeMillis();
+            
+            long i = 0;
+            while (tasks.size() < N) {
+                tasks.add(new TimedCallable<BigInteger>(executor, new Fib(i), 1));
+                i += 10;
+            }
+            
+            int iters = 0;
+            BigInteger sum = BigInteger.ZERO;
+            for (Iterator<Callable<BigInteger>> it = tasks.iterator(); it.hasNext();) {
+                try {
+                    ++iters;
+                    sum = sum.add(it.next().call());
+                }
+                catch (TimeoutException success) {
+                    assertTrue(iters > 0);
+                    return;
+                }
+                catch (Exception e) {
+                    fail("unexpected exception: " + e);
+                }
+            }
+            // if by chance we didn't ever time out, total time must be small
+            long elapsed = System.currentTimeMillis() - startTime;
+            assertTrue(elapsed < N);
+        }
+        finally {
+            executor.shutdownNow();
+        }
+    }
+
+    
+    static class TimedCallable<T> implements Callable<T> {
+        private final Executor exec;
+        private final Callable<T> func;
+        private final long msecs;
+        
+        TimedCallable(Executor exec, Callable<T> func, long msecs) {
+            this.exec = exec;
+            this.func = func;
+            this.msecs = msecs;
+        }
+        
+        public T call() throws Exception {
+            Future<T> ftask = Executors.execute(exec, func);
+            try {
+                return ftask.get(msecs, TimeUnit.MILLISECONDS);
+            } finally {
+                ftask.cancel(true);
+            }
+        }
+    }
+
+
+    private static class Fib implements Callable<BigInteger> {
+        private final BigInteger n;
+        Fib(long n) {
+            if (n < 0) throw new IllegalArgumentException("need non-negative arg, but got " + n);
+            this.n = BigInteger.valueOf(n);
+        }
+        public BigInteger call() {
+            BigInteger f1 = BigInteger.ONE;
+            BigInteger f2 = f1;
+            for (BigInteger i = BigInteger.ZERO; i.compareTo(n) < 0; i = i.add(BigInteger.ONE)) {
+                BigInteger t = f1.add(f2);
+                f1 = f2;
+                f2 = t;
+            }
+            return f1;
+        }
+    };
+
 
 
 }

@@ -8,6 +8,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class SemaphoreTest extends TestCase{
 
@@ -193,4 +194,28 @@ public class SemaphoreTest extends TestCase{
             fail("unexpected exception");
         }
     }
+
+    public void testSerialization() {
+        Semaphore l = new Semaphore(3);
+
+        try {
+            l.acquire();
+            l.release();
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            Semaphore r = (Semaphore) in.readObject();
+            assertEquals(3, r.availablePermits());
+            r.acquire();
+            r.release();
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
+    }
+
 }

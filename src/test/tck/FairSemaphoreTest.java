@@ -8,6 +8,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class FairSemaphoreTest extends TestCase{
 
@@ -333,6 +334,29 @@ public class FairSemaphoreTest extends TestCase{
             t.interrupt();
             t.join();
         } catch(InterruptedException e){
+            fail("unexpected exception");
+        }
+    }
+
+    public void testSerialization() {
+        FairSemaphore l = new FairSemaphore(3);
+
+        try {
+            l.acquire();
+            l.release();
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            FairSemaphore r = (FairSemaphore) in.readObject();
+            assertEquals(3, r.availablePermits());
+            r.acquire();
+            r.release();
+        } catch(Exception e){
+            e.printStackTrace();
             fail("unexpected exception");
         }
     }

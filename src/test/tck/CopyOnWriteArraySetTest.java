@@ -8,6 +8,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class CopyOnWriteArraySetTest extends TestCase{
     
@@ -234,6 +235,27 @@ public class CopyOnWriteArraySetTest extends TestCase{
             c.toArray(new Long[5]);
 	    fail("Object[] toArray(Object[]) should throw ArrayStoreException");
         }catch(ArrayStoreException e){}
+    }
+
+    public void testSerialization() {
+        CopyOnWriteArraySet q = fullSet(10);
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(q);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            CopyOnWriteArraySet r = (CopyOnWriteArraySet)in.readObject();
+            assertEquals(q.size(), r.size());
+            assertTrue(q.equals(r));
+            assertTrue(r.equals(q));
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
     }
 
 }

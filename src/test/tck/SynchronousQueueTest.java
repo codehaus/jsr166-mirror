@@ -8,6 +8,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class SynchronousQueueTest extends TestCase {
 
@@ -288,7 +289,7 @@ public class SynchronousQueueTest extends TestCase {
         for (int i = 1; i < N; i+=2) {
             assertFalse(q.remove(new Integer(i)));
         }
-        assert(q.isEmpty());
+        assertTrue(q.isEmpty());
     }
 	
     public void testContains(){
@@ -438,6 +439,25 @@ public class SynchronousQueueTest extends TestCase {
         
         executor.shutdown();
 
+    }
+
+    public void testSerialization() {
+        SynchronousQueue q = new SynchronousQueue();
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(q);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            SynchronousQueue r = (SynchronousQueue)in.readObject();
+            assertEquals(q.size(), r.size());
+            while (!q.isEmpty()) 
+                assertEquals(q.remove(), r.remove());
+        } catch(Exception e){
+            fail("unexpected exception");
+        }
     }
 
 }

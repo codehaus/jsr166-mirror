@@ -8,6 +8,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class ConcurrentLinkedQueueTest extends TestCase {
     private static final int N = 10;
@@ -223,7 +224,7 @@ public class ConcurrentLinkedQueueTest extends TestCase {
             assertTrue(q.remove(new Integer(i)));
             assertFalse(q.remove(new Integer(i+1)));
         }
-        assert(q.isEmpty());
+        assertTrue(q.isEmpty());
     }
 	
     public void testContains(){
@@ -378,5 +379,25 @@ public class ConcurrentLinkedQueueTest extends TestCase {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
     }        
+
+    public void testSerialization() {
+        ConcurrentLinkedQueue q = fullQueue(N);
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(q);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            ConcurrentLinkedQueue r = (ConcurrentLinkedQueue)in.readObject();
+            assertEquals(q.size(), r.size());
+            while (!q.isEmpty()) 
+                assertEquals(q.remove(), r.remove());
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
+    }
 
 }

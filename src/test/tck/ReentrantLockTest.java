@@ -8,6 +8,7 @@
 import junit.framework.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class ReentrantLockTest extends TestCase {
     static int HOLD_COUNT_TEST_LIMIT = 20;
@@ -35,7 +36,7 @@ public class ReentrantLockTest extends TestCase {
 	    rl.unlock();
 	    fail("Should of thown Illegal Monitor State Exception");
 
-	}catch(IllegalMonitorStateException sucess){}
+	} catch(IllegalMonitorStateException success){}
 
 
     }
@@ -54,7 +55,7 @@ public class ReentrantLockTest extends TestCase {
                     try{
 			lock.lockInterruptibly();
 			fail("should throw");
-		    }catch(InterruptedException sucess){}
+		    } catch(InterruptedException success){}
 		}
 	    });
 	t.start();
@@ -76,13 +77,51 @@ public class ReentrantLockTest extends TestCase {
                     try{
 			lock.tryLock(1000,TimeUnit.MILLISECONDS);
 			fail("should throw");
-		    }catch(InterruptedException sucess){}
+		    } catch(InterruptedException success){}
 		}
 	    });
 	t.start();
 	t.interrupt();
     }
 
+
+    public void testTryLockWhenLocked() { 
+	final ReentrantLock lock = new ReentrantLock();
+	lock.lock();
+	Thread t = new Thread(new Runnable() {
+                public void run(){
+                    assertFalse(lock.tryLock());
+		}
+	    });
+        try {
+            t.start();
+            t.join();
+            lock.unlock();
+        } catch(Exception e){
+            fail("unexpected exception");
+        }
+    } 
+
+    public void testTryLock_Timeout(){ 
+	final ReentrantLock lock = new ReentrantLock();
+	lock.lock();
+	Thread t = new Thread(new Runnable() {
+                public void run(){
+		    try {
+                        assertFalse(lock.tryLock(1, TimeUnit.MILLISECONDS));
+                    } catch (Exception ex) {
+                        fail("unexpected exception");
+                    }
+		}
+	    });
+        try {
+            t.start();
+            t.join();
+            lock.unlock();
+        } catch(Exception e){
+            fail("unexpected exception");
+        }
+    } 
     
     public void testGetHoldCount() {
 	ReentrantLock lock = new ReentrantLock();
@@ -124,33 +163,34 @@ public class ReentrantLockTest extends TestCase {
         } catch(Exception e){
             fail("unexpected exception");
         }
-
     }
 
-    /*
-     * current thread locks interruptibly the thread
-     * another thread tries to aquire the lock and blocks 
-     * on the call. interrupt the attempted aquireLock
-     * assert that the first lock() call actually locked the lock
-     * assert that the current thread is the one holding the lock
-     */
 
-    public void testLockedInterruptibly() {
+    public void testLockInterruptibly() {
 	final ReentrantLock lock = new ReentrantLock();	
-	try {lock.lockInterruptibly();} catch(Exception e) {}
+	try {
+            lock.lockInterruptibly();
+        } catch(Exception e) {
+            fail("unexpected exception");
+        }
 	Thread t = new Thread(new Runnable() { 
 		public void run() {
 		    try {
 			lock.lockInterruptibly();
-			fail("Failed to generate an Interrupted Exception");
+			fail("should throw");
 		    }
 		    catch(InterruptedException e) {}
 		}
 	    });
-	t.start();
-	t.interrupt();
-	assertTrue(lock.isLocked());
-	assertTrue(lock.isHeldByCurrentThread());
+        try {
+            t.start();
+            t.interrupt();
+            assertTrue(lock.isLocked());
+            assertTrue(lock.isHeldByCurrentThread());
+            t.join();
+        } catch(Exception e){
+            fail("unexpected exception");
+        }
     }
 
     public void testAwait_IllegalMonitor() {
@@ -405,6 +445,28 @@ public class ReentrantLockTest extends TestCase {
             assertFalse(t2.isAlive());
         }
         catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testSerialization() {
+        ReentrantLock l = new ReentrantLock();
+        l.lock();
+        l.unlock();
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            ReentrantLock r = (ReentrantLock) in.readObject();
+            r.lock();
+            r.unlock();
+        } catch(Exception e){
+            e.printStackTrace();
             fail("unexpected exception");
         }
     }

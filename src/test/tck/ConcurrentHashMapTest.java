@@ -9,6 +9,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.Enumeration;
+import java.io.*;
 
 public class ConcurrentHashMapTest extends TestCase{
     public static void main(String[] args) {
@@ -344,5 +345,27 @@ public class ConcurrentHashMapTest extends TestCase{
             fail("ConcurrentHashMap - Object remove(Object, Object) should throw Null pointer exceptione");
         }catch(NullPointerException e){}
     }
+
+    public void testSerialization() {
+        ConcurrentHashMap q = map5();
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(q);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            ConcurrentHashMap r = (ConcurrentHashMap)in.readObject();
+            assertEquals(q.size(), r.size());
+            assertTrue(q.equals(r));
+            assertTrue(r.equals(q));
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
+    }
+
     
 }

@@ -8,6 +8,7 @@
 
 import junit.framework.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class TimeUnitTest extends TestCase {
       static public boolean DEBUG = false;
@@ -241,4 +242,25 @@ public class TimeUnitTest extends TestCase {
             fail("Unexpected exception");
         }
     }
+
+    public void testSerialization() {
+        TimeUnit q = TimeUnit.MILLISECONDS;
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(q);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            TimeUnit r = (TimeUnit)in.readObject();
+            
+            assertEquals(q.toString(), r.toString());
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
+    }
+
 }

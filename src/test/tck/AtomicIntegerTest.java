@@ -7,6 +7,7 @@
 
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
+import java.io.*;
 
 public class AtomicIntegerTest extends TestCase {
     public static void main (String[] args) {
@@ -113,6 +114,26 @@ public class AtomicIntegerTest extends TestCase {
 	assertEquals(0,ai.incrementAndGet());
 	assertEquals(1,ai.incrementAndGet());
 	assertEquals(1,ai.get());
+    }
+
+    public void testSerialization() {
+        AtomicInteger l = new AtomicInteger();
+
+        try {
+            l.set(22);
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            AtomicInteger r = (AtomicInteger) in.readObject();
+            assertEquals(l.get(), r.get());
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
     }
 
 

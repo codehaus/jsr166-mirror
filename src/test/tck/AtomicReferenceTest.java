@@ -7,6 +7,7 @@
 
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
+import java.io.*;
 
 public class AtomicReferenceTest extends TestCase {
     public static void main (String[] args) {
@@ -69,6 +70,26 @@ public class AtomicReferenceTest extends TestCase {
 	assertEquals(one,ai.getAndSet(zero));
 	assertEquals(zero,ai.getAndSet(m10));
 	assertEquals(m10,ai.getAndSet(one));
+    }
+
+    public void testSerialization() {
+        AtomicReference l = new AtomicReference();
+
+        try {
+            l.set(one);
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            AtomicReference r = (AtomicReference) in.readObject();
+            assertEquals(l.get(), r.get());
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
     }
 
 }

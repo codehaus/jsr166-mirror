@@ -8,6 +8,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 public class CopyOnWriteArrayListTest extends TestCase{
     
@@ -531,6 +532,27 @@ public class CopyOnWriteArrayListTest extends TestCase{
 
             fail("List subList(int, int) should throw IndexOutofBounds exception");
         }catch(IndexOutOfBoundsException e){}
+    }
+
+    public void testSerialization() {
+        CopyOnWriteArrayList q = fullArray(10);
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(q);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            CopyOnWriteArrayList r = (CopyOnWriteArrayList)in.readObject();
+            assertEquals(q.size(), r.size());
+            assertTrue(q.equals(r));
+            assertTrue(r.equals(q));
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("unexpected exception");
+        }
     }
     
 }

@@ -32,7 +32,7 @@ import java.util.Date;
  * See {@link #getHoldCount} for a way to check this.
  *
  *
- * <p><tt>ReentrantLock</tt> instances are intended to be used primarily 
+ * <p><tt>ReentrantLock</tt> instances are intended to be used primarily
  * in before/after constructions such as:
  *
  * <pre>
@@ -40,7 +40,7 @@ import java.util.Date;
  *   ReentrantLock lock;
  *   // ...
  *
- *   public void m() { 
+ *   public void m() {
  *     lock.lock();  // block until condition holds
  *     try {
  *       // ... method body
@@ -51,27 +51,27 @@ import java.util.Date;
  * }
  * </pre>
  *
- * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
+ * <p>Except where noted, passing a <tt>null</tt> value for any parameter
  * will result in a {@link NullPointerException} being thrown.
  *
  * <h3>Implementation Notes</h3>
- * <p>This implementation supports the interruption of lock acquisition and 
- * provides a 
- * {@link #newCondition Condition} implementation that supports the 
+ * <p>This implementation supports the interruption of lock acquisition and
+ * provides a
+ * {@link #newCondition Condition} implementation that supports the
  * interruption of thread suspension.
  * It also favors interruption over normal method return.
  *
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/14 16:36:27 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/31 16:08:12 $
+ * @editor $Author: tim $
  * @author Doug Lea
- * 
+ *
  **/
 public class ReentrantLock implements Lock, java.io.Serializable {
     /*
-      The basic fastpath/slowpath algorithm looks like this, ignoring 
+      The basic fastpath/slowpath algorithm looks like this, ignoring
       reentrance, cancellation, timeouts, error checking etc:
         Lock:
           if (!fair && casOwner(null, currentThread)) // fastpath
@@ -133,8 +133,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         thread.
 
         To enqueue into a CLH lock, you atomically splice it in as new
-        tail. To dequeue, you just set the head field.  
-        
+        tail. To dequeue, you just set the head field.
+
              +------+  prev +-----+       +-----+
         head |      | <---- |     | <---- |     |  tail
              +------+       +-----+       +-----+
@@ -153,7 +153,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         explanation in the case of spin locks, see the papers by Scott
         & Scherer at
         http://www.cs.rochester.edu/u/scott/synchronization/
-        
+
         Being first in the queue does not mean that you have the lock,
         only that you may contend for it (by CAS'ing owner field).  So
         the currently released contender thread may need to rewait.
@@ -198,7 +198,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     */
 
     /**
-     * Node class for threads waiting for locks. 
+     * Node class for threads waiting for locks.
      */
     static class ReentrantLockQueueNode {
         /**
@@ -263,11 +263,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         transient int parkSemaphore;
 
         ReentrantLockQueueNode() { }
-        ReentrantLockQueueNode(Thread t) { 
-            thread = t; 
+        ReentrantLockQueueNode(Thread t) {
+            thread = t;
         }
-        ReentrantLockQueueNode(Thread t, int s) { 
-            thread = t; 
+        ReentrantLockQueueNode(Thread t, int s) {
+            thread = t;
             releaseStatus = s;
         }
     }
@@ -281,7 +281,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * Creates an instance of <tt>ReentrantLock</tt>.
      * This is equivalent to using <tt>ReentrantLock(false)</tt>.
      */
-    public ReentrantLock() { 
+    public ReentrantLock() {
         fair = false;
     }
 
@@ -290,7 +290,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * Creates an instance of <tt>ReentrantLock</tt> with the
      * given fairness policy.
      */
-    public ReentrantLock(boolean fair) { 
+    public ReentrantLock(boolean fair) {
         this.fair = fair;
         if (fair) {// avoid races to detecting first contention
             ReentrantLockQueueNode h = new ReentrantLockQueueNode();
@@ -299,7 +299,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
     }
 
-    /** 
+    /**
      * Current owner of lock, or null iff the lock is free.  Acquired
      * only using CAS.
      */
@@ -312,18 +312,24 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     private final boolean fair;
 
     /** Head of the wait queue, lazily initialized. */
-    private transient volatile ReentrantLockQueueNode head; 
+    private transient volatile ReentrantLockQueueNode head;
 
     /** Tail of the wait queue, lazily initialized.  */
-    private transient volatile ReentrantLockQueueNode tail; 
+    private transient volatile ReentrantLockQueueNode tail;
 
     // Atomics support
 
-    private final static AtomicReferenceFieldUpdater   ownerUpdater = new AtomicReferenceFieldUpdater (new ReentrantLock[0], new Thread[0], "owner");
-    private final static AtomicReferenceFieldUpdater  tailUpdater = new AtomicReferenceFieldUpdater (new ReentrantLock[0], new ReentrantLockQueueNode[0], "tail");
-    private final static AtomicReferenceFieldUpdater   headUpdater = new AtomicReferenceFieldUpdater (new ReentrantLock[0], new ReentrantLockQueueNode[0], "head");
-    private final static AtomicIntegerFieldUpdater  releaseStatusUpdater = 
-        new AtomicIntegerFieldUpdater (new ReentrantLockQueueNode[0], "releaseStatus");
+    private final static AtomicReferenceFieldUpdater<ReentrantLock, Thread> ownerUpdater =
+        new AtomicReferenceFieldUpdater<ReentrantLock, Thread> (new ReentrantLock[0], new Thread[0], "owner");
+
+    private final static AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode> tailUpdater =
+        new AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode> (new ReentrantLock[0], new ReentrantLockQueueNode[0], "tail");
+
+    private final static AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode> headUpdater =
+        new AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode> (new ReentrantLock[0], new ReentrantLockQueueNode[0], "head");
+
+    private final static AtomicIntegerFieldUpdater<ReentrantLockQueueNode> releaseStatusUpdater =
+        new AtomicIntegerFieldUpdater<ReentrantLockQueueNode> (new ReentrantLockQueueNode[0], "releaseStatus");
 
     private boolean acquireOwner(Thread current) {
         return ownerUpdater.compareAndSet(this, null, current);
@@ -359,14 +365,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     private boolean queueEmpty() {
         ReentrantLockQueueNode h = head; // force order of the volatile reads
-        return h == tail; 
+        return h == tail;
     }
 
     /**
      * Throw IllegalMonitorStateException if t not owner
      */
     final void checkOwner(Thread t) {
-        if (owner != t) 
+        if (owner != t)
             throw new IllegalMonitorStateException();
     }
 
@@ -403,8 +409,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @param nanos time to wait, or zero if untimed
      * @return true if lock acquired (can be false only if interruptible)
      */
-    private boolean waitForLock(Thread current, 
-                              ReentrantLockQueueNode node, 
+    private boolean waitForLock(Thread current,
+                              ReentrantLockQueueNode node,
                               boolean interruptible,
                               long nanos) {
         /*
@@ -414,7 +420,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             ++recursions;
             return true;
         }
-        
+
         /*
          * p is our predecessor node, that holds releaseStatus giving
          * permission to try to obtain lock if we are first in queue.
@@ -433,7 +439,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 return true;
             p = enq(node);
         }
-        else 
+        else
             p = node.prev;
 
         boolean wasInterrupted = false;
@@ -449,25 +455,25 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              * lock.  (We must not try to get lock if we are not
              * first.) Note that if we become first after p == head
              * check, all is well -- we can be sure an unlocking
-             * thread will signal us.  
+             * thread will signal us.
              */
             if (p == head && acquireOwner(current)) {
                 head = node;
                 p.next = null;                 // Unlink for GC
                 node.thread = null;
-                node.prev = null; 
+                node.prev = null;
                 if (wasInterrupted)            // Re-interrupt on normal exit
                     current.interrupt();
                 return true;
             }
 
             int releaseStatus = p.releaseStatus;
-            
+
             /*
              * If our predecessor was cancelled, use its predecessor.
              * There will always be a non-cancelled one somewhere
              * because head node is never cancelled, so at worst we
-             * will hit it. 
+             * will hit it.
              */
 
             if (releaseStatus == CANCELLED) {
@@ -503,8 +509,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              *
              */
             else if (casReleaseStatus(p, releaseStatus, -1)) {
-                // If not interruptible, consume interrupt for now 
-                if (!interruptible && Thread.interrupted()) 
+                // If not interruptible, consume interrupt for now
+                if (!interruptible && Thread.interrupted())
                     wasInterrupted = true;
 
                 if (nanos > 0) { // Update and check timeout value
@@ -525,11 +531,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                     else
                         LockSupport.park(node);
                 }
-                
+
                 if (interruptible &&
                          (nanos < 0 || current.isInterrupted())) {
                     node.thread = null;      // disable signals
-                    releaseStatusUpdater.set(node, CANCELLED);  
+                    releaseStatusUpdater.set(node, CANCELLED);
                     signalSuccessor(node);
                     return false;
                 }
@@ -539,20 +545,20 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Signal succeessor of node, if one exists
-     * 
+     *
      * @param node the node
      */
-    private void signalSuccessor(ReentrantLockQueueNode node) { 
+    private void signalSuccessor(ReentrantLockQueueNode node) {
         /*
          * Find successor -- normally just node.next.
-         * But if its is cancelled, traverse through next's. 
+         * But if its is cancelled, traverse through next's.
          */
         ReentrantLockQueueNode s = node.next;
         while (s != null && s.releaseStatus == CANCELLED) {
             node = s;
             s = s.next;
         }
-            
+
         /*
          * If successor appears to be null, check to see if a newly
          * queued node is successor by starting at tail and working
@@ -561,7 +567,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         if (s == null) {
             s = tail;
             for (;;) {
-                /* 
+                /*
                  * If s == node, there is no successor.  And s's
                  * predecessor is null if we are lagging so far behind
                  * the actions of other nodes/threads that an
@@ -569,12 +575,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                  * non-cancelled successor of node. In which case,
                  * there's no live successor.
                  */
-                if (s == node || s == null) 
+                if (s == node || s == null)
                     return;
                 ReentrantLockQueueNode sp = s.prev;
-                if (sp == node) 
+                if (sp == node)
                     break;
-                s = sp; 
+                s = sp;
             }
         }
 
@@ -604,7 +610,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 
     /**
-     * Attempts to release this lock.  
+     * Attempts to release this lock.
      * <p>If the current thread is the
      * holder of this lock then the hold count is decremented. If the
      * hold count is now zero then the lock is released.  If the
@@ -615,7 +621,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void unlock() {
         checkOwner(Thread.currentThread());
-        if (recursions > 0) 
+        if (recursions > 0)
             --recursions;
         else {
             ownerUpdater.set(this, null);
@@ -624,16 +630,16 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Acquire the lock. 
-     * <p>Acquires the lock if it is not held by another thread and returns 
+     * Acquire the lock.
+     * <p>Acquires the lock if it is not held by another thread and returns
      * immediately, setting the lock hold count to one.
      * <p>If the current thread
      * already holds the lock then the hold count is incremented by one and
      * the method returns immediately.
      * <p>If the lock is held by another thread then the
-     * current thread becomes disabled for thread scheduling 
+     * current thread becomes disabled for thread scheduling
      * purposes and lies dormant until the lock has been acquired,
-     * at which time the lock hold count is set to one. 
+     * at which time the lock hold count is set to one.
      */
     public void lock() {
         Thread current = Thread.currentThread();
@@ -642,38 +648,38 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Acquires the lock unless the current thread is 
+     * Acquires the lock unless the current thread is
      * {@link Thread#interrupt interrupted}.
-     * <p>Acquires the lock if it is not held by another thread and returns 
+     * <p>Acquires the lock if it is not held by another thread and returns
      * immediately, setting the lock hold count to one.
-     * <p>If the current thread already holds this lock then the hold count 
+     * <p>If the current thread already holds this lock then the hold count
      * is incremented by one and the method returns immediately.
      * <p>If the lock is held by another thread then the
-     * current thread becomes disabled for thread scheduling 
+     * current thread becomes disabled for thread scheduling
      * purposes and lies dormant until one of two things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
      * <li> Some other thread {@link Thread#interrupt interrupts} the current
      * thread.
      * </ul>
-     * <p>If the lock is acquired by the current thread then the lock hold 
+     * <p>If the lock is acquired by the current thread then the lock hold
      * count is set to one.
      * <p>If the current thread:
      * <ul>
-     * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} while acquiring 
+     * <li>has its interrupted status set on entry to this method; or
+     * <li>is {@link Thread#interrupt interrupted} while acquiring
      * the lock,
      * </ul>
-     * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. 
-     * <p>In this implementation, as this method is an explicit interruption 
-     * point, preference is 
-     * given to responding to the interrupt over normal or reentrant 
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
+     * <p>In this implementation, as this method is an explicit interruption
+     * point, preference is
+     * given to responding to the interrupt over normal or reentrant
      * acquisition of the lock.
      *
      * @throws InterruptedException if the current thread is interrupted
      */
-    public void lockInterruptibly() throws InterruptedException { 
+    public void lockInterruptibly() throws InterruptedException {
         Thread current = Thread.currentThread();
         if (Thread.interrupted())
             throw new InterruptedException();
@@ -697,8 +703,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <p> If the current thread
      * already holds this lock then the hold count is incremented by one and
      * the method returns <tt>true</tt>.
-     * <p>If the lock is held by another thread then this method will return 
-     * immediately with the value <tt>false</tt>.  
+     * <p>If the lock is held by another thread then this method will return
+     * immediately with the value <tt>false</tt>.
      *
      * @return <tt>true</tt>if the lock was free and was acquired by the
      * current thread, or the lock was already held by the current thread; and
@@ -717,17 +723,17 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      *
-     * Acquires the lock if it is not held by another thread within the given 
-     * waiting time and the current thread has not been 
+     * Acquires the lock if it is not held by another thread within the given
+     * waiting time and the current thread has not been
      * {@link Thread#interrupt interrupted}.
-     * <p>Acquires the lock if it is not held by another thread and returns 
-     * immediately with the value <tt>true</tt>, setting the lock hold count 
+     * <p>Acquires the lock if it is not held by another thread and returns
+     * immediately with the value <tt>true</tt>, setting the lock hold count
      * to one.
      * <p> If the current thread
      * already holds this lock then the hold count is incremented by one and
      * the method returns <tt>true</tt>.
      * <p>If the lock is held by another thread then the
-     * current thread becomes disabled for thread scheduling 
+     * current thread becomes disabled for thread scheduling
      * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
@@ -739,19 +745,19 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * the lock hold count is set to one.
      * <p>If the current thread:
      * <ul>
-     * <li>has its interrupted status set on entry to this method; or 
+     * <li>has its interrupted status set on entry to this method; or
      * <li>is {@link Thread#interrupt interrupted} while acquiring
      * the lock,
      * </ul>
-     * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. 
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
-     * The given waiting time is a best-effort lower bound. If the time is 
+     * The given waiting time is a best-effort lower bound. If the time is
      * less than or equal to zero, the method will not wait at all.
-     * <p>In this implementation, as this method is an explicit interruption 
-     * point, preference is 
-     * given to responding to the interrupt over normal or reentrant 
+     * <p>In this implementation, as this method is an explicit interruption
+     * point, preference is
+     * given to responding to the interrupt over normal or reentrant
      * acquisition of the lock, and over reporting the elapse of the waiting
      * time.
      *
@@ -761,7 +767,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *
      * @return <tt>true</tt> if the lock was free and was acquired by the
      * current thread, or the lock was already held by the current thread; and
-     * <tt>false</tt> if the waiting time elapsed before the lock could be 
+     * <tt>false</tt> if the waiting time elapsed before the lock could be
      * acquired.
      *
      * @throws InterruptedException if the current thread is interrupted
@@ -770,7 +776,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
         if (unit == null)
             throw new NullPointerException();
-        if (Thread.interrupted()) 
+        if (Thread.interrupted())
             throw new InterruptedException();
         Thread current = Thread.currentThread();
         if ((!fair || queueEmpty()) && acquireOwner(current))
@@ -779,7 +785,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             ++recursions;
             return true;
         }
-        if (timeout <= 0) 
+        if (timeout <= 0)
             return false;
         if (waitForLock(current, null, true, unit.toNanos(timeout)))
             return true;
@@ -791,7 +797,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Queries the number of holds on this lock by the current thread.
-     * <p>A thread has a hold on a lock for each lock action that is not 
+     * <p>A thread has a hold on a lock for each lock action that is not
      * matched by an unlock action.
      * <p>The hold count information is typically only used for testing and
      * debugging purposes. For example, if a certain section of code should
@@ -802,7 +808,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *   ReentrantLock lock = new ReentrantLock();
      *   // ...
      *
-     *   public void m() { 
+     *   public void m() {
      *     assert lock.getHoldCount() == 0;
      *     lock.lock();
      *     try {
@@ -832,14 +838,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *   ReentrantLock lock = new ReentrantLock();
      *   // ...
      *
-     *   public void m() { 
+     *   public void m() {
      *       assert lock.isHeldByCurrentThread();
      *       // ... method body
      *   }
      * }
      * </pre>
      *
-     * @return <tt>true</tt> if current thread holds this lock and 
+     * @return <tt>true</tt> if current thread holds this lock and
      * <tt>false</tt> otherwise.
      **/
     public boolean isHeldByCurrentThread() {
@@ -850,7 +856,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     /**
      * Queries if this lock is held by any thread. This method is
      * designed for use in monitoring, not for synchronization control.
-     * @return <tt>true</tt> if any thread holds this lock and 
+     * @return <tt>true</tt> if any thread holds this lock and
      * <tt>false</tt> otherwise.
      **/
     public boolean isLocked() {
@@ -858,10 +864,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Returns a {@link Condition} instance for use with this 
+     * Returns a {@link Condition} instance for use with this
      * {@link Lock} instance.
      *
-     * <p>The returned {@link Condition} instance has the same behavior and 
+     * <p>The returned {@link Condition} instance has the same behavior and
      * usage
      * restrictions with this lock as the {@link Object} monitor methods
      * ({@link Object#wait() wait}, {@link Object#notify notify}, and
@@ -892,7 +898,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     // Helper methods for Conditions
 
     /**
-     * Variant of unlock used by condition wait. 
+     * Variant of unlock used by condition wait.
      * Fully unlocks, setting recursions to zero.
      * @return current recursion count.
      */
@@ -907,8 +913,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     /**
      * Re-acquire lock after a wait, resetting recursion count.
      */
-    final void relockAfterWait(Thread current, 
-                               ReentrantLockQueueNode node, 
+    final void relockAfterWait(Thread current,
+                               ReentrantLockQueueNode node,
                                int recs) {
         waitForLock(current, node, false, 0);
         recursions = recs;
@@ -934,10 +940,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (t == w)
                 return true;
         return false;
-    } 
+    }
 
     /**
-     * Transfer a node from a condition queue onto lock queue. 
+     * Transfer a node from a condition queue onto lock queue.
      * Return true if successful.
      */
     final boolean transferForSignal(ReentrantLockQueueNode node) {
@@ -959,12 +965,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * already negative or attempt to set releaseStatus fails,
          * wake up to resynch.
          */
-        
+
         int c = p.releaseStatus;
         if (c == CANCELLED || c < 0 || !casReleaseStatus(p, c, -1)) {
             c = p.releaseStatus;
-            if (c <= 0) 
-                casReleaseStatus(p, c, 1);               
+            if (c <= 0)
+                casReleaseStatus(p, c, 1);
             LockSupport.unpark(node, node.thread);
         }
 
@@ -975,15 +981,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     /**
      * Re-acquire lock after a cancelled wait.
      */
-    final void relockAfterCancelledWait(Thread current, 
-                                        ReentrantLockQueueNode node, 
+    final void relockAfterCancelledWait(Thread current,
+                                        ReentrantLockQueueNode node,
                                        int recs) {
         /*
          * Try to place node on lock queue.  If we lost race to a
          * signal(), then we can't proceed until it succeeds in
          * placing us on lock queue.  So just spin.
          */
-        if (casReleaseStatus(node, ON_CONDITION_QUEUE, 0)) 
+        if (casReleaseStatus(node, ON_CONDITION_QUEUE, 0))
             enq(node);
         else {
             while (!isOnLockQueue(node))
@@ -1017,7 +1023,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         private ReentrantLockQueueNode addWaiter(Thread current) {
             if (current != owner) throw new IllegalMonitorStateException();
             ReentrantLockQueueNode w = new ReentrantLockQueueNode(current, ON_CONDITION_QUEUE);
-            if (lastWaiter == null) 
+            if (lastWaiter == null)
                 firstWaiter = lastWaiter = w;
             else {
                 ReentrantLockQueueNode t = lastWaiter;
@@ -1035,7 +1041,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          */
         private void doSignal(ReentrantLockQueueNode first) {
             do {
-                if ( (firstWaiter = first.nextWaiter) == null) 
+                if ( (firstWaiter = first.nextWaiter) == null)
                     lastWaiter = null;
                 first.nextWaiter = null;
                 if (transferForSignal(first))
@@ -1043,14 +1049,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 first = firstWaiter;
             } while (first != null);
         }
-        
+
         public void signal() {
             checkOwner(Thread.currentThread());
             ReentrantLockQueueNode w = firstWaiter;
             if (w != null)
                 doSignal(w);
         }
-            
+
         public void signalAll() {
             checkOwner(Thread.currentThread());
             // Pull off list all at once and traverse.
@@ -1101,13 +1107,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             boolean wasInterrupted = false;
             while (!isOnLockQueue(w)) {
                 LockSupport.park(w);
-                if (Thread.interrupted()) 
+                if (Thread.interrupted())
                     wasInterrupted = true;
             }
 
             relockAfterWait(current, w, recs);
             // avoid re-interrupts on exit
-            if (wasInterrupted && !current.isInterrupted()) 
+            if (wasInterrupted && !current.isInterrupted())
                 current.interrupt();
         }
 

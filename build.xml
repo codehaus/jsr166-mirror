@@ -324,7 +324,6 @@ ant [target], where target is one of:
       <bootclasspath refid="javac.bootclasspath"/>
       <compilerarg line="${javac.args} ${build.warnings.option}"/>
       <classpath refid="test.classpath"/>
-      <include name="**/*Test.java"/>
 
     </javac>
   </target>
@@ -339,12 +338,11 @@ ant [target], where target is one of:
                     dir="${build.reports.dir}"
                    fork="true">
 
-      <jvmarg value="-Xbootclasspath/p:${product.jar}"/>
-
-      <classpath>
-        <!-- <path refid="test.classpath"/> -->
-        <pathelement location="${build.testcases.dir}"/>
-      </classpath>
+      <!--
+       ! This nastiness is so JUnit can test classes we are inserting
+       ! into the java.* packages.
+       -->
+      <jvmarg value="-Xbootclasspath/p:${product.jar};${build.testcases.dir};${junit.jar}"/>
 
       <formatter type="xml"/>
 
@@ -385,7 +383,7 @@ ant [target], where target is one of:
     <!-- FIXME: this test isn't specific enough -->
     <available property="junit.available"
                classname="junit.framework.TestCase"/>
-    <fail message="Need JUnit 1.8 to run tests" unless="junit.available"/>
+    <fail message="Need JUnit 3.8 to run tests" unless="junit.available"/>
   </target>
 
 

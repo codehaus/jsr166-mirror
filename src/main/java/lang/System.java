@@ -1047,6 +1047,12 @@ public final class System {
 	// as an initializer only if it is called before sun.misc.VM.booted().
  	sun.misc.VM.maxDirectMemory();
 
+	// Set a boolean to determine whether ClassLoader.loadClass accepts
+	// array syntax.  This value is controlled by the system property
+	// "sun.lang.ClassLoader.allowArraySyntax".  This method acts as
+	// an initializer only if it is called before sun.misc.VM.booted().
+	sun.misc.VM.allowArraySyntax();
+
 	// Subsystems that are invoked during initialization can invoke
 	// sun.misc.VM.isBooted() in order to avoid doing things that should
 	// wait until the application class loader has been set up.

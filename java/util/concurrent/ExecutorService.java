@@ -9,22 +9,24 @@ import java.util.List;
 /**
  * An <tt>Executor</tt> that provides lifecycle-management functions. 
  *
- * <p> An <tt>ExecutorService</tt> can be shut down, which will cause it to stop
+ * <p>An <tt>ExecutorService</tt> can be shut down, which will cause it to stop
  * processing submitted tasks.  After being shut down, it will
  * normally reach a quiescent terminal state in which no tasks are executing
  * and no new ones will be processed.
  *
- * <p> Several concrete implementations of <tt>ExecutorService</tt> are
+ * <p>Several concrete implementations of <tt>ExecutorService</tt> are
  * included in <tt>java.util.concurrent</tt>, including <tt>ThreadExecutor</tt>,
  * a flexible thread pool, and <tt>ScheduledExecutor</tt>, which adds support
  * for timed, delayed and periodic task execution.
  *
- * <p> The <tt>Executors</tt> class provides factory methods for all of the
+ * <p>The <tt>Executors</tt> class provides factory methods for all of the
  * types of executors provided in <tt>java.util.concurrent</tt>.
  *
  * @see Executors
  * @since 1.5
  * @spec JSR-166
+ * @revised $Date: 2003/02/19 10:53:58 $
+ * @editor $Author: jozart $
  */
 public interface ExecutorService extends Executor {
 

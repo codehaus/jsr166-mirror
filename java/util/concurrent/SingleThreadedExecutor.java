@@ -12,10 +12,12 @@ package java.util.concurrent;
  * terminates due to a failure during execution, a new thread will take
  * its place if needed to execute subsequent tasks.
  *
+ * @fixme public getQueue?
+ *
  * @since 1.5
  * @spec JSR-166
- *
- * @fixme public getQueue?
+ * @revised $Date: 2003/02/19 10:53:58 $
+ * @editor $Author: jozart $
  */
 public class SingleThreadedExecutor extends ThreadExecutor {
 

@@ -12,6 +12,8 @@ package java.util.concurrent;
  * @see ThreadExecutor
  * @since 1.5
  * @spec JSR-166
+ * @revised $Date: 2003/02/19 10:53:58 $
+ * @editor $Author: jozart $
  */
 public class Executors {
 

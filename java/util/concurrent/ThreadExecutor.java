@@ -12,7 +12,7 @@ import java.util.List;
  * thread for each task, execute tasks sequentially in a single thread, or
  * implement a thread pool with reusable threads.  
  *
- * <p> The most common configuration of ThreadExecutor is a thread
+ * <p>The most common configuration of ThreadExecutor is a thread
  * pool. Thread pools address solve two different problems at the same
  * time: they usually provide faster performance when executing large
  * numbers of asynchronous tasks, due to reduced per-task invocation
@@ -20,7 +20,7 @@ import java.util.List;
  * resources, including threads, consumed in executing a collection of
  * tasks.
  *
- * <p> To be useful across a wide range of contexts, this class
+ * <p>To be useful across a wide range of contexts, this class
  * provides many adjustable parameters and extensibility hooks.
  * However, programmers are urged to use the more convenient factory
  * methods <tt>newCachedThreadPool</tt> (unbounded thread pool, with
@@ -36,7 +36,7 @@ import java.util.List;
  * <tt>Callbacks</tt>, and/or dynamically change tuning
  * parameters.
  *
- * <p> This class also maintain some basic statistics, such as the
+ * <p>This class also maintain some basic statistics, such as the
  * maximum number of active threads, or the maximum queue length, that
  * may be useful for monitoring and tuning executors.
  *
@@ -48,7 +48,7 @@ import java.util.List;
  * are correct.
  * <dl>
  *
- * <dt> Minimum and maximum pool size.  ThreadExecutor will
+ * <dt>Minimum and maximum pool size.  ThreadExecutor will
  * automatically adjust the pool size within the bounds set by
  * minimumPoolSize and maximumPoolSize.  When a new task is submitted,
  * and fewer than the minimum number of threads are running, a new
@@ -58,12 +58,12 @@ import java.util.List;
  * only if all other threads are busy.  By setting minimumPoolSize and
  * maximumPoolSize to N, you create a fixed-size thread pool.
  *
- * <dt> Keep-alive.  The keepAliveTime determines what happens to idle
+ * <dt>Keep-alive.  The keepAliveTime determines what happens to idle
  * threads.  If the pool currently has more than the minimum number of
  * threads, excess threads will be terminated if they have been idle
  * for more than the keepAliveTime.  
  *
- * <dt> Queueing.  You are free to specify the queuing mechanism used
+ * <dt>Queueing.  You are free to specify the queuing mechanism used
  * to handle submitted tasks.  The newCachedThreadPool factory method
  * uses queueless synchronous channels to to hand off work to threads.
  * This is a safe, conservative policy that avoids lockups when
@@ -95,19 +95,19 @@ import java.util.List;
  * sizes, which keeps CPUs busier but may encounter unacceptable
  * scheduling overhead, which also decreases throughput.
  *
- * <dt> Creating new threads.  New threads are created through the
+ * <dt>Creating new threads.  New threads are created through the
  * Callbacks.  By default, threads are created simply with
  * the new Thread(Runnable) constructor, but by overriding
  * Callbacks.newThread, you can alter the thread's name,
  * thread group, priority, daemon status, etc.
  *
- * <dt> Before and after intercepts.  The Callbacks class has
+ * <dt>Before and after intercepts.  The Callbacks class has
  * methods which are called before and after execution of a task.
  * These can be used to manipulate the execution environment (for
  * example, reinitializing ThreadLocals), gather statistics, or
  * perform logging.
  *
- * <dt> Blocked execution.  There are a number of factors which can
+ * <dt>Blocked execution.  There are a number of factors which can
  * bound the number of tasks which can execute at once, including the
  * maximum pool size and the queuing mechanism used.  If you are using
  * a synchronous queue, the execute() method will block until threads
@@ -117,7 +117,7 @@ import java.util.List;
  * refused by the queue and no threads are available, the
  * Callbacks.cannotExecute method will be called.
  *
- * <dt> Termination.  ThreadExecutor supports two shutdown options,
+ * <dt>Termination.  ThreadExecutor supports two shutdown options,
  * immediate and graceful.  In an immediate shutdown, any threads
  * currently executing are interrupted, and any tasks not yet begun
  * are returned from the shutdownNow call.  In a graceful shutdown,
@@ -125,12 +125,14 @@ import java.util.List;
  * submitted.
  * </dl>
  *
+ * @fixme change name to ThreadedExecutor?
+ *
  * @see CannotExecuteHandler
  * @see ThreadFactory
  * @since 1.5
  * @spec JSR-166
- *
- * @fixme change name to ThreadedExecutor?
+ * @revised $Date: 2003/02/19 10:53:58 $
+ * @editor $Author: jozart $
  */
 public class ThreadExecutor implements ExecutorService {
 

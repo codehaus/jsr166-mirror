@@ -1,13 +1,13 @@
 /*
- * @(#)Random.java	1.38 02/03/04
+ * @(#)Random.java	1.39 03/01/23
  *
- * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
 import java.io.*;
-import sun.misc.Unsafe;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * An instance of this class is used to generate a stream of 
@@ -33,7 +33,7 @@ import sun.misc.Unsafe;
  * class <code>Math</code> simpler to use.
  *
  * @author  Frank Yellin
- * @version 1.38, 03/04/02
+ * @version 1.39, 01/23/03
  * @see     java.lang.Math#random()
  * @since   JDK1.0
  */
@@ -42,16 +42,6 @@ class Random implements java.io.Serializable {
     /** use serialVersionUID from JDK 1.1 for interoperability */
     static final long serialVersionUID = 3905348978240129619L;
 
-    // Setup to use Unsafe.compareAndSwapLong to update seed.
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private static final long seedOffset;
-    static {
-      try {
-        seedOffset = 
-          unsafe.objectFieldOffset(Random.class.getDeclaredField("seed"));
-      } catch(Exception ex) { throw new Error(ex); }
-    }
-
     /**
      * The internal state associated with this pseudorandom number generator.
      * (The specs for the methods in this class describe the ongoing
@@ -59,7 +49,7 @@ class Random implements java.io.Serializable {
      *
      * @serial
      */
-    private volatile long seed;
+    private AtomicLong seed;
 
     private final static long multiplier = 0x5DEECE66DL;
     private final static long addend = 0xBL;
@@ -89,6 +79,7 @@ class Random implements java.io.Serializable {
      * @see     java.util.Random#setSeed(long)
      */
     public Random(long seed) {
+        this.seed = new AtomicLong(0L);
         setSeed(seed);
     }
 
@@ -109,14 +100,15 @@ class Random implements java.io.Serializable {
      * an overriding method may use all 64 bits of the long argument
      * as a seed value. 
      *
-     * Note: Even though seed is updated atomically, this method
+     * Note: Although the seed value is an AtomicLong, this method
      *       must still be synchronized to ensure correct semantics
      *       of haveNextNextGaussian.
      *
      * @param   seed   the initial seed.
      */
     synchronized public void setSeed(long seed) {
-        this.seed = (seed ^ multiplier) & mask;
+        seed = (seed ^ multiplier) & mask;
+        this.seed.set(seed);
     	haveNextNextGaussian = false;
     }
 
@@ -147,10 +139,9 @@ class Random implements java.io.Serializable {
     protected int next(int bits) {
         long oldseed, nextseed;
         do {
-          oldseed = seed;
+          oldseed = seed.get();
           nextseed = (oldseed * multiplier + addend) & mask;
-        } while (!unsafe.compareAndSwapLong(this, seedOffset, 
-                                           oldseed, nextseed));
+        } while (!seed.compareAndSet(oldseed, nextseed));
         return (int)(nextseed >>> (48 - bits));
     }
 
@@ -486,7 +477,7 @@ class Random implements java.io.Serializable {
         if (seedVal < 0)
           throw new java.io.StreamCorruptedException(
                               "Random: invalid seed");
-        seed = seedVal;
+        seed = new AtomicLong(seedVal);
         nextNextGaussian = fields.get("nextNextGaussian", 0.0);
         haveNextNextGaussian = fields.get("haveNextNextGaussian", false);
     }
@@ -501,7 +492,7 @@ class Random implements java.io.Serializable {
     synchronized private void writeObject(ObjectOutputStream s) throws IOException {
         // set the values of the Serializable fields
         ObjectOutputStream.PutField fields = s.putFields();
-        fields.put("seed", seed);
+        fields.put("seed", seed.get());
         fields.put("nextNextGaussian", nextNextGaussian);
         fields.put("haveNextNextGaussian", haveNextNextGaussian);
 

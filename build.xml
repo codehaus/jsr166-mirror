@@ -214,6 +214,7 @@
       <exclude name="${release.jar}"/>
       <exclude name="user.properties"/>
       <exclude name="etc/notes/**"/>
+      <exclude name="lib/gjc/2.1/**"/>
     </jar>
 
   </target>
@@ -680,6 +681,15 @@
       <fileset dir="${basedir}/etc/notes"/>
     </copy>
 
+  </target>
+
+
+  <target name="ng" depends="test">
+    <java classname="SuperfluousAbstract" fork="true">
+
+      <jvmarg value="-Xbootclasspath/p:${test.run.bootclasspath}"/>
+
+    </java>
   </target>
 
 

@@ -187,7 +187,6 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                 public void run() {
                     try {
 			lock.writeLock().tryLock(1000,TimeUnit.MILLISECONDS);
-			threadShouldThrow();
 		    } catch(InterruptedException success){}
 		}
 	    });

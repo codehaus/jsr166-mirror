@@ -30,6 +30,30 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
     /**
+     * constructor with null array throws NPE
+     */
+    public void testConstructor2NPE() {
+        try {
+            int[] a = null;
+            AtomicIntegerArray ai = new AtomicIntegerArray(a);
+        } catch (NullPointerException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * constructor with array is of same size and has all elements
+     */
+    public void testConstructor2() {
+        int[] a = { 17, 3, -42, 99, -7};
+        AtomicIntegerArray ai = new AtomicIntegerArray(a);
+        assertEquals(a.length, ai.length());
+        for (int i = 0; i < a.length; ++i) 
+            assertEquals(a[i], ai.get(i));
+    }
+
+    /**
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
     public void testIndexing(){

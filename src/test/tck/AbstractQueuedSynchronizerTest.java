@@ -155,6 +155,18 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     } 
 
     /**
+     * isQueued(null) throws NPE
+     */
+    public void testIsQueuedNPE() { 
+	final Mutex lock = new Mutex();
+        try {
+            lock.isQueued(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        }
+    }
+
+    /**
      * isQueued reports whether a thread is queued.
      */
     public void testIsQueued() { 

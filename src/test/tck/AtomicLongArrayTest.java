@@ -28,6 +28,30 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     }
 
     /**
+     * constructor with null array throws NPE
+     */
+    public void testConstructor2NPE() {
+        try {
+            long[] a = null;
+            AtomicLongArray ai = new AtomicLongArray(a);
+        } catch (NullPointerException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * constructor with array is of same size and has all elements
+     */
+    public void testConstructor2() {
+        long[] a = { 17L, 3L, -42L, 99L, -7L};
+        AtomicLongArray ai = new AtomicLongArray(a);
+        assertEquals(a.length, ai.length());
+        for (int i = 0; i < a.length; ++i) 
+            assertEquals(a[i], ai.get(i));
+    }
+
+    /**
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
     public void testIndexing(){

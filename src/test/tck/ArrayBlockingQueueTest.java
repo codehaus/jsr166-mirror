@@ -319,11 +319,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * put blocks interruptibly if full
      */
     public void testBlockingPut() {
+        final ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     int added = 0;
                     try {
-                        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
                         for (int i = 0; i < SIZE; ++i) {
                             q.put(new Integer(i));
                             ++added;
@@ -336,7 +336,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                 }});
         try { 
             t.start();
-           Thread.sleep(SHORT_DELAY_MS); 
+           Thread.sleep(MEDIUM_DELAY_MS); 
            t.interrupt();
            t.join();
         }

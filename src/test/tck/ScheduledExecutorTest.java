@@ -586,7 +586,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         try {
             p1.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
             ScheduledFuture task =
-                p1.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, TimeUnit.MILLISECONDS);
+                p1.scheduleAtFixedRate(new NoOpRunnable(), 1, 1, TimeUnit.MILLISECONDS);
             assertFalse(task.isCancelled());
             p1.shutdown();
             assertFalse(task.isCancelled());
@@ -594,7 +594,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             assertTrue(p1.isShutdown());
             Thread.sleep(SHORT_DELAY_MS);
             assertFalse(task.isCancelled());
-            task.cancel(true);
+            assertTrue(task.cancel(true));
             assertTrue(task.isDone());
             Thread.sleep(SHORT_DELAY_MS);
             assertTrue(p1.isTerminated());

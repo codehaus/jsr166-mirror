@@ -30,6 +30,31 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
+     * constructor with null array throws NPE
+     */
+    public void testConstructor2NPE() {
+        try {
+            Integer[] a = null;
+            AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
+        } catch (NullPointerException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * constructor with array is of same size and has all elements
+     */
+    public void testConstructor2() {
+        Integer[] a = { two, one, three, four, seven};
+        AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
+        assertEquals(a.length, ai.length());
+        for (int i = 0; i < a.length; ++i) 
+            assertEquals(a[i], ai.get(i));
+    }
+
+
+    /**
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
     public void testIndexing(){

@@ -152,7 +152,7 @@ public class LinkedList<E>
     }
 
     /**
-     * Appends the given element to the end of this list.  (Identical in
+     * Appends the given element at the end of this list.  (Identical in
      * function to the <tt>add</tt> method; included only for consistency.)
      *
      * @param o the element to be inserted at the end of this list.
@@ -184,7 +184,7 @@ public class LinkedList<E>
     }
 
     /**
-     * Appends the specified element to the end of this list.
+     * Appends the specified element at the end of this list.
      *
      * @param o element to be appended to this list.
      * @return <tt>true</tt> (as per the general contract of
@@ -225,7 +225,7 @@ public class LinkedList<E>
     }
 
     /**
-     * Appends all of the elements in the specified collection to the end of
+     * Appends all of the elements in the specified collection at the end of
      * this list, in the order that they are returned by the specified
      * collection's iterator.  The behavior of this operation is undefined if
      * the specified collection is modified while the operation is in
@@ -497,26 +497,26 @@ public class LinkedList<E>
 
     // Deque operations
     /**
-     * Inserts the specified element to the front of this list.
+     * Inserts the specified element at the front of this list.
      *
-     * @param o the element to insert
+     * @param e the element to insert
      * @return <tt>true</tt> (as per the spec for {@link Deque#offerFirst})
      * @since 1.6
      */
-    public boolean offerFirst(E o) {
-        addFirst(o);
+    public boolean offerFirst(E e) {
+        addFirst(e);
         return true;
     }
 
     /**
-     * Inserts the specified element to the end of this list.
+     * Inserts the specified element at the end of this list.
      *
-     * @param o the element to insert
+     * @param e the element to insert
      * @return <tt>true</tt> (as per the spec for {@link Deque#offerLast})
      * @since 1.6
      */
-    public boolean offerLast(E o) {
-        addLast(o);
+    public boolean offerLast(E e) {
+        addLast(e);
         return true;
     }
 
@@ -578,15 +578,15 @@ public class LinkedList<E>
 
     /**
      * Pushes an element onto the stack represented by this list.  In other
-     * words, inserts the element to the front of this list.
+     * words, inserts the element at the front of this list.
      *
      * <p>This method is equivalent to {@link #addFirst}.
      *
-     * @param o the element to push
+     * @param e the element to push
      * @since 1.6
      */
-    public void push(E o) {
-        addFirst(o);
+    public void push(E e) {
+        addFirst(e);
     }
 
     /**

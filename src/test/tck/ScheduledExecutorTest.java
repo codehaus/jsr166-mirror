@@ -29,14 +29,14 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    p1.execute(runnable);
 	    assertFalse(runnable.done);
 	    Thread.sleep(SHORT_DELAY_MS);
-	    p1.shutdown();
+	    try { p1.shutdown(); } catch(SecurityException ok) { return; }
 	    try {
                 Thread.sleep(MEDIUM_DELAY_MS);
             } catch(InterruptedException e){
                 unexpectedException();
             }
 	    assertTrue(runnable.done);
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
             joinPool(p1);
         }
 	catch(Exception e){
@@ -58,7 +58,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
             joinPool(p1);
 	} catch(RejectedExecutionException e){}
 	catch(Exception e){
@@ -79,7 +79,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    assertFalse(runnable.done);
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(runnable.done);
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
             joinPool(p1);
         } catch(Exception e){
             unexpectedException();
@@ -98,7 +98,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(runnable.done);
             h.cancel(true);
-            p1.shutdown();
             joinPool(p1);
         } catch(Exception e){
             unexpectedException();
@@ -117,7 +116,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(runnable.done);
             h.cancel(true);
-            p1.shutdown();
             joinPool(p1);
         } catch(Exception e){
             unexpectedException();
@@ -168,7 +166,9 @@ public class ScheduledExecutorTest extends JSR166TestCase {
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
         } catch(RejectedExecutionException success){
+        } catch (SecurityException ok) {
         }
+        
         joinPool(se);
 
     }
@@ -184,6 +184,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
         } catch(RejectedExecutionException success){
+        } catch (SecurityException ok) {
         }
         joinPool(se);
     }
@@ -199,7 +200,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
         } catch(RejectedExecutionException success){
-        } 
+        } catch (SecurityException ok) {
+        }
          joinPool(se);
     }
 
@@ -214,6 +216,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
                                    MEDIUM_DELAY_MS, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
         } catch(RejectedExecutionException success){
+        } catch (SecurityException ok) {
         } 
         joinPool(se);
     }
@@ -229,6 +232,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
                                       MEDIUM_DELAY_MS, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
         } catch(RejectedExecutionException success){
+        } catch (SecurityException ok) {
         } 
         joinPool(se);
     }
@@ -331,7 +335,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         ThreadFactory tf = new SimpleThreadFactory();
 	ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1, tf);
         assertSame(tf, p.getThreadFactory());
-        p.shutdown();
         joinPool(p);
     }
 
@@ -343,7 +346,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         p.setThreadFactory(tf);
         assertSame(tf, p.getThreadFactory());
-        p.shutdown();
         joinPool(p);
     }
 
@@ -371,7 +373,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             assertFalse(p1.isShutdown());
         }
         finally {
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
         }
 	assertTrue(p1.isShutdown());
     }
@@ -385,7 +387,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         try {
             p1.execute(new SmallRunnable());
         } finally {
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
         }
         try {
 	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -405,7 +407,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             p1.execute(new SmallRunnable());
             assertFalse(p1.isTerminating());
         } finally {
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
         }
         try {
 	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -430,7 +432,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             BlockingQueue<Runnable> q = p1.getQueue();
             assertTrue(q.contains(tasks[4]));
             assertFalse(q.contains(tasks[0]));
-            p1.shutdownNow();
         } catch(Exception e) {
             unexpectedException();
         } finally {
@@ -459,7 +460,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             assertTrue(q.contains((Runnable)tasks[3]));
             assertTrue(p1.remove((Runnable)tasks[3]));
             assertFalse(q.contains((Runnable)tasks[3]));
-            p1.shutdownNow();
         } catch(Exception e) {
             unexpectedException();
         } finally {
@@ -492,7 +492,12 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         for(int i = 0; i < 5; i++)
             p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-        List l = p1.shutdownNow();
+        List l;
+        try {
+            l = p1.shutdownNow();
+        } catch (SecurityException ok) { 
+            return;
+        }
 	assertTrue(p1.isShutdown());
 	assertTrue(l.size() > 0 && l.size() <= 5);
         joinPool(p1);
@@ -511,7 +516,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             ScheduledFuture[] tasks = new ScheduledFuture[5];
             for(int i = 0; i < 5; i++)
                 tasks[i] = p1.schedule(new NoOpRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
             BlockingQueue q = p1.getQueue();
             for (Iterator it = q.iterator(); it.hasNext();) {
                 ScheduledFuture t = (ScheduledFuture)it.next();
@@ -542,7 +547,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             ScheduledFuture[] tasks = new ScheduledFuture[5];
             for(int i = 0; i < 5; i++)
                 tasks[i] = p1.schedule(new NoOpRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
             assertTrue(p1.isShutdown());
             BlockingQueue q = p1.getQueue();
             assertTrue(q.isEmpty());
@@ -565,7 +570,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             p1.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
             ScheduledFuture task =
                 p1.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, TimeUnit.MILLISECONDS);
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
             assertTrue(p1.isShutdown());
             BlockingQueue q = p1.getQueue();
             assertTrue(q.isEmpty());
@@ -588,7 +593,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             ScheduledFuture task =
                 p1.scheduleAtFixedRate(new NoOpRunnable(), 1, 1, TimeUnit.MILLISECONDS);
             assertFalse(task.isCancelled());
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
             assertFalse(task.isCancelled());
             assertFalse(p1.isTerminated());
             assertTrue(p1.isShutdown());
@@ -602,8 +607,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         catch(Exception ex) {
             unexpectedException();
         }
-        finally {
-            p1.shutdownNow();
+        finally { 
+            joinPool(p1);
         }
     }
 

@@ -117,7 +117,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             unexpectedException();
         }
         assertEquals(1, p2.getCompletedTaskCount());
-        p2.shutdown();
+        try { p2.shutdown(); } catch(SecurityException ok) { return; }
         joinPool(p2);
     }
     
@@ -147,7 +147,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         ThreadFactory tf = new SimpleThreadFactory();
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10), tf, new NoOpREHandler());
         assertSame(tf, p.getThreadFactory());
-        p.shutdown();
         joinPool(p);
     }
 
@@ -159,7 +158,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         ThreadFactory tf = new SimpleThreadFactory();
         p.setThreadFactory(tf);
         assertSame(tf, p.getThreadFactory());
-        p.shutdown();
         joinPool(p);
     }
 
@@ -185,7 +183,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         RejectedExecutionHandler h = new NoOpREHandler();
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10), h);
         assertSame(h, p.getRejectedExecutionHandler());
-        p.shutdown();
         joinPool(p);
     }
 
@@ -198,7 +195,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         RejectedExecutionHandler h = new NoOpREHandler();
         p.setRejectedExecutionHandler(h);
         assertSame(h, p.getRejectedExecutionHandler());
-        p.shutdown();
         joinPool(p);
     }
 
@@ -281,7 +277,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         
 	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertFalse(p1.isShutdown());
-        p1.shutdown();
+        try { p1.shutdown(); } catch(SecurityException ok) { return; }
 	assertTrue(p1.isShutdown());
         joinPool(p1);
     }
@@ -296,7 +292,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         try {
             p1.execute(new MediumRunnable());
         } finally {
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
         }
 	try {
 	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -316,7 +312,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             p1.execute(new SmallRunnable());
             assertFalse(p1.isTerminating());
         } finally {
-            p1.shutdown();
+            try { p1.shutdown(); } catch(SecurityException ok) { return; }
         }
         try {
 	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -344,7 +340,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertSame(q, wq);
             assertFalse(wq.contains(tasks[0]));
             assertTrue(wq.contains(tasks[4]));
-            p1.shutdownNow();
         } catch(Exception e) {
             unexpectedException();
         } finally {
@@ -374,7 +369,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertTrue(q.contains(tasks[3]));
             assertTrue(p1.remove(tasks[3]));
             assertFalse(q.contains(tasks[3]));
-            p1.shutdownNow();
         } catch(Exception e) {
             unexpectedException();
         } finally {
@@ -397,7 +391,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         p1.purge();
         long count = p1.getTaskCount();
         assertTrue(count >= 2 && count < 5);
-        p1.shutdownNow();
         joinPool(p1);
     }
 
@@ -412,7 +405,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
                 p1.execute(new MediumPossiblyInterruptedRunnable());
         }
         finally {
-            l = p1.shutdownNow();
+            try {
+                l = p1.shutdownNow();
+            } catch (SecurityException ok) { return; }
+            
         }
 	assertTrue(p1.isShutdown());
 	assertTrue(l.size() <= 4);
@@ -773,7 +769,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             for(int i = 1; i < 5; ++i) {
                 assertTrue(tasks[i].done);
             }
-            p.shutdownNow();
         } catch(RejectedExecutionException ex){
             unexpectedException();
         } finally {
@@ -800,7 +795,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             for(int i = 0; i < 5; ++i){
                 assertFalse(tasks[i].done);
             }
-            p.shutdownNow();
         } catch(RejectedExecutionException ex){
             unexpectedException();
         } finally {
@@ -823,7 +817,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             p.execute(r3);
             assertFalse(p.getQueue().contains(r2));
             assertTrue(p.getQueue().contains(r3));
-            p.shutdownNow();
         } catch(RejectedExecutionException ex){
             unexpectedException();
         } finally {
@@ -837,7 +830,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testRejectedExecutionExceptionOnShutdown() {
         ThreadPoolExecutor tpe = 
             new ThreadPoolExecutor(1,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(1));
-        tpe.shutdown();
+        try { tpe.shutdown(); } catch(SecurityException ok) { return; }
 	try {
 	    tpe.execute(new NoOpRunnable());
 	    shouldThrow();
@@ -853,7 +846,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         RejectedExecutionHandler h = new ThreadPoolExecutor.CallerRunsPolicy();
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
 
-        p.shutdown();
+        try { p.shutdown(); } catch(SecurityException ok) { return; }
 	try {
             TrackedNoOpRunnable r = new TrackedNoOpRunnable();
 	    p.execute(r);
@@ -872,7 +865,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardPolicy();
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
 
-        p.shutdown();
+        try { p.shutdown(); } catch(SecurityException ok) { return; }
 	try {
             TrackedNoOpRunnable r = new TrackedNoOpRunnable();
 	    p.execute(r);
@@ -892,7 +885,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardOldestPolicy();
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
 
-        p.shutdown();
+        try { p.shutdown(); } catch(SecurityException ok) { return; }
 	try {
             TrackedNoOpRunnable r = new TrackedNoOpRunnable();
 	    p.execute(r);
@@ -932,7 +925,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 	    shouldThrow();
 	} catch(IllegalArgumentException success){
         } finally {
-            tpe.shutdown();
+            try { tpe.shutdown(); } catch(SecurityException ok) { return; }
         }
         joinPool(tpe);
     }   
@@ -951,7 +944,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             shouldThrow();
         } catch(IllegalArgumentException success){
         } finally {
-            tpe.shutdown();
+            try { tpe.shutdown(); } catch(SecurityException ok) { return; }
         }
         joinPool(tpe);
     }
@@ -970,7 +963,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             shouldThrow();
         } catch(IllegalArgumentException success){
         } finally {
-            tpe.shutdown();
+            try { tpe.shutdown(); } catch(SecurityException ok) { return; }
         }
         joinPool(tpe);
     }
@@ -991,7 +984,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             shouldThrow();
         } catch(IllegalArgumentException success){
         } finally {
-            tpe.shutdown();
+            try { tpe.shutdown(); } catch(SecurityException ok) { return; }
         }
         joinPool(tpe);
     }
@@ -1001,7 +994,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testTerminated() {
         ExtendedTPE tpe = new ExtendedTPE();
-        tpe.shutdown();
+        try { tpe.shutdown(); } catch(SecurityException ok) { return; }
         assertTrue(tpe.terminatedCalled);
         joinPool(tpe);
     }
@@ -1018,7 +1011,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertTrue(r.done);
             assertTrue(tpe.beforeCalled);
             assertTrue(tpe.afterCalled);
-            tpe.shutdown();
+            try { tpe.shutdown(); } catch(SecurityException ok) { return; }
         }
         catch(Exception ex) {
             unexpectedException();

@@ -94,8 +94,12 @@ public class JSR166TestCase extends TestCase {
         if (args.length > 0) 
             iters = Integer.parseInt(args[0]);
         Test s = suite();
-        for (int i = 0; i < iters; ++i) 
+        for (int i = 0; i < iters; ++i) {
             junit.textui.TestRunner.run (s);
+            System.gc();
+            System.runFinalization();
+        }
+        System.exit(0);
     }
 
     /**
@@ -283,6 +287,8 @@ public class JSR166TestCase extends TestCase {
         try {
             exec.shutdown();
             assertTrue(exec.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+        } catch(SecurityException ok) {
+            // Allowed in case test doesn't have privs
         } catch(InterruptedException ie) {
             fail("Unexpected exception");
         }

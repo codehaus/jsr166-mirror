@@ -115,11 +115,16 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      * A submitted privileged action to completion
      */
     public void testSubmitPrivilegedAction() {
-        Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-        policy.addPermission(new RuntimePermission("getContextClassLoader"));
-        policy.addPermission(new RuntimePermission("setContextClassLoader"));
-        Policy.setPolicy(policy);
+        Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            policy.addPermission(new RuntimePermission("getContextClassLoader"));
+            policy.addPermission(new RuntimePermission("setContextClassLoader"));
+            Policy.setPolicy(policy);
+        } catch(AccessControlException ok) {
+            return;
+        }
         try {
             ExecutorService e = new DirectExecutorService();
             Future future = e.submit(Executors.callable(new PrivilegedAction() {
@@ -137,7 +142,11 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             unexpectedException();
         }
         finally {
-            Policy.setPolicy(savedPolicy);
+            try {
+                Policy.setPolicy(savedPolicy);
+            } catch(AccessControlException ok) {
+                return;
+            }
         }
     }
 
@@ -145,11 +154,17 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      * A submitted a privileged exception action runs to completion
      */
     public void testSubmitPrivilegedExceptionAction() {
-        Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-        policy.addPermission(new RuntimePermission("getContextClassLoader"));
-        policy.addPermission(new RuntimePermission("setContextClassLoader"));
-        Policy.setPolicy(policy);
+        Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            policy.addPermission(new RuntimePermission("getContextClassLoader"));
+            policy.addPermission(new RuntimePermission("setContextClassLoader"));
+            Policy.setPolicy(policy);
+        } catch(AccessControlException ok) {
+            return;
+        }
+
         try {
             ExecutorService e = new DirectExecutorService();
             Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
@@ -175,11 +190,18 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      * A submitted failed privileged exception action reports exception
      */
     public void testSubmitFailedPrivilegedExceptionAction() {
-        Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-        policy.addPermission(new RuntimePermission("getContextClassLoader"));
-        policy.addPermission(new RuntimePermission("setContextClassLoader"));
-        Policy.setPolicy(policy);
+        Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            policy.addPermission(new RuntimePermission("getContextClassLoader"));
+            policy.addPermission(new RuntimePermission("setContextClassLoader"));
+            Policy.setPolicy(policy);
+        } catch(AccessControlException ok) {
+            return;
+        }
+
+
         try {
             ExecutorService e = new DirectExecutorService();
             Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {

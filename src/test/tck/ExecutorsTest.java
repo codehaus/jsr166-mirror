@@ -69,7 +69,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
-        e.shutdown();
+        joinPool(e);
     }
 
     /**
@@ -80,7 +80,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
-        e.shutdown();
+        joinPool(e);
     }
 
     /**
@@ -104,7 +104,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
-        e.shutdown();
+        joinPool(e);
     }
 
     /**
@@ -115,7 +115,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
-        e.shutdown();
+        joinPool(e);
     }
 
     /**
@@ -152,7 +152,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
-        e.shutdown();
+        joinPool(e);
     }
 
     /**
@@ -163,7 +163,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
-        e.shutdown();
+        joinPool(e);
     }
 
     /**
@@ -199,7 +199,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
-        e.shutdown();
+        joinPool(e);
     }
 
     /**
@@ -237,7 +237,6 @@ public class ExecutorsTest extends JSR166TestCase{
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
-            p1.shutdown();
             joinPool(p1);
 	} catch(RejectedExecutionException e){}
 	catch(Exception e){
@@ -258,7 +257,6 @@ public class ExecutorsTest extends JSR166TestCase{
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
-            p1.shutdown();
             joinPool(p1);
 	} catch(RejectedExecutionException e){}
 	catch(Exception e){
@@ -279,7 +277,6 @@ public class ExecutorsTest extends JSR166TestCase{
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
-            p1.shutdown();
             joinPool(p1);
 	} catch(RejectedExecutionException e){}
 	catch(Exception e){
@@ -357,7 +354,11 @@ public class ExecutorsTest extends JSR166TestCase{
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
         
         e.execute(r);
-        e.shutdown();
+        try {
+            e.shutdown();
+        } catch(SecurityException ok) {
+        }
+        
         try {
             Thread.sleep(SHORT_DELAY_MS);
         } catch (Exception eX) {
@@ -373,11 +374,16 @@ public class ExecutorsTest extends JSR166TestCase{
      * access control context and context class loader
      */
     public void testPrivilegedThreadFactory() {
-        Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-        policy.addPermission(new RuntimePermission("getContextClassLoader"));
-        policy.addPermission(new RuntimePermission("setContextClassLoader"));
-        Policy.setPolicy(policy);
+        Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            policy.addPermission(new RuntimePermission("getContextClassLoader"));
+            policy.addPermission(new RuntimePermission("setContextClassLoader"));
+            Policy.setPolicy(policy);
+        } catch (AccessControlException ok) {
+            return;
+        }
         final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
         final ClassLoader thisccl = Thread.currentThread().getContextClassLoader();
         final AccessControlContext thisacc = AccessController.getContext();
@@ -400,12 +406,16 @@ public class ExecutorsTest extends JSR166TestCase{
 		    } catch(SecurityException ok) {
 			// Also pass if not allowed to change settings
 		    }
+                }
             };
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
         
         Policy.setPolicy(savedPolicy);
         e.execute(r);
-        e.shutdown();
+        try {
+            e.shutdown();
+        } catch(SecurityException ok) {
+        }
         try {
             Thread.sleep(SHORT_DELAY_MS);
         } catch (Exception ex) {
@@ -430,9 +440,15 @@ public class ExecutorsTest extends JSR166TestCase{
      * privilegedCallableUsingCurrentClassLoader throws ACE
      */
     public void testCreatePrivilegedCallableUsingCCLWithNoPrivs() {
-	Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-	Policy.setPolicy(policy);
+	Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            Policy.setPolicy(policy);
+        } catch (AccessControlException ok) {
+            return;
+        }
+
         try {
             Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
             shouldThrow();
@@ -450,11 +466,17 @@ public class ExecutorsTest extends JSR166TestCase{
      * privilegedCallableUsingCurrentClassLoader throws ACE
      */
     public void testprivilegedCallableUsingCCLWithPrivs() {
-	Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-        policy.addPermission(new RuntimePermission("getContextClassLoader"));
-        policy.addPermission(new RuntimePermission("setContextClassLoader"));
-	Policy.setPolicy(policy);
+	Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            policy.addPermission(new RuntimePermission("getContextClassLoader"));
+            policy.addPermission(new RuntimePermission("setContextClassLoader"));
+            Policy.setPolicy(policy);
+        } catch (AccessControlException ok) {
+            return;
+        }
+            
         try {
             Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
             task.call();
@@ -470,9 +492,15 @@ public class ExecutorsTest extends JSR166TestCase{
      * Without permissions, calling privilegedCallable throws ACE
      */
     public void testprivilegedCallableWithNoPrivs() {
-        Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-        Policy.setPolicy(policy);
+	Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            Policy.setPolicy(policy);
+        } catch (AccessControlException ok) {
+            return;
+        }
+
         Callable task = Executors.privilegedCallable(new CheckCCL());
         Policy.setPolicy(savedPolicy);
         try {
@@ -489,11 +517,17 @@ public class ExecutorsTest extends JSR166TestCase{
      * With permissions, calling privilegedCallable succeeds
      */
     public void testprivilegedCallableWithPrivs() {
-	Policy savedPolicy = Policy.getPolicy();
-        AdjustablePolicy policy = new AdjustablePolicy();
-        policy.addPermission(new RuntimePermission("getContextClassLoader"));
-        policy.addPermission(new RuntimePermission("setContextClassLoader"));
-	Policy.setPolicy(policy);
+	Policy savedPolicy = null;
+        try {
+            savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy();
+            policy.addPermission(new RuntimePermission("getContextClassLoader"));
+            policy.addPermission(new RuntimePermission("setContextClassLoader"));
+            Policy.setPolicy(policy);
+        } catch (AccessControlException ok) {
+            return;
+        }
+            
         Callable task = Executors.privilegedCallable(new CheckCCL());
         try {
             task.call();

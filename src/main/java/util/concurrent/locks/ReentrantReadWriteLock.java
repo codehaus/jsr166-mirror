@@ -155,6 +155,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     private final ReentrantReadWriteLock.ReadLock readerLock = new ReadLock();
     /** Inner class providing writelock */
     private final ReentrantReadWriteLock.WriteLock writerLock = new WriteLock();
+    /** Performs all synchronization mechanics */
     private final Sync sync;
 
     /**
@@ -181,6 +182,220 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     public ReentrantReadWriteLock.ReadLock readLock() { 
         return readerLock; 
+    }
+
+    /** 
+     * Synchronization implementation for ReentrantReadWriteLock 
+     */
+    private final static class Sync extends AbstractQueuedSynchronizer {
+        /** true if barging disabled */
+        final boolean fair;
+        /** Current (exclusive) owner thread */
+        private transient Thread owner;
+
+        Sync() { this.fair = false; }
+        Sync(boolean fair) { this.fair = fair; }
+
+        /* 
+         * Shared vs write count extraction constants and functions.  Lock
+         * state is logically divided into two shorts: The lower one
+         * representing the exclusive (writer) lock hold count, and the
+         * upper the shared (reader) hold count.
+         */
+
+        static final int SHARED_SHIFT   = 16;
+        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+
+        /**
+         * Return true if count indicates lock is held in exclusive mode
+         * @param c a lock status count
+         * @return true if count indicates lock is held in exclusive mode
+         */
+        boolean isExclusive(int c) { 
+            return (c & EXCLUSIVE_MASK) != 0; 
+        }
+
+        /**
+         * Return the number of shared holds represented in count
+         */
+        int sharedCount(int c)  { 
+            return c >>> SHARED_SHIFT; 
+        }
+
+        /**
+         * Return the number of exclusive holds represented in count
+         */
+        int exclusiveCount(int c) { 
+            return c & EXCLUSIVE_MASK; 
+        }
+
+        /**
+         * Fast path for write locks
+         */
+        boolean fastAcquireExclusive(boolean enforceFairness) {
+            final AtomicInteger count = state();
+            if ((!enforceFairness || !hasQueuedThreads()) && 
+                count.compareAndSet(0, 1)) {
+                owner = Thread.currentThread();
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Fast path for read locks
+         */
+        boolean fastAcquireShared(boolean enforceFairness) {
+            if (!enforceFairness || !hasQueuedThreads()) {
+                final AtomicInteger count = state();
+                int c = count.get();
+                if (!isExclusive(c) && 
+                    count.compareAndSet(c, c + SHARED_UNIT))
+                    return true;
+            }
+            return false;
+        }
+
+        public final int acquireExclusiveState(boolean isQueued, 
+                                               int acquires, 
+                                               Thread current) {
+            final AtomicInteger count = state();
+            boolean nobarge = !isQueued && fair;
+            for (;;) {
+                int c = count.get();
+                int w = exclusiveCount(c);
+                int r = sharedCount(c);
+                if (r != 0)
+                    return -1;
+                if (w != 0) {
+                    if (current != owner)
+                        return -1;
+                    if (w + acquires >= SHARED_UNIT)
+                        throw new Error("Maximum lock count exceeded");
+                    if (count.compareAndSet(c, c + acquires)) 
+                        return 0;
+                }
+                else {
+                    if (nobarge && hasQueuedThreads())
+                        return -1;
+                    if (count.compareAndSet(c, c + acquires)) {
+                        owner = current;
+                        return 0;
+                    }
+                }
+                // Recheck count if lost any of the above CAS's
+            }
+        }
+
+        public final boolean releaseExclusiveState(int releases) {
+            final AtomicInteger count = state();
+            Thread current = Thread.currentThread();
+            int c = count.get();
+            int w = exclusiveCount(c) - releases;
+            if (w < 0 || owner != current)
+                throw new IllegalMonitorStateException();
+            if (w == 0) 
+                owner = null;
+            count.set(c - releases);
+            return w == 0;
+        }
+
+        public final int acquireSharedState(boolean isQueued, int acquires, 
+                                            Thread current) {
+            final AtomicInteger count = state();
+            boolean nobarge = !isQueued && fair;
+            for (;;) {
+                int c = count.get();
+                int w = exclusiveCount(c);
+                int r = sharedCount(c);
+                if (w != 0 && current != owner)
+                    return -1;
+                if (nobarge && !hasQueuedThreads())
+                    return -1;
+                int nextc = c + acquires * SHARED_UNIT;
+                if (nextc < c)
+                    throw new Error("Maximum lock count exceeded");
+                if (count.compareAndSet(c, nextc)) 
+                    return 1;
+            }
+            // Recheck count if lost CAS
+        }
+
+        public final boolean releaseSharedState(int releases) {
+            final AtomicInteger count = state();
+            for (;;) {
+                int c = count.get();
+                int nextc = c - releases * SHARED_UNIT;
+                if (nextc < 0)
+                    throw new IllegalMonitorStateException();
+                if (count.compareAndSet(c, nextc)) 
+                    return nextc == 0;
+            }
+        }
+    
+        public final void checkConditionAccess(Thread thread, boolean waiting) {
+            int c = state().get();
+            if (exclusiveCount(c) == 0 ||
+                (waiting && sharedCount(c) != 0))
+                throw new IllegalMonitorStateException();
+        }
+
+        // Methods relayed out to Outer class
+
+        void lockShared() { 
+            if (!fastAcquireShared(fair))
+                acquireSharedUninterruptibly(1);
+        }
+
+        void lockExclusive() {
+            if (!fastAcquireExclusive(fair))
+                acquireExclusiveUninterruptibly(1);
+        }
+
+        AbstractQueuedSynchronizer.ConditionObject newCondition() { 
+            return new ConditionObject(); 
+        }
+
+        Thread getOwner() {
+            return (exclusiveCount(state().get()) != 0)? owner : null;
+        }
+        
+        int getReadLockCount() {
+            return sharedCount(state().get());
+        }
+        
+        boolean isWriteLocked() {
+            return exclusiveCount(state().get()) != 0;
+        }
+
+        boolean isWriteLockedByCurrentThread() {
+            return getOwner() == Thread.currentThread();
+        }
+
+        int getWriteHoldCount() {
+            int c = exclusiveCount(state().get());
+            return (owner == Thread.currentThread())? c : 0;
+        }
+
+        Collection<Thread> getQueuedWriterThreads() {
+            return getQueuedThreads(false);
+        }
+
+        Collection<Thread> getQueuedReaderThreads() {
+            return getQueuedThreads(true);
+        }
+
+        /**
+         * Reconstitute this lock instance from a stream
+         * @param s the stream
+         */
+        private void readObject(java.io.ObjectInputStream s)
+            throws java.io.IOException, ClassNotFoundException {
+            s.defaultReadObject();
+            state().set(0); // reset to unlocked state
+        }
+        
     }
 
     /**
@@ -584,10 +799,42 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         /**
          * Returns a {@link Condition} instance for use with this
          * {@link Lock} instance. 
+         * <p>The returned {@link Condition} instance supports the same
+         * usages as do the {@link Object} monitor methods ({@link
+         * Object#wait() wait}, {@link Object#notify notify}, and {@link
+         * Object#notifyAll notifyAll}) when used with the built-in
+         * monitor lock.
+         *
+         * <ul>
+         *
+         * <li>If this write lock is not held when any {@link
+         * Condition} method is called, or if any read locks are held
+         * when a {@link Condition#await() waiting} method is called
+         * then an {@link IllegalMonitorStateException} is thrown.
+         *
+         * <li>When the condition {@link Condition#await() waiting}
+         * methods are called the write lock is released and, before
+         * they return, the write lock is reacquired and the lock hold
+         * count restored to what it was when the method was called.
+         *
+         * <li>If a thread is {@link Thread#interrupt interrupted} while
+         * waiting then the wait will terminate, an {@link
+         * InterruptedException} will be thrown, and the thread's
+         * interrupted status will be cleared.
+         *
+         * <li> Waiting threads are signalled in FIFO order
+         *
+         * <li>The ordering of lock reacquisition for threads returning
+         * from waiting methods is the same as for threads initially
+         * acquiring the lock, which is in the default case not specified,
+         * but for <em>fair</em> locks favors those threads that have been
+         * waiting the longest.
+         * 
+         * </ul>
          * @return the Condition object
          */
-        public WriterConditionObject newCondition() { 
-            return new WriterConditionObject(sync.newCondition());
+        public Condition newCondition() { 
+            return sync.newCondition();
         }
     }
 
@@ -688,27 +935,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Returns a collection containing those threads that may be
-     * waiting on the given Condition.  Because the actual set of
-     * threads may change dynamically while constructing this
-     * result, the returned collection is only a best-effort
-     * estimate. The elements of the returned collection are in no
-     * particular order.  This method is designed to facilitate
-     * construction of subclasses that provide more extensive
-     * condition monitoring facilities.
-     * @param condition the condition
-     * @return the collection of threads
-     * @throws IllegalMonitorStateException if this lock is not held.
-     * @throws IllegalArgumentException if the given condition is
-     * not associated by this lock
-     */
-    protected Collection<Thread> getWaitingThreads(WriterConditionObject condition) {
-        if (condition.getOwner() != sync)
-            throw new IllegalArgumentException("not owner");
-        return condition.getWaitingThreads();
-    }
-
-    /**
      * Queries whether any threads are waiting to acquire. Note that
      * because cancellations may occur at any time, a <tt>true</tt>
      * return does not guarantee that any other thread will ever
@@ -718,10 +944,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * @return true if there may be other threads waiting to acquire
      * the lock.
      */
-    public final boolean hasWaiters() { 
-        return sync.hasWaiters();
+    public final boolean hasQueuedThreads() { 
+        return sync.hasQueuedThreads();
     }
-
 
     /**
      * Returns an estimate of the number of threads waiting to
@@ -750,514 +975,67 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         return sync.getQueuedThreads();
     }
 
-    /** 
-     * Synchronization implementation for ReentrantReadWriteLock 
-     */
-    private final static class Sync extends AbstractQueuedSynchronizer {
-        /** true if barging disabled */
-        final boolean fair;
-        /** Current (exclusive) owner thread */
-        private transient Thread owner;
-
-        Sync() { this.fair = false; }
-        Sync(boolean fair) { this.fair = fair; }
-
-        /* 
-         * Shared vs write count extraction constants and functions.  Lock
-         * state is logically divided into two shorts: The lower one
-         * representing the exclusive (writer) lock hold count, and the
-         * upper the shared (reader) hold count.
-         */
-
-        static final int SHARED_SHIFT   = 16;
-        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
-
-        /**
-         * Return true if count indicates lock is held in exclusive mode
-         * @param c a lock status count
-         * @return true if count indicates lock is held in exclusive mode
-         */
-        boolean isExclusive(int c) { 
-            return (c & EXCLUSIVE_MASK) != 0; 
-        }
-
-        /**
-         * Return the number of shared holds represented in count
-         */
-        int sharedCount(int c)  { 
-            return c >>> SHARED_SHIFT; 
-        }
-
-        /**
-         * Return the number of exclusive holds represented in count
-         */
-        int exclusiveCount(int c) { 
-            return c & EXCLUSIVE_MASK; 
-        }
-
-        /**
-         * Fast path for write locks
-         */
-        boolean fastAcquireExclusive(boolean enforceFairness) {
-            final AtomicInteger count = getState();
-            if ((!enforceFairness || !hasWaiters()) && 
-                count.compareAndSet(0, 1)) {
-                owner = Thread.currentThread();
-                return true;
-            }
-            return false;
-        }
-
-        /**
-         * Fast path for read locks
-         */
-        boolean fastAcquireShared(boolean enforceFairness) {
-            if (!enforceFairness || !hasWaiters()) {
-                final AtomicInteger count = getState();
-                int c = count.get();
-                if (!isExclusive(c) && 
-                    count.compareAndSet(c, c + SHARED_UNIT))
-                    return true;
-            }
-            return false;
-        }
-
-        public final int acquireExclusiveState(boolean isQueued, 
-                                               int acquires, 
-                                               Thread current) {
-            final AtomicInteger count = getState();
-            boolean nobarge = !isQueued && fair;
-            for (;;) {
-                int c = count.get();
-                int w = exclusiveCount(c);
-                int r = sharedCount(c);
-                if (r != 0)
-                    return -1;
-                if (w != 0) {
-                    if (current != owner)
-                        return -1;
-                    if (w + acquires >= SHARED_UNIT)
-                        throw new Error("Maximum lock count exceeded");
-                    if (count.compareAndSet(c, c + acquires)) 
-                        return 0;
-                }
-                else {
-                    if (nobarge && hasWaiters())
-                        return -1;
-                    if (count.compareAndSet(c, c + acquires)) {
-                        owner = current;
-                        return 0;
-                    }
-                }
-                // Recheck count if lost any of the above CAS's
-            }
-        }
-
-        public final boolean releaseExclusiveState(int releases) {
-            final AtomicInteger count = getState();
-            Thread current = Thread.currentThread();
-            int c = count.get();
-            int w = exclusiveCount(c) - releases;
-            if (w < 0 || owner != current)
-                throw new IllegalMonitorStateException();
-            if (w == 0) 
-                owner = null;
-            count.set(c - releases);
-            return w == 0;
-        }
-
-        public final int acquireSharedState(boolean isQueued, int acquires, 
-                                            Thread current) {
-            final AtomicInteger count = getState();
-            boolean nobarge = !isQueued && fair;
-            for (;;) {
-                int c = count.get();
-                int w = exclusiveCount(c);
-                int r = sharedCount(c);
-                if (w != 0 && current != owner)
-                    return -1;
-                if (nobarge && !hasWaiters())
-                    return -1;
-                int nextc = c + acquires * SHARED_UNIT;
-                if (nextc < c)
-                    throw new Error("Maximum lock count exceeded");
-                if (count.compareAndSet(c, nextc)) 
-                    return 1;
-            }
-            // Recheck count if lost any of the above CAS's
-        }
-
-        public final boolean releaseSharedState(int releases) {
-            final AtomicInteger count = getState();
-            for (;;) {
-                int c = count.get();
-                int nextc = c - releases * SHARED_UNIT;
-                if (nextc < 0)
-                    throw new IllegalMonitorStateException();
-                if (count.compareAndSet(c, nextc)) 
-                    return nextc == 0;
-            }
-        }
-    
-        public final void checkConditionAccess(Thread thread, boolean waiting) {
-            int c = getState().get();
-            boolean ok = exclusiveCount(c) != 0;
-            if (ok && waiting && sharedCount(c) != 0)
-                ok = false;
-            if (!ok || owner != thread) 
-                throw new IllegalMonitorStateException();
-        }
-
-        // Methods relayed out to Outer class
-
-        void lockShared() { 
-            if (!fastAcquireShared(fair))
-                acquireSharedUninterruptibly(1);
-        }
-
-        void lockExclusive() {
-            if (!fastAcquireExclusive(fair))
-                acquireExclusiveUninterruptibly(1);
-        }
-
-        AbstractQueuedSynchronizer.ConditionObject newCondition() { 
-            return new ConditionObject(this); 
-        }
-
-        Thread getOwner() {
-            return (exclusiveCount(getState().get()) != 0)? owner : null;
-        }
-        
-        int getReadLockCount() {
-            return sharedCount(getState().get());
-        }
-        
-        boolean isWriteLocked() {
-            return exclusiveCount(getState().get()) != 0;
-        }
-
-        boolean isWriteLockedByCurrentThread() {
-            return getOwner() == Thread.currentThread();
-        }
-
-        int getWriteHoldCount() {
-            int c = exclusiveCount(getState().get());
-            return (owner == Thread.currentThread())? c : 0;
-        }
-
-        Collection<Thread> getQueuedWriterThreads() {
-            return getQueuedThreads(false);
-        }
-
-        Collection<Thread> getQueuedReaderThreads() {
-            return getQueuedThreads(true);
-        }
-
-        Collection<Thread> getWaitingThreads(WriterConditionObject condition) {
-            if (condition.getOwner() != this)
-                throw new IllegalArgumentException("not owner");
-            return condition.getWaitingThreads();
-        }
-
-        /**
-         * Reconstitute this lock instance from a stream
-         * @param s the stream
-         */
-        private void readObject(java.io.ObjectInputStream s)
-            throws java.io.IOException, ClassNotFoundException {
-            s.defaultReadObject();
-            getState().set(0); // reset to unlocked state
-        }
-        
+    /**
+     * Queries whether any threads are waiting on the given
+     * condition. Note that because timeouts and interrupts may
+     * occur at any time, a <tt>true</tt> return does not
+     * guarantee that a future <tt>signal</tt> will awaken any
+     * threads.  This method is designed primarily for use in
+     * monitoring of the system state.
+     * @param condition the condition
+     * @return <tt>true</tt> if there are any waiting threads.
+     * @throws IllegalMonitorStateException if this lock 
+     * is not held
+     * @throws IllegalArgumentException if the given condition is
+     * not associated with this lock
+     */ 
+    public boolean hasWaiters(Condition condition) {
+        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
+            throw new IllegalArgumentException("not owner");
+        return sync.hasWaiters((AbstractQueuedSynchronizer.ConditionObject)condition);
     }
 
     /**
-     * Condition implementation for Write locks.  This class supports
-     * the same basic semantics and styles of usage as the {@link
-     * Object} monitor methods.  Methods may be invoked only when
-     * exclusively holding the write lock associated with this
-     * Condition, and not holding any read locks. Failure to comply
-     * results in {@link IllegalMonitorStateException}.
-     */
-    public static class WriterConditionObject implements Condition {
-        private final AbstractQueuedSynchronizer.ConditionObject cond;
-        WriterConditionObject(AbstractQueuedSynchronizer.ConditionObject cond) {
-            this.cond = cond;
-        }
-
-        /**
-         * Wakes up one waiting thread.
-         *
-         * <p>If any threads are waiting on this condition then one is
-         * selected for waking up.  This implementation always chooses
-         * to wake up the longest-waiting thread whose wait has not
-         * been interrupted or timed out.  That thread must then
-         * re-acquire the lock before it returns. The order in which
-         * it will do so is the same as that for threads initially
-         * acquiring the lock, which is in the default case not
-         * specified, but for <em>fair</em> locks favors those threads
-         * that have been waiting the longest. Note that an awakened
-         * thread can return, at the soonest, only after the current
-         * thread releases the lock associated with this Condition.
-         * 
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         **/
-        public void signal() { cond.signal(); }
-
-        /**
-         * Wake up all waiting threads.
-         *
-         * <p>If any threads are waiting on this condition then they
-         * are all woken up. Each thread must re-acquire the lock
-         * before it returns.
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         */
-        public void signalAll() { cond.signalAll(); }
-
-        /**
-         * Causes the current thread to wait until it is signalled.
-         *
-         * <p>The lock associated with this condition is atomically
-         * released and the current thread becomes disabled for thread
-         * scheduling purposes and lies dormant until <em>one</em> of
-         * the following happens: 
-         *
-         * <ul>
-         *
-         * <li>Some other thread invokes the {@link #signal} method
-         * for this <tt>Condition</tt> and the current thread 
-         * has been waiting the longest of all waiting threads; or
-         *
-         * <li>Some other thread invokes the {@link #signalAll} method
-         * for this <tt>Condition</tt>
-         *
-         * </ul>
-         *
-         * <p>In all cases, before this method can return the current
-         * thread must re-acquire the lock associated with this
-         * condition. When the thread returns it is
-         * <em>guaranteed</em> to hold this lock.
-         *
-         * <p>If the current thread's interrupt status is set when it
-         * enters this method, or it is {@link Thread#interrupt
-         * interrupted} while waiting, it will continue to wait until
-         * signalled. When it finally returns from this method its
-         * <em>interrupted status</em> will still be set.
-         * 
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         */
-        public void awaitUninterruptibly() { cond.awaitUninterruptibly(); }
-
-
-        /**
-         * Causes the current thread to wait until it is signalled or
-         * {@link Thread#interrupt interrupted}.
-         *
-         * <p>The lock associated with this <tt>Condition</tt> is
-         * atomically released and the current thread becomes disabled
-         * for thread scheduling purposes and lies dormant until
-         * <em>one</em> of the following happens:
-         *
-         * <ul>
-         *
-         * <li>Some other thread invokes the {@link #signal} method
-         * for this <tt>Condition</tt> and the current thread 
-         * has been waiting the longest of all waiting threads; or
-         *
-         * <li>Some other thread invokes the {@link #signalAll} method
-         * for this <tt>Condition</tt>; or
-         *
-         * <li>Some other thread {@link Thread#interrupt interrupts}
-         * the current thread
-         *
-         * </ul>
-         *
-         * <p>In all cases, before this method can return the current
-         * thread must re-acquire the lock associated with this
-         * condition. When the thread returns it is
-         * <em>guaranteed</em> to hold this lock.
-         *
-         * <p>If the current thread has its interrupted status set on
-         * entry to this method or is {@link Thread#interrupt
-         * interrupted} while waiting, then {@link
-         * InterruptedException} is thrown and the current thread's
-         * interrupted status is cleared.  
-         *
-         * @throws InterruptedException if the current thread is
-         * interrupted
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         **/
-        public void await() throws InterruptedException { cond.await(); }
-
-        /**
-         * Causes the current thread to wait until it is signalled or
-         * interrupted, or the specified waiting time elapses.
-         *
-         * <p>The lock associated with this condition is atomically
-         * released and the current thread becomes disabled for thread
-         * scheduling purposes and lies dormant until <em>one</em> of
-         * the following happens:
-         *
-         * <ul>
-         *
-         * <li>Some other thread invokes the {@link #signal} method
-         * for this <tt>Condition</tt> and the current thread 
-         * has been waiting the longest of all waiting threads; or
-         *
-         * <li>Some other thread invokes the {@link #signalAll} method
-         * for this <tt>Condition</tt>; or
-         *
-         * <li>Some other thread {@link Thread#interrupt interrupts}
-         * the current thread; or
-         *
-         * <li>The specified waiting time elapses
-         *
-         * </ul>
-         *
-         * <p>In all cases, before this method can return the current
-         * thread must re-acquire the lock associated with this
-         * condition. When the thread returns it is
-         * <em>guaranteed</em> to hold this lock.
-         *
-         * <p>If the current thread has its interrupted status set on
-         * entry to this method or is {@link Thread#interrupt
-         * interrupted} while waiting, then {@link
-         * InterruptedException} is thrown and the current thread's
-         * interrupted status is cleared.  
-         *
-         * <p>The method returns an estimate of the number of nanoseconds
-         * remaining to wait given the supplied <tt>nanosTimeout</tt>
-         * value upon return, or a value less than or equal to zero if it
-         * timed out. This value can be used to determine whether and how
-         * long to re-wait in cases where the wait returns but an awaited
-         * condition still does not hold. 
-         *
-         * @param nanosTimeout the maximum time to wait, in nanoseconds
-         * @return A value less than or equal to zero if the wait has
-         * timed out; otherwise an estimate, that
-         * is strictly less than the <tt>nanosTimeout</tt> argument,
-         * of the time still remaining when this method returned.
-         *
-         * @throws InterruptedException if the current thread is
-         * interrupted.
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         */
-        public long awaitNanos(long nanosTimeout) 
-            throws InterruptedException { 
-            return cond.awaitNanos(nanosTimeout); 
-        }
-        
-        /**
-         * Causes the current thread to wait until it is signalled or
-         * interrupted, or the specified deadline elapses.
-         *
-         * <p>The lock associated with this condition is atomically
-         * released and the current thread becomes disabled for thread
-         * scheduling purposes and lies dormant until <em>one</em> of
-         * the following happens:
-         *
-         * <ul>
-         *
-         * <li>Some other thread invokes the {@link #signal} method
-         * for this <tt>Condition</tt> and the current thread 
-         * has been waiting the longest of all waiting threads; or
-         *
-         * <li>Some other thread invokes the {@link #signalAll} method
-         * for this <tt>Condition</tt>; or
-         *
-         * <li>Some other thread {@link Thread#interrupt interrupts}
-         * the current thread; or
-         *
-         * <li>The specified deadline elapses
-         *
-         * </ul>
-         *
-         * <p>In all cases, before this method can return the current
-         * thread must re-acquire the lock associated with this
-         * condition. When the thread returns it is
-         * <em>guaranteed</em> to hold this lock.
-         *
-         * <p>If the current thread has its interrupted status set on
-         * entry to this method or is {@link Thread#interrupt
-         * interrupted} while waiting, then {@link
-         * InterruptedException} is thrown and the current thread's
-         * interrupted status is cleared.  
-         *
-         * @param deadline the absolute time to wait until
-         * @return <tt>false</tt> if the deadline has
-         * elapsed upon return, else <tt>true</tt>.
-         *
-         * @throws InterruptedException if the current thread is interrupted
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         * @throws NullPointerException if deadline is null
-         */
-        public boolean awaitUntil(Date deadline) throws InterruptedException {
-            return cond.awaitUntil(deadline);
-        }
-
-        /**
-         * Causes the current thread to wait until it is signalled or
-         * interrupted, or the specified waiting time elapses. This
-         * method is behaviorally equivalent to:<br>
-         *
-         * <pre>
-         *   awaitNanos(unit.toNanos(time)) &gt; 0
-         * </pre>
-         *
-         * @param time the maximum time to wait
-         * @param unit the time unit of the <tt>time</tt> argument.
-         * @return <tt>false</tt> if the waiting time detectably
-         * elapsed before return from the method, else <tt>true</tt>.
-         * @throws InterruptedException if the current thread is
-         * interrupted
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         * @throws NullPointerException if unit is null
-         */
-        public boolean await(long time, TimeUnit unit) throws InterruptedException {
-            return cond.await(time, unit);
-        }
-
-        /**
-         * Queries whether any threads are waiting on this
-         * condition. Note that because timeouts and interrupts may
-         * occur at any time, a <tt>true</tt> return does not
-         * guarantee that a future <tt>signal</tt> will awaken any
-         * threads.  This method is designed primarily for use in
-         * monitoring of the system state.
-         * @return <tt>true</tt> if there are any waiting threads.
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         */ 
-        public boolean hasWaiters() { return cond.hasWaiters(); }
-
-        /**
-         * Returns an estimate of the number of threads waiting on
-         * this condition. Note that because timeouts and interrupts
-         * may occur at any time, the estimate serves only as an upper
-         * bound on the actual number of waiters.  This method is
-         * designed for use in monitoring of the system state, not for
-         * synchronization control.
-         * @return the estimated number of waiting threads.
-         * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held
-         */ 
-        public int getWaitQueueLength() { return cond.getWaitQueueLength(); }
-
-        Collection<Thread> getWaitingThreads() {
-            return cond.getWaitingThreads();
-        }
-
-        AbstractQueuedSynchronizer getOwner() {
-            return cond.getOwner();
-        }
+     * Returns an estimate of the number of threads waiting on
+     * the given condition. Note that because timeouts and interrupts
+     * may occur at any time, the estimate serves only as an upper
+     * bound on the actual number of waiters.  This method is
+     * designed for use in monitoring of the system state, not for
+     * synchronization control.
+     * @param condition the condition
+     * @return the estimated number of waiting threads.
+     * @throws IllegalMonitorStateException if this lock 
+     * is not held
+     * @throws IllegalArgumentException if the given condition is
+     * not associated with this lock
+     */ 
+    public int getWaitQueueLength(Condition condition) {
+        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
+            throw new IllegalArgumentException("not owner");
+        return sync.getWaitQueueLength((AbstractQueuedSynchronizer.ConditionObject)condition);
     }
+
+    /**
+     * Returns a collection containing those threads that may be
+     * waiting on the given Condition.  Because the actual set of
+     * threads may change dynamically while constructing this
+     * result, the returned collection is only a best-effort
+     * estimate. The elements of the returned collection are in no
+     * particular order.  This method is designed to facilitate
+     * construction of subclasses that provide more extensive
+     * condition monitoring facilities.
+     * @param condition the condition
+     * @return the collection of threads
+     * @throws IllegalMonitorStateException if this lock 
+     * is not held
+     * @throws IllegalArgumentException if the given condition is
+     * not associated with this lock
+     */
+    protected Collection<Thread> getWaitingThreads(Condition condition) {
+        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
+            throw new IllegalArgumentException("not owner");
+        return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject)condition);
+    }
+
 
 }

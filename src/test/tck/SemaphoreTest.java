@@ -638,6 +638,37 @@ public class SemaphoreTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * release(n) in one thread enables acquire(n) in another thread
+     */
+    public void testAcquireReleaseNInDifferentThreads_fair2() {
+        final Semaphore s = new Semaphore(0, true);
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
+                        s.acquire(2);
+                        s.acquire(2);
+                        s.release(4);
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            s.release(6);
+            s.acquire(2);
+            s.acquire(2);
+            s.release(2);
+            t.join();
+	} catch( InterruptedException e){
+            unexpectedException();
+        }
+    }
+
+
+
 
 
     /**

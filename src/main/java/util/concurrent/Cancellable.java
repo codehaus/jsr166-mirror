@@ -15,7 +15,7 @@ package java.util.concurrent;
  * @since 1.5
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
+ * @revised $Date: 2003/08/06 00:20:00 $
  * @editor $Author: dl $
  * @see FutureTask
  * @see Executor
@@ -51,9 +51,13 @@ public interface Cancellable {
     boolean isCancelled();
 
     /**
-     * Returns <tt>true</tt> if this task ran to completion or was cancelled.
+     * Returns <tt>true</tt> if this task completed.  
      *
-     * @return <tt>true</tt> if task completed normally or was cancelled
+     * Completion may be due to normal termination, an exception, or
+     * cancellation -- in all of these cases, this method will return
+     * <tt>true</tt>.
+     * 
+     * @return <tt>true</tt> if this task completed.
      */
     boolean isDone();
 }

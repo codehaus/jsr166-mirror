@@ -42,7 +42,7 @@ package java.util.concurrent;
  * @see Executor
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/05 19:04:37 $
+ * @revised $Date: 2003/08/06 00:20:00 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -51,9 +51,11 @@ public interface Future<V> {
     /**
      * Returns <tt>true</tt> if the underlying task has completed.
      *
-     * @fixme relation to isDone in Cancellable?
+     * Completion may be due to normal termination, an exception, or
+     * cancellation -- in all of these cases, this method will return
+     * <tt>true</tt>.
      *
-     * @return <tt>true</tt> if underlying task has completed
+     * @return <tt>true</tt> if the underlying task has completed
      */
     boolean isDone();
 

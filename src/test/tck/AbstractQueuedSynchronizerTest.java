@@ -254,7 +254,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     } 
 
     /**
-     * timed tryAcquireExclusive is interruptible.
+     * acquireExclusiveNanos is interruptible.
      */
     public void testInterruptedException2() { 
 	final Mutex lock = new Mutex();
@@ -297,9 +297,9 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     } 
 
     /**
-     * acquireExclusiveTimed on a locked lock times out
+     * acquireExclusiveNanos on a locked lock times out
      */
-    public void testacquireExclusiveTimed_Timeout() { 
+    public void testAcquireExclusiveNanos_Timeout() { 
 	final Mutex lock = new Mutex();
 	lock.acquireExclusiveUninterruptibly(1);
 	Thread t = new Thread(new Runnable() {
@@ -322,9 +322,9 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     
    
     /**
-     * isLocked is true when locked and false when not
+     * getState is true when acquired and false when not
      */
-    public void testIsLocked() {
+    public void testGetState() {
 	final Mutex lock = new Mutex();
 	lock.acquireExclusiveUninterruptibly(1);
 	assertTrue(lock.isLocked());
@@ -534,7 +534,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * release and has no effect when already signalled
      */
-    public void testLatchBoolean() {
+    public void testReleaseShared() {
 	final BooleanLatch l = new BooleanLatch();
 	assertFalse(l.isSignalled());
 	l.releaseShared(0);
@@ -546,7 +546,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * acquireSharedInterruptibly returns after release, but not before
      */
-    public void testLatchAcquireSharedInterruptibly() {
+    public void testAcquireSharedInterruptibly() {
 	final BooleanLatch l = new BooleanLatch();
 
 	Thread t = new Thread(new Runnable() {
@@ -576,7 +576,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * acquireSharedTimed returns after release
      */
-    public void testLatchTimedacquireSharedInterruptibly() {
+    public void testAsquireSharedTimed() {
 	final BooleanLatch l = new BooleanLatch();
 
 	Thread t = new Thread(new Runnable() {
@@ -606,7 +606,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * acquireSharedInterruptibly throws IE if interrupted before released
      */
-    public void testLatchAcquireSharedInterruptibly_InterruptedException() {
+    public void testAcquireSharedInterruptibly_InterruptedException() {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -630,7 +630,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * acquireSharedTimed throws IE if interrupted before released
      */
-    public void testLatchTimedAwait_InterruptedException() {
+    public void testAcquireSharedNanos_InterruptedException() {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -655,7 +655,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * acquireSharedTimed times out if not released before timeout
      */
-    public void testLatchAwaitTimeout() {
+    public void testAcquireSharedNanos_Timeout() {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new Runnable() {
                 public void run() {

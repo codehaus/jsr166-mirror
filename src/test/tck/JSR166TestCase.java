@@ -23,14 +23,14 @@ import java.security.*;
  * <ol>
  *
  * <li> All assertions in code running in generated threads must use
- * the forms {@link threadFail} , {@link threadAssertTrue} {@link
- * threadAssertEquals}, or {@link threadAssertNull}, (not
+ * the forms {@link #threadFail} , {@link #threadAssertTrue} {@link
+ * #threadAssertEquals}, or {@link #threadAssertNull}, (not
  * <tt>fail</tt>, <tt>assertTrue</tt>, etc.) It is OK (but not
  * particularly recommended) for other code to use these forms too.
  * Only the most typically used JUnit assertion methods are defined
  * this way, but enough to live with.</li>
  *
- * <li> If you override {@link setUp} or {@link tearDown}, make sure
+ * <li> If you override {@link #setUp} or {@link #tearDown}, make sure
  * to invoke <tt>super.setUp</tt> and <tt>super.tearDown</tt> within
  * them. These methods are used to clear and check for thread
  * assertion failures.</li>

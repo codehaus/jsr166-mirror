@@ -35,6 +35,7 @@
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
   <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
+  <property name="build.sinjdocs.dir"   location="${build.dir}/sinjdocs"/>
   <property name="build.stripped.dir"   location="${build.dir}/stripped"/>
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
   <property name="build.doccheck.dir"   location="${build.dir}/doccheck"/>
@@ -180,8 +181,8 @@
           depends="configure-tests"
           description="Builds javadocs with custom tags to build folder">
 
-    <delete dir="${build.javadocs.dir}"/>
-    <mkdir dir="${build.javadocs.dir}"/>
+    <delete dir="${build.sinjdocs.dir}"/>
+    <mkdir dir="${build.sinjdocs.dir}"/>
 
     <java classname="net.cscott.sinjdoc.Main" fork="true">
 
@@ -195,7 +196,7 @@
       </classpath>
 
 
-      <arg value="-d"/>          <arg value="${build.javadocs.dir}"/>
+      <arg value="-d"/>          <arg value="${build.sinjdocs.dir}"/>
       <arg value="-sourcepath"/> <arg value="${src.dir}"/>
       <arg value="-overview"/>   <arg value="${src.dir}/intro.html"/>
       <arg value="-source"/>     <arg value="${build.sourcelevel}"/>

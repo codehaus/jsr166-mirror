@@ -68,8 +68,7 @@ import java.util.concurrent.atomic.*;
  * its state when serialized.
  *
  * <p> This lock supports a maximum of 2147483648 recursive locks by
- * the same thread. Attempts to exceed this limit result in {@link
- * Error} throws from locking methods.
+ * the same thread. 
  *
  * @since 1.5
  * @author Doug Lea
@@ -89,36 +88,25 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         /** Current (exclusive) owner thread */
         private transient Thread owner;
 
-        public Sync() { fair = false;   }
         public Sync(boolean fair) { this.fair = fair; }
 
-        public int acquireExclusiveState(boolean isQueued, int acquires, 
-                                         Thread current) {
+        public int acquireExclusiveState(boolean isQueued, int acquires) { 
+            final Thread current = Thread.currentThread();
             final AtomicInteger count = state();
-            for (;;) {
+            if (isQueued || fair || !count.compareAndSet(0, acquires)) {
                 int c = count.get();
-                int nextc = c + acquires;
-                if (nextc < 0)
-                    throw new Error("Maximum lock count exceeded");
-                if (c != 0) {
-                    if (current != owner)
-                        return -1;
-                    count.set(nextc);
-                    return 0;
-                }
-                if (!isQueued && fair && hasQueuedThreads())
+                if ((c != 0 && current != owner) ||
+                    (c == 0 && !isQueued && fair && hasQueuedThreads()) ||
+                    !count.compareAndSet(c, c + acquires))
                     return -1;
-                if (count.compareAndSet(c, nextc)) {
-                    owner = current;
-                    return 0;
-                }
-                // Recheck count if lost CAS
             }
+            owner = current;
+            return 0;
         }
 
         public boolean releaseExclusiveState(int releases) {
+            final Thread current = Thread.currentThread();
             final AtomicInteger count = state();
-            Thread current = Thread.currentThread();
             boolean free = true;
             int c = count.get() - releases;
             if (owner != current || c < 0)
@@ -136,28 +124,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 throw new IllegalMonitorStateException();
         }
 
-        public int acquireSharedState(boolean isQueued, int acquires, Thread current) {
+        public int acquireSharedState(boolean isQueued, int acquires) {
             throw new UnsupportedOperationException();
         }
 
         public boolean releaseSharedState(int releases) {
             throw new UnsupportedOperationException();
-        }
-
-        void lock() {
-            // try fast path first unless fair and contended
-            if ((!fair || !hasQueuedThreads()) && state().compareAndSet(0, 1))
-                owner = Thread.currentThread();
-            else
-                acquireExclusiveUninterruptibly(1);
-        }
-
-        boolean tryLock() {
-            if (state().compareAndSet(0, 1)) {
-                owner = Thread.currentThread();
-                return true;
-            }
-            return acquireExclusiveState(true, 1, Thread.currentThread()) >= 0;
         }
 
         ConditionObject newCondition() {
@@ -197,7 +169,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * This is equivalent to using <tt>ReentrantLock(false)</tt>.
      */
     public ReentrantLock() { 
-        sync = new Sync();
+        sync = new Sync(false);
     }
 
     /**
@@ -224,7 +196,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * at which time the lock hold count is set to one. 
      */
     public void lock() {
-        sync.lock();
+        sync.acquireExclusiveUninterruptibly(1);
     }
 
     /**
@@ -306,7 +278,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <tt>false</tt> otherwise.
      */
     public boolean tryLock() {
-        return sync.tryLock();
+        return sync.acquireExclusiveState(true, 1) >= 0;
     }
 
     /**

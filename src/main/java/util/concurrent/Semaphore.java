@@ -133,8 +133,7 @@ public class Semaphore implements java.io.Serializable {
             state().set(permits);
         }
         
-        public final int acquireSharedState(boolean isQueued, int acquires, 
-                                            Thread current) {
+        public int acquireSharedState(boolean isQueued, int acquires) {
             final AtomicInteger perms = state();
             if (!isQueued && fair && hasQueuedThreads())
                 return -1;
@@ -147,7 +146,7 @@ public class Semaphore implements java.io.Serializable {
             }
         }
         
-        public final boolean releaseSharedState(int releases) {
+        public boolean releaseSharedState(int releases) {
             final AtomicInteger perms = state();
             for (;;) {
                 int p = perms.get();
@@ -156,9 +155,7 @@ public class Semaphore implements java.io.Serializable {
             }
         }
         
-        public final int acquireExclusiveState(boolean isQueued, 
-                                               int acquires, 
-                                               Thread current) {
+        public int acquireExclusiveState(boolean isQueued, int acquires) {
             throw new UnsupportedOperationException();
         }
         
@@ -254,7 +251,7 @@ public class Semaphore implements java.io.Serializable {
      * otherwise.
      */
     public boolean tryAcquire() {
-        return sync.acquireSharedState(false, 1, null) >= 0;
+        return sync.acquireSharedState(false, 1) >= 0;
     }
 
     /**
@@ -411,7 +408,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.acquireSharedState(false, permits, null) >= 0;
+        return sync.acquireSharedState(false, permits) >= 0;
     }
 
     /**

@@ -89,7 +89,7 @@ import java.util.concurrent.atomic.*;
  * <pre>
  * class Mutex implements Lock, java.io.Serializable {
  *    private static class Sync extends AbstractQueuedSynchronizer {
- *       public int acquireExclusiveState(boolean isQueued, int acquires, Thread ignore) {
+ *       public int acquireExclusiveState(boolean isQueued, int acquires) {
  *         assert acquires == 1; // Does not use multiple acquires
  *         return state().compareAndSet(0, 1)? 0 : -1;
  *       }
@@ -99,7 +99,7 @@ import java.util.concurrent.atomic.*;
  *         return true;
  *       }
  *       
- *       public int acquireSharedState(boolean isQueued, int acquires, Thread current) {
+ *       public int acquireSharedState(boolean isQueued, int acquires) {
  *         throw new UnsupportedOperationException();
  *       }
  *
@@ -121,10 +121,10 @@ import java.util.concurrent.atomic.*;
  *
  *    private final Sync sync = new Sync();
  *    public boolean tryLock() { 
- *       return sync.acquireExclusiveState(false, 1, null) >= 0;
+ *       return sync.acquireExclusiveState(false, 1) >= 0;
  *    }
  *    public void lock() { 
- *       if (!tryLock()) sync.acquireExclusiveUninterruptibly(1);
+ *       sync.acquireExclusiveUninterruptibly(1);
  *    }
  *    public void lockInterruptibly() throws InterruptedException { 
  *       sync.acquireExclusiveInterruptibly(1);
@@ -372,11 +372,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          */
         Thread thread;
 
-        Node(Thread thread) { 
-            this.thread = thread; 
-            this.shared = false;
-        }
-
         Node(Thread thread, boolean shared) { 
             this.thread = thread; 
             this.shared = shared;
@@ -477,7 +472,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Try to set status for an attempt to acquire in exclusive mode.
-     * Failures are presumed to be due to unavailability/contention.
+     * This method is always invoked by the thread performing acquire.
+     * If this method reports failure, the thread may be blocked
+     * until signalled upon a release by some other thread.
      * @param isQueued true if the thread has been queued, possibly
      * blocking before this call. If this argument is false,
      * then the thread has not yet been queued. This can be used
@@ -485,7 +482,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param acquires the number of acquires requested. This value
      * is always the one given in an <tt>acquire</tt> method,
      * or is the value saved on entry to a condition wait.
-     * @param current current thread
      * @return negative on failure, zero on success. (These
      * unusual return value conventions match those needed for
      * shared modes.)
@@ -496,11 +492,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws UnsupportedOperationException if exclusive mode not supported
      */
     public abstract int acquireExclusiveState(boolean isQueued, 
-                                              int acquires, 
-                                              Thread current);
+                                              int acquires);
 
     /**
      * Set status to reflect a release in exclusive mode..
+     * This method is always invoked by the thread performing release.
      * @param releases the number of releases. This value
      * is always the one given in a <tt>release</tt> method,
      * or the current value upon entry to a condition wait.
@@ -516,14 +512,15 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Try to set status for an attempt to acquire in shared mode.
-     * Failures are presumed to be due to unavailability/contention.
+     * This method is always invoked by the thread performing acquire.
+     * If this method reports failure, the thread may be blocked
+     * until signalled upon a release by some other thread.
      * @param isQueued true if the thread has been queued, possibly
      * blocking before this call. If this argument is false,
      * then the thread has not yet been queued. This can be used
      * to help implement a fairness policy.
      * @param acquires the number of acquires requested. This value
      * is always the one given in an <tt>acquire</tt> method.
-     * @param current current thread
      * @return negative on failure, zero on exclusive success, and
      * positive if non-exclusively successful, in which case a
      * subsequent waiting thread must check availability.
@@ -534,10 +531,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws UnsupportedOperationException if shared mode not supported
      */
     public abstract int acquireSharedState(boolean isQueued, 
-                                           int acquires, 
-                                           Thread current);
+                                           int acquires);
     /**
      * Set status to reflect a release in shared mode.
+     * This method is always invoked by the thread performing release.
      * @param releases the number of releases. This value
      * is always the one given in a <tt>release</tt> method.
      * @return true if now in a fully released state, so that
@@ -574,7 +571,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param acquires the number of times to acquire
      */
     public final void acquireExclusiveUninterruptibly(int acquires) {
-        doAcquire(false, acquires, UNINTERRUPTED, 0L);
+        if (acquireExclusiveState(false, acquires) < 0)
+            doAcquire(false, acquires, UNINTERRUPTED, 0L);
     }
 
     /**
@@ -590,9 +588,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireExclusiveInterruptibly(int acquires) throws InterruptedException {
-       if (Thread.interrupted() ||
-           doAcquire(false, acquires, INTERRUPT, 0L) == INTERRUPT)
-           throw new InterruptedException();
+        if (Thread.interrupted() ||
+            (acquireExclusiveState(false, acquires) < 0 &&
+             doAcquire(false, acquires, INTERRUPT, 0L) != UNINTERRUPTED))
+            throw new InterruptedException();
    }
 
     /**
@@ -613,7 +612,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      */
    public final boolean acquireExclusiveTimed(int acquires, long nanosTimeout) throws InterruptedException {
        if (!Thread.interrupted()) {
-           int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, nanosTimeout);
+            if (acquireExclusiveState(false, acquires) >= 0)
+                return true;
+           if (nanosTimeout <= 0)
+               return false;
+           int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, 
+                             nanosTimeout);
            if (s == UNINTERRUPTED)
                return true;
            if (s != INTERRUPT)
@@ -648,7 +652,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param acquires the number of times to acquire
      */
     public final void acquireSharedUninterruptibly(int acquires) {
-        doAcquire(true, acquires, UNINTERRUPTED, 0L);
+        if (acquireSharedState(false, acquires) < 0)
+            doAcquire(true, acquires, UNINTERRUPTED, 0L);
     }
 
     /**
@@ -664,9 +669,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireSharedInterruptibly(int acquires) throws InterruptedException {
-       if (Thread.interrupted() ||
-           doAcquire(true, acquires, INTERRUPT, 0L) == INTERRUPT)
-           throw new InterruptedException();
+        if (Thread.interrupted() ||
+            (acquireSharedState(false, acquires) < 0 &&
+             doAcquire(true, acquires, INTERRUPT, 0L) != UNINTERRUPTED))
+            throw new InterruptedException();
    }
 
     /**
@@ -686,7 +692,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      */
    public final boolean acquireSharedTimed(int acquires, long nanosTimeout) throws InterruptedException {
        if (!Thread.interrupted()) {
-           int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, nanosTimeout);
+           if (acquireSharedState(false, acquires) >= 0)
+               return true;
+           if (nanosTimeout <= 0)
+               return false;
+           int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, 
+                             nanosTimeout);
            if (s == UNINTERRUPTED)
                return true;
            if (s != INTERRUPT)
@@ -718,7 +729,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     private void initializeQueue() {
         Node t = tail;
         if (t == null) {         
-            Node h = new Node(null);
+            Node h = new Node(null, false);
             // This will rarely loop; tight spin is OK even it does
             while ((t = tail) == null) {     
                 if (headUpdater.compareAndSet(this, null, h)) {
@@ -820,20 +831,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      */
     private int doAcquire(boolean shared, int acquires, 
                           int mode, long nanosTimeout) {
+        long lastTime = ((mode & TIMEOUT) == 0)? 0 : System.nanoTime();
         final Thread current = Thread.currentThread();
-        int precheck = (shared)?
-            acquireSharedState(false, acquires, current):
-            acquireExclusiveState(false, acquires, current);
-        if (precheck >= 0)
-            return UNINTERRUPTED;
-
-        long lastTime = 0;
-        if ((mode & TIMEOUT) != 0) {
-            if (nanosTimeout <= 0)
-                return TIMEOUT;
-            lastTime = System.nanoTime();
-        }
-
         final Node node = new Node(current, shared);
         enq(node);
 
@@ -857,8 +856,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 int acq;
                 try {
                     acq = shared?
-                        acquireSharedState(true, acquires, current):
-                        acquireExclusiveState(true, acquires, current);
+                        acquireSharedState(true, acquires):
+                        acquireExclusiveState(true, acquires);
                 } catch (RuntimeException ex) {
                     cancelAcquire(node);
                     throw ex;
@@ -928,7 +927,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         for (;;) {
             Node p = node.prev; 
             if (p == head && 
-                acquireExclusiveState(true, savedState, current) >= 0) {
+                acquireExclusiveState(true, savedState) >= 0) {
                 p.next = null; 
                 node.thread = null;
                 node.prev = null; 

@@ -258,10 +258,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return false;
         }
 
-        public final int acquireExclusiveState(boolean isQueued, 
-                                               int acquires, 
-                                               Thread current) {
+        public int acquireExclusiveState(boolean isQueued, int acquires) {
             final AtomicInteger count = state();
+            Thread current = Thread.currentThread();
             for (;;) {
                 int c = count.get();
                 int w = exclusiveCount(c);
@@ -288,7 +287,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
 
-        public final boolean releaseExclusiveState(int releases) {
+        public boolean releaseExclusiveState(int releases) {
             final AtomicInteger count = state();
             Thread current = Thread.currentThread();
             boolean free = true;
@@ -305,17 +304,16 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return free;
         }
 
-        public final int acquireSharedState(boolean isQueued, int acquires, 
-                                            Thread current) {
+        public int acquireSharedState(boolean isQueued, int acquires) {
             final AtomicInteger count = state();
-            boolean nobarge = !isQueued && fair;
+            Thread current = Thread.currentThread();
             for (;;) {
                 int c = count.get();
                 int w = exclusiveCount(c);
                 int r = sharedCount(c);
                 if (w != 0 && current != owner)
                     return -1;
-                if (nobarge && !hasQueuedThreads())
+                if (!isQueued && fair && !hasQueuedThreads())
                     return -1;
                 int nextc = c + acquires * SHARED_UNIT;
                 if (nextc < c)
@@ -326,7 +324,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             // Recheck count if lost CAS
         }
 
-        public final boolean releaseSharedState(int releases) {
+        public boolean releaseSharedState(int releases) {
             final AtomicInteger count = state();
             for (;;) {
                 int c = count.get();
@@ -338,7 +336,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
     
-        public final void checkConditionAccess(Thread thread, boolean waiting) {
+        public void checkConditionAccess(Thread thread, boolean waiting) {
             int c = state().get();
             if (exclusiveCount(c) == 0 ||
                 (waiting && sharedCount(c) != 0))
@@ -359,12 +357,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         boolean tryLockShared() {
             return fastAcquireShared(false) ||
-                acquireSharedState(true, 1, Thread.currentThread()) >= 0;
+                acquireSharedState(true, 1) >= 0;
         }
 
         boolean tryLockExclusive() {
             return fastAcquireExclusive(false) ||
-                acquireExclusiveState(true, 1, Thread.currentThread()) >= 0;
+                acquireExclusiveState(true, 1) >= 0;
         }
 
 

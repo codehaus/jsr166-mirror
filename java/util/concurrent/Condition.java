@@ -166,7 +166,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/21 00:01:07 $
+ * @revised $Date: 2003/01/30 22:13:23 $
  * @editor $Author: dholmes $
  */
 public interface Condition {
@@ -260,7 +260,8 @@ public interface Condition {
     void awaitUninterruptibly();
 
     /**
-     * Causes the current thread to wait until it is signalled or interrupted,
+     * Causes the current thread to wait until it is signalled or 
+     * {@link Thread#interrupt interrupted},
      * or the specified waiting time elapses.
      *
      * <p>The lock associated with this condition is atomically 

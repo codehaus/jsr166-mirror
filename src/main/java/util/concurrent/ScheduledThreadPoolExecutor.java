@@ -68,10 +68,13 @@ public class ScheduledThreadPoolExecutor
         private final long sequenceNumber;
         /** The time the task is enabled to execute in nanoTime units */
         private long time;
-        /** The delay following next time, or <= 0 if non-periodic */
+        /**
+         * Period in nanoseconds for repeating tasks.  A positive
+         * value indicates fixed-rate execution.  A negative value
+         * indicates fixed-delay execution.  A value of 0 indicates a
+         * non-repeating task.
+         */
         private final long period;
-        /** true if at fixed rate; false if fixed delay */
-        private final boolean rateBased; 
 
         /**
          * Creates a one-shot action with given nanoTime-based trigger time
@@ -80,18 +83,16 @@ public class ScheduledThreadPoolExecutor
             super(r, result);
             this.time = ns;
             this.period = 0;
-            rateBased = false;
             this.sequenceNumber = sequencer.getAndIncrement();
         }
 
         /**
          * Creates a periodic action with given nano time and period
          */
-        ScheduledFutureTask(Runnable r, V result, long ns,  long period, boolean rateBased) {
+        ScheduledFutureTask(Runnable r, V result, long ns,  long period) {
             super(r, result);
             this.time = ns;
             this.period = period;
-            this.rateBased = rateBased;
             this.sequenceNumber = sequencer.getAndIncrement();
         }
 
@@ -102,7 +103,6 @@ public class ScheduledThreadPoolExecutor
             super(callable);
             this.time = ns;
             this.period = 0;
-            rateBased = false;
             this.sequenceNumber = sequencer.getAndIncrement();
         }
 
@@ -131,7 +131,7 @@ public class ScheduledThreadPoolExecutor
          * @return true if periodic
          */
         boolean isPeriodic() {
-            return period > 0;
+            return period != 0;
         }
 
         /**
@@ -153,7 +153,11 @@ public class ScheduledThreadPoolExecutor
             if (ok && (!down ||
                        (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
                         !isTerminating()))) {
-                time = period + (rateBased ? time : now());
+                long p = period;
+                if (p > 0)
+                    time += p;
+                else
+                    time = now() - p;
                 ScheduledThreadPoolExecutor.super.getQueue().add(this);
             }
             // This might have been the final executed delayed
@@ -296,6 +300,7 @@ public class ScheduledThreadPoolExecutor
                                            TimeUnit unit) {
         if (callable == null || unit == null)
             throw new NullPointerException();
+        if (delay < 0) delay = 0;
         long triggerTime = now() + unit.toNanos(delay);
         ScheduledFutureTask<V> t = 
             new ScheduledFutureTask<V>(callable, triggerTime);
@@ -311,13 +316,13 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (period <= 0)
             throw new IllegalArgumentException();
+        if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
         ScheduledFutureTask<?> t = 
             new ScheduledFutureTask<Object>(command, 
                                             null,
                                             triggerTime,
-                                            unit.toNanos(period), 
-                                            true);
+                                            unit.toNanos(period));
         delayedExecute(t);
         return t;
     }
@@ -330,13 +335,13 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (delay <= 0)
             throw new IllegalArgumentException();
+        if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
         ScheduledFutureTask<?> t = 
             new ScheduledFutureTask<Boolean>(command, 
                                              null,
                                              triggerTime,
-                                             unit.toNanos(delay), 
-                                             false);
+                                             unit.toNanos(-delay));
         delayedExecute(t);
         return t;
     }
@@ -384,6 +389,7 @@ public class ScheduledThreadPoolExecutor
      * <tt>false</tt> when already shutdown. This value is by default
      * false.
      * @param value if true, continue after shutdown, else don't.
+     * @see #getExecuteExistingDelayedTasksAfterShutdownPolicy
      */
     public void setContinueExistingPeriodicTasksAfterShutdownPolicy(boolean value) {
         continueExistingPeriodicTasksAfterShutdown = value;
@@ -399,6 +405,7 @@ public class ScheduledThreadPoolExecutor
      * to <tt>false</tt> when already shutdown. This value is by
      * default false.
      * @return true if will continue after shutdown.
+     * @see #setContinueExistingPeriodicTasksAfterShutdownPolicy
      */
     public boolean getContinueExistingPeriodicTasksAfterShutdownPolicy() {
         return continueExistingPeriodicTasksAfterShutdown;
@@ -412,6 +419,7 @@ public class ScheduledThreadPoolExecutor
      * <tt>false</tt> when already shutdown. This value is by default
      * true.
      * @param value if true, execute after shutdown, else don't.
+     * @see #getExecuteExistingDelayedTasksAfterShutdownPolicy
      */
     public void setExecuteExistingDelayedTasksAfterShutdownPolicy(boolean value) {
         executeExistingDelayedTasksAfterShutdown = value;
@@ -427,6 +435,7 @@ public class ScheduledThreadPoolExecutor
      * <tt>false</tt> when already shutdown. This value is by default
      * true.
      * @return true if will execute after shutdown.
+     * @see #setExecuteExistingDelayedTasksAfterShutdownPolicy
      */
     public boolean getExecuteExistingDelayedTasksAfterShutdownPolicy() {
         return executeExistingDelayedTasksAfterShutdown;

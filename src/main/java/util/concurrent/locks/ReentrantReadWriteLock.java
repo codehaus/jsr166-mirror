@@ -202,115 +202,28 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * @param c a lock status count
      * @return true if count indicates lock is held in exclusive mode
      */
-    static final boolean isExclusive(int c) { 
+    private static boolean isExclusive(int c) { 
         return (c & EXCLUSIVE_MASK) != 0; 
     }
 
     /**
      * Return the number of shared holds represented in count
      */
-    static final int sharedCount(int c)  { 
+    private static int sharedCount(int c)  { 
         return c >>> SHARED_SHIFT; 
     }
 
     /**
      * Return the number of exclusive holds represented in count
      */
-    static final int exclusiveCount(int c) { 
+    private static int exclusiveCount(int c) { 
         return c & EXCLUSIVE_MASK; 
-    }
-
-    // implement abstract methods
-
-    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
-                                              Thread current) {
-        final AtomicInteger count = getState();
-        boolean nobarge = !isQueued && fair;
-        for (;;) {
-            int c = count.get();
-            int w = exclusiveCount(c);
-            int r = sharedCount(c);
-            if (r != 0)
-                return -1;
-            if (w != 0) {
-                if (current != owner)
-                    return -1;
-                if (w + acquires >= SHARED_UNIT)
-                    throw new Error("Maximum lock count exceeded");
-                if (count.compareAndSet(c, c + acquires)) 
-                    return 0;
-            }
-            else {
-                if (nobarge && hasWaiters())
-                    return -1;
-                if (count.compareAndSet(c, c + acquires)) {
-                    owner = current;
-                    return 0;
-                }
-            }
-            // Recheck count if lost any of the above CAS's
-        }
-    }
-
-    protected final boolean releaseExclusiveState(int releases) {
-        final AtomicInteger count = getState();
-        Thread current = Thread.currentThread();
-        int c = count.get();
-        int w = exclusiveCount(c) - releases;
-        if (w < 0 || owner != current)
-            throw new IllegalMonitorStateException();
-        if (w == 0) 
-            owner = null;
-        count.set(c - releases);
-        return w == 0;
-    }
-
-    protected int acquireSharedState(boolean isQueued, int acquires, 
-                                     Thread current) {
-        final AtomicInteger count = getState();
-        boolean nobarge = !isQueued && fair;
-        for (;;) {
-            int c = count.get();
-            int w = exclusiveCount(c);
-            int r = sharedCount(c);
-            if (w != 0 && current != owner)
-                return -1;
-            if (nobarge && !hasWaiters())
-                return -1;
-            int nextc = c + acquires * SHARED_UNIT;
-            if (nextc < c)
-                throw new Error("Maximum lock count exceeded");
-            if (count.compareAndSet(c, nextc)) 
-                return 1;
-        }
-        // Recheck count if lost any of the above CAS's
-    }
-
-    protected boolean releaseSharedState(int releases) {
-        final AtomicInteger count = getState();
-        for (;;) {
-            int c = count.get();
-            int nextc = c - releases * SHARED_UNIT;
-            if (nextc < 0)
-                throw new IllegalMonitorStateException();
-            if (count.compareAndSet(c, nextc)) 
-                return nextc == 0;
-        }
-    }
-    
-    protected final void checkConditionAccess(Thread thread, boolean waiting) {
-        int c = getState().get();
-        boolean ok = exclusiveCount(c) != 0;
-        if (ok && waiting && sharedCount(c) != 0)
-            ok = false;
-        if (!ok || owner != thread) 
-            throw new IllegalMonitorStateException();
     }
 
     /**
      * Fast path for write locks
      */
-    final boolean fastAcquireExclusive(boolean enforceFairness) {
+    private boolean fastAcquireExclusive(boolean enforceFairness) {
         final AtomicInteger count = getState();
         if ((!enforceFairness || !hasWaiters()) && 
             count.compareAndSet(0, 1)) {
@@ -323,7 +236,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
     /**
      * Fast path for read locks
      */
-    final boolean fastAcquireShared(boolean enforceFairness) {
+    private boolean fastAcquireShared(boolean enforceFairness) {
         if (!enforceFairness || !hasWaiters()) {
             final AtomicInteger count = getState();
             int c = count.get();
@@ -873,6 +786,110 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
         /** Constructor for use by subclasses */
         protected WriterConditionObject() {}
     }
+
+    // implement abstract methods
+
+    /**
+     * Sets internal state if this lock is free or if this is a recursive
+     * lock by the current thread
+     */
+    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
+                                              Thread current) {
+        final AtomicInteger count = getState();
+        boolean nobarge = !isQueued && fair;
+        for (;;) {
+            int c = count.get();
+            int w = exclusiveCount(c);
+            int r = sharedCount(c);
+            if (r != 0)
+                return -1;
+            if (w != 0) {
+                if (current != owner)
+                    return -1;
+                if (w + acquires >= SHARED_UNIT)
+                    throw new Error("Maximum lock count exceeded");
+                if (count.compareAndSet(c, c + acquires)) 
+                    return 0;
+            }
+            else {
+                if (nobarge && hasWaiters())
+                    return -1;
+                if (count.compareAndSet(c, c + acquires)) {
+                    owner = current;
+                    return 0;
+                }
+            }
+            // Recheck count if lost any of the above CAS's
+        }
+    }
+
+    /**
+     * Sets internal state to indicate lock has been released
+     */
+    protected final boolean releaseExclusiveState(int releases) {
+        final AtomicInteger count = getState();
+        Thread current = Thread.currentThread();
+        int c = count.get();
+        int w = exclusiveCount(c) - releases;
+        if (w < 0 || owner != current)
+            throw new IllegalMonitorStateException();
+        if (w == 0) 
+            owner = null;
+        count.set(c - releases);
+        return w == 0;
+    }
+
+    /**
+     * Sets internal state if this lock is not exclusively held
+     */
+    protected final int acquireSharedState(boolean isQueued, int acquires, 
+                                     Thread current) {
+        final AtomicInteger count = getState();
+        boolean nobarge = !isQueued && fair;
+        for (;;) {
+            int c = count.get();
+            int w = exclusiveCount(c);
+            int r = sharedCount(c);
+            if (w != 0 && current != owner)
+                return -1;
+            if (nobarge && !hasWaiters())
+                return -1;
+            int nextc = c + acquires * SHARED_UNIT;
+            if (nextc < c)
+                throw new Error("Maximum lock count exceeded");
+            if (count.compareAndSet(c, nextc)) 
+                return 1;
+        }
+        // Recheck count if lost any of the above CAS's
+    }
+
+    /**
+     * Sets internal state to indicate lock has been released
+     */
+    protected final boolean releaseSharedState(int releases) {
+        final AtomicInteger count = getState();
+        for (;;) {
+            int c = count.get();
+            int nextc = c - releases * SHARED_UNIT;
+            if (nextc < 0)
+                throw new IllegalMonitorStateException();
+            if (count.compareAndSet(c, nextc)) 
+                return nextc == 0;
+        }
+    }
+    
+    /**
+     * Ensures that write-lock, but no read-locks held by calling thread.
+     */
+    protected final void checkConditionAccess(Thread thread, boolean waiting) {
+        int c = getState().get();
+        boolean ok = exclusiveCount(c) != 0;
+        if (ok && waiting && sharedCount(c) != 0)
+            ok = false;
+        if (!ok || owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
+
 
 }
 

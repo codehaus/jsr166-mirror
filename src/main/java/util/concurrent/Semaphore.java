@@ -122,44 +122,6 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
     private static final long serialVersionUID = -3222578661600680210L;
     private final boolean fair;
 
-    // Implement abstract methods
-
-    protected int acquireSharedState(boolean isQueued, int acquires, 
-                                     Thread current) {
-        final AtomicInteger perms = getState();
-        if (!isQueued && fair && hasWaiters())
-            return -1;
-        for (;;) {
-            int available = perms.get();
-            int remaining = available - acquires;
-            if (remaining < 0 ||
-                perms.compareAndSet(available, remaining))
-                return remaining;
-        }
-    }
-     
-    protected boolean releaseSharedState(int releases) {
-        final AtomicInteger perms = getState();
-        for (;;) {
-            int p = perms.get();
-            if (perms.compareAndSet(p, p + releases)) 
-                return true;
-        }
-    }
-
-    protected int acquireExclusiveState(boolean isQueued, int acquires, 
-                                        Thread current) {
-        throw new UnsupportedOperationException();
-    }
-
-    protected boolean releaseExclusiveState(int releases) {
-        throw new UnsupportedOperationException();
-    }
-
-    protected void checkConditionAccess(Thread thread, boolean waiting) {
-        throw new UnsupportedOperationException();
-    }
-
     /**
      * Construct a <tt>Semaphore</tt> with the given number of
      * permits and the given fairness setting.
@@ -521,6 +483,59 @@ public class Semaphore extends AbstractQueuedSynchronizer implements java.io.Ser
      */
     public boolean isFair() {
         return fair;
+    }
+
+    // Implement abstract methods
+
+    /**
+     * Sets internal state to indicate permits acquired if available
+     */
+    protected final int acquireSharedState(boolean isQueued, int acquires, 
+                                     Thread current) {
+        final AtomicInteger perms = getState();
+        if (!isQueued && fair && hasWaiters())
+            return -1;
+        for (;;) {
+            int available = perms.get();
+            int remaining = available - acquires;
+            if (remaining < 0 ||
+                perms.compareAndSet(available, remaining))
+                return remaining;
+        }
+    }
+     
+    /**
+     * Sets internal state to indicate permits have been released
+     */
+    protected final boolean releaseSharedState(int releases) {
+        final AtomicInteger perms = getState();
+        for (;;) {
+            int p = perms.get();
+            if (perms.compareAndSet(p, p + releases)) 
+                return true;
+        }
+    }
+
+    /**
+     * Always throws UnsupportedOperationException
+     */
+    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
+                                        Thread current) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Always throws UnsupportedOperationException
+     */
+    protected final boolean releaseExclusiveState(int releases) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Always throws UnsupportedOperationException
+     */
+    protected final void checkConditionAccess(Thread thread, boolean waiting) {
+        throw new UnsupportedOperationException();
     }
 
 }

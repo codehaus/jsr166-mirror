@@ -29,8 +29,9 @@ import java.util.concurrent.atomic.*;
  * directly provide untimed "trylock" forms, since the state acquire
  * methods can be used for these purposes.)
  *
- * <p> This class does provide <tt>public</tt> instrumentation and
- * monitoring methods such as {@link #hasWaiters}.
+ * <p> This class provides <tt>protected</tt> and, where sensible,
+ * <tt>public</tt> instrumentation and monitoring methods such as
+ * {@link #hasWaiters}.
  *
  * <p> This class supports either or both <em>exclusive</em> and
  * <em>shared</em> modes. When acquired in exclusive mode, it cannot
@@ -38,9 +39,10 @@ import java.util.concurrent.atomic.*;
  * held by multiple threads. This class does not "understand" these
  * differences except in the mechanical sense that when a shared mode
  * acquire succeeds, the next waiting thread (if one exists) must also
- * determine whether it can acquire as well. For implementations that
- * support only exclusive or only shared modes, define the abstract
- * methods for the unused mode to throw {@link UnsupportedOperationException}.
+ * determine whether it can acquire as well. Implementations that
+ * support only exclusive or only shared modes should define the
+ * abstract methods for the unused mode to throw {@link
+ * UnsupportedOperationException}.
  *
  * <p> This class defines a nested {@link Condition} class that can be
  * used with subclasses for which method <tt>releaseExclusive</tt>
@@ -53,13 +55,13 @@ import java.util.concurrent.atomic.*;
  * atomic integer maintaining state.
  *
  * <p>
- * <b>Usage Example.</b> Here is a fair mutual exclusion lock class:
+ * <b>Extension Example.</b> Here is a fair mutual exclusion lock class:
  * <pre>
  *   class FairMutex extends AbstractQueuedSynchronizer implements Lock {
  *       // Uses 0 for unlocked, 1 for locked state
  *
  *       protected int acquireExclusiveState(boolean isQueued, int acquires, 
- *                                           Thread current) {
+ *                                           Thread ignore) {
  *           assert acquires == 1; // Does not use multiple acquires
  *           if ((isQueued || !hasWaiters()) &amp;&amp;
  *                getState().compareAndSet(0, 1))
@@ -68,7 +70,7 @@ import java.util.concurrent.atomic.*;
  *       }
  *
  *       protected boolean releaseExclusiveState(int releases) {
- *           getLockWord.set(0);
+ *           getState().set(0);
  *           return true;
  *       }
  *       
@@ -95,7 +97,7 @@ import java.util.concurrent.atomic.*;
  *
  *       public Condition newCondition() { return new LockCondition(); }
  *   }
- * <pre>
+ * </pre>
  *
  * @since 1.5
  * @author Doug Lea

@@ -20,12 +20,13 @@ import java.util.concurrent.atomic.*;
  * it (which is not possible with <tt>ReentrantLock</tt>).
  *
  * <p> This class has semantics similar to those for POSIX (pthreads)
- * <tt>mutex</tt>. The associated {@link ConditionObject}
- * implementation is also similar except that, unlike POSIX versions,
- * it requires that the lock be held when invoking {@link
- * Condition#signal} and {@link Condition#signalAll}.
+ * <tt>mutex</tt>. There are no garanteed fairness properties. The
+ * associated {@link ConditionObject} implementation is also similar
+ * except that, unlike POSIX versions, it requires that the lock be
+ * held when invoking {@link Condition#signal} and {@link
+ * Condition#signalAll}.
  *
- * * <p> Serialization of this class behaves in the same way as
+ * <p> Serialization of this class behaves in the same way as
  * built-in locks: a deserialized lock is in the unlocked state,
  * regardless of its state when serialized.
  *
@@ -40,31 +41,6 @@ public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.S
      * Creates an instance of <tt>Mutex</tt>.
      */
     public Mutex() { 
-    }
-
-    // implement abstract methods
-
-    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
-                                              Thread current) {
-        return (getState().compareAndSet(0, 1)) ? 0 : -1;
-    }
-
-    protected final boolean releaseExclusiveState(int releases) {
-        getState().set(0);
-        return true;
-    }
-
-    protected final void checkConditionAccess(Thread thread, boolean waiting) {
-        if (getState().get() == 0) throw new IllegalMonitorStateException();
-    }
-
-    protected int acquireSharedState(boolean isQueued, int acquires, 
-                                     Thread current) {
-        throw new UnsupportedOperationException();
-    }
-
-    protected boolean releaseSharedState(int releases) {
-        throw new UnsupportedOperationException();
     }
 
 
@@ -252,6 +228,46 @@ public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.S
     public class ConditionObject extends AbstractQueuedSynchronizer.LockCondition {
         /** Constructor for use by subclasses */
         protected ConditionObject() {}
+    }
+
+    // implement abstract methods
+
+    /**
+     * Sets internal state to locked status if this lock was free
+     */
+    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
+                                              Thread current) {
+        return (getState().compareAndSet(0, 1)) ? 0 : -1;
+    }
+
+    /**
+     * Sets internal state to indicate lock has been released
+     */
+    protected final boolean releaseExclusiveState(int releases) {
+        getState().set(0);
+        return true;
+    }
+
+    /**
+     * Ensures that lock is held
+     */
+    protected final void checkConditionAccess(Thread thread, boolean waiting) {
+        if (getState().get() == 0) throw new IllegalMonitorStateException();
+    }
+
+    /**
+     * Always throws UnsupportedOperationException
+     */
+    protected final int acquireSharedState(boolean isQueued, int acquires, 
+                                     Thread current) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Always throws UnsupportedOperationException
+     */
+    protected final boolean releaseSharedState(int releases) {
+        throw new UnsupportedOperationException();
     }
 
 }

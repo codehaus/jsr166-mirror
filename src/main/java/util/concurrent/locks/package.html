@@ -15,7 +15,8 @@ The {@link java.util.concurrent.locks.Lock} interface supports locking
 disciplines that differ in semantics (reentrant, fair, etc), and that
 can be used in non-block-structured contexts including hand-over-hand
 and lock reordering algorithms. The main implementation is {@link
-java.util.concurrent.locks.ReentrantLock}.
+java.util.concurrent.locks.ReentrantLock}. A simple {@link Mutex}
+class is also available.
 
 <p> The {@link java.util.concurrent.locks.ReadWriteLock} interface
 similarly defines locks that may be shared among readers but are
@@ -33,8 +34,11 @@ multiple <tt>Condition</tt> objects may be associated with a single
 <tt>Condition</tt> methods are different than the corresponding
 <tt>Object</tt> versions.
 
-<p> The {@link java.util.concurrent.locks.LockSupport} class provides
-lower-level blocking and unblocking support that is useful for those
-developers implementing their own customized lock classes.
+<p> The {@link AbstractQueuedSynchronizer} class serves as a useful
+superclass for defining locks and other synchronizers that rely on
+queuing blocked threads.  The {@link
+java.util.concurrent.locks.LockSupport} class provides lower-level
+blocking and unblocking support that is useful for those developers
+implementing their own customized lock classes.
 
 </body> </html>

@@ -76,11 +76,6 @@ import java.util.concurrent.atomic.*;
  * 
  */
 public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, java.io.Serializable {
-    /*
-     * See the internal documentation for AbstractReentrantLock for
-     * description of approach and algorithm.
-     */
-
     private static final long serialVersionUID = 7373984872572414699L;
 
     /** true if barging disabled */
@@ -103,82 +98,6 @@ public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, j
      */
     public ReentrantLock(boolean fair) { 
         this.fair = fair;
-    }
-
-    // Instrumentation and status
-
-    /**
-     * Return true if this lock has fairness set true.
-     * @return true if this lock has fairness set true.
-     */
-    public final boolean isFair() {
-        return fair;
-    }
-
-    /**
-     * Returns the thread that currently owns the exclusive lock, or
-     * <tt>null</tt> if not owned. Note that the owner may be
-     * momentarily <tt>null</tt> even if there are threads trying to
-     * acquire the lock but have not yet done so.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive lock monitoring facilities.
-     * @return the owner, or <tt>null</tt> if not owned.
-     */
-    protected Thread getOwner() {
-        return (getState().get() != 0)? owner : null;
-    }
-
-
-    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
-                                              Thread current) {
-        final AtomicInteger count = getState();
-        boolean nobarge = !isQueued && fair;
-        for (;;) {
-            int c = count.get();
-            int nextc = c + acquires;
-            if (nextc < 0)
-                throw new Error("Maximum lock count exceeded");
-            if (c != 0) {
-                if (current != owner)
-                    return -1;
-                count.set(nextc);
-                return 0;
-            }
-            else {
-                if (nobarge && hasWaiters())
-                    return -1;
-                if (count.compareAndSet(c, nextc)) {
-                    owner = current;
-                    return 0;
-                }
-            }
-            // Recheck count if lost CAS
-        }
-    }
-
-    protected final boolean releaseExclusiveState(int releases) {
-        final AtomicInteger count = getState();
-        Thread current = Thread.currentThread();
-        int c = count.get() - releases;
-        if (c < 0 || owner != current)
-            throw new IllegalMonitorStateException();
-        if (c == 0) 
-            owner = null;
-        count.set(c);
-        return c == 0;
-    }
-
-    protected final void checkConditionAccess(Thread thread, boolean waiting) {
-        if (getState().get() == 0 || owner != thread) 
-            throw new IllegalMonitorStateException();
-    }
-
-    protected int acquireSharedState(boolean isQueued, int acquires, Thread current) {
-        throw new UnsupportedOperationException();
-    }
-
-    protected boolean releaseSharedState(int releases) {
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -509,5 +428,98 @@ public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, j
         /** Constructor for use by subclasses */
         protected ConditionObject() {}
     }
+
+    // Instrumentation and status
+
+    /**
+     * Return true if this lock has fairness set true.
+     * @return true if this lock has fairness set true.
+     */
+    public final boolean isFair() {
+        return fair;
+    }
+
+    /**
+     * Returns the thread that currently owns the exclusive lock, or
+     * <tt>null</tt> if not owned. Note that the owner may be
+     * momentarily <tt>null</tt> even if there are threads trying to
+     * acquire the lock but have not yet done so.  This method is
+     * designed to facilitate construction of subclasses that provide
+     * more extensive lock monitoring facilities.
+     * @return the owner, or <tt>null</tt> if not owned.
+     */
+    protected Thread getOwner() {
+        return (getState().get() != 0)? owner : null;
+    }
+
+
+    /**
+     * Sets internal state if this lock is free or if this is a recursive
+     * lock by the current thread
+     */
+    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
+                                              Thread current) {
+        final AtomicInteger count = getState();
+        boolean nobarge = !isQueued && fair;
+        for (;;) {
+            int c = count.get();
+            int nextc = c + acquires;
+            if (nextc < 0)
+                throw new Error("Maximum lock count exceeded");
+            if (c != 0) {
+                if (current != owner)
+                    return -1;
+                count.set(nextc);
+                return 0;
+            }
+            else {
+                if (nobarge && hasWaiters())
+                    return -1;
+                if (count.compareAndSet(c, nextc)) {
+                    owner = current;
+                    return 0;
+                }
+            }
+            // Recheck count if lost CAS
+        }
+    }
+
+    /**
+     * Sets internal state to indicate lock has been released
+     */
+    protected final boolean releaseExclusiveState(int releases) {
+        final AtomicInteger count = getState();
+        Thread current = Thread.currentThread();
+        int c = count.get() - releases;
+        if (c < 0 || owner != current)
+            throw new IllegalMonitorStateException();
+        if (c == 0) 
+            owner = null;
+        count.set(c);
+        return c == 0;
+    }
+
+    /**
+     * Ensures that lock is held by calling thread.
+     */
+    protected final void checkConditionAccess(Thread thread, boolean waiting) {
+        if (getState().get() == 0 || owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
+
+    /**
+     * Always throws UnsupportedOperationException
+     */
+    protected final int acquireSharedState(boolean isQueued, int acquires, Thread current) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Always throws UnsupportedOperationException
+     */
+    protected final boolean releaseSharedState(int releases) {
+        throw new UnsupportedOperationException();
+    }
+
 
 }

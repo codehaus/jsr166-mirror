@@ -7,7 +7,7 @@ package java.util.concurrent;
 import java.util.List;
 
 /**
- * An <tt>Executor</tt> that can execute many tasks concurrently.
+ * An <tt>ExecutorService</tt> that can execute many tasks concurrently.
  * Depending on its configuration, a <tt>ThreadExecutor</tt> can create a new
  * thread for each task, execute tasks sequentially in a single thread, or
  * implement a thread pool with reusable threads.  
@@ -129,6 +129,8 @@ import java.util.List;
  * @see ThreadFactory
  * @since 1.5
  * @spec JSR-166
+ *
+ * @fixme change name to ThreadedExecutor?
  */
 public class ThreadExecutor implements ExecutorService {
 
@@ -287,7 +289,7 @@ public class ThreadExecutor implements ExecutorService {
     /**
      * Returns the CannotExecuteHandler.
      */
-    protected CannotExecuteHandler getCannotExecuteHandler() {
+    public CannotExecuteHandler getCannotExecuteHandler() {
         return null;
     }
 
@@ -300,83 +302,102 @@ public class ThreadExecutor implements ExecutorService {
      *
      * @param handler the new CannotExecuteHandler
      */
-    protected void setCannotExecuteHandler(CannotExecuteHandler handler) {
+    public void setCannotExecuteHandler(CannotExecuteHandler handler) {
     }
 
     /* Various CannotExecuteHandler implementations. */
 
     /**
-     * Sets the policy for unexecutable tasks to be that the current thread
-     * executes the command if there are no available threads in the pool.
-     * This policy is set by default.
+     * A handler for unexecutable tasks that runs these tasks directly in the
+     * calling thread of the <tt>execute</tt> method.  This is the default
+     * <tt>CannotExecuteHandler</tt>.
      */
-    protected void callerRunsWhenCannotExecute() {
-        setCannotExecuteHandler(new CannotExecuteHandler() {
-            public boolean cannotExecute(Runnable r, boolean isShutdown) {
-                if (!isShutdown) {
-                    r.run();
-                }
-                return true;
+   public class CallerRunsCannotExecuteHandler implements CannotExecuteHandler {
+
+        /**
+         * Creates new <tt>CallerRunsCannotExecuteHandler</tt>.
+         */
+        public CallerRunsCannotExecuteHandler() { }
+
+        public boolean cannotExecute(Runnable r, boolean isShutdown) {
+            if (!isShutdown) {
+                r.run();
             }
-        });
+            return true;
+        }
     }
 
     /**
-     * Sets the policy for handling unexecutable tasks to be to throw a RuntimeException.
+     * A handler for unexecutable tasks that throws a <tt>CannotExecuteException</tt>.
      */
-    protected void abortWhenCannotExecute() {
-        setCannotExecuteHandler(new CannotExecuteHandler() {
-            public boolean cannotExecute(Runnable r, boolean isShutdown) {
-                if (!isShutdown) {
-                    throw new CannotExecuteException();
-                }
-                return true;
+    public class AbortCannotExecuteHandler implements CannotExecuteHandler {
+
+        /**
+         * Creates new <tt>AbortCannotExecuteHandler</tt>.
+         */
+        public AbortCannotExecuteHandler() { }
+
+        public boolean cannotExecute(Runnable r, boolean isShutdown) {
+            if (!isShutdown) {
+                throw new CannotExecuteException();
             }
-        });
+            return true;
+        }
     }
 
     /**
-     * Sets the policy for blocked execution to be to wait until a thread
-     * is available.
+     * A handler for unexecutable tasks that waits until the task can be
+     * submitted for execution.
      */
-    protected void waitWhenCannotExecute() {
-        setCannotExecuteHandler(new CannotExecuteHandler() {
-            public boolean cannotExecute(Runnable r, boolean isShutdown) {
-                if (!isShutdown) {
-                    // FIXME: wait here
-                    // FIXME: throw CannotExecuteException if interrupted
-                    return false;
-                }
-                return true;
+    public class WaitCannotExecuteHandler implements CannotExecuteHandler {
+
+        /**
+         * Creates new <tt>WaitCannotExecuteHandler</tt>.
+         */
+        public WaitCannotExecuteHandler() { }
+
+        public boolean cannotExecute(Runnable r, boolean isShutdown) {
+            if (!isShutdown) {
+                // FIXME: wait here
+                // FIXME: throw CannotExecuteException if interrupted
+                return false;
             }
-        });
+            return true;
+        }
     }
 
     /**
-     * Sets the policy for blocked execution to be to discard this request.
+     * A handler for unexecutable tasks that silently discards these tasks.
      */
-    protected void discardWhenCannotExecute() {
-        setCannotExecuteHandler(new CannotExecuteHandler() {
-            public boolean cannotExecute(Runnable r, boolean isShutdown) {
-                return true;
-            }
-        });
+    public class DiscardCannotExecuteHandler implements CannotExecuteHandler {
+
+        /**
+         * Creates new <tt>DiscardCannotExecuteHandler</tt>.
+         */
+        public DiscardCannotExecuteHandler() { }
+
+        public boolean cannotExecute(Runnable r, boolean isShutdown) {
+            return true;
+        }
     }
 
     /**
-     * Sets the policy for blocked execution to be to discard the oldest
-     * unhandled request.
+     * A handler for unexecutable tasks that discards the oldest unhandled request.
      */
-    protected void discardOldestWhenCannotExecute() {
-        setCannotExecuteHandler(new CannotExecuteHandler() {
-            public boolean cannotExecute(Runnable r, boolean isShutdown) {
-                if (!isShutdown) {
-                    // FIXME: discard oldest here
-                    return false;
-                }
-                return true;
+    public class DiscardOldestCannotExecuteHandler implements CannotExecuteHandler {
+
+        /**
+         * Creates new <tt>DiscardOldestCannotExecuteHandler</tt>.
+         */
+        public DiscardOldestCannotExecuteHandler() { }
+
+        public boolean cannotExecute(Runnable r, boolean isShutdown) {
+            if (!isShutdown) {
+                // FIXME: discard oldest here
+                return false;
             }
-        });
+            return true;
+        }
     }
 
     /* Executor methods. INHERIT this javadoc from interface??? */
@@ -418,11 +439,15 @@ public class ThreadExecutor implements ExecutorService {
      *
      * @param timeout the maximum time to wait
      * @param granularity the time unit of the timeout argument.
+     * @return <tt>true</tt> if this executor terminated and <tt>false</tt>
+     * if waiting time elapsed before termination.
      * @throws java.lang.InterruptedException if interrupted while waiting.
      * @throws java.lang.IllegalStateException if not shut down.
      */
-    public void awaitTermination(long timeout, TimeUnit granularity)
-    throws InterruptedException {}
+    public boolean awaitTermination(long timeout, TimeUnit granularity)
+    throws InterruptedException {
+        return true;
+    }
 
     /**
      * Initiates an orderly shutdown in which previously submitted tasks

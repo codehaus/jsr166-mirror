@@ -61,13 +61,14 @@ public class Executors {
      * shutdown, a new one will take its place if needed to execute
      * subsequent tasks.)  Tasks are guaranteed to execute
      * sequentially, and no more than one task will be active at any
-     * given time. The returned executor cannot be reconfigured
-     * to use additional threads.
+     * given time. Unlike the otherwise equivalent
+     * <tt>newFixedThreadPool(1)</tt> the returned executor is
+     * guaranteed not to be reconfigurable to use additional threads.
      *
      * @return the newly-created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor() {
-        return unconfigurableExecutorService
+        return new DelegatedExecutorService
             (new ThreadPoolExecutor(1, 1,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>()));
@@ -77,7 +78,7 @@ public class Executors {
      * Creates an Executor that uses a single worker thread operating
      * off an unbounded queue, and uses the provided ThreadFactory to
      * create a new thread when needed. Unlike the otherwise
-     * equivalent <tt>newFixedThreadPool(1)</tt> the returned executor
+     * equivalent <tt>newFixedThreadPool(1, threadFactory)</tt> the returned executor
      * is guaranteed not to be reconfigurable to use additional
      * threads.
      * 
@@ -87,7 +88,7 @@ public class Executors {
      * @return the newly-created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-        return unconfigurableExecutorService
+        return new DelegatedExecutorService
             (new ThreadPoolExecutor(1, 1,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>(),
@@ -132,12 +133,41 @@ public class Executors {
     }
    
     /**
-     * Creates a thread pool that can schedule commands to run after a 
-     * given delay, or to execute periodically.
-     * @return a newly created scheduled thread pool with termination management
+     * Creates a single-threaded executor that can schedule commands
+     * to run after a given delay, or to execute periodically.
+     * (Note however that if this single
+     * thread terminates due to a failure during execution prior to
+     * shutdown, a new one will take its place if needed to execute
+     * subsequent tasks.)  Tasks are guaranteed to execute
+     * sequentially, and no more than one task will be active at any
+     * given time. Unlike the otherwise equivalent
+     * <tt>newScheduledThreadPool(1)</tt> the returned executor is
+     * guaranteed not to be reconfigurable to use additional threads.
+     * @return a newly created scheduled executor
      */
-    public static ScheduledExecutorService newScheduledThreadPool() {
-        return newScheduledThreadPool(1);
+    public static ScheduledExecutorService newSingleThreadScheduledExecutor() {
+        return new DelegatedScheduledExecutorService
+            (new ScheduledThreadPoolExecutor(1));
+    }
+
+    /**
+     * Creates a single-threaded executor that can schedule commands
+     * to run after a given delay, or to execute periodically.  (Note
+     * however that if this single thread terminates due to a failure
+     * during execution prior to shutdown, a new one will take its
+     * place if needed to execute subsequent tasks.)  Tasks are
+     * guaranteed to execute sequentially, and no more than one task
+     * will be active at any given time. Unlike the otherwise
+     * equivalent <tt>newScheduledThreadPool(1, threadFactory)</tt>
+     * the returned executor is guaranteed not to be reconfigurable to
+     * use additional threads.
+     * @param threadFactory the factory to use when creating new
+     * threads
+     * @return a newly created scheduled executor
+     */
+    public static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory) {
+        return new DelegatedScheduledExecutorService
+            (new ScheduledThreadPoolExecutor(1, threadFactory));
     }
     
     /**
@@ -145,7 +175,7 @@ public class Executors {
      * given delay, or to execute periodically.
      * @param corePoolSize the number of threads to keep in the pool,
      * even if they are idle.
-     * @return a newly created scheduled thread pool with termination management
+     * @return a newly created scheduled thread pool
      */
     public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
         return new ScheduledThreadPoolExecutor(corePoolSize);
@@ -158,7 +188,7 @@ public class Executors {
      * even if they are idle.
      * @param threadFactory the factory to use when the executor
      * creates a new thread. 
-     * @return a newly created scheduled thread pool with termination management
+     * @return a newly created scheduled thread pool
      */
     public static ScheduledExecutorService newScheduledThreadPool(
             int corePoolSize, ThreadFactory threadFactory) {
@@ -248,7 +278,6 @@ public class Executors {
      * @throws AccessControlException if the current access control
      * context does not have permission to both get and set context
      * class loader.
-     * @see PrivilegedFutureTask
      */
     public static ThreadFactory privilegedThreadFactory() {
         return new PrivilegedThreadFactory();
@@ -331,6 +360,7 @@ public class Executors {
         return new PrivilegedCallableUsingCurrentClassLoader(callable);
     }
 
+    // Non-public classes supporting the public methods
 
     /**
      * A callable that runs given task and returns given result
@@ -381,8 +411,8 @@ public class Executors {
     static class PrivilegedCallable<T> implements Callable<T> {
         private final AccessControlContext acc;
         private final Callable<T> task;
-        T result;
-        Exception exception;
+        private T result;
+        private Exception exception;
         PrivilegedCallable(Callable<T> task) {
             this.task = task;
             this.acc = AccessController.getContext();
@@ -414,8 +444,8 @@ public class Executors {
         private final ClassLoader ccl;
         private final AccessControlContext acc;
         private final Callable<T> task;
-        T result;
-        Exception exception;
+        private T result;
+        private Exception exception;
         PrivilegedCallableUsingCurrentClassLoader(Callable<T> task) {
             this.task = task;
             this.ccl = Thread.currentThread().getContextClassLoader();
@@ -452,6 +482,9 @@ public class Executors {
         }
     }
 
+    /**
+     * The default thread factory
+     */
     static class DefaultThreadFactory implements ThreadFactory {
         static final AtomicInteger poolNumber = new AtomicInteger(1);
         final ThreadGroup group;
@@ -479,6 +512,9 @@ public class Executors {
         }
     }
 
+    /**
+     *  Thread factory capturing access control and class loader
+     */
     static class PrivilegedThreadFactory extends DefaultThreadFactory {
         private final ClassLoader ccl;
         private final AccessControlContext acc;

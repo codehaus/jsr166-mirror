@@ -1,7 +1,7 @@
 /*
- * @(#)Unsafe.java	1.12 02/05/08
+ * %W% %E%
  *
- * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
@@ -17,7 +17,7 @@ import java.lang.reflect.*;
  * limited because only trusted code can obtain instances of it.
  *
  * @author John R. Rose
- * @version  1.12, 02/05/08
+ * @version  %I%, %E%
  * @see #getUnsafe
  */
 

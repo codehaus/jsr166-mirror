@@ -48,7 +48,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
 
     /** Main lock gurding all access */
-    private final FairReentrantLock lock = new FairReentrantLock();
+    //    private final FairReentrantLock lock = new FairReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
     /** Condition wor waiting takes */
     private final Condition notEmpty = lock.newCondition();
     /** Condition for wiating puts */

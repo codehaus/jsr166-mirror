@@ -17,7 +17,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
     private final PriorityQueue<E> q;
-    private final FairReentrantLock lock = new FairReentrantLock();
+    //    private final FairReentrantLock lock = new FairReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
 
     /**
@@ -70,6 +71,17 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      */
     public PriorityBlockingQueue(Collection<E> initialElements) {
         q = new PriorityQueue<E>(initialElements);
+    }
+
+    /**
+     * Returns the comparator associated with this priority queue, or
+     * <tt>null</tt> if it uses its elements' natural ordering.
+     *
+     * @return the comparator associated with this priority queue, or
+     *         <tt>null</tt> if it uses its elements' natural ordering.
+     */
+    public Comparator comparator() {
+        return q.comparator();
     }
 
     public boolean offer(E x) {

@@ -57,7 +57,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/28 15:33:31 $
+ * @revised $Date: 2003/07/01 16:29:52 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -382,6 +382,13 @@ public class ReentrantLock extends ReentrantLockQueueNode
             }
 
             /*
+             * Retry if already released.
+             */
+            else if (releaseStatus > 0) {
+                casReleaseStatus(p, releaseStatus, 0);
+            }
+
+            /*
              * Wait if we are not not first in queue, or if we are
              * first, we have tried to acquire owner and failed since
              * either entry or last release.  (Note that releaseStatus can
@@ -400,10 +407,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
              * incrementing if already positive.
              *
              */
-            else if (casReleaseStatus(p, releaseStatus, 
-                                      (releaseStatus > 0) ? 0 : -1) && 
-                     releaseStatus <= 0) {
-
+            else if (casReleaseStatus(p, releaseStatus, -1)) {
                 // Update and check timeout value
                 if (nanos > 0) { 
                     long now = TimeUnit.nanoTime();
@@ -416,7 +420,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
                 }
                 
                 if (nanos >= 0)
-                    JSR166Support.parkNode(node, false, nanos);
+                    JSR166Support.park(node, false, nanos);
                 
                 if (!interruptible) {
                     if (Thread.interrupted()) // consume interrupt for now 
@@ -455,8 +459,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
         /*
          * If successor appears to be null, check to see if a newly
          * queued node is successor by starting at tail and working
-         * backwards. If so, help out the enqueing thread by setting
-         * next field. We don't expect this loop to trigger often, 
+         * backwards. We don't expect this loop to trigger often, 
          * and hardly ever to iterate.
          */
         
@@ -464,39 +467,20 @@ public class ReentrantLock extends ReentrantLockQueueNode
             ReentrantLockQueueNode t = tail;
             for (;;) {
                 /* 
-                 * If t == node, there is no successor.  
-                 */
-                if (t == node) 
-                    return;
-
-                ReentrantLockQueueNode tp = t.prev;
-
-                /* 
-                 * t's predecessor is null if we are lagging so far
-                 * behind the actions of other nodes/threads that an
+                 * If t == node, there is no successor.  And t's
+                 * predecessor is null if we are lagging so far behind
+                 * the actions of other nodes/threads that an
                  * intervening head.prev was nulled by some
                  * non-cancelled successor of node. In which case,
                  * there's no live successor.
                  */
-
-                if (tp == null)
+                if (t == node || t == null) 
                     return;
-
-                /* 
-                 * If we find successor, we can do the assignment to
-                 * next (don't even need CAS) on behalf of enqueuing
-                 * thread. At worst we will stall now and lag behind
-                 * both the setting and the later clearing of next
-                 * field. But if so, we will reattach an internal link
-                 * in soon-to-be unreachable set of nodes, so no harm
-                 * done.
-                 */
-                
+                ReentrantLockQueueNode tp = t.prev;
                 if (tp == node) {
-                    node.next = s = t;
+                    s = t;
                     break;
                 }
-
                 t = tp; 
 
                 /*
@@ -512,9 +496,9 @@ public class ReentrantLock extends ReentrantLockQueueNode
         }
 
         Thread thr = s.thread;
-        // don't bother signalling if has lock
+        // Don't bother signalling if has lock
         if (thr != null && thr != owner) 
-            JSR166Support.unparkNode(s);
+            JSR166Support.unpark(s, thr);
     }
 
 
@@ -528,15 +512,15 @@ public class ReentrantLock extends ReentrantLockQueueNode
             ReentrantLockQueueNode h = head;
             if (h == tail)    // No successor
                 return;
-
+            /*
+            if (owner != null) // Don't bother if some thread got lock
+                return;
+            */
             int c = h.releaseStatus;
             if (c > 0)         // Don't need signal if already positive
                 return;
-            if (owner != null) // Don't bother if some thread got lock
-                return;
-
             if (casReleaseStatus(h, c, (c < 0) ? 0 : 1)) { // saturate at 1
-                if (c < 0) 
+                if (c < 0)
                     signalSuccessor(h);
                 return;
             }
@@ -558,12 +542,24 @@ public class ReentrantLock extends ReentrantLockQueueNode
         if (Thread.currentThread() != owner) 
             throw new IllegalMonitorStateException();
 
-        if (recursions > 0) 
+        if (recursions > 0) {
             --recursions;
-        else {
-            ownerUpdater.set(this, null);
-            if (tail != this)  // don't bother if never contended
-                releaseFirst();
+            return;
+        }
+
+        ownerUpdater.set(this, null);
+        for (;;) {
+            ReentrantLockQueueNode h = head;
+            if (h == tail)    // No successor
+                return;
+            int c = h.releaseStatus;
+            if (c > 0)         // Don't need signal if already positive
+                return;
+            if (casReleaseStatus(h, c, (c < 0) ? 0 : 1)) { // saturate at 1
+                signalSuccessor(h);
+                return;
+            }
+            // else retry if CAS fails
         }
     }
 
@@ -1002,7 +998,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
             
             if (!isOffConditionQueue(w)) {
                 for (;;) {
-                    JSR166Support.parkNode(w, false, 0);
+                    JSR166Support.park(w, false, 0);
                     if (isOffConditionQueue(w))
                         break;
                     if ( (wasInterrupted = Thread.interrupted()) ) {
@@ -1042,7 +1038,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
             boolean wasInterrupted = false;
             while (!isOffConditionQueue(w)) {
-                JSR166Support.parkNode(w, false, 0);
+                JSR166Support.park(w, false, 0);
                 if (Thread.interrupted()) 
                     wasInterrupted = true;
             }
@@ -1072,7 +1068,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
             if (!isOffConditionQueue(w)) {
                 for (;;) {
-                    JSR166Support.parkNode(w, false, timeLeft);
+                    JSR166Support.park(w, false, timeLeft);
                     if (isOffConditionQueue(w)) 
                         break;
                     
@@ -1115,7 +1111,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
             if (!isOffConditionQueue(w)) {
                 for (;;) {
-                    JSR166Support.parkNode(w, true, abstime);
+                    JSR166Support.park(w, true, abstime);
                     if (isOffConditionQueue(w)) 
                         break;
                     

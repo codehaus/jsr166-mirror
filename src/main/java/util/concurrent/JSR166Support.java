@@ -82,7 +82,10 @@ final class JSR166Support {
      */
     static native void park(boolean isAbsolute, long time);
 
-    static void parkNode(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
+    /**
+     * Temporary version of park to allow emulation
+     */
+    static void park(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
         park(isAbsolute, time);
     }
 
@@ -95,9 +98,13 @@ final class JSR166Support {
      */
     static native void unpark(Object thread);
 
-    static void unparkNode(ReentrantLockQueueNode node) {
-        unpark(node.thread);
+    /**
+     *Tempoarary version of unpark to allow emulation
+     */ 
+    static void unpark(ReentrantLockQueueNode node, Thread thread) {
+        unpark(thread);
     }
+
 
     /**
      * Implementation of Locks.mightBeLocked.

@@ -77,7 +77,7 @@ final class JSR166Support {
      * @param time the deadline or timeout. If zero and isAbsolute is
      * false, means to wait forever.
      */
-    static void parkNode(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
+    static void park(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
         try {
             synchronized(node) {
                 if ( (node.parkSemaphore = (node.parkSemaphore > 0) ? 0 : -1) ==0)
@@ -109,7 +109,7 @@ final class JSR166Support {
      * subsequent call to park not to block. 
      * @param thread the thread to unpark (no-op if null).
      */
-    static void unparkNode(ReentrantLockQueueNode node) {
+    static void unpark(ReentrantLockQueueNode node, Thread thread) {
         if (node == null)
             return;
         synchronized(node) {

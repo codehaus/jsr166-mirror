@@ -31,7 +31,8 @@
  * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-                              implements Queue<E> {
+                              implements Queue<E>, 
+                                         java.io.Serializable {
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 
     /**
@@ -127,15 +128,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             initialCapacity = 1;
         queue = new E[initialCapacity + 1];
 
-        /* Commented out to compile with generics compiler
 
         if (initialElements instanceof Sorted) {
             comparator = ((Sorted)initialElements).comparator();
             for (Iterator<E> i = initialElements.iterator(); i.hasNext(); )
                 queue[++size] = i.next();
         } else {
-        */
-        {
             comparator = null;
             for (Iterator<E> i = initialElements.iterator(); i.hasNext(); )
                 add(i.next());
@@ -414,7 +412,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @return the comparator associated with this priority queue, or
      *         <tt>null</tt> if it uses its elements' natural ordering.
      */
-    Comparator comparator() {
+    public Comparator comparator() {
         return comparator;
     }
 

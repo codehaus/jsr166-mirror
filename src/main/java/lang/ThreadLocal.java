@@ -1,5 +1,5 @@
 /*
- * @(#)ThreadLocal.java	1.27 03/06/22
+ * @(#)ThreadLocal.java 1.27 03/06/22
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -129,7 +129,7 @@ public class ThreadLocal<T> {
         // Maps are constructed lazily.  if the map for this thread
         // doesn't exist, create it, with this ThreadLocal and its
         // initial value as its only entry.
-	T value = initialValue();
+        T value = initialValue();
         createMap(t, value);
         return value;
     }
@@ -141,7 +141,7 @@ public class ThreadLocal<T> {
      * method to set the values of thread-locals.
      *
      * @param value the value to be stored in the current threads' copy of
-     *	      this thread-local.
+     *        this thread-local.
      */
     public void set(T value) {
         Thread t = Thread.currentThread();
@@ -160,7 +160,7 @@ public class ThreadLocal<T> {
      **/
 
      public void remove() {
-         ThreadLocalMap m = getMap(Thread.currentThread());
+         ThreadLocalMap<T> m = getMap(Thread.currentThread());
          if (m != null)
              m.remove(this);
      }
@@ -173,7 +173,7 @@ public class ThreadLocal<T> {
      * @return the map
      */
     ThreadLocalMap<T> getMap(Thread t) {
-        return t.threadLocals;
+        return (ThreadLocalMap<T>) t.threadLocals;
     }
 
     /**
@@ -309,7 +309,7 @@ public class ThreadLocal<T> {
             table = new Entry[len];
       
             for (int j = 0; j < len; j++) {
-                Entry<T> e = parentTable[j];
+                Entry<T> e = (Entry<T>) parentTable[j];
                 if (e != null) {
                     ThreadLocal<T> k = e.get();
                     if (k != null) {
@@ -339,7 +339,7 @@ public class ThreadLocal<T> {
          */
         private T get(ThreadLocal<T> key) {
             int i = key.threadLocalHashCode & (table.length - 1);
-            Entry<T> e = table[i];
+            Entry<T> e = (Entry<T>) table[i];
             if (e != null && e.get() == key)
                 return e.value;
 
@@ -367,10 +367,10 @@ public class ThreadLocal<T> {
                     return replaceStaleEntry(key, null, i, true);
 
                 i = nextIndex(i, len);
-                e = tab[i];
+                e = (Entry<T>) tab[i];
             }
 
-	    T value = key.initialValue();
+            T value = key.initialValue();
             tab[i] = new Entry<T>(key, value);
             int sz = ++size;
             if (!cleanSomeSlots(i, sz) && sz >= threshold) 
@@ -397,7 +397,7 @@ public class ThreadLocal<T> {
             int len = tab.length;
             int i = key.threadLocalHashCode & (len-1);
 
-            for (Entry<T> e = tab[i]; e != null; e = tab[i = nextIndex(i, len)]) {
+            for (Entry<T> e = (Entry<T>) tab[i]; e != null; e = (Entry<T>) tab[i = nextIndex(i, len)]) {
                 ThreadLocal<T> k = e.get();
 
                 if (k == key) {
@@ -426,7 +426,7 @@ public class ThreadLocal<T> {
             Entry[] tab = table;
             int len = tab.length;
             int i = key.threadLocalHashCode & (len-1);
-            for (Entry<T> e = tab[i]; e != null; e = tab[i = nextIndex(i, len)]) {
+            for (Entry<T> e = (Entry<T>) tab[i]; e != null; e = (Entry<T>) tab[i = nextIndex(i, len)]) {
                 if (e.get() == key) {
                     e.clear();
                     expungeStaleEntry(i);
@@ -458,7 +458,7 @@ public class ThreadLocal<T> {
          * @return the value associated with key after the operation completes.
          */
         private T replaceStaleEntry(ThreadLocal<T> key, T value, 
-				    int staleSlot, boolean actAsGet) {
+                                    int staleSlot, boolean actAsGet) {
             Entry[] tab = table;
             int len = tab.length;
             Entry<T> e;
@@ -468,14 +468,14 @@ public class ThreadLocal<T> {
             // incremental rehashing due to garbage collector freeing
             // up refs in bunches (i.e., whenever the collector runs).
             int slotToExpunge = staleSlot;
-            for (int i = prevIndex(staleSlot, len); (e = tab[i]) != null;
+            for (int i = prevIndex(staleSlot, len); (e = (Entry<T>) tab[i]) != null;
                  i = prevIndex(i, len)) 
                 if (e.get() == null) 
                     slotToExpunge = i;
 
             // Find either the key or trailing null slot of run, whichever
             // occurs first
-            for (int i = nextIndex(staleSlot, len); (e = tab[i]) != null;
+            for (int i = nextIndex(staleSlot, len); (e = (Entry<T>) tab[i]) != null;
                  i = nextIndex(i, len)) {
                 ThreadLocal<T> k = e.get();
 
@@ -510,7 +510,7 @@ public class ThreadLocal<T> {
             // If key not found, put new entry in stale slot
             if (actAsGet)
                 value = key.initialValue();
-            tab[staleSlot].value = null;   // Help the GC
+            ((Entry<T>) tab[staleSlot]).value = null;   // Help the GC
             tab[staleSlot] = new Entry<T>(key, value);
 
             // If there are any other stale entries in run, expunge them
@@ -536,14 +536,14 @@ public class ThreadLocal<T> {
             int len = tab.length;
 
             // expunge entry at staleSlot
-            tab[staleSlot].value = null;   // Help the GC
+            ((Entry<T>) tab[staleSlot]).value = null;   // Help the GC
             tab[staleSlot] = null;
             size--;
 
             // Rehash until we encounter null
             Entry<T> e;
             int i;
-            for (i = nextIndex(staleSlot, len); (e = tab[i]) != null;
+            for (i = nextIndex(staleSlot, len); (e = (Entry<T>) tab[i]) != null;
                  i = nextIndex(i, len)) {
                 ThreadLocal<T> k = e.get();
                 if (k == null) {
@@ -597,7 +597,7 @@ public class ThreadLocal<T> {
             int len = tab.length;
             do {
                 i = nextIndex(i, len);
-                Entry<T> e = tab[i];
+                Entry<T> e = (Entry<T>) tab[i];
                 if (e != null && e.get() == null) {
                     n = len;
                     removed = true;
@@ -631,7 +631,7 @@ public class ThreadLocal<T> {
             int count = 0;
 
             for (int j = 0; j < oldLen; ++j) {
-                Entry<T> e = oldTab[j];
+                Entry<T> e = (Entry<T>) oldTab[j];
                 oldTab[j] = null; // Help the GC
                 if (e != null) {
                     ThreadLocal<T> k = e.get();
@@ -660,7 +660,7 @@ public class ThreadLocal<T> {
             Entry[] tab = table;
             int len = tab.length;
             for (int j = 0; j < len; j++) {
-                Entry<T> e = tab[j];
+                Entry<T> e = (Entry<T>) tab[j];
                 if (e != null && e.get() == null) 
                     expungeStaleEntry(j);
             }

@@ -60,7 +60,7 @@ public class PriorityQueueTest extends TestCase {
                      expected,
                      sorted);
 
-        System.out.println(unsorted.subList(0, 25));
-        System.out.println(sorted.subList(0, 25));
+        //System.out.println(unsorted.subList(0, 10));
+        //System.out.println(sorted.subList(0, 10));
     }
 }

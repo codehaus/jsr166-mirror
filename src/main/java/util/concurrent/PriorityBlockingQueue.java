@@ -42,7 +42,7 @@ public class PriorityBlockingQueue<E> extends AbstractBlockingQueueFromQueue<E>
      * @param initialCapacity the initial capacity for this priority queue.
      * @param comparator the comparator used to order this priority queue.
      */
-    public PriorityBlockingQueue(int initialCapacity, Comparator comparator) {
+    public PriorityBlockingQueue(int initialCapacity, Comparator<E> comparator) {
         super(new PriorityQueue<E>(initialCapacity, comparator), Integer.MAX_VALUE);
     }
 

@@ -24,7 +24,7 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:40 $
+ * @revised $Date: 2003/05/29 13:49:24 $
  * @editor $Author: dl $
  */
 public class Executors {
@@ -58,7 +58,7 @@ public class Executors {
         return new DelegatedExecutorService
             (new ThreadPoolExecutor(nThreads, nThreads,
                                     0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue()));
+                                    new LinkedBlockingQueue<Runnable>()));
     }
 
     /**
@@ -74,7 +74,7 @@ public class Executors {
         return new DelegatedExecutorService
             (new ThreadPoolExecutor(nThreads, nThreads,
                                     0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue(),
+                                    new LinkedBlockingQueue<Runnable>(),
                                     threadFactory, null));
     }
 
@@ -93,7 +93,7 @@ public class Executors {
         return new DelegatedExecutorService
             (new ThreadPoolExecutor(1, 1, 
                                     0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue()));
+                                    new LinkedBlockingQueue<Runnable>()));
     }
 
     /**
@@ -109,7 +109,7 @@ public class Executors {
         return new DelegatedExecutorService
             (new ThreadPoolExecutor(1, 1, 
                                     0L, TimeUnit.MILLISECONDS,
-                                    new LinkedBlockingQueue(),
+                                    new LinkedBlockingQueue<Runnable>(),
                                     threadFactory, null));
     }
 
@@ -131,7 +131,7 @@ public class Executors {
         return new DelegatedExecutorService
             (new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                     60, TimeUnit.SECONDS,
-                                    new SynchronousQueue()));
+                                    new SynchronousQueue<Runnable>()));
     }
 
     /**
@@ -146,7 +146,7 @@ public class Executors {
         return new DelegatedExecutorService
             (new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                     60, TimeUnit.SECONDS,
-                                    new SynchronousQueue(),
+                                    new SynchronousQueue<Runnable>(),
                                     threadFactory, null));
     }
 

@@ -379,7 +379,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *               <code>null</code>.
      * @see     #put(Object, Object)
      */
-    public V get(Object key) {
+    public V get(K key) {
         int hash = hash(key);     // throws null pointer exception if key null
 
         // Try first without locking...
@@ -430,7 +430,45 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @see     #contains(Object)
      */
     public boolean containsKey(Object key) {
-        return get(key) != null;
+        // Annoyingly, for now, duplicate get, since can't call
+        // because different signatures.
+
+        int hash = hash(key);     // throws null pointer exception if key null
+
+        // Try first without locking...
+        Entry<K,V>[] tab = table;
+        int index = hash & (tab.length - 1);
+        Entry<K,V> first = tab[index];
+        Entry<K,V> e;
+
+        for (e = first; e != null; e = e.next) {
+            if (e.hash == hash && eq(key, e.key)) {
+                V value = e.value;
+                if (value != null)
+                    return true;
+                else
+                    break;
+            }
+        }
+
+        // Recheck under synch if key apparently not there or interference
+        Segment seg = segments[hash & SEGMENT_MASK];
+        seg.lock();
+        try {
+            tab = table;
+            index = hash & (tab.length - 1);
+            Entry<K,V> newFirst = tab[index];
+            if (e != null || first != newFirst) {
+                for (e = newFirst; e != null; e = e.next) {
+                    if (e.hash == hash && eq(key, e.key))
+                        return true;
+                }
+            }
+            return false;
+        }
+        finally {
+            seg.unlock();
+        }
     }
 
 

@@ -386,7 +386,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
 
-    public E[] toArray() {
+    public Object[] toArray() {
         return new E[0];
     }
 

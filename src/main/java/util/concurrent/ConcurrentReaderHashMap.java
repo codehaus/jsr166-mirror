@@ -284,7 +284,7 @@ public class ConcurrentReaderHashMap<K,V>  extends Dictionary<K,V>
      *               <code>null</code>.
      * @see     #put(Object, Object)
      */
-    public V get(Object key) { // should be "K key" but compiler complains?
+    public V get(K key) { 
         int hash = hash(key); // throws NullPointerException if key null
 
         if (count != 0) { // read-volatile

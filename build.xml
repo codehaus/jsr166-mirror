@@ -214,6 +214,10 @@ ant [target], where target is one of:
     </copy>
     <copy tofile="${deployDir}/index.html"
           file="${basedir}/etc/anthill-index.html"/>
+    <mkdir dir="${deployDir}/notes}"/>
+    <copy todir="${deployDir}/notes">
+      <fileset dir="${basedir}/etc/notes"/>
+    </copy>
   </target>
 
 

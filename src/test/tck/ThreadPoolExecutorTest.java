@@ -39,7 +39,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     static class FailingThreadFactory implements ThreadFactory{
         int calls = 0;
         public Thread newThread(Runnable r){
-            if (++calls > 1) throw new NullPointerException();
+            if (++calls > 1) return null;
             return new Thread(r);
         }   
     }

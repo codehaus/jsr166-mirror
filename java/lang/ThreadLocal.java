@@ -1,5 +1,5 @@
 /*
- * @(#)ThreadLocal.java	1.19 01/12/03
+ * @(#)ThreadLocal.java 1.19 01/12/03
  *
  * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -132,7 +132,7 @@ public class ThreadLocal {
      * applications will have no need for this functionality.
      *
      * @param value the value to be stored in the current threads' copy of
-     *	      this thread-local.
+     *        this thread-local.
      */
     public void set(Object value) {
         Thread t = Thread.currentThread();

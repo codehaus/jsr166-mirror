@@ -717,7 +717,7 @@ public class ConcurrentHashMap
    * @exception  NullPointerException  if the value is <code>null</code>.
    * @see        #containsKey(Object)
    * @see        #containsValue(Object)
-   * @see	   Map
+   * @see          Map
    */
 
   public boolean contains(Object value) {
@@ -916,8 +916,8 @@ public class ConcurrentHashMap
    * @return  an enumeration of the keys in this table.
    * @see     Enumeration
    * @see     #elements()
-   * @see	#keySet()
-   * @see	Map
+   * @see       #keySet()
+   * @see       Map
    */
   public Enumeration keys() {
     return new KeyIterator();
@@ -931,8 +931,8 @@ public class ConcurrentHashMap
    * @return  an enumeration of the values in this table.
    * @see     java.util.Enumeration
    * @see     #keys()
-   * @see	#values()
-   * @see	Map
+   * @see       #values()
+   * @see       Map
    */
   
   public Enumeration elements() {

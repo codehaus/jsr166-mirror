@@ -287,8 +287,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * does not contain any null elements.
    *
    * @param a the array into which the elements of the list are to
-   *		be stored, if it is big enough; otherwise, a new array of the
-   * 		same runtime type is allocated for this purpose.
+   *            be stored, if it is big enough; otherwise, a new array of the
+   *            same runtime type is allocated for this purpose.
    * @return an array containing the elements of the list.
    * @exception ArrayStoreException the runtime type of a is not a supertype
    * of the runtime type of every element in this list.
@@ -316,7 +316,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    *
    * @param index index of element to return.
    * @exception IndexOutOfBoundsException index is out of range (index
-   * 		  &lt; 0 || index &gt;= size()).
+   *              &lt; 0 || index &gt;= size()).
    */
   public Object get(int index) {
     Object[] elementData = array();
@@ -332,7 +332,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * @param element element to be stored at the specified position.
    * @return the element previously at the specified position.
    * @exception IndexOutOfBoundsException index out of range
-   *		  (index &lt; 0 || index &gt;= size()).
+   *              (index &lt; 0 || index &gt;= size()).
    */
   public synchronized Object set(int index, Object element) {
     int len = array_.length;
@@ -373,7 +373,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * @param index index at which the specified element is to be inserted.
    * @param element element to be inserted.
    * @exception IndexOutOfBoundsException index is out of range
-   *		  (index &lt; 0 || index &gt; size()).
+   *              (index &lt; 0 || index &gt; size()).
    */
   public synchronized void add(int index, Object element) {
     int len = array_.length;
@@ -393,7 +393,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * indices).  Returns the element that was removed from the list.
    *
    * @exception IndexOutOfBoundsException index out of range (index
-   * 		  &lt; 0 || index &gt;= size()).
+   *              &lt; 0 || index &gt;= size()).
    * @param index the index of the element to removed.
    */
   public synchronized Object remove(int index) {
@@ -465,8 +465,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * @param fromIndex index of first element to be removed.
    * @param fromIndex index after last element to be removed.
    * @exception IndexOutOfBoundsException fromIndex or toIndex out of
-   *		  range (fromIndex &lt; 0 || fromIndex &gt;= size() || toIndex
-   *		  &gt; size() || toIndex &lt; fromIndex).
+   *              range (fromIndex &lt; 0 || fromIndex &gt;= size() || toIndex
+   *              &gt; size() || toIndex &lt; fromIndex).
    */
   private synchronized void removeRange(int fromIndex, int toIndex) {
     int len = array_.length;
@@ -499,7 +499,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
     for (int i = 0; i < len; ++i) {
       if (element == array_[i] ||
           (element != null && element.equals(array_[i]))) 
-	return false; // exit, throwing away copy
+        return false; // exit, throwing away copy
       else
         newArray[i] = array_[i];
     }
@@ -668,10 +668,10 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * specified Collection's iterator.
    *
    * @param index index at which to insert first element
-   *		    from the specified collection.
+   *                from the specified collection.
    * @param c elements to be inserted into this list.
    * @exception IndexOutOfBoundsException index out of range (index
-   *		  &lt; 0 || index &gt; size()).
+   *              &lt; 0 || index &gt; size()).
    */
   public synchronized boolean addAll(int index, Collection c) {
     int len = array_.length;
@@ -706,8 +706,8 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * Save the state of the list to a stream (i.e., serialize it).
    *
    * @serialData The length of the array backing the list is emitted
-   *		   (int), followed by all of its elements (each an Object)
-   *		   in the proper order.
+   *               (int), followed by all of its elements (each an Object)
+   *               in the proper order.
    */
   private void writeObject(java.io.ObjectOutputStream s)
     throws java.io.IOException{
@@ -735,7 +735,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
     int arrayLength = s.readInt();
     Object[] elementData = new Object[arrayLength];
 
-	// Read in all elements in the proper order.
+        // Read in all elements in the proper order.
     for (int i=0; i<elementData.length; i++)
       elementData[i] = s.readObject();
     array_ = elementData;
@@ -854,9 +854,9 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
    * add methods.
    *
    * @param index index of first element to be returned from the
-   *		    ListIterator (by a call to getNext).
+   *                ListIterator (by a call to getNext).
    * @exception IndexOutOfBoundsException index is out of range
-   *		  (index &lt; 0 || index &gt; size()).
+   *              (index &lt; 0 || index &gt; size()).
    */
   public ListIterator listIterator(final int index) {
     Object[] elementData = array();
@@ -918,7 +918,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
     /**
      * Not supported. Always throws UnsupportedOperationException.
      * @exception UnsupportedOperationException remove is not supported
-     * 		  by this Iterator.
+     *            by this Iterator.
      */
 
     public void remove() {
@@ -928,7 +928,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
     /**
      * Not supported. Always throws UnsupportedOperationException.
      * @exception UnsupportedOperationException set is not supported
-     * 		  by this Iterator.
+     *            by this Iterator.
      */
     public void set(Object o) {
       throw new UnsupportedOperationException();
@@ -937,7 +937,7 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
     /**
      * Not supported. Always throws UnsupportedOperationException.
      * @exception UnsupportedOperationException add is not supported
-     * 		  by this Iterator.
+     *            by this Iterator.
      */
     public void add(Object o) {
       throw new UnsupportedOperationException();

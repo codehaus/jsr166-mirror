@@ -1,5 +1,5 @@
 /*
- * @(#)LinkedList.java	1.43 01/12/03
+ * @(#)LinkedList.java  1.43 01/12/03
  *
  * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -58,15 +58,15 @@ package java.util;
  *
  * @author  Josh Bloch
  * @version 1.43, 12/03/01 
- * @see	    List
- * @see	    ArrayList
- * @see	    Vector
- * @see	    Collections#synchronizedList(List)
+ * @see     java.util.List
+ * @see     java.util.ArrayList
+ * @see     java.util.Vector
+ * @see     java.util.Collections#synchronizedList(java.util.List)
  * @since 1.2
  */
 
 public class LinkedList extends AbstractSequentialList
-		        implements List, Queue, Cloneable, java.io.Serializable
+                        implements List, Queue, Cloneable, java.io.Serializable
 {
     private transient Entry header = new Entry(null, null, null);
     private transient int size = 0;
@@ -87,8 +87,8 @@ public class LinkedList extends AbstractSequentialList
      * @throws NullPointerException if the specified collection is null.
      */
      public LinkedList(Collection c) {
-	 this();
-	 addAll(c);
+         this();
+         addAll(c);
      }
 
     /**
@@ -98,10 +98,10 @@ public class LinkedList extends AbstractSequentialList
      * @throws    NoSuchElementException if this list is empty.
      */
     public Object getFirst() {
-	if (size==0)
-	    throw new NoSuchElementException();
+        if (size==0)
+            throw new NoSuchElementException();
 
-	return header.next.element;
+        return header.next.element;
     }
 
     /**
@@ -111,10 +111,10 @@ public class LinkedList extends AbstractSequentialList
      * @throws    NoSuchElementException if this list is empty.
      */
     public Object getLast()  {
-	if (size==0)
-	    throw new NoSuchElementException();
+        if (size==0)
+            throw new NoSuchElementException();
 
-	return header.previous.element;
+        return header.previous.element;
     }
 
     /**
@@ -124,9 +124,9 @@ public class LinkedList extends AbstractSequentialList
      * @throws    NoSuchElementException if this list is empty.
      */
     public Object removeFirst() {
-	Object first = header.next.element;
-	remove(header.next);
-	return first;
+        Object first = header.next.element;
+        remove(header.next);
+        return first;
     }
 
     /**
@@ -136,9 +136,9 @@ public class LinkedList extends AbstractSequentialList
      * @throws    NoSuchElementException if this list is empty.
      */
     public Object removeLast() {
-	Object last = header.previous.element;
-	remove(header.previous);
-	return last;
+        Object last = header.previous.element;
+        remove(header.previous);
+        return last;
     }
 
     /**
@@ -147,7 +147,7 @@ public class LinkedList extends AbstractSequentialList
      * @param o the element to be inserted at the beginning of this list.
      */
     public void addFirst(Object o) {
-	addBefore(o, header.next);
+        addBefore(o, header.next);
     }
 
     /**
@@ -157,7 +157,7 @@ public class LinkedList extends AbstractSequentialList
      * @param o the element to be inserted at the end of this list.
      */
     public void addLast(Object o) {
-	addBefore(o, header);
+        addBefore(o, header);
     }
 
     /**
@@ -179,7 +179,7 @@ public class LinkedList extends AbstractSequentialList
      * @return the number of elements in this list.
      */
     public int size() {
-	return size;
+        return size;
     }
 
     /**
@@ -190,7 +190,7 @@ public class LinkedList extends AbstractSequentialList
      * <tt>Collection.add</tt>).
      */
     public boolean add(Object o) {
-	addBefore(o, header);
+        addBefore(o, header);
         return true;
     }
 
@@ -248,7 +248,7 @@ public class LinkedList extends AbstractSequentialList
      * specified collection's iterator.
      *
      * @param index index at which to insert first element
-     *		    from the specified collection.
+     *              from the specified collection.
      * @param c elements to be inserted into this list.
      * @return <tt>true</tt> if this list changed as a result of the call.
      * @throws IndexOutOfBoundsException if the specified index is out of
@@ -256,15 +256,15 @@ public class LinkedList extends AbstractSequentialList
      * @throws NullPointerException if the specified collection is null.
      */
     public boolean addAll(int index, Collection c) {
-	int numNew = c.size();
+        int numNew = c.size();
         if (numNew==0)
             return false;
-	modCount++;
+        modCount++;
 
         Entry successor = (index==size ? header : entry(index));
         Entry predecessor = successor.previous;
-	Iterator it = c.iterator();
-	for (int i=0; i<numNew; i++) {
+        Iterator it = c.iterator();
+        for (int i=0; i<numNew; i++) {
             Entry e = new Entry(it.next(), successor, predecessor);
             predecessor.next = e;
             predecessor = e;
@@ -279,9 +279,9 @@ public class LinkedList extends AbstractSequentialList
      * Removes all of the elements from this list.
      */
     public void clear() {
-	modCount++;
+        modCount++;
         header.next = header.previous = header;
-	size = 0;
+        size = 0;
     }
 
 
@@ -308,7 +308,7 @@ public class LinkedList extends AbstractSequentialList
      * @param element element to be stored at the specified position.
      * @return the element previously at the specified position.
      * @throws IndexOutOfBoundsException if the specified index is out of
-     *		  range (<tt>index &lt; 0 || index &gt;= size()</tt>).
+     *            range (<tt>index &lt; 0 || index &gt;= size()</tt>).
      */
     public Object set(int index, Object element) {
         Entry e = entry(index);
@@ -326,7 +326,7 @@ public class LinkedList extends AbstractSequentialList
      * @param element element to be inserted.
      * 
      * @throws IndexOutOfBoundsException if the specified index is out of
-     *		  range (<tt>index &lt; 0 || index &gt; size()</tt>).
+     *            range (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public void add(int index, Object element) {
         addBefore(element, (index==size ? header : entry(index)));
@@ -341,7 +341,7 @@ public class LinkedList extends AbstractSequentialList
      * @return the element previously at the specified position.
      * 
      * @throws IndexOutOfBoundsException if the specified index is out of
-     * 		  range (<tt>index &lt; 0 || index &gt;= size()</tt>).
+     *            range (<tt>index &lt; 0 || index &gt;= size()</tt>).
      */
     public Object remove(int index) {
         Entry e = entry(index);
@@ -379,8 +379,8 @@ public class LinkedList extends AbstractSequentialList
      *
      * @param o element to search for.
      * @return the index in this list of the first occurrence of the
-     * 	       specified element, or -1 if the list does not contain this
-     * 	       element.
+     *         specified element, or -1 if the list does not contain this
+     *         element.
      */
     public int indexOf(Object o) {
         int index = 0;
@@ -409,8 +409,8 @@ public class LinkedList extends AbstractSequentialList
      *
      * @param o element to search for.
      * @return the index in this list of the last occurrence of the
-     * 	       specified element, or -1 if the list does not contain this
-     * 	       element.
+     *         specified element, or -1 if the list does not contain this
+     *         element.
      */
     public int lastIndexOf(Object o) {
         int index = size;
@@ -445,140 +445,140 @@ public class LinkedList extends AbstractSequentialList
      * time in the future.
      *
      * @param index index of first element to be returned from the
-     *		    list-iterator (by a call to <tt>next</tt>).
+     *              list-iterator (by a call to <tt>next</tt>).
      * @return a ListIterator of the elements in this list (in proper
-     * 	       sequence), starting at the specified position in the list.
+     *         sequence), starting at the specified position in the list.
      * @throws    IndexOutOfBoundsException if index is out of range
-     *		  (<tt>index &lt; 0 || index &gt; size()</tt>).
-     * @see List#listIterator(int)
+     *            (<tt>index &lt; 0 || index &gt; size()</tt>).
+     * @see java.util.List#listIterator(int)
      */
     public ListIterator listIterator(int index) {
-	return new ListItr(index);
+        return new ListItr(index);
     }
 
     private class ListItr implements ListIterator {
-	private Entry lastReturned = header;
-	private Entry next;
-	private int nextIndex;
-	private int expectedModCount = modCount;
+        private Entry lastReturned = header;
+        private Entry next;
+        private int nextIndex;
+        private int expectedModCount = modCount;
 
-	ListItr(int index) {
-	    if (index < 0 || index > size)
-		throw new IndexOutOfBoundsException("Index: "+index+
-						    ", Size: "+size);
-	    if (index < (size >> 1)) {
-		next = header.next;
-		for (nextIndex=0; nextIndex<index; nextIndex++)
-		    next = next.next;
-	    } else {
-		next = header;
-		for (nextIndex=size; nextIndex>index; nextIndex--)
-		    next = next.previous;
-	    }
-	}
+        ListItr(int index) {
+            if (index < 0 || index > size)
+                throw new IndexOutOfBoundsException("Index: "+index+
+                                                    ", Size: "+size);
+            if (index < (size >> 1)) {
+                next = header.next;
+                for (nextIndex=0; nextIndex<index; nextIndex++)
+                    next = next.next;
+            } else {
+                next = header;
+                for (nextIndex=size; nextIndex>index; nextIndex--)
+                    next = next.previous;
+            }
+        }
 
-	public boolean hasNext() {
-	    return nextIndex != size;
-	}
+        public boolean hasNext() {
+            return nextIndex != size;
+        }
 
-	public Object next() {
-	    checkForComodification();
-	    if (nextIndex == size)
-		throw new NoSuchElementException();
+        public Object next() {
+            checkForComodification();
+            if (nextIndex == size)
+                throw new NoSuchElementException();
 
-	    lastReturned = next;
-	    next = next.next;
-	    nextIndex++;
-	    return lastReturned.element;
-	}
+            lastReturned = next;
+            next = next.next;
+            nextIndex++;
+            return lastReturned.element;
+        }
 
-	public boolean hasPrevious() {
-	    return nextIndex != 0;
-	}
+        public boolean hasPrevious() {
+            return nextIndex != 0;
+        }
 
-	public Object previous() {
-	    if (nextIndex == 0)
-		throw new NoSuchElementException();
+        public Object previous() {
+            if (nextIndex == 0)
+                throw new NoSuchElementException();
 
-	    lastReturned = next = next.previous;
-	    nextIndex--;
-	    checkForComodification();
-	    return lastReturned.element;
-	}
+            lastReturned = next = next.previous;
+            nextIndex--;
+            checkForComodification();
+            return lastReturned.element;
+        }
 
-	public int nextIndex() {
-	    return nextIndex;
-	}
+        public int nextIndex() {
+            return nextIndex;
+        }
 
-	public int previousIndex() {
-	    return nextIndex-1;
-	}
+        public int previousIndex() {
+            return nextIndex-1;
+        }
 
-	public void remove() {
+        public void remove() {
             checkForComodification();
             try {
                 LinkedList.this.remove(lastReturned);
             } catch (NoSuchElementException e) {
                 throw new IllegalStateException();
             }
-	    if (next==lastReturned)
+            if (next==lastReturned)
                 next = lastReturned.next;
             else
-		nextIndex--;
-	    lastReturned = header;
-	    expectedModCount++;
-	}
+                nextIndex--;
+            lastReturned = header;
+            expectedModCount++;
+        }
 
-	public void set(Object o) {
-	    if (lastReturned == header)
-		throw new IllegalStateException();
-	    checkForComodification();
-	    lastReturned.element = o;
-	}
+        public void set(Object o) {
+            if (lastReturned == header)
+                throw new IllegalStateException();
+            checkForComodification();
+            lastReturned.element = o;
+        }
 
-	public void add(Object o) {
-	    checkForComodification();
-	    lastReturned = header;
-	    addBefore(o, next);
-	    nextIndex++;
-	    expectedModCount++;
-	}
+        public void add(Object o) {
+            checkForComodification();
+            lastReturned = header;
+            addBefore(o, next);
+            nextIndex++;
+            expectedModCount++;
+        }
 
-	final void checkForComodification() {
-	    if (modCount != expectedModCount)
-		throw new ConcurrentModificationException();
-	}
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
     }
 
     private static class Entry {
-	Object element;
-	Entry next;
-	Entry previous;
+        Object element;
+        Entry next;
+        Entry previous;
 
-	Entry(Object element, Entry next, Entry previous) {
-	    this.element = element;
-	    this.next = next;
-	    this.previous = previous;
-	}
+        Entry(Object element, Entry next, Entry previous) {
+            this.element = element;
+            this.next = next;
+            this.previous = previous;
+        }
     }
 
     private Entry addBefore(Object o, Entry e) {
-	Entry newEntry = new Entry(o, e, e.previous);
-	newEntry.previous.next = newEntry;
-	newEntry.next.previous = newEntry;
-	size++;
-	modCount++;
-	return newEntry;
+        Entry newEntry = new Entry(o, e, e.previous);
+        newEntry.previous.next = newEntry;
+        newEntry.next.previous = newEntry;
+        size++;
+        modCount++;
+        return newEntry;
     }
 
     private void remove(Entry e) {
-	if (e == header)
-	    throw new NoSuchElementException();
+        if (e == header)
+            throw new NoSuchElementException();
 
-	e.previous.next = e.next;
-	e.next.previous = e.previous;
-	size--;
-	modCount++;
+        e.previous.next = e.next;
+        e.next.previous = e.previous;
+        size--;
+        modCount++;
     }
 
     /**
@@ -589,11 +589,11 @@ public class LinkedList extends AbstractSequentialList
      */
     public Object clone() {
         LinkedList clone = null;
-	try { 
-	    clone = (LinkedList)super.clone();
-	} catch (CloneNotSupportedException e) { 
-	    throw new InternalError();
-	}
+        try { 
+            clone = (LinkedList)super.clone();
+        } catch (CloneNotSupportedException e) { 
+            throw new InternalError();
+        }
 
         // Put clone into "virgin" state
         clone.header = new Entry(null, null, null);
@@ -613,14 +613,14 @@ public class LinkedList extends AbstractSequentialList
      * in the correct order.
      *
      * @return an array containing all of the elements in this list
-     * 	       in the correct order.
+     *         in the correct order.
      */
     public Object[] toArray() {
-	Object[] result = new Object[size];
+        Object[] result = new Object[size];
         int i = 0;
         for (Entry e = header.next; e != header; e = e.next)
             result[i++] = e.element;
-	return result;
+        return result;
     }
 
     /**
@@ -638,8 +638,8 @@ public class LinkedList extends AbstractSequentialList
      * does not contain any null elements.
      *
      * @param a the array into which the elements of the list are to
-     *		be stored, if it is big enough; otherwise, a new array of the
-     * 		same runtime type is allocated for this purpose.
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose.
      * @return an array containing the elements of the list.
      * @throws ArrayStoreException if the runtime type of a is not a
      *         supertype of the runtime type of every element in this list.
@@ -666,18 +666,18 @@ public class LinkedList extends AbstractSequentialList
      * is, serialize it).
      *
      * @serialData The size of the list (the number of elements it
-     *		   contains) is emitted (int), followed by all of its
+     *             contains) is emitted (int), followed by all of its
      * elements (each an Object) in the proper order.  
      */
     private synchronized void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
-	// Write out any hidden serialization magic
-	s.defaultWriteObject();
+        // Write out any hidden serialization magic
+        s.defaultWriteObject();
 
         // Write out size
         s.writeInt(size);
 
-	// Write out all elements in the proper order.
+        // Write out all elements in the proper order.
         for (Entry e = header.next; e != header; e = e.next)
             s.writeObject(e.element);
     }
@@ -688,8 +688,8 @@ public class LinkedList extends AbstractSequentialList
      */
     private synchronized void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-	// Read in any hidden serialization magic
-	s.defaultReadObject();
+        // Read in any hidden serialization magic
+        s.defaultReadObject();
 
         // Read in size
         int size = s.readInt();
@@ -698,22 +698,22 @@ public class LinkedList extends AbstractSequentialList
         header = new Entry(null, null, null);
         header.next = header.previous = header;
 
-	// Read in all elements in the proper order.
-	for (int i=0; i<size; i++)
+        // Read in all elements in the proper order.
+        for (int i=0; i<size; i++)
             add(s.readObject());
     }
 
     public Object peek() {
-	if (size==0)
-	    return null;
-	return header.previous.element;
+        if (size==0)
+            return null;
+        return header.previous.element;
     }
 
     public Object poll() {
-	if (size==0)
-	    return null;
-	Object last = header.previous.element;
-	remove(header.previous);
-	return last;
+        if (size==0)
+            return null;
+        Object last = header.previous.element;
+        remove(header.previous);
+        return last;
     }
 }

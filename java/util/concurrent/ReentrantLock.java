@@ -43,15 +43,24 @@ package java.util.concurrent;
  * }
  * </pre>
  *
+ * <p>This class supports the interruption of lock acquisition and provides a 
+ * {@link #newCondition Condition} that supports the interruption of thread 
+ * suspension.
+ *
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
  * will result in a {@link NullPointerException} being thrown.
  *
+ * <h3>Implentation Notes</h3>
+ * <p> To-BE_DONE
+ *
+ *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/09 06:36:23 $
+ * @revised $Date: 2002/12/11 04:54:20 $
  * @editor $Author: dholmes $
  * 
- * @fixme We need a non-nested example to motivate this
+ * @fixme (1) We need a non-nested example to motivate this
+ * @fixme (2) Describe performance aspects of interruptible locking for the RI
  **/
 public class ReentrantLock implements Lock {
 
@@ -75,7 +84,7 @@ public class ReentrantLock implements Lock {
     public void lock() {}
 
     /**
-     * Acquire the lock only if the current thread is not 
+     * Acquire the lock unless the current thread is 
      * {@link Thread#interrupt interrupted}.
      * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately, setting the lock hold count to one.
@@ -91,14 +100,21 @@ public class ReentrantLock implements Lock {
      * </ul>
      * <p>If the lock is acquired by the current thread then the lock hold 
      * count is set to one.
-     * <p>If the current thread is {@link Thread#interrupt interrupted} 
-     * while waiting to acquire the lock then {@link InterruptedException}
-     * is thrown and the current thread's <em>interrupted status</em> 
-     * is cleared.
+     * <p>If the current thread:
+     * <ul>
+     * <li>has its interrupted status set on entry to this method; or 
+     * <li>is {@link Thread#interrupt interrupted} while waiting to acquire 
+     * the lock,
+     * </ul>
+     * then {@link InterruptedException} is thrown and the current thread's 
+     * interrupted status is cleared. As this method is an explicit
+     * interruption point, preference is given to responding to the interrupt
+     * over reentrant acquisition of the lock.
      *
-     * @fixme What if the current thread holds the lock and is in the
-     * interrupted state when it calls this? Do we increment or throws IE?
-     * As described currently we increment.
+     * <h3>Implentation Notes</h3>
+     * <p> To-BE_DONE
+     *
+     * @throws InterruptedException if the current thread is interrupted
      */
     public void lockInterruptibly() throws InterruptedException { }
 
@@ -143,27 +159,30 @@ public class ReentrantLock implements Lock {
      * </ul>
      * <p>If the lock is acquired then the value <tt>true</tt> is returned and
      * the lock hold count is set to one.
-     * <p>If the current thread is {@link Thread#interrupt interrupted} 
-     * while waiting to acquire the lock then {@link InterruptedException}
-     * is thrown and the current thread's <em>interrupted status</em> 
-     * is cleared.
+     * <p>If the current thread:
+     * <ul>
+     * <li>has its interrupted status set on entry to this method; or 
+     * <li>is {@link Thread#interrupt interrupted} while waiting to acquire 
+     * the lock,
+     * </ul>
+     * then {@link InterruptedException} is thrown and the current thread's 
+     * interrupted status is cleared. As this method is an explicit
+     * interruption point, preference is given to responding to the interrupt
+     * over reentrant acquisition of the lock.
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
      * <p>The given waiting time is a best-effort lower bound. If the time is 
-     * less than or equal to zero, the method will not wait at all, but may 
-     * still throw an <tt>InterruptedException</tt> if the thread is 
-     * {@link Thread#interrupt interrupted}.
+     * less than or equal to zero, the method will not wait at all.
      *
-     * @return <tt>true</tt>if the lock was free and was acquired by the
+     * <h3>Implentation Notes</h3>
+     * <p> To-BE_DONE
+     *
+     * @return <tt>true</tt> if the lock was free and was acquired by the
      * current thread, or the lock was already held by the current thread; and
      * <tt>false</tt> if the waiting time elapsed before the lock could be 
      * acquired.
-
-     * @fixme What if the current thread holds the lock and is in the
-     * interrupted state when it calls this? Do we increment or throws IE?
-     * As documented we increment. We need to be consistent with 
-     * <tt>Locks.tryLock</tt>
      *
+     * @throws InterruptedException if the current thread is interrupted
      */
     public boolean tryLock(long time, Clock granularity) throws InterruptedException {
         return false;
@@ -242,7 +261,7 @@ public class ReentrantLock implements Lock {
      * Returns a new {@link Condition} for use with this lock.
      * The returned {@link Condition} has the same behaviour and usage
      * restrictions with this lock as the {@link Object} monitor methods
-     * ({@link Object#wait() wait}, [@link Object#notify notify}, and
+     * ({@link Object#wait() wait}, {@link Object#notify notify}, and
      * {@link Object#notifyAll notifyAll}) have with the built-in monitor
      * lock:
      * <ul>
@@ -254,6 +273,9 @@ public class ReentrantLock implements Lock {
      * called the lock is released and before they return the lock is
      * reacquired and the lock hold count restored to what it was when the
      * method was called.
+     * <li>If a thread is {@link Thread#interrupt interrupted} while waiting
+     * then the wait will terminate, an {@link InterruptedException} will be
+     * thrown, and the thread's interrupted status will be cleared.
      * <li>The order in which waiting threads are signalled is not specified.
      * <li>The order in which threads returning from a wait, and threads trying
      * to acquire the lock, are granted the lock, is not specified.

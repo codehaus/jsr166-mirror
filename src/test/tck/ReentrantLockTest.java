@@ -56,16 +56,6 @@ public class ReentrantLockTest extends JSR166TestCase {
         public Collection<Thread> getQueuedThreads() { 
             return super.getQueuedThreads(); 
         }
-        public ConditionObject newCondition() { 
-            return new PublicCondition();
-        }
-
-        class PublicCondition extends ReentrantLock.ConditionObject {
-            PublicCondition() { }
-            public Collection<Thread> getWaitingThreads() { 
-                return super.getWaitingThreads(); 
-            }
-        }
 
     }
 
@@ -428,7 +418,7 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testAwait() {
 	final ReentrantLock lock = new ReentrantLock();	
-        final ReentrantLock.ConditionObject c = lock.newCondition();
+        final AbstractQueuedSynchronizer.ConditionObject c = lock.newCondition();
 	Thread t = new Thread(new Runnable() { 
 		public void run() {
 		    try {
@@ -461,7 +451,7 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testHasWaiters() {
 	final ReentrantLock lock = new ReentrantLock();	
-        final ReentrantLock.ConditionObject c = lock.newCondition();
+        final AbstractQueuedSynchronizer.ConditionObject c = lock.newCondition();
 	Thread t = new Thread(new Runnable() { 
 		public void run() {
 		    try {
@@ -503,7 +493,7 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLength() {
 	final ReentrantLock lock = new ReentrantLock();	
-        final ReentrantLock.ConditionObject c = lock.newCondition();
+        final AbstractQueuedSynchronizer.ConditionObject c = lock.newCondition();
 	Thread t1 = new Thread(new Runnable() { 
 		public void run() {
 		    try {
@@ -548,69 +538,6 @@ public class ReentrantLockTest extends JSR166TestCase {
             lock.lock();
             assertFalse(c.hasWaiters());
             assertEquals(0, c.getWaitQueueLength());
-            lock.unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
-    }
-
-    /**
-     * getWaitingThreads returns only and all waiting threads
-     */
-    public void testGetWaitingThreads() {
-	final PublicReentrantLock lock = new PublicReentrantLock();	
-        final PublicReentrantLock.PublicCondition c = (PublicReentrantLock.PublicCondition)lock.newCondition();
-	Thread t1 = new Thread(new Runnable() { 
-		public void run() {
-		    try {
-			lock.lock();
-                        threadAssertTrue(c.getWaitingThreads().isEmpty());
-                        c.await();
-                        lock.unlock();
-		    }
-		    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-		}
-	    });
-
-	Thread t2 = new Thread(new Runnable() { 
-		public void run() {
-		    try {
-			lock.lock();
-                        threadAssertFalse(c.getWaitingThreads().isEmpty());
-                        c.await();
-                        lock.unlock();
-		    }
-		    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-		}
-	    });
-
-        try {
-            lock.lock();
-            assertTrue(c.getWaitingThreads().isEmpty());
-            lock.unlock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertTrue(c.hasWaiters());
-            assertTrue(c.getWaitingThreads().contains(t1));
-            assertTrue(c.getWaitingThreads().contains(t2));
-            c.signalAll();
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertFalse(c.hasWaiters());
-            assertTrue(c.getWaitingThreads().isEmpty());
             lock.unlock();
             t1.join(SHORT_DELAY_MS);
             t2.join(SHORT_DELAY_MS);

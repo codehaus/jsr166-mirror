@@ -56,17 +56,6 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         public Collection<Thread> getQueuedThreads() { 
             return super.getQueuedThreads(); 
         }
-        public PublicCondition newCondition() { 
-            return new PublicCondition();
-        }
-
-        class PublicCondition extends ReentrantReadWriteLock.WriterConditionObject {
-            PublicCondition() { }
-            public Collection<Thread> getWaitingThreads() { 
-                return super.getWaitingThreads(); 
-            }
-        }
-
     }
 
     /**
@@ -920,7 +909,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testHasWaiters() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();	
-        final ReentrantReadWriteLock.WriterConditionObject c = (ReentrantReadWriteLock.WriterConditionObject)(lock.writeLock().newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = (lock.writeLock().newCondition());
 	Thread t = new Thread(new Runnable() { 
 		public void run() {
 		    try {
@@ -962,7 +951,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLength() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();	
-        final ReentrantReadWriteLock.WriterConditionObject c = (ReentrantReadWriteLock.WriterConditionObject)(lock.writeLock().newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = (lock.writeLock().newCondition());
 	Thread t1 = new Thread(new Runnable() { 
 		public void run() {
 		    try {
@@ -1017,68 +1006,4 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-
-    /**
-     * getWaitingThreads returns only and all waiting threads
-     */
-    public void testGetWaitingThreads() {
-	final PublicReentrantReadWriteLock lock = new PublicReentrantReadWriteLock();	
-        final PublicReentrantReadWriteLock.PublicCondition c = (PublicReentrantReadWriteLock.PublicCondition)lock.newCondition();
-	Thread t1 = new Thread(new Runnable() { 
-		public void run() {
-		    try {
-			lock.writeLock().lock();
-                        threadAssertTrue(c.getWaitingThreads().isEmpty());
-                        c.await();
-                        lock.writeLock().unlock();
-		    }
-		    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-		}
-	    });
-
-	Thread t2 = new Thread(new Runnable() { 
-		public void run() {
-		    try {
-			lock.writeLock().lock();
-                        threadAssertFalse(c.getWaitingThreads().isEmpty());
-                        c.await();
-                        lock.writeLock().unlock();
-		    }
-		    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-		}
-	    });
-
-        try {
-            lock.writeLock().lock();
-            assertTrue(c.getWaitingThreads().isEmpty());
-            lock.writeLock().unlock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertTrue(c.hasWaiters());
-            assertTrue(c.getWaitingThreads().contains(t1));
-            assertTrue(c.getWaitingThreads().contains(t2));
-            c.signalAll();
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertFalse(c.hasWaiters());
-            assertTrue(c.getWaitingThreads().isEmpty());
-            lock.writeLock().unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
-    }
-
 }

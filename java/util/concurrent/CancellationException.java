@@ -3,7 +3,11 @@ package java.util.concurrent;
 /**
  * Thrown when trying to retrieve the results of an asynchronous task
  * to indicate that the task was cancelled before its completion.
- * THROWN BY WHAT??
+ * @fixme THROWN BY WHAT??
+ * @since 1.5
+ * @spec JSR-166
+ * @revised $Date: 2003/01/29 23:07:44 $
+ * @editor $Author: dholmes $
  */
 public class CancellationException extends IllegalStateException {  
 
@@ -13,10 +17,10 @@ public class CancellationException extends IllegalStateException {
     public CancellationException() {}
 
     /**
-     * Constructs a <tt>CancellationException</tt> with specified detail
+     * Constructs a <tt>CancellationException</tt> with the specified detail
      * message.
      *
-     * @param message the detail message pertaining to this exception.
+     * @param detail the detail message
      */
     public CancellationException(String detail) {
         super(detail);

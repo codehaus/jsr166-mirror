@@ -29,13 +29,13 @@ package java.util.concurrent;
  * @see ThreadPoolExecutor, SingleThreadedExecutor, ScheduledExecutor
  * @see Executors
  * @see Runnable, FutureTask
- **/
+ */
 public interface Executor {
 
     /**
      * Execute the given command sometime in the future.  The command
      * may execute in the calling thread, in a new thread, or in a
      * pool thread, at the discretion of the Executor implementation.
-     **/
-    public void execute(Runnable command);
+     */
+    void execute(Runnable command);
 }

@@ -166,7 +166,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
         Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
                     } catch(InterruptedException success){
                     } catch(Exception b){
@@ -177,7 +177,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
         Thread t2 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();                        
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){

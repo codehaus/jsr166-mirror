@@ -70,8 +70,25 @@ public class SemaphoreTest extends JSR166TestCase {
         assertFalse(s0.isFair());
         Semaphore s1 = new Semaphore(-1, false);
         assertEquals(-1, s1.availablePermits());
+        assertFalse(s1.isFair());
         Semaphore s2 = new Semaphore(-1, false);
         assertEquals(-1, s2.availablePermits());
+        assertFalse(s2.isFair());
+    }
+
+    /**
+     * Constructor without fairness argument behaves as nonfair
+     */
+    public void testConstructor2() {
+        Semaphore s0 = new Semaphore(0);
+        assertEquals(0, s0.availablePermits());
+        assertFalse(s0.isFair());
+        Semaphore s1 = new Semaphore(-1);
+        assertEquals(-1, s1.availablePermits());
+        assertFalse(s1.isFair());
+        Semaphore s2 = new Semaphore(-1);
+        assertEquals(-1, s2.availablePermits());
+        assertFalse(s2.isFair());
     }
 
     /**

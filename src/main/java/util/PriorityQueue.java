@@ -129,15 +129,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             initialCapacity = 1;
         queue = new E[initialCapacity + 1];
 
-        /* Commented out to compile with generics compiler
-
         if (initialElements instanceof Sorted) {
             comparator = ((Sorted)initialElements).comparator();
             for (Iterator<E> i = initialElements.iterator(); i.hasNext(); )
                 queue[++size] = i.next();
         } else {
-        */
-        {
             comparator = null;
             for (Iterator<E> i = initialElements.iterator(); i.hasNext(); )
                 add(i.next());

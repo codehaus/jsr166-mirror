@@ -79,13 +79,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private final ReentrantLock takeLock = new ReentrantLock();
 
     /** Wait queue for waiting takes */
-    private final Condition notEmpty = takeLock.newCondition();
+    private final ReentrantLock.ConditionObject notEmpty = takeLock.newCondition();
 
     /** Lock held by put, offer, etc */
     private final ReentrantLock putLock = new ReentrantLock();
 
     /** Wait queue for waiting puts */
-    private final Condition notFull = putLock.newCondition();
+    private final ReentrantLock.ConditionObject notFull = putLock.newCondition();
 
     /**
      * Signal a waiting take. Called only from put/offer (which do not

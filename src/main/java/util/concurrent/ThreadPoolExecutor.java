@@ -235,7 +235,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Wait condition to support awaitTermination
      */
-    private final Condition termination = mainLock.newCondition();
+    private final ReentrantLock.ConditionObject termination = mainLock.newCondition();
 
     /**
      * Set containing all worker threads in pool.

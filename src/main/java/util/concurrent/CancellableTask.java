@@ -210,7 +210,7 @@ public class CancellableTask implements Cancellable, Runnable {
     protected class InnerCancellableFuture<V> implements Future<V>, Runnable {
         private final Callable<V> callable;
         private final ReentrantLock lock = new ReentrantLock();
-        private final Condition accessible = lock.newCondition();
+        private final ReentrantLock.ConditionObject accessible = lock.newCondition();
         private V result;
         private Throwable exception;
 

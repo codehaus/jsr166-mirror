@@ -97,7 +97,7 @@ public class CyclicBarrier {
     /** The lock for guarding barrier entry */
     private final ReentrantLock lock = new ReentrantLock();
     /** Condition to wait on until tripped */
-    private final Condition trip = lock.newCondition();
+    private final ReentrantLock.ConditionObject trip = lock.newCondition();
     /** The number of parties */
     private final int parties;
     /* The command to run when tripped */

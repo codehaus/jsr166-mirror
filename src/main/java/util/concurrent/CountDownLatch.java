@@ -122,7 +122,7 @@ import java.util.concurrent.locks.*;
  */
 public class CountDownLatch {
     private final ReentrantLock lock = new ReentrantLock();
-    private final Condition zero = lock.newCondition();
+    private final ReentrantLock.ConditionObject zero = lock.newCondition();
     private int count;
 
     /**

@@ -103,7 +103,7 @@ public class Semaphore implements java.io.Serializable {
     // to access.
 
     final ReentrantLock lock;
-    final Condition available;
+    final ReentrantLock.ConditionObject available;
     long count;
 
     /** 

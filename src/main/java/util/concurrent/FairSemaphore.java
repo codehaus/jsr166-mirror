@@ -38,7 +38,7 @@ public class FairSemaphore extends Semaphore {
      */
     private static class Node extends ReentrantLock {
         /** The condition to wait on */
-        Condition done = newCondition();
+        ReentrantLock.ConditionObject done = newCondition();
         /** True if interrupted before released */
         boolean cancelled;
         /** Number of permits remaining until can release */

@@ -214,6 +214,11 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         return capacity - count.get();
     }
 
+    /**
+     * Adds the specified element to the tail of this queue, waiting if
+     * necessary for space to become available.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     */
     public void put(E o) throws InterruptedException {
         if (o == null) throw new NullPointerException();
         // Note: convention in all put/take/etc is to preset
@@ -248,6 +253,11 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             signalNotEmpty();
     }
 
+    /**
+     * Inserts the specified element at the tail of this queue, waiting if
+     * necessary up to the specified wait time for space to become available.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     */
     public boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException {
 
@@ -282,12 +292,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
    /**
-    * Adds the specified element to the tail of this queue if possible,
+    * Inserts the specified element at the tail of this queue if possible,
     * returning immediately if this queue is full.
     *
-    * @param o the element to add.
-    * @return <tt>true</tt> if it was possible to add the element to
-    *         this queue, else <tt>false</tt>
     * @throws NullPointerException if the specified element is <tt>null</tt>
     */
     public boolean offer(E o) {

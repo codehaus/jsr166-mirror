@@ -46,47 +46,82 @@ package java.util.concurrent;
  * @see ReentrantLock
  * @see Condition
  * @see ReadWriteLock
+ * @see Locks
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/04 04:38:49 $
+ * @revised $Date: 2002/12/05 00:49:20 $
  * @editor $Author: dholmes $
  **/
 public interface Lock {
 
     /**
-     * Acquire the lock.
-     * The current thread will block until the lock has been acquired.
-     * 
-     * @fixme Is a concrete lock allowed to throw an exception
-     * if it detects deadlock? If so, how should that be specified here?
+     * Acquire the lock. If the lock is not available then
+     * the current thread will block until the lock has been acquired.
+     * <p>A concrete <tt>Lock</tt> implementation may be able to detect 
+     * erroneous use of the
+     * lock, such as an invocation that would cause deadlock, and may throw 
+     * an exception in such circumstances. The circumstances and the exception
+     * type must be documented by the <tt>Lock</tt> implementation.
+     *
      **/
     public void lock();
 
     /**
      * Acquire the lock only if the current thread is not interrupted.
-     * The current thread will block until the lock has been acquired, or
-     * the current thread is {@link Thread#interrupt interrupted}.
+     * <p>If the lock is available then this method will return immediately.
+     * <p>If the lock is not available then the current thread will block until
+     * one of two things happens:
+     * <ul>
+     * <li> The lock is acquired by the current thread; or
+     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * thread.
+     * </ul>
+     * <p>If the current thread is {@link Thread#interrupt interrupted} 
+     * while waiting to acquire the lock then {@link InterruptedException}
+     * is thrown and the current thread's <em>interrupted status</em> 
+     * is cleared.
      *
-     * @fixme do we have specific interruption semantics ie.
-     * is <pre><tt>
-     * Thread.currentThread().interrupt(); l.lockInterruptibly();
-     * </tt></pre>
-     * guaranteed to throw the IE?
+     * <p>A concrete <tt>Lock</tt> implementation may be able to detect 
+     * erroneous use of the
+     * lock, such as an invocation that would cause deadlock, and may throw 
+     * an exception in such circumstances. The circumstances and the exception
+     * type must be documented by the <tt>Lock</tt> implementation.
+     *
+     * @throws InterruptedException if the current thread is interrupted
+     * while trying to acquire the lock.
      *
      * @see Thread#interrupt
-     * @throws InterruptedException if the current thread is interrupted
-     * while trying to acquire the lock. If this exception is thrown then
-     * the lock was not acquired.
+     *
+     * @fixme This allows for interruption only if waiting actually occurs.
+     * Is this correct? Is it too strict?
      **/
     public void lockInterruptibly() throws InterruptedException;
 
 
     /**
      * Acquire the lock only if it is free at the time of invocation.
-     * The current thread is not blocked if the lock is unavailable, but
-     * instead the method returns immediately with the value 
-     * <tt>false</tt>.
+     * <p>If the lock is available then this method will return immediately
+     * with the value <tt>true</tt>.
+     * <p>If the lock is not available then this method will return 
+     * immediately with the value <tt>false</tt>.
+     * <p>A typical usage idiom for this method would be:
+     * <pre>
+     *      Lock lock = ...;
+     *      if (lock.tryLock()) {
+     *          try {
+     *              // manipulate protected state
+     *          finally {
+     *              lock.unlock();
+     *          }
+     *      }
+     *      else {
+     *          // perform alternative actions
+     *      }
+     * </pre>
+     * This usage ensures that the lock is unlocked if it was acquired, and
+     * doesn't try to unlock if the lock was not acquired.
+     *
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
      * otherwise.
      **/
@@ -95,40 +130,79 @@ public interface Lock {
     /**
      * Acquire the lock if it is free within the given wait time and the
      * current thread has not been interrupted. 
-     * The current thread will block until either the lock is acquired, the
-     * specified waiting time elapses, or the thread is interrupted.
+     * <p>If the lock is available then this method will return immediately
+     * with the value <tt>true</tt>.
+     * <p>If the lock is not available then the current thread will block until
+     * one of three things happens:
+     * <ul>
+     * <li> The lock is acquired by the current thread; or
+     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * thread; or
+     * <li> The specified wait time elapses
+     * </ul>
+     * <p>If the lock is acquired then the value <tt>true</tt> is returned.
+     * <p>If the current thread is {@link Thread#interrupt interrupted} 
+     * while waiting to acquire the lock then {@link InterruptedException}
+     * is thrown and the current thread's <em>interrupted status</em> 
+     * is cleared.
+     * <p>If the specified wait time elapses then the value <tt>false</tt>
+     * is returned.
      * <p>The given wait time is a best-effort lower bound. If the time is 
      * less than or equal to zero, the method will not wait at all, but may 
      * still throw an <tt>InterruptedException</tt> if the thread is 
-     * interrupted.
+     * {@link Thread#interrupt interrupted}.
+     *
+     * <p>A concrete <tt>Lock</tt> implementation may be able to detect 
+     * erroneous use of the
+     * lock, such as an invocation that would cause deadlock, and may throw 
+     * an exception in such circumstances. The circumstances and the exception
+     * type must be documented by the <tt>Lock</tt> implementation.
      *
      * @param time the maximum time to wait for the lock
      * @param granularity the time unit of the <tt>time</tt> argument.
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
      * if the wait time elapsed before the lock was acquired.
-     * @throws InterruptedException if the current thread is interrupted
-     * while trying to acquire the lock. If this exception is thrown then
-     * the lock was not acquired.
      *
-     * @fixme Do we throw NPE if Clock is null?
+     * @throws InterruptedException if the current thread is interrupted
+     * while trying to acquire the lock.
      *
      * @see Thread#interrupt
+     *
+     * @fixme We have inconsistent interrupt semantics if the thread is
+     * interrupted before calling this method: if the lock is available
+     * we won't throw IE, if the lock is not available and the timeout is <=0
+     * then we may throw IE. Need to resolve this.
+     *
+     * @fixme (2) Do we throw NPE if Clock is null?
+     *
      **/
     public boolean tryLock(long time, Clock granularity) throws InterruptedException;
 
     /**
      * Release the lock.
-     * <p>Whether or not it is an error for a thread to release a lock that
-     * it has not acquired is dependent on the concrete lock type.
+     * <p>A concrete <tt>Lock</tt> implementation will usually impose
+     * restrictions on which thread can release a lock (typically only the
+     * holder of the lock can release it) and may throw
+     * an exception if the restriction is violated. 
+     * Any restrictions and the exception
+     * type must be documented by the <tt>Lock</tt> implementation.
      **/
     public void unlock();
 
     /**
      * Construct a new {@link Condition} for this <tt>Lock</tt>.
-     * <p>The exact operation of the condition depends on the concrete lock
-     * type.
-     * @return a {@link Condition} object for this <tt>Lock</tt>, or
+     * <p>The exact operation of the {@link Condition} depends on the concrete
+     * <tt>Lock</tt> implementation and must be documented by that
+     * implementation.
+     * 
+     * @return A {@link Condition} object for this <tt>Lock</tt>, or
      * <tt>null</tt> if this <tt>Lock</tt> type does not support conditions.
+     *
+     * @fixme Should this always return a new condition (which could be a
+     * "recycled" instance from a pool), or could a lock enforce, for example,
+     * a singleton condition? I can't think of an example where this might
+     * make sense but what should we say about the returned instance here?
+     * Anything? Nothing?
      **/
     public Condition newCondition();
 

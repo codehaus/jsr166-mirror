@@ -20,7 +20,7 @@ package java.util.concurrent;
 public interface Cancellable {
 
     /**
-     * Attempt to cancel execution of this task.  This attempt will
+     * Attempts to cancel execution of this task.  This attempt will
      * fail if the task has already completed, already been cancelled,
      * or could not be cancelled for some other reason. If successful,
      * and this task has not started when <tt>cancel</tt> is called,

@@ -68,6 +68,15 @@ granularities (including nanoseconds) for specifying and controlling
 time-out based operations. Nearly all other classes in the package
 contain operations based on time-outs in addition to indefinite waits.
 
+<p>In all cases that time-outs are used, the time-out specifies the
+minimum time that the method should wait before indicating that it
+timed-out. The virtual machine should make a &quot;best effort&quot;
+to detect time-outs as soon as possible after they occur. Regardless
+of the efforts of the virtual machine, the normal scheduling
+mechanisms, and the need to re-acquire locks in many cases, can lead
+to an indefinite amount of time elapsing between a time-out being
+detected and a thread actually executing again after that time-out.
+
 <h2>Synchronizers</h2>
 
 Five classes aid common special-purpose synchronization idioms.

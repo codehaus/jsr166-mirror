@@ -125,7 +125,7 @@ public abstract class SwingWorker<V> implements Future<V>, Runnable {
      * Creates new SwingWorker with specified executor.
      * @param e executor for this worker
      */
-    public SwingWorker(Executor e) {
+    protected SwingWorker(Executor e) {
         setExecutor(e);
     }
 

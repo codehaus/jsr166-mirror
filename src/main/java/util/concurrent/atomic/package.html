@@ -33,7 +33,8 @@ the variable will eventually succeed.
 employ efficient machine-level atomic instructions that are available
 on contemporary processors. However on some platforms, support may
 entail some form of internal locking. Thus the methods are not
-strictly guaranteed to be non-blocking.
+strictly guaranteed to be non-blocking --
+a thread may block transiently before performing the operation.
 
 <p> Instances of classes {@link
 java.util.concurrent.atomic.AtomicBoolean}, {@link
@@ -70,7 +71,7 @@ rules for volatiles:
   ordinary non-volatile memory operation.
 
   <li> <tt>compareAndSet</tt>
-  and all other read-and-update operations 
+  and all other read-and-update operations such as <tt>getAndIncrement</tt>
   have the memory effects of both reading and
   writing <tt>volatile</tt> variables.
 </ul> 

@@ -207,7 +207,7 @@ public class Semaphore implements java.io.Serializable {
                 }
             }
         }
-        if (s != null)
+        if (s != null && s != node)
             LockSupport.unpark(s.thread);
     }
 

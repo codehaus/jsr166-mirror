@@ -9,12 +9,25 @@ import java.util.*;
  * priorities are returned in arbitrary order. Comparison failures
  * throw ClassCastExceptions during insertions and extractions.
  **/
-public class PriorityBlockingQueue implements BlockingQueue, java.io.Serializable {
+public class PriorityBlockingQueue extends AbstractCollection implements BlockingQueue, java.io.Serializable {
 
     public PriorityBlockingQueue() {}
     public PriorityBlockingQueue(Comparator comparator) {}
     
     public void put(Object x) {
+    }
+    public boolean offer(Object x) {
+        return false;
+    }
+    public boolean remove(Object x) {
+        return false;
+    }
+    public Object remove() {
+        return null;
+    }
+
+    public Object element() {
+        return null;
     }
     public boolean offer(Object x, long time, Clock granularity) {
         return false;
@@ -48,4 +61,7 @@ public class PriorityBlockingQueue implements BlockingQueue, java.io.Serializabl
         return null;
     }
 
+    public Iterator iterator() { 
+      return null;
+    }
 }

@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * An unbounded queue based on linked nodes.
  **/
-public class LinkedBlockingQueue implements BlockingQueue, java.io.Serializable {
+public class LinkedBlockingQueue extends AbstractCollection implements BlockingQueue, java.io.Serializable {
 
     public LinkedBlockingQueue() {}
     public void put(Object x) {
@@ -18,6 +18,22 @@ public class LinkedBlockingQueue implements BlockingQueue, java.io.Serializable 
     }
     public boolean add(Object x) {
         return false;
+    }
+    public boolean offer(Object x) {
+        return false;
+    }
+    public Object remove() {
+        return null;
+    }
+    public Iterator iterator() { 
+      return null;
+    }
+
+    public boolean remove(Object x) {
+        return false;
+    }
+    public Object element() {
+        return null;
     }
     public Object poll() {
         return null;

@@ -118,4 +118,15 @@ public class CyclicBarrier {
     public void reset() {
         // for now
     }
+
+    /**
+     * Return the number of threads currently waiting at the barrier.
+     * This method is primarily useful for debugging and assertions
+     * in programs using barriers.
+     * @return the number of threads currently blocked in <tt>await</tt>
+     **/
+    public int getNumberWaiting() {
+        return 0; // for now
+    }
+
 }

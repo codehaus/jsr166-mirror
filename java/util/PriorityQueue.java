@@ -12,7 +12,7 @@ import java.util.*;
  * Comparable, or a Comparator must be supplied. Comparison failures
  * throw ClassCastExceptions during insertions and extractions.
  **/
-public class PriorityQueue implements Queue {
+public class PriorityQueue extends AbstractCollection implements Queue {
     public PriorityQueue(int initialCapacity) {}
     public PriorityQueue(int initialCapacity, Comparator comparator) {}
 
@@ -23,12 +23,30 @@ public class PriorityQueue implements Queue {
     public boolean add(Object x) {
         return false;
     }
+    public boolean offer(Object x) {
+        return false;
+    }
+    public boolean remove(Object x) {
+        return false;
+    }
+
+    public Object remove() {
+        return null;
+    }
+    public Iterator iterator() { 
+      return null;
+    }
+
+    public Object element() {
+        return null;
+    }
     public Object poll() {
         return null;
     }
     public Object peek() {
         return null;
     }
+
     public boolean isEmpty() {
         return false;
     }

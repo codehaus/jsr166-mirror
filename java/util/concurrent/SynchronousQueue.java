@@ -10,7 +10,7 @@ import java.util.*;
  * in another thread in order to hand it some information, event, or
  * task.
  **/
-public class SynchronousQueue implements BlockingQueue, java.io.Serializable {
+public class SynchronousQueue extends AbstractCollection implements BlockingQueue, java.io.Serializable {
 
     public SynchronousQueue() {}
     public void put(Object x) throws InterruptedException {
@@ -21,6 +21,23 @@ public class SynchronousQueue implements BlockingQueue, java.io.Serializable {
     public boolean add(Object x) {
         return false;
     }
+    public boolean offer(Object x) {
+        return false;
+    }
+    public boolean remove(Object x) {
+        return false;
+    }
+    public Object remove() {
+        return null;
+    }
+    public Iterator iterator() { 
+      return null;
+    }
+
+    public Object element() {
+        return null;
+    }
+
     public Object poll() {
         return null;
     }
@@ -47,4 +64,5 @@ public class SynchronousQueue implements BlockingQueue, java.io.Serializable {
         return null;
     }
 
+  
 }

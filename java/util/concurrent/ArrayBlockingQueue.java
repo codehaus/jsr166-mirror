@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * A bounded queue based on a fixed-sized array.
  **/
-public class ArrayBlockingQueue implements BlockingQueue, java.io.Serializable {
+public class ArrayBlockingQueue extends AbstractCollection implements BlockingQueue, java.io.Serializable {
 
     public ArrayBlockingQueue(int capacity) {}
 
@@ -18,6 +18,21 @@ public class ArrayBlockingQueue implements BlockingQueue, java.io.Serializable {
     }
     public boolean add(Object x) {
         return false;
+    }
+    public boolean offer(Object x) {
+        return false;
+    }
+    public boolean remove(Object x) {
+        return false;
+    }
+    public Object remove() {
+        return null;
+    }
+    public Iterator iterator() { 
+      return null;
+    }
+    public Object element() {
+        return null;
     }
     public Object poll() {
         return null;

@@ -12,11 +12,27 @@ import java.util.*;
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.)
  *
  **/
-public class LinkedQueue implements  Queue, java.io.Serializable {
+public class LinkedQueue extends AbstractCollection implements  Queue, java.io.Serializable {
 
     public LinkedQueue() {}
     public boolean add(Object x) {
         return false;
+    }
+    public boolean offer(Object x) {
+        return false;
+    }
+    public Object remove() {
+        return null;
+    }
+    public Iterator iterator() { 
+      return null;
+    }
+
+    public boolean remove(Object x) {
+        return false;
+    }
+    public Object element() {
+        return null;
     }
     public Object poll() {
         return null;

@@ -709,6 +709,12 @@ public class LinkedList extends AbstractSequentialList
         return header.previous.element;
     }
 
+    public Object element() {
+        if (size==0)
+            throw new NoSuchElementException();
+        return header.previous.element;
+    }
+
     public Object poll() {
         if (size==0)
             return null;
@@ -716,4 +722,17 @@ public class LinkedList extends AbstractSequentialList
         remove(header.previous);
         return last;
     }
+
+    public Object remove() {
+        if (size==0)
+            throw new NoSuchElementException();
+        Object last = header.previous.element;
+        remove(header.previous);
+        return last;
+    }
+
+    public boolean offer(Object x) {
+        return add(x);
+    }
+
 }

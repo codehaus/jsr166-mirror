@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.*;
  * a class that uses a semaphore to control access to a pool of items:
  * <pre>
  * class Pool {
- *   private static final MAX_AVAILABLE = 100;
+ *   private static final int MAX_AVAILABLE = 100;
  *   private final Semaphore available = new Semaphore(MAX_AVAILABLE, true);
  *
  *   public Object getItem() throws InterruptedException {

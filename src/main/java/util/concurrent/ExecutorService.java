@@ -140,8 +140,10 @@ public interface ExecutorService extends Executor {
 
 
     /**
-     * Submits a value-returning task for execution and returns a Future
-     * representing the pending results of the task. 
+     * Submits a value-returning task for execution and returns a
+     * Future representing the pending results of the task, and whose
+     * <<tt>get</tt> method will return the given result upon
+     * <em>successful</em> completion.
      *
      * <p>
      * If you would like to immediately block waiting
@@ -162,15 +164,15 @@ public interface ExecutorService extends Executor {
     <T> Future<T> submit(Callable<T> task);
 
     /**
-     * Submits a Runnable task for execution and returns a Future 
-     * representing that task that will upon completion return 
-     * the given result
+     * Submits a Runnable task for execution and returns a Future
+     * representing that task that will upon successful completion
+     * return the given result.
      *
      * @param task the task to submit
      * @param result the result to return
      * @return a Future representing pending completion of the task,
      * and whose <tt>get()</tt> method will return the given result
-     * upon completion.
+     * upon successful completion.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      * @throws NullPointerException if task null     
@@ -184,7 +186,7 @@ public interface ExecutorService extends Executor {
      * @param task the task to submit
      * @return a Future representing pending completion of the task,
      * and whose <tt>get()</tt> method will return <tt>null</tt>
-     * upon completion.
+     * upon successful completion.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      * @throws NullPointerException if task null

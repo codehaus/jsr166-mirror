@@ -66,7 +66,9 @@ import java.util.*;
  * started only when needed by new tasks, but this can be overridden
  * dynamically using method {@link
  * ThreadPoolExecutor#prestartCoreThread} or
- * {@link ThreadPoolExecutor#prestartAllCoreThreads}.  </dd>
+ * {@link ThreadPoolExecutor#prestartAllCoreThreads}.
+ * You probably want to prestart threads if you construct the
+ * pool with a non-empty queue. </dd>
  *
  * <dt>Creating new threads</dt>
  *
@@ -96,7 +98,8 @@ import java.util.*;
  * default, the keep-alive policy applies only when there are more
  * than corePoolSizeThreads. But method {@link
  * ThreadPoolExecutor#allowCoreThreadTimeOut} can be used to apply
- * this time-out policy to core threads as well.  </dd>
+ * this time-out policy to core threads as well, so long as
+ * the keepAliveTime value is non-zero. </dd>
  *
  * <dt>Queuing</dt>
  *
@@ -724,7 +727,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
-     * parameters.
+     * parameters and default thread factory.
      *
      * @param corePoolSize the number of threads to keep in the
      * pool, even if they are idle.
@@ -758,7 +761,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
-     * parameters.
+     * parameters and default handler.
      *
      * @param corePoolSize the number of threads to keep in the
      * pool, even if they are idle.
@@ -1255,10 +1258,16 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * tasks. When true, the same keep-alive policy applying to
      * non-core threads applies also to core threads. To avoid
      * continual thread replacement, the keep-alive time must be
-     * greater than zero when setting <tt>true</tt>.
+     * greater than zero when setting <tt>true</tt>. This method
+     * should in general be called before the pool is actively used.
      * @param value <tt>true</tt> if should time out, else <tt>false</tt>
+     * @throws IllegalArgumentException if value is <tt>true</tt>
+     * and the current keep-alive time is not greater than zero.
      */
     public void allowCoreThreadTimeOut(boolean value) {
+        if (value && keepAliveTime <= 0)
+            throw new IllegalArgumentException("Core threads must have nonzero keep alive times");
+
         allowCoreThreadTimeOut = value;
     }
 
@@ -1314,12 +1323,15 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @param time the time to wait.  A time value of zero will cause
      * excess threads to terminate immediately after executing tasks.
      * @param unit  the time unit of the time argument
-     * @throws IllegalArgumentException if time less than zero
+     * @throws IllegalArgumentException if time less than zero or
+     * if time is zero and allowsCoreThreadTimeOut
      * @see #getKeepAliveTime
      */
     public void setKeepAliveTime(long time, TimeUnit unit) {
         if (time < 0)
             throw new IllegalArgumentException();
+        if (time == 0 && allowsCoreThreadTimeOut())
+            throw new IllegalArgumentException("Core threads must have nonzero keep alive times");
         this.keepAliveTime = unit.toNanos(time);
     }
 
@@ -1435,8 +1447,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Method invoked prior to executing the given Runnable in the
      * given thread.  This method is invoked by thread <tt>t</tt> that
      * will execute task <tt>r</tt>, and may be used to re-initialize
-     * ThreadLocals, or to perform logging. Note: To properly nest
-     * multiple overridings, subclasses should generally invoke
+     * ThreadLocals, or to perform logging. This implementation does
+     * nothing, but may be customized in subclasses. Note: To properly
+     * nest multiple overridings, subclasses should generally invoke
      * <tt>super.beforeExecute</tt> at the end of this method.
      *
      * @param t the thread that will run task r.
@@ -1447,9 +1460,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Method invoked upon completion of execution of the given
      * Runnable.  This method is invoked by the thread that executed
-     * the task. If non-null, the Throwable is the uncaught exception
-     * that caused execution to terminate abruptly. Note: To properly
-     * nest multiple overridings, subclasses should generally invoke
+     * the task. If non-null, the Throwable is the uncaught
+     * RuntimeException that caused execution to terminate
+     * abruptly. This implementation does nothing, but may be
+     * customized in subclasses. Note: To properly nest multiple
+     * overridings, subclasses should generally invoke
      * <tt>super.afterExecute</tt> at the beginning of this method.
      *
      * @param r the runnable that has completed.

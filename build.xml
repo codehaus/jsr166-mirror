@@ -2,6 +2,11 @@
 
   <description>
     Build file for JSR-166
+
+    Note that junit.jar must be in ${ant.home}/lib for the
+    test target to work. [FIXME: This should be automatically
+    enforced by this build file by failing with a message if
+    junit.jar is not in the right place.]
   </description>
 
   <!-- Compilation options -->
@@ -45,7 +50,6 @@
 
   <path id="test.classpath">
     <pathelement location="${product.jar}"/>
-    <pathelement location="${junit.jar}"/>
   </path>
 
 

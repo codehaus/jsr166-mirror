@@ -1,7 +1,7 @@
  package java.util;
 
 /**
- * A priority queue based on a priority heap.  This queue orders
+ * An unbounded priority queue based on a priority heap.  This queue orders
  * elements according to an order specified at construction time, which is
  * specified in the same manner as {@link java.util.TreeSet} and
  * {@link java.util.TreeMap}: elements are ordered
@@ -22,7 +22,7 @@
  *
  * <p>A priority queue has a <i>capacity</i>.  The capacity is the
  * size of the array used internally to store the elements on the
- * queue, and is limited to <tt>Integer.MAX_VALUE-1</tt>.
+ * queue.
  * It is always at least as large as the queue size.  As
  * elements are added to a priority queue, its capacity grows
  * automatically.  The details of the growth policy are not specified.
@@ -118,8 +118,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Create a <tt>PriorityQueue</tt> containing the elements in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
-     * size of the specified collection (bounded by
-     * <tt>Integer.MAX_VALUE-1</tt>); or 1 if the collection is empty.
+     * size of the specified collection or 1 if the collection is empty.
      * If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be
      * sorted according to the same comparator, or according to its elements'
@@ -144,9 +143,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             initialCapacity = 1;
 
         this.queue = new Object[initialCapacity + 1];
-
-        // FIXME: if c is larger than Integer.MAX_VALUE we'll
-        // overflow the array
 
         if (c instanceof Sorted) {
             comparator = (Comparator<? super E>)((Sorted)c).comparator();
@@ -176,8 +172,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         ++size;
 
         // Grow backing store if necessary
-        // FIXME: watch for overflow
-        // FIXME: what if we're full?
         while (size >= queue.length) {
             Object[] newQueue = new Object[2 * queue.length];
             System.arraycopy(queue, 0, newQueue, 0, queue.length);

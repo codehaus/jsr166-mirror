@@ -104,7 +104,9 @@ public interface ScheduledExecutorService extends ExecutorService {
      * If any execution of the task
      * encounters an exception, subsequent executions are suppressed.
      * Otherwise, the task will only terminate via cancellation or
-     * termination of the executor.
+     * termination of the executor. If any execution of this task 
+     * takes longer than its period, then subsequent executions
+     * may start late, but will not concurrently execute.
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param period the period between successive executions.

@@ -66,7 +66,6 @@
   </path>
 
 
-
   <!-- Main targets -->
 
 
@@ -619,6 +618,114 @@
       <jvmarg value="${bootclasspath.args}"/>
       <classpath refid="test.classpath"/>
     </java>
+  </target>
+
+  
+  
+  <!-- C++ and JNI definitions and demos -->
+  
+  <target name="configure-cpp">
+
+    <!-- Define tasks and types -->
+    
+    <path id="cpptasks.path">
+      <pathelement location="${lib.dir}/cpptasks.jar"/>
+    </path>
+    <taskdef resource="cpptasks.tasks" classpathref="cpptasks.path"/>
+    <typedef resource="cpptasks.types" classpathref="cpptasks.path"/>
+    
+    <!-- Set platform property for JNI includes -->
+    
+    <condition property="platform" value="linux">
+      <os name="Linux"/>
+    </condition>
+    <condition property="platform" value="win32">
+      <os family="windows"/>
+    </condition>
+    <condition property="platform" value="solaris">
+      <os name="SunOS"/>
+    </condition>
+    
+  </target>
+  
+  
+  <target name="cppdemo" depends="configure-cpp">
+  
+    <mkdir dir="${build.dir}"/>
+    
+    <cc multithreaded="true"
+                 name="g++" 
+               objdir="${build.dir}"
+              outfile="${build.dir}/CppDemo">
+      <fileset dir="${test.src.dir}" includes="CppDemo.cpp"/>
+      <libset libs="stdc++"/>
+    </cc>
+    
+    <exec executable="${build.dir}/CppDemo">
+      <arg line="count in word frequency of word in command line count"/>
+    </exec>
+    
+  </target>
+  
+  
+  <target name="jnidemo" depends="init, configure-compiler, configure-cpp">
+  
+    <mkdir dir="${build.testcases.dir}"/>
+    
+    <javac srcdir="${test.src.dir}"
+          destdir="${build.testcases.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+      <compilerarg value="${bootclasspath.args}"/>
+      <compilerarg line="${build.args}"/>
+      <classpath refid="test.classpath"/>
+      <include name="JniDemo.java"/>
+    </javac>
+    
+    <javah destdir="${build.testcases.dir}"
+      classpathref="test.classpath">
+      <class name="JniDemo"/>
+    </javah>
+    
+    <cc multithreaded="true"
+                 name="g++" 
+               objdir="${build.dir}"
+              outfile="${build.dir}/JniDemo"
+              outtype="shared">
+              
+      <compiler>
+        <defineset>
+          <define name="__int64" value="long long"/>
+        </defineset>
+        <includepath location="${java.home}/../include"/>
+        <includepath location="${java.home}/../include/${platform}"/>
+        <compilerarg value="-mno-cygwin"/>
+      </compiler>
+      
+      <linker>
+        <linkerarg value="--add-stdcall-alias"/>
+      </linker>
+      
+      <includepath location="${build.testcases.dir}"/>
+      
+      <fileset dir="${test.src.dir}" includes="JniDemo.cpp"/>
+      
+      <libset libs="stdc++"/>
+      
+    </cc>
+    
+    <!-- Necessary if windows, harmless if not -->
+    <copy file="${build.dir}/libJniDemo.so" tofile="${build.dir}/JniDemo.dll"/>
+    
+    <java classname="JniDemo" fork="true">
+      <!-- Watch out: path separator hardwired to semicolon here! -->
+      <sysproperty key="java.library.path" path="${java.library.path};${build.dir}"/>
+      <classpath refid="test.classpath"/>
+    </java>
+    
   </target>
 
 

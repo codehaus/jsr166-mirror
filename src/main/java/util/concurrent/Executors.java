@@ -44,10 +44,8 @@ public class Executors {
      * A wrapper class that exposes only the ExecutorService and 
      * ScheduleExecutor methods of a ScheduledThreadPoolExecutor.
      */
-    private static class DelegatedScheduledExecutorService 
-            extends DelegatedExecutorService
-            implements ScheduledExecutor {
-        
+    private static class DelegatedScheduledExecutorService
+            extends DelegatedExecutorService implements ScheduledExecutor {
         private final ScheduledExecutor e;
         DelegatedScheduledExecutorService(ScheduledThreadPoolExecutor executor) {
             super(executor);
@@ -175,8 +173,7 @@ public class Executors {
                                     new SynchronousQueue<Runnable>(),
                                     threadFactory));
     }
-    
-    
+   
     /**
      * Creates a thread pool that can schedule commands to run after a 
      * given delay, or to execute periodically.
@@ -184,9 +181,8 @@ public class Executors {
      * an <tt>ExecutorService</tt>.
      */
     public static ScheduledExecutor newScheduledThreadPool() {
-        return newScheduledThreadPool(0);
+        return newScheduledThreadPool(1);
     }
-    
     
     /**
      * Creates a thread pool that can schedule commands to run after a 
@@ -197,9 +193,9 @@ public class Executors {
      * an <tt>ExecutorService</tt>.
      */
     public static ScheduledExecutor newScheduledThreadPool(int corePoolSize) {
-        return newScheduledThreadPool(corePoolSize, null);
+        return new DelegatedScheduledExecutorService
+            (new ScheduledThreadPoolExecutor(corePoolSize));
     }
-
 
     /**
      * Creates a thread pool that can schedule commands to run after a 
@@ -213,45 +209,9 @@ public class Executors {
      */
     public static ScheduledExecutor newScheduledThreadPool(int corePoolSize, 
                                                            ThreadFactory threadFactory) {
-        return newScheduledThreadPool(corePoolSize, threadFactory, false, false);
+        return new DelegatedScheduledExecutorService
+            (new ScheduledThreadPoolExecutor(corePoolSize, threadFactory));
     }
-
-    
-    /**
-     * Creates a thread pool that can schedule commands to run after a 
-     * given delay, or to execute periodically.
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
-     * @param threadFactory the factory to use when the executor
-     * creates a new thread. 
-     * @param continueExistingPeriodicTasksAfterShutdown  whether to 
-     * continue executing existing periodic tasks even when the returned 
-     * executor has been <tt>shutdown</tt>.
-     * @param executeExistingDelayedTasksAfterShutdown  whether to 
-     * continue executing existing delayed tasks even when the returned 
-     * executor has been <tt>shutdown</tt>.
-     * @return a <tt>ScheduledExecutor</tt> that may safely be cast to
-     * an <tt>ExecutorService</tt>.
-     */
-    public static ScheduledExecutor newScheduledThreadPool(
-            int corePoolSize, 
-            ThreadFactory threadFactory,
-            boolean continueExistingPeriodicTasksAfterShutdown,
-            boolean executeExistingDelayedTasksAfterShutdown) {
-                
-        ScheduledThreadPoolExecutor stpe = threadFactory == null ? 
-            new ScheduledThreadPoolExecutor(corePoolSize) :
-            new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
-            
-        stpe.setContinueExistingPeriodicTasksAfterShutdownPolicy(
-            continueExistingPeriodicTasksAfterShutdown);
-            
-        stpe.setExecuteExistingDelayedTasksAfterShutdownPolicy(
-            executeExistingDelayedTasksAfterShutdown);
-        
-        return new DelegatedScheduledExecutorService(stpe);
-    }
-    
 
     /**
      * Executes a Runnable task and returns a Future representing that

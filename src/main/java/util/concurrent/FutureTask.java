@@ -1,5 +1,7 @@
 /*
- * @(#)FutureTask.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent;
@@ -30,17 +32,18 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:47 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  */
 public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
-
     private V result;
     private Throwable exception;
     private boolean ready;
     private Thread runner;
     private final Callable<V> callable;
     private boolean cancelled;
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition accessible = lock.newCondition();
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the
@@ -84,10 +87,14 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      */
     protected void doRun() {
         try {
-            synchronized(this) {
+            lock.lock();
+            try {
                 if (ready || runner != null)
                     return;
                 runner = Thread.currentThread();
+            }
+            finally {
+                lock.unlock();
             }
             set(callable.call());
         }
@@ -108,15 +115,21 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * @throws ExecutionException if the underlying computation threw an exception
      * @throws InterruptedException if current thread was interrupted while waiting
      */
-    public synchronized V get() throws InterruptedException, ExecutionException {
-        while (!ready)
-            wait();
-        if (cancelled)
-            throw new CancellationException();
-        else if (exception != null)
-            throw new ExecutionException(exception);
-        else
-            return result;
+    public V get() throws InterruptedException, ExecutionException {
+        lock.lock();
+        try {
+            while (!ready)
+                accessible.await();
+            if (cancelled)
+                throw new CancellationException();
+            else if (exception != null)
+                throw new ExecutionException(exception);
+            else
+                return result;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -124,7 +137,7 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * complete, and then retrieves its result.
      *
      * @param timeout the maximum time to wait
-     * @param granularity the time unit of the timeout argument
+     * @param unit the time unit of the timeout argument
      * @return value of this task
      * @throws CancellationException if task producing this value was cancelled before completion
      * @throws ExecutionException if the underlying computation
@@ -132,29 +145,29 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws TimeoutException if the wait timed out
      */
-    public synchronized V get(long timeout, TimeUnit granularity)
+    public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
 
-        if (!ready) {
-            long startTime = TimeUnit.highResolutionTime();
-            long waitTime = timeout;
-            for (;;) {
-                granularity.timedWait(this, waitTime);
-                if (ready)
-                    break;
-                else {
-                    waitTime = TimeUnit.highResolutionTime() - startTime;
-                    if (waitTime <= 0)
+        lock.lock();
+        try {
+            if (!ready) {
+                long nanos = unit.toNanos(timeout);
+                do {
+                    if (nanos <= 0)
                         throw new TimeoutException();
-                }
+                    nanos = accessible.awaitNanos(nanos);
+                } while (!ready);
             }
+            if (cancelled)
+                throw new CancellationException();
+            else if (exception != null)
+                throw new ExecutionException(exception);
+            else
+                return result;
         }
-        if (cancelled)
-            throw new CancellationException();
-        else if (exception != null)
-            throw new ExecutionException(exception);
-        else
-            return result;
+        finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -166,11 +179,17 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      *
      * @fixme Need to clarify "should" in "should only be called once".
      */
-    protected synchronized void set(V v) {
-        ready = true;
-        result = v;
-        runner = null;
-        notifyAll();
+    protected void set(V v) {
+        lock.lock();
+        try {
+            ready = true;
+            result = v;
+            runner = null;
+            accessible.signalAll();
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -181,30 +200,54 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      *
      * @param t the throwable
      */
-    protected synchronized void setException(Throwable t) {
-        ready = true;
-        exception = t;
-        runner = null;
-        notifyAll();
+    protected void setException(Throwable t) {
+        lock.lock();
+        try {
+            ready = true;
+            exception = t;
+            runner = null;
+            accessible.signalAll();
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     /* Cancellable implementation. */
 
-    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
-        if (ready || cancelled)
-            return false;
-        if (mayInterruptIfRunning &&
-            runner != null && runner != Thread.currentThread())
-            runner.interrupt();
-        return cancelled = ready = true;
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        lock.lock();
+        try {
+            if (ready || cancelled)
+                return false;
+            if (mayInterruptIfRunning &&
+                runner != null && runner != Thread.currentThread())
+                runner.interrupt();
+            return cancelled = ready = true;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized boolean isCancelled() {
-        return cancelled;
+    public boolean isCancelled() {
+        lock.lock();
+        try {
+            return cancelled;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized boolean isDone() {
-        return ready;
+    public boolean isDone() {
+        lock.lock();
+        try {
+            return ready;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 }
 

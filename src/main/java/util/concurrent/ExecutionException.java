@@ -1,19 +1,20 @@
 /*
- * @(#)ExecutionException.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent;
 
 /**
  * Thrown when attempting to retrieve the result of a task that aborted.
- * @fixme THROWN BY WHO??  MENTION THAT THIS IS WRAPPER FOR REAL CAUSE
  *
  * @since 1.5
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:46 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  */
 public class ExecutionException extends Exception {
 

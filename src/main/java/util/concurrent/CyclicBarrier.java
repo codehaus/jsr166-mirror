@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 /**
@@ -70,13 +76,13 @@ package java.util.concurrent;
  *     // log the completion of this iteration
  *   }</pre>
  *
- * <p>The <tt>CyclicBarrier</tt> uses an all-or-none breakage model for failed
- * synchronization attempts: If a thread leaves a barrier point
- * prematurely because of interruption, all others will also
- * leave abnormally (via {@link BrokenBarrierException}), until the barrier is
- * {@link #reset}. This is usually the simplest and best
- * strategy for sharing knowledge about failures among cooperating
- * threads in the most common usage contexts of barriers.  
+ * <p>The <tt>CyclicBarrier</tt> uses an all-or-none breakage model
+ * for failed synchronization attempts: If a thread leaves a barrier
+ * point prematurely because of interruption or timeout, all others
+ * will also leave abnormally (via {@link BrokenBarrierException}),
+ * until the barrier is {@link #reset}. This is usually the simplest
+ * and best strategy for sharing knowledge about failures among
+ * cooperating threads in the most common usage contexts of barriers.
  *
  * <h3>Implementation Considerations</h3>
  * <p>This implementation has the property that interruptions among newly
@@ -90,13 +96,115 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:46 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:39 $
+ * @editor $Author: dl $
  *
  * @fixme Is the above property actually true in this implementation?
  * @fixme Should we have a timeout version of await()?
  */
 public class CyclicBarrier {
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition trip = lock.newCondition();
+    private final int parties;
+    private Runnable barrierCommand;
+
+    /**
+     * The generation number. Incremented mod Integer.MAX_VALUE every
+     * time barrier tripped. Starts at 1 to simplify handling of
+     * breakage indicator
+     */
+    private int generation = 1; 
+
+    /** 
+     * Breakage indicator: last generation of breakage, propagated
+     * across barrier generations until reset. 
+     */
+    private int broken = 0; 
+
+    /**
+     * Number of parties still waiting. Counts down from parties to 0
+     * on each cycle.
+     */
+    private int count; 
+
+    /**
+     * Update state on barrier trip.
+     */  
+    private void nextGeneration() {
+        count = parties;
+        int g = generation;
+        // avoid generation == 0
+        if (++generation < 0) generation = 1;
+        // propagate breakage
+        if (broken == g) broken = generation;
+    }
+
+    private int dowait(boolean timed, long nanos) throws InterruptedException, BrokenBarrierException, TimeoutException {
+        lock.lock();
+        try {
+            int index = --count;
+            int g = generation;
+
+            if (broken == g) 
+                throw new BrokenBarrierException();
+
+            if (Thread.interrupted()) {
+                broken = g;
+                trip.signalAll();
+                throw new InterruptedException();
+            }
+
+            if (index == 0) {  // tripped
+                nextGeneration();
+                trip.signalAll();
+                try {
+                    if (barrierCommand != null) 
+                        barrierCommand.run();
+                    return 0;
+                }
+                catch (RuntimeException ex) {
+                    broken = generation; // next generation is broken
+                    throw ex;
+                }
+            }
+
+            while (generation == g) {
+                try {
+                    if (!timed) 
+                        trip.await();
+                    else if (nanos > 0)
+                        nanos = trip.awaitNanos(nanos);
+                }
+                catch (InterruptedException ex) {
+                    // Only claim that broken if interrupted before reset
+                    if (generation == g) { 
+                        broken = g;
+                        trip.signalAll();
+                        throw ex;
+                    }
+                    else {
+                        Thread.currentThread().interrupt(); // propagate
+                        break;
+                    }
+                }
+                
+                if (timed && nanos <= 0) {
+                    broken = g;
+                    trip.signalAll();
+                    throw new TimeoutException();
+                }
+
+                if (broken == generation) 
+                    throw new BrokenBarrierException();
+                
+            }
+            return index;
+
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
     /**
      * Create a new <tt>CyclicBarrier</tt> that will trip when the
@@ -111,6 +219,10 @@ public class CyclicBarrier {
      * @throws IllegalArgumentException if <tt>parties</tt> is less than 1.
      */
     public CyclicBarrier(int parties, Runnable barrierAction) {
+        if (parties <= 0) throw new IllegalArgumentException();
+        this.parties = parties; 
+        this.count = parties;
+        this.barrierCommand = barrierAction;
     }
 
     /**
@@ -125,6 +237,7 @@ public class CyclicBarrier {
      * @throws IllegalArgumentException if <tt>parties</tt> is less than 1.
      */
     public CyclicBarrier(int parties) {
+        this(parties, null);
     }
 
     /**
@@ -132,7 +245,7 @@ public class CyclicBarrier {
      * @return the number of parties required to trip this barrier.
      **/
     public int getParties() {
-        return 0; // for now
+        return parties;
     }
 
     /**
@@ -141,13 +254,14 @@ public class CyclicBarrier {
      *
      * <p>If the current thread is not the last to arrive then it is
      * disabled for thread scheduling purposes and lies dormant until
-     * one of four things happens:
+     * one of following things happens:
      * <ul>
      * <li>The last thread arrives; or
      * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread; or
      * <li>Some other thread  {@link Thread#interrupt interrupts} one of the
      * other waiting threads; or
+     * <li>Some other thread  times out while waiting for barrier; or
      * <li>Some other thread invokes {@link #reset} on this barrier.
      * </ul>
      * <p>If the current thread:
@@ -185,17 +299,84 @@ public class CyclicBarrier {
      * reset, or the barrier was broken when <tt>await</tt> was called.
      */
     public int await() throws InterruptedException, BrokenBarrierException {
-        return 0; // for now
+        try {
+            return dowait(false, 0);
+        }
+        catch (TimeoutException toe) {
+            throw new Error(toe); // cannot happen;
+        }
+    }
+
+    /**
+     * Wait until all {@link #getParties parties} have invoked <tt>await</tt>
+     * on this barrier.
+     *
+     * <p>If the current thread is not the last to arrive then it is
+     * disabled for thread scheduling purposes and lies dormant until
+     * one of the following things happens:
+     * <ul>
+     * <li>The last thread arrives; or
+     * <li>The speceified timeout elapses; or
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
+     * thread; or
+     * <li>Some other thread  {@link Thread#interrupt interrupts} one of the
+     * other waiting threads; or
+     * <li>Some other thread  times out while waiting for barrier; or
+     * <li>Some other thread invokes {@link #reset} on this barrier.
+     * </ul>
+     * <p>If the current thread:
+     * <ul>
+     * <li>has its interrupted status set on entry to this method; or
+     * <li>is {@link Thread#interrupt interrupted} while waiting
+     * </ul>
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
+     *
+     * <p>If the barrier is {@link #reset} while any thread is waiting, or if 
+     * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked
+     * then {@link BrokenBarrierException} is thrown.
+     *
+     * <p>If any thread is {@link Thread#interrupt interrupted} while waiting,
+     * then all other waiting threads will throw 
+     * {@link BrokenBarrierException} and the barrier is placed in the broken
+     * state.
+     *
+     * <p>If the current thread is the last thread to arrive, and a
+     * non-null barrier action was supplied in the constructor, then the
+     * current thread runs the action before allowing the other threads to 
+     * continue.
+     * If an exception occurs during the barrier action then that exception
+     * will be propagated in the current thread.
+     *
+     * @return the arrival index of the current thread, where index
+     *  <tt>{@link #getParties()} - 1</tt> indicates the first to arrive and 
+     * zero indicates the last to arrive.
+     *
+     * @throws InterruptedException if the current thread was interrupted 
+     * while waiting
+     * @throws TimeoutException if the specified timeout elapses.
+     * @throws BrokenBarrierException if <em>another</em> thread was
+     * interrupted while the current thread was waiting, or the barrier was
+     * reset, or the barrier was broken when <tt>await</tt> was called.
+     */
+    public int await(long timeout, TimeUnit unit) throws InterruptedException, BrokenBarrierException, TimeoutException {
+        return dowait(true, unit.toNanos(timeout));
     }
 
     /**
      * Query if this barrier is in a broken state.
      * @return <tt>true</tt> if one or more parties broke out of this
-     * barrier due to interruption since construction or the last reset;
-     * and <tt>false</tt> otherwise.
+     * barrier due to interruption or timeout since construction or
+     * the last reset; and <tt>false</tt> otherwise.
      */
     public boolean isBroken() {
-        return false; // for now
+        lock.lock();
+        try {
+            return broken >= generation;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -204,7 +385,16 @@ public class CyclicBarrier {
      * {@link BrokenBarrierException}.
      */
     public void reset() {
-        // for now
+        lock.lock();
+        try {
+            int g = generation;
+            nextGeneration();
+            broken = g; // cause brokenness setting to stop at previous gen.
+            trip.signalAll();
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -214,7 +404,13 @@ public class CyclicBarrier {
      * @return the number of parties currently blocked in {@link #await}
      **/
     public int getNumberWaiting() {
-        return 0; // for now
+        lock.lock();
+        try {
+            return parties - count;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
 }

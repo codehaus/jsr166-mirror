@@ -1,12 +1,15 @@
 /*
- * @(#)Executors.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent;
+import java.util.*;
 
 /**
- * A factory for the <tt>Executor</tt> classes defined in
- * <tt>java.util.concurrent</tt>.
+ * Factory and utility methods for the <tt>Executor</tt> classes
+ * defined in <tt>java.util.concurrent</tt>.
  *
  * <p>An Executor is a framework for executing Runnables.  The
  * Executor manages queueing and scheduling of tasks, and creation and
@@ -17,14 +20,32 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @see Executor
- * @see ThreadedExecutor
+ * @see ExecutorService
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:46 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  */
 public class Executors {
+
+    /**
+     * A wrapper class that exposes only the ExecutorService methods
+     * of an implementation.
+     */ 
+    static private class DelegatedExecutorService implements ExecutorService {
+        private final ExecutorService e;
+        DelegatedExecutorService(ExecutorService executor) { e = executor; }
+        public void execute(Runnable command) { e.execute(command); }
+        public void shutdown() { e.shutdown(); }
+        public List shutdownNow() { return e.shutdownNow(); }
+        public boolean isShutdown() { return e.isShutdown(); }
+        public boolean isTerminated() { return e.isTerminated(); }
+        public boolean awaitTermination(long timeout, TimeUnit unit)
+            throws InterruptedException {
+            return e.awaitTermination(timeout, unit);
+        }
+    }
 
     /**
      * Creates a thread pool that reuses a fixed set of threads
@@ -33,10 +54,63 @@ public class Executors {
      * @param nThreads the number of threads in the pool
      * @return the newly created thread pool
      */
-    public static ThreadedExecutor newFixedThreadPool(int nThreads) {
-        return new ThreadPoolExecutor(nThreads, nThreads,
-                                      0L, TimeUnit.MILLISECONDS,
-                                      new LinkedBlockingQueue());
+    public static ExecutorService newFixedThreadPool(int nThreads) {
+        return new DelegatedExecutorService
+            (new ThreadPoolExecutor(nThreads, nThreads,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue()));
+    }
+
+    /**
+     * Creates a thread pool that reuses a fixed set of threads
+     * operating off a shared unbounded queue, using the provided
+     * ThreadFactory to create new threads when needed.
+     *
+     * @param nThreads the number of threads in the pool
+     * @param threadfactory the factory to use when creating new threads
+     * @return the newly created thread pool
+     */
+    public static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
+        return new DelegatedExecutorService
+            (new ThreadPoolExecutor(nThreads, nThreads,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue(),
+                                    threadFactory, null));
+    }
+
+    /**
+     * Creates an Executor that uses a single worker thread operating
+     * off an unbounded queue. (Note however that if this single
+     * thread terminates due to a failure during execution prior to
+     * shutdown, a new one will take its place if needed to execute
+     * subsequent tasks.)  Tasks are guaranteed to execute
+     * sequentially, and no more than one task will be active at any
+     * given time.
+     *
+     * @return the newly-created single-threaded Executor
+     */
+    public static ExecutorService newSingleThreadExecutor() {
+        return new DelegatedExecutorService
+            (new ThreadPoolExecutor(1, 1, 
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue()));
+    }
+
+    /**
+     * Creates an Executor that uses a single worker thread operating
+     * off an unbounded queue, and uses the provided ThreadFactory to
+     * create new threads when needed.
+     * @param threadfactory the factory to use when creating new
+     * threads
+     *
+     * @return the newly-created single-threaded Executor
+     */
+    public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
+        return new DelegatedExecutorService
+            (new ThreadPoolExecutor(1, 1, 
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue(),
+                                    threadFactory, null));
     }
 
     /**
@@ -53,57 +127,27 @@ public class Executors {
      *
      * @return the newly created thread pool
      */
-    public static ThreadedExecutor newCachedThreadPool() {
-        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                      60000, TimeUnit.MILLISECONDS,
-                                      new SynchronousQueue());
+    public static ExecutorService newCachedThreadPool() {
+        return new DelegatedExecutorService
+            (new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                    60, TimeUnit.SECONDS,
+                                    new SynchronousQueue()));
     }
 
     /**
-     * Creates a thread pool that reuses a limited pool of cached
-     * threads.
-     *
-     * @param minThreads the minimum number of threads to keep in the
-     * pool, even if they are idle.
-     * @param maxThreads the maximum number of threads to allow in the
-     * pool.
-     * @param keepAliveTime when the number of threads is greater than
-     * the minimum, this is the maximum time that excess idle threads
-     * will wait for new tasks before terminating.
-     * @param granularity the time unit for the keepAliveTime
-     * argument.
-     * @param queue the queue to use for holding tasks before they
-     * are executed. This queue will hold only the <tt>Runnable</tt>
-     * tasks submitted by the <tt>execute</tt> method.
+     * Creates a thread pool that creates new threads as needed, but
+     * will reuse previously constructed threads when they are
+     * available, and uses the provided 
+     * ThreadFactory to create new threads when needed.
+     * @param threadfactory the factory to use when creating new threads
      * @return the newly created thread pool
-     * @throws IllegalArgumentException if minThreads, maxThreads, or
-     * keepAliveTime less than zero, or if minThreads greater than
-     * maxThreads.  
-     * @throws NullPointerException if queue is null
      */
-    public static ThreadedExecutor newThreadPool(int minThreads,
-                                                   int maxThreads,
-                                                   long keepAliveTime,
-                                                   TimeUnit granularity,
-                                                   BlockingQueue queue) {
-        return new ThreadPoolExecutor(minThreads, maxThreads,
-                                      keepAliveTime, granularity,
-                                      queue);
-    }
-
-    /**
-     * Creates an Executor that uses a single worker thread operating
-     * off an unbounded queue. (Note however that if this single
-     * thread terminates due to a failure during execution prior to
-     * shutdown, a new one will take its place if needed to execute
-     * subsequent tasks.)  Tasks are guaranteed to execute
-     * sequentially, and no more than one task will be active at any
-     * given time.
-     *
-     * @return the newly-created single-threaded Executor
-     */
-    public static SingleThreadedExecutor newSingleThreadExecutor() {
-        return new SingleThreadedExecutor();
+    public static ExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
+        return new DelegatedExecutorService
+            (new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                    60, TimeUnit.SECONDS,
+                                    new SynchronousQueue(),
+                                    threadFactory, null));
     }
 
     /**
@@ -118,17 +162,17 @@ public class Executors {
      * @param keepAliveTime when the number of threads is greater than
      * the minimum, this is the maximum time that excess idle threads
      * will wait for new tasks before terminating.
-     * @param granularity the time unit for the keepAliveTime
+     * @param unit the time unit for the keepAliveTime
      * argument.
      * @return the newly created ScheduledExecutor
      */
-    public static ScheduledExecutor newScheduledExecutor(int minThreads,
-                                                         int maxThreads,
-                                                         long keepAliveTime,
-                                                         TimeUnit granularity) {
-        return new ScheduledExecutor(minThreads, maxThreads,
-                                     keepAliveTime, granularity);
-    }
+    //    public static ScheduledExecutor newScheduledExecutor(int minThreads,
+    //                                                         int maxThreads,
+    //                                                         long keepAliveTime,
+    //                                                         TimeUnit unit) {
+    //        return new ScheduledExecutor(minThreads, maxThreads,
+    //                                     keepAliveTime, unit);
+    //    }
 
     /**
      * Executes a Runnable task and returns a Future representing that

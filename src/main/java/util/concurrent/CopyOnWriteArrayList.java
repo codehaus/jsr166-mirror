@@ -1,5 +1,10 @@
-package java.util.concurrent;
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
 
+package java.util.concurrent;
 import java.util.*;
 
 /**
@@ -20,9 +25,8 @@ import java.util.*;
  *
  * Because of the copy-on-write policy, some one-by-one mutative
  * operations in the java.util.Arrays and java.util.Collections
- * classes are so time/space intensive as to never be worth calling
- * (except perhaps as benchmarks for garbage collectors :-).  <p>
- *
+ * classes are so time/space intensive as to never be worth calling.
+ * <p>
  *
  * Due to their strict read-only nature, element-changing operations
  * on iterators (remove, set, and add) are not supported. These are
@@ -35,13 +39,13 @@ public class CopyOnWriteArrayList<E>
      * The held array. Directly access only within synchronized
      *  methods
      */
-    private transient E[] array_;
+    private volatile transient E[] array_;
 
     /**
      * Accessor to the array intended to be called from
      * within unsynchronized read-only methods
      **/
-    private synchronized E[] array() { return array_; }
+    private E[] array() { return array_; }
 
     /**
      * Constructs an empty list
@@ -967,23 +971,18 @@ public class CopyOnWriteArrayList<E>
     private static class COWSubList<E> extends AbstractList<E> {
 
         /*
-          This is currently a bit sleazy. The class
-          extends AbstractList merely for convenience,
-          to avoid having to define addAll, etc. This
-          doesn't hurt, but is stupid and wasteful.
-          This class does not need or use modCount mechanics
-          in AbstractList, but does need to check for
-          concurrent modification using similar mechanics.
-          On each operation, the array that we expect
-          the backing list to use is checked and updated.
-          Since we do this for all of the base operations
-          invoked by those defined in AbstractList, all is well.
-
-          It's not clear whether this is worth cleaning up.
-          The kinds of list operations inherited from
-          AbstractList are are already so slow on COW sublists
-          that adding a bit more space/time doesn't seem
-          even noticeable.
+          This class extends AbstractList merely for convenience, to
+          avoid having to define addAll, etc. This doesn't hurt, but
+          is wasteful.  This class does not need or use modCount
+          mechanics in AbstractList, but does need to check for
+          concurrent modification using similar mechanics.  On each
+          operation, the array that we expect the backing list to use
+          is checked and updated.  Since we do this for all of the
+          base operations invoked by those defined in AbstractList,
+          all is well.  While inefficient, this is not worth
+          improving.  The kinds of list operations inherited from
+          AbstractList are are already so slow on COW sublists that
+          adding a bit more space/time doesn't seem even noticeable.
          */
 
         private final CopyOnWriteArrayList<E> l;

@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 import java.util.*;
@@ -16,7 +22,7 @@ import java.io.ObjectOutputStream;
  * <dd> Retrievals may overlap updates.  Successful retrievals using
  * get(key) and containsKey(key) usually run without
  * locking. Unsuccessful retrievals (i.e., when the key is not
- * present) do involve brief synchronization (locking).  Because
+ * present) do involve brief locking.  Because
  * retrieval operations can ordinarily overlap with update operations
  * (i.e., put, remove, and their derivatives), retrievals can only be
  * guaranteed to return the results of the most recently
@@ -34,12 +40,12 @@ import java.io.ObjectOutputStream;
  * hash table at some point at or since the creation of the
  * iterator/enumeration.  They will return at most one instance of
  * each element (via next()/nextElement()), but might or might not
- * reflect puts and removes that have been processed since they were
- * created.  They do <em>not</em> throw ConcurrentModificationException.
- * However, these iterators are designed to be used by only one
- * thread at a time. Passing an iterator across multiple threads may
- * lead to unpredictable results if the table is being concurrently
- * modified.  <p>
+ * reflect puts and removes that have been processed since
+ * construction if the Iterator.  They do <em>not</em> throw
+ * ConcurrentModificationException.  However, these iterators are
+ * designed to be used by only one thread at a time. Passing an
+ * iterator across multiple threads may lead to unpredictable traversal
+ * if the table is being concurrently modified.  <p>
  *
  *
  * <dt> Updates
@@ -57,9 +63,7 @@ import java.io.ObjectOutputStream;
  * <p>
  *
  * There is <em>NOT</em> any support for locking the entire table to
- * prevent updates. This makes it imposssible, for example, to
- * add an element only if it is not already present, since another
- * thread may be in the process of doing the same thing.
+ * prevent updates. 
  *
  * </dl>
  *
@@ -67,15 +71,12 @@ import java.io.ObjectOutputStream;
  * This class may be used as a direct replacement for
  * java.util.Hashtable in any application that does not rely
  * on the ability to lock the entire table to prevent updates.
- * As of this writing, it performs much faster than Hashtable in
- * typical multi-threaded applications with multiple readers and writers.
  * Like Hashtable but unlike java.util.HashMap,
  * this class does NOT allow <tt>null</tt> to be used as a key or
  * value.
  * <p>
  *
- *
- **/
+**/
 public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         implements ConcurrentMap<K, V>, Cloneable, Serializable {
 
@@ -140,28 +141,31 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * elements in its region.
      * However, the main use of a Segment is for its lock.
      **/
-    private final static class Segment {
+    private final static class Segment extends ReentrantLock {
         /**
          * The number of elements in this segment's region.
-         * It is always updated within synchronized blocks.
          **/
         private int count;
 
         /**
          * Get the count under synch.
          **/
-        private synchronized int getCount() { return count; }
+        private int getCount() { 
+            lock();
+            try {
+                return count; 
+            }
+            finally {
+                unlock();
+            }
+        }
 
-        /**
-         * Force a synchronization
-         **/
-        private synchronized void synch() {}
     }
 
     /**
      * The array of concurrency control segments.
      **/
-    private final Segment[] segments = new Segment[CONCURRENCY_LEVEL];
+    private transient final Segment[] segments = new Segment[CONCURRENCY_LEVEL];
 
 
     /**
@@ -396,7 +400,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         // Recheck under synch if key apparently not there or interference
         Segment seg = segments[hash & SEGMENT_MASK];
-        synchronized(seg) {
+        seg.lock();
+        try {
             tab = table;
             index = hash & (tab.length - 1);
             Entry<K,V> newFirst = tab[index];
@@ -407,6 +412,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 }
             }
             return null;
+        }
+        finally {
+            seg.unlock();
         }
     }
 
@@ -455,7 +463,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         Entry<K,V>[] tab;
         int votes;
 
-        synchronized(seg) {
+        seg.lock();
+        try {
             tab = table;
             int index = hash & (tab.length-1);
             Entry<K,V> first = tab[index];
@@ -480,13 +489,16 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             if ((votes & bit) == 0)
                 votes = votesForResize |= bit;
         }
+        finally {
+            seg.unlock();
+        }
 
         // Attempt resize if 1/4 segs vote,
         // or if this seg itself reaches the overall threshold.
         // (The latter check is just a safeguard to avoid pathological cases.)
         if (bitcount(votes) >= CONCURRENCY_LEVEL / 4  ||
         segcount > (threshold * CONCURRENCY_LEVEL))
-            resize(0, tab);
+            resize(tab);
 
         return null;
     }
@@ -501,7 +513,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         Entry<K,V>[] tab;
         int votes;
 
-        synchronized(seg) {
+        seg.lock();
+        try {
             tab = table;
             int index = hash & (tab.length-1);
             Entry<K,V> first = tab[index];
@@ -525,13 +538,16 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             if ((votes & bit) == 0)
                 votes = votesForResize |= bit;
         }
+        finally {
+            seg.unlock();
+        }
 
         // Attempt resize if 1/4 segs vote,
         // or if this seg itself reaches the overall threshold.
         // (The latter check is just a safeguard to avoid pathological cases.)
         if (bitcount(votes) >= CONCURRENCY_LEVEL / 4  ||
         segcount > (threshold * CONCURRENCY_LEVEL))
-            resize(0, tab);
+            resize(tab);
 
         return value;
     }
@@ -544,16 +560,24 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * this changes on any call, the attempt is aborted because the
      * table has already been resized by another thread.
      */
-    private void resize(int index, Entry<K,V>[] assumedTab) {
-        Segment seg = segments[index];
-        synchronized(seg) {
-            if (assumedTab == table) {
-                int next = index+1;
-                if (next < segments.length)
-                    resize(next, assumedTab);
-                else
-                    rehash();
+    private void resize(Entry<K,V>[] assumedTab) {
+        boolean ok = true;
+        int lastlocked = 0;
+        for (int i = 0; i < segments.length; ++i) {
+            segments[i].lock();
+            lastlocked = i;
+            if (table != assumedTab) {
+                ok = false;
+                break;
             }
+        }
+        try {
+            if (ok)
+                rehash();
+        }
+        finally {
+            for (int i = lastlocked; i >= 0; --i) 
+                segments[i].unlock();
         }
     }
 
@@ -673,7 +697,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         int hash = hash(key);
         Segment seg = segments[hash & SEGMENT_MASK];
 
-        synchronized(seg) {
+        seg.lock();
+        try {
             Entry<K,V>[] tab = table;
             int index = hash & (tab.length-1);
             Entry<K,V> first = tab[index];
@@ -700,6 +725,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             seg.count--;
             return oldValue;
         }
+        finally {
+            seg.unlock();
+        }
     }
 
 
@@ -721,7 +749,13 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         for (int s = 0; s < segments.length; ++s) {
             Segment seg = segments[s];
             Entry<K,V>[] tab;
-            synchronized(seg) { tab = table; }
+            seg.lock();
+            try {
+                tab = table; 
+            }
+            finally {
+                seg.unlock();
+            }
             for (int i = s; i < tab.length; i+= segments.length) {
                 for (Entry<K,V> e = tab[i]; e != null; e = e.next)
                     if (value.equals(e.value))
@@ -772,13 +806,18 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         for(;;) {
             Entry<K,V>[] tab;
             int max;
-            synchronized(segments[0]) { // must synch on some segment. pick 0.
+            // must synch on some segment. pick 0.
+            segments[0].lock();
+            try {
                 tab = table;
                 max = threshold * CONCURRENCY_LEVEL;
             }
+            finally {
+                segments[0].unlock();
+            }
             if (n < max)
                 break;
-            resize(0, tab);
+            resize(tab);
         }
 
         for (Iterator<Map.Entry<A,B>> it = t.entrySet().iterator(); it.hasNext();) {
@@ -795,7 +834,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         //   are obtained in low to high order
         for (int s = 0; s < segments.length; ++s) {
             Segment seg = segments[s];
-            synchronized(seg) {
+            seg.lock();
+            try {
                 Entry<K,V>[] tab = table;
                 for (int i = s; i < tab.length; i+= segments.length) {
                     for (Entry<K,V> e = tab[i]; e != null; e = e.next)
@@ -803,6 +843,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     tab[i] = null;
                     seg.count = 0;
                 }
+            }
+            finally {
+                seg.unlock();
             }
         }
     }
@@ -1053,8 +1096,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         private HashIterator() {
             // force all segments to synch
-            synchronized(segments[0]) { tab = table; }
-            for (int i = 1; i < segments.length; ++i) segments[i].synch();
+            for (int i = 0; i < segments.length; ++i) {
+                segments[i].lock();
+                segments[i].unlock();
+            }
+            tab = table; 
             index = tab.length - 1;
         }
 
@@ -1151,14 +1197,26 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         // readObject to set initial capacity, to avoid needless resizings.
 
         int cap;
-        synchronized(segments[0]) { cap = table.length; }
+        segments[0].lock();
+        try {
+            cap = table.length;
+        }
+        finally {
+            segments[0].unlock();
+        }
         s.writeInt(cap);
 
         // Write out keys and values (alternating)
         for (int k = 0; k < segments.length; ++k) {
             Segment seg = segments[k];
             Entry[] tab;
-            synchronized(seg) { tab = table; }
+            seg.lock();
+            try {
+                tab = table; 
+            }
+            finally {
+                seg.unlock();
+            }
             for (int i = k; i < tab.length; i+= segments.length) {
                 for (Entry e = tab[i]; e != null; e = e.next) {
                     s.writeObject(e.key);

@@ -1,5 +1,10 @@
-package java.util.concurrent;
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
 
+package java.util.concurrent;
 import java.util.*;
 
 /**
@@ -26,7 +31,7 @@ import java.util.*;
  * of copy-on-write sets are classes that maintain
  * sets of Handler objects
  * that must be multicasted to upon an update command. This
- * is a classic case where you do not want to be holding a synch
+ * is a classic case where you do not want to be holding a 
  * lock while sending a message, and where traversals normally
  * vastly overwhelm additions.
  * <pre>

@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 /**
@@ -10,8 +16,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:48 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  */
 public class TimeoutException extends Exception {
     /**

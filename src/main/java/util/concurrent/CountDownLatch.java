@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 /**
@@ -72,10 +78,13 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:46 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:39 $
+ * @editor $Author: dl $
  */
 public class CountDownLatch {
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition zero = lock.newCondition();
+    private int count;
 
     /**
      * Constructs a <tt>CountDownLatch</tt> initialized with the given
@@ -84,9 +93,12 @@ public class CountDownLatch {
      * @param count the number of times {@link #countDown} must be invoked
      * before threads can pass through {@link #await}.
      *
-     * @throws IllegalArgumentException if <tt>count</tt> is less than one.
+     * @throws IllegalArgumentException if <tt>count</tt> is less than zero.
      */
-    public CountDownLatch(int count) {}
+    public CountDownLatch(int count) { 
+        if (count < 0) throw new IllegalArgumentException("count < 0");
+        this.count = count; 
+    }
 
     /**
      * Causes the current thread to wait until the latch has counted down to 
@@ -114,7 +126,17 @@ public class CountDownLatch {
      * @throws InterruptedException if the current thread is interrupted
      * while waiting.
      */
-    public void await() throws InterruptedException {}
+    public void await() throws InterruptedException {
+        lock.lock();
+        try {
+            while (count != 0)
+                zero.await();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
 
     /**
      * Causes the current thread to wait until the latch has counted down to 
@@ -150,17 +172,31 @@ public class CountDownLatch {
      * less than or equal to zero, the method will not wait at all.
      *
      * @param timeout the maximum time to wait
-     * @param granularity the time unit of the <tt>timeout</tt> argument.
+     * @param unit the time unit of the <tt>timeout</tt> argument.
      * @return <tt>true</tt> if the count reached zero  and <tt>false</tt>
      * if the waiting time elapsed before the count reached zero.
      *
      * @throws InterruptedException if the current thread is interrupted
      * while waiting.
      */
-    public boolean await(long timeout, TimeUnit granularity) 
+    public boolean await(long timeout, TimeUnit unit) 
         throws InterruptedException {
-        return false;
+        long nanos = unit.toNanos(timeout);
+        lock.lock();
+        try {
+            for (;;) {
+                if (count == 0)
+                    return true;
+                nanos = zero.awaitNanos(nanos);
+                if (nanos <= 0)
+                    return false;
+            }
+        }
+        finally {
+            lock.unlock();
+        }
     }
+
 
 
     /**
@@ -172,7 +208,16 @@ public class CountDownLatch {
      * <p>If the current {@link #getCount count} equals zero then nothing
      * happens.
      */
-    public void countDown() {}
+    public void countDown() {
+        lock.lock();
+        try {
+            if (count > 0 && --count == 0)
+                zero.signalAll();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
     /**
      * Returns the current count.
@@ -180,6 +225,12 @@ public class CountDownLatch {
      * @return the current count.
      */
     public long getCount() {
-        return 0;
+        lock.lock();
+        try {
+            return count;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 }

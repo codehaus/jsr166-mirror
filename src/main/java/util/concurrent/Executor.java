@@ -1,5 +1,7 @@
 /*
- * @(#)Executor.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent;
@@ -69,7 +71,7 @@ package java.util.concurrent;
  * }</pre>
  *
  * The <tt>Executor</tt> implementations provided in
- * <tt>java.util.concurrent</tt> implement <tt>ThreadedExecutor</tt>,
+ * <tt>java.util.concurrent</tt> implement <tt>ExecutorService</tt>,
  * which is a more extensive interface.  For more advanced users, the
  * <tt>ThreadPoolExecutor</tt> class provides a powerful, extensible
  * thread pool implementation. The <tt>Executors</tt> class provides
@@ -103,8 +105,8 @@ package java.util.concurrent;
  * @see FutureTask
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:46 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  */
 public interface Executor {
 

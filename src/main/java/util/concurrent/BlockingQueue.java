@@ -1,23 +1,48 @@
-package java.util.concurrent;
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
 
+package java.util.concurrent;
 import java.util.Queue;
 
 /**
- * A <tt>BlockingQueue</tt> is a {@link java.util.Queue} that additionally 
- * supports
- * operations that wait for elements to exist when taking them, and/or
- * wait for space to exist when putting them.
+ * A <tt>BlockingQueue</tt> is a {@link java.util.Queue} that
+ * additionally supports operations that wait for elements to exist
+ * when taking them, and wait for space to exist when putting them.
  *
- * <p><tt>BlockingQueue</tt> implementations might or might not have bounded
- * capacity or other insertion constraints, so in general, you cannot
- * tell if a given <tt>put</tt> will block.
- *
- * <p>A <tt>BlockingQueue</tt> should not accept <tt>null</tt> elements as
+ * <p> <tt>BlockingQueues</tt> do not accept <tt>null</tt> elements.
+ * Implementations throw <tt>IllegalArgumentException</tt> on attempts
+ * to <tt>add</tt>, <tt>put</tt> or <tt>offer</tt> a <tt>null</tt>.  A
  * <tt>null</tt> is used as a sentinel value to indicate failure of
- * <tt>poll</tt> operations. If it necessary to allow <tt>null</tt> as an
- * element then it is the responsibility of the client code to deal with
- * this ambiguity. It is preferable to use a special object to represent 
- * &quot;no element&quot; rather than using the value <tt>null</tt>.
+ * <tt>poll</tt> operations.
+ *
+ * <p><tt>BlockingQueues</tt> may be capacity bounded. At any given
+ * time they may have a <tt>remainingCapacity</tt> beyond which no
+ * additional elements can be <tt>put</tt> without blocking.
+ * BlockingQueues without any intrinsic capacity constraints always
+ * report <tt>Integer.MAX_VALUE</tt> remaining capacity.
+ *
+ * <p> While <tt>BlockingQueues</tt> are designed to be used primarily
+ * as producer-consumer queues, they support the <tt>Collection</tt>
+ * interface. So for example, it is possible to remove an arbitrary
+ * element from within a queue using <tt>remove(x)</tt>. However,
+ * such operations are in general <em>NOT</em> performed very
+ * efficiently, and are intended for only occasional use; for example,
+ * when a queued message is cancelled. Also, the bulk operations, most
+ * notably <tt>addAll</tt> are <em>NOT</em> performed atomically, so
+ * it is possible for <tt>addAll(c)</tt> to fail (throwing an
+ * exception) after adding only some of the elements in <tt>c</tt>.
+ *
+ * <p><tt>BlockingQueue</tt>s do <em>not</em> intrinsically support
+ * any kind of &quot;close&quot; or &quot;shutdown&quot; operation to
+ * indicate that no more items will be added.  The needs and usage of
+ * such features tend to be implementation dependent. For example, a
+ * common tactic is for producers to insert special
+ * <em>end-of-stream</em> or <em>poison</em> objects, that are
+ * interpreted accordingly when taken by consumers.
+ *
  * <p>
  * Usage example. Here is a sketch of a classic producer-consumer program.
  * <pre>
@@ -57,18 +82,11 @@ import java.util.Queue;
  * }
  * </pre>
  *
- * <p><tt>BlockingQueue</tt>s do <em>not</em> intrinsically support any kind 
- * of &quot;close&quot; or &quot;shutdown&quot; operation to indicate that 
- * no more items will be added. 
- * The needs and usage of such features tend to be implementation
- * dependent. For example, a common tactic is for producers to insert
- * special <em>end-of-stream</em> or <em>poison</em> objects, that are 
- * interpreted accordingly when taken by consumers.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:45 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:39 $
+ * @editor $Author: dl $
  */
 public interface BlockingQueue<E> extends Queue<E> {
     /**
@@ -111,5 +129,18 @@ public interface BlockingQueue<E> extends Queue<E> {
      */
     public boolean offer(E x, long timeout, TimeUnit granularity) 
         throws InterruptedException;
+
+    /**
+     * Return the number of elements that this queue can ideally (in
+     * the absence of memory or resource constraints) accept without
+     * blocking, or <tt>Integer.MAX_VALUE</tt> if there is no
+     * intrinsic limit.  Note that you <em>cannot</em> always tell if
+     * an attempt to <tt>add</tt> an element will succeed by
+     * inspecting <tt>remainingCapacity</tt> because it may be the
+     * case that a waiting consumer is ready to <tt>take</tt> an
+     * element out of an otherwise full queue.
+     * @return the remaining capacity
+     **/
+    public int remainingCapacity();
 
 }

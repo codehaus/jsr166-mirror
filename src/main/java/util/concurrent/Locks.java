@@ -1,5 +1,12 @@
-package java.util.concurrent;
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
 
+package java.util.concurrent;
+import sun.misc.Unsafe;
+import java.util.Date;
 
 /**
  * Utility operations for built-in synchronization and {@link Lock} classes.
@@ -48,14 +55,13 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:47 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  *
  * @fixme add implementation notes for any performance issues related to
  * timeouts or interrupts
  **/
 public class Locks {
-
     private Locks() {} // uninstantiable.
 
     /**
@@ -78,73 +84,19 @@ public class Locks {
      * otherwise.
      **/
     public static boolean attempt(Object lock, Runnable action) {
-        return false; // for now;
-    }
+        if (lock == null || action == null)
+            throw new NullPointerException();
 
-    /**
-     * Performs the given action holding the monitor lock of
-     * the given object if it is free within the given waiting time and the
-     * current thread has not been {@link Thread#interrupt interrupted}.
-     *
-     * <p>If the monitor lock of the given object is immediately available
-     * to the current thread then it is acquired. 
-     * The action is then executed and finally the monitor lock is released
-     * and the method returns with the value <tt>true</tt>.
-     *
-     * <p>If the monitor lock is not available then
-     * the current thread becomes disabled for thread scheduling 
-     * purposes and lies dormant until one of three things happens:
-     * <ul>
-     * <li> The monitor lock is acquired by the current thread; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
-     * thread; or
-     * <li> The specified waiting time elapses
-     * </ul>
-     * <p>If the monitor lock is acquired
-     * the action is executed then the monitor lock is released
-     * and the method returns with the value <tt>true</tt>.
-     *
-     * <p>If the action completes abruptly due to an {@link Error} or
-     * {@link RuntimeException}, then the method completes abruptly
-     * for the same reason, after the lock has been released.
-     *
-     * <p>If the current thread:
-     * <ul>
-     * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} while waiting to acquire 
-     * the monitor lock, 
-     * </ul>
-     * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. 
-     *
-     * <p>If the specified waiting time elapses then the value <tt>false</tt>
-     * is returned.
-     * The given waiting time is a best-effort lower bound. If the time is 
-     * less than or equal to zero, the method will not wait at all.
-     *
-     * <p><b>Implementation Notes</b>
-     * <p>TO-BE-DONE
-     *
-     *
-     * @param lock the object whose monitor lock must be acquired
-     * @param action the code to run while holding the monitor lock
-     * @param timeout the maximum time to wait for the monitor lock
-     * @param granularity the time unit of the <tt>timeout</tt> argument.
-     * @return <tt>true</tt> if the monitor lock was acquired and the
-     * action executed, and <tt>false</tt>
-     * if the waiting time elapsed before the monitor lock was acquired.
-     *
-     * @throws InterruptedException if the current thread is interrupted
-     * while trying to acquire the monitor lock.
-     *
-     * @see Thread#interrupt
-     *
-     **/
-    public static boolean attempt(Object lock, Runnable action, 
-                                  long timeout, TimeUnit granularity)
-        throws InterruptedException {
-
-        return false; // for now;
+        if (!JSR166Support.tryLockEnter(lock))
+            return false;
+        
+        try {
+            action.run();
+            return true;
+        }
+        finally {
+            JSR166Support.tryLockExit(lock);
+        }
     }
 
     /**
@@ -171,7 +123,26 @@ public class Locks {
      * monitor lock of a <tt>null</tt> element in the <tt>locks</tt> array.
      **/
     public static boolean attempt(Object[] locks, Runnable action) {
-        return false; // for now;
+        // This code is a little mysterious looking unless you remember
+        // that finally clauses execute before return or throw.
+        int lastlocked = -1;
+        try {
+            boolean ok = true;
+            for (int i = 0; i < locks.length; ++i) {
+                Object l = locks[i];
+                if (l == null) 
+                    throw new NullPointerException(); 
+                if (!JSR166Support.tryLockEnter(l))
+                    return false;
+                lastlocked = i;
+            }
+            action.run();
+            return true;
+        }
+        finally {
+            for (int i = lastlocked; i >= 0; --i)
+                JSR166Support.tryLockExit(locks[i]);
+        }
     }
 
     /**
@@ -199,9 +170,38 @@ public class Locks {
      * lock of a <tt>null</tt> element in the <tt>locks</tt> array.
      **/
     public static boolean attempt(Lock[] locks, Runnable action) {
-        return false; // for now;
+        // This code is a little mysterious looking unless you remember
+        // that finally clauses execute before return or throw.
+        int lastlocked = -1;
+        try {
+            for (int i = 0; i < locks.length; ++i) {
+                Lock l = locks[i];
+                if (l == null) 
+                    throw new NullPointerException(); 
+                if (!l.tryLock()) 
+                    return false;
+                lastlocked = i;
+            }
+
+            action.run();
+            return true;
+        }
+        finally {
+            for (int i = lastlocked; i >= 0; --i)
+                locks[i].unlock();
+        }
     }
 
+    /**
+     * Returns a conservative indicator of whether the given lock is
+     * held by any thread. This method always returns true if
+     * the lock is held, but may return true even if not held.
+     *
+     * @return true if lock is held, and either true or false if not held.
+     */
+    public static boolean mightBeLocked(Object lock) {
+        return JSR166Support.mightBeLocked(lock);
+    }
 
     /**
      * Returns a {@link Condition} instance for use with the given object.
@@ -211,9 +211,9 @@ public class Locks {
      * </pre>
      * then:
      * <ul>
-     * <li><tt>c.await()</tt> is analagous to <tt>o.wait()</tt>
-     * <li><tt>c.signal()</tt> is analagous to <tt>o.notify()</tt>; and
-     * <li><tt>c.signalAll()</tt> is analagous to <tt>o.notifyAll()</tt>
+     * <li><tt>c.await()</tt> is analogous to <tt>o.wait()</tt>
+     * <li><tt>c.signal()</tt> is analogous to <tt>o.notify()</tt>; and
+     * <li><tt>c.signalAll()</tt> is analogous to <tt>o.notifyAll()</tt>
      * </ul>
      * in that:
      * <ul>
@@ -284,11 +284,54 @@ public class Locks {
      * @return a {@link Condition} instance bound to the given object
      **/
     public static Condition newConditionFor(Object lock) {
-        return null; // for now;
+        return new ConditionObject(lock);
+    }
+
+    static final private class ConditionObject implements Condition {
+        private final Object lock;
+        private final Object cond = new Object();
+
+        ConditionObject(Object lock) { this.lock = lock; }
+
+        public void await() throws InterruptedException {
+            JSR166Support.conditionWait(lock, cond);
+        }
+
+        public void awaitUninterruptibly() {
+            boolean wasInterrupted = Thread.interrupted(); // record and clear
+            for (;;) {
+                try {
+                    JSR166Support.conditionWait(lock, cond);
+                    break;
+                }
+                catch (InterruptedException ex) { // re-interrupted; try again
+                    wasInterrupted = true;
+                }
+            }
+            if (wasInterrupted) { // re-establish interrupted state
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        public long awaitNanos(long nanos) throws InterruptedException {
+            return JSR166Support.conditionRelWait(lock, cond, nanos);
+        }
+
+        public boolean await(long time, TimeUnit unit) throws InterruptedException {
+            return awaitNanos(unit.toNanos(time)) > 0;
+        }
+
+        public boolean awaitUntil(Date deadline) throws InterruptedException {
+            return JSR166Support.conditionAbsWait(lock, cond, 
+                                                  deadline.getTime());
+        }
+        public void signal() {
+            JSR166Support.conditionNotify(lock, cond);
+        }
+
+        public void signalAll() {
+            JSR166Support.conditionNotifyAll(lock, cond);
+        }
     }
 
 }
-
-
-
-

@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 /**
@@ -57,10 +63,81 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:46 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  */
 public class Exchanger<V> {
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition taken = lock.newCondition();
+
+    /** Holder for the item being exchanged */
+    private V item;
+    
+    /**
+     * Arrival count transitions from 0 to 1 to 2 then back to 0
+     * during an exchange.
+     */
+    private int arrivalCount;
+
+    private V doExchange(V x, boolean timed, long nanos) throws InterruptedException, TimeoutException {
+        lock.lock();
+        try {
+            V other;
+            int count = ++arrivalCount;
+
+            // If item is already waiting, replace it and signal other thread
+            if (count == 2) { 
+                other = item;
+                item = x;
+                taken.signal();
+                return other;
+            }
+
+            // Otherwise, set item and wait for another thread to
+            // replace it and signal us.
+
+            item = x;
+            InterruptedException interrupted = null;
+            try { 
+                while (arrivalCount != 2) {
+                    if (!timed)
+                        taken.await();
+                    else if (nanos > 0) 
+                        nanos = taken.awaitNanos(nanos);
+                    else 
+                        break; // timed out
+                }
+            }
+            catch (InterruptedException ie) {
+                interrupted = ie;
+            }
+
+            // get and reset item and count after the wait.
+            other = item;
+            item = null;
+            count = arrivalCount;
+            arrivalCount = 0; 
+            
+            // If the other thread replaced item, then we must
+            // continue even if cancelled.
+            if (count == 2) {
+                if (interrupted != null)
+                    Thread.currentThread().interrupt();
+                return other;
+            }
+
+            // Otherwise, no one is waiting for us, so we can just back out
+            if (interrupted != null) {
+                taken.signal(); // propagate to any other waiting thread
+                throw interrupted;
+            }
+            else  // must be timeout
+                throw new TimeoutException();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
     /**
      * Create a new Exchanger
@@ -99,7 +176,12 @@ public class Exchanger<V> {
      * @throws InterruptedException if current thread was interrupted while waiting
      **/
     public V exchange(V x) throws InterruptedException {
-        return null; // for now
+        try {
+            return doExchange(x, false, 0);
+        }
+        catch (TimeoutException cannotHappen) { 
+            throw new Error(cannotHappen);
+        }
     }
 
     /**
@@ -139,15 +221,15 @@ public class Exchanger<V> {
      *
      * @param x the object to exchange
      * @param timeout the maximum time to wait
-     * @param granularity the time unit of the <tt>timeout</tt> argument.
+     * @param unit the time unit of the <tt>timeout</tt> argument.
      * @return the object provided by the other thread.
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws TimeoutException if the specified waiting time elapses before
      * another thread enters the exchange.
      **/
-    public V exchange(V x, long timeout, TimeUnit granularity) 
+    public V exchange(V x, long timeout, TimeUnit unit) 
         throws InterruptedException, TimeoutException {
-        return null; // for now
+        return doExchange(x, true, unit.toNanos(timeout));
     }
 
 }

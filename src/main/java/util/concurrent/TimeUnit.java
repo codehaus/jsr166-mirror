@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 /**
@@ -8,7 +14,7 @@ package java.util.concurrent;
  * It does not maintain time information, but only helps organize and 
  * use time representations that may be maintained separately across 
  * various contexts.
- * A static method {@link #highResolutionTime} provides access to a high
+ * A static method {@link #nanoTime} provides access to a high
  * resolution, nanosecond, timer, which can be used to measure elapsed time.
  *
  * <p>The <tt>TimeUnit</tt> class cannot be directly instantiated.  
@@ -35,8 +41,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:48 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  *
  * @fixme The previous version created singleton subclass instances. I could
  * not see any reason to create subclasses instead of just instances.
@@ -50,7 +56,7 @@ public final class TimeUnit implements java.io.Serializable {
      * and is not related to any notion of system, or wall-clock time.
      * Although the value returned represents nanoseconds since some
      * arbitrary start time in the past, the resolution at which this value
-     * is updated is not specified. So we have nanosecond precision, but
+     * is updated is not specified. It provides have nanosecond precision, but
      * not necessarily nanosecond accuracy.
      * It is guaranteed that successive return
      * values from this method will not decrease.
@@ -58,9 +64,9 @@ public final class TimeUnit implements java.io.Serializable {
      * <p> For example to measure how long some code takes to execute, 
      * with nanosecond precision:
      * <pre>
-     * long startTime = TimeUnit.highResolutionTime();
+     * long startTime = TimeUnit.nanoTime();
      * // ... the code being measured ...
-     * long estimatedTime = TimeUnit.highResolutionTime() - startTime;
+     * long estimatedTime = TimeUnit.nanoTime() - startTime;
      * </pre>
      * 
      * @return The current value of the system high resolution timer, in
@@ -69,8 +75,8 @@ public final class TimeUnit implements java.io.Serializable {
      * @fixme Is this spec tight enough? Too tight? What about issues of
      * reading the TSC from different processors on a SMP?
      */
-    public static final long highResolutionTime() {
-        return systemTimeNanos();
+    public static final long nanoTime() {
+        return JSR166Support.currentTimeNanos();
     }
 
     /**
@@ -84,12 +90,24 @@ public final class TimeUnit implements java.io.Serializable {
      * @return the converted duration in the current unit.
      */
     public long convert(long duration, TimeUnit unit) {
-        if (index > unit.index) {
+        if (unit == this)
+            return duration;
+        if (index > unit.index) 
             return duration / multipliers[index - unit.index];
-        }
-        else {
+        else 
             return duration * multipliers[unit.index - index];
-        }
+    }
+
+    /**
+     * Equivalent to <code>NANOOSECONDS.convert(duration, this)</code>.
+     * @param duration the duration
+     * @return the converted duration.
+     **/
+    public long toNanos(long duration) {
+        if (index == NS)
+            return duration;
+        else
+            return duration * multipliers[index];
     }
     
     /**
@@ -174,9 +192,6 @@ public final class TimeUnit implements java.io.Serializable {
         else 
             return 0;
     }
-
-    /** Underlying native time call */
-    static native long systemTimeNanos();
 
     /** Unit for one-second granularities */
     public static final TimeUnit SECONDS = new TimeUnit(S);

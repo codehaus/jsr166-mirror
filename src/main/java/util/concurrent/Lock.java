@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 /**
@@ -40,16 +46,10 @@ package java.util.concurrent;
  *     l.lock();
  *     try {
  *         // access the resource protected by this lock
- *     } catch ( ... ) {
- *         // ensure consistency before releasing lock
  *     } finally {
  *         l.unlock();
  *     }
  * </tt></pre>
- * This mimics the automatic release property of built-in monitor locks, and
- * carries with it the same responsibility for ensuring that if an exception
- * occurs then the resource is left in a consistent state before the lock
- * is released.
  *
  * <p><tt>Lock</tt> implementations provide additional functionality over the 
  * use
@@ -117,10 +117,10 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:47 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  *
- */
+ **/
 public interface Lock {
 
     /**
@@ -136,15 +136,15 @@ public interface Lock {
      * The circumstances and the exception type must be documented by that 
      * <tt>Lock</tt> implementation.
      *
-     */
-    void lock();
+     **/
+    public void lock();
 
     /**
      * Acquires the lock unless the current thread is  
      * {@link Thread#interrupt interrupted}. 
      * <p>Acquires the lock if it is available and returns immediately.
      * <p>If the lock is not available then
-     * the current thread becomes disabled for thread scheduling 
+     * the current thread thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of two things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
@@ -178,8 +178,8 @@ public interface Lock {
      *
      * @see Thread#interrupt
      *
-     */
-    void lockInterruptibly() throws InterruptedException;
+     **/
+    public void lockInterruptibly() throws InterruptedException;
 
 
     /**
@@ -206,8 +206,8 @@ public interface Lock {
      *
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
      * otherwise.
-     */
-    boolean tryLock();
+     **/
+    public boolean tryLock();
 
     /**
      * Acquires the lock if it is free within the given waiting time and the
@@ -250,8 +250,8 @@ public interface Lock {
      * The circumstances and the exception type must be documented by that 
      * <tt>Lock</tt> implementation.
      *
-     * @param timeout the maximum time to wait for the lock
-     * @param granularity the time unit of the <tt>timeout</tt> argument.
+     * @param time the maximum time to wait for the lock
+     * @param unit the time unit of the <tt>time</tt> argument.
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
      * if the waiting time elapsed before the lock was acquired.
      *
@@ -261,9 +261,8 @@ public interface Lock {
      *
      * @see Thread#interrupt
      *
-     */
-    boolean tryLock(long timeout, TimeUnit granularity) 
-        throws InterruptedException;
+     **/
+    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
 
     /**
      * Releases the lock.
@@ -274,8 +273,8 @@ public interface Lock {
      * an (unchecked) exception if the restriction is violated.
      * Any restrictions and the exception
      * type must be documented by that <tt>Lock</tt> implementation.
-     */
-    void unlock();
+     **/
+    public void unlock();
 
     /**
      * Returns a {@link Condition} instance that is bound to this <tt>Lock</tt>
@@ -298,8 +297,8 @@ public interface Lock {
      * @return A {@link Condition} instance for this <tt>Lock</tt> instance.
      * @throws UnsupportedOperationException if this <tt>Lock</tt> 
      * implementation does not support conditions.
-     */
-    Condition newCondition();
+     **/
+    public Condition newCondition();
 
 }
 

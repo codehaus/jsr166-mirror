@@ -1,110 +1,238 @@
-package java.util.concurrent;
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
 
+
+package java.util.concurrent;
 import java.util.*;
 
 /**
- * An unbounded queue in which elements cannot be taken until
- * their indicated delays have elapsed.
+ * An unbounded queue of <tt>DelayEntry</tt> elements, in which
+ * elements can only be taken when their delay has expired.
  **/
 
-public class DelayQueue<E> extends AbstractCollection<E>
-        implements BlockingQueue<E>, java.io.Serializable {
+public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
+        implements BlockingQueue<DelayEntry<E>> {
+
+    private transient final ReentrantLock lock = new ReentrantLock();
+    private transient final Condition canTake = lock.newCondition();
+    private final PriorityQueue<DelayEntry<E>> q = new PriorityQueue<DelayEntry<E>>();
 
     public DelayQueue() {}
 
-    /**
-     * Add the given element to the queue, to be taken after the given delay.
-     * @param unit the time to delay
-     * @param unit the granularity of the time unit
-     * @param x the element
-     */
-    public boolean add(long delay, TimeUnit granularity, E x) {
-        return false;
+    public boolean offer(DelayEntry<E> x) {
+        lock.lock();
+        try {
+            DelayEntry<E> first = q.peek();
+            q.offer(x);
+            if (first == null || x.compareTo(first) < 0)
+                canTake.signalAll();
+            return true;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
-    /**
-     * Return the time until the given element may be taken,
-     * in the requested time granularity.
-     * @param element the element
-     * @param granularity the time granularity
-     * @throws NoSuchElementException if element not present
-     */
-    public long getDelay(E element, TimeUnit granularity) {
-        return 0;
+    public void put(DelayEntry<E> x) {
+        offer(x);
     }
 
-    /**
-     * Return the time until the earliest element may be taken,
-     * in the requested time granularity.
-     * @param granularity the time granularity
-     * @throws NoSuchElementException if empty
-     */
-    public long getEarliestDelay(TimeUnit granularity) {
-        return 0;
+    public boolean offer(DelayEntry<E> x, long time, TimeUnit unit) {
+        return offer(x);
+    }
+
+    public boolean add(DelayEntry<E> x) {
+        return offer(x);
+    }
+
+    public DelayEntry<E> take() throws InterruptedException {
+        lock.lockInterruptibly();
+        try {
+            for (;;) {
+                DelayEntry first = q.peek();
+                if (first == null)
+                    canTake.await();
+                else {
+                    long delay =  first.getDelay(TimeUnit.NANOSECONDS);
+                    if (delay > 0)
+                        canTake.awaitNanos(delay);
+                    else {
+                        DelayEntry<E> x = q.poll();
+                        assert x != null;
+                        if (q.size() != 0)
+                            canTake.signalAll(); // wake up other takers
+                        return x;
+                        
+                    }
+                }
+            }
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    public DelayEntry<E> poll(long time, TimeUnit unit) throws InterruptedException {
+        lock.lockInterruptibly();
+        long nanos = unit.toNanos(time);
+        try {
+            for (;;) {
+                DelayEntry first = q.peek();
+                if (first == null) {
+                    if (nanos <= 0)
+                        return null;
+                    else
+                        nanos = canTake.awaitNanos(nanos);
+                }
+                else {
+                    long delay =  first.getDelay(TimeUnit.NANOSECONDS);
+                    if (delay > 0) {
+                        if (delay > nanos)
+                            delay = nanos;
+                        long timeLeft = canTake.awaitNanos(delay);
+                        nanos -= delay - timeLeft;
+                    }
+                    else {
+                        DelayEntry<E> x = q.poll();
+                        assert x != null;
+                        if (q.size() != 0)
+                            canTake.signalAll(); 
+                        return x;
+                    }
+                }
+            }
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
 
-    /**
-     * Equivalent to add(0, [any time unit], x).
-     **/
-    public void put(E x) {
-    }
-    /**
-     * Equivalent to add(0, [any time unit], x).
-     **/
-    public boolean offer(E x, long time, TimeUnit granularity) {
-        return false;
-    }
-    /**
-     * Equivalent to add(0, [any time unit], x).
-     **/
-    public boolean add(E x) {
-        return false;
-    }
-    /**
-     * Equivalent to add(0, [any time unit], x).
-     **/
-    public boolean offer(E x) {
-        return false;
+    public DelayEntry<E> poll() {
+        lock.lock();
+        try {
+            DelayEntry first = q.peek();
+            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
+                return null;
+            else {
+                DelayEntry<E> x = q.poll();
+                assert x != null;
+                if (q.size() != 0)
+                    canTake.signalAll(); 
+                return x;
+            }
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
+    public DelayEntry<E> peek() {
+        lock.lock();
+        try {
+            return q.peek();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
-    public E take() throws InterruptedException {
-        return null;
-    }
-    public E remove() {
-        return null;
-    }
-    public Iterator<E> iterator() {
-      return null;
-    }
-
-    public boolean remove(Object x) {
-        return false;
-    }
-    public E element() {
-        return null;
-    }
-    public E poll() {
-        return null;
-    }
-    public E poll(long time, TimeUnit granularity) throws InterruptedException {
-        return null;
-    }
-    public E peek() {
-        return null;
-    }
-    public boolean isEmpty() {
-        return false;
-    }
     public int size() {
-        return 0;
+        lock.lock();
+        try {
+            return q.size();
+        }
+        finally {
+            lock.unlock();
+        }
     }
+
+    public void clear() {
+        lock.lock();
+        try {
+            q.clear();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    public int remainingCapacity() {
+        return Integer.MAX_VALUE;
+    }
+
     public Object[] toArray() {
-        return null;
+        lock.lock();
+        try {
+            return q.toArray();
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     public <T> T[] toArray(T[] array) {
-        return null;
+        lock.lock();
+        try {
+            return q.toArray(array);
+        }
+        finally {
+            lock.unlock();
+        }
     }
+
+    public boolean remove(Object x) {
+        lock.lock();
+        try {
+            return q.remove(x);
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    public Iterator<DelayEntry<E>> iterator() {
+        lock.lock();
+        try {
+            return new Itr(q.iterator());
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    private class Itr<E> implements Iterator<DelayEntry<E>> {
+        private final Iterator<DelayEntry<E>> iter;
+        Itr(Iterator<DelayEntry<E>> i) { 
+            iter = i; 
+        }
+
+	public boolean hasNext() {
+            return iter.hasNext();
+	}
+        
+	public DelayEntry<E> next() {
+            lock.lock();
+            try {
+                return iter.next();
+            }
+            finally {
+                lock.unlock();
+            }
+	}
+        
+	public void remove() {
+            lock.lock();
+            try {
+                iter.remove();
+            }
+            finally {
+                lock.unlock();
+            }
+	}
+    }
+
 }

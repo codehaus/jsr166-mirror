@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
+ */
+
 package java.util.concurrent;
 
 /**
@@ -87,13 +93,26 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:48 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:14:40 $
+ * @editor $Author: dl $
  *
  */
-public class Semaphore {
+public class Semaphore implements java.io.Serializable {
+    // todo SerialID
+    // uses default serialization, which happens be fine here.
 
-    private long permits = 0;
+    // Fields are package-private to allow the FairSemaphore variant
+    // to access.
+
+    final ReentrantLock lock;
+    final Condition available;
+    long count;
+
+    Semaphore(long permits, ReentrantLock lock) {
+        this.count = permits;
+        this.lock = lock;
+        available = lock.newCondition();
+    }
 
     /**
      * Construct a <tt>Semaphore</tt> with the given number of
@@ -101,7 +120,7 @@ public class Semaphore {
      * @param permits the initial number of permits available
      */
     public Semaphore(long permits) {
-        this.permits = permits;
+        this(permits, new ReentrantLock());
     }
 
     /**
@@ -134,7 +153,20 @@ public class Semaphore {
      *
      * @see Thread#interrupt
      */
-    public void acquire() throws InterruptedException {}
+    public void acquire() throws InterruptedException {
+        lock.lockInterruptibly();
+        try {
+            while (count <= 0) available.await();
+            --count;
+        }
+        catch (InterruptedException ie) {
+            available.signal();
+            throw ie;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
     /**
      * Acquires a permit from this semaphore, blocking until one is
@@ -156,7 +188,16 @@ public class Semaphore {
      * thread does return from this method its interrupt status will be set.
      *
      */
-    public void acquireUninterruptibly() {}
+    public void acquireUninterruptibly() {
+        lock.lock();
+        try {
+            while (count <= 0) available.awaitUninterruptibly();
+            --count;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
     /**
      * Acquires a permit from this semaphore, only if one is available at the 
@@ -172,7 +213,17 @@ public class Semaphore {
      * otherwise.
      */
     public boolean tryAcquire() {
-        return false;
+        lock.lock();
+        try {
+            if (count > 0) {
+                --count;
+                return true;
+            }
+            return false;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -219,7 +270,26 @@ public class Semaphore {
      */
     public boolean tryAcquire(long timeout, TimeUnit granularity)
         throws InterruptedException {
-        return false;
+        lock.lockInterruptibly();
+        long nanos = granularity.toNanos(timeout);
+        try {
+            for (;;) {
+                if (count > 0) {
+                    --count;
+                    return true;
+                }
+                if (nanos <= 0)
+                    return false;
+                nanos = available.awaitNanos(nanos);
+            }
+        }
+        catch (InterruptedException ie) {
+            available.signal();
+            throw ie;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -234,7 +304,17 @@ public class Semaphore {
      * Correct usage of a semaphore is established by programming convention
      * in the application.
      */
-    public void release() {}
+    public void release() {
+        lock.lock();
+        try {
+            ++count;
+            available.signal();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+        
 
     /**
      * Return the current number of permits available in this semaphore.
@@ -242,7 +322,13 @@ public class Semaphore {
      * @return the number of permits available in this semaphore.
      */
     public long availablePermits() {
-        return permits;
+        lock.lock();
+        try {
+            return count;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 }
 

@@ -1133,7 +1133,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         public String toString() {
-            return getKey() + "=" + getValue();
+            // If not acting as entry, just use default toString.
+            if (lastReturned == null)
+                return super.toString();
+            else
+                return getKey() + "=" + getValue();
         }
 
         private boolean eq(Object o1, Object o2) {

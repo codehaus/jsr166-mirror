@@ -543,6 +543,7 @@
     </path>
 
     <path id="compile.bootclasspath">
+      <pathelement location="${build.classes.dir}"/>
       <pathelement location="${collect.jar}"/>
       <pathelement location="${rt.jar}"/>
     </path>

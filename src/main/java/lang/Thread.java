@@ -849,18 +849,21 @@ class Thread implements Runnable {
     private native boolean isInterrupted(boolean ClearInterrupted);
 
     /**
-     * Destroys this thread, without any cleanup. Any monitors it has 
-     * locked remain locked. (This method is not implemented.)
+     * Throws {@link NoSuchMethodError}.
      *
-     * @deprecated If this method were to be implemented, it would be deadlock
-     *     prone in much the manner of {@link #suspend}. If the target thread
-     *     held a lock on the monitor protecting a critical system resource
-     *     when it was suspended, no thread could ever access this resource
-     *     again. If another thread ever attempted to lock this resource,
-     *     deadlock would result. Such deadlocks typically manifest themselves
-     *     as "frozen" processes.  For more information, see <a href=
-     *     "{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html"> Why
-     *     are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
+     * @deprecated This method was originally designed to destroy this
+     *     thread without any cleanup. Any monitors it held would have
+     *     remained locked. However, the method was never implemented.
+     *     If if were to be implemented, it would be deadlock-prone in
+     *     much the manner of {@link #suspend}. If the target thread held
+     *     a lock protecting a critical system resource when it was
+     *     destroyed, no thread could ever access this resource again.
+     *     If another thread ever attempted to lock this resource, deadlock
+     *     would result. Such deadlocks typically manifest themselves as
+     *     "frozen" processes. For more information, see
+     *     <a href="{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html">
+     *     Why are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
+     * @throws NoSuchMethodError always
      */
     @Deprecated
     public void destroy() {

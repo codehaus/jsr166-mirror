@@ -299,11 +299,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         if (element == null)
             throw new NullPointerException();
         modCount++;
+        ++size;
 
         // Grow backing store if necessary
-        if (++size == queue.length) {
+        while (size >= queue.length) {
             E[] newQueue = new E[2 * queue.length];
-            System.arraycopy(queue, 0, newQueue, 0, size);
+            System.arraycopy(queue, 0, newQueue, 0, queue.length);
             queue = newQueue;
         }
 

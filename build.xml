@@ -1,37 +1,23 @@
 <project name="jsr166" default="usage">
 
   <description>
-    Build file for JSR-166
+------------------------------------------------------------------------------
+  Build file for JSR-166
 
-    JUnit 3.8 or better must be in ${ant.home}/lib for the test target to work.
+  Usage: ant [target]
+
+  User-specific settings are read from user.properties.
+  See user.properties.sample for examples.
+------------------------------------------------------------------------------
   </description>
 
-
-  <target name="usage" description="Prints this message">
-    <echo>
-ant [target], where target is one of:
-
- usage       (default) Prints this message
- compile     Compiles all sources to build folder
- jar         Builds library jar from compiled sources
- test        Runs all tests (requires JUnit 1.8 in ${ant.home}/lib)
- docs        Builds javadocs with custom tags to build folder
- dist-docs   Builds javadocs without custom tags to dist folder
- dist        Puts all distributable products in single hierarchy
-
- clean       Removes all build products
- dist-clean  Removes all build and distribution products
-
- checkstyle  Reports on style errors in Java source (verbose, mostly chaff)
- doccheck    Reports on javadoc style errors (not working yet)
-    </echo>
+  <target name="usage" description="Advises user to run with -projecthelp">
+    <echo>Run "ant -projecthelp" for full usage information.</echo>
   </target>
+
 
   <!-- User-specific settings -->
   <property file="user.properties"/>
-
-  <!-- Set build.warnings in user.properties to turn on -warnunchecked -->
-  <!-- <property name="build.warnings" value=""/> -->
 
 
   <!-- Compilation options -->
@@ -156,7 +142,7 @@ ant [target], where target is one of:
 
   <target name="test"
           depends="init, check-junit, report-tests"
-          description="Runs all tests (requires JUnit 3.8+ in ${ant.home}/lib)" />
+          description="Runs all tests (requires JUnit 3.8.1 in ${ant.home}/lib)" />
 
 
   <target name="checkstyle"
@@ -203,9 +189,10 @@ ant [target], where target is one of:
               source="${build.docsourcelevel}">
 
       <tag name="revised" description="Last revised:"/>
-      <tag name="spec" description="Specified by:"/>
-      <tag name="editor" description="Last edited by:"/>
-      <tag name="fixme" description="FIX ME:"/>
+      <tag name="spec"    description="Specified by:"/>
+      <tag name="editor"  description="Last edited by:"/>
+      <tag name="fixme"   description="FIX ME:"/>
+
       <packageset dir="${build.filter.src.dir}"/>
 
     </javadoc>
@@ -329,12 +316,6 @@ ant [target], where target is one of:
   <target name="base-jar"
           depends="compile, init-jar">
 
-    <jar destfile="${product.jar}">
-      <fileset dir="${build.classes.dir}">
-        <patternset refid="emulation.excludes"/>
-      </fileset>
-    </jar>
-
   </target>
 
 
@@ -361,10 +342,14 @@ ant [target], where target is one of:
 
 
   <target name="emulation-jar"
-          depends="base-jar, compile-emulation"
+          depends="init-jar, compile-emulation"
           if="build.emulation">
 
-    <jar destfile="${product.jar}" update="true" duplicate="add">
+
+    <jar destfile="${product.jar}" duplicate="add">
+      <fileset dir="${build.classes.dir}">
+        <patternset refid="emulation.excludes"/>
+      </fileset>
       <fileset dir="${build.emulation.dir}"/>
     </jar>
 

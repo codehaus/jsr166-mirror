@@ -1,5 +1,7 @@
 /*
- * @(#)AtomicStampedReference.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent.atomic;
@@ -10,8 +12,8 @@ package java.util.concurrent.atomic;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:49 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 16:18:04 $
+ * @editor $Author: dl $
  */
 public class AtomicStampedReference<V> {
 
@@ -83,7 +85,7 @@ public class AtomicStampedReference<V> {
      * @param newStamp the new value for the stamp
      * @return true if successful
      */
-    public boolean attemptUpdate(V      expectedReference,
+    public boolean compareAndSet(V      expectedReference,
                                  V      newReference,
                                  int    expectedStamp,
                                  int    newStamp) {
@@ -91,7 +93,7 @@ public class AtomicStampedReference<V> {
         return  expectedReference == current.reference &&
             expectedStamp == current.integer &&
             ((newReference == current.reference && newStamp == current.integer) ||
-             atomicRef.attemptUpdate(current,
+             atomicRef.compareAndSet(current,
                                      new ReferenceIntegerPair(newReference,
                                                               newStamp)));
     }
@@ -125,7 +127,7 @@ public class AtomicStampedReference<V> {
         ReferenceIntegerPair current = (ReferenceIntegerPair)(atomicRef.get());
         return  expectedReference == current.reference &&
             (newStamp == current.integer ||
-             atomicRef.attemptUpdate(current,
+             atomicRef.compareAndSet(current,
                                      new ReferenceIntegerPair(expectedReference,
                                                               newStamp)));
     }

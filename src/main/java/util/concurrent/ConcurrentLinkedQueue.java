@@ -24,12 +24,12 @@ import java.util.concurrent.atomic.*;
  * algorithm based on one described in <a
  * href="http://www.cs.rochester.edu/u/michael/PODC96.html"> Simple,
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
- * Algorithms</a> by Maged M. Michael and Michael L. Scott.)
+ * Algorithms</a> by Maged M. Michael and Michael L. Scott.
  *
  * <p>Beware that, unlike in most collections, the <tt>size</tt> method
  * is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
- * of elements requires an O(n) traversal.
+ * of elements requires a traversal of the elements.
  * @since 1.5
  * @author Doug Lea
  *

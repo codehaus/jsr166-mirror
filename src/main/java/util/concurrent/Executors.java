@@ -8,7 +8,7 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * Factory and utility methods for {@link Executor} and {@link
+ * Factory and utility methods for {@link Executor}, {@link
  * ExecutorService}, {@link Future}, and {@link Cancellable} classes
  * defined in this package.
  *

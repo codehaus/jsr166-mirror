@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * default, the task execution thread does not run as a <i>daemon thread</i>,
  * so it is capable of keeping an application from terminating.  If a caller
  * wants to terminate a timer's task execution thread rapidly, the caller
- * should invoke the the timer's <tt>cancel</tt> method.
+ * should invoke the timer's <tt>cancel</tt> method.
  *
  * <p>If the timer's task execution thread terminates unexpectedly, for
  * example, because its <tt>stop</tt> method is invoked, any further
@@ -390,7 +390,7 @@ public class Timer {
      * <p>Fixed-rate execution is appropriate for recurring activities that
      * are sensitive to <i>absolute</i> time, such as ringing a chime every
      * hour on the hour, or running scheduled maintenance every day at a
-     * particular time.  It is also appropriate for for recurring activities
+     * particular time.  It is also appropriate for recurring activities
      * where the total time to perform a fixed number of executions is
      * important, such as a countdown timer that ticks once every second for
      * ten seconds.  Finally, fixed-rate execution is appropriate for
@@ -433,7 +433,7 @@ public class Timer {
      * <p>Fixed-rate execution is appropriate for recurring activities that
      * are sensitive to <i>absolute</i> time, such as ringing a chime every
      * hour on the hour, or running scheduled maintenance every day at a
-     * particular time.  It is also appropriate for for recurring activities
+     * particular time.  It is also appropriate for recurring activities
      * where the total time to perform a fixed number of executions is
      * important, such as a countdown timer that ticks once every second for
      * ten seconds.  Finally, fixed-rate execution is appropriate for
@@ -525,7 +525,7 @@ public class Timer {
      *
      * <p>Most programs will have no need to call this method.
      * It is designed for use by the rare application that cancels a large
-     * number of of tasks.  Calling this method trades time for space: the
+     * number of tasks.  Calling this method trades time for space: the
      * runtime of the method may be proportional to n + c log n, where n
      * is the number of tasks in the queue and c is the number of cancelled
      * tasks.
@@ -648,7 +648,7 @@ class TimerThread extends Thread {
  * ordered on nextExecutionTime.  Each Timer object has one of these, which it
  * shares with its TimerThread.  Internally this class uses a heap, which
  * offers log(n) performance for the add, removeMin and rescheduleMin
- * operations, and constant time performance for the the getMin operation.
+ * operations, and constant time performance for the getMin operation.
  */
 class TaskQueue {
     /**

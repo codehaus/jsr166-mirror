@@ -49,11 +49,15 @@ import java.io.ObjectOutputStream;
  * and a significantly lower value can lead to thread contention. But
  * overestimates and underestimates within an order of magnitude do
  * not usually have much noticeable impact. A value of one is
- * appropriate when it is known that only one thread will modify
- * and all others will only read.
+ * appropriate when it is known that only one thread will modify and
+ * all others will only read. Also, resizing this or any other kind of
+ * hash table is a relatively slow operation, so, when possible, it is
+ * a good idea to provide estimates of expected table sizes in
+ * constructors.
  *
- * <p>This class implements all of the <em>optional</em> methods
- * of the {@link Map} and {@link Iterator} interfaces.
+ * <p>This class and its views and iterators implement all of the
+ * <em>optional</em> methods of the {@link Map} and {@link Iterator}
+ * interfaces.
  *
  * <p> Like {@link java.util.Hashtable} but unlike {@link
  * java.util.HashMap}, this class does NOT allow <tt>null</tt> to be
@@ -178,32 +182,29 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * is less than two for the default load factor threshold.)
          *
          * Read operations can thus proceed without locking, but rely
-         * on a memory barrier to ensure that completed write
-         * operations performed by other threads are
-         * noticed. Conveniently, the "count" field, tracking the
-         * number of elements, can also serve as the volatile variable
-         * providing proper read/write barriers. This is convenient
-         * because this field needs to be read in many read operations
-         * anyway. 
+         * on selected uses of volatiles to ensure that completed
+         * write operations performed by other threads are
+         * noticed. For most purposes, the "count" field, tracking the
+         * number of elements, serves as that volatile variable
+         * ensuring visibility.  This is convenient because this field
+         * needs to be read in many read operations anyway:
          *
-         * Implementors note. The basic rules for all this are:
-         *
-         *   - All unsynchronized read operations must first read the
+         *   - All (unsynchronized) read operations must first read the
          *     "count" field, and should not look at table entries if
          *     it is 0.
          *
-         *   - All synchronized write operations should write to
-         *     the "count" field after updating. The operations must not
-         *     take any action that could even momentarily cause
-         *     a concurrent read operation to see inconsistent
-         *     data. This is made easier by the nature of the read
-         *     operations in Map. For example, no operation
+         *   - All (synchronized) write operations should write to
+         *     the "count" field after structurally changing any bin.
+         *     The operations must not take any action that could even
+         *     momentarily cause a concurrent read operation to see
+         *     inconsistent data. This is made easier by the nature of
+         *     the read operations in Map. For example, no operation
          *     can reveal that the table has grown but the threshold
          *     has not yet been updated, so there are no atomicity
          *     requirements for this with respect to reads.
          *
-         * As a guide, all critical volatile reads and writes are marked
-         * in code comments.
+         * As a guide, all critical volatile reads and writes to the
+         * count field are marked in code comments.
          */
 
         private static final long serialVersionUID = 2249069246763182397L;
@@ -214,8 +215,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         transient volatile int count;
 
         /**
-         * Number of updates; used for checking lack of modifications
-         * in bulk-read methods.
+         * Number of updates that alter the size of the table. This is
+         * used during bulk-read methods to make sure they see a
+         * consistent snapshot: If modCounts change during a traversal
+         * of segments computing size or checking contatinsValue, then
+         * we might have an inconsistent view of state so (usually)
+         * must retry.
          */
         transient int modCount;
 
@@ -227,9 +232,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         transient int threshold;
 
         /**
-         * The per-segment table
+         * The per-segment table. Declared as a raw type, casted
+         * to HashEntry<K,V> on each use.
          */
-        transient HashEntry[] table;
+        transient volatile HashEntry[] table;
 
         /**
          * The load factor for the hash table.  Even though this value
@@ -249,21 +255,46 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * Call only while holding lock or in constructor.
          **/
         void setTable(HashEntry[] newTable) {
-            table = newTable;
             threshold = (int)(newTable.length * loadFactor);
-            count = count; // write-volatile
+            table = newTable;
+        }
+
+        /**
+         * Return properly casted first entry of bin for given hash
+         */
+        HashEntry<K,V> getFirst(int hash) {
+            HashEntry[] tab = table;
+            return (HashEntry<K,V>) tab[hash & (tab.length - 1)];
+        }
+
+        /**
+         * Read value field of an entry under lock. Called if value
+         * field ever appears to be null. This is possible only if a
+         * compiler happens to reorder a HashEntry initialization with
+         * its table assignment, which is legal under memory model
+         * but is not known to ever occur.
+         */
+        V readValueUnderLock(HashEntry<K,V> e) {
+            lock();
+            try {
+                return e.value;
+            } finally {
+                unlock();
+            }
         }
 
         /* Specialized implementations of map methods */
 
         V get(Object key, int hash) {
             if (count != 0) { // read-volatile
-                HashEntry[] tab = table;
-                int index = hash & (tab.length - 1);
-                HashEntry<K,V> e = (HashEntry<K,V>) tab[index];
+                HashEntry<K,V> e = getFirst(hash);
                 while (e != null) {
-                    if (e.hash == hash && key.equals(e.key))
-                        return e.value;
+                    if (e.hash == hash && key.equals(e.key)) {
+                        V v = e.value;
+                        if (v != null)
+                            return v;
+                        return readValueUnderLock(e); // recheck
+                    }
                     e = e.next;
                 }
             }
@@ -272,9 +303,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         boolean containsKey(Object key, int hash) {
             if (count != 0) { // read-volatile
-                HashEntry[] tab = table;
-                int index = hash & (tab.length - 1);
-                HashEntry<K,V> e = (HashEntry<K,V>) tab[index];
+                HashEntry<K,V> e = getFirst(hash);
                 while (e != null) {
                     if (e.hash == hash && key.equals(e.key))
                         return true;
@@ -288,10 +317,17 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             if (count != 0) { // read-volatile
                 HashEntry[] tab = table;
                 int len = tab.length;
-                for (int i = 0 ; i < len; i++)
-                    for (HashEntry<K,V> e = (HashEntry<K,V>)tab[i] ; e != null ; e = e.next)
-                        if (value.equals(e.value))
+                for (int i = 0 ; i < len; i++) {
+                    for (HashEntry<K,V> e = (HashEntry<K,V>)tab[i]; 
+                         e != null ; 
+                         e = e.next) {
+                        V v = e.value;
+                        if (v == null) // recheck
+                            v = readValueUnderLock(e);
+                        if (value.equals(v))
                             return true;
+                    }
+                }
             }
             return false;
         }
@@ -299,27 +335,16 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         boolean replace(K key, int hash, V oldValue, V newValue) {
             lock();
             try {
-                int c = count;
-                HashEntry[] tab = table;
-                int index = hash & (tab.length - 1);
-                HashEntry<K,V> first = (HashEntry<K,V>) tab[index];
-                HashEntry<K,V> e = first;
-                for (;;) {
-                    if (e == null)
-                        return false;
-                    if (e.hash == hash && key.equals(e.key))
-                        break;
+                HashEntry<K,V> e = getFirst(hash);
+                while (e != null && (e.hash != hash || !key.equals(e.key)))
                     e = e.next;
+
+                boolean replaced = false;
+                if (e != null && oldValue.equals(e.value)) {
+                    replaced = true;
+                    e.value = newValue;
                 }
-
-                V v = e.value;
-                if (v == null || !oldValue.equals(v))
-                    return false;
-
-                e.value = newValue;
-                count = c; // write-volatile
-                return true;
-                
+                return replaced;
             } finally {
                 unlock();
             }
@@ -328,24 +353,16 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         V replace(K key, int hash, V newValue) {
             lock();
             try {
-                int c = count;
-                HashEntry[] tab = table;
-                int index = hash & (tab.length - 1);
-                HashEntry<K,V> first = (HashEntry<K,V>) tab[index];
-                HashEntry<K,V> e = first;
-                for (;;) {
-                    if (e == null)
-                        return null;
-                    if (e.hash == hash && key.equals(e.key))
-                        break;
+                HashEntry<K,V> e = getFirst(hash);
+                while (e != null && (e.hash != hash || !key.equals(e.key)))
                     e = e.next;
-                }
 
-                V v = e.value;
-                e.value = newValue;
-                count = c; // write-volatile
-                return v;
-                
+                V oldValue = null;
+                if (e != null) {
+                    oldValue = e.value;
+                    e.value = newValue;
+                }
+                return oldValue;
             } finally {
                 unlock();
             }
@@ -356,37 +373,38 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             lock();
             try {
                 int c = count;
+                if (c++ > threshold) // ensure capacity
+                    rehash();
                 HashEntry[] tab = table;
                 int index = hash & (tab.length - 1);
                 HashEntry<K,V> first = (HashEntry<K,V>) tab[index];
+                HashEntry<K,V> e = first;
+                while (e != null && (e.hash != hash || !key.equals(e.key)))
+                    e = e.next;
 
-                for (HashEntry<K,V> e = first; e != null; e = (HashEntry<K,V>) e.next) {
-                    if (e.hash == hash && key.equals(e.key)) {
-                        V oldValue = e.value;
-                        if (!onlyIfAbsent)
-                            e.value = value;
-                        ++modCount;
-                        count = c; // write-volatile
-                        return oldValue;
-                    }
+                V oldValue;
+                if (e != null) {
+                    oldValue = e.value;
+                    if (!onlyIfAbsent)
+                        e.value = value;
                 }
-
-                tab[index] = new HashEntry<K,V>(hash, key, value, first);
-                ++modCount;
-                ++c;
-                count = c; // write-volatile
-                if (c > threshold)
-                    setTable(rehash(tab));
-                return null;
+                else {
+                    oldValue = null;
+                    ++modCount;
+                    tab[index] = new HashEntry<K,V>(key, hash, first, value);
+                    count = c; // write-volatile
+                }
+                return oldValue;
             } finally {
                 unlock();
             }
         }
 
-        HashEntry[] rehash(HashEntry[] oldTable) {
+        void rehash() {
+            HashEntry[] oldTable = table;            
             int oldCapacity = oldTable.length;
             if (oldCapacity >= MAXIMUM_CAPACITY)
-                return oldTable;
+                return;
 
             /*
              * Reclassify nodes in each list to new Map.  Because we are
@@ -403,6 +421,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
              */
 
             HashEntry[] newTable = new HashEntry[oldCapacity << 1];
+            threshold = (int)(newTable.length * loadFactor);
             int sizeMask = newTable.length - 1;
             for (int i = 0; i < oldCapacity ; i++) {
                 // We need to guarantee that any existing reads of old Map can
@@ -435,15 +454,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         // Clone all remaining nodes
                         for (HashEntry<K,V> p = e; p != lastRun; p = p.next) {
                             int k = p.hash & sizeMask;
-                            newTable[k] = new HashEntry<K,V>(p.hash,
-                                                             p.key,
-                                                             p.value,
-                                                             (HashEntry<K,V>) newTable[k]);
+                            HashEntry<K,V> n = (HashEntry<K,V>)newTable[k];
+                            newTable[k] = new HashEntry<K,V>(p.key, p.hash,
+                                                             n, p.value);
                         }
                     }
                 }
             }
-            return newTable;
+            table = newTable;
         }
 
         /**
@@ -452,33 +470,31 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         V remove(Object key, int hash, Object value) {
             lock();
             try {
-                int c = count;
+                int c = count - 1;
                 HashEntry[] tab = table;
                 int index = hash & (tab.length - 1);
                 HashEntry<K,V> first = (HashEntry<K,V>)tab[index];
-
                 HashEntry<K,V> e = first;
-                for (;;) {
-                    if (e == null)
-                        return null;
-                    if (e.hash == hash && key.equals(e.key))
-                        break;
+                while (e != null && (e.hash != hash || !key.equals(e.key)))
                     e = e.next;
+
+                V oldValue = null;
+                if (e != null) {
+                    V v = e.value;
+                    if (value == null || value.equals(v)) {
+                        oldValue = v;
+                        // All entries following removed node can stay
+                        // in list, but all preceding ones need to be
+                        // cloned.
+                        ++modCount;
+                        HashEntry<K,V> newFirst = e.next;
+                        for (HashEntry<K,V> p = first; p != e; p = p.next)
+                            newFirst = new HashEntry<K,V>(p.key, p.hash,  
+                                                          newFirst, p.value);
+                        tab[index] = newFirst;
+                        count = c; // write-volatile
+                    }
                 }
-
-                V oldValue = e.value;
-                if (value != null && !value.equals(oldValue))
-                    return null;
-
-                // All entries following removed node can stay in list, but
-                // all preceding ones need to be cloned.
-                HashEntry<K,V> newFirst = e.next;
-                for (HashEntry<K,V> p = first; p != e; p = p.next)
-                    newFirst = new HashEntry<K,V>(p.hash, p.key,
-                                                  p.value, newFirst);
-                tab[index] = newFirst;
-                ++modCount;
-                count = c-1; // write-volatile
                 return oldValue;
             } finally {
                 unlock();
@@ -486,15 +502,17 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         void clear() {
-            lock();
-            try {
-                HashEntry[] tab = table;
-                for (int i = 0; i < tab.length ; i++)
-                    tab[i] = null;
-                ++modCount;
-                count = 0; // write-volatile
-            } finally {
-                unlock();
+            if (count != 0) {
+                lock();
+                try {
+                    HashEntry[] tab = table;
+                    for (int i = 0; i < tab.length ; i++)
+                        tab[i] = null;
+                    ++modCount;
+                    count = 0; // write-volatile
+                } finally {
+                    unlock();
+                }
             }
         }
     }
@@ -505,15 +523,15 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     static final class HashEntry<K,V> {
         final K key;
-        V value;
         final int hash;
+        volatile V value;
         final HashEntry<K,V> next;
 
-        HashEntry(int hash, K key, V value, HashEntry<K,V> next) {
-            this.value = value;
-            this.hash = hash;
+        HashEntry(K key, int hash, HashEntry<K,V> next, V value) {
             this.key = key;
+            this.hash = hash;
             this.next = next;
+            this.value = value;
         }
     }
 
@@ -604,7 +622,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public boolean isEmpty() {
         final Segment[] segments = this.segments;
         /*
-         * We need to keep track of per-segment modCounts to avoid ABA
+         * We keep track of per-segment modCounts to avoid ABA
          * problems in which an element in one segment was added and
          * in another removed during traversal, in which case the
          * table was never actually empty at any point. Note the
@@ -636,15 +654,19 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     // inherit Map javadoc
     public int size() {
         final Segment[] segments = this.segments;
+        long sum = 0;
+        long check = 0;
         int[] mc = new int[segments.length];
-        for (;;) {
-            long sum = 0;
+        // Try at most twice to get accurate count. On failure due to
+        // continuous async changes in table, resort to locking.
+        for (int k = 0; k < 2; ++k) {
+            check = 0;
+            sum = 0;
             int mcsum = 0;
             for (int i = 0; i < segments.length; ++i) {
                 sum += segments[i].count;
                 mcsum += mc[i] = segments[i].modCount;
             }
-            int check = 0;
             if (mcsum != 0) {
                 for (int i = 0; i < segments.length; ++i) {
                     check += segments[i].count;
@@ -654,13 +676,22 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     }
                 }
             }
-            if (check == sum) {
-                if (sum > Integer.MAX_VALUE)
-                    return Integer.MAX_VALUE;
-                else
-                    return (int)sum;
-            }
+            if (check == sum) 
+                break;
         }
+        if (check != sum) { // Resort to locking all segments
+            sum = 0;
+            for (int i = 0; i < segments.length; ++i) 
+                segments[i].lock();
+            for (int i = 0; i < segments.length; ++i) 
+                sum += segments[i].count;
+            for (int i = 0; i < segments.length; ++i) 
+                segments[i].unlock();
+        }
+        if (sum > Integer.MAX_VALUE)
+            return Integer.MAX_VALUE;
+        else
+            return (int)sum;
     }
 
 
@@ -708,10 +739,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public boolean containsValue(Object value) {
         if (value == null)
             throw new NullPointerException();
+        
+        // See explanation of modCount use above
 
         final Segment[] segments = this.segments;
         int[] mc = new int[segments.length];
-        for (;;) {
+
+        // Try at most twice without locking
+        for (int k = 0; k < 2; ++k) {
             int sum = 0;
             int mcsum = 0;
             for (int i = 0; i < segments.length; ++i) {
@@ -733,6 +768,22 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             if (cleanSweep)
                 return false;
         }
+        // Resort to locking all segments
+        for (int i = 0; i < segments.length; ++i) 
+            segments[i].lock();
+        boolean found = false;
+        try {
+            for (int i = 0; i < segments.length; ++i) {
+                if (segments[i].containsValue(value)) {
+                    found = true;
+                    break;
+                }
+            }
+        } finally {
+            for (int i = 0; i < segments.length; ++i) 
+                segments[i].unlock();
+        }
+        return found;
     }
 
     /**

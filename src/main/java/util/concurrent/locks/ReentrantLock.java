@@ -71,8 +71,8 @@ import sun.misc.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/26 00:09:19 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/08/26 19:59:47 $
+ * @editor $Author: dl $
  * @author Doug Lea
  * 
  **/
@@ -1282,9 +1282,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 
     /**
-     * This class represents a minor performance hack, that
-     * specializes AtomicReferenceFieldUpdater for ReentrantLock owner
-     * field without requiring dynamic checks.
+     * This class represents a minor performance hack, that will
+     * hopefully someday disappear. It specializes
+     * AtomicReferenceFieldUpdater for ReentrantLock owner field
+     * without requiring dynamic checks on method acquire.
      */
     private static class OwnerUpdater extends AtomicReferenceFieldUpdater<ReentrantLock,Thread> {
 

@@ -70,7 +70,7 @@ public interface Future<V> {
      * task should be interrupted; otherwise, in-progress tasks are allowed
      * to complete
      * @return <tt>false</tt> if the task could not be cancelled,
-     * typically because is has already completed normally;
+     * typically because it has already completed normally;
      * <tt>true</tt> otherwise
      */
     boolean cancel(boolean mayInterruptIfRunning);

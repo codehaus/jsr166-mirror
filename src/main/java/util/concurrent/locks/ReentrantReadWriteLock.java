@@ -61,9 +61,13 @@ import java.util.*;
  * <tt>readLock().newCondition()</tt> throws 
  * <tt>UnsupportedOperationException</tt>.
  *
+ * <li><b>Instrumentation</b>
+ * <P> This class supports methods to determine whether locks
+ * are held or contended. These methods are designed for monitoring
+ * system state, not for synchronization control.
  * </ul>
  *
- * <p><b>Sample usage</b>. Here is a code sketch showing how to exploit
+ * <p><b>Sample usages</b>. Here is a code sketch showing how to exploit
  * reentrancy to perform lock downgrading after updating a cache (exception
  * handling is elided for simplicity):
  * <pre>
@@ -93,13 +97,45 @@ import java.util.*;
  * }
  * </pre>
  *
+ * ReentrantReadWriteLocks can be used to improve concurrency in some
+ * uses of some kinds of Collections. This is typically worthwhile
+ * only when the collections are expected to be large, accessed by
+ * more reader threads than writer threads, and entail operations with
+ * overhead that outweighs synchronization overhead. For example, here
+ * is a class using a TreeMap that is expected to be large and 
+ * concurrently accessed.
+ *
+ * <pre>
+ * class RWDictionary {
+ *    private final Map&lt;String, Data&gt;  m = new TreeMap&lt;String, Data&gt;();
+ *    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+ *    private final Lock r = rwl.readLock();
+ *    private final Lock w = rwl.writeLock();
+ *
+ *    public Data get(String key) {
+ *        r.lock(); try { return m.get(key); } finally { r.unlock(); }
+ *    }
+ *    public String[] allKeys() {
+ *        r.lock(); try { return m.keySet().toArray(); } finally { r.unlock(); }
+ *    }
+ *    public Data put(String key, Data value) {
+ *        w.lock(); try { return m.put(key, value); } finally { w.unlock(); }
+ *    }
+ *    public void clear() {
+ *        w.lock(); try { m.clear(); } finally { w.unlock(); }
+ *    }
+ * }
+ * </pre>
+ * 
+ *
  * <h3>Implementation Notes</h3>
  *
- * <p>In this implementation the write lock internally defines an
- * owner and can only be released by the thread that acquired it.  In
- * contrast, the read lock has no concept of ownership.  Consequently,
- * while not usually a good practice, it is possible to acquire a read
- * lock in one thread, and release it in another.
+ * <p>A reentrant write lock intrinsically defines an owner and can
+ * only be released by the thread that acquired it.  In contrast, in
+ * this implementation, the read lock has no concept of ownership, and
+ * there is no requirement that the thread releasing a read lock is
+ * the same as the one that acquired it.  However, this property is
+ * not guaranteed to hold in future implementations of this class.
  *
  * @since 1.5
  * @author Doug Lea
@@ -213,6 +249,15 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         }
     }
 
+    /**
+     * Returns the thread that currently owns the write lock, or
+     * <tt>null</tt> if not owned. Note that the owner may be
+     * momentarily <tt>null</tt> even if there are threads trying to
+     * acquire the lock but have not yet done so.  This method is
+     * designed to facilitate construction of subclasses that provide
+     * more extensive lock monitoring facilities.
+     * @return the owner, or <tt>null</tt> if not owned.
+     */
     protected Thread getOwner() {
         return (isWriting(count.get()))? owner : null;
     }
@@ -349,17 +394,17 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
 
     /**
      * Queries the number of read locks held for this lock. This method is
-     * designed for use in monitoring of the system state, 
+     * designed for use in monitoring  system state, 
      * not for synchronization control.
      * @return the number of read locks held.
      */
-    public int getReadLocks() {
+    public int getReadLockCount() {
         return count.get() >>> 1;
     }
 
     /**
      * Queries if the write lock is held by any thread. This method is
-     * designed for use in monitoring of the system state, 
+     * designed for use in monitoring  system state, 
      * not for synchronization control.
      * @return <tt>true</tt> if any thread holds write lock and 
      * <tt>false</tt> otherwise.
@@ -388,19 +433,6 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
     public int getWriteHoldCount() {
         return (isWriting(count.get()) && owner == Thread.currentThread())?
             recursions + 1 :  0;
-    }
-
-    /**
-     * Returns the thread that currently owns the write lock, or
-     * <tt>null</tt> if not owned. Note that the owner may be
-     * momentarily <tt>null</tt> even if there are threads trying to
-     * acquire the lock but have not yet done so.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive lock monitoring facilities.
-     * @return the owner, or <tt>null</tt> if not owned.
-     */
-    protected Thread getWriter() {
-        return (isWriting(count.get()))? owner : null;
     }
 
     /**

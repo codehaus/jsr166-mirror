@@ -164,7 +164,6 @@ public class CopyOnWriteArrayList implements List, RandomAccess, Cloneable, java
      *          List; returns <code>-1</code> if the object is not found.
      * @see     Object#equals(Object)
      */
-    // needed in order to compile on 1.2b3 ???
     public int indexOf(Object elem, int index) {
         Object[] elementData = array();
         int elementCount = elementData.length;

@@ -506,7 +506,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             throw new NoSuchElementException();
         }
         public void remove() {
-            throw new UnsupportedOperationException();
+            throw new IllegalStateException();
         }
     }
 

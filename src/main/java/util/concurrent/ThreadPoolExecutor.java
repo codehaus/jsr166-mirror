@@ -137,8 +137,8 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/08 20:05:07 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/09 19:55:30 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public class ThreadPoolExecutor implements ExecutorService {
@@ -272,6 +272,8 @@ public class ThreadPoolExecutor implements ExecutorService {
         return t;
     }
 
+    // addIfUnderCorePoolSize is non-private; accessible to ScheduledExecutor
+
     /**
      * Create and start a new thread running firstTask as its first
      * task, only if less than corePoolSize threads are running.
@@ -279,7 +281,6 @@ public class ThreadPoolExecutor implements ExecutorService {
      * null if none)
      * @return true if successful.
      */
-    // non-private; accessible to ScheduledExecutor
     boolean addIfUnderCorePoolSize(Runnable firstTask) {
         Thread t = null;
         mainLock.lock();
@@ -731,6 +732,14 @@ public class ThreadPoolExecutor implements ExecutorService {
         } finally {
             mainLock.unlock();
         }
+    }
+
+    /**
+     * Invokes <tt>shutdown</tt> when this executor is no longer
+     * referenced.
+     */ 
+    protected void finalize()  {
+        shutdown();
     }
 
     /**

@@ -19,11 +19,11 @@ import sun.misc.Unsafe;
  * must define the protected methods that change this state, and which
  * define what that state means in terms of this object being acquired
  * or released.  Given these, the other methods in this class carry
- * out all queuing and blocking mechanics using an internal
- * specialized FIFO queue. Subclasses can maintain other state fields,
- * but only the atomically updated <tt>int</tt> value manipulated
- * using methods {@link #getState}, {@link #setState} and {@link
- * #compareAndSetState} is tracked with respect to synchronization.
+ * out all queuing and blocking mechanics. Subclasses can maintain
+ * other state fields, but only the atomically updated <tt>int</tt>
+ * value manipulated using methods {@link #getState}, {@link
+ * #setState} and {@link #compareAndSetState} is tracked with respect
+ * to synchronization.
  *
  * <p>Subclasses should be defined as non-public internal helper
  * classes that are used to implement the synchronization properties
@@ -45,7 +45,7 @@ import sun.misc.Unsafe;
  * same FIFO queue. Usually, implementation subclasses support only
  * one of these modes, but both can come into play for example in a
  * {@link ReadWriteLock}. Subclasses that support only exclusive or
- * only shared modes need not define the methods for the unused mode.
+ * only shared modes need not define the methods supporting the unused mode.
  *
  * <p>This class defines a nested {@link Condition} class that can be
  * used with subclasses supporting exclusive mode for which method
@@ -124,25 +124,25 @@ import sun.misc.Unsafe;
  * <tt>false</tt> only if {@link #hasQueuedThreads} returns
  * <tt>true</tt> and <tt>getFirstQueuedThread</tt> is not the current
  * thread; or equivalently, that <tt>getFirstQueuedThread</tt> is both
- * non-null and not the current thread.  Further variants are
+ * non-null and not the current thread.  Further variations are
  * possible.
  *
  * <p> Throughput and scalability are generally highest for the
  * default barging (also known as <em>greedy</em>,
  * <em>renouncement</em>, and <em>convoy-avoidance</em>) strategy.
- * While not guaranteed to be fair or starvation-free, earlier queued
- * threads are allowed to recontend before later queued threads, and
- * each recontention has an unbiased chance to succeed against
- * incoming threads.  Also, while acquires do not &quot;spin&quot; in
- * the usual sense, they may perform multiple invocations of
- * <tt>tryAcquire</tt> interspersed with other computations before
- * blocking.  This gives most of the benefits of spins when exclusive
- * synchronization is only briefly held, without most of the
- * liabilities when it isn't. If so desired, you can augment this by
- * preceeding calls to acquire methods with "fast-path" checks,
- * possibly prechecking {@link #hasContended} and/or {@link
- * #hasQueuedThreads} to only do so if the synchronizer is likely not
- * to be contended. 
+ * While this is not guaranteed to be fair or starvation-free, earlier
+ * queued threads are allowed to recontend before later queued
+ * threads, and each recontention has an unbiased chance to succeed
+ * against incoming threads.  Also, while acquires do not
+ * &quot;spin&quot; in the usual sense, they may perform multiple
+ * invocations of <tt>tryAcquire</tt> interspersed with other
+ * computations before blocking.  This gives most of the benefits of
+ * spins when exclusive synchronization is only briefly held, without
+ * most of the liabilities when it isn't. If so desired, you can
+ * augment this by preceeding calls to acquire methods with
+ * "fast-path" checks, possibly prechecking {@link #hasContended}
+ * and/or {@link #hasQueuedThreads} to only do so if the synchronizer
+ * is likely not to be contended.
  *
  * <p> This class provides an efficient and scalable basis for
  * synchronization in part by specializing its range of use to
@@ -194,21 +194,21 @@ import sun.misc.Unsafe;
  *      }
  *    }
  *
- *    // Our sync object does all the hard work. We just forward to it.
+ *    // The sync object does all the hard work. We just forward to it.
  *    private final Sync sync = new Sync();
  *
- *    public void lock() { sync.acquire(1); }
- *    public boolean tryLock() { return sync.tryAcquire(1); }
+ *    public void lock()                { sync.acquire(1); }
+ *    public boolean tryLock()          { return sync.tryAcquire(1); }
+ *    public void unlock()              { sync.release(1); }
+ *    public Condition newCondition()   { return sync.newCondition(); }
+ *    public boolean isLocked()         { return sync.isHeldExclusively(); }
+ *    public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
  *    public void lockInterruptibly() throws InterruptedException { 
  *      sync.acquireInterruptibly(1);
  *    }
  *    public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
  *      return sync.tryAcquireNanos(1, unit.toNanos(timeout));
  *    }
- *    public void unlock() { sync.release(1); }
- *    public Condition newCondition() { return sync.newCondition(); }
- *    public boolean isLocked() { return sync.isHeldExclusively(); }
- *    public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
  * }
  * </pre>
  *
@@ -234,11 +234,11 @@ import sun.misc.Unsafe;
  *    }
  *
  *    private final Sync sync = new Sync();
- *    public void signal() { sync.releaseShared(1); }
+ *    public boolean isSignalled() { return sync.isSignalled(); }
+ *    public void signal()         { sync.releaseShared(1); }
  *    public void await() throws InterruptedException {
  *      sync.acquireSharedInterruptibly(1);
  *    }
- *    public boolean isSignalled() { return sync.isSignalled(); }
  * }
  *
  * </pre>
@@ -484,7 +484,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Sets the value of synchronization state.
-     * This operation has memory semantics of a <tt>volatile</tt> read.
+     * This operation has memory semantics of a <tt>volatile</tt> write.
      * @param newState the new state value
      */
     protected final void setState(int newState) {
@@ -687,11 +687,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * different.  Only a little bit of factoring is possible due to
      * interactions of exception mechanics (including ensuring that we
      * cancel if tryAcquire throws exception) and other control, at
-     * least not without hurting performance too much. And it is
-     * tolerable here: we write all these variants so that users of
-     * this class won't need to write multiple versions of their
-     * synchronizers. Better to have redundancy concentrated here than
-     * in the applications of this class.
+     * least not without hurting performance too much. 
      */
 
     /**
@@ -899,13 +895,15 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Attempts to acquire in exclusive mode. This method should query
      * if the state of the object permits it to be acquired in the
-     * exclusive mode, and if so to acquire it if possible.
+     * exclusive mode, and if so to acquire it.
      *
      * <p>This method is always invoked by the thread performing
      * acquire.  If this method reports failure, the acquire method
      * may queue the thread, if it is not already queued, until it is
      * signalled by a release from some other thread. This can be used
-     * to implement method {@link Lock#tryLock()}. <p>The default
+     * to implement method {@link Lock#tryLock()}. 
+     *
+     * <p>The default
      * implementation throws {@link UnsupportedOperationException}
      *
      * @param arg the acquire argument. This value
@@ -951,12 +949,15 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Attempts to acquire in shared mode. This method should query if
      * the state of the object permits it to be acquired in the shared
-     * mode, and if so to acquire it if possible.  <p>This method is
-     * always invoked by the thread performing acquire.  If this
-     * method reports failure, the acquire method may queue the
-     * thread, if it is not already queued, until it is signalled by a
-     * release from some other thread.   <p>The default
-     * implementation throws {@link UnsupportedOperationException}
+     * mode, and if so to acquire it.  
+     *
+     * <p>This method is always invoked by the thread performing
+     * acquire.  If this method reports failure, the acquire method
+     * may queue the thread, if it is not already queued, until it is
+     * signalled by a release from some other thread.
+     *
+     * <p>The default implementation throws {@link
+     * UnsupportedOperationException}
      *
      * @param arg the acquire argument. This value
      * is always the one passed to an acquire method,
@@ -1004,7 +1005,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Return true if synchronization is held exclusively with respect
+     * Returns true if synchronization is held exclusively with respect
      * to the current (calling) thread.  This method is invoked
      * upon each call to a non-waiting {@link ConditionObject} method.
      * (Waiting methods instead invoke {@link #release}.)
@@ -1013,6 +1014,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * internally only within {@link ConditionObject} methods, so need
      * not be defined if conditions are not used.
      *
+     * @return true if synchronization is held exclusively;
+     * else false
      * @throws UnsupportedOperationException if conditions are not supported
      */
     protected boolean isHeldExclusively() {
@@ -1027,7 +1030,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * #tryAcquire} until success.  This method can be used
      * to implement method {@link Lock#lock}
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquire} but
+     * This value is conveyed to {@link #tryAcquire} but is
      * otherwise uninterpreted and can represent anything
      * you like.
      */ 
@@ -1046,7 +1049,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * until success or the thread is interrupted.  This method can be
      * used to implement method {@link Lock#lockInterruptibly}
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquire} but
+     * This value is conveyed to {@link #tryAcquire} but is
      * otherwise uninterpreted and can represent anything
      * you like.
      * @throws InterruptedException if the current thread is interrupted
@@ -1068,7 +1071,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * or the timeout elapses.  This method can be used to implement
      * method {@link Lock#tryLock(long, TimeUnit)}.
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquire} but
+     * This value is conveyed to {@link #tryAcquire} but is
      * otherwise uninterpreted and can represent anything
      * you like.
      * @param nanosTimeout the maximum number of nanoseconds to wait
@@ -1087,7 +1090,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * more threads if {@link #tryRelease} returns true.
      * This method can be used to implement method {@link Lock#unlock}
      * @param arg the release argument.
-     * This value is conveyed to {@link #tryRelease} but
+     * This value is conveyed to {@link #tryRelease} but is
      * otherwise uninterpreted and can represent anything
      * you like.
      * @return the value returned from {@link #tryRelease} 
@@ -1109,7 +1112,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * repeatedly blocking and unblocking, invoking {@link
      * #tryAcquireShared} until success.  
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireShared} but
+     * This value is conveyed to {@link #tryAcquireShared} but is
      * otherwise uninterpreted and can represent anything
      * you like.
      */
@@ -1126,7 +1129,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * invoking {@link #tryAcquireShared} until success or the thread
      * is interrupted.  
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireShared} but
+     * This value is conveyed to {@link #tryAcquireShared} but is
      * otherwise uninterpreted and can represent anything
      * you like.
      * @throws InterruptedException if the current thread is interrupted
@@ -1147,7 +1150,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * invoking {@link #tryAcquireShared} until success or the thread
      * is interrupted or the timeout elapses.
      * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireShared} but
+     * This value is conveyed to {@link #tryAcquireShared} but is
      * otherwise uninterpreted and can represent anything
      * you like.
      * @param nanosTimeout the maximum number of nanoseconds to wait
@@ -1165,7 +1168,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Releases in shared mode.  Implemented by unblocking one or more
      * threads if {@link #tryReleaseShared} returns true. 
      * @param arg the release argument.
-     * This value is conveyed to {@link #tryReleaseShared} but
+     * This value is conveyed to {@link #tryReleaseShared} but is
      * is otherwise uninterpreted and can represent anything
      * you like.
      * @return the value returned from {@link #tryReleaseShared} 
@@ -1184,9 +1187,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Queries whether any threads are waiting to acquire. Note that
-     * because cancellations may occur at any time, a <tt>true</tt>
-     * return does not guarantee that any other thread will ever
-     * acquire.  
+     * because cancellations due to interrupts and timeouts may occur
+     * at any time, a <tt>true</tt> return does not guarantee that any
+     * other thread will ever acquire.
      *
      * <p> In this implementation, this operation returns in
      * constant time.
@@ -1232,9 +1235,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      */
     private Thread fullGetFirstQueuedThread() {
         /*
-         * This loops only when the queue changes while we read
-         * certain sets of fields.  It never loops when invoked from
-         * tryAcquireX called within doAcquireX.
+         * This loops only if the queue changes while we read sets of
+         * fields.
          */
         for (;;) {
             Node h = head;
@@ -1242,12 +1244,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 return null;
 
             /*
-             * First node is normally h.next. Try to get its thread
-             * field, ensuring consistent reads: If thread field is
-             * nulled out or s.prev is no longer head, then some other
-             * thread(s) concurrently performed setHead, so we must
-             * reread to be sure that we are returning the correct
-             * thread.
+             * The first node is normally h.next. Try to get its
+             * thread field, ensuring consistent reads: If thread
+             * field is nulled out or s.prev is no longer head, then
+             * some other thread(s) concurrently performed setHead in
+             * between some of our reads, so we must reread.
              */
             Node s = h.next;
             if (s != null) {
@@ -1302,11 +1303,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * acquire.  The value is only an estimate because the number of
      * threads may change dynamically while this method traverses
      * internal data structures.  This method is designed for use in
-     * monitoring of the system state, not for synchronization
+     * monitoring system state, not for synchronization
      * control.
-     *
-     * <p> This implementation traverses the queue to determine
-     * length.
      *
      * @return the estimated number of threads waiting for this lock
      */

@@ -79,7 +79,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * The default initial number of table slots for this table.
      * Used when not otherwise specified in constructor.
      */
-    private static int DEFAULT_INITIAL_CAPACITY = 16;
+    static int DEFAULT_INITIAL_CAPACITY = 16;
 
     /**
      * The maximum capacity, used if a higher value is implicitly
@@ -98,13 +98,13 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * The default number of concurrency control segments.
      **/
-    private static final int DEFAULT_SEGMENTS = 16;
+    static final int DEFAULT_SEGMENTS = 16;
 
     /**
      * The maximum number of segments to allow; used to bound
      * constructor arguments.
      */
-    private static final int MAX_SEGMENTS = 1 << 16; // slightly conservative
+    static final int MAX_SEGMENTS = 1 << 16; // slightly conservative
 
     /* ---------------- Fields -------------- */
 
@@ -112,21 +112,21 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Mask value for indexing into segments. The upper bits of a
      * key's hash code are used to choose the segment.
      **/
-    private final int segmentMask;
+    final int segmentMask;
 
     /**
      * Shift value for indexing within segments.
      **/
-    private final int segmentShift;
+    final int segmentShift;
 
     /**
      * The segments, each of which is a specialized hash table
      */
-    private final Segment[] segments;
+    final Segment[] segments;
 
-    private transient Set<K> keySet;
-    private transient Set<Map.Entry<K,V>> entrySet;
-    private transient Collection<V> values;
+    transient Set<K> keySet;
+    transient Set<Map.Entry<K,V>> entrySet;
+    transient Collection<V> values;
 
     /* ---------------- Small Utilities -------------- */
 
@@ -136,7 +136,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param x the object serving as a key
      * @return the hash code
      */
-    private static int hash(Object x) {
+    static int hash(Object x) {
         int h = x.hashCode();
         h += ~(h << 9);
         h ^=  (h >>> 14);
@@ -148,7 +148,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Return the segment that should be used for key with given hash
      */
-    private Segment<K,V> segmentFor(int hash) {
+    final Segment<K,V> segmentFor(int hash) {
         return (Segment<K,V>) segments[(hash >>> segmentShift) & segmentMask];
     }
 
@@ -159,7 +159,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * subclasses from ReentrantLock opportunistically, just to
      * simplify some locking and avoid separate construction.
      **/
-    private static final class Segment<K,V> extends ReentrantLock implements Serializable {
+    static final class Segment<K,V> extends ReentrantLock implements Serializable {
         /*
          * Segments maintain a table of entry lists that are ALWAYS
          * kept in a consistent state, so can be read without locking.
@@ -218,7 +218,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * (The value of this field is always (int)(capacity *
          * loadFactor).)
          */
-        private transient int threshold;
+        transient int threshold;
 
         /**
          * The per-segment table
@@ -231,7 +231,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * links to outer object.
          * @serial
          */
-        private final float loadFactor;
+        final float loadFactor;
 
         Segment(int initialCapacity, float lf) {
             loadFactor = lf;
@@ -242,7 +242,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * Set table to new HashEntry array.
          * Call only while holding lock or in constructor.
          **/
-        private void setTable(HashEntry[] newTable) {
+        void setTable(HashEntry[] newTable) {
             table = newTable;
             threshold = (int)(newTable.length * loadFactor);
             count = count; // write-volatile
@@ -377,7 +377,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             }
         }
 
-        private HashEntry[] rehash(HashEntry[] oldTable) {
+        HashEntry[] rehash(HashEntry[] oldTable) {
             int oldCapacity = oldTable.length;
             if (oldCapacity >= MAXIMUM_CAPACITY)
                 return oldTable;
@@ -497,11 +497,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * ConcurrentHashMap list entry. Note that this is never exported
      * out as a user-visible Map.Entry
      */
-    private static class HashEntry<K,V> {
-        private final K key;
-        private V value;
-        private final int hash;
-        private final HashEntry<K,V> next;
+    static final class HashEntry<K,V> {
+        final K key;
+        V value;
+        final int hash;
+        final HashEntry<K,V> next;
 
         HashEntry(int hash, K key, V value, HashEntry<K,V> next) {
             this.value = value;
@@ -1023,14 +1023,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /* ---------------- Iterator Support -------------- */
 
-    private abstract class HashIterator {
-        private int nextSegmentIndex;
-        private int nextTableIndex;
-        private HashEntry[] currentTable;
-        private HashEntry<K, V> nextEntry;
+    abstract class HashIterator {
+        int nextSegmentIndex;
+        int nextTableIndex;
+        HashEntry[] currentTable;
+        HashEntry<K, V> nextEntry;
         HashEntry<K, V> lastReturned;
 
-        private HashIterator() {
+        HashIterator() {
             nextSegmentIndex = segments.length - 1;
             nextTableIndex = -1;
             advance();
@@ -1038,7 +1038,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         public boolean hasMoreElements() { return hasNext(); }
 
-        private void advance() {
+        final void advance() {
             if (nextEntry != null && (nextEntry = nextEntry.next) != null)
                 return;
 
@@ -1079,12 +1079,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    private class KeyIterator extends HashIterator implements Iterator<K>, Enumeration<K> {
+    final class KeyIterator extends HashIterator implements Iterator<K>, Enumeration<K> {
         public K next() { return super.nextEntry().key; }
         public K nextElement() { return super.nextEntry().key; }
     }
 
-    private class ValueIterator extends HashIterator implements Iterator<V>, Enumeration<V> {
+    final class ValueIterator extends HashIterator implements Iterator<V>, Enumeration<V> {
         public V next() { return super.nextEntry().value; }
         public V nextElement() { return super.nextEntry().value; }
     }
@@ -1092,12 +1092,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     
 
     /**
-     * Exported Entry objects must write-through changes in setValue,
-     * even if the nodes have been cloned. So we cannot return
-     * internal HashEntry objects. Instead, the iterator itself acts
-     * as a forwarding pseudo-entry.
+     * Entry iterator. Exported Entry objects must write-through
+     * changes in setValue, even if the nodes have been cloned. So we
+     * cannot return internal HashEntry objects. Instead, the iterator
+     * itself acts as a forwarding pseudo-entry.
      */
-    private class EntryIterator extends HashIterator implements Map.Entry<K,V>, Iterator<Entry<K,V>> {
+    final class EntryIterator extends HashIterator implements Map.Entry<K,V>, Iterator<Entry<K,V>> {
         public Map.Entry<K,V> next() {
             nextEntry();
             return this;
@@ -1143,13 +1143,13 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 return getKey() + "=" + getValue();
         }
 
-        private boolean eq(Object o1, Object o2) {
+        boolean eq(Object o1, Object o2) {
             return (o1 == null ? o2 == null : o1.equals(o2));
         }
 
     }
 
-    private class KeySet extends AbstractSet<K> {
+    final class KeySet extends AbstractSet<K> {
         public Iterator<K> iterator() {
             return new KeyIterator();
         }
@@ -1167,7 +1167,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    private class Values extends AbstractCollection<V> {
+    final class Values extends AbstractCollection<V> {
         public Iterator<V> iterator() {
             return new ValueIterator();
         }
@@ -1182,7 +1182,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    private class EntrySet extends AbstractSet<Map.Entry<K,V>> {
+    final class EntrySet extends AbstractSet<Map.Entry<K,V>> {
         public Iterator<Map.Entry<K,V>> iterator() {
             return new EntryIterator();
         }
@@ -1226,7 +1226,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * This duplicates java.util.AbstractMap.SimpleEntry until this class
      * is made accessible.
      */
-    static class SimpleEntry<K,V> implements Entry<K,V> {
+    static final class SimpleEntry<K,V> implements Entry<K,V> {
         K key;
         V value;
 
@@ -1270,7 +1270,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             return key + "=" + value;
         }
 
-        private static boolean eq(Object o1, Object o2) {
+        static boolean eq(Object o1, Object o2) {
             return (o1 == null ? o2 == null : o1.equals(o2));
         }
     }

@@ -67,6 +67,10 @@ import java.util.*;
  * system state, not for synchronization control.
  * </ul>
  *
+ * <p> Serialization of this class behaves in the same way as built-in
+ * locks: a deserialized lock is in the unlocked state, regardless of
+ * its state when serialized.
+ *
  * <p><b>Sample usages</b>. Here is a code sketch showing how to exploit
  * reentrancy to perform lock downgrading after updating a cache (exception
  * handling is elided for simplicity):
@@ -127,10 +131,6 @@ import java.util.*;
  * }
  * </pre>
  * 
- *
- * <p> Serialization of this class behaves in the same way as built-in
- * locks: a deserialized lock is in the unlocked state, regardless of
- * its state when serialized.
  *
  * <h3>Implementation Notes</h3>
  *

@@ -44,7 +44,6 @@ public class ScheduledThreadPoolExecutor
      */
     private volatile boolean executeExistingDelayedTasksAfterShutdown = true;
 
-
     /**
      * Sequence number to break scheduling ties, and in turn to
      * guarantee FIFO order among tied entries.
@@ -57,7 +56,7 @@ public class ScheduledThreadPoolExecutor
     /**
      * Return nanosecond time offset by origin
      */
-    private long now() {
+    final long now() {
 	return System.nanoTime() - NANO_ORIGIN;
     }
 
@@ -132,15 +131,6 @@ public class ScheduledThreadPoolExecutor
          */
         boolean isPeriodic() {
             return period != 0;
-        }
-
-        /**
-         * Returns the period, or zero if non-periodic.
-         *
-         * @return the period
-         */
-        long getPeriod(TimeUnit unit) {
-            return unit.convert(period, TimeUnit.NANOSECONDS);
         }
 
         /**

@@ -17,13 +17,12 @@ import java.util.*;
  * are inserted at the tail of the queue, and the queue retrieval
  * operations obtain elements at the head of the queue.
  *
- * <p>This is a classic &quot;bounded buffer&quot;, in which a fixed-sized
- * array holds
- * elements inserted by producers and extracted by consumers.  Once
- * created, the capacity can not be increased.  Attempts to offer an
- * element to a full queue will result in the offer operation
- * blocking; attempts to retrieve an element from an empty queue will
- * similarly block.
+ * <p>This is a classic &quot;bounded buffer&quot;, in which a
+ * fixed-sized array holds elements inserted by producers and
+ * extracted by consumers.  Once created, the capacity cannot be
+ * increased.  Attempts to offer an element to a full queue will
+ * result in the offer operation blocking; attempts to retrieve an
+ * element from an empty queue will similarly block.
  *
  * <p> This class supports an optional fairness policy for ordering
  * threads blocked on an insertion or removal.  By default, this
@@ -76,7 +75,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Circularly increment i.
      */
-    int inc(int i) {
+    final int inc(int i) {
         return (++i == items.length)? 0 : i;
     }
 

@@ -17,10 +17,12 @@ package java.util.concurrent;
  * <p>
  *
  * <b>Usage Examples.</b>
- * Suppose you have a set of solvers for a certain problem (each returning
- * a value of some type <tt>Result</tt>),
- * and would like to run them concurrently, using the results of each of them
- * that return a non-null value. You could write this as:
+ *
+ * Suppose you have a set of solvers for a certain problem, each
+ * returning a value of some type <tt>Result</tt>, and would like to
+ * run them concurrently, processing the results of each of them that
+ * return a non-null value, in some method <tt>use(Result r)</tt>. You
+ * could write this as:
  *
  * <pre>
  *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers)
@@ -38,7 +40,7 @@ package java.util.concurrent;
  * </pre>
  *
  * Suppose instead that you would like to use the first non-null result
- * of the set of tasks, ignoring any of those that encounter exceptions,
+ * of the set of tasks, ignoring any that encounter exceptions,
  * and cancelling all other tasks when the first one is ready:
  *
  * <pre>

@@ -78,7 +78,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * AbstractQueuedSynchronizer to manage blocking, using AQS state
      *  0 for waiting, 1 for ack, -1 for cancelled.
      */
-    private static final class Node extends AbstractQueuedSynchronizer {
+    static final class Node extends AbstractQueuedSynchronizer {
         /** Synchronization state value representing that node acked */
         private static final int ACK    =  1;
         /** Synchronization state value representing that node cancelled */
@@ -199,7 +199,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Simple FIFO queue class to hold waiting puts/takes.
      **/
-    private static class WaitQueue<E> {
+    static final class WaitQueue<E> {
         Node head;
         Node last;
 

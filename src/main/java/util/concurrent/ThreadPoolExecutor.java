@@ -237,9 +237,9 @@ import java.util.*;
  *     try {
  *       while (isPaused) unpaused.await();
  *     } catch(InterruptedException ie) {
- *       Thread.currentThread().interrupt();
+ *       t.interrupt();
  *     } finally {
- *        pauseLock.unlock();
+ *       pauseLock.unlock();
  *     }
  *   }
  * 
@@ -248,7 +248,7 @@ import java.util.*;
  *     try {
  *       isPaused = true;
  *     } finally {
- *        pauseLock.unlock();
+ *       pauseLock.unlock();
  *     }
  *   }
  * 
@@ -258,7 +258,7 @@ import java.util.*;
  *       isPaused = false;
  *       unpaused.signalAll();
  *     } finally {
- *        pauseLock.unlock();
+ *       pauseLock.unlock();
  *     }
  *   }
  * }
@@ -864,6 +864,17 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    /**
+     * Initiates an orderly shutdown in which previously submitted
+     * tasks are executed, but no new tasks will be
+     * accepted. Invocation has no additional effect if already shut
+     * down.
+     * @throws SecurityException if a security manager exists and
+     * shutting down this ExecutorService may manipulate threads that
+     * the caller is not permitted to modify because it does not hold
+     * {@link java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     * or the security manager's <tt>checkAccess</tt>  method denies access.
+     */
     public void shutdown() {
         // Fail if caller doesn't have modifyThread permission
 	SecurityManager security = System.getSecurityManager();
@@ -914,6 +925,22 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
 
+    /**
+     * Attempts to stop all actively executing tasks, halts the
+     * processing of waiting tasks, and returns a list of the tasks that were
+     * awaiting execution. 
+     *  
+     * <p>This implementation cancels tasks via {@link
+     * Thread#interrupt}, so if any tasks mask or fail to respond to
+     * interrupts, they may never terminate.
+     *
+     * @return list of tasks that never commenced execution
+     * @throws SecurityException if a security manager exists and
+     * shutting down this ExecutorService may manipulate threads that
+     * the caller is not permitted to modify because it does not hold
+     * {@link java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     * or the security manager's <tt>checkAccess</tt> method denies access.
+     */
     public List<Runnable> shutdownNow() {
         // Almost the same code as shutdown()
 	SecurityManager security = System.getSecurityManager();

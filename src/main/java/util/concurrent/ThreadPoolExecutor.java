@@ -136,7 +136,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/28 23:00:40 $
+ * @revised $Date: 2003/05/29 13:21:28 $
  * @editor $Author: dl $
  *
  */
@@ -487,6 +487,25 @@ public class ThreadPoolExecutor implements ExecutorService {
         }
     }
 
+    private static class DequeuableFutureTask<V> extends FutureTask<V> {
+        private final ThreadPoolExecutor tpe;
+        public DequeuableFutureTask(Callable<V> callable, ThreadPoolExecutor tpe) {
+            super(callable);
+            this.tpe = tpe;
+        }
+
+        public DequeuableFutureTask(final Runnable runnable, final V result, ThreadPoolExecutor tpe) {
+            super(runnable, result);
+            this.tpe = tpe;
+        }
+        
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (!isDone())
+                tpe.dequeue(this);
+            return super.cancel(mayInterruptIfRunning);
+        }
+    }
+
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
      * parameters.  It may be more convenient to use one of the factory
@@ -668,6 +687,20 @@ public class ThreadPoolExecutor implements ExecutorService {
             // else retry
         }
     }
+
+    public <T> FutureTask<T> executeAsFuture(Callable<T> task) {
+        FutureTask<T> future = new DequeuableFutureTask<T>(task, this);
+        execute(future);
+        return future;
+    }
+
+    public <T> FutureTask<T> executeAsFuture(Runnable task, T returnValue) {
+        FutureTask<T> future = new DequeuableFutureTask<T>(task, returnValue, this);
+        execute(future);
+        return future;
+    }
+
+
         
     public void shutdown() {
         mainLock.lock();
@@ -761,6 +794,18 @@ public class ThreadPoolExecutor implements ExecutorService {
     public BlockingQueue<Runnable> getQueue() {
         return workQueue;
     }
+
+    /**
+     * Removes this task from internal queue if it is present, thus
+     * causing it not to be run if it has not already started.  This
+     * method may be useful as one part of a cancellation scheme.
+     * 
+     * #return true if the task was removed
+     */
+    public boolean dequeue(Runnable task) {
+        return getQueue().remove(task);
+    }
+
 
     /**
      * Sets the core number of threads.  This overrides any value set

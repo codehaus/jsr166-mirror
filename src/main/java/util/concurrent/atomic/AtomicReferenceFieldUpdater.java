@@ -42,20 +42,11 @@ import java.lang.reflect.*;
  * @author Doug Lea
  */
 public abstract class AtomicReferenceFieldUpdater<T, V>  {
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private final long offset;
-
-    // Standin for upcoming synthesized version
-    static class AtomicReferenceFieldUpdaterImpl<T,V> extends AtomicReferenceFieldUpdater<T,V> {
-        AtomicReferenceFieldUpdaterImpl(Class<T> tclass, Class<V> vclass, String fieldName) {
-            super(tclass, vclass, fieldName);
-        }
-    }
 
     /**
-     * Create an updater for objects with the given field.
-     * The Class constructor arguments are needed to check
-     * that reflective types and generic types match.
+     * Create an updater for objects with the given field.  The Class
+     * arguments are needed to check that reflective types and generic
+     * types match.
      * @param tclass the class of the objects holding the field.
      * @param vclass the class of the field
      * @param fieldName the name of the field to be updated.
@@ -65,41 +56,17 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
-        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass, vclass, fieldName);
+        // Currently rely on standard instrinsics implmentation
+        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass, 
+                                                        vclass, 
+                                                        fieldName);
     }
 
-    AtomicReferenceFieldUpdater(Class<T> tclass, Class<V> vclass, String fieldName) {
-        Field field = null;
-        Class fieldClass = null;
-        try {
-            field = tclass.getDeclaredField(fieldName);
-            fieldClass = field.getType();
-        } catch(Exception ex) {
-            throw new RuntimeException(ex);
-        }
-
-        if (vclass != fieldClass)
-            throw new ClassCastException();
-
-        if (!Modifier.isVolatile(field.getModifiers()))
-            throw new IllegalArgumentException("Must be volatile type");
-
-        offset = unsafe.objectFieldOffset(field);
+    /**
+     * Protected do-nothing constructor for use by subclasses.
+     */
+    protected AtomicReferenceFieldUpdater() {
     }
-
-    final boolean doCas(Object obj, Object expect, Object update) {
-        return unsafe.compareAndSwapObject(obj, offset, expect, update);
-    }
-
-    final void doSet(Object obj, Object newValue) {
-        unsafe.putObjectVolatile(obj, offset, newValue);
-    }
-
-    final Object doGet(Object obj) {
-        return unsafe.getObjectVolatile(obj, offset);
-    }
-
-
 
     /**
      * Atomically set the value of the field of the given object managed
@@ -114,9 +81,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * @return true if successful.
      */
 
-    public boolean compareAndSet(T obj, V expect, V update) {
-        return doCas(obj, expect, update);
-    }
+    public abstract boolean compareAndSet(T obj, V expect, V update);
 
     /**
      * Atomically set the value of the field of the given object managed
@@ -124,16 +89,13 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * <tt>==</tt> the expected value. This method is guaranteed to be
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field.
+     * changes in the field, and may fail spuriously.
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
      * @return true if successful.
      */
-    public boolean weakCompareAndSet(T obj, V expect, V update) {
-        return compareAndSet(obj, expect, update);
-    }
-
+    public abstract boolean weakCompareAndSet(T obj, V expect, V update);
 
     /**
      * Set the field of the given object managed by this updater. This
@@ -142,18 +104,14 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * @param obj An object whose field to set
      * @param newValue the new value
      */
-    public void set(T obj, V newValue) {
-        doSet(obj, newValue);
-    }
+    public abstract void set(T obj, V newValue);
 
     /**
      * Get the current value held in the field by the given object.
      * @param obj An object whose field to get
      * @return the current value
      */
-    public V get(T obj) {
-        return (V)doGet(obj);
-    }
+    public abstract V get(T obj);
 
     /**
      * Set to the given value and return the old value.
@@ -170,6 +128,65 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         }
     }
 
+    /**
+     * Standard hotspot implementation using intrinsics
+     */
+    private static class AtomicReferenceFieldUpdaterImpl<T,V> extends AtomicReferenceFieldUpdater<T,V> {
+        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private final long offset;
+        private final Class<T> tclass;
+        private final Class<V> vclass;
 
+        AtomicReferenceFieldUpdaterImpl(Class<T> tclass, Class<V> vclass, String fieldName) {
+            Field field = null;
+            Class fieldClass = null;
+            try {
+                field = tclass.getDeclaredField(fieldName);
+                fieldClass = field.getType();
+            } catch(Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            
+            if (vclass != fieldClass)
+                throw new ClassCastException();
+            
+            if (!Modifier.isVolatile(field.getModifiers()))
+                throw new IllegalArgumentException("Must be volatile type");
+
+            this.tclass = tclass;
+            this.vclass = vclass;
+            offset = unsafe.objectFieldOffset(field);
+        }
+        
+
+        public boolean compareAndSet(T obj, V expect, V update) {
+            if (!tclass.isInstance(obj)||
+                !vclass.isInstance(update))
+                throw new ClassCastException();
+            return unsafe.compareAndSwapObject(obj, offset, expect, update);
+        }
+
+        public boolean weakCompareAndSet(T obj, V expect, V update) {
+            // same implmentation as strong form for now
+            if (!tclass.isInstance(obj)||
+                !vclass.isInstance(update))
+                throw new ClassCastException();
+            return unsafe.compareAndSwapObject(obj, offset, expect, update);
+        }
+
+
+        public void set(T obj, V newValue) {
+            if (!tclass.isInstance(obj)||
+                !vclass.isInstance(newValue))
+                throw new ClassCastException();
+            unsafe.putObjectVolatile(obj, offset, newValue);
+        }
+
+        public V get(T obj) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            return (V)unsafe.getObjectVolatile(obj, offset);
+        }
+    }
 }
 

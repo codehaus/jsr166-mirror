@@ -28,21 +28,10 @@ import java.lang.reflect.*;
  */
 
 public abstract class  AtomicLongFieldUpdater<T>  {
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private final long offset;
-
-    // Standin for upcoming synthesized version
-    static class AtomicLongFieldUpdaterImpl<T> extends AtomicLongFieldUpdater<T> {
-        AtomicLongFieldUpdaterImpl(Class<T> tclass, String fieldName) {
-            super(tclass, fieldName);
-        }
-    }
-
-
     /**
-     * Create an updater for objects with the given field.
-     * The Class constructor argument is needed to check
-     * that reflective types and generic types match.
+     * Create an updater for objects with the given field.  The Class
+     * argument is needed to check that reflective types and generic
+     * types match.
      * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
      * @return the updater
@@ -55,35 +44,10 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         return new AtomicLongFieldUpdaterImpl<U>(tclass, fieldName);
     }
 
-
-    AtomicLongFieldUpdater(Class<T> tclass, String fieldName) {
-        Field field = null;
-        try {
-            field = tclass.getDeclaredField(fieldName);
-        } catch(Exception ex) {
-            throw new RuntimeException(ex);
-        }
-
-        Class fieldt = field.getType();
-        if (fieldt != long.class)
-            throw new IllegalArgumentException("Must be long type");
-
-        if (!Modifier.isVolatile(field.getModifiers()))
-            throw new IllegalArgumentException("Must be volatile type");
-
-        offset = unsafe.objectFieldOffset(field);
-    }
-
-    final boolean doCas(Object obj, long expect, long update) {
-        return unsafe.compareAndSwapLong(obj, offset, expect, update);
-    }
-
-    final void doSet(Object obj, long newValue) {
-        unsafe.putLongVolatile(obj, offset, newValue);
-    }
-
-    final long doGet(Object obj) {
-        return unsafe.getLongVolatile(obj, offset);
+    /**
+     * Protected do-nothing constructor for use by subclasses.
+     */
+    protected AtomicLongFieldUpdater() {
     }
 
     /**
@@ -101,9 +65,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * of the class possessing the field established in the constructor.
      */
 
-    public final boolean compareAndSet(T obj, long expect, long update) {
-        return doCas(obj, expect, update);
-    }
+    public abstract boolean compareAndSet(T obj, long expect, long update);
 
     /**
      * Atomically set the value of the field of the given object managed
@@ -111,7 +73,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * <tt>==</tt> the expected value. This method is guaranteed to be
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field.
+     * changes in the field, and may fail spruiously.
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
@@ -120,9 +82,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * of the class possessing the field established in the constructor.
      */
 
-    public final boolean weakCompareAndSet(T obj, long expect, long update) {
-        return compareAndSet(obj, expect, update);
-    }
+    public abstract boolean weakCompareAndSet(T obj, long expect, long update);
 
     /**
      * Set the field of the given object managed by this updater. This
@@ -131,18 +91,14 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * @param obj An object whose field to set
      * @param newValue the new value
      */
-    public final void set(T obj, long newValue) {
-        doSet(obj, newValue);
-    }
+    public abstract void set(T obj, long newValue);
 
     /**
      * Get the current value held in the field by the given object.
      * @param obj An object whose field to get
      * @return the current value
      */
-    public final long get(T obj) {
-        return doGet(obj);
-    }
+    public abstract long get(T obj);
 
     /**
      * Set to the given value and return the old value.
@@ -249,5 +205,53 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 
+    private static class AtomicLongFieldUpdaterImpl<T> extends AtomicLongFieldUpdater<T> {
+        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private final long offset;
+        private final Class<T> tclass;
+
+        AtomicLongFieldUpdaterImpl(Class<T> tclass, String fieldName) {
+            Field field = null;
+            try {
+                field = tclass.getDeclaredField(fieldName);
+            } catch(Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            
+            Class fieldt = field.getType();
+            if (fieldt != long.class)
+                throw new IllegalArgumentException("Must be long type");
+            
+            if (!Modifier.isVolatile(field.getModifiers()))
+                throw new IllegalArgumentException("Must be volatile type");
+            
+            this.tclass = tclass;
+            offset = unsafe.objectFieldOffset(field);
+        }
+
+        public boolean compareAndSet(T obj, long expect, long update) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            return unsafe.compareAndSwapLong(obj, offset, expect, update);
+        }
+
+        public boolean weakCompareAndSet(T obj, long expect, long update) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            return unsafe.compareAndSwapLong(obj, offset, expect, update);
+        }
+
+        public void set(T obj, long newValue) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            unsafe.putLongVolatile(obj, offset, newValue);
+        }
+
+        public long get(T obj) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            return unsafe.getLongVolatile(obj, offset);
+        }
+    }
 }
 

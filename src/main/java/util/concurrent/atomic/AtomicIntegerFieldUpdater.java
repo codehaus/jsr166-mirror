@@ -24,20 +24,10 @@ import java.lang.reflect.*;
  * @author Doug Lea
  */
 public abstract class  AtomicIntegerFieldUpdater<T>  {
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private final long offset;
-
-    // Standin for upcoming synthesized version
-    static class AtomicIntegerFieldUpdaterImpl<T> extends AtomicIntegerFieldUpdater<T> {
-        AtomicIntegerFieldUpdaterImpl(Class<T> tclass, String fieldName) {
-            super(tclass, fieldName);
-        }
-    }
-
     /**
-     * Create an updater for objects with the given field.
-     * The Class constructor argument is needed to check
-     * that reflective types and generic types match.
+     * Create an updater for objects with the given field.  The Class
+     * argument is needed to check that reflective types and generic
+     * types match.
      * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
      * @return the updater
@@ -50,34 +40,10 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
         return new AtomicIntegerFieldUpdaterImpl<U>(tclass, fieldName);
     }
 
-    AtomicIntegerFieldUpdater(Class<T> tclass, String fieldName) {
-        Field field = null;
-        try {
-            field = tclass.getDeclaredField(fieldName);
-        } catch(Exception ex) {
-            throw new RuntimeException(ex);
-        }
-
-        Class fieldt = field.getType();
-        if (fieldt != int.class)
-            throw new IllegalArgumentException("Must be integer type");
-
-        if (!Modifier.isVolatile(field.getModifiers()))
-            throw new IllegalArgumentException("Must be volatile type");
-
-        offset = unsafe.objectFieldOffset(field);
-    }
-
-    final boolean doCas(Object obj, int expect, int update) {
-        return unsafe.compareAndSwapInt(obj, offset, expect, update);
-    }
-
-    final void doSet(Object obj, int newValue) {
-        unsafe.putIntVolatile(obj, offset, newValue);
-    }
-
-    final int doGet(Object obj) {
-        return unsafe.getIntVolatile(obj, offset);
+    /**
+     * Protected do-nothing constructor for use by subclasses.
+     */
+    protected AtomicIntegerFieldUpdater() {
     }
 
     /**
@@ -95,9 +61,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * of the class possessing the field established in the constructor.
      */
 
-    public final boolean compareAndSet(T obj, int expect, int update) {
-        return doCas(obj, expect, update);
-    }
+    public abstract boolean compareAndSet(T obj, int expect, int update);
 
     /**
      * Atomically set the value of the field of the given object managed
@@ -105,7 +69,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * <tt>==</tt> the expected value. This method is guaranteed to be
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field.
+     * changes in the field, and may fail spuriously.
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
@@ -114,9 +78,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * of the class possessing the field established in the constructor.
      */
 
-    public final boolean weakCompareAndSet(T obj, int expect, int update) {
-        return compareAndSet(obj, expect, update);
-    }
+    public abstract boolean weakCompareAndSet(T obj, int expect, int update);
 
     /**
      * Set the field of the given object managed by this updater. This
@@ -125,18 +87,14 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * @param obj An object whose field to set
      * @param newValue the new value
      */
-    public final void set(T obj, int newValue) {
-        doSet(obj, newValue);
-    }
+    public abstract void set(T obj, int newValue);
 
     /**
      * Get the current value held in the field by the given object.
      * @param obj An object whose field to get
      * @return the current value
      */
-    public final int get(T obj) {
-        return doGet(obj);
-    }
+    public abstract int get(T obj);
 
     /**
      * Set to the given value and return the old value.
@@ -243,5 +201,56 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
         }
     }
 
+    /**
+     * Standard hotspot implementation using intrinsics
+     */
+    private static class AtomicIntegerFieldUpdaterImpl<T> extends AtomicIntegerFieldUpdater<T> {
+        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private final long offset;
+        private final Class<T> tclass;
+
+        AtomicIntegerFieldUpdaterImpl(Class<T> tclass, String fieldName) {
+            Field field = null;
+            try {
+                field = tclass.getDeclaredField(fieldName);
+            } catch(Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            
+            Class fieldt = field.getType();
+            if (fieldt != int.class)
+                throw new IllegalArgumentException("Must be integer type");
+            
+            if (!Modifier.isVolatile(field.getModifiers()))
+                throw new IllegalArgumentException("Must be volatile type");
+         
+            this.tclass = tclass;
+            offset = unsafe.objectFieldOffset(field);
+        }
+
+        public boolean compareAndSet(T obj, int expect, int update) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            return unsafe.compareAndSwapInt(obj, offset, expect, update);
+        }
+
+        public boolean weakCompareAndSet(T obj, int expect, int update) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            return unsafe.compareAndSwapInt(obj, offset, expect, update);
+        }
+
+        public void set(T obj, int newValue) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            unsafe.putIntVolatile(obj, offset, newValue);
+        }
+
+        public final int get(T obj) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            return unsafe.getIntVolatile(obj, offset);
+        }
+    }
 }
 

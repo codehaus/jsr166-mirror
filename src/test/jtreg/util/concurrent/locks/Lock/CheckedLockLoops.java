@@ -60,6 +60,11 @@ public final class CheckedLockLoops {
         Thread.sleep(10);
 
         if (print)
+            System.out.print("Mutex                 ");
+        new MutexLoop().test(v, nthreads, iters);
+        Thread.sleep(10);
+
+        if (print)
             System.out.print("ReentrantWriteLock    ");
         new ReentrantWriteLockLoop().test(v, nthreads, iters);
         Thread.sleep(10);
@@ -150,6 +155,7 @@ public final class CheckedLockLoops {
 
     }
 
+
     private static class BuiltinLockLoop extends LockLoop {
         final int loop(int n) {
             int sum = 0;
@@ -167,6 +173,27 @@ public final class CheckedLockLoops {
     private static class ReentrantLockLoop extends LockLoop {
         final private ReentrantLock lock = new ReentrantLock();
         final int loop(int n) {
+            final ReentrantLock lock = this.lock;
+            int sum = 0;
+            int x = 0;
+            while (n-- > 0) {
+                lock.lock();
+                try {
+                    x = setValue(LoopHelpers.compute1(getValue()));
+                }
+                finally {
+                    lock.unlock();
+                }
+                sum += LoopHelpers.compute2(x);
+            }
+            return sum;
+        }
+    }
+
+    private static class MutexLoop extends LockLoop {
+        final private Mutex lock = new Mutex();
+        final int loop(int n) {
+            final Mutex lock = this.lock;
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
@@ -186,6 +213,7 @@ public final class CheckedLockLoops {
     private static class FairReentrantLockLoop extends LockLoop {
         final private ReentrantLock lock = new ReentrantLock(true);
         final int loop(int n) {
+            final ReentrantLock lock = this.lock;
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
@@ -205,6 +233,7 @@ public final class CheckedLockLoops {
     private static class ReentrantWriteLockLoop extends LockLoop {
         final private Lock lock = new ReentrantReadWriteLock().writeLock();
         final int loop(int n) {
+            final Lock lock = this.lock;
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
@@ -221,41 +250,10 @@ public final class CheckedLockLoops {
         }
     }
 
-    private static class ReentrantReadWriteLockLoop extends LockLoop {
-        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        final int loop(int n) {
-            int sum = 0;
-            int x = 0;
-            while (n-- > 0) {
-                if ((n & 16) != 0) {
-                    lock.readLock().lock();
-                    try {
-                        x = LoopHelpers.compute1(getValue());
-                        x = LoopHelpers.compute2(x);
-                    }
-                    finally {
-                        lock.readLock().unlock();
-                    }
-                }
-                else {
-                    lock.writeLock().lock();
-                    try {
-                        setValue(x);
-                    }
-                    finally {
-                        lock.writeLock().unlock();
-                    }
-                    sum += LoopHelpers.compute2(x);
-                }
-            }
-            return sum;
-        }
-
-    }
-
     private static class FairReentrantWriteLockLoop extends LockLoop {
         final Lock lock = new ReentrantReadWriteLock(true).writeLock();
         final int loop(int n) {
+            final Lock lock = this.lock;
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
@@ -275,22 +273,18 @@ public final class CheckedLockLoops {
     private static class SemaphoreLoop extends LockLoop {
         final private Semaphore sem = new Semaphore(1, false);
         final int loop(int n) {
+            final Semaphore sem = this.sem;
             int sum = 0;
             int x = 0;
-            try {
-                while (n-- > 0) {
-                    sem.acquire();
-                    try {
-                        x = setValue(LoopHelpers.compute1(getValue()));
-                    }
-                    finally {
-                        sem.release();
-                    }
-                    sum += LoopHelpers.compute2(x);
+            while (n-- > 0) {
+                sem.acquireUninterruptibly();
+                try {
+                    x = setValue(LoopHelpers.compute1(getValue()));
                 }
-            }
-            catch (InterruptedException ie) {
-                return sum;
+                finally {
+                    sem.release();
+                }
+                sum += LoopHelpers.compute2(x);
             }
             return sum;
         }
@@ -298,50 +292,48 @@ public final class CheckedLockLoops {
     private static class FairSemaphoreLoop extends LockLoop {
         final private Semaphore sem = new Semaphore(1, true);
         final int loop(int n) {
+            final Semaphore sem = this.sem;
             int sum = 0;
             int x = 0;
-            try {
-                while (n-- > 0) {
-                    sem.acquire();
-                    try {
-                        x = setValue(LoopHelpers.compute1(getValue()));
-                    }
-                    finally {
-                        sem.release();
-                    }
-                    sum += LoopHelpers.compute2(x);
+            while (n-- > 0) {
+                sem.acquireUninterruptibly();
+                try {
+                    x = setValue(LoopHelpers.compute1(getValue()));
                 }
-            }
-            catch (InterruptedException ie) {
-                return sum;
+                finally {
+                    sem.release();
+                }
+                sum += LoopHelpers.compute2(x);
             }
             return sum;
         }
     }
 
-    private static class FairReentrantReadWriteLockLoop extends LockLoop {
-        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+    private static class ReentrantReadWriteLockLoop extends LockLoop {
+        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final int loop(int n) {
+            final Lock rlock = lock.readLock();
+            final Lock wlock = lock.writeLock();
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
                 if ((n & 16) != 0) {
-                    lock.readLock().lock();
+                    rlock.lock();
                     try {
                         x = LoopHelpers.compute1(getValue());
                         x = LoopHelpers.compute2(x);
                     }
                     finally {
-                        lock.readLock().unlock();
+                        rlock.unlock();
                     }
                 }
                 else {
-                    lock.writeLock().lock();
+                    wlock.lock();
                     try {
                         setValue(x);
                     }
                     finally {
-                        lock.writeLock().unlock();
+                        wlock.unlock();
                     }
                     sum += LoopHelpers.compute2(x);
                 }
@@ -351,4 +343,38 @@ public final class CheckedLockLoops {
 
     }
 
+
+    private static class FairReentrantReadWriteLockLoop extends LockLoop {
+        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+        final int loop(int n) {
+            final Lock rlock = lock.readLock();
+            final Lock wlock = lock.writeLock();
+            int sum = 0;
+            int x = 0;
+            while (n-- > 0) {
+                if ((n & 16) != 0) {
+                    rlock.lock();
+                    try {
+                        x = LoopHelpers.compute1(getValue());
+                        x = LoopHelpers.compute2(x);
+                    }
+                    finally {
+                        rlock.unlock();
+                    }
+                }
+                else {
+                    wlock.lock();
+                    try {
+                        setValue(x);
+                    }
+                    finally {
+                        wlock.unlock();
+                    }
+                    sum += LoopHelpers.compute2(x);
+                }
+            }
+            return sum;
+        }
+
+    }
 }

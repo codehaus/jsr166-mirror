@@ -3,7 +3,7 @@
 #
 # Modify this file to taste and save as user.properties
 #
-# $Id: user.properties.sample,v 1.6 2003/05/29 14:56:37 tim Exp $
+# $Id: user.properties.sample,v 1.7 2003/05/29 15:53:58 tim Exp $
 # ---------------------------------------------------------------------------
 
 
@@ -19,8 +19,8 @@ gjc.novariance = true
 gjc.warnunchecked = false
 
 
-# ----- Skip java.lang.Thread* classes? (default true for 2.0, false o/w) -----
-build.nothreads = true
+# ----- Skip java.lang.Thread* classes? (default false) -----
+build.nothreads = false
 
 
 # ----- Use emulation classes? (default true for Windows, false otherwise) -----

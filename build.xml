@@ -481,13 +481,7 @@
     <property name="build.warnunchecked" value=""/>
 
     <condition property="prepare.src.dir" value="${build.dir}/prepare-src">
-      <or>
-        <and>
-          <not><isset property="build.nothreads"/></not>
-          <equals arg1="${gjc.version}" arg2="2.0"/>
-        </and>
-        <istrue value="${build.nothreads}"/>
-      </or>
+      <istrue value="${build.nothreads}"/>
     </condition>
 
 

@@ -7,7 +7,8 @@ import java.util.*;
  * their indicated delays have elapsed.
  **/
 
-public class DelayQueue extends AbstractCollection implements BlockingQueue, java.io.Serializable {
+public class DelayQueue<E> extends AbstractCollection<E>
+        implements BlockingQueue<E>, java.io.Serializable {
 
     public DelayQueue() {}
 
@@ -17,7 +18,7 @@ public class DelayQueue extends AbstractCollection implements BlockingQueue, jav
      * @param unit the granularity of the time unit
      * @param x the element
      */
-    public boolean add(long delay, Clock granularity, Object x) {
+    public boolean add(long delay, Clock granularity, E x) {
         return false;
     }
 
@@ -28,7 +29,7 @@ public class DelayQueue extends AbstractCollection implements BlockingQueue, jav
      * @param granularity the time granularity
      * @throws NoSuchElementException if element not present
      */
-    public long getDelay(Object element, Clock granularity) {
+    public long getDelay(E element, Clock granularity) {
         return 0;
     }
 
@@ -46,51 +47,51 @@ public class DelayQueue extends AbstractCollection implements BlockingQueue, jav
     /**
      * Equivalent to add(0, [any time unit], x).
      **/
-    public void put(Object x) {
+    public void put(E x) {
     }
     /**
      * Equivalent to add(0, [any time unit], x).
      **/
-    public boolean offer(Object x, long time, Clock granularity) {
+    public boolean offer(E x, long time, Clock granularity) {
         return false;
     }
     /**
      * Equivalent to add(0, [any time unit], x).
      **/
-    public boolean add(Object x) {
+    public boolean add(E x) {
         return false;
     }
     /**
      * Equivalent to add(0, [any time unit], x).
      **/
-    public boolean offer(Object x) {
+    public boolean offer(E x) {
         return false;
     }
 
 
-    public Object take() throws InterruptedException {
+    public E take() throws InterruptedException {
         return null;
     }
-    public Object remove() {
+    public E remove() {
         return null;
     }
-    public Iterator iterator() { 
+    public Iterator<E> iterator() {
       return null;
     }
 
     public boolean remove(Object x) {
         return false;
     }
-    public Object element() {
+    public E element() {
         return null;
     }
-    public Object poll() {
+    public E poll() {
         return null;
     }
-    public Object poll(long time, Clock granularity) throws InterruptedException {
+    public E poll(long time, Clock granularity) throws InterruptedException {
         return null;
     }
-    public Object peek() {
+    public E peek() {
         return null;
     }
     public boolean isEmpty() {
@@ -99,11 +100,11 @@ public class DelayQueue extends AbstractCollection implements BlockingQueue, jav
     public int size() {
         return 0;
     }
-    public Object[] toArray() {
+    public E[] toArray() {
         return null;
     }
 
-    public Object[] toArray(Object[] array) {
+    public <T> T[] toArray(T[] array) {
         return null;
     }
 }

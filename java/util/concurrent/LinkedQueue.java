@@ -12,32 +12,33 @@ import java.util.*;
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.)
  *
  **/
-public class LinkedQueue extends AbstractCollection implements  Queue, java.io.Serializable {
+public class LinkedQueue<E> extends AbstractCollection<E>
+        implements Queue<E>, java.io.Serializable {
 
     public LinkedQueue() {}
-    public boolean add(Object x) {
+    public boolean add(E x) {
         return false;
     }
-    public boolean offer(Object x) {
+    public boolean offer(E x) {
         return false;
     }
-    public Object remove() {
+    public E remove() {
         return null;
     }
-    public Iterator iterator() { 
+    public Iterator<E> iterator() {
       return null;
     }
 
     public boolean remove(Object x) {
         return false;
     }
-    public Object element() {
+    public E element() {
         return null;
     }
-    public Object poll() {
+    public E poll() {
         return null;
     }
-    public Object peek() {
+    public E peek() {
         return null;
     }
     public boolean isEmpty() {
@@ -46,11 +47,11 @@ public class LinkedQueue extends AbstractCollection implements  Queue, java.io.S
     public int size() {
         return 0;
     }
-    public Object[] toArray() {
+    public E[] toArray() {
         return null;
     }
 
-    public Object[] toArray(Object[] array) {
+    public <T> T[] toArray(T[] array) {
         return null;
     }
 

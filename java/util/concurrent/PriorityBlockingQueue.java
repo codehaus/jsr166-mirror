@@ -5,46 +5,47 @@ import java.util.*;
 /**
  * An unbounded blocking priority queue.  Ordering follows the
  * java.util.Collection conventions: Either the elements must be
- * Comparable, or a Comparator must be supplied. Elements with tied 
+ * Comparable, or a Comparator must be supplied. Elements with tied
  * priorities are returned in arbitrary order. Comparison failures
  * throw ClassCastExceptions during insertions and extractions.
  **/
-public class PriorityBlockingQueue extends AbstractCollection implements BlockingQueue, java.io.Serializable {
+public class PriorityBlockingQueue<E> extends AbstractCollection<E>
+        implements BlockingQueue<E>, java.io.Serializable {
 
     public PriorityBlockingQueue() {}
     public PriorityBlockingQueue(Comparator comparator) {}
-    
-    public void put(Object x) {
+
+    public void put(E x) {
     }
-    public boolean offer(Object x) {
+    public boolean offer(E x) {
         return false;
     }
     public boolean remove(Object x) {
         return false;
     }
-    public Object remove() {
+    public E remove() {
         return null;
     }
 
-    public Object element() {
+    public E element() {
         return null;
     }
-    public boolean offer(Object x, long time, Clock granularity) {
+    public boolean offer(E x, long time, Clock granularity) {
         return false;
     }
-    public Object take() throws InterruptedException {
+    public E take() throws InterruptedException {
         return null;
     }
-    public boolean add(Object x) {
+    public boolean add(E x) {
         return false;
     }
-    public Object poll() {
+    public E poll() {
         return null;
     }
-    public Object poll(long time, Clock granularity) throws InterruptedException {
+    public E poll(long time, Clock granularity) throws InterruptedException {
         return null;
     }
-    public Object peek() {
+    public E peek() {
         return null;
     }
     public boolean isEmpty() {
@@ -53,15 +54,15 @@ public class PriorityBlockingQueue extends AbstractCollection implements Blockin
     public int size() {
         return 0;
     }
-    public Object[] toArray() {
+    public E[] toArray() {
         return null;
     }
 
-    public Object[] toArray(Object[] array) {
+    public <T> T[] toArray(T[] array) {
         return null;
     }
 
-    public Iterator iterator() { 
+    public Iterator<E> iterator() {
       return null;
     }
 }

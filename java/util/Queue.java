@@ -15,7 +15,7 @@ package java.util;
  * Collections.add method, that throws an unchecked exception upon
  * failure. It is designed for use in collections in which failure to
  * add is a normal, rather than exceptional occurrence, for example,
- * in fixed-capacity queues.  
+ * in fixed-capacity queues.
  *
  * <p> The <tt>remove</tt> and <tt>poll</tt> methods delete and return
  * an element in accord with the implementation's ordering policies --
@@ -25,11 +25,11 @@ package java.util;
  * <tt>remove</tt> throws an exception. These are designed for usage
  * contexts in which emptiness is considered to be normal versus
  * exceptional.
- * 
+ *
  * <p> The <tt>element</tt> and <tt>peek</tt> methods return but do
  * not delete the element that would be obtained by a call to
  * <tt>remove</tt> and <tt>poll</tt> respectively.
- * 
+ *
  * <p> The Queue interface does not define blocking queue methods
  * (i.e., those that wait for elements to appear and/or for space to
  * be available) that are common in concurrent programming. These are
@@ -41,19 +41,20 @@ package java.util;
  * to do so, since <tt>null</tt> is also used as a sentinel by
  * <tt>poll</tt> to indicate that no elements exist.
  **/
-public interface Queue extends Collection {
+public interface Queue<E> extends Collection<E> {
+
     /**
-     * Add the given object to this queue if possible. 
+     * Add the given object to this queue if possible.
      * @param x the object to add
      * @return true if successful
      **/
-    public boolean offer(Object x); 
+    public boolean offer(E x);
 
     /**
      * Delete and return an object from the queue if one is available.
      * @return the object, or null if the queue is empty.
      **/
-    public Object poll(); 
+    public E poll();
 
     /**
      * Delete and return the element produced by poll, if the queue is
@@ -61,14 +62,14 @@ public interface Queue extends Collection {
      * @return an element
      * @throws NoSuchElementException if empty
      **/
-    public Object remove() throws NoSuchElementException; 
+    public E remove() throws NoSuchElementException;
 
     /**
      * Return but do not delete the element that will be returned by
      * the next call to poll.
      * @return an element, or null if empty
      **/
-    public Object peek(); 
+    public E peek();
 
     /**
      * Return but do not delete the element that will be returned by
@@ -76,5 +77,5 @@ public interface Queue extends Collection {
      * @return an element
      * @throws NoSuchElementException if empty
      **/
-    public Object element() throws NoSuchElementException; 
+    public E element() throws NoSuchElementException;
 }

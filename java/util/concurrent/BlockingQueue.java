@@ -6,7 +6,7 @@ import java.util.Queue;
  * BlockingQueues are java.util.Queues that additionally support
  * operations that wait for elements to exist when taking them, and/or
  * wait for space to exist when putting them.
- * 
+ *
  * <p> BlockingQueue implementations might or might not have bounded
  * capacity or other insertion constraints, so in general, you cannot
  * tell if a given put will block.
@@ -49,23 +49,23 @@ import java.util.Queue;
  *   }
  * }
  * </pre>
- * 
+ *
  * <p> BlockingQueues do NOT intrinsically support any kind of "close"
  * or "shutdown" operation to indicate that no more items will be
  * added. The needs and usage of such features tend to be implementation
  * dependent. For example, a common tactic is for producers to insert
- * special EndOfStream or Poison objects, that are interpreted 
+ * special EndOfStream or Poison objects, that are interpreted
  * accordingly when taken by consumers.
 
  **/
-public interface BlockingQueue extends Queue {
+public interface BlockingQueue<E> extends Queue<E> {
     /**
      * Take an object from the queue, waiting if necessary for
      * an object to be present.
      * @return the object
      * @throws InterruptedException if interrupted while waiting.
      **/
-    public Object take() throws InterruptedException;
+    public E take() throws InterruptedException;
 
     /**
      * Take an object from the queue if one is available within given wait time
@@ -75,7 +75,7 @@ public interface BlockingQueue extends Queue {
      * @throws InterruptedException if interrupted while waiting.
      * @throws TimeoutException if timed out while waiting.
      **/
-    public Object poll(long time, Clock granularity) throws InterruptedException;
+    public E poll(long time, Clock granularity) throws InterruptedException;
 
     /**
      * Add the given object to the queue, waiting if necessary for
@@ -83,7 +83,7 @@ public interface BlockingQueue extends Queue {
      * @param x the object to add
      * @throws InterruptedException if interrupted while waiting.
      **/
-    public void put(Object x) throws InterruptedException;
+    public void put(E x) throws InterruptedException;
 
     /**
      * Add the given object to the queue if space is available within
@@ -95,6 +95,6 @@ public interface BlockingQueue extends Queue {
      * @throws InterruptedException if interrupted while waiting.
      * @throws TimeoutException if timed out while waiting.
      **/
-    public boolean offer(Object x, long time, Clock granularity) throws InterruptedException;
+    public boolean offer(E x, long time, Clock granularity) throws InterruptedException;
 
 }

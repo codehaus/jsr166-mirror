@@ -5,45 +5,46 @@ import java.util.*;
 /**
  * A bounded queue based on a fixed-sized array.
  **/
-public class ArrayBlockingQueue extends AbstractCollection implements BlockingQueue, java.io.Serializable {
+public class ArrayBlockingQueue<E> extends AbstractCollection<E>
+        implements BlockingQueue<E>, java.io.Serializable {
 
     public ArrayBlockingQueue(int capacity) {}
 
-    public ArrayBlockingQueue(int capacity, Collection initialElements) {}
+    public ArrayBlockingQueue(int capacity, Collection<E> initialElements) {}
 
-    public void put(Object x) throws InterruptedException {
+    public void put(E x) throws InterruptedException {
     }
-    public Object take() throws InterruptedException {
+    public E take() throws InterruptedException {
         return null;
     }
-    public boolean add(Object x) {
+    public boolean add(E x) {
         return false;
     }
-    public boolean offer(Object x) {
+    public boolean offer(E x) {
         return false;
     }
     public boolean remove(Object x) {
         return false;
     }
-    public Object remove() {
+    public E remove() {
         return null;
     }
-    public Iterator iterator() { 
+    public Iterator<E> iterator() {
       return null;
     }
-    public Object element() {
+    public E element() {
         return null;
     }
-    public Object poll() {
+    public E poll() {
         return null;
     }
-    public boolean offer(Object x, long time, Clock granularity) throws InterruptedException {
+    public boolean offer(E x, long time, Clock granularity) throws InterruptedException {
         return false;
     }
-    public Object poll(long time, Clock granularity) throws InterruptedException {
+    public E poll(long time, Clock granularity) throws InterruptedException {
         return null;
     }
-    public Object peek() {
+    public E peek() {
         return null;
     }
     public boolean isEmpty() {
@@ -60,12 +61,12 @@ public class ArrayBlockingQueue extends AbstractCollection implements BlockingQu
     public int capacity() {
         return 0;
     }
-    public Object[] toArray() {
+    public E [] toArray() {
         return null;
     }
 
-    public Object[] toArray(Object[] array) {
+    public <T> T[] toArray(T[] array) {
         return null;
     }
-    
+
 }

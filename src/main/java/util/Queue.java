@@ -16,17 +16,20 @@ package java.util;
  * priority queues, which order elements according to a supplied
  * comparator, or the elements' natural ordering, and LIFO queues (or
  * stacks) which order the elements LIFO (last-in-first-out).
- * Whatever the ordering used, the <em>head</em> of the queue is that element
- * which would be removed by a call to {@link #remove() } or {@link #poll()}.
- * Every <tt>Queue</tt> implementation must specify its ordering guarantees.
+ * Whatever the ordering used, the <em>head</em> of the queue is that
+ * element which would be removed by a call to {@link #remove() } or
+ * {@link #poll()}.  In a FIFO queue, all new elements are inserted at
+ * the <em> tail</em> of the queue. Other kinds of queues may use
+ * different placement rules.  Every <tt>Queue</tt> implementation
+ * must specify its ordering properties.
  *
- * <p>The {@link #offer offer} method adds an element if possible, otherwise
- * returning <tt>false</tt>.  This differs from the 
- * {@link java.util.Collection#add Collection.add}
- * method, which throws an unchecked exception upon
- * failure. It is designed for use in collections in which failure to
- * add is a normal, rather than exceptional occurrence, for example,
- * in fixed-capacity (or &quot;bounded&quot;) queues.
+ * <p>The {@link #offer offer} method inserts an element if possible,
+ * otherwise returning <tt>false</tt>.  This differs from the {@link
+ * java.util.Collection#add Collection.add} method, which can fail to
+ * add an element only by throwing an unchecked exception.  The
+ * <tt>offer</tt> method is designed for use when failure is a normal,
+ * rather than exceptional occurrence, for example, in fixed-capacity
+ * (or &quot;bounded&quot;) queues.
  *
  * <p>The {@link #remove()} and {@link #poll()} methods remove and
  * return the head of the queue.
@@ -80,9 +83,13 @@ package java.util;
 public interface Queue<E> extends Collection<E> {
 
     /**
-     * Adds the specified element to this queue, if possible.
+     * Inserts the specified element to this queue, if possible.  When
+     * using queues that may impose insertion restrictions (for
+     * example capacity bounds), method <tt>offer</tt> is generally
+     * preferable to method {@link Collection#add}, which can fail to
+     * insert an element only by throwing an exception.
      *
-     * @param o the element to add.
+     * @param o the element to insert.
      * @return <tt>true</tt> if it was possible to add the element to
      * this queue, else <tt>false</tt>
      */
@@ -127,13 +134,3 @@ public interface Queue<E> extends Collection<E> {
      */
     E element();
 }
-
-
-
-
-
-
-
-
-
-

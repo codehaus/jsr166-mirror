@@ -442,8 +442,9 @@ public class LinkedList<E>
     // Queue operations.
 
     /**
-     * Retrieves, but does not remove, the head (first element) of this list..
+     * Retrieves, but does not remove, the head (first element) of this list.
      * @return the head of this queue, or <tt>null</tt> if this queue is empty.
+     * @since 1.5
      */
     public E peek() {
         if (size==0)
@@ -452,17 +453,19 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves, but does not remove, the head (first element) of this list..
+     * Retrieves, but does not remove, the head (first element) of this list.
      * @return the head of this queue.
      * @throws NoSuchElementException if this queue is empty.
+     * @since 1.5
      */
     public E element() {
         return getFirst();
     }
 
     /**
-     * Retrieves and removes the head (first element) of this list..
+     * Retrieves and removes the head (first element) of this list.
      * @return the head of this queue, or <tt>null</tt> if this queue is empty.
+     * @since 1.5
      */
     public E poll() {
         if (size==0)
@@ -471,9 +474,10 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves and removes the head (first element) of this list..
+     * Retrieves and removes the head (first element) of this list.
      * @return the head of this queue.
      * @throws NoSuchElementException if this queue is empty.
+     * @since 1.5
      */
     public E remove() {
         return removeFirst();
@@ -485,6 +489,7 @@ public class LinkedList<E>
      * @param x the element to add.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Queue.offer</tt>)
+     * @since 1.5
      */
     public boolean offer(E x) {
         return add(x);

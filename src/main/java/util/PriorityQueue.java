@@ -14,10 +14,11 @@ package java.util;
  * and {@link java.util.TreeMap}: elements are ordered either according to
  * their <i>natural order</i> (see {@link Comparable}), or according to a
  * {@link java.util.Comparator}, depending on which constructor is used.
+ *
  * <p>The <em>head</em> of this queue is the <em>least</em> element with
  * respect to the specified ordering.  If multiple elements are tied for least
  * value, the head is one of those elements. A priority queue does not permit
- * <tt>null</tt> elements.
+ * <tt>null</tt> elements. 
  *
  * <p>The {@link #remove()} and {@link #poll()} methods remove and
  * return the head of the queue.
@@ -25,12 +26,12 @@ package java.util;
  * <p>The {@link #element()} and {@link #peek()} methods return, but do
  * not delete, the head of the queue.
  *
- * <p>A priority queue has a <i>capacity</i>.  The capacity is the
- * size of the array used internally to store the elements on the
- * queue.
- * It is always at least as large as the queue size.  As
- * elements are added to a priority queue, its capacity grows
- * automatically.  The details of the growth policy are not specified.
+ * <p>A priority queue is unbounded, but has a <i>capacity</i>.  The
+ * capacity is the size of the array used internally to store the
+ * elements on the queue.  It is always at least as large as the queue
+ * size.  As elements are added to a priority queue, its capacity
+ * grows automatically.  The details of the growth policy are not
+ * specified.
  *
  * <p>The Iterator provided in method {@link #iterator()} is <em>not</em>
  * guaranteed to traverse the elements of the PriorityQueue in any
@@ -277,10 +278,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
             
 
-    // Queue Methods
-
     /**
-     * Add the specified element to this priority queue.
+     * Inserts the specified element to this priority queue.
      *
      * @return <tt>true</tt>
      * @throws ClassCastException if the specified element cannot be compared
@@ -303,13 +302,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return true;
     }
 
-    public E poll() {
+    public E peek() {
         if (size == 0)
             return null;
-        return remove();
-    }
-
-    public E peek() {
         return (E) queue[1];
     }
 
@@ -320,7 +315,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException {@inheritDoc}
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      * @throws ClassCastException if the specified element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
@@ -339,7 +334,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * <p>
      * This implementation iterates over the specified collection, and adds
      * each object returned by the iterator to this collection, in turn.
-     * @throws NullPointerException {@inheritDoc}
+     * @param c collection whose elements are to be added to this queue
+     * @return <tt>true</tt> if this queue changed as a result of the
+     *         call.
+     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
+     * is <tt>null</tt>
      * @throws ClassCastException if any element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
@@ -348,21 +347,6 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return super.addAll(c);
     }
 
-
-    /**
-     * Removes a single instance of the specified element from this
-     * queue, if it is present.  More formally,
-     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
-     * o.equals(e))</tt>, if the queue contains one or more such
-     * elements.  Returns <tt>true</tt> if the queue contained the
-     * specified element (or equivalently, if the queue changed as a
-     * result of the call).
-     *
-     * <p>This implementation iterates over the queue looking for the
-     * specified element.  If it finds the element, it removes the element
-     * from the queue using the iterator's remove method.<p>
-     *
-     */
     public boolean remove(Object o) {
         if (o == null)
             return false;
@@ -506,12 +490,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         size = 0;
     }
 
-    /**
-     * Removes and returns the first element from queue.
-     */
-    public E remove() {
+    public E poll() {
         if (size == 0)
-            throw new NoSuchElementException();
+            return null;
         modCount++;
 
         E result = (E) queue[1];

@@ -267,7 +267,7 @@ public final class CheckedLockLoops {
     }
 
     private static class SemaphoreLoop extends LockLoop {
-        final private Semaphore sem = new Semaphore(1);
+        final private Semaphore sem = new Semaphore(1, false);
         final int loop(int n) {
             int sum = 0;
             int x = 0;
@@ -290,7 +290,7 @@ public final class CheckedLockLoops {
         }
     }
     private static class FairSemaphoreLoop extends LockLoop {
-        final private FairSemaphore sem = new FairSemaphore(1);
+        final private Semaphore sem = new Semaphore(1, true);
         final int loop(int n) {
             int sum = 0;
             int x = 0;

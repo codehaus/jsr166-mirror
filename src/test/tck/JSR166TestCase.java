@@ -121,7 +121,6 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(DelayQueueTest.class));
         suite.addTest(new TestSuite(ExchangerTest.class));
         suite.addTest(new TestSuite(ExecutorsTest.class));
-        suite.addTest(new TestSuite(FairSemaphoreTest.class));
         suite.addTest(new TestSuite(FutureTaskTest.class));
         suite.addTest(new TestSuite(LinkedBlockingQueueTest.class));
         suite.addTest(new TestSuite(LinkedListTest.class));

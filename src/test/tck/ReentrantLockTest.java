@@ -70,6 +70,16 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
+     * Constructor sets given fairness
+     */
+    public void testConstructor() { 
+	ReentrantLock rl = new ReentrantLock();
+        assertFalse(rl.isFair());
+	ReentrantLock r2 = new ReentrantLock(true);
+        assertTrue(r2.isFair());
+    }
+
+    /**
      * locking an unlocked lock succeeds
      */
     public void testLock() { 

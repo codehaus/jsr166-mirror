@@ -77,12 +77,11 @@ thread actually executing again after that time-out.
 <h2>Synchronizers</h2>
 
 Five classes aid common special-purpose synchronization idioms.
-{@link java.util.concurrent.Semaphore} and {@link
-java.util.concurrent.FairSemaphore} are classic concurrency tools.
+{@link java.util.concurrent.Semaphore} is a classic concurrency tool.
 {@link java.util.concurrent.CountDownLatch} is very simple yet very
 common utility for blocking until a single signal, event, or condition
-holds.  A {@link java.util.concurrent.CyclicBarrier} is a resettable multiway
-synchronization point common in some styles of parallel
+holds.  A {@link java.util.concurrent.CyclicBarrier} is a resettable
+multiway synchronization point common in some styles of parallel
 programming. An {@link java.util.concurrent.Exchanger} allows two
 threads to exchange objects at a rendezvous point.
 

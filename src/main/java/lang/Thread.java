@@ -682,6 +682,7 @@ class Thread implements Runnable {
      *       <a href="{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html">Why 
      *       are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
+    @Deprecated
     public final void stop() {
 	synchronized (this) {
             //if the thread is already dead, return
@@ -746,6 +747,7 @@ class Thread implements Runnable {
      *        <a href="{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html">Why 
      *        are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
+    @Deprecated
     public final synchronized void stop(Throwable obj) {
 	SecurityManager security = System.getSecurityManager();
 	if (security != null) {
@@ -860,6 +862,7 @@ class Thread implements Runnable {
      *     "{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html"> Why
      *     are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
+    @Deprecated
     public void destroy() {
 	throw new NoSuchMethodError();
     }
@@ -897,6 +900,7 @@ class Thread implements Runnable {
      *   <a href="{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html">Why 
      *   are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
+    @Deprecated
     public final void suspend() {
 	checkAccess();
 	suspend0();
@@ -922,6 +926,7 @@ class Thread implements Runnable {
      *     <a href="{@docRoot}/../guide/misc/threadPrimitiveDeprecation.html">Why 
      *     are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
+    @Deprecated
     public final void resume() {
 	checkAccess();
 	resume0();
@@ -1061,6 +1066,7 @@ class Thread implements Runnable {
      *		   which is deprecated.  Further, the results of this call
      *		   were never well-defined.
      */
+    @Deprecated
     public native int countStackFrames();
 
     /**

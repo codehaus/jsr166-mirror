@@ -937,6 +937,7 @@ public final class System {
      * @see     java.lang.SecurityManager#checkExit(int)
      * @since   JDK1.1
      */
+    @Deprecated
     public static void runFinalizersOnExit(boolean value) {
 	Runtime.getRuntime().runFinalizersOnExit(value);
     }

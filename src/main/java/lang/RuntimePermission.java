@@ -72,6 +72,16 @@ import java.util.StringTokenizer;
  * </tr>
  *
  * <tr>
+ *   <td>enableContextClassLoaderOverride</td>
+ *   <td>Subclass implementation of the thread context class loader methods</td>
+ *   <td>The context class loader is used by system code and extensions
+ * when they need to lookup resources that might not exist in the system
+ * class loader. Granting enableContextClassLoaderOverride permission would allow
+ * a subclass of Thread to override the methods that are used
+ * to get or set the context class loader for a particular thread.</td>
+ * </tr>
+ *
+ * <tr>
  *   <td>setSecurityManager</td>
  *   <td>Setting of the security manager (possibly replacing an existing one)
  * </td>

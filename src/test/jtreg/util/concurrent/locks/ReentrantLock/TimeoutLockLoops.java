@@ -1,6 +1,6 @@
 /*
  * @test %I% %E%
- * @bug 4486658
+ * @bug 4486658 5031862
  * @compile -source 1.5 TimeoutLockLoops.java
  * @run main TimeoutLockLoops
  * @summary Checks for responsiveness of locks to timeouts.

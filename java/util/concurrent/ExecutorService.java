@@ -93,7 +93,7 @@ public interface ExecutorService extends Executor {
      * execution of a thread-based, allowing fine-grained control and
      * monitoring.
      */
-    public interface Callbacks {
+    interface Callbacks {
 
         /**
          * Method invoked prior to executing the given Runnable in given

@@ -44,11 +44,11 @@ import java.util.Date;
  * {@link Condition} instances.
  * <pre>
  * class BoundedBuffer {
- *   <b>Lock lock = new ReentrantLock();</b>
+ *   <b>final Lock lock = new ReentrantLock();</b>
  *   final Condition notFull  = <b>lock.newCondition(); </b>
  *   final Condition notEmpty = <b>lock.newCondition(); </b>
  *
- *   Object[] items = new Object[100];
+ *   final Object[] items = new Object[100];
  *   int putptr, takeptr, count;
  *
  *   public void put(Object x) throws InterruptedException {
@@ -421,7 +421,7 @@ public interface Condition {
     void signal();
 
     /**
-     * Wake up all waiting threads.
+     * Wakes up all waiting threads.
      *
      * <p>If any threads are waiting on this condition then they are
      * all woken up. Each thread must re-acquire the lock before it can

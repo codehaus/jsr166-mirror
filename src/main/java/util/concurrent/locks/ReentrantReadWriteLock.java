@@ -19,13 +19,15 @@ import java.util.Date;
  * <p> This class does not impose a reader or writer preference
  * ordering for lock access.  However, it does support an optional
  * <em>fairness</em> policy.  When constructed as fair, threads
- * contend using an approximately arrival-order policy. When the write
- * lock is released either longest-waiting single writer will be
- * assigned the write lock, or if there is a reader waiting longer
- * than any writer, the set of readers will be assigned the read lock.
- * <p>If readers are active and a writer arrives then no subsequent
- * readers will be granted the read lock until after that writer has
- * acquired and released the write lock.
+ * contend for entry using an approximately arrival-order policy. When
+ * the write lock is released either the longest-waiting single writer
+ * will be assigned the write lock, or if there is a reader waiting
+ * longer than any writer, the set of readers will be assigned the
+ * read lock.  When constructed as non-fair, the order of entry to the
+ * lock need not be in arrival order.  In either case, if readers are
+ * active and a writer enters the lock then no subsequent readers will
+ * be granted the read lock until after that writer has acquired and
+ * released the write lock.
  * 
  * <li><b>Reentrancy</b>
  * <p>This lock allows both readers and writers to reacquire read or
@@ -114,8 +116,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/25 19:28:06 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/25 22:59:31 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  *
  */

@@ -11,8 +11,8 @@ package java.util.concurrent;
  * way of decoupling task submission from the mechanics of how each
  * task will be run, including details of thread use, scheduling, etc.
  *
- * <p>In the simplest case, an executor could run the submitted task
- * immediately in the caller's thread:
+ * <p>In the simplest case, an executor can run the submitted task immediately
+ * in the caller's thread:
  *
  * <pre>
  * class DirectExecutor implements Executor {
@@ -22,10 +22,8 @@ package java.util.concurrent;
  * }</pre>
  *
  * However, tasks are typically executed in a different thread than
- * the caller's thread.  The example below shows a simple Executor
- * which spawns a new thread for each task, but most Executor
- * implementations will impose some sort of limitation on how and when
- * tasks are scheduled:
+ * the caller's thread.  The executor below spawns a new thread for
+ * each task.
  *
  * <pre>
  * class ThreadPerTaskExecutor implements Executor {
@@ -34,9 +32,9 @@ package java.util.concurrent;
  *     }
  * }</pre>
  *
- * The Executor example below uses a second Executor as part of its
- * implementation, and acts as a gatekeeper, submitting tasks to the
- * underlying Executor sequentially, one at a time:
+ * Most <tt>Executor</tt> implementations will impose some sort of limitation
+ * on how and when tasks are scheduled.  The executor below serializes the
+ * submission of tasks to a second executor, illustrating a composite executor.
  *
  * <pre>
  * class SerialExecutor implements Executor {
@@ -82,8 +80,8 @@ package java.util.concurrent;
  * @see FutureTask
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/04 15:31:45 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/06/07 15:55:16 $
+ * @editor $Author: jozart $
  */
 public interface Executor {
 
@@ -92,9 +90,9 @@ public interface Executor {
      * may execute in a new thread, in a pooled thread, or in the calling
      * thread, at the discretion of the <tt>Executor</tt> implementation.
      *
-     * @param command the runnable task
-     * @throws ExecutionException if command cannot be submitted for
+     * @param task the runnable task
+     * @throws RejectedExecutionException if task cannot be submitted for
      * execution
      */
-    void execute(Runnable command);
+    void execute(Runnable task);
 }

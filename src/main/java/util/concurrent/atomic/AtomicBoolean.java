@@ -1,20 +1,36 @@
 /*
- * @(#)AtomicBoolean.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent.atomic;
+import sun.misc.Unsafe;
 
 /**
- * An <tt>AtomicBoolean</tt> maintains a <tt>boolean</tt> value that is updated
- * atomically. See the package specification for description of the
- * general properties it shares with other atomics.
+ * An <tt>AtomicBoolean</tt> maintains a <tt>boolean</tt> value that
+ * is updated atomically. See the package specification for
+ * description of the general properties it shares with other atomics.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:48 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/05/27 18:20:25 $
+ * @editor $Author: dl $
  */
 public class AtomicBoolean implements java.io.Serializable {
+    // setup to use Unsafe.compareAndSwapInt for updates
+    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final long valueOffset;
+
+    static {
+      try {
+        valueOffset = 
+          unsafe.objectFieldOffset(AtomicBoolean.class.getDeclaredField("value"));
+      }
+      catch(Exception ex) { throw new Error(ex); }
+    }
+
+    private volatile int value;
 
     /**
      * Creates a new <tt>AtomicBoolean</tt> with the given initial value.
@@ -22,7 +38,7 @@ public class AtomicBoolean implements java.io.Serializable {
      * @param initialValue the intial value
      */
     public AtomicBoolean(boolean initialValue) {
-        // for now
+        value = initialValue ? 1 : 0;
     }
 
     /**
@@ -31,7 +47,7 @@ public class AtomicBoolean implements java.io.Serializable {
      * @return the current value
      */
     public final boolean get() {
-        return false; // for now
+        return value != 0;
     }
 
     /**
@@ -46,8 +62,22 @@ public class AtomicBoolean implements java.io.Serializable {
      * @param update the new value
      * @return true if successful
      */
-    public final boolean attemptUpdate(boolean expect, boolean update) {
-        return false; // for now
+    public final boolean compareAndSet(boolean expect, boolean update) {
+        int e = expect? 1 : 0;
+        int u = update? 1 : 0;
+        return unsafe.compareAndSwapInt(this, valueOffset, e, u);
+    }
+
+    /**
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
+     * May fail spuriously.
+     * @return true if successful.
+     **/
+    public boolean weakCompareAndSet(boolean expect, boolean update) {
+        int e = expect? 1 : 0;
+        int u = update? 1 : 0;
+        return unsafe.compareAndSwapInt(this, valueOffset, e, u);
     }
 
     /**
@@ -56,7 +86,7 @@ public class AtomicBoolean implements java.io.Serializable {
      * @param newValue the new value
      */
     public final void set(boolean newValue) {
-        // for now
+        value = newValue ? 1 : 0;
     }
 
     /**
@@ -66,6 +96,10 @@ public class AtomicBoolean implements java.io.Serializable {
      * @return the previous value
      */
     public final boolean getAndSet(boolean newValue) {
-        return false; // for now
+        for (;;) {
+            boolean current = get();
+            if (compareAndSet(current, newValue))
+                return current;
+        }
     }
 }

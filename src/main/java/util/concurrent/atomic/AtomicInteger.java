@@ -1,103 +1,123 @@
 /*
- * @(#)AtomicInteger.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent.atomic;
+import sun.misc.Unsafe;
 
 /**
- * An <tt>AtomicInteger</tt> maintains an <tt>int</tt> value that is updated
- * atomically. See the package specification for description of the
- * general properties it shares with other atomics.
- *
- * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/05/14 21:30:48 $
- * @editor $Author: tim $
- */
-public class AtomicInteger implements java.io.Serializable { 
+ * An AtomicInteger maintains an <tt>int</tt> value that is updated
+ * atomically.
+ **/
+public final class AtomicInteger implements java.io.Serializable { 
+    // setup to use Unsafe.compareAndSwapInt for updates
+    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final long valueOffset;
+
+    static {
+      try {
+        valueOffset = 
+          unsafe.objectFieldOffset(AtomicInteger.class.getDeclaredField("value"));
+      }
+      catch(Exception ex) { throw new Error(ex); }
+    }
+
+    private volatile int value;
 
     /**
-     * Creates a new <tt>AtomicInteger</tt> with the given initial value.
-     *
-     * @param initialValue the intial value
-     */
+     * Create a new AtomicInteger with the given initial value;
+     **/
     public AtomicInteger(int initialValue) {
-        // for now
+        value = initialValue;
     }
 
     /**
-     * Returns the current value.
-     *
-     * @return the current value
-     */
-    public final int get() {
-        return 0; // for now
+     * Get the current value
+     **/
+    public int get() {
+        return value;
     }
   
     /**
-     * Atomically sets the value to the given update value if the
-     * current value is equal to the expected value.  Any given
-     * invocation of this operation may fail (return
-     * <code>false</code>) spuriously, but repeated invocation when
-     * the current value holds the expected value and no other thread
-     * is also attempting to set the value will eventually succeed.
-     *
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful
-     */
-    public final boolean attemptUpdate(int expect, int update) {
-        return false; // for now
+     * Set to the given value
+     **/
+    public void set(int newValue) {
+        value = newValue;
     }
 
     /**
-     * Unconditionally sets to the given value.
-     *
-     * @param newValue the new value
-     */
-    public final void set(int newValue) {
-        // for now
+     * Set to the give value and return the old value
+     **/
+    public int getAndSet(int newValue) {
+        for (;;) {
+            int current = get();
+            if (compareAndSet(current, newValue))
+                return current;
+        }
     }
 
     /**
-     * Sets to the given value and returns the previous value.
-     *
-     * @param newValue the new value
-     * @return the previous value
-     */
-    public final int getAndSet(int newValue) {
-        return 0; // for now
+     * Atomically increment the current value.
+     * @return the previous value;
+     **/
+    public int getAndIncrement() {
+        for (;;) {
+            int current = get();
+            int next = current+1;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
+  
+    /**
+     * Atomically decrement the current value.
+     * @return the previous value;
+     **/
+    public int getAndDecrement() {
+        for (;;) {
+            int current = get();
+            int next = current-1;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
+  
+    /**
+     * Atomically add the given value to current value.
+     * @return the previous value;
+     **/
+    public int getAndAdd(int y) {
+        for (;;) {
+            int current = get();
+            int next = current+y;
+            if (compareAndSet(current, next))
+                return current;
+        }
+    }
+  
+  
+    /**
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
+     * @return true if successful. False return indicates that
+     * the actual value was not equal to the expected value.
+     **/
+    public boolean compareAndSet(int expect, int update) {
+      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
     /**
-     * Atomically increments the current value -- the atomic version
-     * of postincrement <code>v++</code>.
-     *
-     * @return the previous value
-     */
-    public final int getAndIncrement() {
-        return 0; // for now
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
+     * May fail spuriously.
+     * @return true if successful.
+     **/
+    public boolean weakCompareAndSet(int expect, int update) {
+      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
   
-  
-    /**
-     * Atomically decrements the current value -- the atomic version
-     * of postdecrement <code>v--</code>.
-     *
-     * @return the previous value
-     */
-    public final int getAndDecrement() {
-        return 0; // for now
-    }
-  
-  
-    /**
-     * Atomically adds the given value to current value.
-     *
-     * @param x the value to be added
-     * @return the previous value
-     */
-    public final int getAndAdd(int x) {
-        return 0; // for now
-    }
 }

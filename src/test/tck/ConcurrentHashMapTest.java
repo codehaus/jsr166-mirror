@@ -81,8 +81,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
      */
     public void testContainsValue() {
         ConcurrentHashMap map = map5();
-	assertTrue(map.contains("A"));
-        assertFalse(map.contains("Z"));
+	assertTrue(map.containsValue("A"));
+        assertFalse(map.containsValue("Z"));
     }
 
     /**

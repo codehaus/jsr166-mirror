@@ -117,7 +117,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/20 23:57:41 $
+ * @revised $Date: 2003/01/30 22:12:40 $
  * @editor $Author: dholmes $
  *
  */
@@ -144,7 +144,7 @@ public interface Lock {
      * {@link Thread#interrupt interrupted}. 
      * <p>Acquires the lock if it is available and returns immediately.
      * <p>If the lock is not available then
-     * the current thread thread becomes disabled for thread scheduling 
+     * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of two things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or

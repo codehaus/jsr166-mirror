@@ -48,11 +48,11 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private transient Node<E> head = new Node<E>(null);
     private transient Node<E> last = head;
 
-    private transient final ReentrantLock takeLock = new ReentrantLock();
-    private transient final Condition notEmpty = takeLock.newCondition();
+    private final ReentrantLock takeLock = new ReentrantLock();
+    private final Condition notEmpty = takeLock.newCondition();
 
-    private transient final ReentrantLock putLock = new ReentrantLock();
-    private transient final Condition notFull = putLock.newCondition();
+    private final ReentrantLock putLock = new ReentrantLock();
+    private final Condition notFull = putLock.newCondition();
 
 
     /**

@@ -368,6 +368,16 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
+
+    public String toString() {
+        lock.lock();
+        try {
+            return super.toString();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
     
     public Iterator<E> iterator() {
         lock.lock();

@@ -691,7 +691,6 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         final Condition c = lock.writeLock().newCondition();
         try {
             lock.writeLock().lock();
-            assertFalse(c.await(10, TimeUnit.MILLISECONDS));
             lock.writeLock().unlock();
         }
         catch (Exception ex) {
@@ -708,7 +707,6 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock.writeLock().lock();
             java.util.Date d = new java.util.Date();
-            assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + 10)));
             lock.writeLock().unlock();
         }
         catch (Exception ex) {

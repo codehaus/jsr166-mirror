@@ -155,6 +155,7 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(ThreadLocalTest.class));
         suite.addTest(new TestSuite(ThreadPoolExecutorTest.class));
         suite.addTest(new TestSuite(ThreadTest.class));
+        suite.addTest(new TestSuite(TimeUnitTest.class));
         suite.addTest(new TestSuite(TreeMapTest.class));
         suite.addTest(new TestSuite(TreeSetTest.class));
 		

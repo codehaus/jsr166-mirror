@@ -614,6 +614,23 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
+
+    /**
+     * An add following remove(x) succeeds
+     */
+    public void testRemoveElementAndAdd() {
+        try {
+            LinkedBlockingQueue q = new LinkedBlockingQueue();
+            assertTrue(q.add(new Integer(1)));
+            assertTrue(q.add(new Integer(2)));
+            assertTrue(q.remove(new Integer(1)));
+            assertTrue(q.remove(new Integer(2)));
+            assertTrue(q.add(new Integer(3)));
+            assertTrue(q.take() != null);
+        } catch (Exception e){
+            unexpectedException();
+        }
+    }
 	
     /**
      * contains(x) reports true when elements added but not yet removed

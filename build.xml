@@ -251,10 +251,13 @@
              showoutput="true"
           errorProperty="junit.failed"
         failureProperty="junit.failed"
-                    dir="${build.reports.dir}">
+                    dir="${build.reports.dir}"
+                   fork="true">
+
+      <jvmarg value="-Xbootclasspath/p:${product.jar}"/>
 
       <classpath>
-        <path refid="test.classpath"/>
+        <!-- <path refid="test.classpath"/> -->
         <pathelement location="${build.testcases.dir}"/>
       </classpath>
 

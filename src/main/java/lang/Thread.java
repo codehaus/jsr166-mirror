@@ -307,6 +307,7 @@ class Thread implements Runnable {
         if (parent.inheritableThreadLocals != null)
           this.inheritableThreadLocals = ThreadLocal.createInheritedMap(
               (ThreadLocal.ThreadLocalMap<Object>)parent.inheritableThreadLocals);
+        uncaughtExceptionHandler = defaultUncaughtExceptionHandler; // JSR166
 
         /* Stash the specified stack size in case the VM cares */
         this.stackSize = stackSize;
@@ -1411,10 +1412,13 @@ class Thread implements Runnable {
     private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
     /**
-     * Set the default handler invoked when a Thread abruptly terminates
-     * due to an uncaught exception. 
-     * <p>This handler is invoked only if the thread has not had its own
-     * uncaught exception handler explicitly set.
+     * Set the default handler invoked when Threads abruptly terminate
+     * due uncaught exceptions. All Threads created subsequently will
+     * use this handler unless explicitly overridden.  Existing
+     * Threads that explicitly set their handlers to <tt>null</tt>
+     * will also use this default. All other threads will use the
+     * previous default (or their ThreadGroups, if no default had been
+     * set).
      * @exception  SecurityException  If a security manager is present and it 
      * denies <tt>{@link RuntimePermission}
      * (&quot;setDefaultUncaughtExceptionHandler&quot;)</tt>
@@ -1453,18 +1457,17 @@ class Thread implements Runnable {
      * @since 1.5
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() { 
-        return (uncaughtExceptionHandler != null ?
-                uncaughtExceptionHandler :
-                (defaultUncaughtExceptionHandler != null ?
-                 defaultUncaughtExceptionHandler : group));
+        return uncaughtExceptionHandler != null ?
+                uncaughtExceptionHandler : group;
     }
 
     /**
      * Set the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception. If unset or set to <tt>null</tt>, then the
-     * {@link #setDefaultUncaughtExceptionHandler default handler} is used. 
-     * If the default handler is <tt>null</tt> then the Thread's 
-     * ThreadGroup serves as its handler.
+     * due to an uncaught exception. If unset or set to <tt>null</tt>,
+     * then the prevailing {@link #setDefaultUncaughtExceptionHandler
+     * default handler} is used.  If the default handler is
+     * <tt>null</tt> then the Thread's ThreadGroup serves as its
+     * handler.
      * @exception  SecurityException  if the current thread is not allowed to
      *               modify this thread.
      * @see #setDefaultUncaughtExceptionHandler
@@ -1472,7 +1475,8 @@ class Thread implements Runnable {
      */
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) { 
         checkAccess();
-        uncaughtExceptionHandler = eh;
+        uncaughtExceptionHandler = (eh != null)? 
+            eh : defaultUncaughtExceptionHandler;
     }
 
     /**

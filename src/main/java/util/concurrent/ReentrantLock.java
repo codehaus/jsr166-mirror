@@ -44,17 +44,21 @@ import java.util.Date;
  * }
  * </pre>
  *
- * <p>This class supports the interruption of lock acquisition and provides a 
- * {@link #newCondition Condition} implementation that supports the 
- * interruption of thread suspension.
- *
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
  * will result in a {@link NullPointerException} being thrown.
  *
+ * <h3>Implementation Notes</h3>
+ * <p>This implementation supports the interruption of lock acquisition and 
+ * provides a 
+ * {@link #newCondition Condition} implementation that supports the 
+ * interruption of thread suspension.
+ * It also favors interruption over normal method return.
+ *
+ *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/26 05:50:50 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  * 
  **/
@@ -607,7 +611,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's 
      * interrupted status is cleared. 
-     * <p>As this method is an explicit interruption point, preference is 
+     * <p>In this implementation, as this method is an explicit interruption 
+     * point, preference is 
      * given to responding to the interrupt over normal or reentrant 
      * acquisition of the lock.
      *
@@ -681,14 +686,16 @@ public class ReentrantLock extends ReentrantLockQueueNode
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's 
      * interrupted status is cleared. 
-     * <p>As this method is an explicit interruption point, preference is 
-     * given to responding to the interrupt over normal or reentrant 
-     * acquisition of the lock, and over reporting the elapse of the waiting
-     * time.
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
      * The given waiting time is a best-effort lower bound. If the time is 
      * less than or equal to zero, the method will not wait at all.
+     * <p>In this implementation, as this method is an explicit interruption 
+     * point, preference is 
+     * given to responding to the interrupt over normal or reentrant 
+     * acquisition of the lock, and over reporting the elapse of the waiting
+     * time.
+     *
      *
      * @param timeout the time to wait for the lock
      * @param unit the time unit of the timeout argument

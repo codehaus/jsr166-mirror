@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.*;
 /**
  * An unbounded thread-safe queue based on linked nodes.  LinkedQueues
  * are an especially good choice when many threads will share access
- * to acommon  queue. 
+ * to a common  queue. 
  *
  * <p> This implementation employs an efficient "wait-free" algorithm
  * based on one described in <a

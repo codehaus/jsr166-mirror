@@ -92,44 +92,33 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         public int acquireExclusiveState(boolean isQueued, int acquires) { 
             final Thread current = Thread.currentThread();
-            final AtomicInteger count = state();
-            if (isQueued || fair || !count.compareAndSet(0, acquires)) {
-                int c = count.get();
-                if ((c != 0 && current != owner) ||
-                    (c == 0 && !isQueued && fair && hasQueuedThreads()) ||
-                    !count.compareAndSet(c, c + acquires))
-                    return -1;
-            }
+            int c = get();
+            if ((!isQueued && fair && c == 0 && hasQueuedThreads()) ||
+                (c != 0 && current != owner))
+                return -1;
+            if (!compareAndSet(c, c + acquires))
+                return -1;
             owner = current;
             return 0;
         }
 
         public boolean releaseExclusiveState(int releases) {
             final Thread current = Thread.currentThread();
-            final AtomicInteger count = state();
             boolean free = true;
-            int c = count.get() - releases;
+            int c = get() - releases;
             if (owner != current || c < 0)
                 throw new IllegalMonitorStateException();
             if (c == 0)
                 owner = null;
             else
                 free = false;
-            count.set(c);
+            set(c);
             return free;
         }
 
         public void checkConditionAccess(Thread thread, boolean waiting) {
-            if (state().get() == 0 || owner != thread) 
+            if (get() == 0 || owner != thread) 
                 throw new IllegalMonitorStateException();
-        }
-
-        public int acquireSharedState(boolean isQueued, int acquires) {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean releaseSharedState(int releases) {
-            throw new UnsupportedOperationException();
         }
 
         ConditionObject newCondition() {
@@ -137,11 +126,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
         
         Thread getOwner() {
-            return (state().get() != 0)? owner : null;
+            return (get() != 0)? owner : null;
         }
         
         int getHoldCount() {
-            int c = state().get();
+            int c = get();
             return (owner == Thread.currentThread())? c : 0;
         }
         
@@ -150,7 +139,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
         
         boolean isLocked() {
-            return state().get() != 0;
+            return get() != 0;
         }
 
         /**
@@ -160,7 +149,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {
             s.defaultReadObject();
-            state().set(0); // reset to unlocked state
+            set(0); // reset to unlocked state
         }
     }
 

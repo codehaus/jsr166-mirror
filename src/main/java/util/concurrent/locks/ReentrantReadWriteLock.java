@@ -207,41 +207,24 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         private int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
 
         public int acquireExclusiveState(boolean isQueued, int acquires) {
-            // handle only fast path here; else relay
-            if (isQueued || fair || !state().compareAndSet(0, acquires)) 
-                return doAcquireExclusiveState(isQueued, acquires);
-            owner = Thread.currentThread();
+            Thread current = Thread.currentThread();
+            int c = get();
+            int w = exclusiveCount(c);
+            if (w + acquires >= SHARED_UNIT)
+                throw new Error("Maximum lock count exceeded");
+            if ((w == 0 || current != owner) &&
+                (c != 0 || (!isQueued && fair && hasQueuedThreads())))
+                return -1;
+            if (!compareAndSet(c, c + acquires)) 
+                return -1;
+            owner = current;
             return 0;
         }
 
-        int doAcquireExclusiveState(boolean isQueued, int acquires) {
-            final AtomicInteger count = state();
-            Thread current = Thread.currentThread();
-            for (;;) {
-                int c = count.get();
-                int w = exclusiveCount(c);
-                int r = sharedCount(c);
-                if (w == 0) {
-                    if (r != 0 || (!isQueued && fair && hasQueuedThreads()))
-                        return -1;
-                }
-                else if (current != owner) 
-                    return -1;
-                if (w + acquires >= SHARED_UNIT)
-                    throw new Error("Maximum lock count exceeded");
-                if (count.compareAndSet(c, c + acquires)) {
-                    owner = current;
-                    return 0;
-                }
-                // Recheck count if lost CAS
-            }
-        }
-
         public boolean releaseExclusiveState(int releases) {
-            final AtomicInteger count = state();
             Thread current = Thread.currentThread();
             boolean free = true;
-            int c = count.get();
+            int c = get();
             int w = exclusiveCount(c) - releases;
             c -= releases;
             if (w < 0 || owner != current)
@@ -250,41 +233,39 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 owner = null;
             else
                 free = false;
-            count.set(c);
+            set(c);
             return free;
         }
 
         public int acquireSharedState(boolean isQueued, int acquires) {
-            final AtomicInteger count = state();
             for (;;) {
-                int c = count.get();
+                int c = get();
+                int nextc = c + (acquires << SHARED_SHIFT);
+                if (nextc < c)
+                    throw new Error("Maximum lock count exceeded");
                 if ((exclusiveCount(c) != 0 && 
                      owner != Thread.currentThread()) ||
                     (!isQueued && fair && !hasQueuedThreads()))
                     return -1;
-                int nextc = c + (acquires << SHARED_SHIFT);
-                if (nextc < c)
-                    throw new Error("Maximum lock count exceeded");
-                if (count.compareAndSet(c, nextc)) 
+                if (compareAndSet(c, nextc)) 
                     return 1;
                 // Recheck count if lost CAS
             }
         }
 
         public boolean releaseSharedState(int releases) {
-            final AtomicInteger count = state();
             for (;;) {
-                int c = count.get();
+                int c = get();
                 int nextc = c - (releases << SHARED_SHIFT);
                 if (nextc < 0)
                     throw new IllegalMonitorStateException();
-                if (count.compareAndSet(c, nextc)) 
+                if (compareAndSet(c, nextc)) 
                     return nextc == 0;
             }
         }
     
         public void checkConditionAccess(Thread thread, boolean waiting) {
-            int c = state().get();
+            int c = get();
             if (exclusiveCount(c) == 0 ||
                 (waiting && sharedCount(c) != 0))
                 throw new IllegalMonitorStateException();
@@ -301,15 +282,15 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         Thread getOwner() {
-            return (exclusiveCount(state().get()) != 0)? owner : null;
+            return (exclusiveCount(get()) != 0)? owner : null;
         }
         
         int getReadLockCount() {
-            return sharedCount(state().get());
+            return sharedCount(get());
         }
         
         boolean isWriteLocked() {
-            return exclusiveCount(state().get()) != 0;
+            return exclusiveCount(get()) != 0;
         }
 
         boolean isWriteLockedByCurrentThread() {
@@ -317,7 +298,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         int getWriteHoldCount() {
-            int c = exclusiveCount(state().get());
+            int c = exclusiveCount(get());
             return (owner == Thread.currentThread())? c : 0;
         }
 
@@ -336,7 +317,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {
             s.defaultReadObject();
-            state().set(0); // reset to unlocked state
+            set(0); // reset to unlocked state
         }
     }
 

@@ -27,7 +27,7 @@ public class PriorityBlockingQueueTest extends TestCase {
         assertEquals("should go through 3 elements", 3, k);
     }
 
-    public void testWeaklyConsistentIteration () {
+    public void testFastFail () {
 
         final PriorityBlockingQueue<Integer> q = new PriorityBlockingQueue<Integer>(3);
 

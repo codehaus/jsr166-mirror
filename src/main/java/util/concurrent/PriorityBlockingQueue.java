@@ -132,7 +132,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @return the comparator used to order this collection, or <tt>null</tt>
      * if this collection is sorted according to its elements natural ordering.
      */
-    public Comparator comparator() {
+    public Comparator<? super E> comparator() {
         return q.comparator();
     }
 

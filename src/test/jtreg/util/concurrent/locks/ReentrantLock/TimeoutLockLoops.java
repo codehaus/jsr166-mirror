@@ -39,7 +39,7 @@ public final class TimeoutLockLoops {
         private int v = rng.next();
         private volatile boolean completed;
         private volatile int result = 17;
-        private final ReentrantLock lock = new ReentrantLock();
+        private final ReentrantLock lock = new ReentrantLock(true);
         private final LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         private final CyclicBarrier barrier;
         private final int nthreads;

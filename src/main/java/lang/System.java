@@ -799,18 +799,27 @@ public final class System {
      * The environment is a system-dependent mapping from names to
      * values which is passed from parent to child processes.
      *
+     * <p>If the system does not support environment variables, an
+     * empty map is returned.
+     *
+     * <p>The returned map will never contain null keys or values.
+     * Attempting to query the presence of a null key or value will
+     * throw a {@link NullPointerException}.  Attempting to query
+     * the presence of a key or value which is not of type
+     * {@link String} will throw a {@link ClassCastException}.
+     *
+     * <p>The returned map and its collection views may not obey the
+     * general contract of the {@link Object#equals} and
+     * {@link Object#hashCode} methods.
+     *
+     * <p>The returned map is typically case-sensitive on all platforms.
+     *
      * <p>If a security manager exists, its
      * {@link SecurityManager#checkPermission checkPermission}
      * method is called with a
      * <code>{@link RuntimePermission}("getenv.*")</code>
      * permission.  This may result in a {@link SecurityException} being
-     * thrown.  If no exception is thrown the system environment is
-     * returned.
-     *
-     * <p>If the system does not support environment variables, an
-     * empty map is returned.
-     *
-     * <p>The returned map is typically case-sensitive on all platforms.
+     * thrown.
      *
      * <p>When passing information to a Java subprocess,
      * <a href=#EnvironmentVSSystemProperties>system properties</a>

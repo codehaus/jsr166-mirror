@@ -182,11 +182,14 @@ class Thread implements Runnable {
      * before setting this thread's interrupt status.
      */
     private volatile Interruptible blocker;
+    private Object blockerLock = new Object();
 
     /* Set the blocker field; invoked via reflection magic from java.nio code
      */
     private void blockedOn(Interruptible b) {
-	blocker = b;
+	synchronized (blockerLock) {
+	    blocker = b;
+	}
     }
 
     /**
@@ -753,9 +756,13 @@ class Thread implements Runnable {
     public void interrupt() {
         if (this != Thread.currentThread()) // jsr166
             checkAccess();
-	Interruptible b = blocker;
-	if (b != null) {
-	    b.interrupt();
+	synchronized (blockerLock) {
+	    Interruptible b = blocker;
+	    if (b != null) {
+		b.interrupt();
+		interrupt0();		// Just to set the interrupt flag
+		return;
+	    }
 	}
 	interrupt0();
     }

@@ -64,7 +64,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/11 22:41:45 $
+ * @revised $Date: 2003/07/12 00:50:43 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -198,10 +198,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     */
 
     /**
-     * This class is only temporarily public for preliminary release.
      * Node class for threads waiting for locks. 
      */
-    public static class ReentrantLockQueueNode {
+    static class ReentrantLockQueueNode {
         /**
          * Controls whether successor node is allowed to try to obtain
          * ownership. Acts as a saturating (in both directions) counting
@@ -256,7 +255,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * TEMPORARY field for use only by emulated version of park/unpark.
          * Remove when emulation package is phased out.
          */
-        public transient int parkSemaphore;
+        transient int parkSemaphore;
 
         ReentrantLockQueueNode() { }
         ReentrantLockQueueNode(Thread t) { 
@@ -517,7 +516,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 boolean interrupted = !interruptible && Thread.interrupted();
 
                 if (nanos > 0) { // Update and check timeout value
-                    long now = TimeUnit.nanoTime();
+                    long now = System.nanoTime();
                     if (lastTime != 0) {
                         nanos -= now - lastTime;
                         if (nanos == 0) // avoid zero
@@ -528,9 +527,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
                 // Last chance to avoid blocking -- don't park
                 // if it looks like we can acquire lock.
-                if (nanos >= 0 &&
-                    (p != head || owner != null))
-                    JSR166Support.park(node, false, nanos);
+                if (nanos >= 0 && (p != head || owner != null)) {
+                    if (nanos >= 0)
+                        LockSupport.parkNanos(node, nanos);
+                    else
+                        LockSupport.park(node);
+                }
                 
                 if (interrupted)  // reset interrupt status
                     current.interrupt();
@@ -588,7 +590,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         Thread thr = s.thread;
         if (thr != null && thr != owner) // don't bother to signal if has lock
-            JSR166Support.unpark(s, thr);
+            LockSupport.unpark(s, thr);
     }
 
     /**
@@ -1066,7 +1068,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             boolean wasInterrupted = false;
             while (!isOffConditionQueue(w) &&
                    !(wasInterrupted = Thread.interrupted()))
-                JSR166Support.park(w, false, 0);
+                LockSupport.park(w);
 
             /**
              * If cancelled, kill node and allow relock, below to make
@@ -1093,7 +1095,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
             boolean wasInterrupted = false;
             while (!isOffConditionQueue(w)) {
-                JSR166Support.park(w, false, 0);
+                LockSupport.park(w);
                 if (Thread.interrupted()) 
                     wasInterrupted = true;
             }
@@ -1113,13 +1115,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
             if (nanos <= 0) nanos = 1; // park arg must be positive
             long timeLeft = nanos;
-            long startTime = TimeUnit.nanoTime();
+            long startTime = System.nanoTime();
             boolean wasInterrupted = false;
 
             while (!isOffConditionQueue(w) &&
                    !(wasInterrupted = Thread.interrupted()) &&
-                   (timeLeft = nanos - (TimeUnit.nanoTime() - startTime)) > 0)
-                JSR166Support.park(w, false, timeLeft);
+                   (timeLeft = nanos - (System.nanoTime() - startTime)) > 0)
+                LockSupport.parkNanos(w, timeLeft);
 
             if ((wasInterrupted || timeLeft <= 0) &&
                 casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
@@ -1133,7 +1135,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             else if (timeLeft <= 0)
                 return timeLeft;
             else
-                return nanos - (TimeUnit.nanoTime() - startTime);
+                return nanos - (System.nanoTime() - startTime);
         }
 
         public boolean awaitUntil(Date deadline) throws InterruptedException {
@@ -1150,7 +1152,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             while (!isOffConditionQueue(w) &&
                    !(wasInterrupted = Thread.interrupted()) &&
                    !(timedOut = System.currentTimeMillis() > abstime))
-                JSR166Support.park(w, true, abstime);
+                LockSupport.parkUntil(w, abstime);
 
             if ((wasInterrupted || timedOut) &&
                 casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {

@@ -14,8 +14,6 @@ package java.util.concurrent;
  * It does not maintain time information, but only helps organize and 
  * use time representations that may be maintained separately across 
  * various contexts.
- * A static method {@link #nanoTime} provides access to a high
- * resolution, nanosecond, timer, which can be used to measure elapsed time.
  *
  * <p>The <tt>TimeUnit</tt> class cannot be directly instantiated.  
  * Use the {@link #SECONDS}, {@link #MILLISECONDS}, {@link #MICROSECONDS},
@@ -41,41 +39,11 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:49 $
+ * @revised $Date: 2003/07/12 00:50:34 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
 public final class TimeUnit implements java.io.Serializable {
-
-    /**
-     * Return the current value of the system high resolution timer, in
-     * nanoseconds. 
-     * <p>This method can only be used to measure elapsed time
-     * and is not related to any notion of system, or wall-clock time.
-     * Although the value returned represents nanoseconds since some
-     * arbitrary start time in the past, the resolution at which this value
-     * is updated is not specified. It provides nanosecond precision, but
-     * not necessarily nanosecond accuracy.
-     * <p>It is guaranteed that successive return
-     * values from this method will not decrease.
-     *
-     * <p> For example, to measure how long some code takes to execute, 
-     * with nanosecond precision:
-     * <pre>
-     *   long startTime = TimeUnit.nanoTime();
-     *   // ... the code being measured ...
-     *   long estimatedTime = TimeUnit.nanoTime() - startTime;
-     * </pre>
-     * 
-     * @return The current value of the system high resolution timer, in
-     * nanoseconds.
-     *
-     * @fixme Is this spec tight enough? Too tight? What about issues of
-     * reading the TSC from different processors on a SMP?
-     */
-    public static final long nanoTime() {
-        return JSR166Support.currentTimeNanos();
-    }
 
     /**
      * Convert the given time duration in the given unit to the

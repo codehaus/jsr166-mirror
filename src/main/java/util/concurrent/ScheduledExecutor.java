@@ -85,7 +85,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
 
         public long getDelay(TimeUnit unit) {
-            return unit.convert(time - TimeUnit.nanoTime(), 
+            return unit.convert(time - System.nanoTime(), 
                                 TimeUnit.NANOSECONDS);
         }
 
@@ -126,7 +126,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         DelayedTask nextTask() {
             if (period <= 0 || isCancelled())
                 return null;
-            long nextTime = period + (rateBased ? time : TimeUnit.nanoTime());
+            long nextTime = period + (rateBased ? time : System.nanoTime());
             return new DelayedTask(getRunnable(), nextTime, period, rateBased);
         }
 
@@ -141,7 +141,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
          */
         DelayedFutureTask(Callable<V> callable, long delay,  TimeUnit unit) {
             // must set after super ctor call to use inner class
-            super(null, TimeUnit.nanoTime() + unit.toNanos(delay));
+            super(null, System.nanoTime() + unit.toNanos(delay));
             setRunnable(new InnerCancellableFuture<V>(callable));
         }
 
@@ -274,7 +274,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      */
 
     public DelayedTask schedule(Runnable command, long delay,  TimeUnit unit) {
-        DelayedTask t = new DelayedTask(command, TimeUnit.nanoTime() + unit.toNanos(delay));
+        DelayedTask t = new DelayedTask(command, System.nanoTime() + unit.toNanos(delay));
         super.execute(t);
         return t;
     }
@@ -313,7 +313,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      */
     public DelayedTask scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
         DelayedTask t = new DelayedTask
-            (command, TimeUnit.nanoTime() + unit.toNanos(initialDelay),
+            (command, System.nanoTime() + unit.toNanos(initialDelay),
              unit.toNanos(period), true);
         super.execute(t);
         return t;
@@ -360,7 +360,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      */
     public DelayedTask scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
         DelayedTask t = new DelayedTask
-            (command, TimeUnit.nanoTime() + unit.toNanos(initialDelay),
+            (command, System.nanoTime() + unit.toNanos(initialDelay),
              unit.toNanos(delay), false);
         super.execute(t);
         return t;

@@ -62,7 +62,7 @@ public final class CancelledFutureLoops {
         final void test() throws Exception {
             Future[] futures = new Future[nthreads];
             for (int i = 0; i < nthreads; ++i) 
-                futures[i] = Executors.execute(pool, this);
+                futures[i] = pool.submit(this);
 
             barrier.await();
             Thread.sleep(TIMEOUT);

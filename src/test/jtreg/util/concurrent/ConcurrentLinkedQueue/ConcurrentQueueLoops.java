@@ -94,7 +94,7 @@ public class ConcurrentQueueLoops {
         totalItems = new AtomicInteger(n * items);
         ArrayList<Future<Integer>> results = new ArrayList<Future<Integer>>(n);
         for (int i = 0; i < n; ++i) 
-            results.add(Executors.execute(pool, new Stage(q, barrier, items)));
+            results.add(pool.submit(new Stage(q, barrier, items)));
 
         if (print)
             System.out.print("Threads: " + n + "\t:");

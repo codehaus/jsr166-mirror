@@ -51,8 +51,8 @@ public class CancelledProducerConsumerLoops {
         Future[] cons = new Future[npairs];
         
         for (int i = 0; i < npairs; ++i) {
-            prods[i] = Executors.execute(pool, new Producer(q, barrier, iters));
-            cons[i] = Executors.execute(pool, new Consumer(q, barrier, iters));
+            prods[i] = pool.submit(new Producer(q, barrier, iters));
+            cons[i] = pool.submit(new Consumer(q, barrier, iters));
         }
         barrier.await();
         Thread.sleep(TIMEOUT);

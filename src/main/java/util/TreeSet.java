@@ -442,7 +442,7 @@ public class TreeSet<E>
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
-     * @throws IllegalArgumentException if this set is itself a subSet,
+     * @throws IllegalArgumentException if this set is itself a subset,
      *         and <tt>toElement</tt> is not within the
      *         specified range of the subset.
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt> and

@@ -15,6 +15,6 @@ package java.lang;
  * @see     java.util.concurrent.Future
  **/
 public interface Callable {
-  Object call() throws Exception;
+    Object call() throws Exception;
 }
 

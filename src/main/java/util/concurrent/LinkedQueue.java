@@ -31,7 +31,12 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
     /*
      * This is a straight adaptation of Michael & Scott algorithm.
-     * For explanation, read the paper.
+     * For explanation, read the paper.  The only (minor) algorithmic
+     * difference is that this version supports lazy deletion of
+     * internal nodes (method remove(Object)) -- remove CAS'es item
+     * fields to null. The normal queue operations unlink but then
+     * pass over nodes with null item fields. Similarly, iteration
+     * methods ignore those with nulls.
      */
 
     static class Node {

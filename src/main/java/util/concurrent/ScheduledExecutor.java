@@ -246,20 +246,29 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * Creates and executes a one-shot action that may trigger after
      * the given delay.
+     * @param command the task to execute.
+     * @param delay the time from now to delay execution.
+     * @param unit the time unit of the delay parameter.
+     * @return a handle that can be used to cancel the task.
      */
 
-    public DelayedTask schedule(Runnable r, long delay,  TimeUnit unit) {
-        DelayedTask t = new DelayedTask(r, TimeUnit.nanoTime() + unit.toNanos(delay));
+    public DelayedTask schedule(Runnable command, long delay,  TimeUnit unit) {
+        DelayedTask t = new DelayedTask(command, TimeUnit.nanoTime() + unit.toNanos(delay));
         super.execute(t);
         return t;
     }
 
     /**
      * Creates and executes a one-shot action that may trigger after the given date.
+     * @param command the task to execute.
+     * @param date the time to commence excution.
+     * @return a handle that can be used to cancel the task.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
      */
-    public DelayedTask schedule(Runnable r, Date date) {
+    public DelayedTask schedule(Runnable command, Date date) {
         DelayedTask t = new DelayedTask
-            (r, 
+            (command, 
              TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
                                            System.currentTimeMillis()));
         super.execute(t);
@@ -270,10 +279,17 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * Creates and executes a periodic action that may trigger first
      * after the given initial delay, and subsequently with the given
      * period.
+     * @param command the task to execute.
+     * @param initialDelay the time to delay first execution.
+     * @param period the period between successive executions.
+     * @param unit the time unit of the delay and period parameters
+     * @return a handle that can be used to cancel the task.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
      */
-    public DelayedTask schedule (Runnable r, long initialDelay,  long period, TimeUnit unit) {
+    public DelayedTask schedule (Runnable command, long initialDelay,  long period, TimeUnit unit) {
         DelayedTask t = new DelayedTask
-            (r, TimeUnit.nanoTime() + unit.toNanos(initialDelay),
+            (command, TimeUnit.nanoTime() + unit.toNanos(initialDelay),
              unit.toNanos(period));
         super.execute(t);
         return t;
@@ -282,11 +298,18 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * Creates a periodic action that may trigger first after the
      * given date, and subsequently with the given period.
+     * @param command the task to execute.
+     * @param initialDate the time to delay first execution.
+     * @param period the period between successive executions.
+     * @param unit the time unit of the  period parameter.
+     * @return a handle that can be used to cancel the task.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
      */
-    public DelayedTask schedule(Runnable r, Date firstDate, long period, TimeUnit unit) {
+    public DelayedTask schedule(Runnable command, Date initialDate, long period, TimeUnit unit) {
         DelayedTask t = new DelayedTask
-            (r, 
-             TimeUnit.MILLISECONDS.toNanos(firstDate.getTime() - 
+            (command, 
+             TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
                                            System.currentTimeMillis()),
              unit.toNanos(period));
         super.execute(t);
@@ -296,6 +319,12 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
      * Creates and executes a Future that may trigger after the given delay.
+     * @param callable the function to execute.
+     * @param delay the time from now to delay execution.
+     * @param unit the time unit of the delay parameter.
+     * @return a Future that can be used to extract result or cancel.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
      */
     public <V> DelayedFutureTask<V> schedule(Callable<V> callable, long delay,  TimeUnit unit) {
         DelayedFutureTask<V> t = new DelayedFutureTask<V>
@@ -307,6 +336,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * Creates and executes a one-shot action that may trigger after
      * the given date.
+     * @param callable the function to execute.
+     * @param date the time to commence excution.
+     * @return a Future that can be used to extract result or cancel.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
      */
     public <V> DelayedFutureTask<V> schedule(Callable<V> callable, Date date) {
         DelayedFutureTask<V> t = new DelayedFutureTask<V>
@@ -317,6 +351,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
      * Execute command with zero required delay
+     * @param command the task to execute
+     * @throws RejectedExecutionException at discretion of
+     * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted
+     * for execution because the executor has been shut down.
      */
     public void execute(Runnable command) {
         schedule(command, 0, TimeUnit.NANOSECONDS);
@@ -332,8 +370,14 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         super.afterExecute(r, t);
         DelayedTask d = (DelayedTask)r;
         DelayedTask next = d.nextTask();
-        if (next != null)
+        if (next == null) 
+            return;
+        try {
             super.execute(next);
+        }
+        catch(RejectedExecutionException ex) {
+            // lost race to detect shutdown; ignore
+        }
     }
 }
 

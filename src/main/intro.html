@@ -75,7 +75,7 @@ A basic (nonblocking) Queue interface that is compatatible with
 java.util.Collections will be introduced into java.util. Also,
 although it is at the borders of being in scope of JSR-166,
 java.util.LinkedList will be adapted to support Queue, and
-a new non-thread-safe java.util.HeapPriorityQueue will be added.
+a new non-thread-safe java.util.PriorityQueue will be added.
 
 <p> Five implementations in java.util.concurrent support the extended
 BlockingQueue interface, that defines blocking versions of put and
@@ -97,22 +97,35 @@ lightweight task frameworks.  Executors also standardize ways of
 calling threads that compute functions returning results, via
 Futures. This is supported in part by defining interface Callable, the
 argument/result analog of Runnable.
+ 
+<p> Executors provide a framework for executing Runnables.  The
+Executor manages queueing and scheduling of tasks, and creation and
+teardown of threads.  Depending on which concrete Executor class is
+being used, tasks may execute in a newly created thread, an existing
+task-execution thread, or the thread calling execute(), and may
+execute sequentially or concurrently.
 
-<p> While the Executor framework is intended to be extensible the most
-commonly used Executor will be ThreadExecutor, which can be configured
-to act as all sorts of thread pools, background threads, etc. The
-class is designed to be general enough to suffice for the vast
-majority of usages, even sophisticated ones, yet also includes methods
-and functionality that simplify routine usage.
+<p> Several concrete implementations of Executor are included in
+java.util.concurrent, including ThreadPoolExecutor, a flexible thread
+pool and ScheduledExecutor, which adds support for delayed and
+periodic task execution.  Executor can be used in conjunction with
+FutureTask (which implements Runnable) to asynchronously start a
+potentially long-running computation and query the FutureTask to
+determine if its execution has completed.
+
+<p> The <tt>Executors</tt> class provides factory methods for all
+of the types of executors provided in
+<tt>java.util.concurrent</tt>.
+
 
 <h2>Locks</h2>
 
 The Lock interface supports locking disciplines that differ in
-semantics (reentrant, semaphore-based, etc), and that can be used in
+semantics (reentrant, fair, etc), and that can be used in
 non-block-structured contexts including hand-over-hand and lock
 reordering algorithms. This flexibility comes at the price of more
-awkward syntax.  Implementations include Semaphore, ReentrantMutex
-FIFOSemaphore, and CountDownLatch.
+awkward syntax.  Implementations include ReentrantLock and
+FairReentrantLock.
 
 <p>
 The Locks class additionally supports trylock-designs using builtin
@@ -142,45 +155,38 @@ to be different than Object versions. The downside of this is that
 people can make the mistake of calling cond.notify instead of
 cond.signal. However, they will get IllegalMonitorState exceptions if
 they do, so they can detect the error if they ever run the code.
-<p>
-The implementation requires VM magic to atomically suspend and release
-lock. But it is unlikely to be very challenging for JVM providers,
-since most layer Java monitors on top of posix condvars or similar
-low-level functionality anyway.
+
 
 <h2>Atomic variables</h2>
 
-Classes AtomicInteger, AtomicLong, AtomicDouble, AtomicFloat, and
-AtomicReference provide simple scalar variables supporting
-compareAndSwap (CAS) and related atomic operations. These are
-desparately needed by those performing low-level concurrent system
-programming, but much less commonly useful in higher-level frameworks.
-
+The atomic subpackage includes a small library of classes, including
+AtomicInteger, AtomicLong, and AtomicReference that support variables
+performinf compareAndSet (CAS) and related atomic operations.
 
 <h2>Timing</h2>
 
 Java has always supported sub-millisecond versions of several native
 time-out-based methods (such as Object.wait), but not methods to
 actually perform timing in finer-grained units. We address this by
-introducing class Clock, which provides multiple granularities for
+introducing class TimeUnit, which provides multiple granularities for
 both accessing time and performing time-out based operations.
 
 
 <h2>Synchronizers</h2>
 
 Five classes aid common special-purpose synchronization idioms.
-Semaphores and FifoSemaphores are classic concurrency tools.  Latches
-are very simple yet very common objects useful for blocking until a
-single signal, event, or condition holds.  CyclicBarriers are
-resettable multiway synchronization points very common in some styles
-of parallel programming. Exchangers allow two threads to exchange
-objects at a rendezvous point.
+Semaphores and FairSemaphores are classic concurrency tools.
+CountDownLatches are very simple yet very common objects useful for
+blocking until a single signal, event, or condition holds.
+CyclicBarriers are resettable multiway synchronization points very
+common in some styles of parallel programming. Exchangers allow two
+threads to exchange objects at a rendezvous point.
 
 
 <h2>Concurrent Collections</h2>
 
 JSR 166 will supply a few Collection implementations designed for use
-in multithreaded contexts: ConcurrentHashTable, CopyOnWriteArrayList,
+in multithreaded contexts: ConcurrentHashMap, CopyOnWriteArrayList,
 and CopyOnWriteArraySet.
 
 <h2>Uncaught Exception Handlers</h2>
@@ -191,10 +197,10 @@ disassociates these handlers from ThreadGroups, which has proven to be
 too inflexible in many multithreaded programs. (Note that the combination
 of features in JSR 166 make ThreadGroups even less likely to
 be used in most programs. Perhaps they will eventually be deprecated.)
-<p>
-Additionally,  ThreadLocals will now support a means to
-remove a ThreadLocals, which is needed in some thread-pool and
-worker-thread designs.
+
+<p> Additionally, ThreadLocals will now support a means to remove a
+ThreadLocal, which is needed in some thread-pool and worker-thread
+designs.
 
   <hr>
   <address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>

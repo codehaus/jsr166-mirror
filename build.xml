@@ -35,8 +35,18 @@
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
 
   <property name="gj.compiler.args"
-           value='-J-Xbootclasspath/p:${javac.jar} -bootclasspath ${collect.jar};${rt.jar} -gj'
+           value='-J-Xbootclasspath/p:${javac.jar} -gj'
   />
+
+  <path id="gj.compiler.bootclasspath">
+    <pathelement location="${collect.jar}"/>
+    <pathelement location="${rt.jar}"/>
+  </path>
+
+  <path id="test.classpath">
+    <pathelement location="${product.jar}"/>
+    <pathelement location="${junit.jar}"/>
+  </path>
 
 
   <target name="compile">
@@ -49,6 +59,7 @@
            source="${build.sourcelevel}"
              fork="true">
 
+      <bootclasspath refid="gj.compiler.bootclasspath"/>
       <compilerarg line="${gj.compiler.args}"/>
 
       <!-- need this because srcdir is basedir! -->
@@ -160,13 +171,9 @@
            source="${build.sourcelevel}"
              fork="true">
 
+      <bootclasspath refid="gj.compiler.bootclasspath"/>
       <compilerarg line="${gj.compiler.args}"/>
-
-      <classpath id="test.classpath">
-        <pathelement location="${product.jar}"/>
-        <pathelement location="${junit.jar}"/>
-      </classpath>
-
+      <classpath refid="test.classpath"/>
       <include name="**/*Test.java"/>
 
     </javac>

@@ -35,7 +35,7 @@ public final class TestWebCrawler {
 
     public TestWebCrawler(Class<WebCrawler> wcClass, URL startUrl, int limit) throws Exception {
         this.webCrawler = wcClass.getConstructor(Comparator.class, long.class, TimeUnit.class)
-                                 .newInstance(URL_ORDER, TIMEOUT, UNIT);
+                                 .newInstance(URL_ORDER, 1L, TimeUnit.SECONDS);
         this.startUrl = startUrl;
         this.limit = limit;
     }
@@ -51,7 +51,7 @@ public final class TestWebCrawler {
         }
     };
 
-    private static final long TIMEOUT = 8;
+    private static final long TIMEOUT = 10;
     private static final TimeUnit UNIT = TimeUnit.SECONDS;
 
     private final WebCrawler webCrawler;

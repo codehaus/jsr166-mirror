@@ -23,6 +23,7 @@ public final class WebCrawler3 implements WebCrawler {
     private final long timeout;
     private final TimeUnit unit;
     private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final ScheduledExecutorService sched = Executors.newScheduledThreadPool(1);
 
 
     public Future<?> crawl(URL startUrl, BlockingQueue<URL> rq) {
@@ -31,6 +32,7 @@ public final class WebCrawler3 implements WebCrawler {
 
     public void shutdown() {
         pool.shutdownNow();
+        sched.shutdown();
     }
 
     private class CrawlTask implements Runnable {
@@ -46,7 +48,7 @@ public final class WebCrawler3 implements WebCrawler {
 
         public void run() {
             try {
-                for (seen.put(url, true); !done(); url = poll())
+                for (seen.put(url, true); !done(); url = poll()) {
                     pool.execute(new Runnable() {
                         public void run() {
                             try {
@@ -64,6 +66,7 @@ public final class WebCrawler3 implements WebCrawler {
                             }
                         }
                     });
+                }
             } catch (InterruptedException e) {
                 // reset interrupt status
                 Thread.currentThread().interrupt();
@@ -80,8 +83,12 @@ public final class WebCrawler3 implements WebCrawler {
             PeriodicHostTask existing = hosts.putIfAbsent(host, hostTask);
             if (existing == null) {
                 existing = hostTask;
-                sched.scheduleWithFixedDelay(hostTask, 0, 1, TimeUnit.SECONDS);
-                log.info("scheduled task for host "+host);
+                if (sched.isShutdown()) {
+                    log.info("skipping task creation for host "+host);
+                } else {
+                    sched.scheduleWithFixedDelay(hostTask, 0, 1, TimeUnit.SECONDS);
+                    log.info("scheduled task for host "+host);
+                }
             }
             existing.add(u);
             log.fine("added "+u);
@@ -92,15 +99,15 @@ public final class WebCrawler3 implements WebCrawler {
         }
 
         private URL poll() throws InterruptedException {
-            return pq.poll(timeout, unit);
+            return pq.poll(10L, TimeUnit.SECONDS);
         }
 
         private final ConcurrentMap<URL, Boolean> seen =
             new ConcurrentHashMap<URL, Boolean>();
+
         private final BlockingQueue<URL> pq =
             new PriorityBlockingQueue<URL>(PQ_CAPACITY, searchOrder);
-        private final ScheduledExecutorService sched =
-            Executors.newScheduledThreadPool(1);
+
         private final ConcurrentMap<String, PeriodicHostTask> hosts =
             new ConcurrentHashMap<String, PeriodicHostTask>();
 

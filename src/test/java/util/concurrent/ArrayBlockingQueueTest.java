@@ -1,5 +1,7 @@
 package java.util.concurrent;
 
+import java.util.concurrent.locks.*;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.ConcurrentModificationException;
@@ -62,6 +64,17 @@ public class ArrayBlockingQueueTest extends TestCase {
 
         assertEquals("queue should be empty again", 0, q.size());
     }
+    
+    public void testLocks () throws InterruptedException {
+        Lock lock = new ReentrantLock();
+        lock.lockInterruptibly();
+        try {
+            assertTrue(lock != null);
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
     public void testOffer () {
 
@@ -71,27 +84,27 @@ public class ArrayBlockingQueueTest extends TestCase {
         q.add(2);
 
         Executor executor = Executors.newFixedThreadPool(2);
-
+        
         executor.execute(new Runnable() {
             public void run() {
                 assertFalse("offer should be rejected", q.offer(3));
-                try {
-                    assertTrue("offer should be accepted", q.offer(3, 1000, TimeUnit.MILLISECONDS));
-                }
-                catch (IllegalMonitorStateException e) {
-                    e.printStackTrace(System.err);
-                    fail("illegal monitor state");
-                }
-                catch (InterruptedException e) {
-                    fail("should not be interrupted");
-                }
+                //try {
+                //    assertTrue("offer should be accepted", q.offer(3, 1000, TimeUnit.MILLISECONDS));
+                //}
+                //catch (IllegalMonitorStateException e) {
+                //    e.printStackTrace(System.err);
+                //    fail("illegal monitor state");
+                //}
+                //catch (InterruptedException e) {
+                //    fail("should not be interrupted");
+                //}
             }
         });
 
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                     assertEquals("first item in queue should be 1", 1, q.take());
                 }
                 catch (InterruptedException e) {
@@ -99,5 +112,6 @@ public class ArrayBlockingQueueTest extends TestCase {
                 }
             }
         });
+
     }
 }

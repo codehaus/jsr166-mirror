@@ -293,6 +293,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         return 0;
     }
 
+    /**
+     * Always returns zero. SynchronousQueues have no internal capacity.
+     * @return zero.
+     */
     public int remainingCapacity() {
         return 0;
     }

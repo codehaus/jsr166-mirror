@@ -59,7 +59,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/06 16:53:05 $
+ * @revised $Date: 2003/06/06 17:51:49 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -561,11 +561,13 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * Increment releaseStatus and signal next thread in queue if one
      * exists and is waiting. Called only by unlock. This code is split
      * out from unlock to encourage inlining of non-contended cases.
-     * @param h (nonnull) current head of lock queue (reread upon CAS
-     * failure).
      */
-    private void releaseFirst(ReentrantLockQueueNode h) {
+    private void releaseFirst() {
         for (;;) {
+            ReentrantLockQueueNode h = head;
+            if (h == tail)    // No successor
+                return;
+
             int c = h.releaseStatus;
             if (c > 0)         // Don't need signal if already positive
                 return;
@@ -576,9 +578,6 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
                     signalSuccessor(h);
                 return;
             }
-            h = head;
-            if (h == tail)    // No successor
-                return;
         }
     }
 
@@ -600,9 +599,8 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
         }
 
         ownerUpdater.set(this, null);
-        ReentrantLockQueueNode h = head;
-        if (h != tail) 
-            releaseFirst(h);
+        if (tail != this)  // don't bother if never contended
+            releaseFirst();
     }
 
     /**

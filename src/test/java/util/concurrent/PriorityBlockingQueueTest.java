@@ -7,33 +7,17 @@ import java.util.ConcurrentModificationException;
 import junit.framework.TestCase;
 
 /**
- * Tests the ArrayBlockingQueue implementation.
+ * Tests the PriorityBlockingQueue implementation.
  */
-public class ArrayBlockingQueueTest extends TestCase {
-
-    public void testCapacity () {
-
-        ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(2);
-
-        assertEquals("should have room for 2", 2, q.remainingCapacity());
-
-        q.add(1);
-        q.add(2);
-
-        assertEquals("queue should be full", 0, q.remainingCapacity());
-
-        assertFalse("offer should be rejected", q.offer(3));
-    }
+public class PriorityBlockingQueueTest extends TestCase {
 
     public void testOrdering () {
 
-        final ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(3);
+        final PriorityBlockingQueue<Integer> q = new PriorityBlockingQueue<Integer>(3);
 
         q.add(1);
         q.add(2);
         q.add(3);
-
-        assertEquals("queue should be full", 0, q.remainingCapacity());
 
         int k = 0;
         for (Integer i : q) {
@@ -45,7 +29,7 @@ public class ArrayBlockingQueueTest extends TestCase {
 
     public void testWeaklyConsistentIteration () {
 
-        final ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(3);
+        final PriorityBlockingQueue<Integer> q = new PriorityBlockingQueue<Integer>(3);
 
         q.add(1);
         q.add(2);
@@ -55,17 +39,15 @@ public class ArrayBlockingQueueTest extends TestCase {
             for (Integer i : q) {
                 q.remove();
             }
+            fail("fast-fail iteration; should get CME");
         }
         catch (ConcurrentModificationException e) {
-            fail("weakly consistent iterator; should not get CME");
         }
-
-        assertEquals("queue should be empty again", 0, q.size());
     }
 
     public void testOffer () {
 
-        final ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(2);
+        final PriorityBlockingQueue<Integer> q = new PriorityBlockingQueue<Integer>(2);
 
         q.add(1);
         q.add(2);
@@ -74,7 +56,7 @@ public class ArrayBlockingQueueTest extends TestCase {
 
         executor.execute(new Runnable() {
             public void run() {
-                assertFalse("offer should be rejected", q.offer(3));
+                //assertFalse("offer should be rejected", q.offer(3));
                 try {
                     assertTrue("offer should be accepted", q.offer(3, 1000, TimeUnit.MILLISECONDS));
                 }

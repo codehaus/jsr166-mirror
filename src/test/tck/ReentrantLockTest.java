@@ -57,6 +57,10 @@ public class ReentrantLockTest extends JSR166TestCase {
         public Collection<Thread> getQueuedThreads() { 
             return super.getQueuedThreads(); 
         }
+        public Collection<Thread> getWaitingThreads(Condition c) { 
+            return super.getWaitingThreads(c); 
+        }
+
 
     }
 
@@ -112,6 +116,35 @@ public class ReentrantLockTest extends JSR166TestCase {
         rl.unlock();
     }
 
+
+    /**
+     * hasQueuedThreads reports whether there are waiting threads
+     */
+    public void testhasQueuedThreads() { 
+	final ReentrantLock lock = new ReentrantLock();
+        Thread t1 = new Thread(new InterruptedLockRunnable(lock));
+        Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
+        try {
+            assertFalse(lock.hasQueuedThreads());
+            lock.lock();
+            t1.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasQueuedThreads());
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasQueuedThreads());
+            t1.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasQueuedThreads());
+            lock.unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(lock.hasQueuedThreads());
+            t1.join();
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
 
     /**
      * getQueueLength reports number of waiting threads
@@ -419,7 +452,7 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testAwait() {
 	final ReentrantLock lock = new ReentrantLock();	
-        final AbstractQueuedSynchronizer.ConditionObject c = lock.newCondition();
+        final Condition c = lock.newCondition();
 	Thread t = new Thread(new Runnable() { 
 		public void run() {
 		    try {
@@ -448,17 +481,114 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
+     * hasWaiters throws IAE if not owned
+     */
+    public void testHasWaitersIAE() {
+	final ReentrantLock lock = new ReentrantLock();
+        final Condition c = (lock.newCondition());
+	final ReentrantLock lock2 = new ReentrantLock();
+        try {
+            lock2.hasWaiters(c);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * hasWaiters throws IMSE if not locked
+     */
+    public void testHasWaitersIMSE() {
+	final ReentrantLock lock = new ReentrantLock();
+        final Condition c = (lock.newCondition());
+        try {
+            lock.hasWaiters(c);
+            shouldThrow();
+        } catch (IllegalMonitorStateException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+
+    /**
+     * getWaitQueueLength throws IAE if not owned
+     */
+    public void testGetWaitQueueLengthIAE() {
+	final ReentrantLock lock = new ReentrantLock();
+        final Condition c = (lock.newCondition());
+	final ReentrantLock lock2 = new ReentrantLock();
+        try {
+            lock2.getWaitQueueLength(c);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * getWaitQueueLength throws IMSE if not locked
+     */
+    public void testGetWaitQueueLengthIMSE() {
+	final ReentrantLock lock = new ReentrantLock();
+        final Condition c = (lock.newCondition());
+        try {
+            lock.getWaitQueueLength(c);
+            shouldThrow();
+        } catch (IllegalMonitorStateException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+
+    /**
+     * getWaitingThreads throws IAE if not owned
+     */
+    public void testGetWaitingThreadsIAE() {
+	final PublicReentrantLock lock = new PublicReentrantLock();	
+        final Condition c = (lock.newCondition());
+	final PublicReentrantLock lock2 = new PublicReentrantLock();	
+        try {
+            lock2.getWaitingThreads(c);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
+     * getWaitingThreads throws IMSE if not locked
+     */
+    public void testGetWaitingThreadsIMSE() {
+	final PublicReentrantLock lock = new PublicReentrantLock();	
+        final Condition c = (lock.newCondition());
+        try {
+            lock.getWaitingThreads(c);
+            shouldThrow();
+        } catch (IllegalMonitorStateException success) {
+        } catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+
+
+    /**
      * hasWaiters returns true when a thread is waiting, else false
      */
     public void testHasWaiters() {
 	final ReentrantLock lock = new ReentrantLock();	
-        final AbstractQueuedSynchronizer.ConditionObject c = lock.newCondition();
+        final Condition c = lock.newCondition();
 	Thread t = new Thread(new Runnable() { 
 		public void run() {
 		    try {
 			lock.lock();
-                        threadAssertFalse(c.hasWaiters());
-                        threadAssertEquals(0, c.getWaitQueueLength());
+                        threadAssertFalse(lock.hasWaiters(c));
+                        threadAssertEquals(0, lock.getWaitQueueLength(c));
                         c.await();
                         lock.unlock();
 		    }
@@ -472,14 +602,14 @@ public class ReentrantLockTest extends JSR166TestCase {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
             lock.lock();
-            assertTrue(c.hasWaiters());
-            assertEquals(1, c.getWaitQueueLength());
+            assertTrue(lock.hasWaiters(c));
+            assertEquals(1, lock.getWaitQueueLength(c));
             c.signal();
             lock.unlock();
             Thread.sleep(SHORT_DELAY_MS);
             lock.lock();
-            assertFalse(c.hasWaiters());
-            assertEquals(0, c.getWaitQueueLength());
+            assertFalse(lock.hasWaiters(c));
+            assertEquals(0, lock.getWaitQueueLength(c));
             lock.unlock();
             t.join(SHORT_DELAY_MS);
             assertFalse(t.isAlive());
@@ -494,13 +624,13 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLength() {
 	final ReentrantLock lock = new ReentrantLock();	
-        final AbstractQueuedSynchronizer.ConditionObject c = lock.newCondition();
+        final Condition c = lock.newCondition();
 	Thread t1 = new Thread(new Runnable() { 
 		public void run() {
 		    try {
 			lock.lock();
-                        threadAssertFalse(c.hasWaiters());
-                        threadAssertEquals(0, c.getWaitQueueLength());
+                        threadAssertFalse(lock.hasWaiters(c));
+                        threadAssertEquals(0, lock.getWaitQueueLength(c));
                         c.await();
                         lock.unlock();
 		    }
@@ -514,8 +644,8 @@ public class ReentrantLockTest extends JSR166TestCase {
 		public void run() {
 		    try {
 			lock.lock();
-                        threadAssertTrue(c.hasWaiters());
-                        threadAssertEquals(1, c.getWaitQueueLength());
+                        threadAssertTrue(lock.hasWaiters(c));
+                        threadAssertEquals(1, lock.getWaitQueueLength(c));
                         c.await();
                         lock.unlock();
 		    }
@@ -531,14 +661,14 @@ public class ReentrantLockTest extends JSR166TestCase {
             t2.start();
             Thread.sleep(SHORT_DELAY_MS);
             lock.lock();
-            assertTrue(c.hasWaiters());
-            assertEquals(2, c.getWaitQueueLength());
+            assertTrue(lock.hasWaiters(c));
+            assertEquals(2, lock.getWaitQueueLength(c));
             c.signalAll();
             lock.unlock();
             Thread.sleep(SHORT_DELAY_MS);
             lock.lock();
-            assertFalse(c.hasWaiters());
-            assertEquals(0, c.getWaitQueueLength());
+            assertFalse(lock.hasWaiters(c));
+            assertEquals(0, lock.getWaitQueueLength(c));
             lock.unlock();
             t1.join(SHORT_DELAY_MS);
             t2.join(SHORT_DELAY_MS);
@@ -549,6 +679,71 @@ public class ReentrantLockTest extends JSR166TestCase {
             unexpectedException();
         }
     }
+
+    /**
+     * getWaitingThreads returns only and all waiting threads
+     */
+    public void testGetWaitingThreads() {
+	final PublicReentrantLock lock = new PublicReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t1 = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        threadAssertTrue(lock.getWaitingThreads(c).isEmpty());
+                        c.await();
+                        lock.unlock();
+		    }
+		    catch(InterruptedException e) {
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+
+	Thread t2 = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        threadAssertFalse(lock.getWaitingThreads(c).isEmpty());
+                        c.await();
+                        lock.unlock();
+		    }
+		    catch(InterruptedException e) {
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+
+        try {
+            lock.lock();
+            assertTrue(lock.getWaitingThreads(c).isEmpty());
+            lock.unlock();
+            t1.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            lock.lock();
+            assertTrue(lock.hasWaiters(c));
+            assertTrue(lock.getWaitingThreads(c).contains(t1));
+            assertTrue(lock.getWaitingThreads(c).contains(t2));
+            c.signalAll();
+            lock.unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            lock.lock();
+            assertFalse(lock.hasWaiters(c));
+            assertTrue(lock.getWaitingThreads(c).isEmpty());
+            lock.unlock();
+            t1.join(SHORT_DELAY_MS);
+            t2.join(SHORT_DELAY_MS);
+            assertFalse(t1.isAlive());
+            assertFalse(t2.isAlive());
+        }
+        catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+
 
     /**
      * awaitUninterruptibly doesn't abort on interrupt

@@ -100,6 +100,7 @@ public class JSR166TestCase extends TestCase {
         TestSuite suite = new TestSuite("JSR166 Unit Tests");
         
         suite.addTest(new TestSuite(AbstractExecutorServiceTest.class));
+        suite.addTest(new TestSuite(AbstractQueuedSynchronizerTest.class));
         suite.addTest(new TestSuite(ArrayBlockingQueueTest.class));
         suite.addTest(new TestSuite(AtomicBooleanTest.class)); 
         suite.addTest(new TestSuite(AtomicIntegerArrayTest.class)); 
@@ -537,6 +538,7 @@ public class JSR166TestCase extends TestCase {
             return Boolean.TRUE;
         }
     }
+
 
     /**
      * For use as RejectedExecutionHandler in constructors

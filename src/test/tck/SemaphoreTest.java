@@ -291,6 +291,35 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
+     * hasQueuedThreads reports whether there are waiting threads
+     */
+    public void testHasQueuedThreads() { 
+	final Semaphore lock = new Semaphore(1, false);
+        Thread t1 = new Thread(new InterruptedLockRunnable(lock));
+        Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
+        try {
+            assertFalse(lock.hasQueuedThreads());
+            lock.acquireUninterruptibly();
+            t1.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasQueuedThreads());
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasQueuedThreads());
+            t1.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasQueuedThreads());
+            lock.release();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(lock.hasQueuedThreads());
+            t1.join();
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
+    /**
      * getQueueLength reports number of waiting threads
      */
     public void testGetQueueLength() { 

@@ -5,7 +5,6 @@
  * Other contributors include Andrew Wright, Jeffrey Hayes, 
  * Pat Fisher, Mike Judd. 
  */
- */
 
 import junit.framework.*;
 import java.util.concurrent.atomic.*;

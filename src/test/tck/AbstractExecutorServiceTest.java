@@ -762,16 +762,19 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
-            l.add(Executors.callable(new LongPossiblyInterruptedRunnable(), TEST_STRING));
+            l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
+            l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-            assertEquals(2, result.size());
+            assertEquals(3, result.size());
             Iterator<Future<String>> it = result.iterator(); 
             Future<String> f1 = it.next();
             Future<String> f2 = it.next();
+            Future<String> f3 = it.next();
             assertTrue(f1.isDone());
             assertFalse(f1.isCancelled());
             assertTrue(f2.isDone());
-            //            assertTrue(f2.isCancelled());
+            assertTrue(f3.isDone());
+            assertTrue(f3.isCancelled());
         } catch(Exception ex) {
             unexpectedException();
         } finally {

@@ -291,10 +291,15 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 
     /**
      * Returns an estimate of the number of active threads in this
-     * thread group.
+     * thread group.  The result might not reflect concurrent activity,
+     * and might be affected by the presence of certain system threads.
+     * <p>
+     * Due to the inherently imprecise nature of the result, it is
+     * recommended that this method only be used for informational purposes.
      *
-     * @return  the number of active threads in this thread group and in any
-     *          other thread group that has this thread group as an ancestor.
+     * @return  an estimate of the number of active threads in this thread
+     *          group and in any other thread group that has this thread
+     *          group as an ancestor.
      * @since   JDK1.0
      */
     public int activeCount() {
@@ -329,10 +334,16 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * First, the <code>checkAccess</code> method of this thread group is 
      * called with no arguments; this may result in a security exception. 
      * <p>
-     * An application should use the <code>activeCount</code> method to 
-     * get an estimate of how big the array should be. If the array is 
-     * too short to hold all the threads, the extra threads are silently 
-     * ignored. 
+     * An application might use the <code>activeCount</code> method to 
+     * get an estimate of how big the array should be, however <i>if the
+     * array is too short to hold all the threads, the extra threads are
+     * silently ignored.</i>  If it is critical to obtain every active
+     * thread in this thread group and its subgroups, the caller should
+     * verify that the returned int value is strictly less than the length
+     * of <tt>list</tt>.
+     * <p>
+     * Due to the inherent race condition in this method, it is recommended
+     * that the method only be used for informational purposes.
      *
      * @param   list   an array into which to place the list of threads.
      * @return  the number of threads put into the array.
@@ -357,8 +368,15 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * First, the <code>checkAccess</code> method of this thread group is 
      * called with no arguments; this may result in a security exception. 
      * <p>
-     * An application should use the <code>activeCount</code> method to 
-     * get an estimate of how big the array should be. 
+     * An application might use the <code>activeCount</code> method to 
+     * get an estimate of how big the array should be, however <i>if the
+     * array is too short to hold all the threads, the extra threads are
+     * silently ignored.</i>  If it is critical to obtain every active thread
+     * in this thread group, the caller should verify that the returned int
+     * value is strictly less than the length of <tt>list</tt>.
+     * <p>
+     * Due to the inherent race condition in this method, it is recommended
+     * that the method only be used for informational purposes.
      *
      * @param   list      an array into which to place the list of threads.
      * @param   recurse   a flag indicating whether also to include threads
@@ -412,7 +430,10 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 
     /**
      * Returns an estimate of the number of active groups in this
-     * thread group.
+     * thread group.  The result might not reflect concurrent activity.
+     * <p>
+     * Due to the inherently imprecise nature of the result, it is
+     * recommended that this method only be used for informational purposes.
      *
      * @return  the number of active thread groups with this thread group as
      *          an ancestor.
@@ -447,10 +468,16 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * First, the <code>checkAccess</code> method of this thread group is 
      * called with no arguments; this may result in a security exception. 
      * <p>
-     * An application should use the <code>activeGroupCount</code> 
-     * method to get an estimate of how big the array should be. If the 
-     * array is too short to hold all the thread groups, the extra thread 
-     * groups are silently ignored. 
+     * An application might use the <code>activeGroupCount</code> method to 
+     * get an estimate of how big the array should be, however <i>if the
+     * array is too short to hold all the thread groups, the extra thread
+     * groups are silently ignored.</i>  If it is critical to obtain every
+     * active subgroup in this thread group, the caller should verify that
+     * the returned int value is strictly less than the length of
+     * <tt>list</tt>.
+     * <p>
+     * Due to the inherent race condition in this method, it is recommended
+     * that the method only be used for informational purposes.
      *
      * @param   list   an array into which to place the list of thread groups.
      * @return  the number of thread groups put into the array.
@@ -474,8 +501,16 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * First, the <code>checkAccess</code> method of this thread group is 
      * called with no arguments; this may result in a security exception. 
      * <p>
-     * An application should use the <code>activeGroupCount</code> 
-     * method to get an estimate of how big the array should be. 
+     * An application might use the <code>activeGroupCount</code> method to 
+     * get an estimate of how big the array should be, however <i>if the
+     * array is too short to hold all the thread groups, the extra thread
+     * groups are silently ignored.</i>  If it is critical to obtain every
+     * active subgroup in this thread group, the caller should verify that
+     * the returned int value is strictly less than the length of
+     * <tt>list</tt>.
+     * <p>
+     * Due to the inherent race condition in this method, it is recommended
+     * that the method only be used for informational purposes.
      *
      * @param   list      an array into which to place the list of threads.
      * @param   recurse   a flag indicating whether to recursively enumerate

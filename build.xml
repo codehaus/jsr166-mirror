@@ -59,10 +59,17 @@
 
 
 
-  <!-- Files excluded from emulation and dist-docs -->
-  <patternset id="emulation.excludes">
+  <!-- Files excluded from dist-docs and emulation jar -->
+  <patternset id="unsafe.exclusion">
     <exclude name="java/util/Random.*"/>
     <exclude name="sun/misc/Unsafe.*"/>
+  </patternset>
+
+  <!-- Files excludes from emulation jar -->
+  <patternset id="atomic.exclusion">
+    <exclude name="java/util/concurrent/atomic/AtomicInteger*"/>
+    <exclude name="java/util/concurrent/atomic/AtomicLong*"/>
+    <exclude name="java/util/concurrent/atomic/AtomicReference*"/>
   </patternset>
 
 
@@ -292,7 +299,8 @@
 
     <jar destfile="${product.jar}" duplicate="add">
       <fileset dir="${build.classes.dir}">
-        <patternset refid="emulation.excludes"/>
+        <patternset refid="atomic.exclusion"/>
+        <patternset refid="unsafe.exclusion"/>
       </fileset>
       <fileset dir="${build.emulation.dir}"/>
     </jar>
@@ -341,7 +349,7 @@
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
         <exclude name="**/*.html"/>
-        <patternset refid="emulation.excludes"/>
+        <patternset refid="unsafe.exclusion"/>
       </fileset>
       <filterchain>
 

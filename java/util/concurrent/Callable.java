@@ -1,7 +1,7 @@
-package java.lang;
+package java.util.concurrent;
 
 /**
- * A callable computes a function.
+ * A callable computes a result, or throws an exception if unable to do so.
  * The <tt>Callable</tt> interface plays a role similar to that of
  * <tt>Runnable</tt>, except that it represents methods that
  * return results and (possibly) throw exceptions. 

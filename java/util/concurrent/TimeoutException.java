@@ -1,32 +1,19 @@
 package java.util.concurrent;
 
 /**
- * Exception thrown when an operation times out.
+ * Exception thrown when a blocking operation times out.
  * <p>
- * This exception extends {@link InterruptedException}, as an indication
- * that a blocking operation has been aborted due to timeout.
- * However, receiving a <tt>TimeoutException</tt> does not necessarily imply
- * that the current thread had been {@link Thread#interrupt interrupted}.
- * When these cases
- * must be distinguished, you can use the following construction:
- * <pre>
- * try {
- *   blockingOperation(timeout, timeunit);
- * }
- * catch(TimeoutException te) {
- *    // deal with timeout
- * }
- * catch(InterruptedException ie) {
- *     // deal with thread interruption
- *  }
- * </pre>
+ * Blocking operations for which a timeout is specified need a means to
+ * indicate that the timeout has occurred. For many such operations it is
+ * possible to return a value that indicates timeout; when that is not
+ * possible then <tt>TimeoutException</tt> should be declared and thrown.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/31 00:13:35 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/03/31 03:50:08 $
+ * @editor $Author: dholmes $
  */
-public class TimeoutException extends InterruptedException {
+public class TimeoutException extends Exception {
     /**
      * Constructs a <tt>TimeoutException</tt> with no specified detail
      * message.

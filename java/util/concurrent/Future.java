@@ -43,8 +43,8 @@ package java.util.concurrent;
  * @see Executor
  *
  * @spec JSR-166
- * @revised $Date: 2003/02/26 10:48:09 $
- * @editor $Author: jozart $
+ * @revised $Date: 2003/03/31 03:50:08 $
+ * @editor $Author: dholmes $
  */
 public interface Future<V> {
 
@@ -78,8 +78,11 @@ public interface Future<V> {
      * @throws CancellationException here???
      * @throws ExecutionException if underlying computation threw an exception
      * @throws InterruptedException if current thread was interrupted while waiting
-     * @throws TimeOutException if the wait timed out
+     * @throws TimeoutException if the wait timed out
      */
     V get(long timeout, TimeUnit granularity)
-        throws InterruptedException, ExecutionException;
+        throws InterruptedException, ExecutionException, TimeoutException;
 }
+
+
+

@@ -39,7 +39,8 @@ public class LinkedBlockingQueue<E> extends AbstractCollection<E>
     public E poll() {
         return null;
     }
-    public E poll(long timeout, TimeUnit granularity) throws InterruptedException {
+    public E poll(long timeout, TimeUnit granularity) 
+        throws InterruptedException {
         return null;
     }
     public E peek() {
@@ -59,3 +60,4 @@ public class LinkedBlockingQueue<E> extends AbstractCollection<E>
         return null;
     }
 }
+

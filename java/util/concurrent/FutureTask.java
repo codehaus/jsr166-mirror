@@ -15,21 +15,22 @@ package java.util.concurrent;
  * computation be restarted or cancelled.
  *
  * <p>Because <tt>FutureTask</tt> implements <tt>Runnable</tt>, a
- * <tt>FutureTask</tt> can be submitted to an Executor for current or deferred
- * execution.
+ * <tt>FutureTask</tt> can be submitted to an {@link Executor} for 
+ * current or deferred execution.
  *
- * <p>FutureTask can be used to wrap a <tt>Callable</tt> or <tt>Runnable</tt>
- * so that it can scheduled for execution in a thread or an Executor, cancel
+ * <p>A <tt>FutureTask</tt> can be used to wrap a <tt>Callable</tt> or 
+ * <tt>Runnable</tt> object so that it can be scheduled for execution in a 
+ * thread or an <tt>Executor</tt>, cancel
  * computation before the computation completes, and wait for or
  * retrieve the results.  If the computation threw an exception, the
  * exception is propagated to any thread that attempts to retrieve the
  * result.
  *
- * @since 1.5
  * @see Executor
  *
+ * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/03/29 02:15:28 $
+ * @revised $Date: 2003/03/31 03:50:08 $
  * @editor $Author: dholmes $
  */
 public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
@@ -53,7 +54,7 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the
-     * given runnable, and arrange that <tt>get</tt> will return the
+     * given <tt>Runnable</tt>, and arrange that <tt>get</tt> will return the
      * given result on successful completion.
      *
      * @param  runnable the runnable task
@@ -98,10 +99,10 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
     /* Future implementation. INHERIT this javadoc from interface??? Note CancellationException. */
 
     /**
-     * Waits if necessary for the computation to complete, and then retrieve
+     * Waits if necessary for the computation to complete, and then retrieves
      * its result.
      *
-     * @return value of this task
+     * @return the computed result
      * @throws CancellationException if task producing this value was
      * cancelled before completion
      * @throws ExecutionException if the underlying computation threw an exception
@@ -120,7 +121,7 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
 
     /**
      * Waits if necessary for at most the given time for the computation to
-     * complete, and then retrieves the result.
+     * complete, and then retrieves its result.
      *
      * @param timeout the maximum time to wait
      * @param granularity the time unit of the timeout argument
@@ -129,10 +130,10 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * @throws ExecutionException if the underlying computation
      * threw an exception.
      * @throws InterruptedException if current thread was interrupted while waiting
-     * @throws TimeOutException if the wait timed out
+     * @throws TimeoutException if the wait timed out
      */
     public synchronized V get(long timeout, TimeUnit granularity)
-        throws InterruptedException, ExecutionException {
+        throws InterruptedException, ExecutionException, TimeoutException {
 
         if (!ready) {
             long startTime = TimeUnit.highResolutionTime();
@@ -195,7 +196,7 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
         if (mayInterruptIfRunning &&
             runner != null && runner != Thread.currentThread())
             runner.interrupt();
-        return cancelled = true;
+        return cancelled = ready = true;
     }
 
     public synchronized boolean isCancelled() {

@@ -33,11 +33,11 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/25 08:45:43 $
+ * @editor $Author: jozart $
  * @author Doug Lea
  */
-public class FutureTask<V> extends CancellableTask implements Cancellable, Future<V>, Runnable {
+public class FutureTask<V> extends CancellableTask implements Future<V> {
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the

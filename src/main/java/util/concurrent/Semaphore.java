@@ -603,7 +603,7 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
-     * Return true if this semaphore has fairness set true.
+     * Returns true if this semaphore has fairness set true.
      * @return true if this semaphore has fairness set true.
      */
     public boolean isFair() {

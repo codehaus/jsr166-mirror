@@ -1462,8 +1462,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Transfer node, if necessary, to sync queue after a cancelled
-     * wait. Return true if thread was cancelled before being
+     * Transfers node, if necessary, to sync queue after a cancelled
+     * wait. Returns true if thread was cancelled before being
      * signalled.
      * @param current the waiting thread
      * @param node its node

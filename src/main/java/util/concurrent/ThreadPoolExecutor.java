@@ -64,19 +64,20 @@ import java.util.*;
  * <dt>Queueing</dt> 
  * 
  * <dd>You are free to specify the queuing mechanism used to handle
- * submitted tasks.  The newCachedThreadPool factory method uses
- * queueless synchronous channels to to hand off work to threads.
- * This is a safe, conservative policy that avoids lockups when
- * handling sets of requests that might have internal dependencies.
- * The newFixedThreadPool factory method uses a LinkedBlockingQueue,
- * which will cause new tasks to be queued in cases where all
- * MaximumPoolSize threads are busy.  Queues are sometimes appropriate
- * when each task is completely independent of others, so tasks cannot
- * affect each others execution. For example, in an http server.  When
- * given a choice, this pool always prefers adding a new thread rather
- * than queueing if there are currently fewer than the current
- * getCorePoolSize threads running, but otherwise always prefers
- * queuing a request rather than adding a new thread.
+ * submitted tasks.  A good default is to use queueless synchronous
+ * channels to to hand off work to threads.  This is a safe,
+ * conservative policy that avoids lockups when handling sets of
+ * requests that might have internal dependencies.  Using an unbounded
+ * queue (for example a LinkedBlockingQueue) which will cause new
+ * tasks to be queued in cases where all corePoolSize threads are
+ * busy, so no more that corePoolSize threads will be craated.  This
+ * may be appropriate when each task is completely independent of
+ * others, so tasks cannot affect each others execution. For example,
+ * in an http server.  When given a choice, this pool always prefers
+ * adding a new thread rather than queueing if there are currently
+ * fewer than the current getCorePoolSize threads running, but
+ * otherwise always prefers queuing a request rather than adding a new
+ * thread.
  *
  * <p>While queuing can be useful in smoothing out transient bursts of
  * requests, especially in socket-based services, it is not very well
@@ -136,7 +137,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/03 16:44:36 $
+ * @revised $Date: 2003/06/06 18:42:18 $
  * @editor $Author: dl $
  *
  */

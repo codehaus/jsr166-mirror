@@ -11,21 +11,14 @@ import java.util.*;
  * Factory and utility methods for the <tt>Executor</tt> classes
  * defined in <tt>java.util.concurrent</tt>.
  *
- * <p>An Executor is a framework for executing Runnables.  The
- * Executor manages queueing and scheduling of tasks, and creation and
- * teardown of threads.  Depending on which concrete Executor class is
- * being used, tasks may execute in a newly created thread, an
- * existing task-execution thread, or the thread calling execute(),
- * and may execute sequentially or concurrently.
- *
  * @since 1.5
  * @see Executor
  * @see ExecutorService
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/04 15:31:45 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/06/06 18:42:17 $
+ * @editor $Author: dl $
  */
 public class Executors {
 

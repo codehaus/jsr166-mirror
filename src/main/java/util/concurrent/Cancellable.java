@@ -7,14 +7,15 @@
 package java.util.concurrent;
 
 /**
- * An asynchronous task that can be cancelled.  Cancellation is performed by
- * the <tt>cancel</tt> method.  Additional methods are provided to determine
- * if the task completed normally or was cancelled.
+ * Something (usually a task) that can be cancelled.  Cancellation is
+ * performed by the <tt>cancel</tt> method.  Additional methods are
+ * provided to determine if the task completed normally or was
+ * cancelled.
  *
  * @since 1.5
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:39 $
+ * @revised $Date: 2003/06/06 18:42:17 $
  * @editor $Author: dl $
  */
 public interface Cancellable {

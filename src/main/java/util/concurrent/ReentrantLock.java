@@ -27,7 +27,7 @@ import java.util.Date;
  * See {@link #getHoldCount} for a way to check this.
  *
  *
- * <p><code>ReentrantLock</code> instances are intended to be used primarily 
+ * <p><tt>ReentrantLock</tt> instances are intended to be used primarily 
  * in before/after constructions such as:
  *
  * <pre>
@@ -53,13 +53,11 @@ import java.util.Date;
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
  * will result in a {@link NullPointerException} being thrown.
  *
- * <h3>Implementation Notes</h3>
- * <p> To-BE_DONE
  *
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/06 17:51:49 $
+ * @revised $Date: 2003/06/06 18:42:17 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -281,7 +279,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
     }
 
     /**
-     * Return whther lock wait queue is empty
+     * Return whether lock wait queue is empty
      */
     final boolean queueEmpty() {
         ReentrantLockQueueNode h = head; // force order of the volatile reads
@@ -651,8 +649,6 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * interruption point, preference is given to responding to the interrupt
      * over reentrant acquisition of the lock.
      *
-     * <h3>Implementation Notes</h3>
-     * <p> To-BE_DONE
      *
      * @throws InterruptedException if the current thread is interrupted
      */
@@ -674,7 +670,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * to one.
      * <p> If the current thread
      * already holds this lock then the hold count is incremented by one and
-     * the method returns <tt>true</code>.
+     * the method returns <tt>true</tt>.
      * <p>If the lock is held by another thread then this method will return 
      * immediately with the value <tt>false</tt>.
      *
@@ -702,7 +698,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * to one.
      * <p> If the current thread
      * already holds this lock then the hold count is incremented by one and
-     * the method returns <tt>true</code>.
+     * the method returns <tt>true</tt>.
      * <p>If the lock is held by another thread then the
      * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of three things happens:
@@ -729,8 +725,6 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * <p>The given waiting time is a best-effort lower bound. If the time is 
      * less than or equal to zero, the method will not wait at all.
      *
-     * <h3>Implementation Notes</h3>
-     * <p> To-BE_DONE
      *
      * @return <tt>true</tt> if the lock was free and was acquired by the
      * current thread, or the lock was already held by the current thread; and

@@ -32,12 +32,12 @@ import java.lang.reflect.*;
  * }
  * </pre>
  *
- * <p> Note the weaker guarantees of the <code>compareAndSet<code>
+ * <p> Note the weaker guarantees of the <tt>compareAndSet</tt>
  * method in this class than in other atomic classes. Because this
  * class cannot ensure that all uses of the field are appropriate for
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of
- * <code>compareAndSet<code> and <tt>set</tt>.
+ * <tt>compareAndSet</tt> and <tt>set</tt>.
  */
 
 public class  AtomicReferenceFieldUpdater<T, V> { 

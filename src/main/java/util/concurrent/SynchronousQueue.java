@@ -120,7 +120,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
         }
 
-
         /**
          * Wait for a taker to take item placed by putter, or time out.
          */
@@ -136,33 +135,30 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             return false;
                         }
                     }
-                    try {
-                        if (done == null)
-                            done = this.newCondition();
-                        if (timed)
-                            nanos = done.awaitNanos(nanos);
-                        else
-                            done.await();
-                    }
-                    catch (InterruptedException ie) {
-                        // If taken, return normally but set interrupt status
-                        if (item == null) {
-                            Thread.currentThread().interrupt();
-                            return true;
-                        }
-                        else {
-                            item = CANCELLED;
-                            done.signal(); // propagate signal
-                            throw ie;
-                        }
-                    }
+                    if (done == null)
+                        done = this.newCondition();
+                    if (timed)
+                        nanos = done.awaitNanos(nanos);
+                    else
+                        done.await();
+                }
+            }
+            catch (InterruptedException ie) {
+                // If taken, return normally but set interrupt status
+                if (item == null) {
+                    Thread.currentThread().interrupt();
+                    return true;
+                }
+                else {
+                    item = CANCELLED;
+                    done.signal(); // propagate signal
+                    throw ie;
                 }
             }
             finally {
                 this.unlock();
             }
         }
-
 
         /**
          * Wait for a putter to put item placed by taker, or time out.
@@ -183,28 +179,26 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             return null;
                         }
                     }
-                    try {
-                        if (done == null)
-                            done = this.newCondition();
-                        if (timed)
-                            nanos = done.awaitNanos(nanos);
-                        else
-                            done.await();
-                    }
-                    catch (InterruptedException ie) {
-                        x = item;
-                        if (x != null) {
-                            item = null;
-                            next = null;
-                            Thread.currentThread().interrupt();
-                            return x;
-                        }
-                        else {
-                            item = CANCELLED;
-                            done.signal(); // propagate signal
-                            throw ie;
-                        }
-                    }
+                    if (done == null)
+                        done = this.newCondition();
+                    if (timed)
+                        nanos = done.awaitNanos(nanos);
+                    else
+                        done.await();
+                }
+            }
+            catch (InterruptedException ie) {
+                Object y = item;
+                if (y != null) {
+                    item = null;
+                    next = null;
+                    Thread.currentThread().interrupt();
+                    return y;
+                }
+                else {
+                    item = CANCELLED;
+                    done.signal(); // propagate signal
+                    throw ie;
                 }
             }
             finally {
@@ -284,7 +278,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 qlock.unlock();
             }
 
-            if (mustWait)
+            if (mustWait) 
                 return (E)node.waitForPut(timed, nanos);
 
             else {

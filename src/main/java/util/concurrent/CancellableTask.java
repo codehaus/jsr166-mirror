@@ -73,7 +73,6 @@ public class CancellableTask implements Cancellable, Runnable {
         if (mayInterruptIfRunning &&
             r != null &&
             r instanceof Thread &&
-            r != Thread.currentThread() &&
             runnerUpdater.compareAndSet(this, r, CANCELLED)) 
 
             ((Thread)r).interrupt();

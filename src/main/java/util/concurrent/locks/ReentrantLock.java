@@ -613,8 +613,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this lock
+     * @throws NullPointerException if condition null
      */ 
     public boolean hasWaiters(Condition condition) {
+        if (condition == null)
+            throw new NullPointerException();
         if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
         return sync.hasWaiters((AbstractQueuedSynchronizer.ConditionObject)condition);
@@ -633,8 +636,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this lock
+     * @throws NullPointerException if condition null
      */ 
     public int getWaitQueueLength(Condition condition) {
+        if (condition == null)
+            throw new NullPointerException();
         if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
         return sync.getWaitQueueLength((AbstractQueuedSynchronizer.ConditionObject)condition);
@@ -655,8 +661,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this lock
+     * @throws NullPointerException if condition null
      */
     protected Collection<Thread> getWaitingThreads(Condition condition) {
+        if (condition == null)
+            throw new NullPointerException();
         if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
         return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject)condition);

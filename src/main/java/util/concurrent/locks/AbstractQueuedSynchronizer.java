@@ -194,7 +194,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * * While acquires never "spin" in the usual sense, they perform
      *    multiple test-and-test-and sets interspersed with other
      *    computations before blocking.  This gives most of the
-     *    benefits of spins when they are only briefly held without
+     *    benefits of spins when locks etc are only briefly held, without
      *    most of the liabilities when they aren't.
      *
      * * The wait queue is a variant of a "CLH" (Craig, Landin, and
@@ -254,7 +254,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      *  
      *  * CLH queues need a dummy header node to get started. But
      *    we don't create them on construction, because it would be wasted
-     *    effort if there never contention. Instead, the node
+     *    effort if there is never contention. Instead, the node
      *    is constructed and head and tail pointers are set upon first
      *    contention.
      *
@@ -266,12 +266,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      *    transferred to the main queue.  A special value of status
      *    field is used to mark which queue a node is on.
      *
-     *  * All suspension and resumption of threads uses the JSR166
-     *    native park/unpark API. These are safe versions of
-     *    suspend/resume (plus timeout support) that avoid the intrinsic
-     *    race problems with suspend/resume: Park suspends if not
-     *    preceded by an unpark. Unpark resumes if waiting, else causes
-     *    next park not to suspend.
+     * * All suspension and resumption of threads uses LockSupport
+     *    park/unpark. 
      *
      *  * Thanks go to Dave Dice, Mark Moir, Victor Luchangco, Bill
      *    Scherer and Michael Scott, along with members of JSR-166
@@ -712,11 +708,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         Node t = tail;
         if (t == null) {         
             Node h = new Node(null);
+            // This will rarely loop; tight spin is OK even it does
             while ((t = tail) == null) {     
                 if (headUpdater.compareAndSet(this, null, h)) 
                     tail = h;
-                else
-                    Thread.yield();
             }
         }
     }
@@ -1105,17 +1100,15 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             enq(node);
             return true;
         }
-        else {
-            /*
-             * If we lost out to a signal(), then we can't proceed
-             * until it finishes its enq().  Cancelling during an
-             * incomplete transfer is both rare and transient, so just
-             * spin.
-             */
-            while (!isOnSyncQueue(node)) 
-                Thread.yield();
-            return false;
-        }
+        /*
+         * If we lost out to a signal(), then we can't proceed
+         * until it finishes its enq().  Cancelling during an
+         * incomplete transfer is both rare and transient, so just
+         * spin.
+         */
+        while (!isOnSyncQueue(node)) 
+            Thread.yield();
+        return false;
     }
 
     // Instrumentation methods for conditions
@@ -1125,8 +1118,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * uses this synchronizer as its lock.
      * @param condition the condition
      * @return <tt>true</tt> if owned
+     * @throws NullPointerException if condition null
      */
     public boolean owns(ConditionObject condition) {
+        if (condition == null)
+            throw new NullPointerException();
         return condition.isOwnedBy(this);
     }
 
@@ -1143,6 +1139,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this synchronizer
+     * @throws NullPointerException if condition null
      */ 
     public boolean hasWaiters(ConditionObject condition) {
         if (!owns(condition))
@@ -1163,6 +1160,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this synchronizer
+     * @throws NullPointerException if condition null
      */ 
     public int getWaitQueueLength(ConditionObject condition) {
         if (!owns(condition))
@@ -1183,6 +1181,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * is not held
      * @throws IllegalArgumentException if the given condition is
      * not associated with this synchronizer
+     * @throws NullPointerException if condition null
      */
     public Collection<Thread> getWaitingThreads(ConditionObject condition) {
         if (!owns(condition))

@@ -6,6 +6,7 @@
 
 package java.util.concurrent.locks;
 import java.util.concurrent.*;
+import java.util.Date;
 
 /**
  * An implementation of {@link ReadWriteLock} supporting similar
@@ -113,17 +114,43 @@ import java.util.concurrent.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/08 20:05:08 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/16 20:47:25 $
+ * @editor $Author: dl $
  * @author Doug Lea
  *
  */
 public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializable  {
 
+    /**
+     * Creates a new <tt>ReentrantReadWriteLock</tt> with
+     * default ordering properties.
+     */
+    public ReentrantReadWriteLock() {
+        entryLock = new ReentrantLock();
+    }
+
+    /**
+     * Creates a new <tt>ReentrantReadWriteLock</tt> with
+     * the given fairness policy.
+     *
+     * @param fair true if this lock should use a fair ordering policy
+     */
+    public ReentrantReadWriteLock(boolean fair) {
+        entryLock = new ReentrantLock(fair);
+    }
+
+    public Lock writeLock() { return writerLock; }
+    public Lock readLock() { return readerLock; }
+
     /*
-      Note that all fields are transient and defined in a way that
-      deserialized locks are in initial unlocked state.
-    */
+     * Note that all fields are defined in a way so that deserialized
+     * locks are in initial unlocked state.
+     */
+
+    /** Inner class providing readlock */
+    private final Lock readerLock = new ReaderLock();
+    /** Inner class providing writelock */
+    private final Lock writerLock = new WriterLock();
 
     /** 
      * Main lock.  Writers acquire on entry, and hold until release.
@@ -135,18 +162,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /** 
      * Number of threads that have entered read lock.  This is never
-     * reset to zero. Incremented only during acquisition of read lock
-     * while the "entryLock" is held, but read elsewhere, so is declared
-     * volatile.
+     * reset to zero. It is incremented only during acquisition of
+     * read lock while the "entryLock" is held, but read elsewhere, so
+     * is declared volatile.
      **/
     private transient volatile int readers;
 
     /** 
      * Number of threads that have exited read lock.  This is never
-     * reset to zero.  Accessed only in code protected by rLock. When
-     * exreaders != readers, the rwlock is being used for
-     * reading. Else if the entry lock is held, it is being used for
-     * writing (or in transition). Else it is free.  Note: To
+     * reset to zero.  Accessed only in code protected by
+     * writeCheckLock. When exreaders != readers, the rwlock is being
+     * used for reading. Else if the entry lock is held, it is being
+     * used for writing (or in transition). Else it is free.  Note: To
      * distinguish these states, we assume that fewer than 2^32 reader
      * threads can simultaneously execute.
      **/
@@ -175,7 +202,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * only when entry lock is held, at most one writer can be waiting
      * for this notification.  Because increments to "readers" aren't
      * protected by "this" lock, the notification may be spurious
-     * (when an incoming reader in in the process of updating the
+     * (when an incoming reader is in the process of updating the
      * field), but at the point tested in acquiring write lock, both
      * locks will be held, thus avoiding false alarms. And we will
      * never miss an opportunity to send a notification when it is
@@ -261,33 +288,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             writeCheckLock.unlock();
         }
     }
-
-    /**
-     * Creates a new <tt>ReentrantReadWriteLock</tt> with
-     * default ordering properties.
-     */
-    public ReentrantReadWriteLock() {
-        entryLock = new ReentrantLock();
-    }
-
-    /**
-     * Creates a new <tt>ReentrantReadWriteLock</tt> with
-     * the given fairness policy.
-     *
-     * @param fair true if this lock should use a fair ordering policy
-     */
-    public ReentrantReadWriteLock(boolean fair) {
-        entryLock = new ReentrantLock(fair);
-    }
-
-    /** Inner class providing readlock */
-    private final Lock readerLock = new ReaderLock();
-    /** Inner class providing writelock */
-    private final Lock writerLock = new WriterLock();
-
-    public Lock writeLock() { return writerLock; }
-
-    public Lock readLock() { return readerLock; }
 
     /**
      * The Reader lock
@@ -407,7 +407,76 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         public Condition newCondition() { 
-            return entryLock.newCondition();
+            return new WriteLockCondition();
+        }
+
+        /**
+         * Condition for write lock mainly just delegates to entry
+         * lock condition, but must wait for any readers to exit
+         * before returning from wait.
+         */
+        private class WriteLockCondition implements Condition {
+            private final Condition entryCond = entryLock.newCondition();
+
+            public void await() throws InterruptedException {
+                InterruptedException ie = null;
+                try {
+                    entryCond.await();
+                }
+                catch(InterruptedException ex) {
+                    ie = ex;
+                }
+                writerEnterUninterruptibly();
+                if (ie != null)
+                    throw ie;
+            }
+
+            public void awaitUninterruptibly() {
+                entryCond.awaitUninterruptibly();
+                writerEnterUninterruptibly();
+            }
+
+            public long awaitNanos(long nanosTimeout) throws InterruptedException {
+                InterruptedException ie = null;
+                long result = 0;
+                try {
+                    result = entryCond.awaitNanos(nanosTimeout);
+                }
+                catch(InterruptedException ex) {
+                    ie = ex;
+                }
+                writerEnterUninterruptibly();
+                if (ie != null)
+                    throw ie;
+                return result;
+            }
+
+            public boolean await(long time, TimeUnit unit) throws InterruptedException {
+                return awaitNanos(unit.toNanos(time)) > 0L;
+            }
+
+            public boolean awaitUntil(Date deadline) throws InterruptedException {
+                InterruptedException ie = null;
+                boolean result = false;
+                try {
+                    result = entryCond.awaitUntil(deadline);
+                }
+                catch(InterruptedException ex) {
+                    ie = ex;
+                }
+                writerEnterUninterruptibly();
+                if (ie != null)
+                    throw ie;
+                return result;
+            }
+            
+            public void signal() {
+                entryCond.signal();
+            }
+
+            public void signalAll() {
+                entryCond.signalAll();
+            }
         }
         
     }

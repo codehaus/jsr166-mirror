@@ -17,14 +17,14 @@ import java.util.List;
  * submitted.
  *
  * <p>The <tt>Executors</tt> class provides factory methods for the
- * executors provided in <tt>java.util.concurrent</tt>.
+ * executor services provided in <tt>java.util.concurrent</tt>.
  *
  * @since 1.5
  * @see Executors
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 15:50:14 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/05/27 18:15:49 $
+ * @editor $Author: jozart $
  */
 public interface ExecutorService extends Executor {
 

@@ -1,10 +1,20 @@
-package java.util.concurrent.atomic;
-/**
- * An AtomicStampedReference maintains an object reference along with an
- * integer "stamp", that can be updated atomically.
- **/
+/*
+ * @(#)AtomicStampedReference.java
+ */
 
+package java.util.concurrent.atomic;
+
+/**
+ * An <tt>AtomicStampedReference</tt> maintains an object reference along with an
+ * integer "stamp", that can be updated atomically.
+ *
+ * @since 1.5
+ * @spec JSR-166
+ * @revised $Date: 2003/02/19 08:30:13 $
+ * @editor $Author: jozart $
+ */
 public class AtomicStampedReference<V> {
+
     private class ReferenceIntegerPair {
         private final V reference;
         private final int integer;
@@ -16,46 +26,49 @@ public class AtomicStampedReference<V> {
     private final AtomicReference<ReferenceIntegerPair> atomicRef;
 
     /**
-     * Create a new AtomicStampableReference with the given initial values
+     * Creates a new <tt>AtomicStampedReference</tt> with the given initial values.
+     *
      * @param initialRef the intial reference
      * @param initialStamp the intial stamp
-     **/
+     */
     public AtomicStampedReference(V initialRef, int initialStamp) {
         atomicRef = new AtomicReference<ReferenceIntegerPair>(new ReferenceIntegerPair(initialRef, initialStamp));
     }
 
     /**
-     * Get the current value of the reference.
-     * @return the current value of the reference.
-     **/
+     * Returns the current value of the reference.
+     *
+     * @return the current value of the reference
+     */
     public V getReference() {
         return ((ReferenceIntegerPair)(atomicRef.get())).reference;
     }
 
     /**
-     * Get the current value of the stamp
-     * @return the current value of the stamp.
-     **/
+     * Returns the current value of the stamp.
+     *
+     * @return the current value of the stamp
+     */
     public int getStamp() {
         return ((ReferenceIntegerPair)(atomicRef.get())).integer;
     }
 
     /**
-     * Get the current values of both the reference and the stamp.
+     * Returns the current values of both the reference and the stamp.
      * Typical usage is <code>int[1] holder; ref = v.get(holder); </code>.
-     * @param stampHolder an array of size of at least one; on
-     * return stampholder[0] will hold the value of the stamp.
-     * @return the current value of the reference.
-     **/
+     *
+     * @param stampHolder an array of size of at least one.  On return,
+     * <tt>stampholder[0]</tt> will hold the value of the stamp.
+     * @return the current value of the reference
+     */
     public V get(int[] stampHolder) {
         ReferenceIntegerPair p = (ReferenceIntegerPair)(atomicRef.get());
         stampHolder[0] = p.integer;
         return p.reference;
     }
 
-
     /**
-     * Atomically set the value of both the reference and stamp
+     * Atomically sets the value of both the reference and stamp
      * to the given update values if the
      * current reference is <code>==</code> to the expected reference
      * and the current stamp is equal to the expected stamp.  Any given
@@ -63,6 +76,7 @@ public class AtomicStampedReference<V> {
      * <code>false</code>) spuriously, but repeated invocation when
      * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
+     *
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference
      * @param expectedStamp the expected value of the stamp
@@ -83,7 +97,8 @@ public class AtomicStampedReference<V> {
     }
 
     /**
-     * Unconditionally set the value of both the reference and stamp.
+     * Unconditionally sets the value of both the reference and stamp.
+     *
      * @param newReference the new value for the reference
      * @param newStamp the new value for the stamp
      */
@@ -94,13 +109,14 @@ public class AtomicStampedReference<V> {
     }
 
     /**
-     * Atomically set the value of the stamp to the given update value
+     * Atomically sets the value of the stamp to the given update value
      * if the current reference is <code>==</code> to the expected
      * reference.  Any given invocation of this operation may fail
      * (return <code>false</code>) spuriously, but repeated invocation
      * when the current value holds the expected value and no other
      * thread is also attempting to set the value will eventually
      * succeed.
+     *
      * @param expectedReference the expected value of the reference
      * @param newStamp the new value for the stamp
      * @return true if successful
@@ -113,7 +129,4 @@ public class AtomicStampedReference<V> {
                                      new ReferenceIntegerPair(expectedReference,
                                                               newStamp)));
     }
-
-
 }
-

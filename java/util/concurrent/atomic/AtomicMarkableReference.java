@@ -1,9 +1,20 @@
+/*
+ * @(#)AtomicMarkableReference.java
+ */
+
 package java.util.concurrent.atomic;
+
 /**
- * An AtomicMarkableReference maintains an object reference along with a
+ * An <tt>AtomicMarkableReference</tt> maintains an object reference along with a
  * mark bit, that can be updated atomically.
- **/
+ *
+ * @since 1.5
+ * @spec JSR-166
+ * @revised $Date: 2003/02/19 08:30:13 $
+ * @editor $Author: jozart $
+ */
 public class AtomicMarkableReference<V> {
+
     private class ReferenceBooleanPair {
         private final V reference;
         private final boolean bit;
@@ -15,38 +26,41 @@ public class AtomicMarkableReference<V> {
     private final AtomicReference<ReferenceBooleanPair> atomicRef;
 
     /**
-     * Create a new AtomicMarkableReference with the given initial values
+     * Creates a new <tt>AtomicMarkableReference</tt> with the given initial values.
+     *
      * @param initialRef the intial reference
      * @param initialMark the intial mark
-     **/
-
+     */
     public AtomicMarkableReference(V initialRef, boolean initialMark) {
         atomicRef = new AtomicReference<ReferenceBooleanPair>(new ReferenceBooleanPair(initialRef, initialMark));
     }
 
     /**
-     * Get the current value of the reference.
-     * @return the current value of the reference.
-     **/
+     * Returns the current value of the reference.
+     *
+     * @return the current value of the reference
+     */
     public V getReference() {
         return ((ReferenceBooleanPair)(atomicRef.get())).reference;
     }
 
     /**
-     * Get the current value of the mark
-     * @return the current value of the mark.
-     **/
+     * Returns the current value of the mark.
+     *
+     * @return the current value of the mark
+     */
     public boolean isMarked() {
         return ((ReferenceBooleanPair)(atomicRef.get())).bit;
     }
 
     /**
-     * Get the current values of both the reference and the mark.
+     * Returns the current values of both the reference and the mark.
      * Typical usage is <code>boolean[1] holder; ref = v.get(holder); </code>.
-     * @param markHolder an array of size of at least one; on
-     * return markholder[0] will hold the value of the mark.
-     * @return the current value of the reference.
-     **/
+     *
+     * @param markHolder an array of size of at least one. On return,
+     * <tt>markholder[0]</tt> will hold the value of the mark.
+     * @return the current value of the reference
+     */
     public V get(boolean[] markHolder) {
         ReferenceBooleanPair p = (ReferenceBooleanPair)(atomicRef.get());
         markHolder[0] = p.bit;
@@ -54,7 +68,7 @@ public class AtomicMarkableReference<V> {
     }
 
     /**
-     * Atomically set the value of both the reference and mark
+     * Atomically sets the value of both the reference and mark
      * to the given update values if the
      * current reference is <code>==</code> to the expected reference
      * and the current mark is equal to the expected mark.  Any given
@@ -62,6 +76,7 @@ public class AtomicMarkableReference<V> {
      * <code>false</code>) spuriously, but repeated invocation when
      * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
+     *
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference
      * @param expectedMark the expected value of the mark
@@ -82,7 +97,8 @@ public class AtomicMarkableReference<V> {
     }
 
     /**
-     * Unconditionally set the value of both the reference and mark.
+     * Unconditionally sets the value of both the reference and mark.
+     *
      * @param newReference the new value for the reference
      * @param newMark the new value for the mark
      */
@@ -93,13 +109,14 @@ public class AtomicMarkableReference<V> {
     }
 
     /**
-     * Atomically set the value of the mark to the given update value
+     * Atomically sets the value of the mark to the given update value
      * if the current reference is <code>==</code> to the expected
      * reference.  Any given invocation of this operation may fail
      * (return <code>false</code>) spuriously, but repeated invocation
      * when the current value holds the expected value and no other
      * thread is also attempting to set the value will eventually
      * succeed.
+     *
      * @param expectedReference the expected value of the reference
      * @param newMark the new value for the mark
      * @return true if successful

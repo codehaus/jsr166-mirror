@@ -973,12 +973,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @param current the waiting thread
      * @param node its node
      * @param recs number of recursive holds on lock before entering wait
-     * @param interrupts interrupt control upon acquiring lock
+     * @param interruptCtl interrupt control upon acquiring lock
      */
     final void relockAfterWait(Thread current, 
                                LockNode node, 
                                int recs,
-                               int interrupts) {
+                               int interruptCtl) {
         for (;;) {
             LockNode p = node.prev; 
             if (p == head && owner == null &&
@@ -988,7 +988,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 node.thread = null;
                 node.prev = null; 
                 head = node;
-                if (interrupts > 0)
+                if (interruptCtl > 0)
                     current.interrupt();
                 return;
             }
@@ -1000,8 +1000,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 node.prev = p.prev;
             else { 
                 LockSupport.park();
-                if (Thread.interrupted()) 
-                    interrupts = 1;
+                if (Thread.interrupted() && interruptCtl == 0) 
+                    interruptCtl = 1;
             }
         }
     }
@@ -1284,13 +1284,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             lock.checkOwner(current);
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
-            int interrupted = 0;
+            int ictl = 0;
             while (!lock.isOnLockQueue(w)) {
                 LockSupport.park();
                 if (Thread.interrupted()) 
-                    interrupted = 1;
+                    ictl = 1;
             }
-            lock.relockAfterWait(current, w, recs, interrupted);
+            lock.relockAfterWait(current, w, recs, ictl);
         }
 
         /**
@@ -1340,11 +1340,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
-            boolean throwIE = false;
+            int ictl = 0;
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    ictl = lock.transferAfterCancelledWait(current, w)? -1:1;
                     break;
                 }
                 if (lock.isOnLockQueue(w)) 
@@ -1352,8 +1352,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 LockSupport.park();
             }
 
-            lock.relockAfterWait(current, w, recs, 0);
-            if (throwIE)
+            lock.relockAfterWait(current, w, recs, ictl);
+            if (ictl < 0)
                 throw new InterruptedException();
         }
 
@@ -1420,11 +1420,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
             long lastTime = System.nanoTime();
-            boolean throwIE = false;
+            int ictl = 0;
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    ictl = lock.transferAfterCancelledWait(current, w)? -1:1;
                     break;
                 }
                 if (nanosTimeout <= 0L) {
@@ -1439,8 +1439,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 lastTime = now;
             }
 
-            lock.relockAfterWait(current, w, recs, 0);
-            if (throwIE)
+            lock.relockAfterWait(current, w, recs, ictl);
+            if (ictl < 0)
                 throw new InterruptedException();
             return nanosTimeout - (System.nanoTime() - lastTime);
         }
@@ -1502,12 +1502,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
             long abstime = deadline.getTime();
-            boolean throwIE = false;
             boolean to = false;
+            int ictl = 0;
             
             for (;;) {
                 if (Thread.interrupted()) {
-                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    ictl = lock.transferAfterCancelledWait(current, w)? -1:1;
                     break;
                 }
                 if (System.currentTimeMillis() > abstime) {
@@ -1519,8 +1519,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 LockSupport.parkUntil(abstime);
             }
 
-            lock.relockAfterWait(current, w, recs, 0);
-            if (throwIE)
+            lock.relockAfterWait(current, w, recs, ictl);
+            if (ictl < 0)
                 throw new InterruptedException();
             if (to)
                 return false;
@@ -1559,12 +1559,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
             long lastTime = System.nanoTime();
-            boolean throwIE = false;
             boolean to = false;
+            int ictl = 0;
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    ictl = lock.transferAfterCancelledWait(current, w)? -1:1;
                     break;
                 }
                 if (nanosTimeout <= 0L) {
@@ -1579,8 +1579,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 lastTime = now;
             }
 
-            lock.relockAfterWait(current, w, recs, 0);
-            if (throwIE)
+            lock.relockAfterWait(current, w, recs, ictl);
+            if (ictl < 0)
                 throw new InterruptedException();
             if (to)
                 return false;

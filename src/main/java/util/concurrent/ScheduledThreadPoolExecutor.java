@@ -51,7 +51,7 @@ public class ScheduledThreadPoolExecutor
      */
     private static final AtomicLong sequencer = new AtomicLong(0);
     
-    private static class ScheduledFutureTask<V> 
+    private class ScheduledFutureTask<V> 
             extends FutureTask<V> implements ScheduledFuture<V> {
         
         /** Sequence number to break ties FIFO */
@@ -62,7 +62,6 @@ public class ScheduledThreadPoolExecutor
         private final long period;
         /** true if at fixed rate; false if fixed delay */
         private final boolean rateBased; 
-
 
         /**
          * Creates a one-shot action with given nanoTime-based trigger time
@@ -137,25 +136,27 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Overrides FutureTask version so as to reset if periodic.
+         * Overrides FutureTask version so as to reset/requeue if periodic.
          */ 
         public void run() {
-            if (isPeriodic())
-                runAndReset();
-            else
-                super.run();
-        }
-
-        /**
-         * Return a task (which may be this task) that will trigger in
-         * the period subsequent to current task, or null if
-         * non-periodic or cancelled.
-         */
-        ScheduledFutureTask nextTask() {
-            if (period <= 0 || !reset())
-                return null;
-            time = period + (rateBased ? time : System.nanoTime());
-            return this;
+            if (!isPeriodic())
+                ScheduledFutureTask.super.run();
+            else {
+                ScheduledFutureTask.super.runAndReset();
+                if (isCancelled())
+                    return;
+                boolean down = isShutdown();
+                if (!down ||
+                    (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
+                     !isTerminating())) {
+                    time = period + (rateBased ? time : System.nanoTime());
+                    ScheduledThreadPoolExecutor.super.getQueue().add(this);
+                }
+                // This might have been the final executed delayed
+                // task.  Wake up threads to check.
+                else if (down) 
+                    interruptIdleWorkers();
+            }
         }
     }
 
@@ -577,25 +578,4 @@ public class ScheduledThreadPoolExecutor
         return super.getQueue();
     }
 
-    /**
-     * Override of <tt>Executor</tt> hook method to support periodic
-     * tasks.  If the executed task was periodic, causes the task for
-     * the next period to execute.
-     * @param r the task (assumed to be a ScheduledFuture)
-     * @param t the exception
-     */
-    protected void afterExecute(Runnable r, Throwable t) { 
-        super.afterExecute(r, t);
-        ScheduledFutureTask<?> next = ((ScheduledFutureTask<?>)r).nextTask();
-        if (next != null &&
-            (!isShutdown() ||
-             (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
-              !isTerminating())))
-            super.getQueue().add(next);
-
-        // This might have been the final executed delayed task.  Wake
-        // up threads to check.
-        else if (isShutdown()) 
-            interruptIdleWorkers();
-    }
 }

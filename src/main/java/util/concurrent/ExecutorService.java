@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 
+import java.util.Collection;
 import java.util.List;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
@@ -13,7 +14,7 @@ import java.security.PrivilegedExceptionAction;
 /**
  * An <tt>Executor</tt> that provides methods to manage termination
  * and those that can produce a {@link Future} for tracking
- * progress of an asynchronous task.
+ * progress of one or more asynchronous tasks.
  * An <tt>ExecutorService</tt> can be shut down, which will cause it
  * to stop accepting new tasks.  After being shut down, the executor
  * will eventually terminate, at which point no tasks are actively
@@ -156,6 +157,145 @@ public interface ExecutorService extends Executor {
      * @throws InterruptedException if interrupted while waiting
      */
     boolean awaitTermination(long timeout, TimeUnit unit)
+        throws InterruptedException;
+
+
+    /**
+     * Arranges for execution of the given tasks, returning when at
+     * least one of them has completed. 
+     * Upon return, tasks that have not completed are cancelled.
+     * @param tasks the collection of tasks
+     * @return A list of Futures representing the tasks. If the task
+     * list is non-empty, the first element of this list is known to
+     * have completed. Other tasks may or may not have also completed.
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks null
+     */
+    List<Future<?>> runAny(Collection<Runnable> tasks)
+        throws InterruptedException;
+
+    /**
+     * Arranges for execution of the given tasks, returning when at
+     * least one of them has completed or the given timeout expires.
+     * Upon return, tasks that have not completed are cancelled.
+     * @param tasks the collection of tasks
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @return A list of Futures representing the tasks. If the task
+     * list is non-empty and the operation did not time out, the first
+     * element of this list is known to have completed. Other tasks
+     * may or may not have also completed. If the operation timed out,
+     * none of the tasks will have completed.
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks or unit null
+     */
+    List<Future<?>> runAny(Collection<Runnable> tasks, 
+                              long timeout, TimeUnit unit) 
+        throws InterruptedException;
+
+
+    /**
+     * Arranges for execution of the given tasks, returning when
+     * all of them complete. 
+     * @param tasks the collection of tasks
+     * @return A list of Futures representing the tasks, each
+     * of which has completed. 
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks null
+     */
+    List<Future<?>> runAll(Collection<Runnable> tasks)
+        throws InterruptedException;
+
+    /**
+     * Arranges for execution of the given tasks, returning normally
+     * when all complete or the given timeout expires, whichever
+     * happens first.
+     * Upon return, tasks that have not completed are cancelled.
+     * @param tasks the collection of tasks
+     * @param timeout the maximum time to wait
+     * @return A list of Futures representing the tasks. If the
+     * operation did not time out, each
+     * task will have completed. If it did time out, some of
+     * thiese tasks will not have completed.
+     * @param unit the time unit of the timeout argument
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks or unit null
+     */
+    List<Future<?>> runAll(Collection<Runnable> tasks, 
+                              long timeout, TimeUnit unit) 
+        throws InterruptedException;
+
+    /**
+     * Arranges for execution of the given tasks, returning when at
+     * least one of them has completed. 
+     * Upon return, tasks that have not completed are cancelled.
+     * @param tasks the collection of tasks
+     * @return A list of Futures representing the tasks. If the task
+     * list is non-empty, the first element of this list is known to
+     * have completed. Other tasks may or may not have also completed.
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks null
+     */
+
+    <T> List<Future<T>> callAny(Collection<Callable<T>> tasks)
+        throws InterruptedException;
+
+    /**
+     * Arranges for execution of the given tasks, returning when at
+     * least one of them has completed or the given timeout expires.
+     * Upon return, tasks that have not completed are cancelled.
+     * @param tasks the collection of tasks
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @return A list of Futures representing the tasks. If the task
+     * list is non-empty and the operation did not time out, the first
+     * element of this list is known to have completed. Other tasks
+     * may or may not have also completed. If the operation timed out,
+     * none of the tasks will have completed.
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks or unit null
+     */
+    <T> List<Future<T>> callAny(Collection<Callable<T>> tasks, 
+                                  long timeout, TimeUnit unit) 
+        throws InterruptedException;
+
+    /**
+     * Arranges for execution of the given tasks, returning their results
+     * when all complete.
+     * @param tasks the collection of tasks
+     * @return A list of Futures representing the tasks, each
+     * of which has completed. 
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks null
+     */
+
+    <T> List<Future<T>> callAll(Collection<Callable<T>> tasks)
+        throws InterruptedException;
+
+    /**
+     * Arranges for execution of the given tasks, returning their results
+     * when all complete or the timeout expires, whichever happens first.
+     * Upon return, tasks that have not completed are cancelled.
+     * @param tasks the collection of tasks
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @return A list of Futures representing the tasks. If the
+     * operation did not time out, each
+     * task will have completed. If it did time out, some of
+     * thiese tasks will not have completed.
+     * @throws InterruptedException if interrupted while waiting, in
+     * which case unfinished tasks are cancelled.
+     * @throws NullPointerException if tasks or unit null
+     */
+    <T> List<Future<T>> callAll(Collection<Callable<T>> tasks, 
+                                  long timeout, TimeUnit unit) 
         throws InterruptedException;
 
 }

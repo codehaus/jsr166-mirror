@@ -152,6 +152,261 @@ public class ReentrantLockTest extends TestCase {
 	assertTrue(lock.isLocked());
 	assertTrue(lock.isHeldByCurrentThread());
     }
-    
+
+    public void testAwait_IllegalMonitor() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+        try {
+            c.await();
+            fail("should throw");
+        }
+        catch (IllegalMonitorStateException success) {
+        }
+        catch (Exception ex) {
+            fail("should throw IMSE");
+        }
+    }
+
+    public void testSignal_IllegalMonitor() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+        try {
+            c.signal();
+            fail("should throw");
+        }
+        catch (IllegalMonitorStateException success) {
+        }
+        catch (Exception ex) {
+            fail("should throw IMSE");
+        }
+    }
+
+    public void testAwaitNanos_Timeout() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+        try {
+            lock.lock();
+            long t = c.awaitNanos(100);
+            assertTrue(t <= 0);
+            lock.unlock();
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testAwait_Timeout() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+        try {
+            lock.lock();
+            assertFalse(c.await(10, TimeUnit.MILLISECONDS));
+            lock.unlock();
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testAwaitUntil_Timeout() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+        try {
+            lock.lock();
+            java.util.Date d = new java.util.Date();
+            assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + 10)));
+            lock.unlock();
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testAwait() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        c.await();
+                        lock.unlock();
+		    }
+		    catch(InterruptedException e) {
+                        fail("unexpected exception");
+                    }
+		}
+	    });
+
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            lock.lock();
+            c.signal();
+            lock.unlock();
+            t.join(SHORT_DELAY_MS);
+            assertFalse(t.isAlive());
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testAwaitUninterruptibly() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t = new Thread(new Runnable() { 
+		public void run() {
+                    lock.lock();
+                    c.awaitUninterruptibly();
+                    lock.unlock();
+		}
+	    });
+
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            t.interrupt();
+            lock.lock();
+            c.signal();
+            lock.unlock();
+            t.join(SHORT_DELAY_MS);
+            assertFalse(t.isAlive());
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testAwait_Interrupt() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        c.await();
+                        lock.unlock();
+                        fail("should throw");
+		    }
+		    catch(InterruptedException success) {
+                    }
+		}
+	    });
+
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            t.interrupt();
+            t.join(SHORT_DELAY_MS);
+            assertFalse(t.isAlive());
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testAwaitNanos_Interrupt() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        c.awaitNanos(SHORT_DELAY_MS * 2 * 1000000);
+                        lock.unlock();
+                        fail("should throw");
+		    }
+		    catch(InterruptedException success) {
+                    }
+		}
+	    });
+
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            t.interrupt();
+            t.join(SHORT_DELAY_MS);
+            assertFalse(t.isAlive());
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testAwaitUntil_Interrupt() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        java.util.Date d = new java.util.Date();
+                        c.awaitUntil(new java.util.Date(d.getTime() + 10000));
+                        lock.unlock();
+                        fail("should throw");
+		    }
+		    catch(InterruptedException success) {
+                    }
+		}
+	    });
+
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            t.interrupt();
+            t.join(SHORT_DELAY_MS);
+            assertFalse(t.isAlive());
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testSignalAll() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t1 = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        c.await();
+                        lock.unlock();
+		    }
+		    catch(InterruptedException e) {
+                        fail("unexpected exception");
+                    }
+		}
+	    });
+
+	Thread t2 = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        c.await();
+                        lock.unlock();
+		    }
+		    catch(InterruptedException e) {
+                        fail("unexpected exception");
+                    }
+		}
+	    });
+
+        try {
+            t1.start();
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            lock.lock();
+            c.signalAll();
+            lock.unlock();
+            t1.join(SHORT_DELAY_MS);
+            t2.join(SHORT_DELAY_MS);
+            assertFalse(t1.isAlive());
+            assertFalse(t2.isAlive());
+        }
+        catch (Exception ex) {
+            fail("unexpected exception");
+        }
+    }
 
 }

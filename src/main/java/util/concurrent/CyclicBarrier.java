@@ -84,7 +84,7 @@ import java.util.concurrent.locks.*;
  * model for failed synchronization attempts: If a thread leaves a
  * barrier point prematurely because of interruption, failure, or
  * timeout, all other threads, even those that have not yet resumed
- * from a previous {@link #await}. will also leave abnormally via
+ * from a previous {@link #await}, will also leave abnormally via
  * {@link BrokenBarrierException} (or <tt>InterruptedException</tt> if
  * they too were interrupted at about the same time).
  *

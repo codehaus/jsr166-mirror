@@ -730,9 +730,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws  NullPointerException  if the key is
      *               <code>null</code>.
      */
-    public V remove(Object key, Object value) {
+    public boolean remove(Object key, Object value) {
         int hash = hash(key);
-        return segmentFor(hash).remove(key, hash, value);
+        return segmentFor(hash).remove(key, hash, value) != null;
     }
 
     /**
@@ -964,7 +964,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             if (!(o instanceof Map.Entry))
                 return false;
             Map.Entry<K,V> e = (Map.Entry<K,V>)o;
-            return ConcurrentHashMap.this.remove(e.getKey(), e.getValue()) != null;
+            return ConcurrentHashMap.this.remove(e.getKey(), e.getValue());
         }
         public int size() {
             return ConcurrentHashMap.this.size();

@@ -50,10 +50,17 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * Remove entry for key only if currently mapped to given value.
      * Acts as
      * <pre> 
-     *  if (map.get(key) == value) map.remove(key);
+     *  if (map.get(key).equals(value)) {
+     *     map.remove(key);
+     *     return true;
+     * }
+     * else return false;
      * </pre>
      * except that the action is performed atomically.
+     * @param key key with which the specified value is associated.
+     * @param value value associated with the specified key.
+     * @return true if the value was removed
      */
-    boolean remove(K key, V value);
+    boolean remove(Object key, Object value);
 
 }

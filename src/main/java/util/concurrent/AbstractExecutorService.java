@@ -6,20 +6,15 @@
 
 package java.util.concurrent;
 
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.util.*;
-import java.util.concurrent.locks.*;
 
 /**
  * Provides default implementation of {@link ExecutorService}
- * execution methods. This class implements the <tt>submit</tt> and
- * <tt>invoke</tt> methods using the default {@link FutureTask} and
- * {@link PrivilegedFutureTask} classes provided in this package.  For
- * example, the the implementation of <tt>submit(Runnable)</tt>
- * creates an associated <tt>FutureTask</tt> that is executed and
+ * execution methods. This class implements the <tt>submit</tt>,
+ * <tt>invokeAny</tt> and <tt>invokeAll</tt> methods using the default
+ * {@link FutureTask} class provided in this package.  For example,
+ * the the implementation of <tt>submit(Runnable)</tt> creates an
+ * associated <tt>FutureTask</tt> that is executed and
  * returned. Subclasses overriding these methods to use different
  * {@link Future} implementations should do so consistently for each
  * of these methods.
@@ -39,12 +34,6 @@ public abstract class AbstractExecutorService implements ExecutorService {
         FutureTask<T> ftask = new FutureTask<T>(task);
         execute(ftask);
         return ftask;
-    }
-
-    public <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException {
-        FutureTask<T> ftask = new FutureTask<T>(task);
-        execute(ftask);
-        return ftask.get();
     }
 
     // any/all methods, each a little bit different than the other

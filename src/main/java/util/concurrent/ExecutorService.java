@@ -106,8 +106,12 @@ public interface ExecutorService extends Executor {
 
     /**
      * Submits a value-returning task for execution and returns a Future
-     * representing the pending results of the task.
+     * representing the pending results of the task. 
      *
+     * <p>
+     * Note that if you would like to immediately block waiting
+     * for a task, you can use constructions of the form
+     * <tt>result = exec.submit(aCallable).get();</tt>
      * @param task the task to submit
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if task cannot be scheduled
@@ -127,21 +131,6 @@ public interface ExecutorService extends Executor {
      * for execution
      */
     Future<?> submit(Runnable task);
-
-    /**
-     * Executes a value-returning task and blocks until it returns a
-     * value or throws an exception.
-     *
-     * @param task the task to submit
-     * @return a Future representing pending completion of the task
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution
-     * @throws InterruptedException if interrupted while waiting for
-     * completion
-     * @throws ExecutionException if the task encountered an exception
-     * while executing
-     */
-    <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException;
 
     /**
      * Executes the given tasks, returning their results

@@ -287,12 +287,50 @@ public class Executors {
 
     /**
      * Creates and returns a {@link Callable} object that, when
-     * called, runs the given privileged exception action and returns its result
+     * called, runs the given privileged exception action and returns
+     * its result
      * @param action the privileged exception action to run
      */
     public static Callable<Object> callable(PrivilegedExceptionAction action) {
         return new PrivilegedExceptionActionAdapter(action);
     }
+
+    /**
+     * Creates and returns a {@link Callable} object that will, when
+     * called, execute the given <tt>callable</tt> under the current
+     * access control context. This method should normally be
+     * invoked within an {@link AccessController#doPrivileged} action
+     * to create callables that will, if possible, execute under the
+     * selected permission settings holding within that action; or if
+     * not possible, throw an associated {@link
+     * AccessControlException}.
+     * @param callable the underlying task
+     *
+     */
+    public static <T> Callable<T> privilegedCallable(Callable<T> callable) {
+        return new PrivilegedCallable(callable);
+    }
+    
+    /**
+     * Creates and returns a {@link Callable} object that will, when
+     * called, execute the given <tt>callable</tt> under the current
+     * access control context, with the current context class loader
+     * as the context class loader. This method should normally be
+     * invoked within an {@link AccessController#doPrivileged} action
+     * to create callables that will, if possible, execute under the
+     * selected permission settings holding within that action; or if
+     * not possible, throw an associated {@link
+     * AccessControlException}.
+     * @param callable the underlying task
+     *
+     * @throws AccessControlException if the current access control
+     * context does not have permission to both set and get context
+     * class loader.
+     */
+    public static <T> Callable<T> privilegedCallableUsingCurrentClassLoader(Callable<T> callable) {
+        return new PrivilegedCallableUsingCurrentClassLoader(callable);
+    }
+
 
     /**
      * A callable that runs given task and returns given result
@@ -334,6 +372,84 @@ public class Executors {
             return action.run();
         }
         private final PrivilegedExceptionAction action;
+    }
+
+
+    /**
+     * A callable that runs under established access control settings
+     */
+    static class PrivilegedCallable<T> implements Callable<T> {
+        private final AccessControlContext acc;
+        private final Callable<T> task;
+        T result;
+        Exception exception;
+        PrivilegedCallable(Callable<T> task) {
+            this.task = task;
+            this.acc = AccessController.getContext();
+        }
+
+        public T call() throws Exception {
+            AccessController.doPrivileged(new PrivilegedAction() {
+                    public Object run() {
+                        try {
+                            result = task.call();
+                        } catch(Exception ex) {
+                            exception = ex;
+                        }
+                        return null;
+                    }
+                }, acc);
+            if (exception != null)
+                throw exception;
+            else 
+                return result;
+        }
+    }
+
+    /**
+     * A callable that runs under established access control settings and
+     * current ClassLoader
+     */
+    static class PrivilegedCallableUsingCurrentClassLoader<T> implements Callable<T> {
+        private final ClassLoader ccl;
+        private final AccessControlContext acc;
+        private final Callable<T> task;
+        T result;
+        Exception exception;
+        PrivilegedCallableUsingCurrentClassLoader(Callable<T> task) {
+            this.task = task;
+            this.ccl = Thread.currentThread().getContextClassLoader();
+            this.acc = AccessController.getContext();
+            acc.checkPermission(new RuntimePermission("getContextClassLoader"));
+            acc.checkPermission(new RuntimePermission("setContextClassLoader"));
+        }
+
+        public T call() throws Exception {
+            AccessController.doPrivileged(new PrivilegedAction() {
+                    public Object run() {
+                        ClassLoader savedcl = null;
+                        Thread t = Thread.currentThread();
+                        try {
+                            ClassLoader cl = t.getContextClassLoader();
+                            if (ccl != cl) {
+                                t.setContextClassLoader(ccl);
+                                savedcl = cl;
+                            }
+                            result = task.call();
+                        } catch(Exception ex) {
+                            exception = ex;
+                        } finally {
+                            if (savedcl != null)
+                                t.setContextClassLoader(savedcl);
+                        }
+                        return null;
+                    }
+                }, acc);
+            if (exception != null)
+                throw exception;
+            else 
+                return result;
+        }
     }
 
     static class DefaultThreadFactory implements ThreadFactory {
@@ -411,10 +527,6 @@ public class Executors {
         }
         public <T> Future<T> submit(Callable<T> task) {
             return e.submit(task);
-        }
-
-        public <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException {
-            return e.invoke(task);
         }
         public     <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
             throws InterruptedException {

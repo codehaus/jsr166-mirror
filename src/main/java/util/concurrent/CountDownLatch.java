@@ -12,10 +12,10 @@ import java.util.concurrent.locks.*;
  * a set of operations being performed in other threads completes.
  *
  * <p>A <tt>CountDownLatch</tt> is initialized with a given
- * <em>count</em>.  The {@link #await} methods block until the current
+ * <em>count</em>.  The {@link #await await} methods block until the current
  * {@link #getCount count} reaches zero due to invocations of the
  * {@link #countDown} method, after which all waiting threads are
- * released and any subsequent invocations of {@link #await} return
+ * released and any subsequent invocations of {@link #await await} return
  * immediately. This is a one-shot phenomenon -- the count cannot be
  * reset.  If you need a version that resets the count, consider using
  * a {@link CyclicBarrier}.
@@ -23,7 +23,7 @@ import java.util.concurrent.locks.*;
  * <p>A <tt>CountDownLatch</tt> is a versatile synchronization tool
  * and can be used for a number of purposes.  A
  * <tt>CountDownLatch</tt> initialized with a count of one serves as a
- * simple on/off latch, or gate: all threads invoking {@link #wait}
+ * simple on/off latch, or gate: all threads invoking {@link #await await}
  * wait at the gate until it is opened by a thread invoking {@link
  * #countDown}.  A <tt>CountDownLatch</tt> initialized to <em>N</em>
  * can be used to make one thread wait until <em>N</em> threads have
@@ -31,15 +31,15 @@ import java.util.concurrent.locks.*;
  * <p>A useful property of a <tt>CountDownLatch</tt> is that it
  * doesn't require that threads calling <tt>countDown</tt> wait for
  * the count to reach zero before proceeding, it simply prevents any
- * thread from proceeding past the {@link #await wait} until all
+ * thread from proceeding past an {@link #await await} until all
  * threads could pass.
  *
  * <p><b>Sample usage:</b> Here is a pair of classes in which a group
  * of worker threads use two countdown latches:
  * <ul>
- * <li> The first is a start signal that prevents any worker from proceeding
+ * <li>The first is a start signal that prevents any worker from proceeding
  * until the driver is ready for them to proceed;
- * <li> The second is a completion signal that allows the driver to wait
+ * <li>The second is a completion signal that allows the driver to wait
  * until all workers have completed.
  * </ul>
  *
@@ -119,8 +119,8 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/23 19:46:15 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/25 22:28:11 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public class CountDownLatch {
@@ -152,9 +152,9 @@ public class CountDownLatch {
      * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of two things happen:
      * <ul>
-     * <li> The count reaches zero due to invocations of the
+     * <li>The count reaches zero due to invocations of the
      * {@link #countDown} method; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread.
      * </ul>
      * <p>If the current thread:

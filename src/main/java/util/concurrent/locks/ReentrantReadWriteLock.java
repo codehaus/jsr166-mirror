@@ -163,7 +163,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * default ordering properties.
      */
     public ReentrantReadWriteLock() {
-        sync = new Sync();
+        sync = new Sync(false);
     }
 
     /**
@@ -176,24 +176,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         sync = new Sync(fair);
     }
 
-    public ReentrantReadWriteLock.WriteLock writeLock() { 
-        return writerLock; 
-    }
-
-    public ReentrantReadWriteLock.ReadLock readLock() { 
-        return readerLock; 
-    }
+    public ReentrantReadWriteLock.WriteLock writeLock() { return writerLock; }
+    public ReentrantReadWriteLock.ReadLock  readLock()  { return readerLock; }
 
     /** 
      * Synchronization implementation for ReentrantReadWriteLock 
      */
     private final static class Sync extends AbstractQueuedSynchronizer {
         /** true if barging disabled */
-        final boolean fair;
+        private final boolean fair;
         /** Current (exclusive) owner thread */
         private transient Thread owner;
 
-        Sync() { this.fair = false; }
         Sync(boolean fair) { this.fair = fair; }
 
         /* 
@@ -203,32 +197,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * upper the shared (reader) hold count.
          */
 
-        static final int SHARED_SHIFT   = 16;
-        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+        private static final int SHARED_SHIFT   = 16;
+        private static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+        private static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
 
-        /**
-         * Return true if count indicates lock is held in exclusive mode
-         * @param c a lock status count
-         * @return true if count indicates lock is held in exclusive mode
-         */
-        boolean isExclusive(int c) { 
-            return (c & EXCLUSIVE_MASK) != 0; 
-        }
-
-        /**
-         * Return the number of shared holds represented in count
-         */
-        int sharedCount(int c)  { 
-            return c >>> SHARED_SHIFT; 
-        }
-
-        /**
-         * Return the number of exclusive holds represented in count
-         */
-        int exclusiveCount(int c) { 
-            return c & EXCLUSIVE_MASK; 
-        }
+        /** Return the number of shared holds represented in count  */
+        private int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
+        /** Return the number of exclusive holds represented in count  */
+        private int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
 
         public int acquireExclusiveState(boolean isQueued, int acquires) {
             // handle only fast path here; else relay
@@ -315,6 +291,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         // Methods relayed to outer class
+
+        boolean isFair() {
+            return fair;
+        }
 
         ConditionObject newCondition() { 
             return new ConditionObject(); 
@@ -806,7 +786,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * @return true if this lock has fairness set true.
      */
     public final boolean isFair() {
-        return sync.fair;
+        return sync.isFair();
     }
 
     /**

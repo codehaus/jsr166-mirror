@@ -57,7 +57,8 @@ shutdown.  The two primary implementations of ExecutorService are
 flexible thread pool and {@link
 java.util.concurrent.ScheduledExecutor}, which adds support for
 delayed and periodic task execution.  These, and other Executors can
-be used in conjunction with a {@link FutureTask} to asynchronously
+be used in conjunction with a {@link java.util.concurrent.FutureTask} 
+to asynchronously
 start a potentially long-running computation and query the FutureTask
 to determine if its execution has completed, or cancel it.
 
@@ -70,7 +71,7 @@ a few utilities methods for using them.
 A basic (nonblocking) {@link java.util.Queue} interface extending
 java.util.Collection is introduced into java.util. Existing class
 java.util.LinkedList is adapted to support Queue, and a new
-non-thread-safe {@link java.util.concurrent.java.util.PriorityQueue}
+non-thread-safe {@link java.util.PriorityQueue}
 is added.  The java.util.concurrent {@link
 java.util.concurrent.LinkedQueue} class supplies an efficient
 thread-safe non-blocking queue.
@@ -81,7 +82,8 @@ blocking versions of put and take: {@link
 java.util.concurrent.LinkedBlockingQueue}, {@link
 java.util.concurrent.ArrayBlockingQueue}, {@link
 java.util.concurrent.SynchronousQueue}, {@link
-java.util.concurrent.PriorityBlockingQueue}, and {@link DelayQueue}.
+java.util.concurrent.PriorityBlockingQueue}, and 
+{@link java.util.concurrent.DelayQueue}.
 
 
 <h2>Locks</h2>
@@ -132,7 +134,7 @@ Five classes aid common special-purpose synchronization idioms.
 java.util.concurrent.FairSemaphore} are classic concurrency tools.
 {@link java.util.concurrent.CountDownLatch} is very simple yet very
 common utility for blocking until a single signal, event, or condition
-holds.  A {@link CyclicBarrier} is a resettable multiway
+holds.  A {@link java.util.concurrent.CyclicBarrier} is a resettable multiway
 synchronization point common in some styles of parallel
 programming. An {@link java.util.concurrent.Exchanger} allows two
 threads to exchange objects at a rendezvous point.

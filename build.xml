@@ -30,6 +30,7 @@
   <property name="build.dir"            location="build"/>
   <property name="build.classes.dir"    location="${build.dir}/classes"/>
   <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
+  <property name="build.j1.dir"         location="${build.dir}/j1"/>
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
   <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
@@ -42,6 +43,7 @@
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
   <property name="test.src.dir"         location="${basedir}/src/test"/>
+  <property name="j1.src.dir"           location="${basedir}/src/javaone"/>
   <property name="tck.src.dir"          location="${test.src.dir}/tck"/>
   <property name="jtreg.src.dir"        location="${test.src.dir}/jtreg"/>
   <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
@@ -62,6 +64,12 @@
   <!-- Test classpath -->
   <path id="test.classpath">
     <pathelement location="${build.testcases.dir}"/>
+    <pathelement location="${junit.jar}"/>
+  </path>
+
+  <!-- Test classpath -->
+  <path id="j1.classpath">
+    <pathelement location="${build.j1.dir}"/>
     <pathelement location="${junit.jar}"/>
   </path>
 
@@ -446,6 +454,8 @@
                    fork="true">
 
       <jvmarg value="${bootclasspath.args}"/>
+      <jvmarg value="-server"/>
+      <jvmarg value="-showversion"/>
       
       <classpath refid="test.classpath"/>
 
@@ -592,7 +602,7 @@
 
   <!-- Standalone sample program -->
   
-  <target name="sample" depends="jar">
+  <target name="sample" depends="">
   
     <mkdir dir="${build.testcases.dir}"/>
     
@@ -603,21 +613,105 @@
       deprecation="${build.deprecation}"
            source="${build.sourcelevel}"
              fork="true">
-             
+      
+      <!--
       <compilerarg value="${bootclasspath.args}"/>
       <compilerarg line="${build.args}"/>
       
       <classpath refid="test.classpath"/>
+      -->
       
       <include name="jsr166/test/Sample.java"/>
       
     </javac>
     
+    <copy todir="${build.testcases.dir}">
+      <fileset dir="${test.src.dir}">
+        <include name="**/*.properties"/>
+      </fileset>
+    </copy>
+  
              
     <java classname="jsr166.test.Sample" fork="true">
       <jvmarg value="${bootclasspath.args}"/>
+      <!-- <jvmarg value="-server"/> -->
+      <!-- <jvmarg value="-ea"/> -->
       <classpath refid="test.classpath"/>
+      <!-- <arg value="1000"/> -->
     </java>
+  </target>
+
+
+  <!-- BoF demos -->
+  
+  <target name="j1" depends="jar">
+  
+    <mkdir dir="${build.j1.dir}"/>
+    
+    <javac srcdir="${j1.src.dir}"
+          destdir="${build.j1.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+             
+      <compilerarg value="${bootclasspath.args}"/>
+      <compilerarg line="${build.args}"/>
+      
+      <classpath refid="j1.classpath"/>
+      
+    </javac>
+    
+<!--
+    <java classname="MainClass" fork="true">
+      <jvmarg value="${bootclasspath.args}"/>
+      <classpath refid="j1.classpath"/>
+    </java>
+-->
+
+    <junit printsummary="true"
+             showoutput="true"
+          errorProperty="junit.failed"
+        failureProperty="junit.failed"
+                    dir="${build.j1.dir}"
+                   fork="true">
+
+      <jvmarg value="${bootclasspath.args}"/>
+      <jvmarg value="-server"/>
+      
+      <classpath refid="j1.classpath"/>
+
+      <formatter type="xml"/>
+
+      <batchtest todir="${build.j1.dir}">
+        <fileset dir="${j1.src.dir}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+
+    </junit>
+
+    <!-- Sets junit.report.format to frames if redirection is present,
+         otherwise sets it to noframes. -->
+    <available property="junit.report.format"
+                  value="frames"
+              classname="org.apache.xalan.lib.Redirect"
+    />
+    <property name="junit.report.format" value="noframes"/>
+
+    <junitreport todir="${build.j1.dir}">
+      <fileset dir="${build.j1.dir}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report styledir="${stylesheet.dir}"
+                format="${junit.report.format}"
+                 todir="${build.j1.dir}"
+      />
+    </junitreport>
+
+    <fail message="Test Cases Failed" if="junit.failed"/>
+
   </target>
 
   
@@ -724,6 +818,7 @@
       <!-- Watch out: path separator hardwired to semicolon here! -->
       <sysproperty key="java.library.path" path="${java.library.path};${build.dir}"/>
       <classpath refid="test.classpath"/>
+      <arg line="count in word frequency of word in command line count"/>
     </java>
     
   </target>

@@ -142,6 +142,7 @@ public class CyclicBarrier {
      */
     private int dowait(boolean timed, long nanos) 
         throws InterruptedException, BrokenBarrierException, TimeoutException {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int index = --count;
@@ -159,8 +160,9 @@ public class CyclicBarrier {
                 nextGeneration();
                 boolean ranAction = false;
                 try {
-                    if (barrierCommand != null) 
-                        barrierCommand.run();
+                    Runnable command = barrierCommand;
+                    if (command != null) 
+                        command.run();
                     ranAction = true;
                     return 0;
                 } finally {
@@ -373,6 +375,7 @@ public class CyclicBarrier {
      * and <tt>false</tt> otherwise.
      */
     public boolean isBroken() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return broken;
@@ -391,6 +394,7 @@ public class CyclicBarrier {
      * instead create a new barrier for subsequent use.
      */
     public void reset() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             /*
@@ -414,6 +418,7 @@ public class CyclicBarrier {
      * @return the number of parties currently blocked in {@link #await}
      **/
     public int getNumberWaiting() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return parties - count;

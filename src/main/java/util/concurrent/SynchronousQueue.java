@@ -247,7 +247,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         for (;;) {
             Node node;
             boolean mustWait;
-
+            final ReentrantLock qlock = this.qlock;
             qlock.lockInterruptibly();
             try {
                 node = waitingTakes.deq();
@@ -275,6 +275,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             Node node;
             boolean mustWait;
 
+            final ReentrantLock qlock = this.qlock;
             qlock.lockInterruptibly();
             try {
                 node = waitingPuts.deq();
@@ -369,6 +370,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
+        final ReentrantLock qlock = this.qlock;
 
         for (;;) {
             Node node;
@@ -395,6 +397,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *         element is available.
      */
     public E poll() {
+        final ReentrantLock qlock = this.qlock;
         for (;;) {
             Node node;
             qlock.lock();

@@ -6,7 +6,6 @@
 
 package java.util.concurrent;
 import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
 
 /**
@@ -408,6 +407,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      */
     private boolean addIfUnderCorePoolSize(Runnable firstTask) {
         Thread t = null;
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             if (poolSize < corePoolSize)
@@ -432,6 +432,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private Runnable addIfUnderMaximumPoolSize(Runnable firstTask) {
         Thread t = null;
         Runnable next = null;
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             if (poolSize < maximumPoolSize) {
@@ -508,6 +509,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Wake up all threads that might be waiting for tasks.
      */
     void interruptIdleWorkers() {
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             for (Worker w : workers)
@@ -522,6 +524,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @param w the worker
      */
     private void workerDone(Worker w) {
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             completedTaskCount += w.completedTasks;
@@ -557,8 +560,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
             // Either state is STOP, or state is SHUTDOWN and there is
             // no work to do. So we can terminate.
-            runState = TERMINATED;
             termination.signalAll();
+            runState = TERMINATED;
             // fall through to call terminate() outside of lock.
         } finally {
             mainLock.unlock();
@@ -610,6 +613,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * Interrupt thread if not running a task
          */
         void interruptIfIdle() {
+            final ReentrantLock runLock = this.runLock;
             if (runLock.tryLock()) {
                 try {
                     thread.interrupt();
@@ -630,6 +634,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * Run a single task between before/after methods.
          */
         private void runTask(Runnable task) {
+            final ReentrantLock runLock = this.runLock;
             runLock.lock();
             try {
                 // Abort now if immediate cancel.  Otherwise, we have
@@ -880,6 +885,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             java.security.AccessController.checkPermission(shutdownPerm);
 
         boolean fullyTerminated = false;
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             if (workers.size() > 0) {
@@ -928,6 +934,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             java.security.AccessController.checkPermission(shutdownPerm);
 
         boolean fullyTerminated = false;
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             if (workers.size() > 0) {
@@ -985,6 +992,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     public boolean awaitTermination(long timeout, TimeUnit unit)
         throws InterruptedException {
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             long nanos = unit.toNanos(timeout);
@@ -1132,6 +1140,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     public void setCorePoolSize(int corePoolSize) {
         if (corePoolSize < 0)
             throw new IllegalArgumentException();
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             int extra = this.corePoolSize - corePoolSize;
@@ -1203,6 +1212,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     public void setMaximumPoolSize(int maximumPoolSize) {
         if (maximumPoolSize <= 0 || maximumPoolSize < corePoolSize)
             throw new IllegalArgumentException();
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             int extra = this.maximumPoolSize - maximumPoolSize;
@@ -1280,6 +1290,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return the number of threads
      */
     public int getActiveCount() {
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             int n = 0;
@@ -1300,6 +1311,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return the number of threads
      */
     public int getLargestPoolSize() {
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             return largestPoolSize;
@@ -1318,6 +1330,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return the number of tasks
      */
     public long getTaskCount() {
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             long n = completedTaskCount;
@@ -1342,6 +1355,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return the number of tasks
      */
     public long getCompletedTaskCount() {
+        final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             long n = completedTaskCount;

@@ -122,7 +122,7 @@ public class Semaphore implements java.io.Serializable {
     /*
      * The underlying algorithm here is a simplified adaptation of
      * that used for ReentrantLock. See the internal documentation of
-     * ReentrantLock for detailed explanation.
+     * lock package classes for detailed explanation.
      */
 
     private static final long serialVersionUID = -3222578661600680210L;
@@ -219,6 +219,7 @@ public class Semaphore implements java.io.Serializable {
      * @return remaining number of permits
      */
     private int doTryAcquire(int permits) {
+        final AtomicInteger perms = this.perms;
         for (;;) {
             int available = perms.get();
             int remaining = available - permits;
@@ -347,6 +348,7 @@ public class Semaphore implements java.io.Serializable {
      * Internal version of release
      */
     private void doRelease(int permits) {
+        final AtomicInteger perms = this.perms;
         for (;;) {
             int p = perms.get();
             if (perms.compareAndSet(p, p + permits)) {

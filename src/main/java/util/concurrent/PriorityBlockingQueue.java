@@ -143,6 +143,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             boolean ok = q.offer(o);
@@ -184,6 +185,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public E take() throws InterruptedException {
+        final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             try {
@@ -203,6 +205,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
 
     public E poll() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.poll();
@@ -213,6 +216,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         long nanos = unit.toNanos(timeout);
+        final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             for (;;) {
@@ -234,6 +238,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public E peek() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.peek();
@@ -243,6 +248,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public int size() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.size();
@@ -261,6 +267,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public boolean remove(Object o) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.remove(o);
@@ -270,6 +277,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public boolean contains(Object o) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.contains(o);
@@ -279,6 +287,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public Object[] toArray() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.toArray();
@@ -289,6 +298,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
 
     public String toString() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.toString();
@@ -302,6 +312,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             throw new NullPointerException();
         if (c == this)
             throw new IllegalArgumentException();
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int n = 0;
@@ -323,6 +334,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             throw new IllegalArgumentException();
         if (maxElements <= 0)
             return 0;
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int n = 0;
@@ -342,6 +354,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * The queue will be empty after this call returns.
      */
     public void clear() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             q.clear();
@@ -351,6 +364,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public <T> T[] toArray(T[] a) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.toArray(a);
@@ -370,6 +384,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @return an iterator over the elements in this queue.
      */
     public Iterator<E> iterator() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return new Itr(q.iterator());
@@ -395,6 +410,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
 
         public E next() {
+            ReentrantLock lock = PriorityBlockingQueue.this.lock;
             lock.lock();
             try {
                 return iter.next();
@@ -404,6 +420,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
 
         public void remove() {
+            ReentrantLock lock = PriorityBlockingQueue.this.lock;
             lock.lock();
             try {
                 iter.remove();

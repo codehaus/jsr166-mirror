@@ -178,15 +178,26 @@ public abstract class AbstractExecutorService implements ExecutorService {
         List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
         boolean done = false;
         try {
-            for (Callable<T> t : tasks) {
-                FutureTask<T> f = new FutureTask<T>(t);
-                futures.add(f);
-                execute(f);
-            }
+            for (Callable<T> t : tasks) 
+                futures.add(new FutureTask<T>(t));
+
             long lastTime = System.nanoTime();
+
+            // Interleave time checks and calls to execute in case
+            // executor doesn't have any/much parallelism.
+            Iterator<Future<T>> it = futures.iterator();
+            while (it.hasNext()) {
+                execute((Runnable)(it.next()));
+                long now = System.nanoTime();
+                nanos -= now - lastTime;
+                lastTime = now;
+                if (nanos <= 0)
+                    return futures; 
+            }
+
             for (Future<T> f : futures) {
                 if (!f.isDone()) {
-                    if (nanos < 0) 
+                    if (nanos <= 0) 
                         return futures; 
                     try { 
                         f.get(nanos, TimeUnit.NANOSECONDS); 

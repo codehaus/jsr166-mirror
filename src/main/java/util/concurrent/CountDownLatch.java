@@ -167,6 +167,7 @@ public class CountDownLatch {
      * while waiting.
      */
     public void await() throws InterruptedException {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             while (count != 0)
@@ -221,6 +222,7 @@ public class CountDownLatch {
     public boolean await(long timeout, TimeUnit unit) 
         throws InterruptedException {
         long nanos = unit.toNanos(timeout);
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             for (;;) {
@@ -247,6 +249,7 @@ public class CountDownLatch {
      * happens.
      */
     public void countDown() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (count > 0 && --count == 0)
@@ -262,6 +265,7 @@ public class CountDownLatch {
      * @return the current count.
      */
     public long getCount() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return count;

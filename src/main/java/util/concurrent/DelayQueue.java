@@ -55,6 +55,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             E first = q.peek();
@@ -104,6 +105,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     public E take() throws InterruptedException {
+        final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             for (;;) {
@@ -130,6 +132,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     public E poll(long time, TimeUnit unit) throws InterruptedException {
+        final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         long nanos = unit.toNanos(time);
         try {
@@ -163,6 +166,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
 
     public E poll() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             E first = q.peek();
@@ -181,6 +185,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     public E peek() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.peek();
@@ -190,6 +195,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     public int size() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.size();
@@ -203,6 +209,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             throw new NullPointerException();
         if (c == this)
             throw new IllegalArgumentException();
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int n = 0;
@@ -228,6 +235,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             throw new IllegalArgumentException();
         if (maxElements <= 0)
             return 0;
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int n = 0;
@@ -251,6 +259,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * The queue will be empty after this call returns.
      */
     public void clear() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             q.clear();
@@ -269,6 +278,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     public Object[] toArray() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.toArray();
@@ -278,6 +288,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     public <T> T[] toArray(T[] array) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.toArray(array);
@@ -287,6 +298,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     public boolean remove(Object o) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return q.remove(o);
@@ -305,6 +317,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @return an iterator over the elements in this queue.
      */
     public Iterator<E> iterator() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return new Itr(q.iterator());
@@ -324,6 +337,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
 
         public E next() {
+            final ReentrantLock lock = DelayQueue.this.lock;
             lock.lock();
             try {
                 return iter.next();
@@ -333,6 +347,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
 
         public void remove() {
+            final ReentrantLock lock = DelayQueue.this.lock;
             lock.lock();
             try {
                 iter.remove();

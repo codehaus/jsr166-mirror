@@ -100,19 +100,23 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
+        final ReentrantLock lock = this.lock;
+        Thread interruptThread = null;
         lock.lock();
         try {
             Object r = runState;
             if (r == DONE || r == CANCELLED)
                 return false;
-            runState = CANCELLED;
-            accessible.signalAll();
             if (mayInterruptIfRunning && r != null && r instanceof Thread)
-                ((Thread)r).interrupt();
+                interruptThread = (Thread)r;
+            accessible.signalAll();
+            runState = CANCELLED;
         }
         finally{
             lock.unlock();
         }
+        if (interruptThread != null)
+            interruptThread.interrupt();
         done();
         return true;
     }
@@ -130,6 +134,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * while waiting
      */
     public V get() throws InterruptedException, ExecutionException {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             for (;;) {
@@ -167,6 +172,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         long nanos = unit.toNanos(timeout);
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             for (;;) {
@@ -205,6 +211,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @param v the value
      */ 
     protected void set(V v) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (runState == CANCELLED) 
@@ -225,6 +232,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @param t the cause of failure.
      */ 
     protected void setException(Throwable t) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (runState == CANCELLED) 
@@ -244,6 +252,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @return true if successful
      */ 
    private boolean setRunning() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (runState != null)
@@ -263,6 +272,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @return true if successful
      */
     private boolean reset() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (runState == CANCELLED) 

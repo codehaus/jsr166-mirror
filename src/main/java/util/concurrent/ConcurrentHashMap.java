@@ -594,6 +594,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // inherit Map javadoc
     public boolean isEmpty() {
+        final Segment[] segments = this.segments;
         /*
          * We need to keep track of per-segment modCounts to avoid ABA
          * problems in which an element in one segment was added and
@@ -626,6 +627,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // inherit Map javadoc
     public int size() {
+        final Segment[] segments = this.segments;
         int[] mc = new int[segments.length];
         for (;;) {
             long sum = 0;
@@ -699,6 +701,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         if (value == null)
             throw new NullPointerException();
 
+        final Segment[] segments = this.segments;
         int[] mc = new int[segments.length];
         for (;;) {
             int sum = 0;

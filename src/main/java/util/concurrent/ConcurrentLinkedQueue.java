@@ -55,24 +55,24 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * methods ignore those with nulls.
      */
 
-    private static class AtomicLinkedNode<E> {
+    private static class Node<E> {
         private volatile E item;
-        private volatile AtomicLinkedNode<E> next;
+        private volatile Node<E> next;
         
         private static final 
-            AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode> 
+            AtomicReferenceFieldUpdater<Node, Node> 
             nextUpdater =
             AtomicReferenceFieldUpdater.newUpdater
-            (AtomicLinkedNode.class, AtomicLinkedNode.class, "next");
+            (Node.class, Node.class, "next");
         private static final 
-            AtomicReferenceFieldUpdater<AtomicLinkedNode, Object> 
+            AtomicReferenceFieldUpdater<Node, Object> 
             itemUpdater =
             AtomicReferenceFieldUpdater.newUpdater
-            (AtomicLinkedNode.class, Object.class, "item");
+            (Node.class, Object.class, "item");
         
-        AtomicLinkedNode(E x) { item = x; }
+        Node(E x) { item = x; }
         
-        AtomicLinkedNode(E x, AtomicLinkedNode<E> n) { item = x; next = n; }
+        Node(E x, Node<E> n) { item = x; next = n; }
         
         E getItem() {
             return item;
@@ -86,36 +86,36 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             itemUpdater.set(this, val);
         }
         
-        AtomicLinkedNode<E> getNext() {
+        Node<E> getNext() {
             return next;
         }
         
-        boolean casNext(AtomicLinkedNode<E> cmp, AtomicLinkedNode<E> val) {
+        boolean casNext(Node<E> cmp, Node<E> val) {
             return nextUpdater.compareAndSet(this, cmp, val);
         }
         
-        void setNext(AtomicLinkedNode<E> val) {
+        void setNext(Node<E> val) {
             nextUpdater.set(this, val);
         }
         
     }
 
     private static final 
-        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> 
+        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node> 
         tailUpdater = 
         AtomicReferenceFieldUpdater.newUpdater
-        (ConcurrentLinkedQueue.class, AtomicLinkedNode.class, "tail");
+        (ConcurrentLinkedQueue.class, Node.class, "tail");
     private static final 
-        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> 
+        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node> 
         headUpdater = 
         AtomicReferenceFieldUpdater.newUpdater
-        (ConcurrentLinkedQueue.class,  AtomicLinkedNode.class, "head");
+        (ConcurrentLinkedQueue.class,  Node.class, "head");
 
-    private boolean casTail(AtomicLinkedNode<E> cmp, AtomicLinkedNode<E> val) {
+    private boolean casTail(Node<E> cmp, Node<E> val) {
         return tailUpdater.compareAndSet(this, cmp, val);
     }
 
-    private boolean casHead(AtomicLinkedNode<E> cmp, AtomicLinkedNode<E> val) {
+    private boolean casHead(Node<E> cmp, Node<E> val) {
         return headUpdater.compareAndSet(this, cmp, val);
     }
 
@@ -124,10 +124,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * Pointer to header node, initialized to a dummy node.  The first
      * actual node is at head.getNext().
      */
-    private transient volatile AtomicLinkedNode<E> head = new AtomicLinkedNode<E>(null, null);
+    private transient volatile Node<E> head = new Node<E>(null, null);
 
     /** Pointer to last node on list **/
-    private transient volatile AtomicLinkedNode<E> tail = head;
+    private transient volatile Node<E> tail = head;
 
 
     /**
@@ -172,10 +172,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
-        AtomicLinkedNode<E> n = new AtomicLinkedNode<E>(o, null);
+        Node<E> n = new Node<E>(o, null);
         for(;;) {
-            AtomicLinkedNode<E> t = tail;
-            AtomicLinkedNode<E> s = t.getNext();
+            Node<E> t = tail;
+            Node<E> s = t.getNext();
             if (t == tail) {
                 if (s == null) {
                     if (t.casNext(s, n)) {
@@ -191,9 +191,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     public E poll() {
         for (;;) {
-            AtomicLinkedNode<E> h = head;
-            AtomicLinkedNode<E> t = tail;
-            AtomicLinkedNode<E> first = h.getNext();
+            Node<E> h = head;
+            Node<E> t = tail;
+            Node<E> first = h.getNext();
             if (h == head) {
                 if (h == t) {
                     if (first == null)
@@ -214,9 +214,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     public E peek() { // same as poll except don't remove item
         for (;;) {
-            AtomicLinkedNode<E> h = head;
-            AtomicLinkedNode<E> t = tail;
-            AtomicLinkedNode<E> first = h.getNext();
+            Node<E> h = head;
+            Node<E> t = tail;
+            Node<E> first = h.getNext();
             if (h == head) {
                 if (h == t) {
                     if (first == null)
@@ -240,11 +240,11 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * node, not element (so we cannot collapse with peek() without
      * introducing race.)
      */
-    AtomicLinkedNode<E> first() {
+    Node<E> first() {
         for (;;) {
-            AtomicLinkedNode<E> h = head;
-            AtomicLinkedNode<E> t = tail;
-            AtomicLinkedNode<E> first = h.getNext();
+            Node<E> h = head;
+            Node<E> t = tail;
+            Node<E> first = h.getNext();
             if (h == head) {
                 if (h == t) {
                     if (first == null)
@@ -280,7 +280,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public int size() {
         int count = 0;
-        for (AtomicLinkedNode<E> p = first(); p != null; p = p.getNext()) {
+        for (Node<E> p = first(); p != null; p = p.getNext()) {
             if (p.getItem() != null) {
                 // Collections.size() spec says to max out
                 if (++count == Integer.MAX_VALUE)
@@ -292,7 +292,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     public boolean contains(Object o) {
         if (o == null) return false;
-        for (AtomicLinkedNode<E> p = first(); p != null; p = p.getNext()) {
+        for (Node<E> p = first(); p != null; p = p.getNext()) {
             E item = p.getItem();
             if (item != null &&
                 o.equals(item))
@@ -303,7 +303,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     public boolean remove(Object o) {
         if (o == null) return false;
-        for (AtomicLinkedNode<E> p = first(); p != null; p = p.getNext()) {
+        for (Node<E> p = first(); p != null; p = p.getNext()) {
             E item = p.getItem();
             if (item != null &&
                 o.equals(item) &&
@@ -316,7 +316,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     public Object[] toArray() {
         // Use ArrayList to deal with resizing.
         ArrayList<E> al = new ArrayList<E>();
-        for (AtomicLinkedNode<E> p = first(); p != null; p = p.getNext()) {
+        for (Node<E> p = first(); p != null; p = p.getNext()) {
             E item = p.getItem();
             if (item != null)
                 al.add(item);
@@ -327,7 +327,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     public <T> T[] toArray(T[] a) {
         // try to use sent-in array
         int k = 0;
-        AtomicLinkedNode<E> p;
+        Node<E> p;
         for (p = first(); p != null && k < a.length; p = p.getNext()) {
             E item = p.getItem();
             if (item != null)
@@ -341,7 +341,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
         // If won't fit, use ArrayList version
         ArrayList<E> al = new ArrayList<E>();
-        for (AtomicLinkedNode<E> q = first(); q != null; q = q.getNext()) {
+        for (Node<E> q = first(); q != null; q = q.getNext()) {
             E item = q.getItem();
             if (item != null)
                 al.add(item);
@@ -367,7 +367,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         /**
          * Next node to return item for.
          */
-        private AtomicLinkedNode<E> nextNode;
+        private Node<E> nextNode;
 
         /**
          * nextItem holds on to item fields because once we claim
@@ -380,7 +380,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         /**
          * Node of the last returned item, to support remove.
          */
-        private AtomicLinkedNode<E> lastRet;
+        private Node<E> lastRet;
 
         Itr() {
             advance();
@@ -394,7 +394,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             lastRet = nextNode;
             E x = nextItem;
 
-            AtomicLinkedNode<E> p = (nextNode == null)? first() : nextNode.getNext();
+            Node<E> p = (nextNode == null)? first() : nextNode.getNext();
             for (;;) {
                 if (p == null) {
                     nextNode = null;
@@ -421,7 +421,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         public void remove() {
-            AtomicLinkedNode<E> l = lastRet;
+            Node<E> l = lastRet;
             if (l == null) throw new IllegalStateException();
             // rely on a future traversal to relink.
             l.setItem(null);
@@ -443,7 +443,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         s.defaultWriteObject();
 
         // Write out all elements in the proper order.
-        for (AtomicLinkedNode<E> p = first(); p != null; p = p.getNext()) {
+        for (Node<E> p = first(); p != null; p = p.getNext()) {
             Object item = p.getItem();
             if (item != null)
                 s.writeObject(item);
@@ -462,7 +462,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         throws java.io.IOException, ClassNotFoundException {
         // Read in capacity, and any hidden stuff
         s.defaultReadObject();
-        head = new AtomicLinkedNode<E>(null, null);
+        head = new Node<E>(null, null);
         tail = head;
         // Read in all elements and place in queue
         for (;;) {

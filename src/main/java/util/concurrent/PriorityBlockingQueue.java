@@ -15,16 +15,17 @@ import java.util.*;
  * obeying its ordering rules and implementation characteristics.
  * @since 1.5
  * @author Doug Lea
-**/
+*/
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
-        implements BlockingQueue<E>, java.io.Serializable {
+        implements Sorted, BlockingQueue<E>, java.io.Serializable {
 
     private final PriorityQueue<E> q;
     private final ReentrantLock lock = new ReentrantLock(true);
     private final Condition notEmpty = lock.newCondition();
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> with the default initial capacity
+     * Create a <tt>PriorityBlockingQueue</tt> with the default initial 
+     * capacity
      * (11) that orders its elements according to their natural
      * ordering (using <tt>Comparable</tt>.)
      */
@@ -55,7 +56,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * ordering.
      */
     public PriorityBlockingQueue(int initialCapacity,
-                                 Comparator<E> comparator) {
+                                 Comparator<? super E> comparator) {
         q = new PriorityQueue<E>(initialCapacity, comparator);
     }
 
@@ -71,30 +72,30 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * <tt>Sorted</tt>, the priority queue is ordered according to
      * its elements' natural order.
      *
-     * @param initialElements the collection whose elements are to be placed
+     * @param c the collection whose elements are to be placed
      *        into this priority queue.
      * @throws ClassCastException if elements of the specified collection
      *         cannot be compared to one another according to the priority
      *         queue's ordering.
-     * @throws NullPointerException if the specified collection or an
-     *         element of the specified collection is <tt>null</tt>.
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
      */
-    public PriorityBlockingQueue(Collection<E> initialElements) {
-        q = new PriorityQueue<E>(initialElements);
+    public PriorityBlockingQueue(Collection<? extends E> c) {
+        q = new PriorityQueue<E>(c);
     }
 
 
     // these first two override just to get the throws docs
 
     /**
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean add(E element) {
         return super.add(element);
     }
 
     /**
-     * @throws NullPointerException if any element is <tt>null</tt>.
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);
@@ -104,12 +105,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return q.comparator();
     }
 
-    /** @throws NullPointerException if <tt>x</tt> is <tt>null</tt> */
-    public boolean offer(E x) {
-        if (x == null) throw new NullPointerException();
+    /** 
+     * @throws NullPointerException if the specified element is <tt>null</tt> 
+     **/
+    public boolean offer(E o) {
+        if (o == null) throw new NullPointerException();
         lock.lock();
         try {
-            boolean ok = q.offer(x);
+            boolean ok = q.offer(o);
             assert ok;
             notEmpty.signal();
             return true;
@@ -119,13 +122,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public void put(E x) throws InterruptedException {
-        offer(x); // never need to block
+    public void put(E o) throws InterruptedException {
+        offer(o); // never need to block
     }
 
-    public boolean offer(E x, long timeout, TimeUnit unit)
+    public boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException {
-        return offer(x); // never need to block
+        return offer(o); // never need to block
     }
 
     public E take() throws InterruptedException {
@@ -212,20 +215,20 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return Integer.MAX_VALUE;
     }
 
-    public boolean remove(Object x) {
+    public boolean remove(Object o) {
         lock.lock();
         try {
-            return q.remove(x);
+            return q.remove(o);
         }
         finally {
             lock.unlock();
         }
     }
 
-    public boolean contains(Object x) {
+    public boolean contains(Object o) {
         lock.lock();
         try {
-            return q.contains(x);
+            return q.contains(o);
         }
         finally {
             lock.unlock();

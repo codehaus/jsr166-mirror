@@ -1,19 +1,18 @@
 package java.util.concurrent;
 
 /**
- * Exception thrown when an asynchronously executing task aborts, 
- * failing to produce a result.
+ * Thrown when attempting to retrieve the results of an asychronous
+ * task that aborted, failing to produce a result.  
+ * @@@brian Why not just use standard exception chaining?  
  */
 public class ExecutionException extends Exception {
 
     /**
-     * This field holds the target if the
-     * ExecutionException(Throwable target) constructor was
-     * used to instantiate the object
+     * This field holds the target if the ExecutionException(Throwable
+     * target) constructor was used to instantiate the object
      *
      * @serial
-     *
-     */
+     * */
     private Throwable target;
     
     /**
@@ -49,11 +48,11 @@ public class ExecutionException extends Exception {
     /**
      * Get the thrown target exception.
      *
-     * <p>This method predates the general-purpose exception chaining facility.
-     * The {@link Throwable#getCause()} method is now the preferred means of
-     * obtaining this information.
+     * <p>This method predates the general-purpose exception chaining
+     * facility.  The {@link Throwable#getCause()} method is now the
+     * preferred means of obtaining this information.
      *
-     * @return the thrown target exception (cause of this exception).
+     * @return the thrown target exception (cause of this exception).  
      */
     public Throwable getTargetException() {
         return target;

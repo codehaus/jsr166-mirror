@@ -9,12 +9,13 @@ import java.util.*;
  * sequentially in a single thread, or implement a thread pool with
  * reusable task threads.  
  *
- * <p>The most common configuration is the thread pool. Thread pools
- * can solve two different problems at the same time: They usually
- * provide faster performance when executing large numbers of
- * asynchronous tasks, due to reduced per-task invocation overhead,
- * and they provide a means of bounding and managing the resources,
- * including threads, consumed in executing a collection of tasks.
+ * <p>The most common configuration of ThreadExecutor is a thread
+ * pool. Thread pools address solve two different problems at the same
+ * time: they usually provide faster performance when executing large
+ * numbers of asynchronous tasks, due to reduced per-task invocation
+ * overhead, and they provide a means of bounding and managing the
+ * resources, including threads, consumed in executing a collection of
+ * tasks.
  *
  * <p> To be useful across a wide range of contexts, this class
  * provides many adjustable parameters and extensibility hooks.
@@ -35,15 +36,89 @@ import java.util.*;
  * may be useful for monitoring and tuning executors.
  *
  * <p>
- * <b>Tuning guide</b> (Outline.)
+ * <b>Tuning guide</b> 
+ * @@@brian I have copied some stuff from dl.u.c; please review to make sure
+ * that it is still correct.  
+ * @@@brian Also please check if my statements about queuing and blocking
+ * are correct.
  * <dl>
- *   <dt> Minimum and maximum Pool size
- *   <dt> Keep-alive times
- *   <dt> Queeing
- *   <dt> Creating new threads
- *   <dt> Before and after intercepts
- *   <dt> Blocked execution
- *   <dt> Termination
+ *
+ * <dt> Minimum and maximum pool size.  ThreadExecutor will
+ * automatically adjust the pool size within the bounds set by
+ * minimumPoolSize and maximumPoolSize.  When a new task is submitted,
+ * and fewer than the minimum number of threads are running, a new
+ * thread is created to handle the request, even if other worker
+ * threads are idle.  If there are more than the minimum but less than
+ * the maximum number of threads running, a new thread will be created
+ * only if all other threads are busy.  By setting minimumPoolSize and
+ * maximumPoolSize to N, you create a fixed-size thread pool.
+ *
+ * <dt> Keep-alive.  The keepAliveTime determines what happens to idle
+ * threads.  If the pool currently has more than the minimum number of
+ * threads, excess threads will be terminated if they have been idle
+ * for more than the keepAliveTime.  
+ *
+ * <dt> Queueing.  You are free to specify the queuing mechanism used
+ * to handle submitted tasks.  The newCachedThreadPool factory method
+ * uses queueless synchronous channels to to hand off work to threads.
+ * This is a safe, conservative policy that avoids lockups when
+ * handling sets of requests that might have internal dependencies.
+ * The newFixedThreadPool factory method uses a LinkedBlockingQueue,
+ * which will cause new tasks to be queued in cases where all
+ * MaximumPoolSize threads are busy.  Queues are sometimes appropriate
+ * when each task is completely independent of others, so tasks cannot
+ * affect each others execution. For example, in an http server.  When
+ * given a choice, this pool always prefers adding a new thread rather
+ * than queueing if there are currently fewer than the current
+ * getMinimumPoolSize threads running, but otherwise always prefers
+ * queuing a request rather than adding a new thread.
+ *
+ * <p>While queuing can be useful in smoothing out transient bursts of
+ * requests, especially in socket-based services, it is not very well
+ * behaved when commands continue to arrive on average faster than
+ * they can be processed.  Using a bounded queue implements an overflow
+ * policy which drops requests which cannot be handled due to insufficient
+ * capacity.
+ *
+ * Queue sizes and maximum pool sizes can often be traded off for each
+ * other. Using large queues and small pools minimizes CPU usage, OS
+ * resources, and context-switching overhead, but can lead to
+ * artifically low throughput.  If tasks frequently block (for example
+ * if they are I/O bound), a JVM and underlying OS may be able to
+ * schedule time for more threads than you otherwise allow. Use of
+ * small queues or queueless handoffs generally requires larger pool
+ * sizes, which keeps CPUs busier but may encounter unacceptable
+ * scheduling overhead, which also decreases throughput.
+ *
+ * <dt> Creating new threads.  New threads are created through the
+ * ExecutorIntercepts.  By default, threads are created simply with
+ * the new Thread(Runnable) constructor, but by overriding
+ * ExecutorIntercepts.newThread, you can alter the thread's name,
+ * thread group, priority, daemon status, etc.
+ *
+ * <dt> Before and after intercepts.  The ExecutorIntercepts class has
+ * methods which are called before and after execution of a task.
+ * These can be used to manipulate the execution environment (for
+ * example, reinitializing ThreadLocals), gather statistics, or
+ * perform logging.
+ *
+ * <dt> Blocked execution.  There are a number of factors which can
+ * bound the number of tasks which can execute at once, including the
+ * maximum pool size and the queuing mechanism used.  If you are using
+ * a synchronous queue, the execute() method will block until threads
+ * are available to execute.  If you are using a bounded queue, then
+ * tasks will be discarded if the bound is reached.  If the executor
+ * determines that a task cannot be executed because it has been
+ * refused by the queue and no threads are available, the
+ * ExecutorIntercepts.cannotExecute method will be called.  
+ *
+ * <dt> Termination.  ThreadExecutor supports two shutdown options,
+ * immediate and graceful.  In an immediate shutdown, any threads
+ * currently executing are interrupted, and any tasks not yet begun
+ * are returned from the shutdownNow call.  In a graceful shutdown,
+ * all queued tasks are allowed to run, but new tasks may not be
+ * submitted.
+ *
  * </dl>
  * @see ExecutorIntercepts
  **/
@@ -319,13 +394,50 @@ public class ThreadExecutor implements Executor {
 
     // Executor methods
 
+
+    /**
+     * Execute the given command sometime in the future.  The command
+     * may execute in the calling thread, in a new thread, or in a
+     * pool thread, at the discretion of the Executor implementation.
+     **/
     public void execute(Runnable command) {}
 
+    /**
+     * Initiate an orderly shutdown in which previously submitted tasks
+     * are executed, but new tasks submitted to execute() subsequent to
+     * calling shutdown() are not.
+     *
+     * <p> The exact fate of tasks submitted in subsequent calls to
+     * <tt>execute</tt> is left unspecified in this
+     * interface. Implementations may provide different options, such
+     * as ignoring them, or causing <tt>execute</tt> to throw an
+     * (unchecked) <tt>IllegalStateException</tt>.
+     **/
     public void shutdown() {}
+
+    /**
+     * Attempt to stop processing all actively executing tasks, never
+     * start processing previously submitted tasks that have not yet
+     * commenced execution, and cause subsequently submitted tasks not
+     * to be processed.  The exact fate of tasks submitted in
+     * subsequent calls to <tt>execute</tt> is left unspecified in
+     * this interface. Implementations may provide different options,
+     * such as ignoring them, or causing <tt>execute</tt> to throw an
+     * (unchecked) <tt>IllegalStateException</tt>.  Similarly, there
+     * are no guarantees beyond best-effort attempts to stop
+     * processing actively executing tasks.  For example typical
+     * thread-based Executors will cancel via
+     * <tt>Thread.interrupt</tt>, so if any tasks mask or fail to
+     * respond to interrupts, they might never terminate.
+     * @return a list of all tasks that never commenced execution.
+     **/
     public List shutdownNow() {
         return null;
     }
 
+    /**
+     * Return true if the Executor has been shut down.
+     **/
     public boolean isShutdown() {
         return false;
     }

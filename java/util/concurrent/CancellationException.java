@@ -1,8 +1,8 @@
 package java.util.concurrent;
 
 /**
- * Exception thrown when trying to obtain the results of a task that has been
- * cancelled.
+ * Thrown when trying to retrieve the results of an asynchronous task
+ * to indicate that the task was cancelled before its completion.
  **/
 public class CancellationException extends IllegalStateException {  
     /**

@@ -58,16 +58,13 @@ public class AtomicBoolean implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the value to the given update value if the
-     * current value is equal to the expected value.  Any given
-     * invocation of this operation may fail (return
-     * <tt>false</tt>) spuriously, but repeated invocation when
-     * the current value holds the expected value and no other thread
-     * is also attempting to set the value will eventually succeed.
+     * Atomically set the value to the given updated value
+     * if the current value <tt>==</tt> the expected value.
      *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful
+     * @return true if successful. False return indicates that
+     * the actual value was not equal to the expected value.
      */
     public final boolean compareAndSet(boolean expect, boolean update) {
         int e = expect ? 1 : 0;

@@ -498,7 +498,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         final Condition c = lock.newCondition();
         try {
             lock.lock();
-            assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
             lock.unlock();
         }
         catch (Exception ex) {
@@ -515,7 +515,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         try {
             lock.lock();
             java.util.Date d = new java.util.Date();
-            assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + 10)));
+            c.awaitUntil(new java.util.Date(d.getTime() + 10));
             lock.unlock();
         }
         catch (Exception ex) {

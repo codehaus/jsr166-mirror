@@ -53,16 +53,12 @@ import java.util.Date;
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
  * will result in a {@link NullPointerException} being thrown.
  *
- *
- *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/06 18:42:17 $
+ * @revised $Date: 2003/06/07 16:06:02 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
- * @fixme (1) We need a non-nested example to motivate this
- * @fixme (2) Describe performance aspects of interruptible locking for the RI
  **/
 public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.io.Serializable {
     /*
@@ -90,12 +86,13 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
           if (h != null) unpark(h's successor's thread);
 
       * The fast path uses one atomic CAS operation, plus one
-        StoreLoad barrier per lock/unlock pair.  The "owner" field is
-        handled as a simple spinlock.  To lock, the owner field is set
-        to current thread using conditional atomic update.  To unlock,
-        the owner field is set to null, checking if anyone needs
-        waking up, if so doing so.  Recursive locks/unlocks instead
-        increment/decrement recursion field.
+        StoreLoad barrier (i.e., volatile-write-barrier) per
+        lock/unlock pair.  The "owner" field is handled as a simple
+        spinlock.  To lock, the owner field is set to current thread
+        using conditional atomic update.  To unlock, the owner field
+        is set to null, checking if anyone needs waking up, if so
+        doing so.  Recursive locks/unlocks instead increment/decrement
+        recursion field.
 
       * By default, contended locks use a kind of "greedy" /
         "renouncement" / barging / convoy-avoidance strategy: When a
@@ -165,9 +162,9 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
         appears to be null.
 
         Cancellation introduces some conservatism to the basic
-        algorithm of these.  Since we must poll for cancellation of
-        other nodes, we can miss noticing whether a cancelled node is
-        ahead or behind us. This is dealt with by always unparking
+        algorithms.  Since we must poll for cancellation of other
+        nodes, we can miss noticing whether a cancelled node is ahead
+        or behind us. This is dealt with by always unparking
         successors upon cancellation, and not letting them park again
         (by saturating release counts) until they stabilize on a new
         predecessor.
@@ -177,26 +174,27 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
         queues because they are only accessed when lock is held.  To
         wait, a thread makes a node inserted into a condition queue.
         Upon signal, the node is transferred to the lock queue.
-        Special values of releaseStatus fields are used to mark which queue a
-        node is on.
+        Special values of releaseStatus fields are used to mark which
+        queue a node is on.
 
-      * All suspension and resumption of threads uses the JSR166
-        native park/unpark API. These are safe versions of
-        suspend/resume (plus timeout support) that internally avoid
-        the intrinsic race problems with suspend/resume: Park suspends
-        if not preceded by an unpark. Unpark resumes if waiting, else
-        causes next park not to suspend. While safe and efficient,
-        these are not general-purpose public operations because we do
-        not want code outside this package to randomly call these
-        methods -- parks and unparks should be matched up. (It is OK
-        to have more unparks than unparks, but it causes threads to
-        spuriously wake up. So minimizing excessive unparks is a
-        performance concern.)
+      * All suspension and resumption of threads uses the internal
+        JSR166 native park/unpark API. These are safe versions of
+        suspend/resume (plus timeout support) that avoid the intrinsic
+        race problems with suspend/resume: Park suspends if not
+        preceded by an unpark. Unpark resumes if waiting, else causes
+        next park not to suspend. While safe and efficient, these are
+        not general-purpose public operations because we cannot allow
+        code outside this package to randomly call these methods --
+        parks and unparks should be matched up. (It is OK to have more
+        unparks than unparks, but it causes threads to spuriously wake
+        up. So minimizing excessive unparks is a performance concern.)
 
       * The ReentrantLock class extends package-private
         ReentrantLockQueueNode class as an expedient and efficient
         (although slightly sleazy) solution to serialization and
-        initialization problems.
+        initialization problems -- we need head and tail nodes to be
+        initialized to a head node, so use the ReeantrantLock itself
+        as that node.
     */
 
     /*
@@ -248,7 +246,6 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
     final boolean casReleaseStatus(ReentrantLockQueueNode node, int cmp, int val) {
         return releaseStatusUpdater.compareAndSet(node, cmp, val);
     }
-
 
     /**
      * Special value for releaseStatus indicating that node is cancelled.
@@ -308,57 +305,29 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
         return true;
     }
 
-    /*
-     * policy/status values for main lock routine. A bit ugly but
-     * worth it to factor the common lock code across the different
-     * policies for suppressing or throwing IE and indicating
-     * timeouts.
-     */
-
-    /** 
-     * As param, suppress interrupts.
-     * As return, lock was successfully obtained.
-     */
-    static final int NO_INTERRUPT = 0;
-
-    /** 
-     * As param, allow interrupts.
-     * As return, lock was not obtained because thread was interrupted.
-     */
-    static final int INTERRUPT = -1;
-
-    
-    /** 
-     * As param, use timed waits. 
-     * As return, lock was not obtained because timeout was exceeded.
-     */
-    static final int TIMEOUT = -2;
-
     /**
      * Main locking code, parameterized across different policies.
      * @param current current thread
      * @param node its wait-node, it is alread exists; else null in
      * which case it is created,
-     * @param policy -- NO_INTERRUPT, INTERRUPT, or TIMEOUT
-     * thread interrupted
+     * @param interruptible - true if acan abort for interrupt or timeout
      * @param nanos time to wait, or zero if untimed
-     * @return NO_INTERRUPT on success, else INTERRUPT, or TIMEOUT
+     * @return true if lock acquired (can be false only if interruptible)
      */
-    final int doLock(Thread current, 
-                     ReentrantLockQueueNode node, 
-                     int policy,
-                     long nanos) {
+    final boolean doLock(Thread current, 
+                         ReentrantLockQueueNode node, 
+                         boolean interruptible,
+                         long nanos) {
 
-        int status = NO_INTERRUPT;
+        boolean interrupted = false;
 
         /*
          * Bypass queueing if a recursive lock
          */
         if (owner == current) {
             ++recursions;
-            return status;
+            return true;
         }
-
 
         long lastTime = 0; // for adjusting timeouts, below
 
@@ -394,20 +363,14 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
              */
 
             if (p == head && acquireOwner(current)) {
-                /*
-                 * status can be INTERRUPT here if policy is
-                 * NO_INTERRUPT but thread was interrupted while
-                 * waiting, in which case we must reset status upon
-                 * return.
-                 */
-                if (status == INTERRUPT) 
+                if (interrupted) // re-interrupt on exit
                     current.interrupt();
 
                 p.next = null;       // clear for GC and to suppress signals
                 node.thread = null;  
                 node.prev = null;    
                 head = node;
-                return NO_INTERRUPT;
+                return true;
             }
 
             int releaseStatus = p.releaseStatus;
@@ -443,30 +406,33 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
              * incrementing if already positive.
              *
              */
-            else if (casReleaseStatus(p, releaseStatus, (releaseStatus > 0)? 0 : -1) && releaseStatus <= 0) {
+            else if (casReleaseStatus(p, releaseStatus, 
+                                      (releaseStatus > 0)? 0 : -1) && 
+                     releaseStatus <= 0) {
 
                 // Update and check timeout value
                 if (nanos > 0) { 
                     long now = TimeUnit.nanoTime();
                     if (lastTime != 0) {
                         nanos -= now - lastTime;
-                        if (nanos <= 0) 
-                            status = TIMEOUT;
+                        if (nanos == 0) // avoid zero
+                            nanos = -1;
                     }
                     lastTime = now;
                 }
                 
-                if (status != TIMEOUT)
+                if (nanos >= 0)
                     JSR166Support.park(false, nanos);
                 
-                if (Thread.interrupted()) 
-                    status = INTERRUPT;
-
-                if (status != NO_INTERRUPT && policy != NO_INTERRUPT) {
+                if (!interruptible) {
+                    if (Thread.interrupted()) // consume interrupt for now 
+                        interrupted = true; 
+                }
+                else if (nanos < 0 || current.isInterrupted()) {
                     node.thread = null;      // disable signals
                     releaseStatusUpdater.set(node, CANCELLED);  // don't need CAS here
                     signalSuccessor(node);   
-                    return status;
+                    return false;
                 }
             }
         }
@@ -571,11 +537,13 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
                 return;
             if (owner != null) // Don't bother if some thread got lock
                 return;
+
             if (casReleaseStatus(h, c, (c < 0)? 0 : 1)) { // saturate at 1
                 if (c < 0) 
                     signalSuccessor(h);
                 return;
             }
+            // else retry if CAS fails
         }
     }
 
@@ -590,15 +558,13 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      */
     public void unlock() {
         checkOwner(Thread.currentThread());
-
-        if (recursions > 0) {
+        if (recursions > 0) 
             --recursions;
-            return;
+        else {
+            ownerUpdater.set(this, null);
+            if (tail != this)  // don't bother if never contended
+                releaseFirst();
         }
-
-        ownerUpdater.set(this, null);
-        if (tail != this)  // don't bother if never contended
-            releaseFirst();
     }
 
     /**
@@ -615,10 +581,8 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      */
     public void lock() {
         Thread current = Thread.currentThread();
-        if (canBarge() && acquireOwner(current)) 
-            return;
-        int stat = doLock(current, null, NO_INTERRUPT, 0);
-        //        assert stat == NO_INTERRUPT;
+        if (!canBarge() || !acquireOwner(current))
+            doLock(current, null, false, 0);
     }
 
     /**
@@ -654,12 +618,12 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      */
     public void lockInterruptibly() throws InterruptedException { 
         Thread current = Thread.currentThread();
-        if (Thread.interrupted()) 
-            throw new InterruptedException();
-        if (canBarge() && acquireOwner(current)) 
-            return;
-        if (doLock(current, null, INTERRUPT, 0) == INTERRUPT)
-            throw new InterruptedException();
+        if (!Thread.interrupted()) {
+            if ((canBarge() && acquireOwner(current)) || 
+                doLock(current, null, true, 0))
+                return;
+        }
+        throw new InterruptedException();
     }
 
     /**
@@ -741,19 +705,17 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
         Thread current = Thread.currentThread();
         if (canBarge() && acquireOwner(current))
             return true;
-        if (owner == current) { 
+        if (owner == current) { // check recursions before timeout
             ++recursions;
             return true;
         }
         if (timeout <= 0) 
             return false;
-        int stat = doLock(current, null, TIMEOUT, unit.toNanos(timeout));
-        if (stat == NO_INTERRUPT)
+        if (doLock(current, null, true, unit.toNanos(timeout)))
             return true;
-        if (stat == INTERRUPT)
+        if (Thread.interrupted())
             throw new InterruptedException();
-        assert stat == TIMEOUT;
-        return false; 
+        return false;  // timed out
     }
 
 
@@ -877,7 +839,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
     } 
 
     /**
-     * Transfer a node from condition queue onto lock queue. 
+     * Transfer a node from a condition queue onto lock queue. 
      * Return true if successful (i.e., node not cancelled)
      */
     final boolean transferToLockQueue(ReentrantLockQueueNode node) {
@@ -1041,12 +1003,12 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
              * us. Otherwise, upon exit, our node is already in the
              * lock queue when doLock is called.
              */
-            doLock(current, w, NO_INTERRUPT, 0);
+            doLock(current, w, false, 0);
 
             recursions = recs;
             afterWait();
 
-            if (wasInterrupted) 
+            if (wasInterrupted || Thread.interrupted())
                 throw new InterruptedException();
         }
         
@@ -1066,7 +1028,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
                     wasInterrupted = true;
             }
 
-            doLock(current, w, NO_INTERRUPT, 0);
+            doLock(current, w, false, 0);
             recursions = recs;
             afterWait();
             // avoid re-interrupts on exit
@@ -1110,11 +1072,11 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
                 } 
             }
 
-            doLock(current, w, NO_INTERRUPT, 0);
+            doLock(current, w, false, 0);
             recursions = recs;
             afterWait();
 
-            if (wasInterrupted) 
+            if (wasInterrupted || Thread.interrupted())
                 throw new InterruptedException();
             else if (timeLeft <= 0)
                 return timeLeft;
@@ -1157,11 +1119,11 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
                 } 
             }
 
-            doLock(current, w, NO_INTERRUPT, 0);
+            doLock(current, w, false, 0);
             recursions = recs;
             afterWait();
 
-            if (wasInterrupted) 
+            if (wasInterrupted || Thread.interrupted())
                 throw new InterruptedException();
             return !cancelled;
         }

@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Atomics</title>
+</head>
+
+<body>
+
+
+This package contains classes that support lock-free thread-safe
+programming on single variables. All provide an operation of the form:
+
+<pre>
+  boolean attemptUpdate(expectedValue, updateValue);
+</pre>
+
+<p> This method (which varies in argument types across different
+classes) is used to atomically set a variable to the
+<code>updateValue</code> if it currently holds the
+<code>expectedValue</code>, reporting <code>true</code> on success.
+Calls to <code>attemptUpdate</code> should almost always appear in
+loops of some sort.  Any given invocation of
+<code>attemptUpdate</code> method may fail, even spuriously (that is,
+for no apparent reason). A <code>false</code> return means only that
+the operation may be retried if desired, relying on the guarantee that
+repeated invocation when the variable holds <code>expectedValue</code>
+and no other thread is also attempting to set the variable will
+eventually succeed.
+
+<p>This specification of <code>attemptUpdate</code> enables
+implementations to employ efficient machine-level atomic instructions
+that are available on contemporary processors. However on some
+platforms support may entail some form of internal locking. Thus the
+method is not strictly guaranteed to be non-blocking.
+
+<p> Method <code>attemptUpdate</code>, along with method
+<code>get</code> that returns current value, minimally suffice for
+programming with atomic operations. The classes and methods in this
+package provide a few related operations to form a small toolkit of
+common constructions using atomics.
+
+<p>Instances of classes <code>AtomicBoolean</code>,
+<code>AtomicInteger</code>, <code>AtomicLong</code>, and
+<code>AtomicReference</code> each provide access and updates to a
+single variable of the corresponding type.  The memory effects for
+accesses and updates are exactly the same as those of
+<code>volatile</code> fields.  Each class also provides appropriate
+utility methods for that type.  For example, <code>AtomicLong</code>
+and <code>AtomicInt</code> provide an atomic increment method.  One
+application is to generate sequence numbers, as in:
+
+<pre>
+class Sequencer {
+  private AtomicLong sequenceNumber = new AtomicLong(0);
+  public long next() { return sequenceNumber.getAndIncrement(); }
+}
+</pre>
+
+
+<p>Atomic references find use in constructions that require additional
+utility classes, not utility methods.  The
+<code>AtomicMarkableReference</code> class associates a single boolean
+with a reference. For example, this bit might be used inside a data
+structure to mean that the object being referenced has logically been
+deleted. The <code>AtomicStampedReference</code> class associates an
+integer value with a reference. This may be used for example, to
+represent version numbers corresponding to series of updates.
+Finally, <code>AtomicReferenceFieldUpdater</code> is a
+reflection-based utility that enables atomic updates to designated
+reference fields of designated classes. It may be of use in atomic
+data structures in which several reference fields of the same node
+(for example, the links of a tree node) are independently subject to
+atomic updates. This class enables greater flexibility in how and when
+to use atomic updates, at the expense of more awkward reflection-based
+setup, less convenient usage, and weaker guarantees.
+
+<p> Atomics are not used very often in application-level classes.  They
+are designed primarily as building blocks for implementing
+non-blocking data structures and related infrastructure classes.  The
+<code>attemptUpdate</code> method is not a general replacement for
+locking. It applies only when critical updates for an object are
+confined to a <em>single</em> variable.  And atomic classes are not
+general purpose replacements for <code>java.lang.Integer</code>,
+<code>java.lang.Boolean</code> and related classes. They do
+<em>NOT</em> define methods such as <code>hashCode</code> and
+<code>compareTo</code>. (Because atomic variables are expected to be
+mutated, they are poor choices for hash table keys.)  Additionally,
+classes are provided only for those types that are commonly useful as
+atomics. For example, there is no atomic class for representing
+<code>byte</code>. In those infrequent cases where you would like to
+do so, you can use an <code>AtomicInteger</code> to hold
+<code>byte</code> values, and cast appropriately. Similarly, you can
+hold floating point types using <code>Float.floatToIntBits</code> and
+<code>Float.intBitstoFloat</code> conversions.
+
+
+
+<hr>
+<address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
+<!-- hhmts start --> Last modified: Mon Jan 20 11:01:01 EST 2003 <!-- hhmts end -->
+</body> </html>

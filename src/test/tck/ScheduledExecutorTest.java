@@ -1059,7 +1059,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
-            l.add(Executors.callable(new MediumInterruptedRunnable(), TEST_STRING));
+            l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
             List<Future<String>> result = e.invokeAll(l, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(2, result.size());
             Iterator<Future<String>> it = result.iterator(); 

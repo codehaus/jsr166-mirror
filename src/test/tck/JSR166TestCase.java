@@ -466,6 +466,16 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    class LongPossiblyInterruptedRunnable implements Runnable {
+        public void run() {
+            try {
+                Thread.sleep(LONG_DELAY_MS);
+            }
+            catch(InterruptedException success) {
+            }
+        }
+    }
+
     /**
      * For use as ThreadFactory in constructors
      */

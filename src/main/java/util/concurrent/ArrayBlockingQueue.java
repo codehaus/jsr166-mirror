@@ -204,12 +204,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element to this queue, if possible;
-     * failing if the queue is full.
+     * Inserts the specified element at the tail of this queue if possible,
+     * returning immediately if this queue is full.
      *
-     * @param o the element to add.
-     * @return <tt>true</tt> if it was possible to add the element to
-     *         this queue, else <tt>false</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     public boolean offer(E o) {
@@ -228,16 +225,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Adds the specified element to the tail of this queue, waiting if
+     * Inserts the specified element at the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
-     * @param o the element to add
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if
-     * the specified waiting time elapses before space is available.
-     * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o, long timeout, TimeUnit unit)
@@ -355,8 +344,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
-     * @param o the element to add
-     * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public void put(E o) throws InterruptedException {

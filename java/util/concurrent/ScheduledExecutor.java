@@ -3,14 +3,13 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A ScheduledExecutor asynchronously executes optionally
- * time-delayed tasks. Non-delayed tasks submitted using
- * <tt>execute</tt> are scheduled as if they had a requested delay of
- * zero. This class is preferable to <tt>java.util.Timer</tt> when you
- * need multiple worker threads or the additional flexibility or
- * capabilities of <tt>ThreadExecutor</tt> (of which this is a
- * subclass.)
- */
+ * A ScheduledExecutor asynchronously executes optionally time-delayed
+ * tasks. Non-delayed tasks submitted using <tt>execute</tt> are
+ * scheduled as if they had a requested delay of zero. This class is
+ * preferable to <tt>java.util.Timer</tt> when you need multiple
+ * worker threads or the additional flexibility or capabilities of
+ * <tt>ThreadExecutor</tt> (from which ScheduledExecutor is derived.)
+ * */
 public class ScheduledExecutor extends ThreadExecutor  {
 
     public ScheduledExecutor(int minThreads,

@@ -18,8 +18,7 @@ import java.util.*;
  * and they provide a means of bounding and managing the resources,
  * including threads, consumed when executing a collection of tasks.
  * Each <tt>ThreadPoolExecutor</tt> also maintains some basic
- * statistics, such as the number of completed tasks, that may be
- * useful for monitoring and tuning.
+ * statistics, such as the number of completed tasks.
  *
  * <p>To be useful across a wide range of contexts, this class
  * provides many adjustable parameters and extensibility hooks.  For
@@ -32,9 +31,9 @@ import java.util.*;
  * automatic thread reclamation), {@link Executors#newFixedThreadPool}
  * (fixed size thread pool) and {@link
  * Executors#newSingleThreadExecutor} (single background thread), that
- * preconfigure settings for the most common usage scenarios. Use the
- * following guide when manually configuring and tuning
- * <tt>ThreadPoolExecutors</tt>:
+ * preconfigure settings for the most common usage
+ * scenarios. Otherwise, use the following guide when manually
+ * configuring and tuning <tt>ThreadPoolExecutor</tt>:
  *
  * <dl>
  *
@@ -125,21 +124,22 @@ import java.util.*;
  * new thread will be constructed. This policy avoids lockups when
  * handling sets of requests that might have internal dependencies.
  * Direct handoffs generally require unbounded maximumPoolSizes to
- * avoid rejection of new submitted tasks, which in turn admit the
+ * avoid rejection of new submitted tasks, which in turn admits the
  * possibility of unbounded thread growth when commands continue to
  * arrive on average faster than they can be processed.  </li>
  *
  * <li><em> Unbounded queues.</em> Using an unbounded queue (for
  * example a {@link LinkedBlockingQueue} without a predefined
  * capacity) will cause new tasks to be queued in cases where all
- * corePoolSize threads are busy, so no more than corePoolSize threads
- * will be created.  This may be appropriate when each task is
- * completely independent of others, so tasks cannot affect each
- * others execution; for example, in a web page server.  While this
- * style of queuing can be useful in smoothing out transient bursts of
- * requests, it admits the possibility of unbounded work queue growth
- * when commands continue to arrive on average faster than they can be
- * processed.  </li>
+ * corePoolSize threads are busy. Thus, no more than corePoolSize
+ * threads will ever be created. (And the value of the maximumPoolSize
+ * therefore doesn't have any effect.)  This may be appropriate when
+ * each task is completely independent of others, so tasks cannot
+ * affect each others execution; for example, in a web page server.
+ * While this style of queuing can be useful in smoothing out
+ * transient bursts of requests, it admits the possibility of
+ * unbounded work queue growth when commands continue to arrive on
+ * average faster than they can be processed.  </li>
  *
  * <li><em>Bounded queues.</em> A bounded queue (for example, an
  * {@link ArrayBlockingQueue}) helps prevent resource exhaustion when
@@ -164,10 +164,10 @@ import java.util.*;
  * ThreadPoolExecutor#execute} will be <em>rejected</em> when the
  * Executor has been shut down, and also when the Executor uses finite
  * bounds for both maximum threads and work queue capacity, and is
- * saturated.  In both cases, the <tt>execute</tt> method invokes its
- * {@link RejectedExecutionHandler} {@link
- * RejectedExecutionHandler#rejectedExecution} method.  Four
- * predefined handler policies are provided:
+ * saturated.  In either case, the <tt>execute</tt> method invokes the
+ * {@link RejectedExecutionHandler#rejectedExecution} method of its
+ * {@link RejectedExecutionHandler}.  Four predefined handler policies
+ * are provided:
  *
  * <ol>
  *

@@ -762,6 +762,10 @@
   <!-- Anthill targets -->
 
   <target name="anthill-build">
+  
+    <!-- Override this in user.properties -->
+    <property name="tiger.home" location="e:/j2sdk1.5.0"/>
+    
     <exec resultproperty="result.property" dir="${basedir}" executable="${tiger.home}/bin/java">
       <arg value="-Xmx256000000"/>
       <!-- classpath of new JVM -->

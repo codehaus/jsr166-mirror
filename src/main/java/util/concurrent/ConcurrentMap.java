@@ -45,7 +45,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.
      *
-     **/
+     */
     V putIfAbsent(K key, V value);
 
     /**
@@ -60,7 +60,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * except that the action is performed atomically.
      * @param key key with which the specified value is associated.
      * @param value value associated with the specified key.
-     * @return true if the value was removed
+     * @return true if the value was removed, false otherwise
      * @throws NullPointerException if this map does not permit <tt>null</tt>
      *            keys or values, and the specified key or value is
      *            <tt>null</tt>.

@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * A {@link java.util.Map} providing an additional atomic
- * <tt>putIfAbsent</tt> method.
+ * <tt>putIfAbsent</tt> and <tt>remove</tt> methods.
  * @since 1.5
  * @author Doug Lea
  */
@@ -45,4 +45,15 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *
      **/
     V putIfAbsent(K key, V value);
+
+    /**
+     * Remove entry for key only if currently mapped to given value.
+     * Acts as
+     * <pre> 
+     *  if (map.get(key) == value) map.remove(key);
+     * </pre>
+     * except that the action is performed atomically.
+     */
+    boolean remove(K key, V value);
+
 }

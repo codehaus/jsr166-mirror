@@ -17,8 +17,8 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/07/31 19:49:42 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/01 22:40:05 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public class Executors {
@@ -69,7 +69,7 @@ public class Executors {
             (new ThreadPoolExecutor(nThreads, nThreads,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>(),
-                                    threadFactory, null));
+                                    threadFactory));
     }
 
     /**
@@ -104,7 +104,7 @@ public class Executors {
             (new ThreadPoolExecutor(1, 1,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>(),
-                                    threadFactory, null));
+                                    threadFactory));
     }
 
     /**
@@ -141,7 +141,7 @@ public class Executors {
             (new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                     60, TimeUnit.SECONDS,
                                     new SynchronousQueue<Runnable>(),
-                                    threadFactory, null));
+                                    threadFactory));
     }
 
     /**

@@ -250,8 +250,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             if (!enforceFairness || !hasQueuedThreads()) {
                 final AtomicInteger count = state();
                 int c = count.get();
-                if (!isExclusive(c) && 
-                    count.compareAndSet(c, c + SHARED_UNIT))
+                int nextc = c + SHARED_UNIT;
+                if (!isExclusive(c) && nextc > c &&
+                    count.compareAndSet(c, nextc))
                     return true;
             }
             return false;
@@ -261,7 +262,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                                                int acquires, 
                                                Thread current) {
             final AtomicInteger count = state();
-            boolean nobarge = !isQueued && fair;
             for (;;) {
                 int c = count.get();
                 int w = exclusiveCount(c);
@@ -277,7 +277,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                         return 0;
                 }
                 else {
-                    if (nobarge && hasQueuedThreads())
+                    if (!isQueued && fair && hasQueuedThreads())
                         return -1;
                     if (count.compareAndSet(c, c + acquires)) {
                         owner = current;
@@ -291,14 +291,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         public final boolean releaseExclusiveState(int releases) {
             final AtomicInteger count = state();
             Thread current = Thread.currentThread();
+            boolean free = true;
             int c = count.get();
             int w = exclusiveCount(c) - releases;
+            c -= releases;
             if (w < 0 || owner != current)
                 throw new IllegalMonitorStateException();
-            if (w == 0) 
+            if (w == 0)
                 owner = null;
-            count.set(c - releases);
-            return w == 0;
+            else
+                free = false;
+            count.set(c);
+            return free;
         }
 
         public final int acquireSharedState(boolean isQueued, int acquires, 
@@ -353,7 +357,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 acquireExclusiveUninterruptibly(1);
         }
 
-        AbstractQueuedSynchronizer.ConditionObject newCondition() { 
+        boolean tryLockShared() {
+            return fastAcquireShared(false) ||
+                acquireSharedState(true, 1, Thread.currentThread()) >= 0;
+        }
+
+        boolean tryLockExclusive() {
+            return fastAcquireExclusive(false) ||
+                acquireExclusiveState(true, 1, Thread.currentThread()) >= 0;
+        }
+
+
+        ConditionObject newCondition() { 
             return new ConditionObject(); 
         }
 
@@ -395,7 +410,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             s.defaultReadObject();
             state().set(0); // reset to unlocked state
         }
-        
     }
 
     /**
@@ -490,8 +504,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * @return <tt>true</tt> if the lock was acquired.
          */
         public  boolean tryLock() {
-            return sync.fastAcquireShared(false) ||
-                sync.acquireSharedState(true, 1, Thread.currentThread()) >= 0;
+            return sync.tryLockShared();
         }
 
         /**
@@ -697,8 +710,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * <tt>false</tt> otherwise.
          */
         public boolean tryLock( ) {
-            return sync.fastAcquireExclusive(false) ||
-                sync.acquireExclusiveState(true, 1, Thread.currentThread()) >= 0;
+            return sync.tryLockExclusive();
         }
 
         /**

@@ -106,13 +106,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                     count.set(nextc);
                     return 0;
                 }
-                else {
-                    if (!isQueued && fair && hasQueuedThreads())
-                        return -1;
-                    if (count.compareAndSet(c, nextc)) {
-                        owner = current;
-                        return 0;
-                    }
+                if (!isQueued && fair && hasQueuedThreads())
+                    return -1;
+                if (count.compareAndSet(c, nextc)) {
+                    owner = current;
+                    return 0;
                 }
                 // Recheck count if lost CAS
             }
@@ -121,13 +119,16 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         public boolean releaseExclusiveState(int releases) {
             final AtomicInteger count = state();
             Thread current = Thread.currentThread();
+            boolean free = true;
             int c = count.get() - releases;
-            if (c < 0 || owner != current)
+            if (owner != current || c < 0)
                 throw new IllegalMonitorStateException();
-            if (c == 0) 
+            if (c == 0)
                 owner = null;
+            else
+                free = false;
             count.set(c);
-            return c == 0;
+            return free;
         }
 
         public void checkConditionAccess(Thread thread, boolean waiting) {
@@ -144,12 +145,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         void lock() {
-            // try fast path first
-            if ((!fair || !hasQueuedThreads()) && state().compareAndSet(0, 1)) {
+            // try fast path first unless fair and contended
+            if ((!fair || !hasQueuedThreads()) && state().compareAndSet(0, 1))
                 owner = Thread.currentThread();
-                return;
-            }
-            acquireExclusiveUninterruptibly(1);
+            else
+                acquireExclusiveUninterruptibly(1);
         }
 
         boolean tryLock() {

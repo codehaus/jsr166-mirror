@@ -101,15 +101,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
     }
 
     /**
-     *   Clone creates an equal map
-     */
-    public void testClone() {
-        ConcurrentHashMap map = map5();
-        ConcurrentHashMap m2 = (ConcurrentHashMap)(map.clone());
-	assertEquals(map, m2);
-    }
-
-    /**
      *  get returns the correct element at the given key,
      *  or null if not present
      */

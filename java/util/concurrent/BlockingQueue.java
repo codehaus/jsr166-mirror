@@ -1,4 +1,5 @@
 package java.util.concurrent;
+
 import java.util.Queue;
 
 /**
@@ -18,7 +19,7 @@ import java.util.Queue;
  *   Producer(BlockingQueue q) { queue = q; }
  *   public void run() {
  *     try {
- *       for(;;) { queue.put(produce()); }
+ *       while(true) { queue.put(produce()); }
  *     }
  *     catch (InterruptedException ex) {}
  *   }
@@ -31,7 +32,7 @@ import java.util.Queue;
  *   Concumer(BlockingQueue q) { queue = q; }
  *   public void run() {
  *     try {
- *       for(;;) { consume(queue.take()); }
+ *       while(true) { consume(queue.take()); }
  *     }
  *     catch (InterruptedException ex) {}
  *   }
@@ -58,43 +59,42 @@ import java.util.Queue;
 
  **/
 public interface BlockingQueue extends Queue {
-  /**
-   * Take an object from the queue, waiting if necessary for
-   * an object to be present.
-   * @return the object
-   * @throws InterruptedException if interrupted while waiting.
-   **/
-  public Object take() throws InterruptedException;
+    /**
+     * Take an object from the queue, waiting if necessary for
+     * an object to be present.
+     * @return the object
+     * @throws InterruptedException if interrupted while waiting.
+     **/
+    public Object take() throws InterruptedException;
 
-  /**
-   * Take an object from the queue if one is available within given wait time
-   * @param time the maximum time to wait
-   * @param granularity the time unit of the time argument.
-   * @return the object, or null if the queue is empty.
-   * @throws InterruptedException if interrupted while waiting.
-   * @throws TimeoutException if timed out while waiting.
-   **/
-  public Object poll(long time, Clock granularity) throws InterruptedException;
+    /**
+     * Take an object from the queue if one is available within given wait time
+     * @param time the maximum time to wait
+     * @param granularity the time unit of the time argument.
+     * @return the object, or null if the queue is empty.
+     * @throws InterruptedException if interrupted while waiting.
+     * @throws TimeoutException if timed out while waiting.
+     **/
+    public Object poll(long time, Clock granularity) throws InterruptedException;
 
-  /**
-   * Add the given object to the queue, waiting if necessary for
-   * space to become available.
-   * @param x the object to add
-   * @throws InterruptedException if interrupted while waiting.
-   **/
-  public void put(Object x) throws InterruptedException;
+    /**
+     * Add the given object to the queue, waiting if necessary for
+     * space to become available.
+     * @param x the object to add
+     * @throws InterruptedException if interrupted while waiting.
+     **/
+    public void put(Object x) throws InterruptedException;
 
-  /**
-   * Add the given object to the queue if space is available within
-   * given wait time.
-   * @param x the object to add
-   * @param time the maximum time to wait
-   * @param granularity the time unit of the time argument.
-   * @return true if successful
-   * @throws InterruptedException if interrupted while waiting.
-   * @throws TimeoutException if timed out while waiting.
-   **/
-  public boolean offer(Object x, long time, Clock granularity) throws InterruptedException;
-
+    /**
+     * Add the given object to the queue if space is available within
+     * given wait time.
+     * @param x the object to add
+     * @param time the maximum time to wait
+     * @param granularity the time unit of the time argument.
+     * @return true if successful
+     * @throws InterruptedException if interrupted while waiting.
+     * @throws TimeoutException if timed out while waiting.
+     **/
+    public boolean offer(Object x, long time, Clock granularity) throws InterruptedException;
 
 }

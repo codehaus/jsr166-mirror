@@ -5,17 +5,17 @@ package java.util.concurrent;
  * cancelled.
  **/
 public class CancellationException extends IllegalStateException {  
-  /**
-   * Constructs a CancellationException with no specified detail
-   * message.
-   **/
-  public CancellationException() {}
+    /**
+     * Constructs a CancellationException with no specified detail
+     * message.
+     **/
+    public CancellationException() {}
 
-  /**
-   * Constructs a CancellationException with specified detail
-   * message.
-   **/
-  public CancellationException(String detail) {
-    super(detail);
-  }
+    /**
+     * Constructs a CancellationException with specified detail
+     * message.
+     **/
+    public CancellationException(String detail) {
+        super(detail);
+    }
 }

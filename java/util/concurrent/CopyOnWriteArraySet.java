@@ -1,4 +1,5 @@
 package java.util.concurrent;
+
 import java.util.*;
 
 /**
@@ -49,41 +50,39 @@ import java.util.*;
  * <p>[<a href="http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html"> Introduction to this package. </a>]
  * @see CopyOnWriteArrayList
  **/
-
-
 public class CopyOnWriteArraySet extends AbstractSet implements Cloneable, java.io.Serializable {
 
-  private final CopyOnWriteArrayList al;
+    private final CopyOnWriteArrayList al;
 
-  /**
-   * Constructs an empty set
-   */
-  public CopyOnWriteArraySet() {
-    al = new CopyOnWriteArrayList();
-  }
+    /**
+     * Constructs an empty set
+     */
+    public CopyOnWriteArraySet() {
+        al = new CopyOnWriteArrayList();
+    }
 
-  /**
-   * Constructs a set containing all of the elements of the specified
-   * Collection.
-   */
-  public CopyOnWriteArraySet(Collection c) { 
-    al = new CopyOnWriteArrayList();
-    al.addAllAbsent(c);
-  }
+    /**
+     * Constructs a set containing all of the elements of the specified
+     * Collection.
+     */
+    public CopyOnWriteArraySet(Collection c) {
+        al = new CopyOnWriteArrayList();
+        al.addAllAbsent(c);
+    }
 
 
-  public int      size()                    { return al.size(); }
-  public boolean  isEmpty()                 { return al.isEmpty(); }
-  public boolean  contains(Object o)        { return al.contains(o); }
-  public Object[] toArray()                 { return al.toArray(); }
-  public Object[] toArray(Object[] a)       { return al.toArray(a); }
-  public void     clear()                   {        al.clear(); }  
-  public Iterator iterator()                { return al.iterator(); }
-  public boolean  remove(Object o)          { return al.remove(o); }
-  public boolean  containsAll(Collection c) { return al.containsAll(c); }
-  public boolean  addAll(Collection c)      { return al.addAllAbsent(c) > 0; }
-  public boolean  removeAll(Collection c)   { return al.removeAll(c); }
-  public boolean  retainAll(Collection c)   { return al.retainAll(c); }
-  public boolean  add(Object o)             { return al.addIfAbsent(o); }
+    public int      size()                    { return al.size(); }
+    public boolean  isEmpty()                 { return al.isEmpty(); }
+    public boolean  contains(Object o)        { return al.contains(o); }
+    public Object[] toArray()                 { return al.toArray(); }
+    public Object[] toArray(Object[] a)       { return al.toArray(a); }
+    public void     clear()                   {        al.clear(); }
+    public Iterator iterator()                { return al.iterator(); }
+    public boolean  remove(Object o)          { return al.remove(o); }
+    public boolean  containsAll(Collection c) { return al.containsAll(c); }
+    public boolean  addAll(Collection c)      { return al.addAllAbsent(c) > 0; }
+    public boolean  removeAll(Collection c)   { return al.removeAll(c); }
+    public boolean  retainAll(Collection c)   { return al.retainAll(c); }
+    public boolean  add(Object o)             { return al.addIfAbsent(o); }
 
 }

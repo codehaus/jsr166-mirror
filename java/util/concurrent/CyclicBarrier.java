@@ -63,59 +63,59 @@ package java.util.concurrent;
  * </pre>
  **/
 public class CyclicBarrier {
-  /**
-   * Create a new cyclic barrier for the given number of parties
-   * (threads required to trip barrier), and the given action
-   * to perform every time the barrier is tripped.
-   * @throws IllegalArgumentException if parties is less than 1.
-   **/
-  public CyclicBarrier(int parties, Runnable barrierAction) {
-  }
+    /**
+     * Create a new cyclic barrier for the given number of parties
+     * (threads required to trip barrier), and the given action
+     * to perform every time the barrier is tripped.
+     * @throws IllegalArgumentException if parties is less than 1.
+     **/
+    public CyclicBarrier(int parties, Runnable barrierAction) {
+    }
 
-  /**
-   * Create a new cyclic barrier for the given number of parties
-   * (threads required to trip barrier), and a null action.
-   **/
-  public CyclicBarrier(int parties) {
-  }
+    /**
+     * Create a new cyclic barrier for the given number of parties
+     * (threads required to trip barrier), and a null action.
+     **/
+    public CyclicBarrier(int parties) {
+    }
 
-  /**
-   * Return the number of parties (threads required to trip barrier).
-   **/
-  public int getParties() {
-    return 0; // for now
-  }
-  
-  /**
-   * Wait until all parties have arrived at the barrier. If the
-   * current thread is the last thread to arrive, and a
-   * non-null barrier action supplied in concstructor, the
-   * thread runs the action before allowing other threads to continue.
-   * @return the arrival index of the current thread, where index
-   *  <tt>parties - 1<tt> indicates the first to arrive and zero
-   * indicates the last to arrive.
-   * @throws InterruptedException if current thread was interrupted while waiting
-   * @throws BrokenBarrierException if <em>another</em> thread was
-   * interrupted while waiting.
-   **/
-  public int await() throws InterruptedException, BrokenBarrierException {
-    return 0; // for now
-  }
-  
-  /**
-   * Return true if one or more parties broke out of this
-   * barrier due to interruption since construction or last reset.
-   **/
-  public boolean isBroken() {
-    return false; // for now
-  }
+    /**
+     * Return the number of parties (threads required to trip barrier).
+     **/
+    public int getParties() {
+        return 0; // for now
+    }
 
-  /**
-   * Reset the barrier to its initial state.  If Any threads are
-   * currently waiting at the barrier, they will return with a
-   * BrokenBarrierException before the barrier if fully reset.
-   **/
-  public void reset() {
-    // for now
-  }
+    /**
+     * Wait until all parties have arrived at the barrier. If the
+     * current thread is the last thread to arrive, and a
+     * non-null barrier action supplied in concstructor, the
+     * thread runs the action before allowing other threads to continue.
+     * @return the arrival index of the current thread, where index
+     *  <tt>parties - 1<tt> indicates the first to arrive and zero
+     * indicates the last to arrive.
+     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws BrokenBarrierException if <em>another</em> thread was
+     * interrupted while waiting.
+     **/
+    public int await() throws InterruptedException, BrokenBarrierException {
+        return 0; // for now
+    }
+
+    /**
+     * Return true if one or more parties broke out of this
+     * barrier due to interruption since construction or last reset.
+     **/
+    public boolean isBroken() {
+        return false; // for now
+    }
+
+    /**
+     * Reset the barrier to its initial state.  If Any threads are
+     * currently waiting at the barrier, they will return with a
+     * BrokenBarrierException before the barrier if fully reset.
+     **/
+    public void reset() {
+        // for now
+    }
 }

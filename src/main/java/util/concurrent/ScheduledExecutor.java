@@ -296,7 +296,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         if (getPoolSize() < getCorePoolSize())
             prestartCoreThread();
             
-        getQueue().offer(command);
+        super.getQueue().offer(command);
     }
 
     /**
@@ -555,9 +555,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         boolean keepDelayed = getExecuteExistingDelayedTasksAfterShutdownPolicy();
         boolean keepPeriodic = getContinueExistingPeriodicTasksAfterShutdownPolicy();
         if (!keepDelayed && !keepPeriodic) 
-            getQueue().clear();
+            super.getQueue().clear();
         else if (keepDelayed || keepPeriodic) {
-            Object[] entries = getQueue().toArray();
+            Object[] entries = super.getQueue().toArray();
             for (int i = 0; i < entries.length; ++i) {
                 DelayedTask t = (DelayedTask)entries[i];
                 if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
@@ -582,6 +582,25 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         cancelUnwantedTasks();
         super.shutdown();
     }
+
+    /**
+     * Attempts to stop all actively executing tasks, halts the
+     * processing of waiting tasks, and returns a list of the tasks that were
+     * awaiting execution. 
+     *  
+     * <p>There are no guarantees beyond best-effort attempts to stop
+     * processing actively executing tasks.  This implementations
+     * cancels via {@link Thread#interrupt}, so if any tasks mask or
+     * fail to respond to interrupts, they may never terminate.
+     *
+     * @return list of tasks that never commenced execution.  Each
+     * element of this list is a <tt>DelayedTask</tt>, including those
+     * tasks submitted using <tt>execute</tt> which are for scheduling
+     * purposes used as the basis of a zero-delay <tt>DelayedTask</tt>.
+     */
+    public List shutdownNow() {
+        return super.shutdownNow();
+    }
             
     /**
      * Removes this task from internal queue if it is present, thus
@@ -592,7 +611,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @return true if the task was removed
      */
     public boolean remove(Runnable task) {
-        if (task instanceof DelayedTask && getQueue().remove(task))
+        if (task instanceof DelayedTask && super.getQueue().remove(task))
             return true;
 
         // The task might actually have been wrapped as a DelayedTask
@@ -600,7 +619,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         // looking for it.
 
         DelayedTask wrap = null;
-        Object[] entries = getQueue().toArray();
+        Object[] entries = super.getQueue().toArray();
         for (int i = 0; i < entries.length; ++i) {
             DelayedTask t = (DelayedTask)entries[i];
             Runnable r = t.getRunnable();
@@ -610,7 +629,21 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             }
         }
         entries = null;
-        return wrap != null && getQueue().remove(wrap);
+        return wrap != null && super.getQueue().remove(wrap);
+    }
+
+
+    /**
+     * Returns the task queue used by this executor.  Each element
+     * of this queue is a <tt>DelayedTask</tt>, including those
+     * tasks submitted using <tt>execute</tt> which are for
+     * scheduling purposes used as the basis of a zero-delay
+     * <tt>DelayedTask</tt>.
+     *
+     * @return the task queue
+     */
+    public BlockingQueue<Runnable> getQueue() {
+        return super.getQueue();
     }
 
     /**
@@ -626,7 +659,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             (!isShutdown() ||
              (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
               !isTerminating())))
-            getQueue().offer(next);
+            super.getQueue().offer(next);
 
         // This might have been the final executed delayed task.  Wake
         // up threads to check.

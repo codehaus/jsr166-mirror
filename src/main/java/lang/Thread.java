@@ -772,9 +772,9 @@ class Thread implements Runnable {
      * @spec JSR-51
      */
     public void interrupt() {
-	if (this != Thread.currentThread())  // jsr166
-            checkAccess();
-	
+	if (this != Thread.currentThread())
+	    checkAccess();
+
 	synchronized (blockerLock) {
 	    Interruptible b = blocker;
 	    if (b != null) {
@@ -1385,7 +1385,7 @@ class Thread implements Runnable {
      *
      * @since 1.5
      */
-    public static Map getAllStackTraces() {
+    public static Map<Thread, StackTraceElement[]> getAllStackTraces() {
         // check for getStackTrace permission
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
@@ -1398,7 +1398,8 @@ class Thread implements Runnable {
         // Get a snapshot of the list of all threads 
         Thread[] threads = getThreads(); 
         StackTraceElement[][] traces = dumpThreads(threads);
-        Map<Thread, StackTraceElement[]> m = new HashMap<Thread, StackTraceElement[]>(threads.length);
+        Map<Thread, StackTraceElement[]> m
+	    = new HashMap<Thread, StackTraceElement[]>(threads.length);
         for (int i = 0; i < threads.length; i++) {
             if (threads[i].isAlive()) { 
                 StackTraceElement[] stackTrace = traces[i];

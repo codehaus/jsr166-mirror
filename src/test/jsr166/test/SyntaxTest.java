@@ -85,7 +85,7 @@ public class SyntaxTest extends TestCase {
         assertEquals("should get total of 10", 10, total);
     }
 
-/*
+
     public void testVarargs () {
 
         int count = argCount(1, 2, 3, 4);
@@ -98,17 +98,17 @@ public class SyntaxTest extends TestCase {
         assertEquals("wrong totalAll", 15, total);
     }
 
-    private int argCount (Integer[] args ...) {
+    private int argCount (Integer... args) {
         return args.length;
     }
 
-    private int argTotal (Integer[] args ...) {
+    private int argTotal (Integer... args) {
         int total = 0;
         for (Integer i : args) total += i.intValue();
         return total;
     }
 
-    private int totalAll (int[][] args ...) {
+    private int totalAll (int[]... args) {
         int total = 0;
         for (int[] ia : args) {
             for (int i : ia) {
@@ -117,7 +117,7 @@ public class SyntaxTest extends TestCase {
         }
         return total;
     }
-*/
+
 
     public void testColor () {
         Color2 c = Color2.red;

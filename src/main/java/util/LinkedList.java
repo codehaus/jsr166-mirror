@@ -262,7 +262,7 @@ public class LinkedList<E>
      * @throws NullPointerException if the specified collection is null.
      */
     public boolean addAll(int index, Collection<? extends E> c) {
-        if (index < 0 || index >= size)
+        if (index < 0 || index > size)
             throw new IndexOutOfBoundsException("Index: "+index+
                                                 ", Size: "+size);
         Object[] a = c.toArray();

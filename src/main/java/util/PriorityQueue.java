@@ -392,6 +392,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     private class Itr implements Iterator<E> {
+
         /**
          * Index (into queue array) of element to be returned by
          * subsequent call to next.
@@ -412,15 +413,20 @@ public class PriorityQueue<E> extends AbstractQueue<E>
          */
         private int expectedModCount = modCount;
 
+        // Workarounds until version that better handles remove() installed.
+        // These are used to copy-on-write the array upon first remove
+        private Object[] q = queue;
+        private int qsize = size;
+
         public boolean hasNext() {
-            return cursor <= size;
+            return cursor <= qsize;
         }
 
         public E next() {
             checkForComodification();
-            if (cursor > size)
+            if (cursor > qsize)
                 throw new NoSuchElementException();
-            E result = (E) queue[cursor];
+            E result = (E) q[cursor];
             lastRet = cursor++;
             return result;
         }
@@ -430,8 +436,13 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                 throw new IllegalStateException();
             checkForComodification();
 
-            PriorityQueue.this.remove(lastRet);
-            cursor--;
+            // Copy on first remove
+            if (q == queue) {
+                q = new Object[queue.length];
+                System.arraycopy(queue, 0, q, 0, queue.length);
+            }
+            PriorityQueue.this.remove(q[lastRet]);
+
             lastRet = 0;
             expectedModCount = modCount;
         }
@@ -471,8 +482,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         E result = (E) queue[i];
         queue[i] = queue[size];
         queue[size--] = null;  // Drop extra ref to prevent memory leak
-        if (i <= size)
+        if (i <= size) {
             fixDown(i);
+            fixUp(i);
+        }
+
         return result;
     }
 
@@ -496,7 +510,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             }
         } else {
             while (k > 1) {
-                int j = k >> 1;
+                int j = k >>> 1;
                 if (comparator.compare((E)queue[j], (E)queue[k]) <= 0)
                     break;
                 Object tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
@@ -518,8 +532,10 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         int j;
         if (comparator == null) {
             while ((j = k << 1) <= size && (j > 0)) {
-                if (j<size && ((Comparable<E>)queue[j]).compareTo((E)queue[j+1]) > 0)
+                if (j<size && 
+                    ((Comparable<E>)queue[j]).compareTo((E)queue[j+1]) > 0)
                     j++; // j indexes smallest kid
+
                 if (((Comparable<E>)queue[k]).compareTo((E)queue[j]) <= 0)
                     break;
                 Object tmp = queue[j];  queue[j] = queue[k]; queue[k] = tmp;
@@ -527,7 +543,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             }
         } else {
             while ((j = k << 1) <= size && (j > 0)) {
-                if (j < size && comparator.compare((E)queue[j], (E)queue[j+1]) > 0)
+                if (j<size && 
+                    comparator.compare((E)queue[j], (E)queue[j+1]) > 0)
                     j++; // j indexes smallest kid
                 if (comparator.compare((E)queue[k], (E)queue[j]) <= 0)
                     break;
@@ -535,6 +552,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                 k = j;
             }
         }
+
     }
 
 

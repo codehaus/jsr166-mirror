@@ -820,28 +820,48 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     public void shutdown() {
+        boolean fullyTerminated = false;
         mainLock.lock();
         try {
-            if (runState == RUNNING) // don't override shutdownNow
-                runState = SHUTDOWN;
-            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
-                it.next().interruptIfIdle();
+            if (workers.size() > 0) {
+                if (runState == RUNNING) // don't override shutdownNow
+                    runState = SHUTDOWN;
+                for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
+                    it.next().interruptIfIdle();
+            }
+            else { // If no workers, trigger full termination now
+                fullyTerminated = true;
+                runState = TERMINATED;
+                termination.signalAll();
+            }
         } finally {
             mainLock.unlock();
         }
+        if (fullyTerminated)
+            terminated();
     }
 
 
     public List shutdownNow() {
+        boolean fullyTerminated = false;
         mainLock.lock();
         try {
-            if (runState != TERMINATED)
-                runState = STOP;
-            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
-                it.next().interruptNow();
+            if (workers.size() > 0) {
+                if (runState != TERMINATED)
+                    runState = STOP;
+                for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
+                    it.next().interruptNow();
+            }
+            else { // If no workers, trigger full termination now
+                fullyTerminated = true;
+                runState = TERMINATED;
+                termination.signalAll();
+            }
         } finally {
             mainLock.unlock();
         }
+        if (fullyTerminated)
+            terminated();
         return Arrays.asList(workQueue.toArray());
     }
 
@@ -871,7 +891,14 @@ public class ThreadPoolExecutor implements ExecutorService {
         throws InterruptedException {
         mainLock.lock();
         try {
-            return termination.await(timeout, unit);
+            long nanos = unit.toNanos(timeout);
+            for (;;) {
+                if (runState == TERMINATED) 
+                    return true;
+                if (nanos <= 0)
+                    return false;
+                nanos = termination.awaitNanos(nanos);
+            }
         } finally {
             mainLock.unlock();
         }

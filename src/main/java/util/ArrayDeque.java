@@ -52,7 +52,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
                            implements Deque<E>, Cloneable, Serializable
 {
     /**
-     * The array in which the elements of in the deque are stored.
+     * The array in which the elements of the deque are stored.
      * The capacity of the deque is the length of this array, which is
      * always a power of two. The array is never allowed to become
      * full, except transiently within an addX method where it is
@@ -147,7 +147,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Constructs an empty array deque with the an initial capacity
+     * Constructs an empty array deque with an initial capacity
      * sufficient to hold 16 elements.
      */
     public ArrayDeque() {

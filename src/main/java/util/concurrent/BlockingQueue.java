@@ -13,7 +13,39 @@ import java.util.Queue;
  * A {@link java.util.Queue} that additionally supports operations
  * that wait for the queue to become non-empty when retrieving an element,
  * and wait for space to become available in the queue when storing an 
- * element.
+ * element. The names
+ * of the operations vary with their policies:
+ *
+ *<table BORDER CELLPADDING=3 CELLSPACING=1>
+ *  <tr>
+ *    <td><em>Operation</em></td>
+ *    <td ALIGN=CENTER><em>Attempt</em></td>
+ *    <td ALIGN=CENTER><em>Throw</em></td>
+ *    <td ALIGN=CENTER><em>Block</em></td>
+ *    <td ALIGN=CENTER><em>Timeout</em></td>
+ *  </tr>
+ *  <tr>
+ *    <td><em>insert</em></td>
+ *    <td>offer(x)</td>
+ *    <td>add(x)</td>
+ *    <td>put(x)</td>
+ *    <td>offer(x,time,unit)</td>
+ *  </tr>
+ *  <tr>
+ *    <td><em>extract</em></td>
+ *    <td>poll()</td>
+ *    <td>remove()</td>
+ *    <td>take()</td>
+ *    <td>poll(time,unit)</td>
+ *  </tr>
+ *  <tr>
+ *    <td><em>inspect</em></td>
+ *    <td>peek()</td>
+ *    <td>element()</td>
+ *    <td></td>
+ *    <td></td>
+ *  </tr>
+ *</table>
  *
  * <p>A <tt>BlockingQueue</tt> does not accept <tt>null</tt> elements.
  * Implementations throw <tt>NullPointerException</tt> on attempts

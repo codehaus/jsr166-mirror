@@ -87,12 +87,17 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     public Object[] toArray()                 { return al.toArray(); }
     public <T> T[]  toArray(T[] a)            { return al.toArray(a); }
     public void     clear()                   {        al.clear(); }
-    public Iterator<E>  iterator()            { return al.iterator(); }
     public boolean  remove(Object o)          { return al.remove(o); }
     public boolean  add(E o)                  { return al.addIfAbsent(o); }
     public boolean  containsAll(Collection<?> c)      { return al.containsAll(c); }
     public boolean  addAll(Collection<? extends E> c) { return al.addAllAbsent(c) > 0; }
     public boolean  removeAll(Collection<?> c)        { return al.removeAll(c); }
     public boolean  retainAll(Collection<?> c)        { return al.retainAll(c); }
+
+    /**
+     * Returns an iterator over the elements contained in this collection
+     * in the order in which these elements were added.
+     */
+    public Iterator<E>  iterator()            { return al.iterator(); }
 
 }

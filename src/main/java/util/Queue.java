@@ -9,7 +9,31 @@ package java.util;
 /**
  * A collection designed for holding elements prior to processing.
  * Besides basic {@link java.util.Collection Collection} operations, queues provide
- * additional insertion, extraction, and inspection operations.
+ * additional insertion, extraction, and inspection operations. The names
+ * of the operations vary with their policies:
+ *
+ *<table BORDER CELLPADDING=3 CELLSPACING=1>
+ *  <tr>
+ *    <td><em>Operation</em></td>
+ *    <td ALIGN=CENTER><em>Attempt</em></td>
+ *    <td ALIGN=CENTER><em>Throw</em></td>
+ *  </tr>
+ *  <tr>
+ *    <td><em>insert</em></td>
+ *    <td>offer(x)</td>
+ *    <td>add(x)</td>
+ *  </tr>
+ *  <tr>
+ *    <td><em>extract</em></td>
+ *    <td>poll()</td>
+ *    <td>remove()</td>
+ *  </tr>
+ *  <tr>
+ *    <td><em>inspect</em></td>
+ *    <td>peek()</td>
+ *    <td>element()</td>
+ *  </tr>
+ *</table>
  *
  * <p>Queues typically, but do not necessarily, order elements in a
  * FIFO (first-in-first-out) manner.  Among the exceptions are

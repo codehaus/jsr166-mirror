@@ -257,8 +257,12 @@ public class LinkedList extends AbstractSequentialList
      */
     public boolean addAll(int index, Collection c) {
         int numNew = c.size();
-        if (numNew==0)
-            return false;
+        if (numNew==0) {
+            if (index < 0 || index >= size)
+                throw new IndexOutOfBoundsException();
+            else
+                return false;
+        }
         modCount++;
 
         Entry successor = (index==size ? header : entry(index));
@@ -706,29 +710,21 @@ public class LinkedList extends AbstractSequentialList
     public Object peek() {
         if (size==0)
             return null;
-        return header.previous.element;
+        return getFirst();
     }
 
     public Object element() {
-        if (size==0)
-            throw new NoSuchElementException();
-        return header.previous.element;
+        return getFirst();
     }
 
     public Object poll() {
         if (size==0)
             return null;
-        Object last = header.previous.element;
-        remove(header.previous);
-        return last;
+        return removeFirst();
     }
 
     public Object remove() {
-        if (size==0)
-            throw new NoSuchElementException();
-        Object last = header.previous.element;
-        remove(header.previous);
-        return last;
+        return removeFirst();
     }
 
     public boolean offer(Object x) {

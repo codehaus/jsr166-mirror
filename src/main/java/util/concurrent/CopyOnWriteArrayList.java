@@ -1059,6 +1059,15 @@ public class CopyOnWriteArrayList<E>
             }
         }
 
+        public void clear() {
+            synchronized(l) {
+                checkForComodification();
+                l.removeRange(offset, offset+size);
+                expectedArray = l.array;
+                size = 0;
+            }
+        }
+
         public E remove(int index) {
             synchronized(l) {
                 rangeCheck(index);

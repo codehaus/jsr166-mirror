@@ -50,8 +50,10 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/05 00:49:20 $
+ * @revised $Date: 2002/12/05 00:54:00 $
  * @editor $Author: dholmes $
+ *
+ * @fixme We need to say something about l.lock() versus synchronized(l)
  **/
 public interface Lock {
 

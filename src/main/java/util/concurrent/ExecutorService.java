@@ -164,6 +164,8 @@ public interface ExecutorService extends Executor {
      * Arranges for execution of the given tasks, returning when at
      * least one of them has completed. 
      * Upon return, tasks that have not completed are cancelled.
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @return A list of Futures representing the tasks. If the task
      * list is non-empty, the first element of this list is known to
@@ -179,6 +181,8 @@ public interface ExecutorService extends Executor {
      * Arranges for execution of the given tasks, returning when at
      * least one of them has completed or the given timeout expires.
      * Upon return, tasks that have not completed are cancelled.
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
@@ -192,13 +196,15 @@ public interface ExecutorService extends Executor {
      * @throws NullPointerException if tasks or unit null
      */
     List<Future<?>> runAny(Collection<Runnable> tasks, 
-                              long timeout, TimeUnit unit) 
+                           long timeout, TimeUnit unit) 
         throws InterruptedException;
 
 
     /**
      * Arranges for execution of the given tasks, returning when
      * all of them complete. 
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @return A list of Futures representing the tasks, each
      * of which has completed. 
@@ -214,6 +220,8 @@ public interface ExecutorService extends Executor {
      * when all complete or the given timeout expires, whichever
      * happens first.
      * Upon return, tasks that have not completed are cancelled.
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @param timeout the maximum time to wait
      * @return A list of Futures representing the tasks. If the
@@ -233,6 +241,8 @@ public interface ExecutorService extends Executor {
      * Arranges for execution of the given tasks, returning when at
      * least one of them has completed. 
      * Upon return, tasks that have not completed are cancelled.
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @return A list of Futures representing the tasks. If the task
      * list is non-empty, the first element of this list is known to
@@ -249,6 +259,8 @@ public interface ExecutorService extends Executor {
      * Arranges for execution of the given tasks, returning when at
      * least one of them has completed or the given timeout expires.
      * Upon return, tasks that have not completed are cancelled.
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
@@ -262,12 +274,14 @@ public interface ExecutorService extends Executor {
      * @throws NullPointerException if tasks or unit null
      */
     <T> List<Future<T>> callAny(Collection<Callable<T>> tasks, 
-                                  long timeout, TimeUnit unit) 
+                                long timeout, TimeUnit unit) 
         throws InterruptedException;
 
     /**
      * Arranges for execution of the given tasks, returning their results
      * when all complete.
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @return A list of Futures representing the tasks, each
      * of which has completed. 
@@ -283,6 +297,8 @@ public interface ExecutorService extends Executor {
      * Arranges for execution of the given tasks, returning their results
      * when all complete or the timeout expires, whichever happens first.
      * Upon return, tasks that have not completed are cancelled.
+     * Note that a <em>completed</em> task could have
+     * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
@@ -295,7 +311,7 @@ public interface ExecutorService extends Executor {
      * @throws NullPointerException if tasks or unit null
      */
     <T> List<Future<T>> callAll(Collection<Callable<T>> tasks, 
-                                  long timeout, TimeUnit unit) 
+                                long timeout, TimeUnit unit) 
         throws InterruptedException;
 
 }

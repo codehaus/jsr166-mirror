@@ -92,7 +92,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
      */
     private static class TaskGroupWaiter {
         private final ReentrantLock lock = new ReentrantLock();
-        private final Condition monitor = lock.newCondition();
+        private final Condition done = lock.newCondition();
         private int firstIndex = -1;
         private int countDown;
         TaskGroupWaiter(int ntasks) { countDown = ntasks; }
@@ -103,9 +103,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 if (firstIndex < 0)
                     firstIndex = index;
                 if (--countDown == 0)
-                    monitor.signalAll();
-            }
-            finally {
+                    done.signalAll();
+            } finally {
                 lock.unlock();
             }
         }
@@ -114,10 +113,9 @@ public abstract class AbstractExecutorService implements ExecutorService {
             lock.lock();
             try {
                 while (countDown > 0)
-                    monitor.await();
+                    done.await();
                 return firstIndex;
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -126,10 +124,9 @@ public abstract class AbstractExecutorService implements ExecutorService {
             lock.lock();
             try {
                 while (countDown > 0 && nanos > 0)
-                    nanos = monitor.awaitNanos(nanos);
+                    nanos = done.awaitNanos(nanos);
                 return firstIndex;
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -138,8 +135,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
             lock.lock();
             try {
                 return countDown <= 0;
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -162,25 +158,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
     }
 
-
-    /**
-     * Helper method to cancel unfinished tasks before return of
-     * bulk execute methods
-     */
-    private static void cancelUnfinishedTasks(List<Future<?>> futures) {
-        for (Future<?> f : futures) 
-            f.cancel(true);
-    }
-
-    /**
-     * Same as cancelUnfinishedTasks; Workaround for compiler oddity
-     */
-    private static <T> void cancelUnfinishedTasks2(List<Future<T>> futures) {
-        for (Future<T> f : futures) 
-            f.cancel(true);
-    }
-
-    // any/all methods, each a little bit different than each other
+    // any/all methods, each a little bit different than the other
 
     public List<Future<?>> runAny(Collection<Runnable> tasks)
         throws InterruptedException {
@@ -205,7 +183,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 Collections.swap(futures, first, 0);
             return futures;
         } finally {
-            cancelUnfinishedTasks(futures);
+            for (Future<?> f : futures) 
+                f.cancel(true);
         }
     }
 
@@ -234,7 +213,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 Collections.swap(futures, first, 0);
             return futures;
         } finally {
-            cancelUnfinishedTasks(futures);
+            for (Future<?> f : futures) 
+                f.cancel(true);
         }
     }
 
@@ -261,12 +241,13 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!waiter.isDone())
-                cancelUnfinishedTasks(futures);
+                for (Future<?> f : futures) 
+                    f.cancel(true);
         }
     }
 
     public List<Future<?>> runAll(Collection<Runnable> tasks, 
-                                     long timeout, TimeUnit unit) 
+                                  long timeout, TimeUnit unit) 
         throws InterruptedException {
         if (tasks == null || unit == null)
             throw new NullPointerException();
@@ -288,7 +269,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!waiter.isDone())
-                cancelUnfinishedTasks(futures);
+                for (Future<?> f : futures) 
+                    f.cancel(true);
         }
     }
 
@@ -314,7 +296,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 Collections.swap(futures, first, 0);
             return futures;
         } finally {
-            cancelUnfinishedTasks2(futures);
+            for (Future<T> f : futures) 
+                f.cancel(true);
         }
     }
 
@@ -342,7 +325,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 Collections.swap(futures, first, 0);
             return futures;
         } finally {
-            cancelUnfinishedTasks2(futures);
+            for (Future<T> f : futures) 
+                f.cancel(true);
         }
     }
 
@@ -367,7 +351,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!waiter.isDone())
-                cancelUnfinishedTasks2(futures);
+                for (Future<T> f : futures) 
+                    f.cancel(true);
         }
     }
 
@@ -393,7 +378,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!waiter.isDone())
-                cancelUnfinishedTasks2(futures);
+                for (Future<T> f : futures) 
+                    f.cancel(true);
         }
     }
 

@@ -15,7 +15,7 @@ package java.util;
  * {@link java.util.Comparator}, depending on which constructor is
  * used. A priority queue does not permit <tt>null</tt> elements.
  * A priority queue relying on natural ordering also does not
- * permit insertion of non-comparable objects (doing so results
+ * permit insertion of non-comparable objects (doing so may result
  * in <tt>ClassCastException</tt>). 
  *
  * <p>The <em>head</em> of this queue is the <em>least</em> element

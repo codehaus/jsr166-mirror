@@ -340,7 +340,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         if (getPoolSize() < getCorePoolSize())
             prestartCoreThread();
             
-        super.getQueue().offer(command);
+        super.getQueue().add(command);
     }
 
     /**
@@ -639,7 +639,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             (!isShutdown() ||
              (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
               !isTerminating())))
-            super.getQueue().offer(next);
+            super.getQueue().add(next);
 
         // This might have been the final executed delayed task.  Wake
         // up threads to check.

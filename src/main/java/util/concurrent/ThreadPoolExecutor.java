@@ -646,7 +646,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * will wait for new tasks before terminating.
      * @param unit the time unit for the keepAliveTime
      * argument.
-     * @param workQueue the queue to use for holding tasks before the
+     * @param workQueue the queue to use for holding tasks before they
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
      * @throws IllegalArgumentException if corePoolSize, or
@@ -676,7 +676,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * will wait for new tasks before terminating.
      * @param unit the time unit for the keepAliveTime
      * argument.
-     * @param workQueue the queue to use for holding tasks before the
+     * @param workQueue the queue to use for holding tasks before they
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
      * @param threadFactory the factory to use when the executor
@@ -711,7 +711,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * will wait for new tasks before terminating.
      * @param unit the time unit for the keepAliveTime
      * argument.
-     * @param workQueue the queue to use for holding tasks before the
+     * @param workQueue the queue to use for holding tasks before they
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
      * @param handler the handler to use when execution is blocked
@@ -745,7 +745,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * will wait for new tasks before terminating.
      * @param unit the time unit for the keepAliveTime
      * argument.
-     * @param workQueue the queue to use for holding tasks before the
+     * @param workQueue the queue to use for holding tasks before they
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
      * @param threadFactory the factory to use when the executor

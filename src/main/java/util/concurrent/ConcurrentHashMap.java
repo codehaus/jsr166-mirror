@@ -305,9 +305,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     e = e.next;
                 }
 
-                V v = e.value;
-                if (v == null || !oldValue.equals(v))
-                    return false;
+                if (oldValue != null) {
+                    V v = e.value;
+                    if (v == null || !oldValue.equals(v))
+                        return false;
+                }
 
                 e.value = newValue;
                 count = c; // write-volatile
@@ -317,6 +319,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 unlock();
             }
         }
+
 
         V put(K key, int hash, V value, boolean onlyIfAbsent) {
             lock();
@@ -824,6 +827,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         return segmentFor(hash).remove(key, hash, value) != null;
     }
 
+
     /**
      * Replace entry for key only if currently mapped to given value.
      * Acts as
@@ -846,6 +850,29 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             throw new NullPointerException();
         int hash = hash(key);
         return segmentFor(hash).replace(key, hash, oldValue, newValue);
+    }
+
+    /**
+     * Replace entry for key only if key is currently mapped.
+     * Acts as
+     * <pre> 
+     *  if ((map.containsKey(key)) {
+     *     map.put(key, value);
+     *     return true;
+     * } else return false;
+     * </pre>
+     * except that the action is performed atomically.
+     * @param key key with which the specified value is associated.
+     * @param value value to be associated with the specified key.
+     * @return true if the value was replaced
+     * @throws NullPointerException if the specified key or value is
+     *            <tt>null</tt>.
+     */
+    public boolean replace(K key, V value) {
+        if (value == null)
+            throw new NullPointerException();
+        int hash = hash(key);
+        return segmentFor(hash).replace(key, hash, null, value);
     }
 
 

@@ -9,15 +9,16 @@ import junit.framework.*;
 
 public class SystemTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run(suite());	
+        junit.textui.TestRunner.run(suite());   
     }
     
     public static Test suite() {
-	return new TestSuite(SystemTest.class);
+        return new TestSuite(SystemTest.class);
     }
 
     /**
-     * Nanos between readings of millis is no longer than millis.
+     * Nanos between readings of millis is no longer than millis (plus
+     * one milli to allow for rounding).
      * This shows only that nano timing not (much) worse than milli.
      */
     public void testNanoTime1() {
@@ -33,7 +34,7 @@ public class SystemTest extends JSR166TestCase {
             long nanos = n2 - n1;
             
             assertTrue(nanos >= 0);
-            assertTrue(nanos <= millis * 1000000);
+            assertTrue(nanos < (millis+1) * 1000000);
         }
         catch(InterruptedException ie) {
             unexpectedException();

@@ -174,7 +174,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if <tt>c</tt> or any element within it
      * is <tt>null</tt>
      */
-    public LinkedBlockingQueue(Collection<E> c) {
+    public LinkedBlockingQueue(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
         for (Iterator<E> it = c.iterator(); it.hasNext();) 
             add(it.next());

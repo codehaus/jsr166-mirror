@@ -1,6 +1,15 @@
 package java.util.concurrent;
 
-/** JAVADOC?? */
+    /**
+     * SingleThreadedExecutor ensures that tasks are executed
+     * sequentially in a thread separate from the submitter, in the
+     * order they were submitted, with no more than one task executing
+     * at a time.  Generally, the tasks will all execute in the same
+     * background thread, but if this single thread terminates due to
+     * a failure during execution prior to shutdown, a new one will
+     * take its place if needed to execute subsequent tasks.  This is
+     * similar to the threading and execution model used by AWT/Swing.
+     */
 public class SingleThreadedExecutor
     extends ThreadExecutor implements Executor, ExecutorService {
 

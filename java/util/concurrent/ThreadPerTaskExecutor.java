@@ -1,9 +1,9 @@
 package java.util.concurrent;
 
 /**
- * ThreadPerTaskExecutor
- *
- * @author Brian Goetz
+ * ThreadPerTaskExecutor executes each task in its own thread.  It makes
+ * no attempt to limit the number of tasks executing concurrently.  It
+ * is similar in effect to calling new Thread(runnable).start(). 
  */
 public class ThreadPerTaskExecutor extends ThreadExecutor implements Executor, ExecutorService {
 

@@ -157,6 +157,7 @@ public class ThreadLocal<T> {
      * the storage requirements of ThreadLocals.  If this ThreadLocal
      * is accessed again, it will by default have its
      * <tt>initialValue</tt>.
+     * @since 1.5
      **/
 
      public void remove() {

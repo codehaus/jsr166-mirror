@@ -1,7 +1,7 @@
 package jsr166.bbuf;
 
-import jsr166.random.Random;
-import jsr166.random.RandomUsingAtomic;
+import jsr166.random.PseudoRandom;
+import jsr166.random.PseudoRandomUsingAtomic;
 import java.util.concurrent.*;
 
 /**
@@ -21,22 +21,22 @@ public final class TestBoundedBuffer {
 
     enum Mode {
         CONDVAR {
-            BoundedBuffer<Long> newBuffer(int capacity) {
-                return new BoundedBufferUsingCondVar<Long>(capacity);
+            BoundedBuffer<Integer> newBuffer(int capacity) {
+                return new BoundedBufferUsingCondVar<Integer>(capacity);
             }
         },
         CONDITION {
-            BoundedBuffer<Long> newBuffer(int capacity) {
-                return new BoundedBufferUsingCondition<Long>(capacity);
+            BoundedBuffer<Integer> newBuffer(int capacity) {
+                return new BoundedBufferUsingCondition<Integer>(capacity);
             }
         },
         ABQ {
-            BoundedBuffer<Long> newBuffer(final int capacity) {
-                return new BoundedBufferUsingABQ<Long>(capacity);
+            BoundedBuffer<Integer> newBuffer(final int capacity) {
+                return new BoundedBufferUsingABQ<Integer>(capacity);
             }
         },
     ;
-        abstract BoundedBuffer<Long> newBuffer(int capacity);
+        abstract BoundedBuffer<Integer> newBuffer(int capacity);
     }
 
     void run() {
@@ -66,7 +66,7 @@ public final class TestBoundedBuffer {
 
     private long trial(final int N, int capacity, Mode mode) {
 
-        final BoundedBuffer<Long> buf = mode.newBuffer(capacity);
+        final BoundedBuffer<Integer> buf = mode.newBuffer(capacity);
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
@@ -78,12 +78,12 @@ public final class TestBoundedBuffer {
                     try {
                         startSignal.await();
                         for (int i = 0; i < N; ++i)
-                            buf.put(rnd.next());
+                            buf.put(rnd.nextInt(6));
                         doneSignal.countDown();
                     }
                     catch (InterruptedException e) {} // XXX ignored
                 }
-                Random rnd = new RandomUsingAtomic(SEED);
+                PseudoRandom rnd = new PseudoRandomUsingAtomic(SEED);
             };
 
             Runnable consumer = new Runnable() {
@@ -116,5 +116,5 @@ public final class TestBoundedBuffer {
         }
     }
 
-    private static final long SEED = 17;
+    private static final int SEED = 17;
 }

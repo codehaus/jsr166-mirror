@@ -414,32 +414,25 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * initial fast path. (The timed version is handled directly in
      * tryLock(timeout). It differs enough in detail to separate out.)
      * @param current current thread
-     * @param node its wait-node, if it already exists; else null in
-     * which case it is created,
      * @param interrupts interrupt control: -1 for abort on interrupt,
      * 0 for continue on interrupt, 1 for continue and thread was
      * already interrupted so needs re-interrupt on exit.
      * @return true if lock acquired (can be false only if interruptible)
      */
-    private boolean waitForLock(Thread current, 
-                                LockNode node, 
-                                int interrupts) {
+    private boolean waitForLock(Thread current, int interrupts) {
         /*
-         * If node isn't null, it was already created during a
-         * Condition await and then transfered from a condition queue.
-         * Otherwise, first check for recursive hold and barging acquire,
-         * and then if still need to wait, create node.
+         * First check for recursive hold and barging acquire, and
+         * then if still need to wait, create node.
          */
-        if (node == null) {
-            Thread o = owner;
-            if (o == current) { 
-                ++recursions;
-                return true;
-            }
-            if (o == null && !fair && ownerUpdater.acquire(this, current))
-                return true;
-            enq(node = new LockNode(current));
+        Thread o = owner;
+        if (o == current) { 
+            ++recursions;
+            return true;
         }
+        if (o == null && !fair && ownerUpdater.acquire(this, current))
+            return true;
+        LockNode node = new LockNode(current);
+        enq(node);
 
         LockNode p = node.prev;         // our predecessor
 
@@ -596,7 +589,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public void lock() {
         Thread current = Thread.currentThread();
         if (head != tail || !ownerUpdater.acquire(this, current))
-            waitForLock(current, null, 0);
+            waitForLock(current, 0);
     }
 
     /**
@@ -636,7 +629,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         // Fail if interrupted or if fastpath and slowpath both fail
         if (Thread.interrupted() ||
             ((head != tail || !ownerUpdater.acquire(this, current)) &&
-             !waitForLock(current, null, -1)))
+             !waitForLock(current, -1)))
             throw new InterruptedException();
     }
 
@@ -986,8 +979,31 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                                LockNode node, 
                                int recs,
                                int interrupts) {
-        waitForLock(current, node, interrupts);
-        recursions = recs;
+        for (;;) {
+            LockNode p = node.prev; 
+            if (p == head && owner == null &&
+                ownerUpdater.acquire(this, current)) {
+                recursions = recs;
+                p.next = null; 
+                node.thread = null;
+                node.prev = null; 
+                head = node;
+                if (interrupts > 0)
+                    current.interrupt();
+                return;
+            }
+            
+            int status = p.status;
+            if (status == 0) 
+                statusUpdater.compareAndSet(p, 0, SIGNAL);
+            else if (status == CANCELLED) 
+                node.prev = p.prev;
+            else { 
+                LockSupport.park();
+                if (Thread.interrupted()) 
+                    interrupts = 1;
+            }
+        }
     }
 
     /**
@@ -1050,19 +1066,18 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
-     * Re-acquire lock after a cancelled wait. Return true if thread
-     * was cancelled before being signalled.
+     * Transfer node, if necessary, to lock queue after a cancelled
+     * wait. Return true if thread was cancelled before being
+     * signalled.
      * @param current the waiting thread
      * @param node its node
-     * @param recs number of recursive holds on lock before entering wait
      * @return true if cancelled before the node was signalled.
      */
-    final boolean relockAfterCancelledWait(Thread current, 
-                                           LockNode node, 
-                                           int recs) {
-        boolean isCancelled = statusUpdater.compareAndSet(node, CONDITION, 0);
-        if (isCancelled) // place on lock queue
+    final boolean transferAfterCancelledWait(Thread current, LockNode node) {
+        if (statusUpdater.compareAndSet(node, CONDITION, 0)) {
             enq(node);
+            return true;
+        }
         else {
             /*
              * If we lost out to a signal(), then we can't proceed
@@ -1072,10 +1087,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              */
             while (!isOnLockQueue(node)) 
                 Thread.yield();
+            return false;
         }
-        waitForLock(current, node, 0);
-        recursions = recs;
-        return isCancelled;
     }
 
     /**
@@ -1110,7 +1123,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         static class ConditionNode extends LockNode {
             /** Link to next node waiting on condition. */
             transient ConditionNode nextWaiter;
-            
             ConditionNode(Thread t) { 
                 super(t); 
                 status = CONDITION;
@@ -1185,69 +1197,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             } while (first != null);
         }
 
-        /*
-         * Cancellation support for await() etc. When a cancellation
-         * (interrupt or timeout) and a notification (signal or
-         * signalAll) occur at about the same time, the signaller
-         * cannot tell for sure that it should not perform the queue
-         * transfer when it actually should instead let the
-         * cancellation continue. So the signaller will blindly try
-         * the transfer. To compensate for this, a cancelling thread
-         * must, according to the (draft) JSR-133 spec, ensure
-         * notification of some other thread that was waiting when
-         * signal() made this mistake (this kind of mistake is rare
-         * but inevitable because of intrinsic races detecting
-         * cancellation vs queue transfer). Since we give preference
-         * to cancellation over normal returns, a cancelling thread
-         * that has already been notified performs the equivalent of a
-         * signal(). Because our condition queues are FIFO, the first
-         * waiter (if one exists) may be one that had been waiting at
-         * the point of the lost signal/cancel race (or not, in which
-         * case the wakeup is spurious). But no other thread could
-         * have already been waiting if the first one wasn't, so
-         * a signal((), as opposed to a signalAll(), suffices.
-         *
-         * This is done only when the cancelling thread has reacquired
-         * the lock, in the following two methods dealing with the two
-         * kinds of circumstances in which this race can occur: In
-         * method cancelAndRelock, when a thread knows that it has
-         * cancelled before reacquiring lock and in method
-         * checkInterruptAfterRelock, when it notices that it has been
-         * interrupted after reacquiring lock, but hadn't noticed
-         * before relocking.
-         */
-
-        /**
-         * Cancel a wait due to interrupt or timeout: reacquire lock
-         * and handle possible cancellation race.
-         * @param current the waiting thread
-         * @param node its node
-         * @param recs number of recursive holds on lock before entering wait
-         */
-        private void cancelAndRelock(Thread current, 
-                                     ConditionNode node, 
-                                     int recs) {
-            if (!lock.relockAfterCancelledWait(current, node, recs)) {
-                ConditionNode w = firstWaiter;
-                if (w != null) 
-                    doSignal(w);
-            }
-        }
-
-        /**
-         * Check for interruption upon return from a wait, throwing
-         * InterruptedException and handling possible cancellation
-         * race if interrupted.
-         */
-        private void checkInterruptAfterRelock() throws InterruptedException {
-            if (Thread.interrupted()) {
-                ConditionNode w = firstWaiter;
-                if (w != null) 
-                    doSignal(w);
-                throw new InterruptedException();
-            }
-        }
-
         // public methods
 
         /**
@@ -1303,7 +1252,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * <p>The lock associated with this condition is atomically
          * released and the current thread becomes disabled for thread
          * scheduling purposes and lies dormant until <em>one</em> of
-         * three things happens: 
+         * the following happens: 
          *
          * <ul>
          *
@@ -1312,9 +1261,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * has been waiting the longest of all waiting threads; or
          *
          * <li>Some other thread invokes the {@link #signalAll} method
-         * for this <tt>Condition</tt>; or
-         *
-         * <li>A &quot;<em>spurious wakeup</em>&quot; occurs
+         * for this <tt>Condition</tt>
          *
          * </ul>
          *
@@ -1353,7 +1300,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * <p>The lock associated with this <tt>Condition</tt> is
          * atomically released and the current thread becomes disabled
          * for thread scheduling purposes and lies dormant until
-         * <em>one</em> of four things happens:
+         * <em>one</em> of the following happens:
          *
          * <ul>
          *
@@ -1365,9 +1312,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * for this <tt>Condition</tt>; or
          *
          * <li>Some other thread {@link Thread#interrupt interrupts}
-         * the current thread; or
-         *
-         * <li>A &quot;<em>spurious wakeup</em>&quot; occurs
+         * the current thread
          *
          * </ul>
          *
@@ -1380,9 +1325,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * entry to this method or is {@link Thread#interrupt
          * interrupted} while waiting, then {@link
          * InterruptedException} is thrown and the current thread's
-         * interrupted status is cleared.  This implementation favors
-         * responding to an interrupt over normal method return in
-         * response to a signal.
+         * interrupted status is cleared.  
          *
          * @throws InterruptedException if the current thread is
          * interrupted
@@ -1392,21 +1335,26 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         public void await() throws InterruptedException {
             Thread current = Thread.currentThread();
             lock.checkOwner(current);
+            if (Thread.interrupted()) 
+                throw new InterruptedException();
+
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
+            boolean throwIE = false;
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    cancelAndRelock(current, w, recs);
-                    throw new InterruptedException();
+                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    break;
                 }
-                if (lock.isOnLockQueue(w)) {
-                    lock.relockAfterWait(current, w, recs, 0);
-                    checkInterruptAfterRelock();
-                    return;
-                }
+                if (lock.isOnLockQueue(w)) 
+                    break;
                 LockSupport.park();
             }
+
+            lock.relockAfterWait(current, w, recs, 0);
+            if (throwIE)
+                throw new InterruptedException();
         }
 
         /**
@@ -1416,7 +1364,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * <p>The lock associated with this condition is atomically
          * released and the current thread becomes disabled for thread
          * scheduling purposes and lies dormant until <em>one</em> of
-         * five things happens:
+         * the following happens:
          *
          * <ul>
          *
@@ -1430,9 +1378,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * <li>Some other thread {@link Thread#interrupt interrupts}
          * the current thread; or
          *
-         * <li>The specified waiting time elapses; or
-         *
-         * <li>A &quot;<em>spurious wakeup</em>&quot; occurs.
+         * <li>The specified waiting time elapses
          *
          * </ul>
          *
@@ -1445,9 +1391,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * entry to this method or is {@link Thread#interrupt
          * interrupted} while waiting, then {@link
          * InterruptedException} is thrown and the current thread's
-         * interrupted status is cleared.  This implementation favors
-         * responding to an interrupt over normal method return in
-         * response to a signal or timeout.
+         * interrupted status is cleared.  
          *
          * <p>The method returns an estimate of the number of nanoseconds
          * remaining to wait given the supplied <tt>nanosTimeout</tt>
@@ -1470,31 +1414,35 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         public long awaitNanos(long nanosTimeout) throws InterruptedException {
             Thread current = Thread.currentThread();
             lock.checkOwner(current);
+            if (Thread.interrupted()) 
+                throw new InterruptedException();
+
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
             long lastTime = System.nanoTime();
+            boolean throwIE = false;
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    cancelAndRelock(current, w, recs);
-                    throw new InterruptedException();
+                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    break;
                 }
                 if (nanosTimeout <= 0L) {
-                    cancelAndRelock(current, w, recs);
-                    return nanosTimeout;
+                    lock.transferAfterCancelledWait(current, w); 
+                    break;
                 }
-                if (lock.isOnLockQueue(w)) {
-                    lock.relockAfterWait(current, w, recs, 0);
-                    checkInterruptAfterRelock();
-                    // We could have sat in lock queue a while, so
-                    // recompute time left on way out.
-                    return nanosTimeout - (System.nanoTime() - lastTime);
-                }
+                if (lock.isOnLockQueue(w)) 
+                    break;
                 LockSupport.parkNanos(nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
             }
+
+            lock.relockAfterWait(current, w, recs, 0);
+            if (throwIE)
+                throw new InterruptedException();
+            return nanosTimeout - (System.nanoTime() - lastTime);
         }
 
 
@@ -1505,7 +1453,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * <p>The lock associated with this condition is atomically
          * released and the current thread becomes disabled for thread
          * scheduling purposes and lies dormant until <em>one</em> of
-         * five things happens:
+         * the following happens:
          *
          * <ul>
          *
@@ -1519,9 +1467,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * <li>Some other thread {@link Thread#interrupt interrupts}
          * the current thread; or
          *
-         * <li>The specified deadline elapses; or
-         *
-         * <li>A &quot;<em>spurious wakeup</em>&quot; occurs.
+         * <li>The specified deadline elapses
          *
          * </ul>
          *
@@ -1534,9 +1480,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * entry to this method or is {@link Thread#interrupt
          * interrupted} while waiting, then {@link
          * InterruptedException} is thrown and the current thread's
-         * interrupted status is cleared.  This implementation favors
-         * responding to an interrupt over normal method return in
-         * response to a signal or timeout.
+         * interrupted status is cleared.  
          *
          * @param deadline the absolute time to wait until
          * @return <tt>false</tt> if the deadline has
@@ -1552,26 +1496,35 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 throw new NullPointerException();
             Thread current = Thread.currentThread();
             lock.checkOwner(current);
+            if (Thread.interrupted()) 
+                throw new InterruptedException();
+
             ConditionNode w = addConditionWaiter(current);
             int recs = lock.unlockForWait();
             long abstime = deadline.getTime();
+            boolean throwIE = false;
+            boolean to = false;
             
             for (;;) {
                 if (Thread.interrupted()) {
-                    cancelAndRelock(current, w, recs);
-                    throw new InterruptedException();
+                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    break;
                 }
                 if (System.currentTimeMillis() > abstime) {
-                    cancelAndRelock(current, w, recs);
-                    return false;
+                    to = lock.transferAfterCancelledWait(current, w); 
+                    break;
                 }
-                if (lock.isOnLockQueue(w)) {
-                    lock.relockAfterWait(current, w, recs, 0);
-                    checkInterruptAfterRelock();
-                    return true;
-                }
+                if (lock.isOnLockQueue(w)) 
+                    break;
                 LockSupport.parkUntil(abstime);
             }
+
+            lock.relockAfterWait(current, w, recs, 0);
+            if (throwIE)
+                throw new InterruptedException();
+            if (to)
+                return false;
+            return true;
         }
         
         /**
@@ -1596,7 +1549,42 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         public boolean await(long time, TimeUnit unit) throws InterruptedException {
             if (unit == null)
                 throw new NullPointerException();
-            return awaitNanos(unit.toNanos(time)) > 0L;
+
+            long nanosTimeout = unit.toNanos(time);
+            Thread current = Thread.currentThread();
+            lock.checkOwner(current);
+            if (Thread.interrupted()) 
+                throw new InterruptedException();
+
+            ConditionNode w = addConditionWaiter(current);
+            int recs = lock.unlockForWait();
+            long lastTime = System.nanoTime();
+            boolean throwIE = false;
+            boolean to = false;
+
+            for (;;) {
+                if (Thread.interrupted()) {
+                    throwIE = lock.transferAfterCancelledWait(current, w); 
+                    break;
+                }
+                if (nanosTimeout <= 0L) {
+                    to = lock.transferAfterCancelledWait(current, w); 
+                    break;
+                }
+                if (lock.isOnLockQueue(w)) 
+                    break;
+                LockSupport.parkNanos(nanosTimeout);
+                long now = System.nanoTime();
+                nanosTimeout -= now - lastTime;
+                lastTime = now;
+            }
+
+            lock.relockAfterWait(current, w, recs, 0);
+            if (throwIE)
+                throw new InterruptedException();
+            if (to)
+                return false;
+            return true;
         }
 
         /**
@@ -1709,4 +1697,3 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
         
 }
-

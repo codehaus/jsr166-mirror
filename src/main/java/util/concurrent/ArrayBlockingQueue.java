@@ -11,12 +11,12 @@ import java.util.*;
 /**
  * A bounded {@link BlockingQueue blocking queue} backed by an array.
  * This queue orders elements FIFO (first-in-first-out).
- * The <em>head</em> of the queue is that element that has been on the 
+ * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
  * The <em>tail</em> of the queue is that element that has been on the
  * queue the shortest time.
  *
- * <p>This is a classic &quot;bounded buffer&quot;, in which a fixed-sized 
+ * <p>This is a classic &quot;bounded buffer&quot;, in which a fixed-sized
  * array holds
  * elements inserted by producers and extracted by consumers.  Once
  * created, the capacity can not be increased.  Attempts to offer an
@@ -131,14 +131,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Internal constructor also used by readResolve.
      * Sets all final fields, plus count.
-     * @param cap the capacity 
+     * @param cap the capacity
      * @param array the array to use or null if should create new one
      * @param count the number of items in the array, where indices 0
      * to count-1 hold items.
      */
-    private ArrayBlockingQueue(int cap, E[] array, int count, 
+    private ArrayBlockingQueue(int cap, E[] array, int count,
                                ReentrantLock lk) {
-        if (cap <= 0) 
+        if (cap <= 0)
             throw new IllegalArgumentException();
         if (array == null)
             this.items = (E[]) new Object[cap];
@@ -152,7 +152,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed) 
+     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
      * capacity and default access policy.
      * @param capacity the capacity of this queue
      */
@@ -161,7 +161,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed) 
+     * Create an <tt>ArrayBlockingQueue</tt> with the given (fixed)
      * capacity and the specified access policy.
      * @param capacity the capacity of this queue
      * @param fair if <tt>true</tt> then queue accesses for threads blocked
@@ -182,14 +182,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         return super.add(x);
     }
 
-    //    /**
-    //     * @throws IllegalStateException {@inheritDoc}
-    //     */
-    //    public boolean addAll(Collection<? extends E> c) {
-    //        return super.addAll(c);
-    //    }
+    /**
+     * @throws IllegalStateException {@inheritDoc}
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        return super.addAll(c);
+    }
 
-   /** 
+   /**
     * Add the specified element to the tail of this queue if possible,
     * returning immediately if this queue is full.
     *
@@ -212,11 +212,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if 
+     * Add the specified element to the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E x, long timeout, TimeUnit unit) 
+    public boolean offer(E x, long timeout, TimeUnit unit)
         throws InterruptedException {
 
         if (x == null) throw new NullPointerException();
@@ -255,7 +255,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             return x;
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -338,7 +338,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to the tail of this queue, waiting if 
+     * Add the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
      * @throws NullPointerException {@inheritDoc}
      */
@@ -365,8 +365,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     // this doc comment is overridden to remove the reference to collections
     // greater in size than Integer.MAX_VALUE
-    /** 
-     * Return the number of elements in this collection. 
+    /**
+     * Return the number of elements in this collection.
      */
     public int size() {
         lock.lock();
@@ -380,7 +380,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     // this doc comment is a modified copy of the inherited doc comment,
     // without the reference to unlimited queues.
-    /** 
+    /**
      * Return the number of elements that this queue can ideally (in
      * the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue

@@ -46,7 +46,7 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements 
             ;
     }
 
-    // why is this here? Won't Collection declare this itself??? - David
+    // XXX Remove this redundant declaration, pending response from Neal Gafter.
     public abstract Iterator<E> iterator();
 }
 

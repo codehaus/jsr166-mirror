@@ -3,15 +3,15 @@
 /**
  * An unbounded priority queue based on a priority heap.  This queue orders
  * elements according to an order specified at construction time, which is
- * specified in the same manner as {@link TreeSet} and {@link TreeMap}: 
+ * specified in the same manner as {@link TreeSet} and {@link TreeMap}:
  * elements are ordered
  * either according to their <i>natural order</i> (see {@link Comparable}), or
  * according to a {@link Comparator}, depending on which constructor is used.
  * The <em>head</em> of this queue is the least element with respect to the
- * specified ordering. If multiple elements are tied for least value, the 
- * head is one of those elements. A priority queue does not permit 
+ * specified ordering. If multiple elements are tied for least value, the
+ * head is one of those elements. A priority queue does not permit
  * <tt>null</tt> elements.
- * 
+ *
  * <p>The {@link #remove()} and {@link #poll()} methods remove and
  * return the head of the queue.
  *
@@ -199,12 +199,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return super.add(element);
     }
 
-    //    /**
-    //     * @throws NullPointerException if any element is <tt>null</tt>.
-    //     */
-    //    public boolean addAll(Collection c) {
-    //        return super.addAll(c);
-    //    }
+    /**
+     * @throws NullPointerException if any element is <tt>null</tt>.
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        return super.addAll(c);
+    }
 
     /**
      * @throws NullPointerException if the specified element is <tt>null</tt>.

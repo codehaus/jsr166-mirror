@@ -5,6 +5,8 @@
  */
 
 package java.util.concurrent;
+
+import java.util.Collection;
 import java.util.Queue;
 
 /**
@@ -46,7 +48,7 @@ import java.util.Queue;
  *
  * <p>
  * Usage example, based on a typical producer-consumer scenario.
- * Note that a <tt>BlockingQueue</tt> can safely be used with multiple 
+ * Note that a <tt>BlockingQueue</tt> can safely be used with multiple
  * producers and multiple consumers.
  * <pre>
  * class Producer implements Runnable {
@@ -89,8 +91,8 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/28 09:40:14 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/28 16:00:19 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface BlockingQueue<E> extends Queue<E> {
@@ -101,13 +103,13 @@ public interface BlockingQueue<E> extends Queue<E> {
      */
     boolean add(E x);
 
-    //    /**
-    //     * @throws IllegalStateException if this queue is full
-    //     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
-    //     */
-    //    boolean addAll(Collection<? extends E> c);
+    /**
+     * @throws IllegalStateException if this queue is full
+     * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
+     */
+    boolean addAll(Collection<? extends E> c);
 
-    /** 
+    /**
      * @throws NullPointerException if <tt>x<tt> is <tt>null</tt>.
      */
     public boolean offer(E x);
@@ -118,14 +120,14 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @param x the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the 
+     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
      * <tt>timeout</tt> parameter
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
      * the specified waiting time elapses before space is available.
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if <tt>x</tt> is <tt>null</tt>.
      */
-    boolean offer(E x, long timeout, TimeUnit unit) 
+    boolean offer(E x, long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**
@@ -134,13 +136,13 @@ public interface BlockingQueue<E> extends Queue<E> {
      * present on this queue.
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the 
+     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
      * <tt>timeout</tt> parameter
-     * @return the head of this queue, or <tt>null</tt> if the 
+     * @return the head of this queue, or <tt>null</tt> if the
      * specified waiting time elapses before an element is present.
      * @throws InterruptedException if interrupted while waiting.
      */
-    E poll(long timeout, TimeUnit unit) 
+    E poll(long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**
@@ -166,7 +168,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * Return the number of elements that this queue can ideally (in
      * the absence of memory or resource constraints) accept without
      * blocking, or <tt>Integer.MAX_VALUE</tt> if there is no
-     * intrinsic limit.  
+     * intrinsic limit.
      * <p>Note that you <em>cannot</em> always tell if
      * an attempt to <tt>add</tt> an element will succeed by
      * inspecting <tt>remainingCapacity</tt> because it may be the

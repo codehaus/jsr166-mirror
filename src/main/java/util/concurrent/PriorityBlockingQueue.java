@@ -5,11 +5,12 @@
  */
 
 package java.util.concurrent;
+
 import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded {@link BlockingQueue blocking queue} based on a 
+ * An unbounded {@link BlockingQueue blocking queue} based on a
  * {@link PriorityQueue},
  * obeying its ordering rules and implementation characteristics.
  * @since 1.5
@@ -32,7 +33,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial 
+     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial
      * capacity
      * that orders its elements according to their natural ordering
      * (using <tt>Comparable</tt>.)
@@ -44,7 +45,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial 
+     * Create a <tt>PriorityBlockingQueue</tt> with the specified initial
      * capacity
      * that orders its elements according to the specified comparator.
      *
@@ -53,13 +54,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * If <tt>null</tt> then the order depends on the elements' natural
      * ordering.
      */
-    public PriorityBlockingQueue(int initialCapacity, 
+    public PriorityBlockingQueue(int initialCapacity,
                                  Comparator<E> comparator) {
         q = new PriorityQueue<E>(initialCapacity, comparator);
     }
 
     /**
-     * Create a <tt>PriorityBlockingQueue</tt> containing the elements 
+     * Create a <tt>PriorityBlockingQueue</tt> containing the elements
      * in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
      * size of the specified collection. If the specified collection
@@ -92,12 +93,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return super.add(element);
     }
 
-    //    /**
-    //     * @throws NullPointerException if any element is <tt>null</tt>.
-    //     */
-    //    public boolean addAll(Collection c) {
-    //        return super.addAll(c);
-    //    }
+    /**
+     * @throws NullPointerException if any element is <tt>null</tt>.
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        return super.addAll(c);
+    }
 
     public Comparator comparator() {
         return q.comparator();
@@ -114,7 +115,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             return true;
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -122,7 +123,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         offer(x); // never need to block
     }
 
-    public boolean offer(E x, long timeout, TimeUnit unit) 
+    public boolean offer(E x, long timeout, TimeUnit unit)
         throws InterruptedException {
         return offer(x); // never need to block
     }
@@ -154,7 +155,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             return q.poll();
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -164,7 +165,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         try {
             for (;;) {
                 E x = q.poll();
-                if (x != null) 
+                if (x != null)
                     return x;
                 if (nanos <= 0)
                     return null;
@@ -188,7 +189,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             return q.peek();
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -274,11 +275,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     private class Itr<E> implements Iterator<E> {
         private final Iterator<E> iter;
-        Itr(Iterator<E> i) { 
-            iter = i; 
+        Itr(Iterator<E> i) {
+            iter = i;
         }
 
-	public boolean hasNext() {
+        public boolean hasNext() {
             /*
              * No sync -- we rely on underlying hasNext to be
              * stateless, in which case we can return true by mistake
@@ -286,9 +287,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
              * ConcurrentModificationException.
              */
             return iter.hasNext();
-	}
-        
-	public E next() {
+        }
+
+        public E next() {
             lock.lock();
             try {
                 return iter.next();
@@ -296,9 +297,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             finally {
                 lock.unlock();
             }
-	}
-        
-	public void remove() {
+        }
+
+        public void remove() {
             lock.lock();
             try {
                 iter.remove();
@@ -306,7 +307,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             finally {
                 lock.unlock();
             }
-	}
+        }
     }
 
     /**

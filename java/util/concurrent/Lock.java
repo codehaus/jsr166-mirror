@@ -40,10 +40,16 @@ package java.util.concurrent;
  *     l.lock();
  *     try {
  *         // access the resource protected by this lock
+ *     } catch ( ... ) {
+ *         // ensure consistency before releasing lock
  *     } finally {
  *         l.unlock();
  *     }
  * </tt></pre>
+ * This mimics the automatic release property of built-in monitor locks, and
+ * carries with it the same responsibility for ensuring that if an exception
+ * occurs then the resource is left in a consistent state before the lock
+ * is released.
  *
  * <p><tt>Lock</tt> implementations provide additional functionality over the 
  * use
@@ -111,10 +117,10 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/09 17:56:51 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/01/20 23:57:41 $
+ * @editor $Author: dholmes $
  *
- **/
+ */
 public interface Lock {
 
     /**
@@ -130,8 +136,8 @@ public interface Lock {
      * The circumstances and the exception type must be documented by that 
      * <tt>Lock</tt> implementation.
      *
-     **/
-    public void lock();
+     */
+    void lock();
 
     /**
      * Acquires the lock unless the current thread is  
@@ -172,8 +178,8 @@ public interface Lock {
      *
      * @see Thread#interrupt
      *
-     **/
-    public void lockInterruptibly() throws InterruptedException;
+     */
+    void lockInterruptibly() throws InterruptedException;
 
 
     /**
@@ -200,8 +206,8 @@ public interface Lock {
      *
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
      * otherwise.
-     **/
-    public boolean tryLock();
+     */
+    boolean tryLock();
 
     /**
      * Acquires the lock if it is free within the given waiting time and the
@@ -255,8 +261,9 @@ public interface Lock {
      *
      * @see Thread#interrupt
      *
-     **/
-    public boolean tryLock(long timeout, TimeUnit granularity) throws InterruptedException;
+     */
+    boolean tryLock(long timeout, TimeUnit granularity) 
+        throws InterruptedException;
 
     /**
      * Releases the lock.
@@ -267,8 +274,8 @@ public interface Lock {
      * an (unchecked) exception if the restriction is violated.
      * Any restrictions and the exception
      * type must be documented by that <tt>Lock</tt> implementation.
-     **/
-    public void unlock();
+     */
+    void unlock();
 
     /**
      * Returns a {@link Condition} instance that is bound to this <tt>Lock</tt>
@@ -291,8 +298,8 @@ public interface Lock {
      * @return A {@link Condition} instance for this <tt>Lock</tt> instance.
      * @throws UnsupportedOperationException if this <tt>Lock</tt> 
      * implementation does not support conditions.
-     **/
-    public Condition newCondition();
+     */
+    Condition newCondition();
 
 }
 

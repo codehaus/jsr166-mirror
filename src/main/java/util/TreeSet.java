@@ -255,7 +255,7 @@ public class TreeSet<E>
      *
      * @throws ClassCastException if the elements provided cannot be compared
      *		  with the elements currently in the set.
-     * @throws NullPointerException of the specified collection is
+     * @throws NullPointerException if the specified collection is
      * <tt>null</tt> or if any element is <tt>null</tt> and this map
      * uses natural ordering, or its comparator does not tolerate
      * <tt>null</tt> keys.
@@ -299,7 +299,8 @@ public class TreeSet<E>
      * For example, suppose that <tt>s</tt> is a navigable set of
      * strings.  The following idiom obtains a view containing all of
      * the strings in <tt>s</tt> from <tt>low</tt> to <tt>high</tt>,
-     * inclusive: <pre> NavigableSet sub = s.subSet(low, high+"\0");
+     * inclusive: 
+     * <pre> NavigableSet sub = s.navigableSubSet(low, high+"\0");
      * </pre>
      *
      * A similar technique can be used to generate an <i>open range</i> (which
@@ -309,8 +310,8 @@ public class TreeSet<E>
      *     NavigableSet sub = s.navigableSubSet(low+"\0", high);
      * </pre>
      *
-     * @param fromElement low endpoint (inclusive) of the subSet.
-     * @param toElement high endpoint (exclusive) of the subSet.
+     * @param fromElement low endpoint (inclusive) of the range.
+     * @param toElement high endpoint (exclusive) of the range.
      * @return a view of the portion of this set whose elements range from
      * 	       <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
      * 	       exclusive.
@@ -353,13 +354,13 @@ public class TreeSet<E>
      *
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
-     * 	       less than toElement.
+     * 	       less than <tt>toElement</tt>.
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
-     * @throws IllegalArgumentException if this set is itself a subSet,
-     *         headSet, or tailSet, and <tt>toElement</tt> is not within the
-     *         specified range of the subSet, headSet, or tailSet.
+     * @throws IllegalArgumentException if this set is itself a subset,
+     *         and <tt>toElement</tt> is not within the
+     *         specified range of the subset.
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt> and
      *	       this set uses natural ordering, or its comparator does
      *         not tolerate <tt>null</tt> elements.
@@ -396,9 +397,9 @@ public class TreeSet<E>
      * @throws ClassCastException if <tt>fromElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>fromElement</tt> does not implement <tt>Comparable</tt>).
-     * @throws IllegalArgumentException if this set is itself a subSet,
-     *         headSet, or tailSet, and <tt>fromElement</tt> is not within the
-     *         specified range of the subSet, headSet, or tailSet.
+     * @throws IllegalArgumentException if this set is itself a subset,
+     *         and <tt>fromElement</tt> is not within the
+     *         specified range of the subset.
      * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
      *	       and this set uses natural ordering, or its comparator does
      *         not tolerate <tt>null</tt> elements.
@@ -411,8 +412,8 @@ public class TreeSet<E>
     /**
      * Equivalent to <tt>navigableSubSet</tt> but with a return
      * type conforming to the <tt>SortedSet</tt> interface.
-     * @param fromElement low endpoint (inclusive) of the subSet.
-     * @param toElement high endpoint (exclusive) of the subSet.
+     * @param fromElement low endpoint (inclusive) of the range.
+     * @param toElement high endpoint (exclusive) of the range.
      * @return a view of the portion of this set whose elements range from
      * 	       <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
      * 	       exclusive.
@@ -437,13 +438,13 @@ public class TreeSet<E>
      *
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
-     * 	       less than toElement.
+     * 	       less than <tt>toElement</tt>.
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
      * @throws IllegalArgumentException if this set is itself a subSet,
-     *         headSet, or tailSet, and <tt>toElement</tt> is not within the
-     *         specified range of the subSet, headSet, or tailSet.
+     *         and <tt>toElement</tt> is not within the
+     *         specified range of the subset.
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt> and
      *	       this set uses natural ordering, or its comparator does
      *         not tolerate <tt>null</tt> elements.
@@ -461,9 +462,9 @@ public class TreeSet<E>
      * @throws ClassCastException if <tt>fromElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>fromElement</tt> does not implement <tt>Comparable</tt>).
-     * @throws IllegalArgumentException if this set is itself a subSet,
-     *         headSet, or tailSet, and <tt>fromElement</tt> is not within the
-     *         specified range of the subSet, headSet, or tailSet.
+     * @throws IllegalArgumentException if this set is itself a subset,
+     *         and <tt>fromElement</tt> is not within the
+     *         specified range of the subset.
      * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
      *	       and this set uses natural ordering, or its comparator does
      *         not tolerate <tt>null</tt> elements.

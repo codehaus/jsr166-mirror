@@ -141,8 +141,8 @@ import java.util.*;
  * the same as the one that acquired it.  However, this property is
  * not guaranteed to hold in future implementations of this class.
  *
- * <p> This lock supports a maximum of 655536 recursive write locks
- * and 65536 read locks. Attempts to exceed this limit result in
+ * <p> This lock supports a maximum of 65536 recursive write locks
+ * and 65536 read locks. Attempts to exceed these limits result in
  * {@link Error} throws from locking methods.
  *
  * @since 1.5
@@ -976,10 +976,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Queries whether any threads are waiting on the given
-     * condition. Note that because timeouts and interrupts may
-     * occur at any time, a <tt>true</tt> return does not
-     * guarantee that a future <tt>signal</tt> will awaken any
+     * Queries whether any threads are waiting on the given condition
+     * associated with the write lock. Note that because timeouts and
+     * interrupts may occur at any time, a <tt>true</tt> return does
+     * not guarantee that a future <tt>signal</tt> will awaken any
      * threads.  This method is designed primarily for use in
      * monitoring of the system state.
      * @param condition the condition
@@ -996,12 +996,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
-     * Returns an estimate of the number of threads waiting on
-     * the given condition. Note that because timeouts and interrupts
-     * may occur at any time, the estimate serves only as an upper
-     * bound on the actual number of waiters.  This method is
-     * designed for use in monitoring of the system state, not for
-     * synchronization control.
+     * Returns an estimate of the number of threads waiting on the
+     * given condition associated with the write lock. Note that because
+     * timeouts and interrupts may occur at any time, the estimate
+     * serves only as an upper bound on the actual number of waiters.
+     * This method is designed for use in monitoring of the system
+     * state, not for synchronization control.
      * @param condition the condition
      * @return the estimated number of waiting threads.
      * @throws IllegalMonitorStateException if this lock 
@@ -1017,13 +1017,13 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Returns a collection containing those threads that may be
-     * waiting on the given Condition.  Because the actual set of
-     * threads may change dynamically while constructing this
-     * result, the returned collection is only a best-effort
-     * estimate. The elements of the returned collection are in no
-     * particular order.  This method is designed to facilitate
-     * construction of subclasses that provide more extensive
-     * condition monitoring facilities.
+     * waiting on the given condition associated with the write lock.
+     * Because the actual set of threads may change dynamically while
+     * constructing this result, the returned collection is only a
+     * best-effort estimate. The elements of the returned collection
+     * are in no particular order.  This method is designed to
+     * facilitate construction of subclasses that provide more
+     * extensive condition monitoring facilities.
      * @param condition the condition
      * @return the collection of threads
      * @throws IllegalMonitorStateException if this lock 

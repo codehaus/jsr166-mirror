@@ -59,6 +59,7 @@
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
+  <property name="concurrent.jar"       location="${lib.dir}/concurrent.jar"/>
 
   <!-- Bootclasspath argument -->
   <property name="bootclasspath.args"   value="-Xbootclasspath/p:${product.jar}"/>
@@ -78,6 +79,7 @@
   <path id="j1.classpath">
     <pathelement location="${build.j1.dir}"/>
     <pathelement location="${junit.jar}"/>
+    <pathelement location="${concurrent.jar}"/>
   </path>
 
 
@@ -677,8 +679,10 @@
             debug="${build.debug}"
        debuglevel="${build.debuglevel}"
       deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
+           source="${build.sourcelevel}" >
+
+      <include name="**/*.java"/>
+      <exclude name="**/dijkstra/**"/>
 
       <compilerarg line="${build.args}"/>
       <classpath refid="j1.classpath"/>
@@ -708,8 +712,11 @@
   <target name="j1" depends="compile-j1"
           description="Runs a standalone JavaOne program">
 
-    <java classname="jsr166.misc.SortedEnumSet" fork="true">
+    <java classname="jsr166.bbuf.BoundedBufferDemo" fork="true">
       <classpath refid="j1.classpath"/>
+      <jvmarg value="-server"/>
+      <arg value="http://www.perl.com/"/>
+      <arg value="1"/>
     </java>
 
   </target>

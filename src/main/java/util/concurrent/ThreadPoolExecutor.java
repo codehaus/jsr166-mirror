@@ -467,52 +467,51 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Get the next task for a worker thread to run.
      * @return the task
-     * @throws InterruptedException if interrupted while waiting for task
      */
-    Runnable getTask() throws InterruptedException {
+    Runnable getTask() {
         for (;;) {
-            switch(runState) {
-            case RUNNING: {
-                // untimed wait if core and not allowing core timeout
-                if (poolSize <= corePoolSize && !allowCoreThreadTimeOut)
-                    return workQueue.take();
-                
-                long timeout = keepAliveTime;
-                if (timeout <= 0) // die immediately for 0 timeout
-                    return null;
-                Runnable r =  workQueue.poll(timeout, TimeUnit.NANOSECONDS);
-                if (r != null)
-                    return r;
-                if (poolSize > corePoolSize || allowCoreThreadTimeOut) 
-                    return null; // timed out
-                // else, after timeout, pool shrank so shouldn't die, so retry
-                break;
-            }
-
-            case SHUTDOWN: {
-                // Help drain queue 
-                Runnable r = workQueue.poll();
-                if (r != null)
-                    return r;
+            try {
+                switch(runState) {
+                case RUNNING: {
+                    // untimed wait if core and not allowing core timeout
+                    if (poolSize <= corePoolSize && !allowCoreThreadTimeOut)
+                        return workQueue.take();
                     
-                // Check if can terminate
-                if (workQueue.isEmpty()) {
-                    interruptIdleWorkers();
-                    return null;
+                    long timeout = keepAliveTime;
+                    if (timeout <= 0) // die immediately for 0 timeout
+                        return null;
+                    Runnable r =  workQueue.poll(timeout, TimeUnit.NANOSECONDS);
+                    if (r != null)
+                        return r;
+                    if (poolSize > corePoolSize || allowCoreThreadTimeOut) 
+                        return null; // timed out
+                    // Else, after timeout, the pool shrank. Retry
+                    break;
                 }
-
-                // There could still be delayed tasks in queue.
-                // Wait for one, re-checking state upon interruption
-                try {
+                    
+                case SHUTDOWN: {
+                    // Help drain queue 
+                    Runnable r = workQueue.poll();
+                    if (r != null)
+                        return r;
+                    
+                    // Check if can terminate
+                    if (workQueue.isEmpty()) {
+                        interruptIdleWorkers();
+                        return null;
+                    }
+                    
+                    // Else there could still be delayed tasks in queue.
                     return workQueue.take();
-                } catch(InterruptedException ignore) {}
-                break;
-            }
-
-            case STOP:
-                return null;
-            default:
-                assert false; 
+                }
+                    
+                case STOP:
+                    return null;
+                default:
+                    assert false; 
+                }
+            } catch(InterruptedException ie) {
+                // On interruption, re-check runstate
             }
         }
     }
@@ -657,8 +656,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 try {
                     task.run();
                     ran = true;
-                    // re-clear to avoid needlessly throwing away thread
-                    Thread.interrupted(); 
                     afterExecute(task, null);
                     ++completedTasks;
                 } catch(RuntimeException ex) {
@@ -685,8 +682,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     runTask(task);
                     task = null; // unnecessary but can help GC
                 }
-            } catch(InterruptedException ie) {
-                // fall through
             } finally {
                 workerDone(this);
             }

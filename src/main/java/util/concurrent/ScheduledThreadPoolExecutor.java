@@ -288,7 +288,7 @@ public class ScheduledThreadPoolExecutor
     }
 
     public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit) {
-        if (command == null)
+        if (command == null || unit == null)
             throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
         ScheduledFutureTask<?> t = new ScheduledFutureTask<Boolean>(command, null, triggerTime);
@@ -297,7 +297,7 @@ public class ScheduledThreadPoolExecutor
     }
 
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-        if (callable == null)
+        if (callable == null || unit == null)
             throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
         ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
@@ -306,7 +306,7 @@ public class ScheduledThreadPoolExecutor
     }
 
     public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
-        if (command == null)
+        if (command == null || unit == null)
             throw new NullPointerException();
         if (period <= 0)
             throw new IllegalArgumentException();
@@ -321,7 +321,7 @@ public class ScheduledThreadPoolExecutor
     }
     
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
-        if (command == null)
+        if (command == null || unit == null)
             throw new NullPointerException();
         if (delay <= 0)
             throw new IllegalArgumentException();

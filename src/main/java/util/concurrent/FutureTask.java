@@ -209,7 +209,6 @@ public class FutureTask<V> implements Future<V>, Runnable {
         try {
             result = v;
             setDone();
-            accessible.signalAll();
         } finally {
             lock.unlock();
         }
@@ -225,7 +224,6 @@ public class FutureTask<V> implements Future<V>, Runnable {
         try {
             exception = t;
             setDone();
-            accessible.signalAll();
         } finally {
             lock.unlock();
         }
@@ -247,19 +245,13 @@ public class FutureTask<V> implements Future<V>, Runnable {
     /**
      * Sets the state of this task to Done, unless already in a
      * Cancelled state, in which case Cancelled status is preserved.
+     * Called only while lock held
      */
-    protected void setDone() {
-        lock.lock();
-        try {
-            Object r = runner;
-            if (r == DONE || r == CANCELLED) 
-                return;
+    private void setDone() {
+        Object r = runner;
+        if (r != CANCELLED) 
             runner = DONE;
-        }
-        finally{
-            lock.unlock();
-        }
-        done();
+        accessible.signalAll();
     }
 
     /**
@@ -286,17 +278,16 @@ public class FutureTask<V> implements Future<V>, Runnable {
     public void run() {
         if (setRunning()) {
             try {
-                try {
-                    if (runnable != null)
-                        runnable.run();
-                    else if (callable != null)
-                        set(callable.call());
-                } catch(Throwable ex) {
-                    setException(ex);
+                if (runnable != null) {
+                    runnable.run();
+                    set(result);
                 }
-            } finally {
-                setDone();
+                else if (callable != null)
+                    set(callable.call());
+            } catch(Throwable ex) {
+                setException(ex);
             }
+            done();
         }
     }
 
@@ -308,14 +299,14 @@ public class FutureTask<V> implements Future<V>, Runnable {
     protected void runAndReset() {
         if (setRunning()) {
             try {
-                try {
-                    if (runnable != null)
-                        runnable.run();
-                    else if (callable != null)
-                        set(callable.call());
-                } catch(Throwable ex) {
-                    setException(ex);
+                if (runnable != null) {
+                    runnable.run();
+                    set(result);
                 }
+                else if (callable != null)
+                    set(callable.call());
+            } catch(Throwable ex) {
+                setException(ex);
             } finally {
                 reset();
             }

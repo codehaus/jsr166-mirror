@@ -67,6 +67,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 Future<T> f = ecs.take();
                 try {
                     return f.get();
+                } catch(InterruptedException ie) {
+                    throw ie;
                 } catch(ExecutionException eex) {
                     ee = eex;
                 } catch(RuntimeException rex) {
@@ -108,6 +110,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                     throw new TimeoutException();
                 try {
                     return f.get();
+                } catch(InterruptedException ie) {
+                    throw ie;
                 } catch(ExecutionException eex) {
                     ee = eex;
                 } catch(RuntimeException rex) {

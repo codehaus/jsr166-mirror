@@ -79,7 +79,10 @@ that the method should wait before indicating that it
 timed-out. Implementations make a &quot;best effort&quot; to detect
 time-outs as soon as possible after they occur. However, an indefinite
 amount of time may elapse between a time-out being detected and a
-thread actually executing again after that time-out.
+thread actually executing again after that time-out. All methods
+that accept timeout parameters treat values less than or equal to
+zero to mean not to wait at all. To wait "forever", you can use
+a value of <tt>Long.MAX_VALUE</tt>.
 
 <h2>Synchronizers</h2>
 

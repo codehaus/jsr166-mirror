@@ -126,7 +126,8 @@ public interface ExecutorService extends Executor {
     /**
      * Blocks until all tasks have completed execution after a shutdown
      * request, or the timeout occurs, or the current thread is
-     * interrupted, whichever happens first.
+     * interrupted, whichever happens first. To wait "forever"
+     * use <tt>awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)</tt>.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument

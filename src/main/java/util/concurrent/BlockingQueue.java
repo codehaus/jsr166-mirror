@@ -91,8 +91,8 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/06 01:57:53 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/08/06 15:48:14 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface BlockingQueue<E> extends Queue<E> {
@@ -105,7 +105,7 @@ public interface BlockingQueue<E> extends Queue<E> {
 
     /**
      * @throws IllegalStateException if this queue is full
-     * @throws NullPointerException if <tt>c</tt> or any element of <tt>c<tt> 
+     * @throws NullPointerException if <tt>c</tt> or any element of <tt>c<tt>
      * is <tt>null</tt>.
      */
     boolean addAll(Collection<? extends E> c);
@@ -113,7 +113,7 @@ public interface BlockingQueue<E> extends Queue<E> {
     /**
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o);
+    boolean offer(E o);
 
     /**
      * Adds the specified element to this queue, waiting if necessary up to the

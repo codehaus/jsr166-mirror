@@ -64,9 +64,6 @@ public class PriorityBlockingQueueTest extends TestCase {
                     e.printStackTrace(System.err);
                     fail("illegal monitor state");
                 }
-                catch (InterruptedException e) {
-                    fail("should not be interrupted");
-                }
             }
         });
 

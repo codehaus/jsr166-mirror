@@ -10,7 +10,7 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded {@linkplain BlockingQueue blocking queue} of <tt>Delayed</tt> 
+ * An unbounded {@linkplain BlockingQueue blocking queue} of <tt>Delayed</tt>
  * elements, in which an element can only be taken when its delay has expired.
  * The <em>head</em> of the queue is that <tt>Delayed</tt> element whose delay
  * expired furthest in the past - if no delay has expired there is no head and
@@ -33,7 +33,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     public DelayQueue() {}
 
     /**
-     * Creates a <tt>DelayQueue</tt> initialy containing the elements of the 
+     * Creates a <tt>DelayQueue</tt> initially containing the elements of the
      * given collection of {@link Delayed} instances.
      *
      * @throws NullPointerException if <tt>c</tt> or any element within it

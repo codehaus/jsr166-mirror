@@ -23,8 +23,8 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/11 13:12:06 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/08 20:05:07 $
+ * @editor $Author: tim $
  * @author Doug Lea
  *
  */
@@ -273,8 +273,7 @@ public class FairSemaphore extends Semaphore {
             }
             count = 0;
             node = enq(-remaining);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
 
@@ -282,18 +281,15 @@ public class FairSemaphore extends Semaphore {
         try {
             while (node.permitsNeeded > 0) 
                 node.done.await();
-        }
-        catch(InterruptedException ie) {
+        } catch(InterruptedException ie) {
             if (node.permitsNeeded > 0) {
                 node.cancelled = true;
                 release(permits - node.permitsNeeded);
                 throw ie;
-            }
-            else { // ignore interrupt
+            } else { // ignore interrupt
                 Thread.currentThread().interrupt();
             }
-        }
-        finally {
+        } finally {
             node.unlock();
         }
     }
@@ -334,8 +330,7 @@ public class FairSemaphore extends Semaphore {
             }
             count = 0;
             node = enq(-remaining);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
 
@@ -343,8 +338,7 @@ public class FairSemaphore extends Semaphore {
         try {
             while (node.permitsNeeded > 0) 
                 node.done.awaitUninterruptibly();
-        }
-        finally {
+        } finally {
             node.unlock();
         }
     }
@@ -376,8 +370,7 @@ public class FairSemaphore extends Semaphore {
                 return true;
             }
             return false;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -447,8 +440,7 @@ public class FairSemaphore extends Semaphore {
                 return false;
             count = 0;
             node = enq(-remaining);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
         
@@ -462,19 +454,16 @@ public class FairSemaphore extends Semaphore {
                 }
             }
             return true;
-        }
-        catch(InterruptedException ie) {
+        } catch(InterruptedException ie) {
             if (node.permitsNeeded > 0) {
                 node.cancelled = true;
                 release(permits - node.permitsNeeded);
                 throw ie;
-            }
-            else { // ignore interrupt
+            } else { // ignore interrupt
                 Thread.currentThread().interrupt();
                 return true;
             }
-        }
-        finally {
+        } finally {
             node.unlock();
         }
     }
@@ -518,8 +507,7 @@ public class FairSemaphore extends Semaphore {
                 if (node == null) {
                     count += p;
                     p = 0;
-                }
-                else {
+                } else {
                     node.lock();
                     try {
                         if (node.cancelled)
@@ -527,21 +515,18 @@ public class FairSemaphore extends Semaphore {
                         else if (node.permitsNeeded > p) {
                             node.permitsNeeded -= p;
                             p = 0;
-                        }
-                        else {
+                        } else {
                             p -= node.permitsNeeded;
                             node.permitsNeeded = 0;
                             node.done.signal();
                             removeFirst();
                         }
-                    }
-                    finally {
+                    } finally {
                         node.unlock();
                     }
                 }
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }

@@ -154,8 +154,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             assert ok;
             notEmpty.signal();
             return true;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -194,16 +193,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             try {
                 while (q.size() == 0)
                     notEmpty.await();
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 notEmpty.signal(); // propagate to non-interrupted thread
                 throw ie;
             }
             E x = q.poll();
             assert x != null;
             return x;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -213,8 +210,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.poll();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -231,14 +227,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
                     return null;
                 try {
                     nanos = notEmpty.awaitNanos(nanos);
-                }
-                catch (InterruptedException ie) {
+                } catch (InterruptedException ie) {
                     notEmpty.signal(); // propagate to non-interrupted thread
                     throw ie;
                 }
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -247,8 +241,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.peek();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -257,8 +250,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.size();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -290,8 +282,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.remove(o);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -300,8 +291,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.contains(o);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -310,8 +300,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.toArray();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -321,8 +310,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.toString();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -335,8 +323,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             q.clear();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -345,8 +332,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.toArray(a);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -365,8 +351,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return new Itr(q.iterator());
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -391,8 +376,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             lock.lock();
             try {
                 return iter.next();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -401,8 +385,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             lock.lock();
             try {
                 iter.remove();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -420,8 +403,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             s.defaultWriteObject();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }

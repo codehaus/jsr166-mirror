@@ -89,8 +89,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         takeLock.lock();
         try {
             notEmpty.signal();
-        }
-        finally {
+        } finally {
             takeLock.unlock();
         }
     }
@@ -102,8 +101,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         putLock.lock();
         try {
             notFull.signal();
-        }
-        finally {
+        } finally {
             putLock.unlock();
         }
     }
@@ -260,8 +258,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             try {
                 while (count.get() == capacity)
                     notFull.await();
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 notFull.signal(); // propagate to a non-interrupted thread
                 throw ie;
             }
@@ -269,8 +266,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             c = count.getAndIncrement();
             if (c + 1 < capacity)
                 notFull.signal();
-        }
-        finally {
+        } finally {
             putLock.unlock();
         }
         if (c == 0)
@@ -302,14 +298,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                     return false;
                 try {
                     nanos = notFull.awaitNanos(nanos);
-                }
-                catch (InterruptedException ie) {
+                } catch (InterruptedException ie) {
                     notFull.signal(); // propagate to a non-interrupted thread
                     throw ie;
                 }
             }
-        }
-        finally {
+        } finally {
             putLock.unlock();
         }
         if (c == 0)
@@ -336,8 +330,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 if (c + 1 < capacity)
                     notFull.signal();
             }
-        }
-        finally {
+        } finally {
             putLock.unlock();
         }
         if (c == 0)
@@ -354,8 +347,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             try {
                 while (count.get() == 0)
                     notEmpty.await();
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 notEmpty.signal(); // propagate to a non-interrupted thread
                 throw ie;
             }
@@ -364,8 +356,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             c = count.getAndDecrement();
             if (c > 1)
                 notEmpty.signal();
-        }
-        finally {
+        } finally {
             takeLock.unlock();
         }
         if (c == capacity)
@@ -391,14 +382,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                     return null;
                 try {
                     nanos = notEmpty.awaitNanos(nanos);
-                }
-                catch (InterruptedException ie) {
+                } catch (InterruptedException ie) {
                     notEmpty.signal(); // propagate to a non-interrupted thread
                     throw ie;
                 }
             }
-        }
-        finally {
+        } finally {
             takeLock.unlock();
         }
         if (c == capacity)
@@ -419,8 +408,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 if (c > 1)
                     notEmpty.signal();
             }
-        }
-        finally {
+        } finally {
             takeLock.unlock();
         }
         if (c == capacity)
@@ -439,8 +427,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 return null;
             else
                 return first.item;
-        }
-        finally {
+        } finally {
             takeLock.unlock();
         }
     }
@@ -480,8 +467,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 if (count.getAndDecrement() == capacity)
                     notFull.signalAll();
             }
-        }
-        finally {
+        } finally {
             fullyUnlock();
         }
         return removed;
@@ -496,8 +482,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             for (Node<E> p = head.next; p != null; p = p.next)
                 a[k++] = p.item;
             return a;
-        }
-        finally {
+        } finally {
             fullyUnlock();
         }
     }
@@ -514,8 +499,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             for (Node p = head.next; p != null; p = p.next)
                 a[k++] = (T)p.item;
             return a;
-        }
-        finally {
+        } finally {
             fullyUnlock();
         }
     }
@@ -524,8 +508,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         fullyLock();
         try {
             return super.toString();
-        }
-        finally {
+        } finally {
             fullyUnlock();
         }
     }
@@ -560,8 +543,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 current = head.next;
                 if (current != null)
                     currentElement = current.item;
-            }
-            finally {
+            } finally {
                 fullyUnlock();
             }
         }
@@ -581,8 +563,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 if (current != null)
                     currentElement = current.item;
                 return x;
-            }
-            finally {
+            } finally {
                 fullyUnlock();
             }
 
@@ -608,8 +589,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                     if (c == capacity)
                         notFull.signalAll();
                 }
-            }
-            finally {
+            } finally {
                 fullyUnlock();
             }
         }
@@ -637,8 +617,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
             // Use trailing null as sentinel
             s.writeObject(null);
-        }
-        finally {
+        } finally {
             fullyUnlock();
         }
     }

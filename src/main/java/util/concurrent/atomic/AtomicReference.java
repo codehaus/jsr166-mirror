@@ -20,8 +20,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicReference.class.getDeclaredField("value"));
-      }
-      catch(Exception ex) { throw new Error(ex); }
+      } catch(Exception ex) { throw new Error(ex); }
     }
 
     private volatile V value;

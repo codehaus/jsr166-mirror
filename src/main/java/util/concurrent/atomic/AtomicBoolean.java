@@ -14,8 +14,8 @@ import sun.misc.Unsafe;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:49 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/08 20:05:07 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public class AtomicBoolean implements java.io.Serializable {
@@ -27,8 +27,7 @@ public class AtomicBoolean implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicBoolean.class.getDeclaredField("value"));
-      }
-      catch (Exception ex) { throw new Error(ex); }
+      } catch (Exception ex) { throw new Error(ex); }
     }
 
     private volatile int value;

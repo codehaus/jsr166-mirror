@@ -22,8 +22,7 @@ public final class AtomicInteger implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicInteger.class.getDeclaredField("value"));
-      }
-      catch(Exception ex) { throw new Error(ex); }
+      } catch(Exception ex) { throw new Error(ex); }
     }
 
     private volatile int value;

@@ -38,9 +38,11 @@ import java.util.concurrent.locks.*;
  *
  *         try {
  *           barrier.await(); 
+ *         } catch (InterruptedException ex) { 
+ *           return; 
+ *         } catch (BrokenBarrierException ex) { 
+ *           return; 
  *         }
- *         catch (InterruptedException ex) { return; }
- *         catch (BrokenBarrierException ex) { return; }
  *       }
  *     }
  *   }
@@ -88,8 +90,8 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/05 23:59:16 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/08 20:05:07 $
+ * @editor $Author: tim $
  * @see CountDownLatch
  *
  * @author Doug Lea
@@ -160,8 +162,7 @@ public class CyclicBarrier {
                     if (barrierCommand != null) 
                         barrierCommand.run();
                     return 0;
-                }
-                catch (RuntimeException ex) {
+                } catch (RuntimeException ex) {
                     broken = generation; // next generation is broken
                     throw ex;
                 }
@@ -173,15 +174,13 @@ public class CyclicBarrier {
                         trip.await();
                     else if (nanos > 0)
                         nanos = trip.awaitNanos(nanos);
-                }
-                catch (InterruptedException ex) {
+                } catch (InterruptedException ex) {
                     // Only claim that broken if interrupted before reset
                     if (generation == g) { 
                         broken = g;
                         trip.signalAll();
                         throw ex;
-                    }
-                    else {
+                    } else {
                         Thread.currentThread().interrupt(); // propagate
                         break;
                     }
@@ -199,8 +198,7 @@ public class CyclicBarrier {
             }
             return index;
 
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -300,8 +298,7 @@ public class CyclicBarrier {
     public int await() throws InterruptedException, BrokenBarrierException {
         try {
             return dowait(false, 0);
-        }
-        catch (TimeoutException toe) {
+        } catch (TimeoutException toe) {
             throw new Error(toe); // cannot happen;
         }
     }
@@ -374,8 +371,7 @@ public class CyclicBarrier {
         lock.lock();
         try {
             return broken >= generation;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -396,8 +392,7 @@ public class CyclicBarrier {
             nextGeneration();
             broken = g; // cause brokenness setting to stop at previous gen.
             trip.signalAll();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -412,8 +407,7 @@ public class CyclicBarrier {
         lock.lock();
         try {
             return parties - count;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }

@@ -34,8 +34,7 @@ import java.util.concurrent.locks.*;
  *           if (currentBuffer.full())
  *             currentBuffer = exchanger.exchange(currentBuffer);
  *         }
- *       }
- *       catch (InterruptedException ex) { ... handle ... }
+ *       } catch (InterruptedException ex) { ... handle ... }
  *     }
  *   }
  *
@@ -48,8 +47,7 @@ import java.util.concurrent.locks.*;
  *           if (currentBuffer.empty())
  *             currentBuffer = exchanger.exchange(currentBuffer);
  *         }
- *       }
- *       catch (InterruptedException ex) { ... handle ...}
+ *       } catch (InterruptedException ex) { ... handle ...}
  *     }
  *   }
  *
@@ -64,7 +62,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/06 18:22:09 $
+ * @revised $Date: 2003/08/08 20:05:07 $
  * @editor $Author: tim $
  * @author Doug Lea
  */
@@ -124,8 +122,7 @@ public class Exchanger<V> {
                     else 
                         break; // timed out
                 }
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 interrupted = ie;
             }
 
@@ -150,8 +147,7 @@ public class Exchanger<V> {
                 throw interrupted;
             else  // must be timeout
                 throw new TimeoutException();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -196,8 +192,7 @@ public class Exchanger<V> {
     public V exchange(V x) throws InterruptedException {
         try {
             return doExchange(x, false, 0);
-        }
-        catch (TimeoutException cannotHappen) { 
+        } catch (TimeoutException cannotHappen) { 
             throw new Error(cannotHappen);
         }
     }

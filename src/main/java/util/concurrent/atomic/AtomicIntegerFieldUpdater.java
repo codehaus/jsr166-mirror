@@ -54,8 +54,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
         Field field = null;
         try {
             field = tclass.getDeclaredField(fieldName);
-        }
-        catch(Exception ex) {
+        } catch(Exception ex) {
             throw new RuntimeException(ex);
         }
 

@@ -145,8 +145,7 @@ public class CancellableTask implements Cancellable, Runnable {
         if (setRunning()) {
             try {
                 runnable.run();
-            }
-            finally {
+            } finally {
                 setDone();
             }
         }
@@ -180,8 +179,7 @@ public class CancellableTask implements Cancellable, Runnable {
         public void run() {
             try {
                 set(callable.call());
-            }
-            catch(Throwable ex) {
+            } catch(Throwable ex) {
                 setException(ex);
             }
         }
@@ -197,8 +195,7 @@ public class CancellableTask implements Cancellable, Runnable {
                     throw new ExecutionException(exception);
                 else
                     return result;
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -221,8 +218,7 @@ public class CancellableTask implements Cancellable, Runnable {
                     throw new ExecutionException(exception);
                 else
                     return result;
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -233,8 +229,7 @@ public class CancellableTask implements Cancellable, Runnable {
                 result = v;
                 setDone();
                 accessible.signalAll();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -245,8 +240,7 @@ public class CancellableTask implements Cancellable, Runnable {
                 exception = t;
                 setDone();
                 accessible.signalAll();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }

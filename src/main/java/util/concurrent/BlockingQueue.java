@@ -57,8 +57,7 @@ import java.util.Queue;
  *   public void run() {
  *     try {
  *       while(true) { queue.put(produce()); }
- *     }
- *     catch (InterruptedException ex) { ... handle ...}
+ *     } catch (InterruptedException ex) { ... handle ...}
  *   }
  *   Object produce() { ... }
  * }
@@ -69,8 +68,7 @@ import java.util.Queue;
  *   public void run() {
  *     try {
  *       while(true) { consume(queue.take()); }
- *     }
- *     catch (InterruptedException ex) { ... handle ...}
+ *     } catch (InterruptedException ex) { ... handle ...}
  *   }
  *   void consume(Object x) { ... }
  * }
@@ -91,7 +89,7 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/06 15:48:14 $
+ * @revised $Date: 2003/08/08 20:05:07 $
  * @editor $Author: tim $
  * @author Doug Lea
  */

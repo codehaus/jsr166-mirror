@@ -58,8 +58,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             if (first == null || o.compareTo(first) < 0)
                 available.signalAll();
             return true;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -105,13 +104,11 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                 E first = q.peek();
                 if (first == null) {
                     available.await();
-                }
-                else {
+                } else {
                     long delay =  first.getDelay(TimeUnit.NANOSECONDS);
                     if (delay > 0) {
                         long tl = available.awaitNanos(delay);
-                    }
-                    else {
+                    } else {
                         E x = q.poll();
                         assert x != null;
                         if (q.size() != 0)
@@ -121,8 +118,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                     }
                 }
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -138,16 +134,14 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                         return null;
                     else
                         nanos = available.awaitNanos(nanos);
-                }
-                else {
+                } else {
                     long delay =  first.getDelay(TimeUnit.NANOSECONDS);
                     if (delay > 0) {
                         if (delay > nanos)
                             delay = nanos;
                         long timeLeft = available.awaitNanos(delay);
                         nanos -= delay - timeLeft;
-                    }
-                    else {
+                    } else {
                         E x = q.poll();
                         assert x != null;
                         if (q.size() != 0)
@@ -156,8 +150,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                     }
                 }
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -176,8 +169,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                     available.signalAll();
                 return x;
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -186,8 +178,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.peek();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -196,8 +187,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.size();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -210,8 +200,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             q.clear();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -229,8 +218,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.toArray();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -239,8 +227,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.toArray(array);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -263,8 +250,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             return q.remove(o);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -282,8 +268,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             return new Itr(q.iterator());
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -302,8 +287,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             lock.lock();
             try {
                 return iter.next();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -312,8 +296,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             lock.lock();
             try {
                 iter.remove();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }

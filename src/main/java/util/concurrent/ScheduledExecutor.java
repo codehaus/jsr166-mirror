@@ -485,8 +485,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             return;
         try {
             execute(next);
-        }
-        catch(RejectedExecutionException ex) {
+        } catch(RejectedExecutionException ex) {
             // lost race to detect shutdown; ignore
         }
     }

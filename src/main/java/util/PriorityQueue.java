@@ -180,13 +180,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             SortedSet<? extends E> s = (SortedSet<? extends E>) c;
             comparator = (Comparator<? super E>)s.comparator();
             fillFromSorted(s);
-        }
-        else if (c instanceof PriorityQueue<? extends E>) {
+        } else if (c instanceof PriorityQueue<? extends E>) {
             PriorityQueue<? extends E> s = (PriorityQueue<? extends E>) c;
             comparator = (Comparator<? super E>)s.comparator();
             fillFromSorted(s);
-        }
-        else {
+        } else {
             comparator = null;
             fillFromUnsorted(c);
         }

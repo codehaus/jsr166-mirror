@@ -21,8 +21,7 @@ public final class AtomicLong implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicLong.class.getDeclaredField("value"));
-      }
-      catch(Exception ex) { throw new Error(ex); }
+      } catch(Exception ex) { throw new Error(ex); }
     }
 
     private volatile long value;

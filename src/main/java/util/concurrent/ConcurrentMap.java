@@ -53,8 +53,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *  if (map.get(key).equals(value)) {
      *     map.remove(key);
      *     return true;
-     * }
-     * else return false;
+     * } else return false;
      * </pre>
      * except that the action is performed atomically.
      * @param key key with which the specified value is associated.

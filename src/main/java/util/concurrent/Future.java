@@ -31,8 +31,7 @@ package java.util.concurrent;
  *     displayOtherThings(); // do other things while searching
  *     try {
  *       displayText(future.get()); // use future
- *     }
- *     catch (ExecutionException ex) { cleanup(); return; }
+ *     } catch (ExecutionException ex) { cleanup(); return; }
  *   }
  * }
  * </pre>
@@ -42,7 +41,7 @@ package java.util.concurrent;
  * @see Executor
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/06 18:22:09 $
+ * @revised $Date: 2003/08/08 20:05:07 $
  * @editor $Author: tim $
  * @author Doug Lea
  */

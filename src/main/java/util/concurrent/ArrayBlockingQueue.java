@@ -108,16 +108,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (i == takeIndex) {
             items[takeIndex] = null;
             takeIndex = inc(takeIndex);
-        }
-        else {
+        } else {
             // slide over all others up through putIndex.
             for (;;) {
                 int nexti = inc(i);
                 if (nexti != putIndex) {
                     items[i] = items[nexti];
                     i = nexti;
-                }
-                else {
+                } else {
                     items[i] = null;
                     putIndex = i;
                     break;
@@ -246,8 +244,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 insert(o);
                 return true;
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -274,14 +271,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     return false;
                 try {
                     nanos = notFull.awaitNanos(nanos);
-                }
-                catch (InterruptedException ie) {
+                } catch (InterruptedException ie) {
                     notFull.signal(); // propagate to non-interrupted thread
                     throw ie;
                 }
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -294,8 +289,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 return null;
             E x = extract();
             return x;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -313,15 +307,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     return null;
                 try {
                     nanos = notEmpty.awaitNanos(nanos);
-                }
-                catch (InterruptedException ie) {
+                } catch (InterruptedException ie) {
                     notEmpty.signal(); // propagate to non-interrupted thread
                     throw ie;
                 }
 
             }
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -357,8 +349,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 i = inc(i);
             }
 
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -367,8 +358,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return (count == 0) ? null : items[takeIndex];
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -379,15 +369,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             try {
                 while (count == 0)
                     notEmpty.await();
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 notEmpty.signal(); // propagate to non-interrupted thread
                 throw ie;
             }
             E x = extract();
             return x;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -406,14 +394,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             try {
                 while (count == items.length)
                     notFull.await();
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 notFull.signal(); // propagate to non-interrupted thread
                 throw ie;
             }
             insert(o);
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -427,8 +413,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return count;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -450,8 +435,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return items.length - count;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -469,8 +453,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 i = inc(i);
             }
             return false;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -486,8 +469,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 i = inc(i);
             }
             return a;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -510,8 +492,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (a.length > count)
                 a[count] = null;
             return a;
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -520,8 +501,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return super.toString();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -540,8 +520,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             return new Itr();
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -597,8 +576,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (nextIndex == putIndex) {
                 nextIndex = -1;
                 nextItem = null;
-            }
-            else {
+            } else {
                 nextItem = items[nextIndex];
                 if (nextItem == null)
                     nextIndex = -1;
@@ -615,8 +593,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 nextIndex = inc(nextIndex);
                 checkNext();
                 return x;
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }
@@ -634,8 +611,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 // back up cursor (reset to front if was first element)
                 nextIndex = (i == ti) ? takeIndex : i;
                 checkNext();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         }

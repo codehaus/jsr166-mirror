@@ -137,8 +137,8 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/08 17:48:45 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/08 20:05:07 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public class ThreadPoolExecutor implements ExecutorService {
@@ -286,8 +286,7 @@ public class ThreadPoolExecutor implements ExecutorService {
         try {
             if (poolSize < corePoolSize)
                 t = addThread(firstTask);
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
         if (t == null)
@@ -315,8 +314,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     next = firstTask;
                 t = addThread(next);
             }
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
         if (t == null)
@@ -385,8 +383,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             allDone = true;
             isTerminated = true;
             termination.signalAll();
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
 
@@ -439,8 +436,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             if (runLock.tryLock()) {
                 try {
                     thread.interrupt();
-                }
-                finally {
+                } finally {
                     runLock.unlock();
                 }
             }
@@ -472,8 +468,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     ran = true;
                     afterExecute(task, null);
                     ++completedTasks;
-                }
-                catch(RuntimeException ex) {
+                } catch(RuntimeException ex) {
                     if (!ran)
                         afterExecute(task, ex);
                     // else the exception occurred within
@@ -481,8 +476,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     // want to call it again.
                     throw ex;
                 }
-            }
-            finally {
+            } finally {
                 runLock.unlock();
             }
         }
@@ -497,8 +491,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     if (firstTask != null) {
                         task = firstTask;
                         firstTask = null;
-                    }
-                    else {
+                    } else {
                         task = getTask();
                         if (task == null)
                             break;
@@ -506,11 +499,9 @@ public class ThreadPoolExecutor implements ExecutorService {
                     runTask(task);
                     task = null; // unnecessary but can help GC
                 }
-            }
-            catch(InterruptedException ie) {
+            } catch(InterruptedException ie) {
                 // fall through
-            }
-            finally {
+            } finally {
                 workerDone(this);
             }
         }
@@ -707,8 +698,7 @@ public class ThreadPoolExecutor implements ExecutorService {
 
             for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
                 it.next().interruptIfIdle();
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -719,8 +709,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             shutdownStatus = SHUTDOWN_NOW;
             for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
                 it.next().interruptNow();
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
         return Arrays.asList(workQueue.toArray());
@@ -739,8 +728,7 @@ public class ThreadPoolExecutor implements ExecutorService {
         mainLock.lock();
         try {
             return termination.await(timeout, unit);
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -860,8 +848,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                 }
             }
 
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -903,8 +890,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     --extra;
                 }
             }
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -976,8 +962,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     ++n;
             }
             return n;
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -992,8 +977,7 @@ public class ThreadPoolExecutor implements ExecutorService {
         mainLock.lock();
         try {
             return largestPoolSize;
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -1017,8 +1001,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                     ++n;
             }
             return n + workQueue.size();
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -1038,8 +1021,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
                 n += it.next().completedTasks;
             return n;
-        }
-        finally {
+        } finally {
             mainLock.unlock();
         }
     }
@@ -1124,8 +1106,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             if (!e.isShutdown()) {
                 try {
                     e.getQueue().put(r);
-                }
-                catch (InterruptedException ie) {
+                } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     throw new RejectedExecutionException(ie);
                 }

@@ -291,8 +291,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 if (c > threshold)
                     setTable(rehash(tab));
                 return null;
-            }
-            finally {
+            } finally {
                 unlock();
             }
         }
@@ -393,8 +392,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 tab[index] = newFirst;
                 count = c-1; // write-volatile
                 return oldValue;
-            }
-            finally {
+            } finally {
                 unlock();
             }
         }
@@ -406,8 +404,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 for (int i = 0; i < tab.length ; i++)
                     tab[i] = null;
                 count = 0; // write-volatile
-            }
-            finally {
+            } finally {
                 unlock();
             }
         }
@@ -1015,8 +1012,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         s.writeObject(e.value);
                     }
                 }
-            }
-            finally {
+            } finally {
                 seg.unlock();
             }
         }

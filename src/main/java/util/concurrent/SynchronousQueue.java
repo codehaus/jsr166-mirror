@@ -100,11 +100,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     if (done != null)
                         done.signal();
                     return true;
-                }
-                else // taker has cancelled
+                } else // taker has cancelled
                     return false;
-            }
-            finally {
+            } finally {
                 this.unlock();
             }
         }
@@ -123,11 +121,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     if (done != null)
                         done.signal();
                     return x;
-                }
-                else
+                } else
                     return null;
-            }
-            finally {
+            } finally {
                 this.unlock();
             }
         }
@@ -154,20 +150,17 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     else
                         done.await();
                 }
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 // If taken, return normally but set interrupt status
                 if (item == null) {
                     Thread.currentThread().interrupt();
                     return true;
-                }
-                else {
+                } else {
                     item = CANCELLED;
                     done.signal(); // propagate signal
                     throw ie;
                 }
-            }
-            finally {
+            } finally {
                 this.unlock();
             }
         }
@@ -198,22 +191,19 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     else
                         done.await();
                 }
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 Object y = item;
                 if (y != null) {
                     item = null;
                     next = null;
                     Thread.currentThread().interrupt();
                     return y;
-                }
-                else {
+                } else {
                     item = CANCELLED;
                     done.signal(); // propagate signal
                     throw ie;
                 }
-            }
-            finally {
+            } finally {
                 this.unlock();
             }
         }
@@ -257,8 +247,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 node = waitingTakes.deq();
                 if ( (mustWait = (node == null)) )
                     node = waitingPuts.enq(x);
-            }
-            finally {
+            } finally {
                 qlock.unlock();
             }
 
@@ -285,8 +274,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 node = waitingPuts.deq();
                 if ( (mustWait = (node == null)) )
                     node = waitingTakes.enq(null);
-            }
-            finally {
+            } finally {
                 qlock.unlock();
             }
 
@@ -363,8 +351,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             Node node;
             try {
                 node = waitingTakes.deq();
-            }
-            finally {
+            } finally {
                 qlock.unlock();
             }
             if (node == null)
@@ -383,8 +370,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             qlock.lock();
             try {
                 node = waitingPuts.deq();
-            }
-            finally {
+            } finally {
                 qlock.unlock();
             }
             if (node == null)

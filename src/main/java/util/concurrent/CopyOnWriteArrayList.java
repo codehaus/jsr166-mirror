@@ -447,8 +447,7 @@ public class CopyOnWriteArrayList<E>
                 for (int k = i + 1; k < len; ++k) newArray[k-1] = array_[k];
                 array_ = newArray;
                 return true;
-            }
-            else
+            } else
                 newArray[i] = array_[i];
         }
         // special handling for last cell
@@ -457,8 +456,7 @@ public class CopyOnWriteArrayList<E>
         (element != null && element.equals(array_[newlen]))) {
             array_ = newArray;
             return true;
-        }
-        else
+        } else
             return false; // throw away copy
 
     }
@@ -910,8 +908,7 @@ public class CopyOnWriteArrayList<E>
         public E next() {
             try {
                 return array[cursor++];
-            }
-            catch (IndexOutOfBoundsException ex) {
+            } catch (IndexOutOfBoundsException ex) {
                 throw new NoSuchElementException();
             }
         }

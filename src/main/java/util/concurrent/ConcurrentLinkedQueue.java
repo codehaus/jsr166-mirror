@@ -140,8 +140,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                         casTail(t, n);
                         return true;
                     }
-                }
-                else {
+                } else {
                     casTail(t, s);
                 }
             }
@@ -159,8 +158,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                         return null;
                     else
                         casTail(t, first);
-                }
-                else if (casHead(h, first)) {
+                } else if (casHead(h, first)) {
                     E item = (E)first.getItem();
                     if (item != null) {
                         first.setItem(null);
@@ -183,8 +181,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                         return null;
                     else
                         casTail(t, first);
-                }
-                else {
+                } else {
                     E item = (E)first.getItem();
                     if (item != null)
                         return item;
@@ -212,8 +209,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                         return null;
                     else
                         casTail(t, first);
-                }
-                else {
+                } else {
                     if (first.getItem() != null)
                         return first;
                     else // remove deleted node and continue
@@ -378,8 +374,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                     nextNode = p;
                     nextItem = item;
                     return x;
-                }
-                else // skip over nulls
+                } else // skip over nulls
                     p = p.getNext();
             }
         }

@@ -74,8 +74,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         try {
             field = tclass.getDeclaredField(fieldName);
             fieldClass = field.getType();
-        }
-        catch(Exception ex) {
+        } catch(Exception ex) {
             throw new RuntimeException(ex);
         }
 

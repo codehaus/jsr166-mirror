@@ -693,15 +693,7 @@
   <target name="configure-emulation">
 
     <condition property="build.emulation.true">
-      <or>
-        <and>
-          <os family="windows"/>
-          <not>
-            <isset property="build.emulation"/>
-          </not>
-        </and>
-        <istrue value="${build.emulation}"/>
-      </or>
+      <istrue value="${build.emulation}"/>
     </condition>
 
   </target>

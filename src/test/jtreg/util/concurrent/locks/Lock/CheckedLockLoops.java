@@ -227,24 +227,30 @@ public final class CheckedLockLoops {
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
-                lock.readLock().lock();
-                try {
-                    x = LoopHelpers.compute1(getValue());
+                if ((n & 16) != 0) {
+                    lock.readLock().lock();
+                    try {
+                        x = LoopHelpers.compute1(getValue());
+                        x = LoopHelpers.compute2(x);
+                    }
+                    finally {
+                        lock.readLock().unlock();
+                    }
                 }
-                finally {
-                    lock.readLock().unlock();
+                else {
+                    lock.writeLock().lock();
+                    try {
+                        setValue(x);
+                    }
+                    finally {
+                        lock.writeLock().unlock();
+                    }
+                    sum += LoopHelpers.compute2(x);
                 }
-                lock.writeLock().lock();
-                try {
-                    setValue(x);
-                }
-                finally {
-                    lock.writeLock().unlock();
-                }
-                sum += LoopHelpers.compute2(x);
             }
             return sum;
         }
+
     }
 
     private static class FairReentrantWriteLockLoop extends LockLoop {
@@ -319,25 +325,30 @@ public final class CheckedLockLoops {
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
-                lock.readLock().lock();
-                try {
-                    x = LoopHelpers.compute1(getValue());
+                if ((n & 16) != 0) {
+                    lock.readLock().lock();
+                    try {
+                        x = LoopHelpers.compute1(getValue());
+                        x = LoopHelpers.compute2(x);
+                    }
+                    finally {
+                        lock.readLock().unlock();
+                    }
                 }
-                finally {
-                    lock.readLock().unlock();
+                else {
+                    lock.writeLock().lock();
+                    try {
+                        setValue(x);
+                    }
+                    finally {
+                        lock.writeLock().unlock();
+                    }
+                    sum += LoopHelpers.compute2(x);
                 }
-                lock.writeLock().lock();
-                try {
-                    setValue(x);
-                }
-                finally {
-                    lock.writeLock().unlock();
-                }
-                sum += LoopHelpers.compute2(x);
             }
             return sum;
         }
-    }
 
+    }
 
 }

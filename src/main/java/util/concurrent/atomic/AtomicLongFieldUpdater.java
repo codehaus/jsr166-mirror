@@ -20,6 +20,9 @@ import java.lang.reflect.*;
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of
  * <tt>compareAndSet</tt> and <tt>set</tt>.
+ *
+ * <p> <em>Development note: This class is currently missing
+ * some planned methods </em>
  */
 
 public class  AtomicLongFieldUpdater<T> { 
@@ -90,81 +93,6 @@ public class  AtomicLongFieldUpdater<T> {
     public final boolean weakCompareAndSet(T obj, long expect, long update) {
         return unsafe.compareAndSwapLong(obj, offset, expect, update);
     }
-
-    /**
-     * Set the field of the given object managed by this updater. This
-     * operation is guaranteed to act as a volatile store with respect
-     * to subsequent invocations of <tt>compareAndSet</tt>.
-     */
-    public final void set(T obj, long newValue) {
-        // Unsafe puts do not know about barriers, so manually apply
-        unsafe.storeStoreBarrier();
-        unsafe.putLong(obj, offset, newValue); 
-        unsafe.storeLoadBarrier();
-    }
-
-    /**
-     * Get the current value held in the field by the given object.
-     */
-    public final long get(T obj) {
-        // Unsafe gets do not know about barriers, so manually apply
-        long v = unsafe.getLong(obj, offset); 
-        unsafe.loadLoadBarrier();
-        return v;
-    }
-
-    /**
-     * Set to the given value and return the old value
-     **/
-    public long getAndSet(T obj, long newValue) {
-        for (;;) {
-            long current = get(obj);
-            if (compareAndSet(obj, current, newValue))
-                return current;
-        }
-    }
-
-    /**
-     * Atomically increment the current value.
-     * @return the previous value;
-     **/
-    public long getAndIncrement(T obj) {
-        for (;;) {
-            long current = get(obj);
-            long next = current+1;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
-    }
-  
-  
-    /**
-     * Atomically decrement the current value.
-     * @return the previous value;
-     **/
-    public long getAndDecrement(T obj) {
-        for (;;) {
-            long current = get(obj);
-            long next = current-1;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
-    }
-  
-  
-    /**
-     * Atomically add the given value to current value.
-     * @return the previous value;
-     **/
-    public long getAndAdd(T obj, long y) {
-        for (;;) {
-            long current = get(obj);
-            long next = current+y;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
-    }
-
 
 }
 

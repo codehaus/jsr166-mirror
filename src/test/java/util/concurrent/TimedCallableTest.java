@@ -11,9 +11,9 @@ import junit.framework.TestCase;
 public class TimedCallableTest extends TestCase {
     
     private final Executor EXECUTOR = 
-        Executors.newSingleThreadExecutor();
+        //Executors.newSingleThreadExecutor();
         //Executors.newFixedThreadPool(4);
-        //Executors.newCachedThreadPool();
+        Executors.newCachedThreadPool();
         //new DirectExecutor();
         
     private static final long MSECS = 5;

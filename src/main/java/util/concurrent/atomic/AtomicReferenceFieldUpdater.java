@@ -180,7 +180,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
         public void set(T obj, V newValue) {
             if (!tclass.isInstance(obj) ||
-                (newValue != null & !vclass.isInstance(newValue)))
+                (newValue != null && !vclass.isInstance(newValue)))
                 throw new ClassCastException();
             unsafe.putObjectVolatile(obj, offset, newValue);
         }

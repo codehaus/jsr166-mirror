@@ -215,6 +215,7 @@
       <exclude name="user.properties"/>
       <exclude name="etc/notes/**"/>
       <exclude name="lib/gjc/2.1/**"/>
+      <exclude name="**/SyntaxTest.java"/>
     </jar>
 
   </target>

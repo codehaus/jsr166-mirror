@@ -228,5 +228,14 @@ public class AtomicIntegerArray implements java.io.Serializable {
         }
     }
  
+    /**
+     * Returns the String representation of the current values of array.
+     * @return the String representation of the current values of array.
+     */
+    public String toString() {
+        if (array.length > 0) // force volatile read
+            get(0);
+        return Arrays.toString(array);
+    }
 
 }

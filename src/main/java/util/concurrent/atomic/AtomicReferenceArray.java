@@ -6,6 +6,7 @@
 
 package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
+import java.util.*;
 
 /**
  * An array of object references in which elements may be updated
@@ -131,6 +132,16 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      */
     public final boolean weakCompareAndSet(int i, E expect, E update) {
         return compareAndSet(i, expect, update);
+    }
+
+    /**
+     * Returns the String representation of the current values of array.
+     * @return the String representation of the current values of array.
+     */
+    public String toString() {
+        if (array.length > 0) // force volatile read
+            get(0);
+        return Arrays.toString(array);
     }
 
 }

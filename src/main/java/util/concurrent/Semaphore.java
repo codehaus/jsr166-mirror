@@ -650,4 +650,13 @@ public class Semaphore implements java.io.Serializable {
     protected Collection<Thread> getQueuedThreads() {
         return sync.getQueuedThreads();
     }
+
+    /**
+     * Returns a string identifying this semaphore, as well as the number of permits.
+     * @return a string identifying this semaphore, as well as the number of permits.
+     */
+    public String toString() {
+        return super.toString() + "[Permits = " + sync.getPermits() + "]";
+    }
+
 }

@@ -6,6 +6,7 @@
 
 package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
+import java.util.*;
 
 /**
  * A <tt>long</tt> array in which elements may be updated atomically.
@@ -222,6 +223,16 @@ public class AtomicLongArray implements java.io.Serializable {
             if (compareAndSet(i, current, next))
                 return next;
         }
+    }
+
+    /**
+     * Returns the String representation of the current values of array.
+     * @return the String representation of the current values of array.
+     */
+    public String toString() {
+        if (array.length > 0) // force volatile read
+            get(0);
+        return Arrays.toString(array);
     }
   
 }

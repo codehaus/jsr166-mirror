@@ -265,4 +265,13 @@ public class CountDownLatch {
     public long getCount() {
         return sync.getCount();
     }
+
+    /**
+     * Returns a string identifying this latch, as well as its count.
+     * @return a string identifying this latch, as well as its count.
+     */
+    public String toString() {
+        return super.toString() + "[Count = " + sync.getCount() + "]";
+    }
+
 }

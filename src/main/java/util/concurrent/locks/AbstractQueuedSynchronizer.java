@@ -1442,6 +1442,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         return list;
     }
 
+    /**
+     * Returns a string identifying this synchronizer, as well as its state.
+     * @return a string identifying this synchronizer, as well as its state.
+     */
+    public String toString() {
+        int s = getState();
+        String q  = hasQueuedThreads()? "non" : "";
+        return super.toString() + 
+            "[State = " + s + ", " + q + "empty queue]";
+    }
+
 
     // Internal support methods for Conditions
 

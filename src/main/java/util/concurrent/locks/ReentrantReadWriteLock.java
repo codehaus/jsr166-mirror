@@ -179,6 +179,22 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     public ReentrantReadWriteLock.WriteLock writeLock() { return writerLock; }
     public ReentrantReadWriteLock.ReadLock  readLock()  { return readerLock; }
 
+    /* 
+     * Read vs write count extraction constants and functions.
+     * Lock state is logically divided into two shorts: The lower
+     * one representing the exclusive (writer) lock hold count,
+     * and the upper the shared (reader) hold count.
+     */
+    
+    static final int SHARED_SHIFT   = 16;
+    static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+    static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+    
+    /** Return the number of shared holds represented in count  */
+    static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
+    /** Return the number of exclusive holds represented in count  */
+    static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
+
     /** 
      * Synchronization implementation for ReentrantReadWriteLock.
      * Subclassed into fair and nonfair versions.
@@ -186,22 +202,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     abstract static class Sync extends AbstractQueuedSynchronizer {
         /** Current (exclusive) owner thread */
         transient Thread owner;
-
-        /* 
-         * Read vs write count extraction constants and functions.
-         * Lock state is logically divided into two shorts: The lower
-         * one representing the exclusive (writer) lock hold count,
-         * and the upper the shared (reader) hold count.
-         */
-
-        static final int SHARED_SHIFT   = 16;
-        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
-
-        /** Return the number of shared holds represented in count  */
-        static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
-        /** Return the number of exclusive holds represented in count  */
-        static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
 
         /**
          * Perform write lock. Allows fast path in non-fair version.
@@ -314,6 +314,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             s.defaultReadObject();
             setState(0); // reset to unlocked state
         }
+
+        final int getCount() { return getState(); }
     }
 
     /** 
@@ -569,6 +571,17 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         public Condition newCondition() {
             throw new UnsupportedOperationException();
         }
+
+        /**
+         * Returns a string identifying this lock, as well as its lock state.
+         * @return a string identifying this lock, as well as its lock state.
+         */
+        public String toString() {
+            int r = sync.getReadLockCount();
+            return super.toString() + 
+                "[Read locks = " + r + "]";
+        }
+
     }
 
     /**
@@ -826,6 +839,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         public Condition newCondition() { 
             return sync.newCondition();
         }
+
+        /**
+         * Returns a string identifying this lock, as well as its lock state.
+         * @return a string identifying this lock, as well as its lock state.
+         */
+        public String toString() {
+            Thread owner = sync.getOwner();
+            return super.toString() + ((owner == null) ?
+                                       "[Unlocked]" :
+                                       "[Locked by thread " + owner.getName() + "]");
+        }
+
     }
 
 
@@ -1036,5 +1061,17 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject)condition);
     }
 
+    /**
+     * Returns a string identifying this lock, as well as its lock state.
+     * @return a string identifying this lock, as well as its lock state.
+     */
+    public String toString() {
+        int c = sync.getCount();
+        int w = exclusiveCount(c);
+        int r = sharedCount(c);
+        
+        return super.toString() + 
+            "[Write locks = " + w + ", Read locks = " + r + "]";
+    }
 
 }

@@ -485,8 +485,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <pre>
      * class X {
      *   ReentrantLock lock = new ReentrantLock();
-     *   // ...
-     *
+     *   // ...     *
      *   public void m() { 
      *     assert lock.getHoldCount() == 0;
      *     lock.lock();
@@ -695,5 +694,16 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
         return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject)condition);
+    }
+
+    /**
+     * Returns a string identifying this lock, as well as its lock state.
+     * @return a string identifying this lock, as well as its lock state.
+     */
+    public String toString() {
+        Thread owner = sync.getOwner();
+        return super.toString() + ((owner == null) ?
+                                   "[Unlocked]" :
+                                   "[Locked by thread " + owner.getName() + "]");
     }
 }

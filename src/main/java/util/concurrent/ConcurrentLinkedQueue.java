@@ -36,11 +36,15 @@ import java.util.concurrent.atomic.*;
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Collection} and {@link Iterator} interfaces.
  *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  *
- **/
+ */
 public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {
     private static final long serialVersionUID = 196745693267521676L;

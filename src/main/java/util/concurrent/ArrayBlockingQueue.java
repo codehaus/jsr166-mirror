@@ -34,6 +34,10 @@ import java.util.*;
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Collection} and {@link Iterator} interfaces.
  *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection

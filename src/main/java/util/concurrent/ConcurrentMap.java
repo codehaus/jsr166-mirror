@@ -10,6 +10,11 @@ import java.util.Map;
 /**
  * A {@link java.util.Map} providing additional atomic
  * <tt>putIfAbsent</tt>, <tt>remove</tt>, and <tt>replace</tt> methods.
+ *
+ * <p>This interface is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *  
  * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map

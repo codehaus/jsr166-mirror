@@ -26,6 +26,10 @@ import java.util.*;
  * PriorityBlockingQueue in any particular order. If you need ordered
  * traversal, consider using <tt>Arrays.sort(pq.toArray())</tt>.
  *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection

@@ -36,6 +36,11 @@ import java.util.*;
  * operations on iterators themselves (remove, set, and add) are not
  * supported. These methods throw
  * <tt>UnsupportedOperationException</tt>.
+ *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection

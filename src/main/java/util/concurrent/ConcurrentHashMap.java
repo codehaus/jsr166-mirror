@@ -59,6 +59,10 @@ import java.io.ObjectOutputStream;
  * java.util.HashMap}, this class does NOT allow <tt>null</tt> to be
  * used as a key or value.
  *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map

@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.*;
  *
  * <p> This class has semantics similar to those for POSIX (pthreads)
  * <tt>mutex</tt>. There are no garanteed fairness properties. The
- * associated {@link ConditionObject} implementation is also similar
+ * associated {@link Condition} implementation is also similar
  * except that, unlike POSIX versions, it requires that the lock be
  * held when invoking {@link Condition#signal} and {@link
  * Condition#signalAll}.
@@ -34,15 +34,61 @@ import java.util.concurrent.atomic.*;
  * @author Doug Lea
  * 
  */
-public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.Serializable {
+public class Mutex implements Lock, java.io.Serializable {
     private static final long serialVersionUID = 7373984872572514699L;
+    /** Sync mechanics use AbstractQueuedSynchronizer inplementation */
+    private final Sync sync = new Sync();
+
+    private final static class Sync extends AbstractQueuedSynchronizer {
+        /*
+         * Implement using 0 for unlocked, 1 for locked.
+         */
+
+        public final int acquireExclusiveState(boolean isQueued, 
+                                               int acquires, 
+                                               Thread current) {
+            return (getState().compareAndSet(0, 1)) ? 0 : -1;
+        }
+        
+        public final boolean releaseExclusiveState(int releases) {
+            getState().set(0);
+            return true;
+        }
+        
+        public final void checkConditionAccess(Thread thread, boolean waiting) {
+            if (getState().get() == 0) throw new IllegalMonitorStateException();
+        }
+        
+        
+        public final int acquireSharedState(boolean isQueued, int acquires, 
+                                            Thread current) {
+            throw new UnsupportedOperationException();
+        }
+        
+        
+        public final boolean releaseSharedState(int releases) {
+            throw new UnsupportedOperationException();
+        }
+        
+        ConditionObject newCondition() { return new ConditionObject(); }
+        
+        /**
+         * Reconstitute this lock instance from a stream (that is,
+         * deserialize it).
+         * @param s the stream
+         */
+        private void readObject(java.io.ObjectInputStream s)
+            throws java.io.IOException, ClassNotFoundException {
+            s.defaultReadObject();
+            getState().set(0); // reset to unlocked state
+        }
+    }
 
     /**
      * Creates an instance of <tt>Mutex</tt>.
      */
     public Mutex() { 
     }
-
 
     /**
      * Acquires the lock. 
@@ -52,8 +98,8 @@ public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.S
      * the lock has been acquired.
      */
     public void lock() {
-        if (!getState().compareAndSet(0, 1)) 
-            acquireExclusiveUninterruptibly(1);
+        if (!sync.getState().compareAndSet(0, 1)) 
+            sync.acquireExclusiveUninterruptibly(1);
     }
 
     /**
@@ -98,7 +144,7 @@ public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.S
      * @throws InterruptedException if the current thread is interrupted
      */
     public void lockInterruptibly() throws InterruptedException { 
-        acquireExclusiveInterruptibly(1);
+        sync.acquireExclusiveInterruptibly(1);
     }
 
     /**
@@ -114,7 +160,7 @@ public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.S
      * and <tt>false</tt> otherwise.
      */
     public boolean tryLock() {
-        return getState().compareAndSet(0, 1);
+        return sync.getState().compareAndSet(0, 1);
     }
 
     /**
@@ -173,23 +219,32 @@ public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.S
      *
      */
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-        return acquireExclusiveTimed(1, unit.toNanos(timeout));
+        return sync.acquireExclusiveTimed(1, unit.toNanos(timeout));
     }
 
     /**
      * Releases this lock.  Has no effect if already unlocked.
      */
     public void unlock() {
-        releaseExclusive(1);
+        sync.releaseExclusive(1);
     }
 
     /**
      * Returns a {@link Condition} instance for use with this 
-     * {@link Lock} instance.
+     * {@link Lock} instance.     
+     * Condition implementation. Methods may be invoked only when the
+     * lock associated with this Condition is held by current thread.
+     * If the lock is not held, attempts to access any condition
+     * methods result in {@link IllegalMonitorStateException}.
+     * However, this check does not strictly guarantee that the lock
+     * is held by the calling thread. The effects of condition methods
+     * accessed by threads that do not hold the associated lock are
+     * undefined.
+     *
      * @return the Condition object
      */
-    public ConditionObject newCondition() {
-        return new ConditionObject();
+    public AbstractQueuedSynchronizer.ConditionObject newCondition() {
+        return sync.newCondition();
     }
 
     /**
@@ -200,74 +255,49 @@ public class Mutex extends AbstractQueuedSynchronizer implements Lock, java.io.S
      * otherwise.
      */
     public boolean isLocked() {
-        return getState().get() != 0;
+        return sync.getState().get() != 0;
     }
 
     /**
-     * Reconstitute this lock instance from a stream (that is,
-     * deserialize it).
-     * @param s the stream
-     */
-    private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        getState().set(0); // reset to unlocked state
-    }
-
-    /**
-     * Condition implementation. Methods may be invoked only when the
-     * lock associated with this Condition is held by current thread.
-     * If the lock is not held, attempts to access any condition
-     * methods result in {@link IllegalMonitorStateException}.
-     * However, this check does not strictly guarantee that the lock
-     * is held by the calling thread. The effects of condition methods
-     * accessed by threads that do not hold the associated lock are
-     * undefined.
+     * Queries whether any threads are waiting to acquire. Note that
+     * because cancellations may occur at any time, a <tt>true</tt>
+     * return does not guarantee that any other thread will ever
+     * acquire.  This method is designed primarily for use in
+     * monitoring of the system state.
      *
+     * @return true if there may be other threads waiting to acquire
+     * the lock.
      */
-    public class ConditionObject extends AbstractQueuedSynchronizer.LockCondition {
-        /** Constructor for use by subclasses */
-        protected ConditionObject() {}
+    public final boolean hasWaiters() { 
+        return sync.hasWaiters();
     }
 
-    // implement abstract methods
 
     /**
-     * Sets internal state to locked status if this lock was free
+     * Returns an estimate of the number of threads waiting to
+     * acquire.  The value is only an estimate because the number of
+     * threads may change dynamically while this method traverses
+     * internal data structures.  This method is designed for use in
+     * monitoring of the system state, not for synchronization
+     * control.
+     * @return the estimated number of threads waiting for this lock
      */
-    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
-                                              Thread current) {
-        return (getState().compareAndSet(0, 1)) ? 0 : -1;
-    }
-
-    /**
-     * Sets internal state to indicate lock has been released
-     */
-    protected final boolean releaseExclusiveState(int releases) {
-        getState().set(0);
-        return true;
+    public final int getQueueLength() {
+        return sync.getQueueLength();
     }
 
     /**
-     * Ensures that lock is held
+     * Returns a collection containing threads that may be waiting to
+     * acquire.  Because the actual set of threads may change
+     * dynamically while constructing this result, the returned
+     * collection is only a best-effort estimate.  The elements of the
+     * returned collection are in no particular order.  This method is
+     * designed to facilitate construction of subclasses that provide
+     * more extensive monitoring facilities.
+     * @return the collection of threads
      */
-    protected final void checkConditionAccess(Thread thread, boolean waiting) {
-        if (getState().get() == 0) throw new IllegalMonitorStateException();
-    }
-
-    /**
-     * Always throws UnsupportedOperationException
-     */
-    protected final int acquireSharedState(boolean isQueued, int acquires, 
-                                     Thread current) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Always throws UnsupportedOperationException
-     */
-    protected final boolean releaseSharedState(int releases) {
-        throw new UnsupportedOperationException();
+    protected Collection<Thread> getQueuedThreads() {
+        return sync.getQueuedThreads();
     }
 
 }

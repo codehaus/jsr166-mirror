@@ -21,17 +21,17 @@ import java.util.concurrent.atomic.*;
  * the {@link AtomicInteger} provided by {@link #getState} is tracked
  * with respect to synchronization mechanics.
  *
- * <p> This class does not directly implement any synchronization
- * interface.  Instead it defines <tt>protected</tt> methods
- * <tt>acquireExclusiveUninterruptibly</tt> and so on that can be
- * invoked as appropriate by concrete locks and related synchronizers
- * to implement their public methods. (Note that this class does not
- * directly provide untimed "trylock" forms, since the state acquire
- * methods can be used for these purposes.)
- *
- * <p> This class provides <tt>protected</tt> and, where sensible,
- * <tt>public</tt> instrumentation and monitoring methods such as
- * {@link #hasWaiters}.
+ * <p> Generally, subclasses of this class should be defined as
+ * non-public internal helper classes used to implement
+ * synchronization needed inside other classes.  This class does not
+ * implement any synchronization interface.  Instead it defines
+ * methods <tt>acquireExclusiveUninterruptibly</tt> and so on that can
+ * be invoked as appropriate by concrete locks and related
+ * synchronizers to implement their public methods. (Note that this
+ * class does not directly provide untimed "trylock" forms, since the
+ * state acquire methods can be used for these purposes.)  This class
+ * also provides instrumentation and monitoring methods such as {@link
+ * #hasWaiters}.
  *
  * <p> This class supports either or both <em>exclusive</em> and
  * <em>shared</em> modes. When acquired in exclusive mode, it cannot
@@ -57,11 +57,12 @@ import java.util.concurrent.atomic.*;
  * <p>
  * <b>Extension Example.</b> Here is a fair mutual exclusion lock class:
  * <pre>
- *   class FairMutex extends AbstractQueuedSynchronizer implements Lock {
+ * class FairMutex implements Lock {
+ *    private static class Sync extends AbstractQueuedSynchronizer {
  *       // Uses 0 for unlocked, 1 for locked state
  *
- *       protected int acquireExclusiveState(boolean isQueued, int acquires, 
- *                                           Thread ignore) {
+ *       public int acquireExclusiveState(boolean isQueued, int acquires, 
+ *                                        Thread ignore) {
  *           assert acquires == 1; // Does not use multiple acquires
  *           if ((isQueued || !hasWaiters()) &amp;&amp;
  *                getState().compareAndSet(0, 1))
@@ -69,34 +70,34 @@ import java.util.concurrent.atomic.*;
  *           return -1;
  *       }
  *
- *       protected boolean releaseExclusiveState(int releases) {
+ *       public boolean releaseExclusiveState(int releases) {
  *           getState().set(0);
  *           return true;
  *       }
  *       
- *       protected int acquireSharedState(boolean isQueued, int acquires, 
+ *       public int acquireSharedState(boolean isQueued, int acquires, 
  *                                        Thread current) {
  *           throw new UnsupportedOperationException();
  *       }
  *
- *       protected boolean releaseSharedState(int releases) {
+ *       public boolean releaseSharedState(int releases) {
  *           throw new UnsupportedOperationException();
  *       }
  *
- *       protected void checkConditionAccess(Thread thread, boolean waiting) {
+ *       public void checkConditionAccess(Thread thread, boolean waiting) {
  *           if (getState().get() == 0)
  *               throw new IllegalMonitorException();
  *       }
+ *       Condition newCondition() { return new ConditionObject(); }
+ *    }
+ *    private final Sync sync = new Sync();
+ *    public void lock() { sync.acquireExclusiveUninterruptibly(1); }
+ *    public void unlock() { sync.releaseExclusive(1); }
+ *    public boolean tryLock() { return sync.acquireExclusiveState(false, 1, null); }
+ *    // ... and so on for other lock methods
  *
- *       public void lock() { acquireExclusiveUninterruptibly(1); }
- *       public void unlock() { releaseExclusive(1); }
- *       public boolean tryLock() { 
- *           return acquireExclusiveState(false, 1, null);
- *       }
- *       // ... and so on for other lock methods
- *
- *       public Condition newCondition() { return new LockCondition(); }
- *   }
+ *    public Condition newCondition() { return sync.newCondition(); }
+ * }
  * </pre>
  *
  * @since 1.5
@@ -434,7 +435,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * changes.
      * @return the state
      */
-    protected AtomicInteger getState() {
+    public AtomicInteger getState() {
         return state;
     }
 
@@ -459,7 +460,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode not supported
      */
-    protected abstract int acquireExclusiveState(boolean isQueued, 
+    public abstract int acquireExclusiveState(boolean isQueued, 
                                                  int acquires, 
                                                  Thread current);
 
@@ -476,7 +477,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode not supported
      */
-    protected abstract boolean releaseExclusiveState(int releases);
+    public abstract boolean releaseExclusiveState(int releases);
 
     /**
      * Try to set status for an attempt to acquire in shared mode.
@@ -498,7 +499,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if shared mode not supported
      */
-    protected abstract int acquireSharedState(boolean isQueued, 
+    public abstract int acquireSharedState(boolean isQueued, 
                                               int acquires, 
                                               Thread current);
     /**
@@ -513,19 +514,19 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if shared mode not supported
      */
-    protected abstract boolean releaseSharedState(int releases);
+    public abstract boolean releaseSharedState(int releases);
 
     /**
      * Throw IllegalMonitorStateException if given thread should not
      * access a {@link Condition} method. This method is invoked upon
-     * each call to a {@link LockCondition} method.
+     * each call to a {@link ConditionObject} method.
      * @param thread the thread
      * @param waiting true if the access is for a condition-wait method,
      * and false if any other method (such as <tt>signal</tt>).
      * @throws IllegalMonitorStateException if cannot access
      * @throws UnsupportedOperationException if conditions not supported
      */
-    protected abstract void checkConditionAccess(Thread thread, 
+    public abstract void checkConditionAccess(Thread thread, 
                                                  boolean waiting);
 
     /**
@@ -534,7 +535,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * implement method {@link Lock#lock}
      * @param acquires the number of times to acquire
      */
-    protected final void acquireExclusiveUninterruptibly(int acquires) {
+    public final void acquireExclusiveUninterruptibly(int acquires) {
         doAcquire(false, acquires, UNINTERRUPTED, 0L);
     }
 
@@ -545,7 +546,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param acquires the number of times to acquire
      * @throws InterruptedException if the current thread is interrupted
      */
-    protected final void acquireExclusiveInterruptibly(int acquires) throws InterruptedException {
+    public final void acquireExclusiveInterruptibly(int acquires) throws InterruptedException {
        if (doAcquire(false, acquires, INTERRUPT, 0L) == INTERRUPT)
            throw new InterruptedException();
    }
@@ -560,7 +561,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   protected boolean acquireExclusiveTimed(int acquires, long nanos) throws InterruptedException {
+   public boolean acquireExclusiveTimed(int acquires, long nanos) throws InterruptedException {
        int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, nanos);
        if (s == UNINTERRUPTED)
            return true;
@@ -574,7 +575,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * can be used to implement method {@link Lock#unlock}
      * @param releases the number of releases
      */
-    protected final void releaseExclusive(int releases) {
+    public final void releaseExclusive(int releases) {
         if (releaseExclusiveState(releases)) {
             Node h = head;
             if (h != null && h.status < 0)
@@ -587,7 +588,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * of 1, this can be used to implement method {@link Lock#lock}
      * @param acquires the number of times to acquire
      */
-    protected final void acquireSharedUninterruptibly(int acquires) {
+    public final void acquireSharedUninterruptibly(int acquires) {
         doAcquire(true, acquires, UNINTERRUPTED, 0L);
     }
 
@@ -598,7 +599,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param acquires the number of times to acquire
      * @throws InterruptedException if the current thread is interrupted
      */
-    protected final void acquireSharedInterruptibly(int acquires) throws InterruptedException {
+    public final void acquireSharedInterruptibly(int acquires) throws InterruptedException {
        if (doAcquire(true, acquires, INTERRUPT, 0L) == INTERRUPT)
            throw new InterruptedException();
    }
@@ -612,7 +613,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   protected boolean acquireSharedTimed(int acquires, long nanos) throws InterruptedException {
+   public boolean acquireSharedTimed(int acquires, long nanos) throws InterruptedException {
        int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, nanos);
        if (s == UNINTERRUPTED)
            return true;
@@ -626,7 +627,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * be used to implement method {@link Lock#unlock}
      * @param releases the number of releases
      */
-    protected final void releaseShared(int releases) {
+    public final void releaseShared(int releases) {
         if (releaseSharedState(releases)) {
             Node h = head;
             if (h != null && h.status < 0)
@@ -921,7 +922,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * more extensive monitoring facilities.
      * @return the collection of threads
      */
-    protected Collection<Thread> getQueuedThreads() {
+    public Collection<Thread> getQueuedThreads() {
         ArrayList<Thread> list = new ArrayList<Thread>();
         for (Node p = tail; p != null; p = p.prev) {
             Thread t = p.thread;
@@ -937,7 +938,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param shared true if shared mode, else exclusive
      * @return the collection of threads
      */
-    protected Collection<Thread> getQueuedThreads(boolean shared) {
+    public Collection<Thread> getQueuedThreads(boolean shared) {
         ArrayList<Thread> list = new ArrayList<Thread>();
         for (Node p = tail; p != null; p = p.prev) {
             if (p.shared == shared) {
@@ -1046,7 +1047,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * <tt>protected</tt> access methods that may be useful for
      * instrumentation and monitoring.
      */
-    public class LockCondition implements Condition, java.io.Serializable {
+    public class ConditionObject implements Condition, java.io.Serializable {
         private static final long serialVersionUID = 1173984872572414699L;
 
         /** First node of condition queue. */
@@ -1057,7 +1058,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         /**
          * Constructor for use by subclasses 
          */
-        protected LockCondition() { }
+        protected ConditionObject() { }
 
         // Internal methods
 

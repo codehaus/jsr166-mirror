@@ -149,23 +149,20 @@ import java.util.*;
  * @author Doug Lea
  *
  */
-public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implements ReadWriteLock, java.io.Serializable  {
+public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializable  {
     private static final long serialVersionUID = -6992448646407690164L;
     /** Inner class providing readlock */
     private final ReentrantReadWriteLock.ReadLock readerLock = new ReadLock();
     /** Inner class providing writelock */
     private final ReentrantReadWriteLock.WriteLock writerLock = new WriteLock();
-    /** true if barging disabled */
-    private final boolean fair;
-    /** Current (exclusive) owner thread */
-    private transient Thread owner;
+    private final Sync sync;
 
     /**
      * Creates a new <tt>ReentrantReadWriteLock</tt> with
      * default ordering properties.
      */
     public ReentrantReadWriteLock() {
-        this.fair = false;
+        sync = new Sync();
     }
 
     /**
@@ -175,7 +172,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * @param fair true if this lock should use a fair ordering policy
      */
     public ReentrantReadWriteLock(boolean fair) {
-        this.fair = fair;
+        sync = new Sync(fair);
     }
 
     public ReentrantReadWriteLock.WriteLock writeLock() { 
@@ -184,67 +181,6 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
 
     public ReentrantReadWriteLock.ReadLock readLock() { 
         return readerLock; 
-    }
-
-    /* 
-     * Shared vs write count extraction constants and functions.  Lock
-     * state is logically divided into two shorts: The lower one
-     * representing the exclusive (writer) lock hold count, and the
-     * upper the shared (reader) hold count.
-     */
-
-    static final int SHARED_SHIFT   = 16;
-    static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-    static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
-
-    /**
-     * Return true if count indicates lock is held in exclusive mode
-     * @param c a lock status count
-     * @return true if count indicates lock is held in exclusive mode
-     */
-    private static boolean isExclusive(int c) { 
-        return (c & EXCLUSIVE_MASK) != 0; 
-    }
-
-    /**
-     * Return the number of shared holds represented in count
-     */
-    private static int sharedCount(int c)  { 
-        return c >>> SHARED_SHIFT; 
-    }
-
-    /**
-     * Return the number of exclusive holds represented in count
-     */
-    private static int exclusiveCount(int c) { 
-        return c & EXCLUSIVE_MASK; 
-    }
-
-    /**
-     * Fast path for write locks
-     */
-    private boolean fastAcquireExclusive(boolean enforceFairness) {
-        final AtomicInteger count = getState();
-        if ((!enforceFairness || !hasWaiters()) && 
-            count.compareAndSet(0, 1)) {
-            owner = Thread.currentThread();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Fast path for read locks
-     */
-    private boolean fastAcquireShared(boolean enforceFairness) {
-        if (!enforceFairness || !hasWaiters()) {
-            final AtomicInteger count = getState();
-            int c = count.get();
-            if (!isExclusive(c) && 
-                count.compareAndSet(c, c + SHARED_UNIT))
-                return true;
-        }
-        return false;
     }
 
     /**
@@ -267,8 +203,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * purposes and lies dormant until the lock has been acquired.
          */
         public void lock() { 
-            if (!fastAcquireShared(fair))
-                acquireSharedUninterruptibly(1);
+            sync.lockShared();
         }
 
         /**
@@ -313,7 +248,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * @throws InterruptedException if the current thread is interrupted
          */
         public void lockInterruptibly() throws InterruptedException {
-            acquireSharedInterruptibly(1);
+            sync.acquireSharedInterruptibly(1);
         }
 
         /**
@@ -340,8 +275,8 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * @return <tt>true</tt> if the lock was acquired.
          */
         public  boolean tryLock() {
-            return fastAcquireShared(false) ||
-                acquireSharedState(true, 1, Thread.currentThread()) >= 0;
+            return sync.fastAcquireShared(false) ||
+                sync.acquireSharedState(true, 1, Thread.currentThread()) >= 0;
         }
 
         /**
@@ -412,7 +347,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          *
          */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            return acquireSharedTimed(1, unit.toNanos(timeout));
+            return sync.acquireSharedTimed(1, unit.toNanos(timeout));
         }
 
         /**
@@ -422,7 +357,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * is made available for other lock attempts.
          */
         public  void unlock() {
-            releaseShared(1);
+            sync.releaseShared(1);
         }
 
         /**
@@ -461,8 +396,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * time the lock hold count is set to one.
          */
         public void lock() {
-            if (!fastAcquireExclusive(fair))
-                acquireExclusiveUninterruptibly(1);
+            sync.lockExclusive();
         }
 
         /**
@@ -516,7 +450,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * @throws InterruptedException if the current thread is interrupted
          */
         public void lockInterruptibly() throws InterruptedException {
-            acquireExclusiveInterruptibly(1);
+            sync.acquireExclusiveInterruptibly(1);
         }
 
         /**
@@ -548,8 +482,8 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * <tt>false</tt> otherwise.
          */
         public boolean tryLock( ) {
-            return fastAcquireExclusive(false) ||
-                acquireExclusiveState(true, 1, Thread.currentThread()) >= 0;
+            return sync.fastAcquireExclusive(false) ||
+                sync.acquireExclusiveState(true, 1, Thread.currentThread()) >= 0;
         }
 
         /**
@@ -629,7 +563,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          *
          */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            return acquireExclusiveTimed(1, unit.toNanos(timeout));
+            return sync.acquireExclusiveTimed(1, unit.toNanos(timeout));
         }
         
         /**
@@ -644,16 +578,21 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
          * hold this lock.
          */
         public void unlock() {
-            releaseExclusive(1);
+            sync.releaseExclusive(1);
         }
 
         /**
          * Returns a {@link Condition} instance for use with this
-         * {@link Lock} instance.
+         * {@link Lock} instance. This class supports
+         * the same basic semantics and styles of usage as the {@link
+         * Object} monitor methods.  Methods may be invoked only when
+         * exclusively holding the write lock associated with this
+         * Condition, and not holding any read locks. Failure to comply
+         * results in {@link IllegalMonitorStateException}.
          * @return the Condition object
          */
-        public WriterConditionObject newCondition() { 
-            return newWriterCondition();
+        public AbstractQueuedSynchronizer.ConditionObject newCondition() { 
+            return sync.newCondition();
         }
     }
 
@@ -665,7 +604,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * @return true if this lock has fairness set true.
      */
     public final boolean isFair() {
-        return fair;
+        return sync.fair;
     }
 
     /**
@@ -678,7 +617,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * @return the owner, or <tt>null</tt> if not owned.
      */
     protected Thread getOwner() {
-        return (exclusiveCount(getState().get()) != 0)? owner : null;
+        return sync.getOwner();
     }
     
     // Instrumentation methods
@@ -690,7 +629,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * @return the number of read locks held.
      */
     public int getReadLockCount() {
-        return sharedCount(getState().get());
+        return sync.getReadLockCount();
     }
 
     /**
@@ -701,7 +640,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * <tt>false</tt> otherwise.
      */
     public boolean isWriteLocked() {
-        return exclusiveCount(getState().get()) != 0;
+        return sync.isWriteLocked();
     }
 
     /**
@@ -710,7 +649,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * <tt>false</tt> otherwise.
      */
     public boolean isWriteLockedByCurrentThread() {
-        return getOwner() == Thread.currentThread();
+        return sync.isWriteLockedByCurrentThread();
     }
 
     /**
@@ -722,8 +661,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * or zero if this lock is not held by the current thread.
      */
     public int getWriteHoldCount() {
-        int c = exclusiveCount(getState().get());
-        return (owner == Thread.currentThread())? c : 0;
+        return sync.getWriteHoldCount();
     }
 
     /**
@@ -737,7 +675,7 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedWriterThreads() {
-        return getQueuedThreads(false);
+        return sync.getQueuedWriterThreads();
     }
 
     /**
@@ -751,145 +689,260 @@ public class ReentrantReadWriteLock extends AbstractQueuedSynchronizer implement
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedReaderThreads() {
-        return getQueuedThreads(true);
-    }
-
-
-    /**
-     * Reconstitute this lock instance from a stream (that is,
-     * deserialize it).
-     * @param s the stream
-     */
-    private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        getState().set(0); // reset to unlocked state
+        return getQueuedReaderThreads();
     }
 
     /**
-     * Relay for WriteLock.newCondition
-     */
-    WriterConditionObject newWriterCondition() {
-        return new WriterConditionObject();
-    }
-
-    /**
-     * Condition implementation for write locks. This class supports
-     * the same basic semantics and styles of usage as the {@link
-     * Object} monitor methods.  Methods may be invoked only when
-     * exclusively holding the write lock associated with this
-     * Condition, and not holding any read locks. Failure to comply
-     * results in {@link IllegalMonitorStateException}.
+     * Queries whether any threads are waiting to acquire. Note that
+     * because cancellations may occur at any time, a <tt>true</tt>
+     * return does not guarantee that any other thread will ever
+     * acquire.  This method is designed primarily for use in
+     * monitoring of the system state.
      *
+     * @return true if there may be other threads waiting to acquire
+     * the lock.
      */
-    public class WriterConditionObject extends AbstractQueuedSynchronizer.LockCondition {
-        /** Constructor for use by subclasses */
-        protected WriterConditionObject() {}
+    public final boolean hasWaiters() { 
+        return sync.hasWaiters();
     }
 
-    // implement abstract methods
 
     /**
-     * Sets internal state if this lock is free or if this is a recursive
-     * lock by the current thread
+     * Returns an estimate of the number of threads waiting to
+     * acquire.  The value is only an estimate because the number of
+     * threads may change dynamically while this method traverses
+     * internal data structures.  This method is designed for use in
+     * monitoring of the system state, not for synchronization
+     * control.
+     * @return the estimated number of threads waiting for this lock
      */
-    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
-                                              Thread current) {
-        final AtomicInteger count = getState();
-        boolean nobarge = !isQueued && fair;
-        for (;;) {
-            int c = count.get();
-            int w = exclusiveCount(c);
-            int r = sharedCount(c);
-            if (r != 0)
-                return -1;
-            if (w != 0) {
-                if (current != owner)
-                    return -1;
-                if (w + acquires >= SHARED_UNIT)
-                    throw new Error("Maximum lock count exceeded");
-                if (count.compareAndSet(c, c + acquires)) 
-                    return 0;
+    public final int getQueueLength() {
+        return sync.getQueueLength();
+    }
+
+    /**
+     * Returns a collection containing threads that may be waiting to
+     * acquire.  Because the actual set of threads may change
+     * dynamically while constructing this result, the returned
+     * collection is only a best-effort estimate.  The elements of the
+     * returned collection are in no particular order.  This method is
+     * designed to facilitate construction of subclasses that provide
+     * more extensive monitoring facilities.
+     * @return the collection of threads
+     */
+    protected Collection<Thread> getQueuedThreads() {
+        return sync.getQueuedThreads();
+    }
+
+    private final static class Sync extends AbstractQueuedSynchronizer {
+        /** true if barging disabled */
+        final boolean fair;
+        /** Current (exclusive) owner thread */
+        private transient Thread owner;
+
+        Sync() { this.fair = false; }
+        Sync(boolean fair) { this.fair = fair; }
+
+        /* 
+         * Shared vs write count extraction constants and functions.  Lock
+         * state is logically divided into two shorts: The lower one
+         * representing the exclusive (writer) lock hold count, and the
+         * upper the shared (reader) hold count.
+         */
+
+        static final int SHARED_SHIFT   = 16;
+        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+
+        /**
+         * Return true if count indicates lock is held in exclusive mode
+         * @param c a lock status count
+         * @return true if count indicates lock is held in exclusive mode
+         */
+        boolean isExclusive(int c) { 
+            return (c & EXCLUSIVE_MASK) != 0; 
+        }
+
+        /**
+         * Return the number of shared holds represented in count
+         */
+        int sharedCount(int c)  { 
+            return c >>> SHARED_SHIFT; 
+        }
+
+        /**
+         * Return the number of exclusive holds represented in count
+         */
+        int exclusiveCount(int c) { 
+            return c & EXCLUSIVE_MASK; 
+        }
+
+        /**
+         * Fast path for write locks
+         */
+        boolean fastAcquireExclusive(boolean enforceFairness) {
+            final AtomicInteger count = getState();
+            if ((!enforceFairness || !hasWaiters()) && 
+                count.compareAndSet(0, 1)) {
+                owner = Thread.currentThread();
+                return true;
             }
-            else {
-                if (nobarge && hasWaiters())
+            return false;
+        }
+
+        /**
+         * Fast path for read locks
+         */
+        boolean fastAcquireShared(boolean enforceFairness) {
+            if (!enforceFairness || !hasWaiters()) {
+                final AtomicInteger count = getState();
+                int c = count.get();
+                if (!isExclusive(c) && 
+                    count.compareAndSet(c, c + SHARED_UNIT))
+                    return true;
+            }
+            return false;
+        }
+
+
+
+        public final int acquireExclusiveState(boolean isQueued, int acquires, 
+                                               Thread current) {
+            final AtomicInteger count = getState();
+            boolean nobarge = !isQueued && fair;
+            for (;;) {
+                int c = count.get();
+                int w = exclusiveCount(c);
+                int r = sharedCount(c);
+                if (r != 0)
                     return -1;
-                if (count.compareAndSet(c, c + acquires)) {
-                    owner = current;
-                    return 0;
+                if (w != 0) {
+                    if (current != owner)
+                        return -1;
+                    if (w + acquires >= SHARED_UNIT)
+                        throw new Error("Maximum lock count exceeded");
+                    if (count.compareAndSet(c, c + acquires)) 
+                        return 0;
                 }
+                else {
+                    if (nobarge && hasWaiters())
+                        return -1;
+                    if (count.compareAndSet(c, c + acquires)) {
+                        owner = current;
+                        return 0;
+                    }
+                }
+                // Recheck count if lost any of the above CAS's
+            }
+        }
+
+        public final boolean releaseExclusiveState(int releases) {
+            final AtomicInteger count = getState();
+            Thread current = Thread.currentThread();
+            int c = count.get();
+            int w = exclusiveCount(c) - releases;
+            if (w < 0 || owner != current)
+                throw new IllegalMonitorStateException();
+            if (w == 0) 
+                owner = null;
+            count.set(c - releases);
+            return w == 0;
+        }
+
+        public final int acquireSharedState(boolean isQueued, int acquires, 
+                                            Thread current) {
+            final AtomicInteger count = getState();
+            boolean nobarge = !isQueued && fair;
+            for (;;) {
+                int c = count.get();
+                int w = exclusiveCount(c);
+                int r = sharedCount(c);
+                if (w != 0 && current != owner)
+                    return -1;
+                if (nobarge && !hasWaiters())
+                    return -1;
+                int nextc = c + acquires * SHARED_UNIT;
+                if (nextc < c)
+                    throw new Error("Maximum lock count exceeded");
+                if (count.compareAndSet(c, nextc)) 
+                    return 1;
             }
             // Recheck count if lost any of the above CAS's
         }
-    }
 
-    /**
-     * Sets internal state to indicate lock has been released
-     */
-    protected final boolean releaseExclusiveState(int releases) {
-        final AtomicInteger count = getState();
-        Thread current = Thread.currentThread();
-        int c = count.get();
-        int w = exclusiveCount(c) - releases;
-        if (w < 0 || owner != current)
-            throw new IllegalMonitorStateException();
-        if (w == 0) 
-            owner = null;
-        count.set(c - releases);
-        return w == 0;
-    }
-
-    /**
-     * Sets internal state if this lock is not exclusively held
-     */
-    protected final int acquireSharedState(boolean isQueued, int acquires, 
-                                     Thread current) {
-        final AtomicInteger count = getState();
-        boolean nobarge = !isQueued && fair;
-        for (;;) {
-            int c = count.get();
-            int w = exclusiveCount(c);
-            int r = sharedCount(c);
-            if (w != 0 && current != owner)
-                return -1;
-            if (nobarge && !hasWaiters())
-                return -1;
-            int nextc = c + acquires * SHARED_UNIT;
-            if (nextc < c)
-                throw new Error("Maximum lock count exceeded");
-            if (count.compareAndSet(c, nextc)) 
-                return 1;
+        public final boolean releaseSharedState(int releases) {
+            final AtomicInteger count = getState();
+            for (;;) {
+                int c = count.get();
+                int nextc = c - releases * SHARED_UNIT;
+                if (nextc < 0)
+                    throw new IllegalMonitorStateException();
+                if (count.compareAndSet(c, nextc)) 
+                    return nextc == 0;
+            }
         }
-        // Recheck count if lost any of the above CAS's
-    }
-
-    /**
-     * Sets internal state to indicate lock has been released
-     */
-    protected final boolean releaseSharedState(int releases) {
-        final AtomicInteger count = getState();
-        for (;;) {
-            int c = count.get();
-            int nextc = c - releases * SHARED_UNIT;
-            if (nextc < 0)
-                throw new IllegalMonitorStateException();
-            if (count.compareAndSet(c, nextc)) 
-                return nextc == 0;
-        }
-    }
     
-    /**
-     * Ensures that write-lock, but no read-locks held by calling thread.
-     */
-    protected final void checkConditionAccess(Thread thread, boolean waiting) {
-        int c = getState().get();
-        boolean ok = exclusiveCount(c) != 0;
-        if (ok && waiting && sharedCount(c) != 0)
-            ok = false;
-        if (!ok || owner != thread) 
-            throw new IllegalMonitorStateException();
+        public final void checkConditionAccess(Thread thread, boolean waiting) {
+            int c = getState().get();
+            boolean ok = exclusiveCount(c) != 0;
+            if (ok && waiting && sharedCount(c) != 0)
+                ok = false;
+            if (!ok || owner != thread) 
+                throw new IllegalMonitorStateException();
+        }
+
+        void lockShared() { 
+            if (!fastAcquireShared(fair))
+                acquireSharedUninterruptibly(1);
+        }
+
+        void lockExclusive() {
+            if (!fastAcquireExclusive(fair))
+                acquireExclusiveUninterruptibly(1);
+        }
+
+        ConditionObject newCondition() { return new ConditionObject(); }
+
+        Thread getOwner() {
+            return (exclusiveCount(getState().get()) != 0)? owner : null;
+        }
+        
+        int getReadLockCount() {
+            return sharedCount(getState().get());
+        }
+        
+        boolean isWriteLocked() {
+            return exclusiveCount(getState().get()) != 0;
+        }
+
+        boolean isWriteLockedByCurrentThread() {
+            return getOwner() == Thread.currentThread();
+        }
+
+        int getWriteHoldCount() {
+            int c = exclusiveCount(getState().get());
+            return (owner == Thread.currentThread())? c : 0;
+        }
+
+        Collection<Thread> getQueuedWriterThreads() {
+            return getQueuedThreads(false);
+        }
+
+        Collection<Thread> getQueuedReaderThreads() {
+            return getQueuedThreads(true);
+        }
+
+
+        /**
+         * Reconstitute this lock instance from a stream (that is,
+         * deserialize it).
+         * @param s the stream
+         */
+        private void readObject(java.io.ObjectInputStream s)
+            throws java.io.IOException, ClassNotFoundException {
+            s.defaultReadObject();
+            getState().set(0); // reset to unlocked state
+        }
+        
     }
-
-
 }
-

@@ -793,7 +793,7 @@ public class CopyOnWriteArrayList<E>
      * object is a List. If not, it returns false; if so, it iterates over
      * both lists, comparing corresponding pairs of elements.  If any
      * comparison returns false, this method returns false.  If either
-     * Iterator runs out of elements before before the other it returns false
+     * Iterator runs out of elements before the other it returns false
      * (as the Lists are of unequal length); otherwise it returns true when
      * the iterations complete.
      *

@@ -15,7 +15,7 @@ import java.util.*;
  * provides a large number of adjustable parameters and extensibility
  * hooks. However, programmers are urged to use the more convenient
  * factory methods <tt>newCachedThreadPool</tt> <tt>newFixedThreadPool</tt>
- * and <tt>newSingleThreadExecutor</tt>, that preconfigure settings for
+ * <tt>newSingleThreadExecutor</tt> and <tt>newThreadPerTaskExeceutor</tt>, that preconfigure settings for
  * the most common usage scenarios. Only if greater control is
  * needed, use the constructor with custom parameters, selectively
  * override <tt>ExecutorIntercepts</tt>, and/or dynamically change tuning
@@ -136,8 +136,25 @@ public class ThreadExecutor implements Executor {
     public static ThreadExecutor newCachedThreadPool() {
         return new ThreadExecutor(0,
             Integer.MAX_VALUE,
-            60,
-            Clock.SECONDS,
+            60000,
+            Clock.MILLISECONDS,
+            new SynchronousQueue(),
+            new ExecutorIntercepts());
+    }
+
+
+    /**
+     * Construct a thread pool using parameters that cause it to use a
+     * new thread for each task.  This provides no efficiency savings
+     * over manually creating new threads, but still offers the
+     * manageability benefits of ThreadExecutor for tracking active
+     * threads, shutdown, and so on.
+     */
+    public static ThreadExecutor newThreadPerTaskExecutor() {
+        return new ThreadExecutor(0,
+            Integer.MAX_VALUE,
+            0,
+            Clock.MILLISECONDS,
             new SynchronousQueue(),
             new ExecutorIntercepts());
     }

@@ -883,7 +883,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      */
     public void shutdown() {
         // Fail if caller doesn't have modifyThread permission. We
-        // explicitly chack permissions directly because we can't trust
+        // explicitly check permissions directly because we can't trust
         // implementations of SecurityManager to correctly override
         // the "check access" methods such that our documented
         // security policy is implemented.

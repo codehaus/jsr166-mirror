@@ -14,7 +14,7 @@ package java.util.concurrent.locks;
  * {@link #writeLock write lock} is exclusive.
  * 
  * <p>A read-write lock allows for a greater level of concurrency in
- * accessing shared data, than that permitted by a mutual exclusion lock.
+ * accessing shared data than that permitted by a mutual exclusion lock.
  * It exploits the fact that while only a single thread at a time (a
  * <em>writer</em> thread) can modify the shared data, in many cases any 
  * number of threads can concurrently read the data (hence <em>reader</em>
@@ -59,11 +59,11 @@ package java.util.concurrent.locks;
  * <li>Determining whether readers that request the read lock while a 
  * reader is active and a writer is waiting, are granted the read lock.
  * Preference to the reader can delay the writer indefinitely, while
- * preference to the write can reduce the potential for concurrency.
+ * preference to the writer can reduce the potential for concurrency.
  *
  * <li>Determining whether the locks are reentrant: can a thread with the
- * write lock reacquire it? can it acquire a read lock while holding the
- * write lock? is the read lock itself reentrant?
+ * write lock reacquire it? Can it acquire a read lock while holding the
+ * write lock? Is the read lock itself reentrant?
  *
  * <li>Can the write lock be downgraded to a read lock without allowing
  * an intervening writer? Can a read lock be upgraded to a write lock,

@@ -102,8 +102,10 @@
            source="${build.sourcelevel}"
              fork="true">
 
+<!--
       <compilerarg    line="${gjc.args}"/>
       <bootclasspath refid="compile.bootclasspath"/>
+-->
 
     </javac>
 
@@ -236,8 +238,10 @@
            source="${build.sourcelevel}"
              fork="true">
 
+    <!--
       <compilerarg    line="${gjc.args} -s"/>
       <bootclasspath refid="compile.bootclasspath"/>
+     -->
 
     </javac>
 
@@ -520,7 +524,9 @@
            source="${build.sourcelevel}"
              fork="true">
 
+<!--
       <compilerarg    line="${gjc.args}"/>
+-->
       <bootclasspath refid="test.compile.bootclasspath"/>
       <classpath     refid="test.classpath"/>
 
@@ -586,7 +592,7 @@
 
 
   <target name="configure-compiler">
-
+<!--
     <property name="gjc.version"
              value="2.2"/>
 
@@ -612,7 +618,7 @@
     <property name="collect.jar"
           location="${gjc.dir}/${gjc.version}/collect${novariance.arg}.jar"/>
 
-
+-->
     <condition property="warnunchecked.arg" value="-warnunchecked">
       <istrue value="${gjc.warnunchecked}"/>
     </condition>
@@ -644,9 +650,11 @@
 
 
     <!-- Common options in javac invocations -->
+<!--
     <property name="gjc.args"
              value="-J-Xbootclasspath/p:${pre.bootclasspath} ${warnunchecked.arg} ${novariance.arg}"
     />
+-->
 
   </target>
 

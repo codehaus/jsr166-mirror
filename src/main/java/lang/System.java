@@ -1056,6 +1056,13 @@ public final class System {
         // way as other threads; we must do it ourselves here.
         Thread current = Thread.currentThread();
         current.getThreadGroup().add(current);
+
+        // Allow privileged classes outside of java.lang access to ConstantPool
+        sun.misc.SharedSecrets.setJavaLangAccess(new sun.misc.JavaLangAccess(){
+            public sun.reflect.ConstantPool getConstantPool(Class klass) {
+                return klass.getConstantPool();
+            }
+        });
     }
 
     /* returns the class of the caller. */

@@ -29,8 +29,8 @@ package java.util.concurrent;
  * @see Executor
  *
  * @spec JSR-166
- * @revised $Date: 2003/02/26 10:48:09 $
- * @editor $Author: jozart $
+ * @revised $Date: 2003/03/12 18:22:40 $
+ * @editor $Author: tim $
  */
 public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
 
@@ -160,12 +160,10 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * Sets the value of this task to the given value.  This method
      * should only be called once; once it is called, the computation
      * is assumed to have completed.
-     * @@@brian We should guard against changing the value by throwing
-     * an exception if the value has already been set!
-     * @@joe We should allow set after task has been cancelled.  I also think
-     * it's OK to allow multiple sets by default.
      *
      * @param v the value
+     *
+     * @fixme Need to clarify "should" in "should only be called once".
      */
     protected synchronized void set(V v) {
         ready = true;

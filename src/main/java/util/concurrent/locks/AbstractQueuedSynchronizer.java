@@ -45,8 +45,9 @@ import sun.misc.Unsafe;
  * &quot;understand&quot; these differences except in the mechanical
  * sense that when a shared mode acquire succeeds, the next waiting
  * thread (if one exists) must also determine whether it can acquire
- * as well. Subclasses that support only exclusive or only shared
- * modes need not redefine the methods for the unused mode.
+ * as well. Threads waiting in the different modes share the same FIFO
+ * queue. Subclasses that support only exclusive or only shared modes
+ * need not redefine the methods for the unused mode.
  *
  * <p>This class defines a nested {@link Condition} class that can be
  * used with subclasses for which method {@link #releaseExclusive}
@@ -127,7 +128,7 @@ import sun.misc.Unsafe;
  *       }
  *    }
  *
- *    // our sync object does all the hard work we just forward our
+ *    // Our sync object does all the hard work. We just forward our
  *    // &quot;acquire&quot; methods to its acquire methods
  *
  *    private final Sync sync = new Sync();
@@ -321,6 +322,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     private static final long serialVersionUID = 7373984972572414691L;
 
     /**
+     * Creates a new <tt>AbstractQueuedSynchronizer</tt> instance
+     * with initial synchronization state of zero.
+     */
+    protected AbstractQueuedSynchronizer() { }
+
+    /**
      * Node class for threads waiting for acquires or conditions.  
      */
     static final class Node {
@@ -447,7 +454,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * cannot explicitly subclass AtomicInteger, which would be
      * efficient and useful otherwise. So, as the lesser of evils, we
      * directly implement. And while we are at it, we do the same for
-     * other CASable fields.
+     * other CASable fields (which could otherwise be done with atomic
+     * field updaters).
      */
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private static final long stateOffset;
@@ -456,17 +464,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     private static final long waitStatusOffset;
 
     static {
-      try {
-        stateOffset = unsafe.objectFieldOffset
-            (AbstractQueuedSynchronizer.class.getDeclaredField("state"));
-        headOffset = unsafe.objectFieldOffset
-            (AbstractQueuedSynchronizer.class.getDeclaredField("head"));
-        tailOffset = unsafe.objectFieldOffset
-            (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
-        waitStatusOffset = unsafe.objectFieldOffset
-            (Node.class.getDeclaredField("waitStatus"));
-
-      } catch(Exception ex) { throw new Error(ex); }
+        try {
+            stateOffset = unsafe.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("state"));
+            headOffset = unsafe.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("head"));
+            tailOffset = unsafe.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+            waitStatusOffset = unsafe.objectFieldOffset
+                (Node.class.getDeclaredField("waitStatus"));
+            
+        } catch(Exception ex) { throw new Error(ex); }
     }
 
     private boolean compareAndSetHead(Node expect, Node update) {
@@ -479,19 +487,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     private boolean compareAndSetWaitStatus(Node node, int expect, int update) {
         return unsafe.compareAndSwapInt(node, waitStatusOffset, expect, update);
-    }
-
-    /**
-     * Atomically set synchronization state to the given updated value
-     * if the current state value <tt>==</tt> the expected value.
-     * This operation has memory semantics of a <tt>volatile</tt> read and write.
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful. False return indicates that
-     * the actual value was not equal to the expected value.
-     */
-    protected final boolean compareAndSetState(int expect, int update) {
-        return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
     }
 
     /**
@@ -512,27 +507,18 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         state = newState;
     }
 
-    /*
-     * Mode words are used internally to handle combinations of
-     * interruptibility and timeout.  These are OR'ed together as
-     * appropriate for arguments and results.
-     */
-
-    /** As arg, don't interrupt; as result, was not interrupted */
-    private static final int UNINTERRUPTED =  0;
-    /** As arg, allow interrupt; as result, was interrupted */ 
-    private static final int INTERRUPT     =  2;
-    /** As arg, allow timeouts; as result, did time out */
-    private static final int TIMEOUT       =  4;
-    /** As arg, reset interrupt status upon return */
-    private static final int REINTERRUPT   =  8;
-
     /**
-     * Creates a new <tt>AbstractQueuedSynchronizer</tt> instance
-     * with initial synchronization state of zero.
+     * Atomically set synchronization state to the given updated value
+     * if the current state value <tt>==</tt> the expected value.
+     * This operation has memory semantics of a <tt>volatile</tt> read and write.
+     * @param expect the expected value
+     * @param update the new value
+     * @return true if successful. False return indicates that
+     * the actual value was not equal to the expected value.
      */
-    protected AbstractQueuedSynchronizer() { }
-
+    protected final boolean compareAndSetState(int expect, int update) {
+        return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
+    }
 
     /**
      * Attempt to acquire in exclusive mode. This method should query
@@ -542,7 +528,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * <p>This method is always invoked by the thread performing
      * acquire.  If this method reports failure, the acquire method
      * may queue the thread until it is signalled by a release from
-     * some other thread.  <p>The default implementation throws {@link
+     * some other thread. With arguments <tt>(false, 1)</tt>, this can
+     * be used to implement method {@link Lock#tryLock()}. <p>The
+     * default implementation throws {@link
      * UnsupportedOperationException}
      *
      * @param isQueued if <tt>true</tt> the current thread is in the queue 
@@ -592,14 +580,15 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Attempt to acquire in exclusive mode. This method should query
-     * if the state of the object permits it to be acquired in the exclusive
-     * mode, and if so to acquire it if possible.
-     * <p>This method is always invoked by the thread performing acquire.
-     * If this method reports failure, the acquire method may queue the thread 
+     * Attempt to acquire in shared mode. This method should query if
+     * the state of the object permits it to be acquired in the shared
+     * mode, and if so to acquire it if possible.  <p>This method is
+     * always invoked by the thread performing acquire.  If this
+     * method reports failure, the acquire method may queue the thread
      * until it is signalled by a release from some other thread.
-     * <p>The default implementation throws 
-     * {@link UnsupportedOperationException}
+     * With arguments <tt>(false, 1)</tt>, this can be used to
+     * help implement method {@link Lock#tryLock()}. <p>The default
+     * implementation throws {@link UnsupportedOperationException}
      *
      * @param isQueued if <tt>true</tt> the current thread is in the queue 
      * when making this call; if <tt>false</tt> the current thread is not
@@ -612,11 +601,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * or is the value saved on entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return a negative value on failure, zero on exclusive success, and
-     * a positive value if non-exclusively successful, in which case a
-     * subsequent waiting thread must check availability.
-     * Upon success, this object has been acquired the
-     * requested number of times.
+     * @return a negative value on failure, zero on exclusive success,
+     * and a positive value if non-exclusively successful, in which
+     * case a subsequent waiting thread must check
+     * availability. (Support for three different return values
+     * enables this method to be used in contexts where acquires only
+     * sometimes act exclusively.)  Upon success, this object has been
+     * acquired the requested number of times.
      * @throws IllegalMonitorStateException if acquiring would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
@@ -684,8 +675,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * you like.
      */
     public final void acquireExclusiveUninterruptibly(int acquires) {
-        if (!tryAcquireExclusiveState(false, acquires))
-            doAcquire(false, acquires, UNINTERRUPTED, 0L);
+        if (!tryAcquireExclusiveState(false, acquires)) 
+            doAcquireExclusiveUninterruptibly(acquires);
     }
 
     /**
@@ -704,11 +695,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireExclusiveInterruptibly(int acquires) throws InterruptedException {
-        if (Thread.interrupted() ||
-            (!tryAcquireExclusiveState(false, acquires) &&
-             doAcquire(false, acquires, INTERRUPT, 0L) != UNINTERRUPTED))
+        if (Thread.interrupted())
             throw new InterruptedException();
-   }
+        if (!tryAcquireExclusiveState(false, acquires))
+            doAcquireExclusiveInterruptibly(acquires);
+    }
 
     /**
      * Acquire in exclusive mode, aborting if interrupted or the given
@@ -729,17 +720,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws InterruptedException if the current thread is interrupted
      */
    public final boolean acquireExclusiveTimed(int acquires, long nanosTimeout) throws InterruptedException {
-       if (!Thread.interrupted()) {
-            if (tryAcquireExclusiveState(false, acquires))
-                return true;
-           int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, 
-                             nanosTimeout);
-           if (s == UNINTERRUPTED)
-               return true;
-           if (s == TIMEOUT)
-               return false;
-       }
-       throw new InterruptedException();
+       if (Thread.interrupted())
+           throw new InterruptedException();
+       if (tryAcquireExclusiveState(false, acquires))
+           return true;
+       return doAcquireExclusiveTimed(acquires, nanosTimeout);
    }
 
     /**
@@ -753,11 +738,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * you like.
      */
     public final void releaseExclusive(int releases) {
-        if (releaseExclusiveState(releases)) {
-            Node h = head;
-            if (h != null && h.waitStatus < 0)
-                unparkSuccessor(h);
-        }
+        if (releaseExclusiveState(releases)) 
+            unparkFirst();
     }
 
     /**
@@ -775,7 +757,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      */
     public final void acquireSharedUninterruptibly(int acquires) {
         if (tryAcquireSharedState(false, acquires) < 0)
-            doAcquire(true, acquires, UNINTERRUPTED, 0L);
+            doAcquireSharedUninterruptibly(acquires);
     }
 
     /**
@@ -794,10 +776,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireSharedInterruptibly(int acquires) throws InterruptedException {
-        if (Thread.interrupted() ||
-            (tryAcquireSharedState(false, acquires) < 0 &&
-             doAcquire(true, acquires, INTERRUPT, 0L) != UNINTERRUPTED))
+        if (Thread.interrupted())
             throw new InterruptedException();
+        if (tryAcquireSharedState(false, acquires) < 0)
+            doAcquireSharedInterruptibly(acquires);
    }
 
     /**
@@ -819,17 +801,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @throws InterruptedException if the current thread is interrupted
      */
    public final boolean acquireSharedTimed(int acquires, long nanosTimeout) throws InterruptedException {
-       if (!Thread.interrupted()) {
-           if (tryAcquireSharedState(false, acquires) >= 0)
-               return true;
-           int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, 
-                             nanosTimeout);
-           if (s == UNINTERRUPTED)
-               return true;
-           if (s == TIMEOUT)
-               return false;
-       }
-       throw new InterruptedException();
+       if (Thread.interrupted())
+           throw new InterruptedException();
+       if (tryAcquireSharedState(false, acquires) >= 0)
+           return true;
+       return doAcquireSharedTimed(acquires, nanosTimeout);
    }
 
     /**
@@ -843,83 +819,67 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * you like.
      */
     public final void releaseShared(int releases) {
-        if (releaseSharedState(releases)) {
-            Node h = head;
-            if (h != null && h.waitStatus < 0)
-                unparkSuccessor(h);
-        }
+        if (releaseSharedState(releases)) 
+            unparkFirst();
     }
 
     // Queuing utilities
 
     /**
-     * Initialize queue. Called on first contention.
-     */
-    private void initializeQueue() {
-        Node t = tail;
-        if (t == null) {         
-            Node h = new Node(null, false);
-            while ((t = tail) == null) {     
-                if (compareAndSetHead(null, h)) {
-                    tail = h;
-                    break;
-                }
-                else
-                    Thread.yield();
-            }
-        }
-    }
-
-    /**
-     * Insert node into queue, initializing head and tail if necessary.
+     * Insert node into queue.
      * @param node the node to insert
      */
     private void enq(Node node) {
-        Node t = tail;
-        if (t == null) {
-            initializeQueue();
-            t = tail;
-        }
         for (;;) {
+            Node t = tail;
+            if (t == null) {
+                initializeQueue(node);
+                return;
+            }
             node.prev = t;      // Prev field must be valid before/upon CAS
             if (compareAndSetTail(t, node)) {
                 t.next = node;  // Next field assignment lags CAS
                 return;
             }
-            t = tail;
-        } 
+        }
     }
 
     /**
-     * Wake up node's successor, if one exists.
-     * @param node the node
+     * Initialize queue with given first node
+     * @param node the node that will be first node in queue
      */
-    private void unparkSuccessor(Node node) {
-        /*
-         * Reset waitStatus before unparking. This improves performance
-         * when called from a release method to enable next thread: A
-         * given head-node can be in effect across multiple releases
-         * that acquired by barging. When they do so, and later
-         * release, the successor that lost a previous race and
-         * re-parked must be re-unparked. But otherwise, we'd like to
-         * minimize unnecessary calls to unpark, which may be
-         * relatively expensive. We don't bother to loop on failed CAS
-         * here though, since the reset is just for performance.  Note
-         * that the CAS will fail when this method is called from
-         * cancellation code since waitStatus will be set to CANCELLED.
-         * This doesn't occur frequently enough to bother avoiding.
-         */
-        compareAndSetWaitStatus(node, Node.SIGNAL, 0);
+    private void initializeQueue(Node node) {
+        for (;;) {
+            Node t = tail;
+            if (t == null) {
+                Node h = new Node(null, false); // Dummy header
+                if (compareAndSetHead(null, h))
+                    tail = t = h;
+                else
+                    t = tail;
+            }
+            if (t != null) { // Variant of enq code
+                node.prev = t; 
+                if (compareAndSetTail(t, node)) {
+                    t.next = node;  
+                    return;
+                }
+            }
+            // Initialization races can have unbounded spins, so yield
+            Thread.yield();
+        }
+    }
 
-        /*
-         * Successor is normally just the next node.  But if cancelled
-         * or apparently null, traverse backwards from tail to find
-         * the actual non-cancelled successor.
-         */
-        Node s = node.next;
-        if ((s != null && s.waitStatus != Node.CANCELLED) ||
-            (s = findSuccessorFromTail(node)) != null)
-            LockSupport.unpark(s.thread);
+    /**
+     * Create and enq node for given thread and mode
+     * @param current the thread
+     * @param shared the mode
+     * @return the new node
+     */
+    private Node addWaiter(Thread current, boolean shared) {
+        Node node = new Node(current, false);
+        enq(node);
+        return node;
     }
 
     /**
@@ -942,163 +902,306 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
+     * Set head of queue to be node.
+     * Requires that pred == node.prev and that pred was old head
+     * @param pred the node holding waitStatus for node
+     * @param node the node. 
+     */
+    private void setHead(Node pred, Node node) {
+        head = node;
+        // Null out unused fields for GC 
+        pred.next = null; 
+        node.thread = null;
+        node.prev = null; 
+    }
+
+    // Blocking support
+
+    /**
+     * Wake up node's successor, if one exists.
+     * @param node the node
+     */
+    private void unparkSuccessor(Node node) {
+        /*
+         * Reset waitStatus before unparking. This improves
+         * performance when called from a release method to enable
+         * next thread: A given head-node can be in effect across
+         * multiple releases that acquired by barging. When they do
+         * so, and later release, the successor that lost a previous
+         * race and re-parked must be re-unparked. But otherwise, we'd
+         * like to minimize unnecessary calls to unpark, which may be
+         * relatively expensive. We don't loop on failed CAS here
+         * though, since this is just a heursitic, and also because
+         * the node may legitimately be in CANCELLED state.
+         */
+        compareAndSetWaitStatus(node, Node.SIGNAL, 0);
+
+        /*
+         * Successor is normally just the next node.  But if cancelled
+         * or apparently null, traverse backwards from tail to find
+         * the actual non-cancelled successor.
+         */
+        Node s = node.next;
+        if ((s != null && s.waitStatus != Node.CANCELLED) ||
+            (s = findSuccessorFromTail(node)) != null)
+            LockSupport.unpark(s.thread);
+    }
+
+    /**
+     * Unpark first waiting thread, if one exists and needs signalling
+     */
+    private void unparkFirst() {
+        Node h = head;
+        if (h != null && h.waitStatus < 0)
+            unparkSuccessor(h);
+    }
+
+    /**
+     * Utility to park and then check interrupt status
+     * @return true if interrupted
+     */
+    private static boolean parkAndCheckInterrupt() {
+        LockSupport.park();
+        return Thread.interrupted();
+    }
+
+    // Utilities for various versions of acquire
+
+    /**
      * Cancel an ongoing attempt to acquire.
      * @param node the node
      */
     private void cancelAcquire(Node node) {
-        node.waitStatus = Node.CANCELLED;
         node.thread = null;   
+        for (;;) {
+            int s = node.waitStatus;
+            if (compareAndSetWaitStatus(node, s, Node.CANCELLED))
+                break;
+        }
         unparkSuccessor(node);
     }
 
     /**
-     * Main code for all varieties of acquire.
-     * @param shared if acquiring in shared mode
-     * @param mode mode representing interrupt/timeout control
-     * @param nanosTimeout timeout time
-     * @return UNINTERRUPTED on success, INTERRUPT on interrupt,
-     * TIMEOUT on timeout
+     * Set wait status for a node that failed to acquire.
+     * Return true if thread should block.
+     * Requires that pred == node.prev
+     * @param node the node. 
+     * @return true if thread should block
      */
-    private int doAcquire(boolean shared, int acquires, 
-                          int mode, long nanosTimeout) {
-        long lastTime = ((mode & TIMEOUT) == 0)? 0 : System.nanoTime();
-        final Thread current = Thread.currentThread();
-        final Node node = new Node(current, shared);
-        enq(node);
+    private boolean shouldParkAfterFailedAcquire(Node node) {
+        Node pred = node.prev;
+        int s = pred.waitStatus;
+        if (s == Node.SIGNAL)
+            return true;
 
-        /*
-         * Repeatedly try to acquire if first in queue; block (park)
-         * on failure.  If we are the first thread in queue, we must
-         * try to acquire, and we must not try if we are not first. We
-         * can park only if we are sure that some other thread will
-         * (eventually) release and signal us.  Along the way, make
-         * sure that the predecessor hasn't been cancelled. If it has,
-         * relink to its predecessor.  When about to park, first try
-         * to set waitStatus enabling holder to signal, and then
-         * recheck one final time before actually blocking. This also
-         * has effect of retrying failed waitStatus CAS due to
-         * contention.
-         */ 
+        if (s == Node.CANCELLED) 
+            node.prev = pred.prev;
+        else
+            compareAndSetWaitStatus(pred, 0, Node.SIGNAL);
 
-        for (;;) {
-            Node p = node.prev;
-            if (p == head) {
-                boolean acquired = false;
-                boolean propagate = false;
-                
-                try {
-                    if (shared) {
-                        int a = tryAcquireSharedState(true, acquires);
-                        if (acquired = (a >= 0))
-                            propagate = a > 0;
-                    }
-                    else
-                        acquired = tryAcquireExclusiveState(true, acquires);
-                    
-                } catch (RuntimeException ex) {
-                    cancelAcquire(node);
-                    throw ex;
-                }
-                
-                if (acquired) {
-                    head = node;
-                    p.next = null; 
-                    node.thread = null;
-                    node.prev = null; 
+        return false;
+    }
 
-                    if (propagate && node.waitStatus < 0) {
-                        Node s = node.next; 
-                        if (s == null || s.shared)
-                            unparkSuccessor(node);
-                    }
-
-                    if ((mode & REINTERRUPT) != 0)
-                        current.interrupt();
-                    return UNINTERRUPTED;
-                }
-            }
-            
-            int waitStatus = p.waitStatus;
-            if (waitStatus == 0) 
-                compareAndSetWaitStatus(p, 0, Node.SIGNAL);
-            else if (waitStatus == Node.CANCELLED) 
-                node.prev = p.prev;
-            else {
-                if ((mode & TIMEOUT) != 0) {
-                    long now = System.nanoTime();
-                    nanosTimeout -= now - lastTime;
-                    lastTime = now;
-                    if (nanosTimeout <= 0) {
-                        cancelAcquire(node);
-                        return TIMEOUT;
-                    }
-                    LockSupport.parkNanos(nanosTimeout);
-                }
-                else
-                    LockSupport.park();
-                
-                if (Thread.interrupted()) {
-                    if ((mode & INTERRUPT) != 0) {
-                        cancelAcquire(node);
-                        return INTERRUPT;
-                    }
-                    mode |= REINTERRUPT;
-                }
-            }
+    /**
+     * Try an exclusive acquire for a node that is in queue.
+     * Returns false if not at head of queue or if tryAcquireExclusive
+     * fails, cancelling wait and rethrowing if it throws exception. 
+     * On success, sets current node as head node.
+     *
+     * @param node the node. 
+     * @param acquires the number of acquires
+     * @return true if successful
+     */
+    private boolean tryAcquireExclusiveQueued(Node node, int acquires) {
+        try {
+            Node pred = node.prev;
+            if (pred != head || !tryAcquireExclusiveState(true, acquires))
+                return false;
+            setHead(pred, node);
+            return true;
+        } catch (RuntimeException ex) {
+            cancelAcquire(node);
+            throw ex;
         }
     }
 
     /**
-     * Re-acquire after a wait, resetting state.  Called only by
-     * Condition methods after returning from condition-waits.  This
-     * method is the same as doAcquire in exclusive, non-interruptible
-     * mode, except that it relies on the node already being on queue.
+     * Try a shared acquire for a node that is in queue.
+     * Returns false if not at head of queue or if tryAcquireExclusive
+     * fails, cancelling wait and rethrowing if it throws exception. 
+     * On success, sets current node as head node and propagates
+     * signal to successors.
+     *
+     * @param node the node. 
+     * @param acquires the number of acquires
+     * @return true if successful
+     */
+    private boolean tryAcquireSharedQueued(Node node, int acquires) {
+        try {
+            Node pred = node.prev;
+            if (pred != head)
+                return false;
+            int a = tryAcquireSharedState(true, acquires);
+            if (a < 0)
+                return false;
+            setHead(pred, node);
+            if (a > 0 && node.waitStatus < 0) {
+                Node s = node.next; 
+                if (s == null || s.shared)
+                    unparkSuccessor(node);
+            }
+            return true;
+        } catch (RuntimeException ex) {
+            cancelAcquire(node);
+            throw ex;
+        }
+    }
+
+    // Various flavors of acquire varying in exclusive/shared
+    // and control modes
+
+    /**
+     * Acquire in exclusive uninterruptible mode for thread already
+     * in queue. Used by acquireExclusiveUninterruptibly as
+     * well as condition wait methods
      * @param current the waiting thread
      * @param node its node
-     * @param savedState the value of state before entering wait
-     * @return true if interrupted while re-acquiring
+     * @param acquires the number of acquires
      */
-    final boolean reacquireExclusive(Thread current, Node node, int savedState) {
+    final void acquireExclusiveQueued(Thread current, Node node, int acquires) {
         boolean interrupted = false;
-        for (;;) {
-            Node p = node.prev; 
-            if (p == head) {
-                try {
-                    if (tryAcquireExclusiveState(true, savedState)) {
-                        head = node;
-                        p.next = null; 
-                        node.thread = null;
-                        node.prev = null; 
-                        return interrupted;
-                    }
-                } catch (RuntimeException ex) {
-                    cancelAcquire(node);
-                    throw ex;
-                }
-            }
-            int waitStatus = p.waitStatus;
-            if (waitStatus == 0) 
-                compareAndSetWaitStatus(p, 0, Node.SIGNAL);
-            else if (waitStatus == Node.CANCELLED) 
-                node.prev = p.prev;
-            else { 
-                LockSupport.park();
-                if (Thread.interrupted())
+        while (!tryAcquireExclusiveQueued(node, acquires)) {
+            if (shouldParkAfterFailedAcquire(node)) {
+                if (parkAndCheckInterrupt())
                     interrupted = true;
             }
         }
+        if (interrupted)
+            current.interrupt();
     }
 
-    /**
-     * Fully release: invoke releaseExclusive with current value of
-     * getState(). Called only by Condition methods on entry to
-     * await.
-     * @return the state before unlocking
+    /** 
+     * Acquire in exclusive uninterruptible mode
+     * @param acquires the number of acquires
      */
-    final int fullyReleaseExclusive() {
-        int c = getState();
-        releaseExclusive(c);
-        return c;
+    private void doAcquireExclusiveUninterruptibly(int acquires) {
+        Thread current = Thread.currentThread();
+        Node node = addWaiter(current, false);
+        acquireExclusiveQueued(current, node, acquires);
+    }
+
+    /** 
+     * Acquire in exclusive interruptible mode
+     * @param acquires the number of acquires
+     */
+    private void doAcquireExclusiveInterruptibly(int acquires) throws InterruptedException {
+
+        Thread current = Thread.currentThread();
+        Node node = addWaiter(current, false);
+        while (!tryAcquireExclusiveQueued(node, acquires)) {
+            if (shouldParkAfterFailedAcquire(node)) {
+                if (parkAndCheckInterrupt()) {
+                    cancelAcquire(node);
+                    throw new InterruptedException();
+                }
+            }
+        }
+    }
+
+    /** 
+     * Acquire in exclusive timed mode
+     * @param acquires the number of acquires
+     * @param nanosTimeout max wait time
+     * @return true if acquired
+     */
+    private boolean doAcquireExclusiveTimed(int acquires, long nanosTimeout) throws InterruptedException {
+        long lastTime = System.nanoTime();
+        Thread current = Thread.currentThread();
+        Node node = addWaiter(current, false);
+
+        while (!tryAcquireExclusiveQueued(node, acquires)) {
+            if (shouldParkAfterFailedAcquire(node)) {
+                if (nanosTimeout <= 0) {
+                    cancelAcquire(node);
+                    return false;
+                }
+                LockSupport.parkNanos(nanosTimeout);
+                if (Thread.interrupted()) {
+                    cancelAcquire(node);
+                    throw new InterruptedException();
+                }
+                long now = System.nanoTime();
+                nanosTimeout -= now - lastTime;
+                lastTime = now;
+            }
+        }
+        return true;
+    }
+
+
+    /** 
+     * Acquire in shared uninterruptible mode
+     * @param acquires the number of acquires
+     */
+    private void doAcquireSharedUninterruptibly(int acquires) {
+        Thread current = Thread.currentThread();
+        Node node = addWaiter(current, true);
+        boolean interrupted = false;
+        while (!tryAcquireSharedQueued(node, acquires)) {
+            if (shouldParkAfterFailedAcquire(node)) {
+                if (parkAndCheckInterrupt())
+                    interrupted = true;
+            }
+        }
+        if (interrupted)
+            current.interrupt();
+    }
+
+    /** 
+     * Acquire in shared interruptible mode
+     * @param acquires the number of acquires
+     */
+    private void doAcquireSharedInterruptibly(int acquires) throws InterruptedException {
+
+        Thread current = Thread.currentThread();
+        Node node = addWaiter(current, true);
+        while (!tryAcquireSharedQueued(node, acquires)) {
+            if (shouldParkAfterFailedAcquire(node)) {
+                if (parkAndCheckInterrupt()) {
+                    cancelAcquire(node);
+                    throw new InterruptedException();
+                }
+            }
+        }
+    }
+
+    /** 
+     * Acquire in shared timed mode
+     * @param acquires the number of acquires
+     * @param nanosTimeout max wait time
+     * @return true if acquired
+     */
+    private boolean doAcquireSharedTimed(int acquires, long nanosTimeout) throws InterruptedException {
+        long lastTime = System.nanoTime();
+        Thread current = Thread.currentThread();
+        Node node = addWaiter(current, true);
+        while (!tryAcquireSharedQueued(node, acquires)) {
+            if (shouldParkAfterFailedAcquire(node)) {
+                if (nanosTimeout <= 0) {
+                    cancelAcquire(node);
+                    return false;
+                }
+                LockSupport.parkNanos(nanosTimeout);
+                if (Thread.interrupted()) {
+                    cancelAcquire(node);
+                    throw new InterruptedException();
+                }
+                long now = System.nanoTime();
+                nanosTimeout -= now - lastTime;
+                lastTime = now;
+            }
+        }
+        return true;
     }
 
     // Instrumentation and monitoring methods
@@ -1183,8 +1286,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     final boolean isOnSyncQueue(Node node) {
         if (node.waitStatus == Node.CONDITION || node.prev == null)
             return false;
-        // If node has successor, it must be on queue
-        if (node.next != null) 
+        if (node.next != null) // If has successor, it must be on queue
             return true;
         /*
          * node.prev can be non-null, but not yet on queue because
@@ -1452,15 +1554,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             Thread current = Thread.currentThread();
             checkConditionAccess(current, true);
             Node w = addConditionWaiter(current);
-            int savedState = fullyReleaseExclusive();
+            int savedState = getState();
+            releaseExclusive(savedState);
             boolean interrupted = false;
+
             while (!isOnSyncQueue(w)) {
                 LockSupport.park();
                 if (Thread.interrupted()) 
                     interrupted = true;
             }
-            if (reacquireExclusive(current, w, savedState))
-                interrupted = true;
+
+            acquireExclusiveQueued(current, w, savedState);
             if (interrupted)
                 current.interrupt();
         }
@@ -1487,7 +1591,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int savedState = fullyReleaseExclusive();
+            int savedState = getState();
+            releaseExclusive(savedState);
             boolean throwIE = false;
             boolean interrupted = false;
 
@@ -1504,8 +1609,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 LockSupport.park();
             }
 
-            if (reacquireExclusive(current, w, savedState))
-                interrupted = true;
+            acquireExclusiveQueued(current, w, savedState);
             if (throwIE)
                 throw new InterruptedException();
             if (interrupted)
@@ -1534,7 +1638,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int savedState = fullyReleaseExclusive();
+            int savedState = getState();
+            releaseExclusive(savedState);
             long lastTime = System.nanoTime();
             boolean throwIE = false;
             boolean interrupted = false;
@@ -1559,8 +1664,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 lastTime = now;
             }
 
-            if (reacquireExclusive(current, w, savedState))
-                interrupted = true;
+            acquireExclusiveQueued(current, w, savedState);
             if (throwIE)
                 throw new InterruptedException();
             if (interrupted)
@@ -1593,7 +1697,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int savedState = fullyReleaseExclusive();
+            int savedState = getState();
+            releaseExclusive(savedState);
             long abstime = deadline.getTime();
             boolean timedout = false;
             boolean throwIE = false;
@@ -1616,8 +1721,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 LockSupport.parkUntil(abstime);
             }
 
-            if (reacquireExclusive(current, w, savedState))
-                interrupted = true;
+            acquireExclusiveQueued(current, w, savedState);
             if (throwIE)
                 throw new InterruptedException();
             if (interrupted)
@@ -1652,7 +1756,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int savedState = fullyReleaseExclusive();
+            int savedState = getState();
+            releaseExclusive(savedState);
             long lastTime = System.nanoTime();
             boolean timedout = false;
             boolean throwIE = false;
@@ -1678,8 +1783,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 lastTime = now;
             }
 
-            if (reacquireExclusive(current, w, savedState))
-                interrupted = true;
+            acquireExclusiveQueued(current, w, savedState);
             if (throwIE)
                 throw new InterruptedException();
             if (interrupted)
@@ -1754,5 +1858,3 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         }
     }
 }
-
-        

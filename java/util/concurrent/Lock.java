@@ -91,7 +91,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/09 06:38:24 $
+ * @revised $Date: 2002/12/10 02:11:08 $
  * @editor $Author: dholmes $
  *
  * @fixme We need to say something about l.lock() versus synchronized(l)
@@ -243,12 +243,13 @@ public interface Lock {
 
     /**
      * Return a {@link Condition} that is bound to this <tt>Lock</tt>.
-     * Conditions are primarily used with the built-in locking provided by
+     * <p>Conditions are primarily used with the built-in locking provided by
      * <tt>synchronized</tt> methods and statements 
      * (see {@link Locks#newConditionFor}, but in some rare circumstances it 
      * can be useful to wait for a condition when working with a data 
      * structure that is accessed using a stand-alone <tt>Lock</tt> class 
-     * (see {@link ReentrantLock}). Before waiting on the condition the 
+     * (see {@link ReentrantLock}). 
+     * <p>Before waiting on the condition the 
      * <tt>Lock</tt> must be acquired by the caller. 
      * A call to {@link Condition#await()} will atomically release the lock 
      * before waiting and re-acquire the lock before the wait returns.
@@ -256,9 +257,9 @@ public interface Lock {
      * <tt>Lock</tt> implementation and must be documented by that
      * implementation.
      * 
-     * @return A {@link Condition} object for this <tt>Lock</tt>, or
-     * <tt>null</tt> if this <tt>Lock</tt> type does not support conditions.
-     *
+     * @return A {@link Condition} object for this <tt>Lock</tt>.
+     * @throws UnsupportedOperationException if this <tt>Lock</tt> does not
+     * support a {@link Condition}.
      **/
     public Condition newCondition();
 

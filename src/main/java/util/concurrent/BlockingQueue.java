@@ -11,41 +11,48 @@ import java.util.Queue;
 
 /**
  * A {@link java.util.Queue} that additionally supports operations
- * that wait for the queue to become non-empty when retrieving an element,
- * and wait for space to become available in the queue when storing an 
- * element. The names
- * of the operations vary with their policies:
+ * that wait for the queue to become non-empty when retrieving an
+ * element, and wait for space to become available in the queue when
+ * storing an element.  Each of these methods exists in four forms:
+ * one throws an exception if the operation fails, the second returns
+ * a special value (either <tt>null</tt> or <tt>false</tt>, depending
+ * on the operation), the third blocks the current thread until the
+ * operation can succeed, and the fourth blocks for only a given
+ * maximum time limit.  The last three forms of the insert operation are
+ * designed specifically for use with capacity-restricted
+ * <tt>BlockingQueue</tt> implementations; in most implementations, insert
+ * operations cannot fail.
  *
- *<table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
- *    <td><em>Operation</em></td>
- *    <td ALIGN=CENTER><em>Attempt</em></td>
- *    <td ALIGN=CENTER><em>Throw</em></td>
- *    <td ALIGN=CENTER><em>Block</em></td>
- *    <td ALIGN=CENTER><em>Timeout</em></td>
- *  </tr>
- *  <tr>
- *    <td><em>insert</em></td>
- *    <td>offer(x)</td>
- *    <td>add(x)</td>
- *    <td>put(x)</td>
- *    <td>offer(x,time,unit)</td>
- *  </tr>
- *  <tr>
- *    <td><em>extract</em></td>
- *    <td>poll()</td>
- *    <td>remove()</td>
- *    <td>take()</td>
- *    <td>poll(time,unit)</td>
- *  </tr>
- *  <tr>
- *    <td><em>inspect</em></td>
- *    <td>peek()</td>
- *    <td>element()</td>
  *    <td></td>
- *    <td></td>
+ *    <td ALIGN=CENTER><em>Throws exception</em></td>
+ *    <td ALIGN=CENTER><em>Returns special value</em></td>
+ *    <td ALIGN=CENTER><em>Blocks</em></td>
+ *    <td ALIGN=CENTER><em>Times out</em></td>
  *  </tr>
- *</table>
+ *  <tr>
+ *    <td><b>Insert</b></td>
+ *    <td>{@link #add add(e)}</td>
+ *    <td>{@link #offer offer(e)}</td>
+ *    <td>{@link #put put(e)}</td>
+ *    <td>{@link #offer(Object, long, TimeUnit) offer(e, time, unit)}</td>
+ *  </tr>
+ *  <tr>
+ *    <td><b>Remove</b></td>
+ *    <td>{@link #remove remove()}</td>
+ *    <td>{@link #poll poll()}</td>
+ *    <td>{@link #take take()}</td>
+ *    <td>{@link #poll(long, TimeUnit) poll(time, unit)}</td>
+ *  </tr>
+ *  <tr>
+ *    <td><b>Examine</b></td>
+ *    <td>{@link #element element()}</td>
+ *    <td>{@link #peek peek()}</td>
+ *    <td><em>not applicable</em></td>
+ *    <td><em>not applicable</em></td>
+ *  </tr>
+ * </table>
  *
  * <p>A <tt>BlockingQueue</tt> does not accept <tt>null</tt> elements.
  * Implementations throw <tt>NullPointerException</tt> on attempts

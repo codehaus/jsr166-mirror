@@ -8,32 +8,38 @@ package java.util;
 
 /**
  * A collection designed for holding elements prior to processing.
- * Besides basic {@link java.util.Collection Collection} operations, queues provide
- * additional insertion, extraction, and inspection operations. The names
- * of the operations vary with their policies:
+ * Besides basic {@link java.util.Collection Collection} operations,
+ * queues provide additional insertion, extraction, and inspection
+ * operations.  Each of these methods exists in two forms: one throws
+ * an exception if the operation fails, the other returns a special
+ * value (either <tt>null</tt> or <tt>false</tt>, depending on the
+ * operation).  The latter form of the insert operation is designed
+ * specifically for use with capacity-restricted <tt>Queue</tt>
+ * implementations; in most implementations, insert operations cannot
+ * fail.
  *
- *<table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
- *    <td><em>Operation</em></td>
- *    <td ALIGN=CENTER><em>Attempt</em></td>
- *    <td ALIGN=CENTER><em>Throw</em></td>
+ *    <td></td>
+ *    <td ALIGN=CENTER><em>Throws exception</em></td>
+ *    <td ALIGN=CENTER><em>Returns special value</em></td>
  *  </tr>
  *  <tr>
- *    <td><em>insert</em></td>
- *    <td>offer(x)</td>
- *    <td>add(x)</td>
+ *    <td><b>Insert</b></td>
+ *    <td>{@link #add add(e)}</td>
+ *    <td>{@link #offer offer(e)}</td>
  *  </tr>
  *  <tr>
- *    <td><em>extract</em></td>
- *    <td>poll()</td>
- *    <td>remove()</td>
+ *    <td><b>Remove</b></td>
+ *    <td>{@link #remove remove()}</td>
+ *    <td>{@link #poll poll()}</td>
  *  </tr>
  *  <tr>
- *    <td><em>inspect</em></td>
- *    <td>peek()</td>
- *    <td>element()</td>
+ *    <td><b>Examine</b></td>
+ *    <td>{@link #element element()}</td>
+ *    <td>{@link #peek peek()}</td>
  *  </tr>
- *</table>
+ * </table>
  *
  * <p>Queues typically, but do not necessarily, order elements in a
  * FIFO (first-in-first-out) manner.  Among the exceptions are

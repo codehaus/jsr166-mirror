@@ -1389,12 +1389,9 @@ class Thread implements Runnable {
 
     /**
      * Interface for handlers invoked when a Thread abruptly terminates
-     * due to an uncaught exception. If a thread does not have its
-     * handler explicitly set (see {@link #setUncaughtExceptionHandler}, then
-     * the default system handler 
-     * (see {@link #setDefaultUncaughtExceptionHandler}) acts as it's handler.
-     * If there is no default handler set then the thread's 
-     * <tt>ThreadGroup</tt> acts as its handler.
+     * due to an uncaught exception. 
+     * @see #setDefaultUncaughtExceptionHandler
+     * @see #setUncaughtExceptionHandler
      * @since 1.5
      */
     public interface UncaughtExceptionHandler { 
@@ -1415,20 +1412,24 @@ class Thread implements Runnable {
      * Set the default handler invoked when a thread abruptly terminates
      * due to an uncaught exception. 
      *
-     * All threads created subsequently will use this handler unless explicitly 
-     * overridden with {@link #setUncaughtExceptionHandler}.  
+     * <p> When a thread is created its uncaught exception handler is set to 
+     * the current default uncaught exception handler. 
+     * This can be overridden by setting the thread's uncaught
+     * exception handler explicitly. 
+     * Any thread whose uncaught exception handler is <tt>null</tt> when it 
+     * is needed will use the current default uncaught exception handler;
+     * or if that is also <tt>null</tt> then the thread's
+     * <tt>ThreadGroup</tt> object acts as its handler.
      *
-     * An existing thread for which the handler is explicitly set to 
-     * <tt>null</tt> will also use this default handler. 
-     *
-     * Any other thread will use the previous default handler, or its 
-     * ThreadGroup if no default had been set.
+     * @param eh the object to use as the default uncaught exception handler.
+     * If <tt>null</tt> then there is no default handler.
      *
      * @throws SecurityException if a security manager is present and it
      *         denies <tt>{@link RuntimePermission}
      *         (&quot;setDefaultUncaughtExceptionHandler&quot;)</tt>
      *
      * @see #setUncaughtExceptionHandler
+     * @see #getUncaughtExceptionHandler
      * @since 1.5
      */
     public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
@@ -1443,7 +1444,7 @@ class Thread implements Runnable {
      }
 
     /**
-     * Return the default handler invoked when a Thread abruptly terminates
+     * Returns the default handler invoked when a Thread abruptly terminates
      * due to an uncaught exception. If the returned value is <tt>null</tt>,
      * there is no default.
      * @since 1.5
@@ -1453,35 +1454,37 @@ class Thread implements Runnable {
     }
 
     /**
-     * Return the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception. If this thread has not had its
-     * handler explicitly set, then the 
-     * {@link #setDefaultUncaughtExceptionHandler default handler} will be
+     * Returns the handler invoked when this Thread abruptly terminates
+     * due to an uncaught exception. If this thread's handler is 
+     * <tt>null</tt> then the current 
+     * {@link #setDefaultUncaughtExceptionHandler default handler} is
      * returned. If there is no default handler then the thread's
-     * <tt>ThreadGroup</tt> is returned.
+     * <tt>ThreadGroup</tt> object is returned.
      * @since 1.5
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() { 
         return uncaughtExceptionHandler != null ?
-                uncaughtExceptionHandler : group;
+            uncaughtExceptionHandler : 
+            (defaultUncaughtExceptionHandler != null ?
+             defaultUncaughtExceptionHandler : group);
     }
 
     /**
      * Set the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception. If set to <tt>null</tt>,
-     * then the prevailing {@link #setDefaultUncaughtExceptionHandler
-     * default handler} is used.  If the default handler is
-     * <tt>null</tt> then the Thread's ThreadGroup serves as its
-     * handler.
-     * @exception  SecurityException  if the current thread is not allowed to
-     *               modify this thread.
+     * due to an uncaught exception. 
+     * <p> When a thread is created its uncaught exception handler is set to 
+     * the current 
+     * {@link #setDefaultUncaughtExceptionHandler default uncaught exception handler}. 
+     * @param eh the object to use as this thread's uncaught exception
+     * handler. If <tt>null</tt> then this thread has no explicit handler.
+     * @throws  SecurityException  if the current thread is not allowed to
+     *          modify this thread.
      * @see #setDefaultUncaughtExceptionHandler
      * @since 1.5
      */
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) { 
         checkAccess();
-        uncaughtExceptionHandler = (eh != null)? 
-            eh : defaultUncaughtExceptionHandler;
+        uncaughtExceptionHandler = eh;
     }
 
     /**

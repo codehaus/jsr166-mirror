@@ -89,12 +89,14 @@ import java.util.*;
  * ThreadPoolExecutor#getKeepAliveTime}). This provides a means of
  * reducing resource consumption when the pool is not being actively
  * used. If the pool becomes more active later, new threads will be
- * constructed. This parameter can also be changed dynamically
- * using method {@link ThreadPoolExecutor#setKeepAliveTime}. Using
- * a value of <tt>Long.MAX_VALUE</tt> {@link TimeUnit#NANOSECONDS}
- * effectively disables idle threads from ever terminating prior
- * to shut down.
- * </dd>
+ * constructed. This parameter can also be changed dynamically using
+ * method {@link ThreadPoolExecutor#setKeepAliveTime}. Using a value
+ * of <tt>Long.MAX_VALUE</tt> {@link TimeUnit#NANOSECONDS} effectively
+ * disables idle threads from ever terminating prior to shut down. By
+ * default, the keep-alive policy applies only when there are more
+ * than corePoolSizeThreads. But method {@link
+ * ThreadPoolExecutor#allowCoreThreadTimeOut} can be used to apply
+ * this time-out policy to core threads as well.  </dd>
  *
  * <dt>Queuing</dt>
  *
@@ -314,6 +316,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private volatile long  keepAliveTime;
 
     /**
+     * If false (default) core threads stay alive even when idle.
+     * If true, core threads use keepAliveTime to time out waiting for work.
+     */
+    private boolean allowCoreThreadTimeOut;
+
+    /**
      * Core pool size, updated only while holding mainLock,
      * but volatile to allow concurrent readability even
      * during updates.
@@ -465,7 +473,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         for (;;) {
             switch(runState) {
             case RUNNING: {
-                if (poolSize <= corePoolSize)   // untimed wait if core
+                // untimed wait if core and not allowing core timeout
+                if (poolSize <= corePoolSize && !allowCoreThreadTimeOut)
                     return workQueue.take();
                 
                 long timeout = keepAliveTime;
@@ -474,8 +483,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 Runnable r =  workQueue.poll(timeout, TimeUnit.NANOSECONDS);
                 if (r != null)
                     return r;
-                if (poolSize > corePoolSize) // timed out
-                    return null;
+                if (poolSize > corePoolSize || allowCoreThreadTimeOut) 
+                    return null; // timed out
                 // else, after timeout, pool shrank so shouldn't die, so retry
                 break;
             }
@@ -1227,6 +1236,35 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         while (addIfUnderCorePoolSize(null))
             ++n;
         return n;
+    }
+
+    /**
+     * Returns true if this pool allows core threads to time out and
+     * terminate if no tasks arrive within the keepAlive time, being
+     * replaced if needed when new tasks arrive. When true, the same
+     * keep-alive policy applying to non-core threads applies also to
+     * core threads. When false (the default), core threads are never
+     * terminated due to lack of incoming tasks.
+     * @return <tt>true</tt> if core threads are allowed to time out,
+     * else <tt>false</tt>
+     */
+    public boolean allowsCoreThreadTimeOut() {
+        return allowCoreThreadTimeOut;
+    }
+
+    /**
+     * Sets the policy governing whether core threads may time out and
+     * terminate if no tasks arrive within the keep-alive time, being
+     * replaced if needed when new tasks arrive. When false, core
+     * threads are never terminated due to lack of incoming
+     * tasks. When true, the same keep-alive policy applying to
+     * non-core threads applies also to core threads. To avoid
+     * continual thread replacement, the keep-alive time must be
+     * greater than zero when setting <tt>true</tt>.
+     * @param value <tt>true</tt> if should time out, else <tt>false</tt>
+     */
+    public void allowCoreThreadTimeOut(boolean value) {
+        allowCoreThreadTimeOut = value;
     }
 
     /**

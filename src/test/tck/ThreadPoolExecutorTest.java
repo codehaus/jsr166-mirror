@@ -1525,4 +1525,48 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             joinPool(e);
         }
     }
+
+    /**
+     * allowsCoreThreadTimeOut is by default false.
+     */
+    public void testAllowsCoreThreadTimeOut() {
+        ThreadPoolExecutor tpe = new ThreadPoolExecutor(2, 2, 1000, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        assertFalse(tpe.allowsCoreThreadTimeOut());
+        joinPool(tpe);
+    }
+
+    /**
+     * allowCoreThreadTimeOut(true) causes idle threads to time out
+     */
+    public void testAllowCoreThreadTimeOut_true() {
+        ThreadPoolExecutor tpe = new ThreadPoolExecutor(2, 10, 10, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        tpe.allowCoreThreadTimeOut(true);
+        tpe.execute(new NoOpRunnable());
+        try {
+            Thread.sleep(MEDIUM_DELAY_MS);
+            assertEquals(0, tpe.getPoolSize());
+        } catch(InterruptedException e){
+            unexpectedException();
+        } finally {
+            joinPool(tpe);
+        }
+    }
+
+    /**
+     * allowCoreThreadTimeOut(false) causes idle threads not to time out
+     */
+    public void testAllowCoreThreadTimeOut_false() {
+        ThreadPoolExecutor tpe = new ThreadPoolExecutor(2, 10, 10, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        tpe.allowCoreThreadTimeOut(false);
+        tpe.execute(new NoOpRunnable());
+        try {
+            Thread.sleep(MEDIUM_DELAY_MS);
+            assertTrue(tpe.getPoolSize() >= 1);
+        } catch(InterruptedException e){
+            unexpectedException();
+        } finally {
+            joinPool(tpe);
+        }
+    }
+
 }

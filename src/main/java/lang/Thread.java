@@ -9,10 +9,12 @@ package java.lang;
 
 import java.security.AccessController;
 import java.security.AccessControlContext;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.concurrent.locks.LockSupport;
+import sun.misc.SoftCache;
 import sun.nio.ch.Interruptible;
 import sun.security.util.SecurityConstants;
 
@@ -286,9 +288,9 @@ class Thread implements Runnable {
     private void init(ThreadGroup g, Runnable target, String name,
                       long stackSize) {
 	Thread parent = currentThread();
+	SecurityManager security = System.getSecurityManager();
 	if (g == null) {
 	    /* Determine if it's an applet or not */
-	    SecurityManager security = System.getSecurityManager();
 	    
 	    /* If there is a security manager, ask the security manager
 	       what to do. */
@@ -306,13 +308,27 @@ class Thread implements Runnable {
 	/* checkAccess regardless of whether or not threadgroup is
            explicitly passed in. */
 	g.checkAccess();
+
+	/*
+	 * Do we have the required permissions?
+	 */
+	if (security != null) {
+	    if (isCCLOverridden(getClass())) {
+	        security.checkPermission(SUBCLASS_IMPLEMENTATION_PERMISSION);
+	    }
+	}
+
+
         g.addUnstarted();
 
 	this.group = g;
 	this.daemon = parent.isDaemon();
 	this.priority = parent.getPriority();
 	this.name = name.toCharArray();
-	this.contextClassLoader = parent.contextClassLoader;
+	if (security == null || isCCLOverridden(parent.getClass()))
+	    this.contextClassLoader = parent.getContextClassLoader();
+	else
+	    this.contextClassLoader = parent.contextClassLoader;
 	this.inheritedAccessControlContext = AccessController.getContext();
 	this.target = target;
 	setPriority(priority);
@@ -429,7 +445,14 @@ class Thread implements Runnable {
      * 
      * <p>If there is a security manager, its <code>checkAccess</code> 
      * method is called with the ThreadGroup as its argument.
+     * <p>In addition, its <code>checkPermission</code>
+     * method is called with the
+     * <code>RuntimePermission("enableContextClassLoaderOverride")</code>
+     * permission when invoked directly or indirectly by the constructor
+     * of a subclass which overrides the <code>getContextClassLoader</code>
+     * or <code>setContextClassLoader</code> methods.
      * This may result in a SecurityException.
+
      * <p>
      * If the <code>target</code> argument is not <code>null</code>, the 
      * <code>run</code> method of the <code>target</code> is called when 
@@ -451,7 +474,8 @@ class Thread implements Runnable {
      * @param      target   the object whose <code>run</code> method is called.
      * @param      name     the name of the new thread.
      * @exception  SecurityException  if the current thread cannot create a
-     *               thread in the specified thread group.
+     *               thread in the specified thread group or cannot
+     *               override the context class loader methods.
      * @see        java.lang.Runnable#run()
      * @see        java.lang.Thread#run()
      * @see        java.lang.Thread#setDaemon(boolean)
@@ -1413,6 +1437,71 @@ class Thread implements Runnable {
         return m;
     }
 
+
+    private static final RuntimePermission SUBCLASS_IMPLEMENTATION_PERMISSION =
+                    new RuntimePermission("enableContextClassLoaderOverride");
+
+    /** cache of subclass security audit results */
+    private static final SoftCache subclassAudits = new SoftCache(10);
+
+
+    /**
+     * Verifies that this (possibly subclass) instance can be constructed
+     * without violating security constraints: the subclass must not override
+     * security-sensitive non-final methods, or else the
+     * "enableContextClassLoaderOverride" RuntimePermission is checked.
+     */
+    private static boolean isCCLOverridden(Class cl) {
+	if (cl == Thread.class)
+	    return false;
+	Boolean result = null;
+	synchronized (subclassAudits) {
+	    result = (Boolean) subclassAudits.get(cl);
+	    if (result == null) {
+		/*
+		 * Note: only new Boolean instances (i.e., not Boolean.TRUE or
+		 * Boolean.FALSE) must be used as cache values, otherwise cache
+		 * entry will pin associated class.
+		 */
+		result = new Boolean(auditSubclass(cl));
+		subclassAudits.put(cl, result);
+	    }
+	}
+	return result.booleanValue();
+    }
+
+    /**
+     * Performs reflective checks on given subclass to verify that it doesn't
+     * override security-sensitive non-final methods.  Returns true if the
+     * subclass overrides any of the methods, false otherwise.
+     */
+    private static boolean auditSubclass(final Class subcl) {
+	Boolean result = (Boolean) AccessController.doPrivileged(
+	    new PrivilegedAction() {
+		public Object run() {
+		    for (Class cl = subcl;
+			 cl != Thread.class;
+			 cl = cl.getSuperclass())
+		    {
+			try {
+			    cl.getDeclaredMethod("getContextClassLoader", new Class[0]);
+			    return Boolean.TRUE;
+			} catch (NoSuchMethodException ex) {
+			}
+			try {
+			    Class[] params = {ClassLoader.class};
+			    cl.getDeclaredMethod("setContextClassLoader", params);
+			    return Boolean.TRUE;
+			} catch (NoSuchMethodException ex) {
+			}
+		    }
+		    return Boolean.FALSE;
+		}
+	    }
+	);
+	return result.booleanValue();
+    }
+
     private native static StackTraceElement[][] dumpThreads(Thread[] threads);
     private native static Thread[] getThreads();
 
@@ -1478,12 +1567,6 @@ class Thread implements Runnable {
         RUNNABLE,
         
         /**
-         * Thread state for a terminated thread.
-         * The thread has completed execution.
-         */
-        TERMINATED,
-
-        /**
          * Thread state for a thread blocked waiting for a monitor lock.
          * A thread in the blocked state is waiting for a monitor lock
          * to enter a synchronized block/method or 
@@ -1525,7 +1608,13 @@ class Thread implements Runnable {
          *   <li>{@link LockSupport#parkUntil LockSupport.parkUntil}</li>
          * </ul>
          */
-        TIMED_WAITING;
+        TIMED_WAITING,
+
+        /**
+         * Thread state for a terminated thread.
+         * The thread has completed execution.
+         */
+        TERMINATED;
     }
 
     /**

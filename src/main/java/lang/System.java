@@ -18,6 +18,7 @@ import java.nio.channels.spi.SelectorProvider;
 import sun.net.InetAddressCachePolicy;
 import sun.reflect.Reflection;
 import sun.security.util.SecurityConstants;
+import sun.reflect.annotation.AnnotationType;
 
 /**
  * The <code>System</code> class contains several useful class fields
@@ -956,6 +957,8 @@ public final class System {
      *             <code>checkLink</code> method doesn't allow
      *             loading of the specified dynamic library
      * @exception  UnsatisfiedLinkError  if the file does not exist.
+     * @exception  NullPointerException if <code>filename</code> is
+     *             <code>null</code>
      * @see        java.lang.Runtime#load(java.lang.String)
      * @see        java.lang.SecurityManager#checkLink(java.lang.String)
      */
@@ -979,6 +982,8 @@ public final class System {
      *             <code>checkLink</code> method doesn't allow
      *             loading of the specified dynamic library
      * @exception  UnsatisfiedLinkError  if the library does not exist.
+     * @exception  NullPointerException if <code>libname</code> is
+     *             <code>null</code>
      * @see        java.lang.Runtime#loadLibrary(java.lang.String)
      * @see        java.lang.SecurityManager#checkLink(java.lang.String)
      */
@@ -992,6 +997,8 @@ public final class System {
      *
      * @param      libname the name of the library.
      * @return     a platform-dependent native library name.
+     * @exception  NullPointerException if <code>libname</code> is
+     *             <code>null</code>
      * @see        java.lang.System#loadLibrary(java.lang.String)
      * @see        java.lang.ClassLoader#findLibrary(java.lang.String)
      * @since      1.2
@@ -1067,10 +1074,16 @@ public final class System {
         Thread current = Thread.currentThread();
         current.getThreadGroup().add(current);
 
-        // Allow privileged classes outside of java.lang access to ConstantPool
+        // Allow privileged classes outside of java.lang
         sun.misc.SharedSecrets.setJavaLangAccess(new sun.misc.JavaLangAccess(){
             public sun.reflect.ConstantPool getConstantPool(Class klass) {
                 return klass.getConstantPool();
+            }
+            public void setAnnotationType(Class klass, AnnotationType type) {
+                klass.setAnnotationType(type);
+            }
+            public AnnotationType getAnnotationType(Class klass) {
+                return klass.getAnnotationType();
             }
         });
     }

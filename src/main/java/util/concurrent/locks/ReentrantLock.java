@@ -71,8 +71,8 @@ import sun.misc.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/26 19:59:47 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/27 01:14:15 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  * 
  **/
@@ -656,17 +656,22 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * of invocation.
      * <p>Acquires the lock if it is not held by another thread and
      * returns immediately with the value <tt>true</tt>, setting the
-     * lock hold count to one. Even when locking has been set to use a
-     * fair ordering policy, a call to <tt>tryLock</tt> will
+     * lock hold count to one. Even when this lock has been set to use a
+     * fair ordering policy, a call to <tt>tryLock()</tt> <em>will</em>
      * immediately acquire the lock if it is available, whether or not
-     * other threads are currently waiting for the lock.
+     * other threads are currently waiting for the lock. 
+     * This &quot;barging&quot; behaviour can be useful in certain 
+     * circumstances, even though it breaks fairness. If you want to honor
+     * the fairness setting for this lock, then use 
+     * {@link #tryLock(long, TimeUnit) tryLock(0, TimeUnit.SECONDS) }
+     * which is almost equivalent (it also detects interruption).
      * <p> If the current thread
      * already holds this lock then the hold count is incremented by one and
      * the method returns <tt>true</tt>.
      * <p>If the lock is held by another thread then this method will return 
      * immediately with the value <tt>false</tt>.  
      *
-     * @return <tt>true</tt>if the lock was free and was acquired by the
+     * @return <tt>true</tt> if the lock was free and was acquired by the
      * current thread, or the lock was already held by the current thread; and
      * <tt>false</tt> otherwise.
      */
@@ -688,8 +693,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * {@link Thread#interrupt interrupted}.
      * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately with the value <tt>true</tt>, setting the lock hold count 
-     * to one.
-     * <p> If the current thread
+     * to one. If this lock has been set to use a fair ordering policy then
+     * an available lock <em>will not</em> be acquired if any other threads
+     * are waiting for the lock. This is in contrast to the {@link #tryLock()}
+     * method. If you want a timed <tt>tryLock</tt> that does permit barging on
+     * a fair lock then combine the timed and un-timed forms together:
+     * <pre><tt>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
+     * </pre>
+     * <p>If the current thread
      * already holds this lock then the hold count is incremented by one and
      * the method returns <tt>true</tt>.
      * <p>If the lock is held by another thread then the

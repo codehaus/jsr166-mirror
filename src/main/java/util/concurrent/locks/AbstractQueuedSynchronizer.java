@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.*;
  * the lock to its previous lock state. No method creates such a
  * condition, so if this constraint cannot be met, do not use it.
  * The detailed behavior of these condition objects depends of
- * course on the seman
+ * course on the semantics of this synchronizer implementation.
  * 
  * <p> Serialization of this class serializes only the atomic integer
  * maintaining state. Typical subclasses requiring seializability will
@@ -77,8 +77,7 @@ import java.util.concurrent.atomic.*;
  *    private static class Sync extends AbstractQueuedSynchronizer {
  *       // Uses 0 for unlocked, 1 for locked state
  *
- *       public int acquireExclusiveState(boolean isQueued, int acquires, 
- *                                        Thread ignore) {
+ *       public int acquireExclusiveState(boolean isQueued, int acquires, Thread current) {
  *         assert acquires == 1; // Does not use multiple acquires
  *         return getState().compareAndSet(0, 1)? 0 : -1
  *       }
@@ -102,8 +101,7 @@ import java.util.concurrent.atomic.*;
  *
  *       Condition newCondition() { return new ConditionObject(this); }
  *
- *       private void readObject(java.io.ObjectInputStream s)
- *         throws java.io.IOException, ClassNotFoundException {
+ *       private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
  *         s.defaultReadObject();
  *         getState().set(0); // reset to unlocked state
  *       }
@@ -1075,8 +1073,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * instrumentation and monitoring.
      *
      * <p> Method documentation for this class describes mechanics,
-     * not behavioral specifications from the point of Lock and
-     * COndition users. Exported versions of this class will in
+     * not behavioral specifications from the point of view of Lock
+     * and Condition users. Exported versions of this class will in
      * general need to be accompanied by documentation desribing
      * method semantics that rely on those of the associated
      * <tt>AbstractQueuedSynchronizer</tt>.

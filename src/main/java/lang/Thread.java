@@ -118,7 +118,7 @@ class Thread implements Runnable {
         void uncaughtException(Thread t, Throwable e);
     }
 
-    private static UncaughtExceptionHandler defaultUncaughtExceptionHandler; // jsr166
+    private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler; // jsr166
 
     /**
      * Set the default handler invoked when a Thread abruptly terminates
@@ -135,7 +135,9 @@ class Thread implements Runnable {
 
     /**
      * Return the default handler invoked when a Thread abruptly terminates
-     * due to an uncaught exception.
+     * due to an uncaught exception. If the returned value is null,
+     * there is no default, and each Thread's ThreadGroup serves as
+     * its handler.
      */
     public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler() { // jsr166
         return defaultUncaughtExceptionHandler;

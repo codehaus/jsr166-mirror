@@ -177,6 +177,46 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
+
+    /** 
+     * getRejectedExecutionHandler returns handler in constructor if not set
+     */
+    public void testGetRejectedExecutionHandler() {
+        RejectedExecutionHandler h = new NoOpREHandler();
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10), h);
+        assertSame(h, p.getRejectedExecutionHandler());
+        p.shutdown();
+        joinPool(p);
+    }
+
+    /** 
+     * setRejectedExecutionHandler sets the handler returned by
+     * getRejectedExecutionHandler
+     */
+    public void testSetRejectedExecutionHandler() {
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        RejectedExecutionHandler h = new NoOpREHandler();
+        p.setRejectedExecutionHandler(h);
+        assertSame(h, p.getRejectedExecutionHandler());
+        p.shutdown();
+        joinPool(p);
+    }
+
+
+    /** 
+     * setRejectedExecutionHandler(null) throws NPE
+     */
+    public void testSetRejectedExecutionHandlerNull() {
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        try {
+            p.setRejectedExecutionHandler(null);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        } finally {
+            joinPool(p);
+        }
+    }
+
     
     /**
      *   getLargestPoolSize increases, but doesn't overestimate, when

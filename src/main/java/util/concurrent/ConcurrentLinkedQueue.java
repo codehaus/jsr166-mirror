@@ -15,7 +15,9 @@ import java.util.concurrent.atomic.*;
  * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
  * The <em>tail</em> of the queue is that element that has been on the
- * queue the shortest time.
+ * queue the shortest time. New elements
+ * are inserted at the tail of the queue, and the queue retrieval
+ * operations obtain elements at the head of the queue.
  * A <tt>ConcurrentLinkedQueue</tt> is an especially good choice when 
  * many threads will share access to a common queue.
  * This queue does not permit <tt>null</tt> elements.
@@ -145,31 +147,22 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     /**
      * Adds the specified element to the tail of this queue.
+     * @param o the element to add.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException {@inheritDoc}
+     * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     public boolean add(E o) {
-        return super.add(o);
+        return offer(o);
     }
 
     /**
-     * Adds all of the elements in the specified collection to this queue.
-     * The behavior of this operation is undefined if
-     * the specified collection is modified while the operation is in
-     * progress.  (This implies that the behavior of this call is undefined if
-     * the specified collection is this queue, and this queue is nonempty.)
-     * <p>
-     * This implementation iterates over the specified collection, and adds
-     * each object returned by the iterator to this queue's tail, in turn.
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public boolean addAll(Collection<? extends E> c) {
-        return super.addAll(c);
-    }
-
-    /**
+     * Inserts the specified element to the tail of this queue.
+     *
+     * @param o the element to add.
+     * @return <tt>true</tt> (as per the general contract of
+     * <tt>Queue.offer</tt>).
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     public boolean offer(E o) {
@@ -269,12 +262,16 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the number of elements in this queue.  If this queue
+     * contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
+     * <tt>Integer.MAX_VALUE</tt>.
      *
-     * Beware that, unlike in most collections, this method is
+     * <p>Beware that, unlike in most collections, this method is
      * <em>NOT</em> a constant-time operation. Because of the
      * asynchronous nature of these queues, determining the current
      * number of elements requires an O(n) traversal.
+     *
+     * @return  the number of elements in this queue.
      */
     public int size() {
         int count = 0;
@@ -299,20 +296,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         return false;
     }
 
-    /**
-     * Removes a single instance of the specified element from this
-     * queue, if it is present.  More formally,
-     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
-     * o.equals(e))</tt>, if the queue contains one or more such
-     * elements.  Returns <tt>true</tt> if the queue contained the
-     * specified element (or equivalently, if the queue changed as a
-     * result of the call).
-     *
-     * <p>This implementation iterates over the queue looking for the
-     * specified element.  If it finds the element, it removes the element
-     * from the queue using the iterator's remove method.<p>
-     *
-     */
     public boolean remove(Object o) {
         if (o == null) return false;
         for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {

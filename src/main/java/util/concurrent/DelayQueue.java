@@ -45,10 +45,11 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
-     * Add the specified element to this delay queue.
+     * Inserts the specified element to this delay queue.
      *
+     * @param o the element to add
      * @return <tt>true</tt>
-     * @throws NullPointerException {@inheritDoc}
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o) {
         lock.lock();
@@ -67,31 +68,33 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Adds the specified element to this delay queue. As the queue is
      * unbounded this method will never block.
-     * @throws NullPointerException {@inheritDoc}
+     * @param o the element to add
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public void put(E o) {
         offer(o);
     }
 
     /**
-     * Adds the specified element to this priority queue. As the queue is
+     * Adds the specified element to this delay queue. As the queue is
      * unbounded this method will never block.
-     * @param o {@inheritDoc}
-     * @param time This parameter is ignored as the method never blocks
+     * @param o the element to add
+     * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
-     * @throws NullPointerException {@inheritDoc}
      * @return <tt>true</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o, long time, TimeUnit unit) {
+    public boolean offer(E o, long timeout, TimeUnit unit) {
         return offer(o);
     }
 
     /**
      * Adds the specified element to this queue.
+     * @param o the element to add
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException {@inheritDoc}
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean add(E o) {
         return offer(o);
@@ -232,20 +235,6 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Removes a single instance of the specified element from this
-     * queue, if it is present.  More formally,
-     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
-     * o.equals(e))</tt>, if the queue contains one or more such
-     * elements.  Returns <tt>true</tt> if the queue contained the
-     * specified element (or equivalently, if the queue changed as a
-     * result of the call).
-     *
-     * <p>This implementation iterates over the queue looking for the
-     * specified element.  If it finds the element, it removes the element
-     * from the queue using the iterator's remove method.<p>
-     *
-     */
     public boolean remove(Object o) {
         lock.lock();
         try {

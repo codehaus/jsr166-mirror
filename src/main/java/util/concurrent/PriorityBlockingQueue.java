@@ -105,7 +105,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException {@inheritDoc}
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      * @throws ClassCastException if the specified element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
@@ -123,7 +123,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * <p>
      * This implementation iterates over the specified collection, and adds
      * each object returned by the iterator to this collection, in turn.
-     * @throws NullPointerException {@inheritDoc}
+     * @param c collection whose elements are to be added to this queue
+     * @return <tt>true</tt> if this queue changed as a result of the
+     *         call.
+     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
+     * is <tt>null</tt>
      * @throws ClassCastException if any element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
@@ -145,13 +149,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Adds the specified element to this priority queue.
+     * Inserts the specified element to this priority queue.
      *
+     * @param o the element to add
      * @return <tt>true</tt>
      * @throws ClassCastException if the specified element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
-     * @throws NullPointerException {@inheritDoc}
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
@@ -169,10 +174,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to this priority queue. As the queue is
      * unbounded this method will never block.
+     * @param o the element to add
      * @throws ClassCastException if the element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
-     * @throws NullPointerException {@inheritDoc}
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public void put(E o) {
         offer(o); // never need to block
@@ -181,14 +187,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to this priority queue. As the queue is
      * unbounded this method will never block.
-     * @param o {@inheritDoc}
+     * @param o the element to add
      * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
+     * @return <tt>true</tt>
      * @throws ClassCastException if the element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
-     * @throws NullPointerException {@inheritDoc}
-     * @return <tt>true</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o, long timeout, TimeUnit unit) {
         return offer(o); // never need to block
@@ -271,20 +277,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return Integer.MAX_VALUE;
     }
 
-    /**
-     * Removes a single instance of the specified element from this
-     * queue, if it is present.  More formally,
-     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
-     * o.equals(e))</tt>, if the queue contains one or more such
-     * elements.  Returns <tt>true</tt> if the queue contained the
-     * specified element (or equivalently, if the queue changed as a
-     * result of the call).
-     *
-     * <p>This implementation iterates over the queue looking for the
-     * specified element.  If it finds the element, it removes the element
-     * from the queue using the iterator's remove method.<p>
-     *
-     */
     public boolean remove(Object o) {
         lock.lock();
         try {

@@ -31,10 +31,13 @@ public class FutureTask<V> extends CancellableTask implements Future<V> {
      * given <tt>Callable</tt>.
      *
      * @param  callable the callable task
+     * @throws NullPointerException if callable is null
      */
     public FutureTask(Callable<V> callable) {
         // must set after super ctor call to use inner class
         super();
+        if (callable == null)
+            throw new NullPointerException();
         setRunnable(new InnerCancellableFuture<V>(callable));
     }
 
@@ -45,11 +48,14 @@ public class FutureTask<V> extends CancellableTask implements Future<V> {
      *
      * @param  runnable the runnable task
      * @param result the result to return on successful completion. If
-     * you don't need a particular result, consider just using
+     * you don't need a particular result, consider using
      * <tt>Boolean.TRUE</tt>.
+     * @throws NullPointerException if runnable is null
      */
     public FutureTask(final Runnable runnable, final V result) {
         super();
+        if (runnable == null)
+            throw new NullPointerException();
         setRunnable(new InnerCancellableFuture<V>
                     (new Callable<V>() {
                         public V call() {

@@ -9,24 +9,26 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * A {@linkplain BlockingQueue blocking queue} in which each <tt>put</tt> 
- * must wait for a <tt>take</tt>, and vice versa.  
- * A synchronous queue does not have any internal capacity - in particular
- * it does not have a capacity of one. You cannot <tt>peek</tt> at a 
- * synchronous queue because an element is only present when you try to take
- * it; you cannot add an element (using any method) unless another thread is
- * trying to remove it; you cannot iterate as there is nothing to iterate.
- * The <em>head</em> of the queue is the element that the first queued thread
- * is trying to add to the queue; if there are no queued threads then no
- * element is being added and the head is <tt>null</tt>.
- * Many of the <tt>Collection</tt> methods make little or no sense for a
- * synchronous queue.
- * This queue does not permit <tt>null</tt> elements.
- * <p>Synchronous queues are similar to rendezvous channels used
- * in CSP and Ada. They are well suited for handoff designs, in which
- * an object running in one thread must synch up with an object
- * running in another thread in order to hand it some information,
- * event, or task.
+ * A {@linkplain BlockingQueue blocking queue} in which each
+ * <tt>put</tt> must wait for a <tt>take</tt>, and vice versa.  A
+ * synchronous queue does not have any internal capacity - in
+ * particular it does not have a capacity of one. You cannot
+ * <tt>peek</tt> at a synchronous queue because an element is only
+ * present when you try to take it; you cannot add an element (using
+ * any method) unless another thread is trying to remove it; you
+ * cannot iterate as there is nothing to iterate.  The <em>head</em>
+ * of the queue is the element that the first queued thread is trying
+ * to add to the queue; if there are no queued threads then no element
+ * is being added and the head is <tt>null</tt>.  For purposes of
+ * other <tt>Collection</tt> methods (for example <tt>contains</tt>),
+ * a <tt>SynchronousQueue<//t> acts as an empty collection.  This
+ * queue does not permit <tt>null</tt> elements.
+ *
+ * <p>Synchronous queues are similar to rendezvous channels used in
+ * CSP and Ada. They are well suited for handoff designs, in which an
+ * object running in one thread must synch up with an object running
+ * in another thread in order to hand it some information, event, or
+ * task.
  * @since 1.5
  * @author Doug Lea
 **/
@@ -300,21 +302,29 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to this queue, waiting if necessary for
      * another thread to receive it.
-     * @throws NullPointerException {@inheritDoc}
+     * @param o the element to add
+     * @throws InterruptedException if interrupted while waiting.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public void put(E o) throws InterruptedException {
         doPut(o, false, 0);
     }
 
     /**
-     * Adds the specified element to this queue, waiting if necessary up to the
-     * specified wait time for another thread to receive it.
+     * Adds the specified element to this queue, waiting if necessary
+     * up to the specified wait time for another thread to receive it.
+     * @param o the element to add
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
+     * <tt>timeout</tt> parameter
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
      * the specified waiting time elapses before a taker appears.
-     * @throws NullPointerException {@inheritDoc}
+     * @throws InterruptedException if interrupted while waiting.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E x, long timeout, TimeUnit unit) throws InterruptedException {
-        return doPut(x, true, unit.toNanos(timeout));
+    public boolean offer(E o, long timeout, TimeUnit unit) throws InterruptedException {
+        return doPut(o, true, unit.toNanos(timeout));
     }
 
 
@@ -331,6 +341,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Retrieves and removes the head of this queue, waiting
      * if necessary up to the specified wait time, for another thread
      * to insert it.
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
+     * <tt>timeout</tt> parameter
+     * @return the head of this queue, or <tt>null</tt> if the
+     * specified waiting time elapses before an element is present.
+     * @throws InterruptedException if interrupted while waiting.
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         return doTake(true, unit.toNanos(timeout));
@@ -338,12 +355,15 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     // Untimed nonblocking versions
 
-    /**
-     * Adds the specified element to this queue, if another thread is
-     * waiting to receive it.
-     *
-     * @throws NullpointerException {@inheritDoc}
-     */
+   /**
+    * Adds the specified element to this queue, if another thread is
+    * waiting to receive it.
+    *
+    * @param o the element to add.
+    * @return <tt>true</tt> if it was possible to add the element to
+    *         this queue, else <tt>false</tt>
+    * @throws NullPointerException if the specified element is <tt>null</tt>
+    */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
 
@@ -364,7 +384,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
-
+    /**
+     * Retrieves and removes the head of this queue, if another thread
+     * is currently making an element available.
+     *
+     * @return the head of this queue, or <tt>null</tt> if no
+     *         element is available.
+     */
     public E poll() {
         for (;;) {
             Node node;
@@ -384,38 +410,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 // else retry
             }
         }
-    }
-
-
-    /**
-     * Adds the specified element to this queue.
-     * @return <tt>true</tt> (as per the general contract of
-     * <tt>Collection.add</tt>).
-     *
-     * @throws NullPointerException {@inheritDoc}
-     * @throws IllegalStateException if no thread is waiting to receive the
-     * element being added
-     */
-    public boolean add(E o) {
-        return super.add(o);
-    }
-
-
-    /**
-     * Adds all of the elements in the specified collection to this queue.
-     * The behavior of this operation is undefined if
-     * the specified collection is modified while the operation is in
-     * progress.  (This implies that the behavior of this call is undefined if
-     * the specified collection is this queue, and this queue is nonempty.)
-     * <p>
-     * This implementation iterates over the specified collection, and adds
-     * each object returned by the iterator to this collection, in turn.
-     * @throws NullPointerException {@inheritDoc}
-     * @throws IllegalStateException if no thread is waiting to receive the
-     * element being added
-     */
-    public boolean addAll(Collection<? extends E> c) {
-        return super.addAll(c);
     }
 
     /**
@@ -454,6 +448,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @param o the element
      * @return <tt>false</tt>
      */
     public boolean contains(Object o) {
@@ -461,8 +456,20 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Always returns <tt>false</tt>.
+     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
+     * @param o the element to remove
+     * @return <tt>false</tt>
+     */
+    public boolean remove(Object o) {
+        return false;
+    }
+
+    /**
      * Returns <tt>false</tt> unless given collection is empty.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @param c the collection
      * @return <tt>false</tt> unless given collection is empty
      */
     public boolean containsAll(Collection<?> c) {
@@ -472,6 +479,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @param c the collection
      * @return <tt>false</tt>
      */
     public boolean removeAll(Collection<?> c) {
@@ -481,6 +489,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * @param c the collection
      * @return <tt>false</tt>
      */
     public boolean retainAll(Collection<?> c) {
@@ -511,7 +520,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns an empty iterator: <tt>hasNext</tt> always returns
+     * Returns an empty iterator in which <tt>hasNext</tt> always returns
      * <tt>false</tt>.
      *
      * @return an empty iterator

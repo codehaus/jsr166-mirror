@@ -43,12 +43,33 @@ package java.util.concurrent;
 public final class TimeUnit implements java.io.Serializable {
 
     /**
+     * Perform the conversion based on given index representing the
+     * difference between units
+     * @param delta the difference in index values of source and target units
+     * @param duration the duration
+     * @return converted duration or saturated value
+     */
+    private static long doConvert(int delta, long duration) {
+        if (delta == 0)
+            return duration;
+        if (delta < 0) 
+            return duration / multipliers[-delta];
+        if (duration > overflows[delta])
+            return Long.MAX_VALUE;
+        if (duration < -overflows[delta])
+            return Long.MIN_VALUE;
+        return duration * multipliers[delta];
+    }
+
+    /**
      * Convert the given time duration in the given unit to the
      * current unit.  Conversions from finer to coarser granulaties
-     * truncate, so lose precision. Conversions from coarser to finer
-     * granularities with arguments that would numerically overflow
-     * saturate to <tt>Long.MIN_VALUE</tt> if negative or
-     * <tt>Long.MAX_VALUE</tt> if positive.
+     * truncate, so lose precision. For example converting
+     * <tt>999</tt> milliseconds to seconds results in
+     * <tt>0</tt>. Conversions from coarser to finer granularities
+     * with arguments that would numerically overflow saturate to
+     * <tt>Long.MIN_VALUE</tt> if negative or <tt>Long.MAX_VALUE</tt>
+     * if positive.
      *
      * @param duration the time duration in the given <tt>unit</tt>
      * @param unit the unit of the <tt>duration</tt> argument
@@ -57,33 +78,53 @@ public final class TimeUnit implements java.io.Serializable {
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      */
     public long convert(long duration, TimeUnit unit) {
-        int i = unit.index - index;
-        if (i == 0)
-            return duration;
-        if (i < 0) 
-            return duration / multipliers[-i];
-        if (duration > overflows[i])
-            return Long.MAX_VALUE;
-        if (duration < -overflows[i])
-            return Long.MIN_VALUE;
-        return duration * multipliers[i];
+        return doConvert(unit.index - index, duration);
     }
 
     /**
      * Equivalent to <tt>NANOSECONDS.convert(duration, this)</tt>.
      * @param duration the duration
-     * @return the converted duration.
+     * @return the converted duration,
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
-     **/
+     * @see #convert
+     */
     public long toNanos(long duration) {
-        if (index == NS)
-            return duration;
-        if (duration > overflows[index])
-            return Long.MAX_VALUE;
-        if (duration < -overflows[index])
-            return Long.MIN_VALUE;
-        return duration * multipliers[index];
+        return doConvert(index, duration);
+    }
+
+    /**
+     * Equivalent to <tt>MICROSECONDS.convert(duration, this)</tt>.
+     * @param duration the duration
+     * @return the converted duration,
+     * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+     * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
+     * @see #convert
+     */
+    public long toMicros(long duration) {
+        return doConvert(index - US, duration);
+    }
+
+    /**
+     * Equivalent to <tt>MILLISECONDS.convert(duration, this)</tt>.
+     * @param duration the duration
+     * @return the converted duration,
+     * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+     * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
+     * @see #convert
+     */
+    public long toMillis(long duration) {
+        return doConvert(index - MS, duration);
+    }
+
+    /**
+     * Equivalent to <tt>SECONDS.convert(duration, this)</tt>.
+     * @param duration the duration
+     * @return the converted duration.
+     * @see #convert
+     */
+    public long toSeconds(long duration) {
+        return doConvert(index - S, duration);
     }
 
     /**
@@ -151,6 +192,27 @@ public final class TimeUnit implements java.io.Serializable {
      */
     public String toString() {
         return unitName;
+    }
+
+
+    /**
+     * Returns true if the given object is a TimeUnit representing
+     * the same unit as this TimeUnit.
+     * @param x the object to compare
+     * @return true if equal
+     */
+    public boolean equals(Object x) {
+        if (!(x instanceof TimeUnit))
+            return false;
+        return ((TimeUnit)x).index == index;
+    }
+
+    /**
+     * Returns a hash code for this TimeUnit.
+     * @return the hash code
+     */
+    public int hashCode() {
+        return unitName.hashCode();
     }
 
     private final String unitName;

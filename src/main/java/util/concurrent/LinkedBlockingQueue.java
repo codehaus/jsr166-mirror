@@ -16,7 +16,9 @@ import java.util.*;
  * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
  * The <em>tail</em> of the queue is that element that has been on the
- * queue the shortest time.
+ * queue the shortest time. New elements
+ * are inserted at the tail of the queue, and the queue retrieval
+ * operations obtain elements at the head of the queue.
  * Linked queues typically have higher throughput than array-based queues but
  * less predictable performance in most concurrent applications.
  *
@@ -180,39 +182,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             add(it.next());
     }
 
-    // Have to override just to update the javadoc 
-
-    /**
-     * Adds the specified element to the tail of this queue.
-     * @return <tt>true</tt> (as per the general contract of
-     * <tt>Collection.add</tt>).
-     * @throws IllegalStateException {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public boolean add(E o) {
-        return super.add(o);
-    }
-
-    /**
-     * Adds all of the elements in the specified collection to this queue.
-     * The behavior of this operation is undefined if
-     * the specified collection is modified while the operation is in
-     * progress.  (This implies that the behavior of this call is undefined if
-     * the specified collection is this queue, and this queue is nonempty.)
-     * <p>
-     * This implementation iterates over the specified collection, and adds
-     * each object returned by the iterator to this queue's tail, in turn.
-     * @throws IllegalStateException {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public boolean addAll(Collection<? extends E> c) {
-        return super.addAll(c);
-    }
 
     // this doc comment is overridden to remove the reference to collections
     // greater in size than Integer.MAX_VALUE
     /**
-     * Returns the number of elements in this collection.
+     * Returns the number of elements in this queue.
+     *
+     * @return  the number of elements in this queue.
      */
     public int size() {
         return count.get();
@@ -235,11 +211,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         return capacity - count.get();
     }
 
-    /**
-     * Adds the specified element to the tail of this queue, waiting if
-     * necessary for space to become available.
-     * @throws NullPointerException {@inheritDoc}
-     */
     public void put(E o) throws InterruptedException {
         if (o == null) throw new NullPointerException();
         // Note: convention in all put/take/etc is to preset
@@ -274,11 +245,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             signalNotEmpty();
     }
 
-    /**
-     * Adds the specified element to the tail of this queue, waiting if
-     * necessary up to the specified wait time for space to become available.
-     * @throws NullPointerException {@inheritDoc}
-     */
     public boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException {
 
@@ -316,7 +282,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     * Adds the specified element to the tail of this queue if possible,
     * returning immediately if this queue is full.
     *
-    * @throws NullPointerException {@inheritDoc}
+    * @param o the element to add.
+    * @return <tt>true</tt> if it was possible to add the element to
+    *         this queue, else <tt>false</tt>
+    * @throws NullPointerException if the specified element is <tt>null</tt>
     */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
@@ -433,16 +402,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Removes a single instance of the specified element from this
-     * queue, if it is present.  More formally,
-     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
-     * o.equals(e))</tt>, if the queue contains one or more such
-     * elements.  Returns <tt>true</tt> if the queue contained the
-     * specified element (or equivalently, if the queue changed as a
-     * result of the call).
-     *
-     */
     public boolean remove(Object o) {
         if (o == null) return false;
         boolean removed = false;

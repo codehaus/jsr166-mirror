@@ -76,8 +76,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         private long sequenceNumber;
         /** The time the task is enabled to execute in nanoTime units */
         private long time;
-        /** The delay forllowing next time, or <= 0 if non-periodic */
-        private long period;
+        /** The delay following next time, or <= 0 if non-periodic */
+        private final long period;
         /** true if at fixed rate; false if fixed delay */
         private final boolean rateBased; 
 
@@ -86,6 +86,18 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
          */
         ScheduledCancellableTask(Runnable r, long ns) {
             super(r);
+            this.time = ns;
+            this.period = 0;
+            rateBased = false;
+            this.sequenceNumber = sequencer.getAndIncrement();
+        }
+
+        /**
+         * Creates a one-shot action with given nanoTime-based trigger time
+         * but does not establish the action (need for Future subclass).
+         */
+        ScheduledCancellableTask(long ns) {
+            super();
             this.time = ns;
             this.period = 0;
             rateBased = false;
@@ -145,17 +157,29 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * Return a new ScheduledCancellable that will trigger in the period
-         * subsequent to current task, or null if non-periodic
-         * or canceled.
+         * Override run method not to setDone if periodic
+         */ 
+        public void run() {
+            if (setRunning()) {
+                try {
+                    getRunnable().run();
+                } finally {
+                    if (!isPeriodic())
+                        setDone();
+                }
+            }
+        }
+
+        /**
+         * Return a new ScheduledCancellable task (which may be the
+         * this task) that will trigger in the period subsequent to
+         * current task, or null if non-periodic or cancelled.
          */
         ScheduledCancellableTask nextTask() {
-            if (period <= 0 || isCancelled())
+            if (period <= 0 || !reset())
                 return null;
-            long nextTime = period + (rateBased ? time : System.nanoTime());
-            this.time = nextTime;
-            this.sequenceNumber = sequencer.getAndIncrement();
-            reset();
+            time = period + (rateBased ? time : System.nanoTime());
+            sequenceNumber = sequencer.getAndIncrement();
             return this;
         }
     }
@@ -167,8 +191,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
          * Creates a ScheduledFuture that may trigger after the given delay.
          */
         ScheduledFutureTask(Callable<V> callable, long triggerTime) {
-            // must set after super ctor call to use inner class
-            super(null, triggerTime);
+            // must set callable after super ctor call to use inner class
+            super(triggerTime);
             setRunnable(new InnerCancellableFuture<V>(callable));
         }
 
@@ -254,6 +278,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * even if they are idle.
      * @param threadFactory the factory to use when the executor
      * creates a new thread. 
+     * @throws NullPointerException if threadFactory is null
      */
     public ScheduledExecutor(int corePoolSize,
                              ThreadFactory threadFactory) {
@@ -268,6 +293,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * even if they are idle.
      * @param handler the handler to use when execution is blocked
      * because the thread bounds and queue capacities are reached.
+     * @throws NullPointerException if handler is null
      */
     public ScheduledExecutor(int corePoolSize,
                               RejectedExecutionHandler handler) {
@@ -284,6 +310,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * creates a new thread. 
      * @param handler the handler to use when execution is blocked
      * because the thread bounds and queue capacities are reached.
+     * @throws NullPointerException if threadFactory or handler is null
      */
     public ScheduledExecutor(int corePoolSize,
                               ThreadFactory threadFactory,
@@ -332,7 +359,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * after the given initial delay, and subsequently with the given
      * period; that is executions will commence after
      * <tt>initialDelay</tt> then <tt>initialDelay+period</tt>, then
-     * <tt>initialDelay + 2 * period</tt>, and so on.
+     * <tt>initialDelay + 2 * period</tt>, and so on.  The
+     * task will only terminate via cancellation.
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param period the period between successive executions.
@@ -351,12 +379,12 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         return t;
     }
     
-
     /**
      * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and and subsequently with the
      * given delay between the termination of one execution and the
-     * commencement of the next.
+     * commencement of the next. 
+     * The task will only terminate via cancellation.
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param delay the delay between the termination of one

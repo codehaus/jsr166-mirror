@@ -27,16 +27,16 @@ import java.util.Queue;
  * reports a remaining capacity of <tt>Integer.MAX_VALUE</tt>.
  *
  * <p> While <tt>BlockingQueue</tt> is designed to be used primarily
- * for producer-consumer queues, it additionally supports the
- * {@link java.util.Collection} interface.  So, for example, it is possible to
- * remove an arbitrary element from a queue using
+ * for producer-consumer queues, it additionally supports the {@link
+ * java.util.Collection} interface.  So, for example, it is possible
+ * to remove an arbitrary element from a queue using
  * <tt>remove(x)</tt>. However, such operations are in general
- * <em>NOT</em> performed very efficiently, and are intended for only
+ * <em>not</em> performed very efficiently, and are intended for only
  * occasional use, such as when a queued message is cancelled.  Also,
- * the bulk operations, most notably <tt>addAll</tt> are <em>NOT</em>
- * performed atomically, so it is possible for <tt>addAll(c)</tt> to
- * fail (throwing an exception) after adding only some of the elements
- * in <tt>c</tt>.
+ * the bulk operations, most notably <tt>addAll</tt> are <em>not</em>
+ * necessarily performed atomically, so it is possible for
+ * <tt>addAll(c)</tt> to fail (throwing an exception) after adding
+ * only some of the elements in <tt>c</tt>.
  *
  * <p>A <tt>BlockingQueue</tt> does <em>not</em> intrinsically support
  * any kind of &quot;close&quot; or &quot;shutdown&quot; operation to
@@ -93,26 +93,22 @@ import java.util.Queue;
 public interface BlockingQueue<E> extends Queue<E> {
 
     /**
-     * @throws IllegalStateException if this queue is full
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
-     */
-    boolean add(E o);
-
-    /**
-     * @throws IllegalStateException if this queue is full
-     * @throws NullPointerException if <tt>c</tt> or any element of <tt>c</tt>
-     * is <tt>null</tt>.
-     */
-    boolean addAll(Collection<? extends E> c);
-
-    /**
+     * Inserts the specified element to this queue, if possible.  When
+     * using queues that may impose insertion restrictions (for
+     * example capacity bounds), method <tt>offer</tt> is generally
+     * preferable to method {@link Collection#add}, which can fail to
+     * inserts an element only by throwing an exception.
+     *
+     * @param o the element to insert.
+     * @return <tt>true</tt> if it was possible to add the element to
+     * this queue, else <tt>false</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     boolean offer(E o);
 
     /**
-     * Adds the specified element to this queue, waiting if necessary up to the
-     * specified wait time for space to become available.
+     * Adds the specified element to this queue, waiting if necessary
+     * up to the specified wait time for space to become available.
      * @param o the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
@@ -149,7 +145,6 @@ public interface BlockingQueue<E> extends Queue<E> {
      */
     E take() throws InterruptedException;
 
-
     /**
      * Adds the specified element to this queue, waiting if necessary for
      * space to become available.
@@ -158,7 +153,6 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     void put(E o) throws InterruptedException;
-
 
     /**
      * Returns the number of elements that this queue can ideally (in
@@ -174,12 +168,33 @@ public interface BlockingQueue<E> extends Queue<E> {
      */
     int remainingCapacity();
 
+    /**
+     * Adds the specified element to this queue if it is possible to
+     * do so immediately, returning <tt>true</tt> upon success, else
+     * throwing an IllegalStateException.  
+     * @param o the element
+     * @return <tt>true</tt> (as per the general contract of
+     *         <tt>Collection.add</tt>).
+     *
+     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws IllegalStateException if element cannot be added
+     */
+    boolean add(E o);
+
+    /**
+     * Adds all of the elements in the specified collection to this
+     * queue if it is possible to do so.  The behavior of this
+     * operation need not be atomic; a failure may occur after
+     * adding only some elements.
+     *
+     * @param c collection whose elements are to be added to this queue
+     * @return <tt>true</tt> if this queue changed as a result of the
+     *         call.
+     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
+     * is <tt>null</tt>
+     * @throws IllegalStateException if any element cannot be added.
+     * 
+     */
+    boolean addAll(Collection<? extends E> c);
+
 }
-
-
-
-
-
-
-
-

@@ -53,8 +53,11 @@ public class CancellableTask implements Cancellable, Runnable {
      * Creates a new CancellableTask which invokes the given
      * <tt>Runnable</tt> when executed.
      * @param r the runnable action
+     * @throws NullPointerException if runnable is null
      */
     public CancellableTask(Runnable r) {
+        if (r == null)
+            throw new NullPointerException();
         this.runnable = r;
     }
 
@@ -153,10 +156,19 @@ public class CancellableTask implements Cancellable, Runnable {
     }
 
     /**
-     * Reset the run state of this task to its initial state.
+     * Reset the run state of this task to its initial state unless
+     * it has been cancelled. (Note that a cancelled task cannot be
+     * reset.)
+     * @return true if successful
      */
-    protected void reset() {
-        runnerUpdater.set(this, null);
+    protected boolean reset() {
+        for (;;) {
+            Object r = runner;
+            if (r == CANCELLED) 
+                return false;
+            if (runnerUpdater.compareAndSet(this, r, null))
+                return true;
+        }
     }
 
     /**

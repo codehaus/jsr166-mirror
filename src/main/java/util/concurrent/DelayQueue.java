@@ -9,23 +9,23 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * An unbounded queue of <tt>DelayEntry</tt> elements, in which
+ * An unbounded queue of <tt>Delayed</tt> elements, in which
  * elements can only be taken when their delay has expired.
  **/
 
-public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
-        implements BlockingQueue<DelayEntry<E>> {
-
+public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
+    implements BlockingQueue<E> {
+    
     private transient final ReentrantLock lock = new ReentrantLock();
     private transient final Condition canTake = lock.newCondition();
-    private final PriorityQueue<DelayEntry<E>> q = new PriorityQueue<DelayEntry<E>>();
+    private final PriorityQueue<E> q = new PriorityQueue<E>();
 
     public DelayQueue() {}
 
-    public boolean offer(DelayEntry<E> x) {
+    public boolean offer(E x) {
         lock.lock();
         try {
-            DelayEntry<E> first = q.peek();
+            E first = q.peek();
             q.offer(x);
             if (first == null || x.compareTo(first) < 0)
                 canTake.signalAll();
@@ -36,23 +36,23 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
         }
     }
 
-    public void put(DelayEntry<E> x) {
+    public void put(E x) {
         offer(x);
     }
 
-    public boolean offer(DelayEntry<E> x, long time, TimeUnit unit) {
+    public boolean offer(E x, long time, TimeUnit unit) {
         return offer(x);
     }
 
-    public boolean add(DelayEntry<E> x) {
+    public boolean add(E x) {
         return offer(x);
     }
 
-    public DelayEntry<E> take() throws InterruptedException {
+    public E take() throws InterruptedException {
         lock.lockInterruptibly();
         try {
             for (;;) {
-                DelayEntry first = q.peek();
+                E first = q.peek();
                 if (first == null)
                     canTake.await();
                 else {
@@ -60,7 +60,7 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
                     if (delay > 0)
                         canTake.awaitNanos(delay);
                     else {
-                        DelayEntry<E> x = q.poll();
+                        E x = q.poll();
                         assert x != null;
                         if (q.size() != 0)
                             canTake.signalAll(); // wake up other takers
@@ -75,12 +75,12 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
         }
     }
 
-    public DelayEntry<E> poll(long time, TimeUnit unit) throws InterruptedException {
+    public E poll(long time, TimeUnit unit) throws InterruptedException {
         lock.lockInterruptibly();
         long nanos = unit.toNanos(time);
         try {
             for (;;) {
-                DelayEntry first = q.peek();
+                E first = q.peek();
                 if (first == null) {
                     if (nanos <= 0)
                         return null;
@@ -96,7 +96,7 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
                         nanos -= delay - timeLeft;
                     }
                     else {
-                        DelayEntry<E> x = q.poll();
+                        E x = q.poll();
                         assert x != null;
                         if (q.size() != 0)
                             canTake.signalAll(); 
@@ -111,14 +111,14 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
     }
 
 
-    public DelayEntry<E> poll() {
+    public E poll() {
         lock.lock();
         try {
-            DelayEntry first = q.peek();
+            E first = q.peek();
             if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
                 return null;
             else {
-                DelayEntry<E> x = q.poll();
+                E x = q.poll();
                 assert x != null;
                 if (q.size() != 0)
                     canTake.signalAll(); 
@@ -130,7 +130,7 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
         }
     }
 
-    public DelayEntry<E> peek() {
+    public E peek() {
         lock.lock();
         try {
             return q.peek();
@@ -194,7 +194,7 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
         }
     }
 
-    public Iterator<DelayEntry<E>> iterator() {
+    public Iterator<E> iterator() {
         lock.lock();
         try {
             return new Itr(q.iterator());
@@ -204,9 +204,9 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
         }
     }
 
-    private class Itr<E> implements Iterator<DelayEntry<E>> {
-        private final Iterator<DelayEntry<E>> iter;
-        Itr(Iterator<DelayEntry<E>> i) { 
+    private class Itr<E> implements Iterator<E> {
+        private final Iterator<E> iter;
+        Itr(Iterator<E> i) { 
             iter = i; 
         }
 
@@ -214,7 +214,7 @@ public class DelayQueue<E> extends AbstractQueue<DelayEntry<E>>
             return iter.hasNext();
 	}
         
-	public DelayEntry<E> next() {
+	public E next() {
             lock.lock();
             try {
                 return iter.next();

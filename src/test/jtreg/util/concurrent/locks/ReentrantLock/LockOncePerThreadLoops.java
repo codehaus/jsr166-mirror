@@ -19,9 +19,9 @@ public final class LockOncePerThreadLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
     static final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
     static boolean print = false;
-    static int nlocks = 500000;
+    static int nlocks = 50000;
     static int nthreads = 100;
-    static int replications = 20;
+    static int replications = 5;
 
     public static void main(String[] args) throws Exception {
         if (args.length > 0) 

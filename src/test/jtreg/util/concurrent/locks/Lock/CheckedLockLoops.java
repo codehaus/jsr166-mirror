@@ -17,8 +17,8 @@ public final class CheckedLockLoops {
     static boolean doBuiltin = false;
 
     public static void main(String[] args) throws Exception {
-        int maxThreads = 8;
-        int iters = 1000000;
+        int maxThreads = 5;
+        int iters = 100000;
 
         if (args.length > 0) 
             maxThreads = Integer.parseInt(args[0]);

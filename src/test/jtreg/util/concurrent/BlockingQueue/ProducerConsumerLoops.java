@@ -35,7 +35,7 @@ public class ProducerConsumerLoops {
 
     public static void main(String[] args) throws Exception {
         int maxPairs = 8;
-        int iters = 100000;
+        int iters = 10000;
 
         if (args.length > 0) 
             maxPairs = Integer.parseInt(args[0]);

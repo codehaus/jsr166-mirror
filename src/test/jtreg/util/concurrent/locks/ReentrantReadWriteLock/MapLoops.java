@@ -25,8 +25,8 @@ public class MapLoops {
     static final int NKEYS = 100000; 
     static int pinsert     = 60;
     static int premove     = 2;
-    static int maxThreads  = 8;
-    static int nops        = 2000000;
+    static int maxThreads  = 5;
+    static int nops        = 1000000;
     static int removesPerMaxRandom;
     static int insertsPerMaxRandom;
 

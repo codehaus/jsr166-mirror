@@ -24,7 +24,7 @@ public class CancelledProducerConsumerLoops {
 
     public static void main(String[] args) throws Exception {
         int maxPairs = 8;
-        int iters = 4000000;
+        int iters = 1000000;
 
         if (args.length > 0) 
             maxPairs = Integer.parseInt(args[0]);

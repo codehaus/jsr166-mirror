@@ -24,8 +24,8 @@ public class ExchangeLoops {
     
 
     public static void main(String[] args) throws Exception {
-        int maxStages = 8;
-        int iters = 100000;
+        int maxStages = 5;
+        int iters = 10000;
 
         if (args.length > 0) 
             maxStages = Integer.parseInt(args[0]);

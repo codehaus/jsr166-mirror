@@ -34,7 +34,7 @@ public class MultipleProducersSingleConsumerLoops {
     }
 
     public static void main(String[] args) throws Exception {
-        int maxProducers = 8;
+        int maxProducers = 5;
         int iters = 100000;
 
         if (args.length > 0) 

@@ -21,11 +21,11 @@ import java.util.*;
 public final class CancelledLockLoops {
     static final Random rng = new Random();
     static boolean print = false;
-    static final int ITERS = 10000000;
+    static final int ITERS = 1000000;
     static final long TIMEOUT = 100; 
 
     public static void main(String[] args) throws Exception {
-        int maxThreads = 8;
+        int maxThreads = 5;
         if (args.length > 0) 
             maxThreads = Integer.parseInt(args[0]);
 

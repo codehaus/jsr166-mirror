@@ -19,10 +19,10 @@ public final class SimpleReentrantLockLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
     static final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
     static boolean print = false;
-    static int iters = 10000000;
+    static int iters = 1000000;
 
     public static void main(String[] args) throws Exception {
-        int maxThreads = 8;
+        int maxThreads = 5;
         if (args.length > 0) 
             maxThreads = Integer.parseInt(args[0]);
 

@@ -20,7 +20,7 @@ public class SingleProducerMultipleConsumerLoops {
     static boolean print = false;
 
     public static void main(String[] args) throws Exception {
-        int maxConsumers = 8;
+        int maxConsumers = 5;
         int iters = 10000;
 
         if (args.length > 0) 

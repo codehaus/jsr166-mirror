@@ -460,7 +460,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Execute command with zero required delay.
+     * Execute command with zero required delay. This has effect
+     * equivalent to <tt>schedule(command, 0, anyUnit)</tt>.  Note
+     * that inspections of the queue and of the list returned by
+     * <tt>shutdownNow</tt> will access the zero-delayed
+     * <tt>DelayedTask</tt>, not the <tt>command</tt> itself.
      *
      * @param command the task to execute
      * @throws RejectedExecutionException at discretion of

@@ -330,17 +330,17 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Lifecycle state
      */
-    private volatile int runState;
+    volatile int runState;
 
     // Special values for runState
     /** Normal, not-shutdown mode */
-    private static final int RUNNING    = 0;
+    static final int RUNNING    = 0;
     /** Controlled shutdown mode */
-    private static final int SHUTDOWN   = 1;
+    static final int SHUTDOWN   = 1;
     /** Immediate shutdown mode */
-    private static final int STOP       = 2;
+    static final int STOP       = 2;
     /** Final state */
-    private static final int TERMINATED = 3;
+    static final int TERMINATED = 3;
 
     /**
      * Handler called when saturated or shutdown in execute.
@@ -452,7 +452,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return the task
      * @throws InterruptedException if interrupted while waiting for task
      */
-    private Runnable getTask() throws InterruptedException {
+    Runnable getTask() throws InterruptedException {
         for (;;) {
             switch(runState) {
             case RUNNING: {
@@ -517,7 +517,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Perform bookkeeping for a terminated worker thread.
      * @param w the worker
      */
-    private void workerDone(Worker w) {
+    void workerDone(Worker w) {
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {

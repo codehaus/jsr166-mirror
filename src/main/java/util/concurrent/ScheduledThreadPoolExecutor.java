@@ -22,11 +22,10 @@ import java.util.*;
  * enabled in first-in-first-out (FIFO) order of submission. 
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
- * of the inherited tuning methods are not useful for
- * it. In particular, because a <tt>ScheduledExecutor</tt> always acts
- * as a fixed-sized pool using <tt>corePoolSize</tt> threads and an
- * unbounded queue, adjustments to <tt>maximumPoolSize</tt> have no
- * useful effect.
+ * of the inherited tuning methods are not useful for it. In
+ * particular, because it acts as a fixed-sized pool using
+ * <tt>corePoolSize</tt> threads and an unbounded queue, adjustments
+ * to <tt>maximumPoolSize</tt> have no useful effect.
  *
  * @since 1.5
  * @author Doug Lea

@@ -64,7 +64,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/11 13:12:45 $
+ * @revised $Date: 2003/07/11 22:41:45 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -361,9 +361,17 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * Return whether lock wait queue is empty
      * @return true if no threads are waiting for lock
      */
-    final boolean queueEmpty() {
+    private boolean queueEmpty() {
         ReentrantLockQueueNode h = head; // force order of the volatile reads
         return h == tail; 
+    }
+
+    /**
+     * Throw IllegalMonitorStateException if t not owner
+     */
+    final void checkOwner(Thread t) {
+        if (owner != t) 
+            throw new IllegalMonitorStateException();
     }
 
     /**
@@ -404,10 +412,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @param nanos time to wait, or zero if untimed
      * @return true if lock acquired (can be false only if interruptible)
      */
-    final boolean doLock(Thread current, 
-                         ReentrantLockQueueNode node, 
-                         boolean interruptible,
-                         long nanos) {
+    private boolean waitForLock(Thread current, 
+                              ReentrantLockQueueNode node, 
+                              boolean interruptible,
+                              long nanos) {
         /*
          * Bypass queueing if a recursive lock
          */
@@ -579,9 +587,29 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         Thread thr = s.thread;
-        if (thr != null) 
+        if (thr != null && thr != owner) // don't bother to signal if has lock
             JSR166Support.unpark(s, thr);
     }
+
+    /**
+     * Release and signal if necessary the first waiting thread, if
+     * one exists.
+     */
+    private void releaseFirst() {
+        ReentrantLockQueueNode h = head;
+        if (h != null) {
+            int c;
+            while ((c = h.releaseStatus) <= 0 && owner == null) {
+                if (casReleaseStatus(h, c, c+1)) {
+                    if (c < 0)
+                        signalSuccessor(h);
+                    break;
+                }
+                // Retry if CAS fails
+            }
+        }
+    }
+
 
     /**
      * Attempts to release this lock.  
@@ -594,33 +622,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * hold this lock.
      */
     public void unlock() {
-        if (Thread.currentThread() != owner) 
-            throw new IllegalMonitorStateException();
-        if (recursions > 0) {
+        checkOwner(Thread.currentThread());
+        if (recursions > 0) 
             --recursions;
-            return;
-        }
-        ownerUpdater.set(this, null);
-
-        /*
-         * Release and signal successor
-         */
-        ReentrantLockQueueNode h = head;
-        if (h == null) 
-            return;
-        while (owner == null) {   // No signal needed if already locked
-            int c = h.releaseStatus;
-            if (c > 0)                           // Already released
-                return;
-            if (c == 0) {                        // Not released; not blocked
-                if (casReleaseStatus(h, c, 1))
-                    return;
-            }
-            else if (casReleaseStatus(h, c, 0)) { // Not released; is blocked
-                signalSuccessor(h);
-                return;
-            }
-            // Retry on CAS falure
+        else {
+            ownerUpdater.set(this, null);
+            releaseFirst();
         }
     }
 
@@ -639,7 +646,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public void lock() {
         Thread current = Thread.currentThread();
         if ((fair && !queueEmpty()) || !acquireOwner(current))
-            doLock(current, null, false, 0);
+            waitForLock(current, null, false, 0);
     }
 
     /**
@@ -680,7 +687,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             throw new InterruptedException();
         if ((!fair || queueEmpty()) && acquireOwner(current))
             return;
-        if (doLock(current, null, true, 0))
+        if (waitForLock(current, null, true, 0))
             return;
         Thread.interrupted(); // clear interrupt status on failure
         throw new InterruptedException();
@@ -782,7 +789,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
         if (timeout <= 0) 
             return false;
-        if (doLock(current, null, true, unit.toNanos(timeout)))
+        if (waitForLock(current, null, true, unit.toNanos(timeout)))
             return true;
         if (Thread.interrupted())
             throw new InterruptedException();
@@ -893,6 +900,29 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     // Helper methods for Conditions
 
     /**
+     * Variant of unlock used by condition wait. 
+     * Fully unlocks, setting recursions to zero.
+     * @return current recursion count.
+     */
+    final int unlockForWait() {
+        int recs = recursions;
+        recursions = 0;
+        ownerUpdater.set(this, null);
+        releaseFirst();
+        return recs;
+    }
+
+    /**
+     * Re-acquire lock after wait
+     */
+    final void relockAfterWait(Thread current, 
+                      ReentrantLockQueueNode node, 
+                      int recs) {
+        waitForLock(current, node, false, 0);
+        recursions = recs;
+    }
+
+    /**
      * Return true if a node, always one that was initially placed on
      * a condition queue, is off the condition queue (and thus,
      * normally is now on lock queue.)
@@ -1001,16 +1031,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
         
         public void signal() {
-            if (Thread.currentThread() != owner) 
-                throw new IllegalMonitorStateException();
+            checkOwner(Thread.currentThread());
             ReentrantLockQueueNode w = firstWaiter;
             if (w != null)
                 doSignal(w);
         }
             
         public void signalAll() {
-            if (Thread.currentThread() != owner) 
-                throw new IllegalMonitorStateException();
+            checkOwner(Thread.currentThread());
             // Pull off list all at once and traverse.
             ReentrantLockQueueNode w = firstWaiter;
             if (w != null) {
@@ -1031,42 +1059,37 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         public void await() throws InterruptedException {
             Thread current = Thread.currentThread();
+            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
-            int recs = recursions;
-            recursions = 0;
-            unlock();
-            boolean wasInterrupted = false;
+            int recs = unlockForWait();
 
-            while (!isOffConditionQueue(w)) {
-                if ( (wasInterrupted = Thread.interrupted()) ) {
-                    if (casReleaseStatus(w, ON_CONDITION_QUEUE, 
-                                         CANCELLED)) {
-                        w.thread = null;
-                        w = null;
-                    }
-                    break;
-                }
+            boolean wasInterrupted = false;
+            while (!isOffConditionQueue(w) &&
+                   !(wasInterrupted = Thread.interrupted()))
                 JSR166Support.park(w, false, 0);
+
+            /**
+             * If cancelled, kill node and allow relock, below to make
+             * a new one for lock re-acquistion.  If not cancelled,
+             * our node is already in the lock queue when relock is
+             * called.
+             */ 
+            if (wasInterrupted &&
+                casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
+                w.thread = null;
+                w = null;
             }
 
-            /*
-             * If we exited above loop due to cancellation, then w is
-             * null, and doLock will make a new lock node for
-             * us. Otherwise, upon exit, our node is already in the
-             * lock queue when doLock is called.
-             */
-            doLock(current, w, false, 0);
-            recursions = recs;
+            relockAfterWait(current, w, recs);
             if (wasInterrupted || Thread.interrupted())
                 throw new InterruptedException();
         }
-        
+
         public void awaitUninterruptibly() {
             Thread current = Thread.currentThread();
+            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
-            int recs = recursions;
-            recursions = 0;
-            unlock();
+            int recs = unlockForWait();
 
             boolean wasInterrupted = false;
             while (!isOffConditionQueue(w)) {
@@ -1075,8 +1098,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                     wasInterrupted = true;
             }
 
-            doLock(current, w, false, 0);
-            recursions = recs;
+            relockAfterWait(current, w, recs);
             // avoid re-interrupts on exit
             if (wasInterrupted && !current.isInterrupted()) 
                 current.interrupt();
@@ -1085,32 +1107,27 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         public long awaitNanos(long nanos) throws InterruptedException {
             Thread current = Thread.currentThread();
+            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
-            int recs = recursions;
-            recursions = 0;
-            unlock();
+            int recs = unlockForWait();
 
             if (nanos <= 0) nanos = 1; // park arg must be positive
             long timeLeft = nanos;
             long startTime = TimeUnit.nanoTime();
             boolean wasInterrupted = false;
 
-            while (!isOffConditionQueue(w)) {
-                if ((wasInterrupted = Thread.interrupted()) ||
-                    (timeLeft = nanos - (TimeUnit.nanoTime() - startTime)) <= 0) {
-                    if (casReleaseStatus(w, ON_CONDITION_QUEUE, 
-                                         CANCELLED)) {
-                        w.thread = null;
-                        w = null;
-                    }
-                    break;
-                }
+            while (!isOffConditionQueue(w) &&
+                   !(wasInterrupted = Thread.interrupted()) &&
+                   (timeLeft = nanos - (TimeUnit.nanoTime() - startTime)) > 0)
                 JSR166Support.park(w, false, timeLeft);
+
+            if ((wasInterrupted || timeLeft <= 0) &&
+                casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
+                w.thread = null;
+                w = null;
             }
 
-            doLock(current, w, false, 0);
-            recursions = recs;
-
+            relockAfterWait(current, w, recs);
             if (wasInterrupted || Thread.interrupted()) 
                 throw new InterruptedException();
             else if (timeLeft <= 0)
@@ -1121,32 +1138,28 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         public boolean awaitUntil(Date deadline) throws InterruptedException {
             Thread current = Thread.currentThread();
+            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
-            int recs = recursions;
-            recursions = 0;
-            unlock();
+            int recs = unlockForWait();
 
             boolean wasInterrupted = false;
+            boolean timedOut = false;
             boolean cancelled = false;
             long abstime = deadline.getTime();
 
-            while (!isOffConditionQueue(w)) {
-                if ( (wasInterrupted = Thread.interrupted()) || 
-                     System.currentTimeMillis() <= abstime) {
-                    if (casReleaseStatus(w, ON_CONDITION_QUEUE, 
-                                         CANCELLED)) {
-                        w.thread = null;
-                        w = null;
-                        cancelled = true;
-                    }
-                    break;
-                } 
+            while (!isOffConditionQueue(w) &&
+                   !(wasInterrupted = Thread.interrupted()) &&
+                   !(timedOut = System.currentTimeMillis() > abstime))
                 JSR166Support.park(w, true, abstime);
+
+            if ((wasInterrupted || timedOut) &&
+                casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
+                w.thread = null;
+                w = null;
+                cancelled = true;
             }
 
-            doLock(current, w, false, 0);
-            recursions = recs;
-
+            relockAfterWait(current, w, recs);
             if (wasInterrupted || Thread.interrupted())
                 throw new InterruptedException();
             return !cancelled;

@@ -39,7 +39,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/07 16:00:28 $
+ * @revised $Date: 2003/08/30 14:52:52 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -49,31 +49,46 @@ public final class TimeUnit implements java.io.Serializable {
      * Convert the given time duration in the given unit to the
      * current unit.  Conversions from finer to coarser granulaties
      * truncate, so lose precision. Conversions from coarser to finer
-     * granularities may numerically overflow.
+     * granularities with arguments that would numerically overflow
+     * saturate to <tt>Long.MIN_VALUE</tt> if negative or
+     * <tt>Long>MAX_VALUE</tt> if positive.
      *
      * @param duration the time duration in the given <tt>unit</tt>
      * @param unit the unit of the <tt>duration</tt> argument
-     * @return the converted duration in the current unit.
+     * @return the converted duration in the current unit,
+     * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+     * overflow, or <tt>Long>MAX_VALUE</tt> if it would positively overflow.
      */
     public long convert(long duration, TimeUnit unit) {
         if (unit == this)
             return duration;
-        else if (index > unit.index)
+        else if (index > unit.index) 
             return duration / multipliers[index - unit.index];
-        else
-            return duration * multipliers[unit.index - index];
+        else {
+            int i = unit.index - index;
+            if (duration > overflows[i])
+                return Long.MAX_VALUE;
+            if (duration < -overflows[i])
+                return Long.MIN_VALUE;
+            return duration * multipliers[i];
+        }
     }
 
     /**
      * Equivalent to <code>NANOSECONDS.convert(duration, this)</code>.
      * @param duration the duration
      * @return the converted duration.
+     * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+     * overflow, or <tt>Long>MAX_VALUE</tt> if it would positively overflow.
      **/
     public long toNanos(long duration) {
         if (index == NS)
             return duration;
-        else
-            return duration * multipliers[index];
+        if (duration > overflows[index])
+            return Long.MAX_VALUE;
+        if (duration < -overflows[index])
+            return Long.MIN_VALUE;
+        return duration * multipliers[index];
     }
 
     /**
@@ -89,15 +104,17 @@ public final class TimeUnit implements java.io.Serializable {
      *    }
      *  }</pre>
      * @param obj the object to wait on
-     * @param timeout the maximum time to wait
+     * @param timeout the maximum time to wait. 
      * @throws InterruptedException if interrupted while waiting.
      * @see Object#wait(long, int)
      */
     public void timedWait(Object obj, long timeout)
         throws InterruptedException {
-        long ms = MILLISECONDS.convert(timeout, this);
-        int ns = excessNanos(timeout, ms);
-        obj.wait(ms, ns);
+        if (timeout > 0) {
+            long ms = MILLISECONDS.convert(timeout, this);
+            int ns = excessNanos(timeout, ms);
+            obj.wait(ms, ns);
+        }
     }
 
     /**
@@ -111,9 +128,11 @@ public final class TimeUnit implements java.io.Serializable {
      */
     public void timedJoin(Thread thread, long timeout)
         throws InterruptedException {
-        long ms = MILLISECONDS.convert(timeout, this);
-        int ns = excessNanos(timeout, ms);
-        thread.join(ms, ns);
+        if (timeout > 0) {
+            long ms = MILLISECONDS.convert(timeout, this);
+            int ns = excessNanos(timeout, ms);
+            thread.join(ms, ns);
+        }
     }
 
     /**
@@ -125,9 +144,11 @@ public final class TimeUnit implements java.io.Serializable {
      * @see Thread#sleep
      */
     public void sleep(long timeout) throws InterruptedException {
-        long ms = MILLISECONDS.convert(timeout, this);
-        int ns = excessNanos(timeout, ms);
-        Thread.sleep(ms, ns);
+        if (timeout > 0) {
+            long ms = MILLISECONDS.convert(timeout, this);
+            int ns = excessNanos(timeout, ms);
+            Thread.sleep(ms, ns);
+        }
     }
 
     /**
@@ -146,7 +167,19 @@ public final class TimeUnit implements java.io.Serializable {
     private static final int S  = 3;
 
     /** quick lookup table for conversion factors */
-    static final int[] multipliers = { 1, 1000, 1000*1000, 1000*1000*1000 };
+    static final int[] multipliers = { 1, 
+                                       1000, 
+                                       1000*1000, 
+                                       1000*1000*1000 };
+
+    /** lookup table to check saturation */
+    static final long[] overflows = { 
+        // Note that because we are dividing these down anyway, 
+        // we don't have to deal with asymmetry of MIN/MAX values.
+        0, // unused
+        Long.MAX_VALUE / 1000,
+        Long.MAX_VALUE / (1000 * 1000),
+        Long.MAX_VALUE / (1000 * 1000 * 1000) };
 
     /** the index of this unit */
     int index;

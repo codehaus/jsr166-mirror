@@ -40,9 +40,15 @@ package java.util.concurrent;
  * write lock. However, upgrading from a read lock to the write lock, is
  * <b>not</b> possible.
  *
- * <li><b>Interruption of lock aquisition</b>
- * <p>Both the read lock and write lock support interruption during lock
+ * <li><b>Interruption of lock acquisition</b>
+ * <p>The read lock and write lock both support interruption during lock
  * acquisition.
+ * And both view the
+ * interruptible lock methods as explicit interruption points and give
+ * preference to responding to the interrupt over normal or reentrant 
+ * acquisition of the lock, or over reporting the elapse of the waiting
+ * time, as applicable.
+
  *
  * <li><b>{@link Condition} support</b>
  * <p>The write lock provides a {@link Condition} implementation that
@@ -51,7 +57,8 @@ package java.util.concurrent;
  * {@link ReentrantLock#newCondition} does for {@link ReentrantLock}.
  * This {@link Condition} can, of course, only be used with the write lock.
  * <p>The read lock does not support a {@link Condition} and
- * <tt>readLock().newCondition()</tt> will return <tt>null</tt>.
+ * <tt>readLock().newCondition()</tt> throws 
+ * <tt>UnsupportedOperationException</tt>.
  *
  * <li><b>Ownership</b>
  * <p>While not exposing a means to query the owner, the write lock does
@@ -61,6 +68,7 @@ package java.util.concurrent;
  * Consequently, while not a particularly 
  * good practice, it is possible to acquire a read lock in one thread, and 
  * release it in another. This can occasionally be useful.
+ *
  *
  * </ul>
  *
@@ -101,8 +109,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:48 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/26 05:13:48 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  *
  */
@@ -417,4 +425,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
 }
+
+
+
+
+
 

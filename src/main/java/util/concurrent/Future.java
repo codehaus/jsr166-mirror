@@ -114,6 +114,7 @@ public interface Future<V> {
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
      * @return computed result
+     * @throws CancellationException if this future was cancelled.
      * @throws ExecutionException if underlying computation threw an
      * exception
      * @throws InterruptedException if current thread was interrupted

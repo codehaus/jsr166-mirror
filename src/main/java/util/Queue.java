@@ -72,7 +72,7 @@ package java.util;
 public interface Queue<E> extends Collection<E> {
 
     /**
-     * Add the specified element to this queue, if possible.
+     * Adds the specified element to this queue, if possible.
      *
      * @param o the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
@@ -81,7 +81,7 @@ public interface Queue<E> extends Collection<E> {
     boolean offer(E o);
 
     /**
-     * Retrieve and remove the head of this queue, if it is available.
+     * Retrieves and removes the head of this queue, if it is available.
      *
      * @return the head of this queue, or <tt>null</tt> if this
      *         queue is empty.
@@ -89,7 +89,7 @@ public interface Queue<E> extends Collection<E> {
     E poll();
 
     /**
-     * Retrieve and remove the head of this queue.
+     * Retrieves and removes the head of this queue.
      * This method differs
      * from the <tt>poll</tt> method in that it throws an exception if this
      * queue is empty.
@@ -100,7 +100,7 @@ public interface Queue<E> extends Collection<E> {
     E remove();
 
     /**
-     * Retrieve, but do not remove, the head of this queue.
+     * Retrieves, but does not remove, the head of this queue.
      * This method differs from the <tt>poll</tt>
      * method only in that this method does not remove the head element from
      * this queue.
@@ -110,7 +110,7 @@ public interface Queue<E> extends Collection<E> {
     E peek();
 
     /**
-     * Retrieve, but do not remove, the head of this queue.  This method
+     * Retrieves, but does not remove, the head of this queue.  This method
      * differs from the <tt>peek</tt> method only in that it throws an
      * exception if this queue is empty.
      *

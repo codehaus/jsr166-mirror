@@ -209,6 +209,12 @@ public class ScheduledThreadPoolExecutor
         }
     }
 
+    public boolean remove(Runnable task) {
+        if (!(task instanceof ScheduledFutureTask))
+            return false;
+        return getQueue().remove(task);
+    }
+
     /**
      * Creates a new ScheduledThreadPoolExecutor with the given core
      * pool size.

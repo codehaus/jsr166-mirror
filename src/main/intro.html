@@ -68,20 +68,28 @@ java.util.PriorityQueue} is added.
 
 <h2>Threads</h2>
 
-Two minor changes are introduced to the {@link java.lang.Thread}
-class: It now allows per-thread installation of handlers for uncaught
-exceptions. Ths optionally disassociates handlers from ThreadGroups,
-which has proven to be too inflexible. (Note that the combination of
-features in JSR-166 make ThreadGroups even less likely to be used in
-most programs. Perhaps they will eventually be deprecated.) Secondly,
-access checks are no longer required when a Thread interrupts
-<em>itself</em>.  The <tt>interrupt</tt> method is the only way to
-re-assert a thread's interruption status (and in the case of
-self-interruption has no other effect than this).  The check here
-previously caused unjustifiable and uncontrollable failures when
-restricted code invoked library code that must reassert interruption
-to correctly propagate status when encountering some
-<tt>InterruptedExceptions</tt>.
+Three minor changes are introduced to the {@link java.lang.Thread}
+class:
+<ul>
+  <li> It now allows per-thread installation of handlers for uncaught
+  exceptions. Ths optionally disassociates handlers from ThreadGroups,
+  which has proven to be too inflexible. (Note that the combination of
+  features in JSR-166 make ThreadGroups even less likely to be used in
+  most programs. Perhaps they will eventually be deprecated.)
+
+  <li> Access checks are no longer required when a Thread interrupts
+  <em>itself</em>.  The <tt>interrupt</tt> method is the only way to
+  re-assert a thread's interruption status (and in the case of
+  self-interruption has no other effect than this).  The check here
+  previously caused unjustifiable and uncontrollable failures when
+  restricted code invoked library code that must reassert interruption
+  to correctly propagate status when encountering some
+  <tt>InterruptedExceptions</tt>.
+  <li> The <tt>destroy</tt> method, which has never been implemented,
+  has finally been deprecated. This is just a spec change, reflecting
+  the fact that that the reason it has never been implmented is that
+  it was undesirable and unworkable.
+</ul>
 
 <h2>Timing</h2>
 

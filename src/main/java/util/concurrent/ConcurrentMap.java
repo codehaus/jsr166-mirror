@@ -60,6 +60,9 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @param key key with which the specified value is associated.
      * @param value value associated with the specified key.
      * @return true if the value was removed
+     * @throws NullPointerException this map does not permit <tt>null</tt>
+     *            keys or values, and the specified key or value is
+     *            <tt>null</tt>.
      */
     boolean remove(Object key, Object value);
 

@@ -394,7 +394,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             return null;
         E x = null;
         int c = -1;
-        takeLock.tryLock();
+        takeLock.lock();
         try {
             if (count.get() > 0) {
                 x = extract();

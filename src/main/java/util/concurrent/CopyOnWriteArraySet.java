@@ -43,7 +43,7 @@ import java.util.*;
  *    public void update() {
  *       changeState();
  *       for (Handler handler : handlers)
- *          it.next().handle();
+ *          handler.handle();
  *    }
  * }
  * </pre>

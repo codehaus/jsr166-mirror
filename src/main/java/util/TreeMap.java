@@ -5,7 +5,7 @@
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
-package java.util;  
+package java.util;
 
 
 /**
@@ -559,7 +559,7 @@ public class TreeMap<K,V>
             incrementSize();
             root = new Entry<K,V>(key, value, null);
             return null;
-       }
+        }
 
         while (true) {
             int cmp = compare(key, t.key);
@@ -658,8 +658,8 @@ public class TreeMap<K,V>
     /**
      * Returns a key-value mapping associated with the least
      * key in this map, or <tt>null</tt> if the map is empty.
-     * 
-     * @return an Entry with least key, or <tt>null</tt> 
+     *
+     * @return an Entry with least key, or <tt>null</tt>
      * if the map is empty.
      */
     public Map.Entry<K,V> firstEntry() {
@@ -670,7 +670,7 @@ public class TreeMap<K,V>
     /**
      * Returns a key-value mapping associated with the greatest
      * key in this map, or <tt>null</tt> if the map is empty.
-     * 
+     *
      * @return an Entry with greatest key, or <tt>null</tt>
      * if the map is empty.
      */
@@ -682,13 +682,13 @@ public class TreeMap<K,V>
     /**
      * Removes and returns a key-value mapping associated with
      * the least key in this map, or <tt>null</tt> if the map is empty.
-     * 
+     *
      * @return the removed first entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
     public Map.Entry<K,V> pollFirstEntry() {
         Entry<K,V> p = getFirstEntry();
-        if (p == null) 
+        if (p == null)
             return null;
         Map.Entry result = new AbstractMap.SimpleImmutableEntry(p);
         deleteEntry(p);
@@ -698,13 +698,13 @@ public class TreeMap<K,V>
     /**
      * Removes and returns a key-value mapping associated with
      * the greatest key in this map, or <tt>null</tt> if the map is empty.
-     * 
+     *
      * @return the removed last entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
     public Map.Entry<K,V> pollLastEntry() {
         Entry<K,V> p = getLastEntry();
-        if (p == null) 
+        if (p == null)
             return null;
         Map.Entry result = new AbstractMap.SimpleImmutableEntry(p);
         deleteEntry(p);
@@ -714,8 +714,8 @@ public class TreeMap<K,V>
     /**
      * Returns a key-value mapping associated with the least key
      * greater than or equal to the given key, or <tt>null</tt> if
-     * there is no such entry. 
-     * 
+     * there is no such entry.
+     *
      * @param key the key.
      * @return an Entry associated with ceiling of given key, or
      * <tt>null</tt> if there is no such Entry.
@@ -734,7 +734,7 @@ public class TreeMap<K,V>
     /**
      * Returns least key greater than or equal to the given key, or
      * <tt>null</tt> if there is no such key.
-     * 
+     *
      * @param key the key.
      * @return the ceiling key, or <tt>null</tt>
      * if there is no such key.
@@ -754,8 +754,8 @@ public class TreeMap<K,V>
     /**
      * Returns a key-value mapping associated with the greatest key
      * less than or equal to the given key, or <tt>null</tt> if there
-     * is no such entry. 
-     * 
+     * is no such entry.
+     *
      * @param key the key.
      * @return an Entry associated with floor of given key, or <tt>null</tt>
      * if there is no such Entry.
@@ -774,7 +774,7 @@ public class TreeMap<K,V>
      * Returns the greatest key
      * less than or equal to the given key, or <tt>null</tt> if there
      * is no such key.
-     * 
+     *
      * @param key the key.
      * @return the floor of given key, or <tt>null</tt> if there is no
      * such key.
@@ -792,8 +792,8 @@ public class TreeMap<K,V>
     /**
      * Returns a key-value mapping associated with the least key
      * strictly greater than the given key, or <tt>null</tt> if there
-     * is no such entry. 
-     * 
+     * is no such entry.
+     *
      * @param key the key.
      * @return an Entry with least key greater than the given key, or
      * <tt>null</tt> if there is no such Entry.
@@ -811,7 +811,7 @@ public class TreeMap<K,V>
     /**
      * Returns the least key strictly greater than the given key, or
      * <tt>null</tt> if there is no such key.
-     * 
+     *
      * @param key the key.
      * @return the least key greater than the given key, or
      * <tt>null</tt> if there is no such key.
@@ -829,8 +829,8 @@ public class TreeMap<K,V>
     /**
      * Returns a key-value mapping associated with the greatest
      * key strictly less than the given key, or <tt>null</tt> if there is no
-     * such entry. 
-     * 
+     * such entry.
+     *
      * @param key the key.
      * @return an Entry with greatest key less than the given
      * key, or <tt>null</tt> if there is no such Entry.
@@ -848,7 +848,7 @@ public class TreeMap<K,V>
     /**
      * Returns the greatest key strictly less than the given key, or
      * <tt>null</tt> if there is no such key.
-     * 
+     *
      * @param key the key.
      * @return the greatest key less than the given
      * key, or <tt>null</tt> if there is no such key.
@@ -872,7 +872,7 @@ public class TreeMap<K,V>
      */
     private transient Set<Map.Entry<K,V>> entrySet = null;
     private transient Set<Map.Entry<K,V>> descendingEntrySet = null;
-    private transient Set<K> descendingKeySet = null; 
+    private transient Set<K> descendingKeySet = null;
 
     transient Set<K> keySet = null;        // XXX remove when integrated
     transient Collection<V> values = null; // XXX remove when integrated
@@ -898,21 +898,21 @@ public class TreeMap<K,V>
         public Iterator<K> iterator() {
             return new KeyIterator(getFirstEntry());
         }
-        
+
         public int size() {
             return TreeMap.this.size();
         }
-        
+
         public boolean contains(Object o) {
             return containsKey(o);
         }
-        
+
         public boolean remove(Object o) {
             int oldSize = size;
             TreeMap.this.remove(o);
             return size != oldSize;
         }
-        
+
         public void clear() {
             TreeMap.this.clear();
         }
@@ -940,18 +940,18 @@ public class TreeMap<K,V>
         public Iterator<V> iterator() {
             return new ValueIterator(getFirstEntry());
         }
-        
+
         public int size() {
             return TreeMap.this.size();
         }
-        
+
         public boolean contains(Object o) {
             for (Entry<K,V> e = getFirstEntry(); e != null; e = successor(e))
                 if (valEquals(e.getValue(), o))
                     return true;
             return false;
         }
-        
+
         public boolean remove(Object o) {
             for (Entry<K,V> e = getFirstEntry(); e != null; e = successor(e)) {
                 if (valEquals(e.getValue(), o)) {
@@ -961,7 +961,7 @@ public class TreeMap<K,V>
             }
             return false;
         }
-        
+
         public void clear() {
             TreeMap.this.clear();
         }
@@ -990,7 +990,7 @@ public class TreeMap<K,V>
         public Iterator<Map.Entry<K,V>> iterator() {
             return new EntryIterator(getFirstEntry());
         }
-        
+
         public boolean contains(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
@@ -999,7 +999,7 @@ public class TreeMap<K,V>
             Entry<K,V> p = getEntry(entry.getKey());
             return p != null && valEquals(p.getValue(), value);
         }
-        
+
         public boolean remove(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
@@ -1012,11 +1012,11 @@ public class TreeMap<K,V>
             }
             return false;
         }
-        
+
         public int size() {
             return TreeMap.this.size();
         }
-        
+
         public void clear() {
             TreeMap.this.clear();
         }
@@ -1034,7 +1034,7 @@ public class TreeMap<K,V>
      * operations.  It does not support the <tt>add</tt> or
      * <tt>addAll</tt> operations.
      *
-     * @return a set view of the mappings contained in this map, in 
+     * @return a set view of the mappings contained in this map, in
      * descending key order
      * @see Map.Entry
      */
@@ -1354,7 +1354,7 @@ public class TreeMap<K,V>
         }
 
         public Map.Entry<K,V> firstEntry() {
-	    TreeMap.Entry<K,V> e = fromStart ? 
+	    TreeMap.Entry<K,V> e = fromStart ?
                 getFirstEntry() : getCeilingEntry(fromKey);
             if (e == null || (!toEnd && compare(e.key, toKey) >= 0))
                 return null;
@@ -1362,7 +1362,7 @@ public class TreeMap<K,V>
         }
 
         public Map.Entry<K,V> lastEntry() {
-	    TreeMap.Entry<K,V> e = toEnd ? 
+	    TreeMap.Entry<K,V> e = toEnd ?
                 getLastEntry() : getLowerEntry(toKey);
             if (e == null || (!fromStart && compare(e.key, fromKey) < 0))
                 return null;
@@ -1370,7 +1370,7 @@ public class TreeMap<K,V>
         }
 
         public Map.Entry<K,V> pollFirstEntry() {
-	    TreeMap.Entry<K,V> e = fromStart ? 
+	    TreeMap.Entry<K,V> e = fromStart ?
                 getFirstEntry() : getCeilingEntry(fromKey);
             if (e == null || (!toEnd && compare(e.key, toKey) >= 0))
                 return null;
@@ -1380,7 +1380,7 @@ public class TreeMap<K,V>
         }
 
         public Map.Entry<K,V> pollLastEntry() {
-	    TreeMap.Entry<K,V> e = toEnd ? 
+	    TreeMap.Entry<K,V> e = toEnd ?
                 getLastEntry() : getLowerEntry(toKey);
             if (e == null || (!fromStart && compare(e.key, fromKey) < 0))
                 return null;
@@ -1523,7 +1523,7 @@ public class TreeMap<K,V>
         }
 
         private transient Set<Map.Entry<K,V>> descendingEntrySetView = null;
-        private transient Set<K> descendingKeySetView = null; 
+        private transient Set<K> descendingKeySetView = null;
 
         public Set<Map.Entry<K,V>> descendingEntrySet() {
             Set<Map.Entry<K,V>> es = descendingEntrySetView;
@@ -1547,17 +1547,17 @@ public class TreeMap<K,V>
             public Iterator<K> iterator() {
                 return new Iterator<K>() {
                     private Iterator<Entry<K,V>> i = descendingEntrySet().iterator();
-                    
+
                     public boolean hasNext() { return i.hasNext(); }
                     public K next() { return i.next().getKey(); }
                     public void remove() { i.remove(); }
                 };
             }
-            
+
             public int size() {
                 return SubMap.this.size();
             }
-            
+
             public boolean contains(Object k) {
                 return SubMap.this.containsKey(k);
             }

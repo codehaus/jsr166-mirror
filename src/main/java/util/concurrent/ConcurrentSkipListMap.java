@@ -264,7 +264,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * For explanation of algorithms sharing at least a couple of
      * features with this one, see Mikhail Fomitchev's thesis
      * (http://www.cs.yorku.ca/~mikhail/), Keir Fraser's thesis
-     * (http://www.cl.cam.ac.uk/users/kaf24/), and Håkan Sundell's
+     * (http://www.cl.cam.ac.uk/users/kaf24/), and Hakan Sundell's
      * thesis (http://www.cs.chalmers.se/~phs/).
      *
      * Given the use of tree-like index nodes, you might wonder why

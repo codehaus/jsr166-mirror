@@ -17,9 +17,16 @@ public class SystemTest extends JSR166TestCase {
         return new TestSuite(SystemTest.class);
     }
 
+    /** 
+     * Worst case rounding for millisecs; set for 60 cycle millis clock.
+     * This value might need to be changed os JVMs with coarser
+     *  System.currentTimeMillis clocks.
+     */
+    static final long MILLIS_ROUND = 17;
+
     /**
      * Nanos between readings of millis is no longer than millis (plus
-     * one milli to allow for rounding).
+     * possible rounding).
      * This shows only that nano timing not (much) worse than milli.
      */
     public void testNanoTime1() {
@@ -33,9 +40,9 @@ public class SystemTest extends JSR166TestCase {
             long m2 = System.currentTimeMillis();
             long millis = m2 - m1;
             long nanos = n2 - n1;
-            
             assertTrue(nanos >= 0);
-            assertTrue(nanos < (millis+1) * 1000000);
+            long nanosAsMillis = nanos / 1000000;
+            assertTrue(nanosAsMillis <= millis + MILLIS_ROUND);
         }
         catch(InterruptedException ie) {
             unexpectedException();
@@ -43,7 +50,8 @@ public class SystemTest extends JSR166TestCase {
     }
 
     /**
-     * Millis between readings of nanos is no longer than nanos
+     * Millis between readings of nanos is less than nanos, adjusting
+     * for rounding.
      * This shows only that nano timing not (much) worse than milli.
      */
     public void testNanoTime2() {
@@ -59,7 +67,8 @@ public class SystemTest extends JSR166TestCase {
             long nanos = n2 - n1;
             
             assertTrue(nanos >= 0);
-            assertTrue(millis * 1000000 <= nanos);
+            long nanosAsMillis = nanos / 1000000;
+            assertTrue(millis <= nanosAsMillis + MILLIS_ROUND);
         }
         catch(InterruptedException ie) {
             unexpectedException();

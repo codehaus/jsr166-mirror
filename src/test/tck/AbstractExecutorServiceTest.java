@@ -764,7 +764,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             l.add(new StringTask());
             l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            List<Future<String>> result = e.invokeAll(l, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(3, result.size());
             Iterator<Future<String>> it = result.iterator(); 
             Future<String> f1 = it.next();

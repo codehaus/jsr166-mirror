@@ -54,6 +54,14 @@ package java.util;
  * used as a special return value by the <tt>poll</tt> method to
  * indicate that the queue contains no elements.
  *
+ * <p><tt>Queue</tt> implementations generally do not define
+ * element-based versions of methods <tt>equals</tt> and
+ * <tt>hashCode</tt> but instead inherit the identity based versions
+ * from class <tt>Object</tt>, because element-based equality is not
+ * always well-defined for queues with the same elements but different
+ * ordering properties.
+ *
+ *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.

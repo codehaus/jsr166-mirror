@@ -1,18 +1,15 @@
  package java.util;
 
 /**
- * An unbounded priority {@linkplain Queue queue} based on a priority heap.  
- * This queue orders
- * elements according to an order specified at construction time, which is
- * specified in the same manner as {@link java.util.TreeSet} and
- * {@link java.util.TreeMap}: elements are ordered
- * either according to their <i>natural order</i> (see {@link Comparable}), or
- * according to a {@link java.util.Comparator}, depending on which
- * constructor is used.
+ * An unbounded priority {@linkplain Queue queue} based on a priority heap.
+ * This queue orders elements according to an order specified at construction
+ * time, which is specified in the same manner as {@link java.util.TreeSet}
+ * and {@link java.util.TreeMap}: elements are ordered either according to
+ * their <i>natural order</i> (see {@link Comparable}), or according to a
+ * {@link java.util.Comparator}, depending on which constructor is used.
  * <p>The <em>head</em> of this queue is the <em>least</em> element with
- * respect to the specified ordering.
- * If multiple elements are tied for least value, the
- * head is one of those elements. A priority queue does not permit
+ * respect to the specified ordering.  If multiple elements are tied for least
+ * value, the head is one of those elements. A priority queue does not permit
  * <tt>null</tt> elements.
  *
  * <p>The {@link #remove()} and {@link #poll()} methods remove and
@@ -150,22 +147,22 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Initially fill elements of the queue array under the 
      * knowledge that it is sorted or is another PQ, in which
-     * case we can just place the elements without fixups.
+     * case we can just place the elements in the order presented.
      */
     private void fillFromSorted(Collection<? extends E> c) {
         for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
             queue[++size] = i.next();
     }
 
-
     /**
-     * Initially fill elements of the queue array that is
-     * not to our knowledge sorted, so we must add them
-     * one by one.
+     * Initially fill elements of the queue array that is not to our knowledge
+     * sorted, so we must rearrange the elements to guarantee the heap
+     * invariant.
      */
     private void fillFromUnsorted(Collection<? extends E> c) {
         for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
-            add(i.next());
+            queue[++size] = i.next();
+        heapify();
     }
 
     /**
@@ -271,9 +268,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         queue = newQueue;
     }
             
+
     // Queue Methods
-
-
 
     /**
      * Add the specified element to this priority queue.
@@ -302,7 +298,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     public E poll() {
         if (size == 0)
             return null;
-        return (E) remove(1);
+        return remove();
     }
 
     public E peek() {
@@ -345,7 +341,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
 
- /**
+    /**
      * Removes a single instance of the specified element from this
      * queue, if it is present.  More formally,
      * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
@@ -366,14 +362,14 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         if (comparator == null) {
             for (int i = 1; i <= size; i++) {
                 if (((Comparable<E>)queue[i]).compareTo((E)o) == 0) {
-                    remove(i);
+                    removeAt(i);
                     return true;
                 }
             }
         } else {
             for (int i = 1; i <= size; i++) {
                 if (comparator.compare((E)queue[i], (E)o) == 0) {
-                    remove(i);
+                    removeAt(i);
                     return true;
                 }
             }
@@ -400,9 +396,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         private int cursor = 1;
 
         /**
-         * Index of element returned by most recent call to next or
-         * previous.  Reset to 0 if this element is deleted by a call
-         * to remove.
+         * Index of element returned by most recent call to next,
+         * unless that element came from the forgetMeNot list.
+         * Reset to 0 if element is deleted by a call to remove.
          */
         private int lastRet = 0;
 
@@ -413,37 +409,69 @@ public class PriorityQueue<E> extends AbstractQueue<E>
          */
         private int expectedModCount = modCount;
 
-        // Workarounds until version that better handles remove() installed.
-        // These are used to copy-on-write the array upon first remove
-        private Object[] q = queue;
-        private int qsize = size;
+        /**
+         * A list of elements that were moved from the unvisited portion of
+         * the heap into the visited portion as a result of "unlucky" element
+         * removals during the iteration.  (Unlucky element removals are those
+         * that require a fixup instead of a fixdown.)  We must visit all of
+         * the elements in this list to complete the iteration.  We do this
+         * after we've completed the "normal" iteration.
+         *
+         * We expect that most iterations, even those involving removals,
+         * will not use need to store elements in this field.
+         */
+        private ArrayList<E> forgetMeNot = null;
+
+        /**
+         * Element returned by the most recent call to next iff that
+         * element was drawn from the forgetMeNot list.
+         */
+        private Object lastRetElt = null;
 
         public boolean hasNext() {
-            return cursor <= qsize;
+            return cursor <= size || forgetMeNot != null;
         }
 
         public E next() {
             checkForComodification();
-            if (cursor > qsize)
+            E result;
+            if (cursor <= size) {
+                result = (E) queue[cursor];
+                lastRet = cursor++;
+            }
+            else if (forgetMeNot == null)
                 throw new NoSuchElementException();
-            E result = (E) q[cursor];
-            lastRet = cursor++;
+            else {
+                int remaining = forgetMeNot.size();
+                result = forgetMeNot.remove(remaining - 1);
+                if (remaining == 1) 
+                    forgetMeNot = null;
+                lastRet = 0;
+                lastRetElt = result;
+            }
             return result;
         }
 
         public void remove() {
-            if (lastRet == 0)
-                throw new IllegalStateException();
             checkForComodification();
 
-            // Copy on first remove
-            if (q == queue) {
-                q = new Object[queue.length];
-                System.arraycopy(queue, 0, q, 0, queue.length);
+            if (lastRet != 0) {
+                E moved = PriorityQueue.this.removeAt(lastRet);
+                lastRet = 0;
+                if (moved == null) {
+                    cursor--;
+                } else {
+                    if (forgetMeNot == null)
+                        forgetMeNot = new ArrayList();
+                    forgetMeNot.add(moved);
+                }
+            } else if (lastRetElt != null) {
+                PriorityQueue.this.remove(lastRetElt);
+                lastRetElt = null;
+            } else {
+                throw new IllegalStateException();
             }
-            PriorityQueue.this.remove(q[lastRet]);
 
-            lastRet = 0;
             expectedModCount = modCount;
         }
 
@@ -471,23 +499,51 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Removes and returns the ith element from queue.  Recall
-     * that queue is one-based, so 1 <= i <= size.
-     *
+     * Removes and returns the first element from queue.
      */
-    private E remove(int i) {
-        assert i <= size;
+    public E remove() {
+        if (size == 0)
+            throw new NoSuchElementException();
         modCount++;
 
-        E result = (E) queue[i];
-        queue[i] = queue[size];
+        E result = (E) queue[1];
+        queue[1] = queue[size];
+        queue[size--] = null;  // Drop extra ref to prevent memory leak
+        if (size > 1)
+            fixDown(1);
+
+        return result;
+    }
+
+    /**
+     * Removes and returns the ith element from queue.  (Recall that queue
+     * is one-based, so 1 <= i <= size.)
+     *
+     * Normally this method leaves the elements at positions from 1 up to i-1,
+     * inclusive, untouched.  Under these circumstances, it returns null.
+     * Occasionally, in order to maintain the heap invariant, it must move
+     * the last element of the list to some index in the range [2, i-1],
+     * and move the element previously at position (i/2) to position i.
+     * Under these circumstances, this method returns the element that was
+     * previously at the end of the list and is now at some position between
+     * 2 and i-1 inclusive.
+     */
+    private E removeAt(int i) { 
+        assert i > 0 && i <= size;
+        modCount++;
+
+        E moved = (E) queue[size];
+        queue[i] = moved;
         queue[size--] = null;  // Drop extra ref to prevent memory leak
         if (i <= size) {
             fixDown(i);
-            fixUp(i);
+            if (queue[i] == moved) {
+                fixUp(i);
+                if (queue[i] != moved)
+                    return moved;
+            }
         }
-
-        return result;
+        return null;
     }
 
     /**
@@ -552,9 +608,16 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                 k = j;
             }
         }
-
     }
 
+    /**
+     * Establishes the heap invariant (described above) in the entire tree,
+     * assuming nothing about the order of the elements prior to the call.
+     */
+    private void heapify() {
+        for (int i = size/2; i >= 1; i--)
+            fixDown(i);
+    }
 
     /**
      * Returns the comparator used to order this collection, or <tt>null</tt>
@@ -610,4 +673,3 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
 }
-

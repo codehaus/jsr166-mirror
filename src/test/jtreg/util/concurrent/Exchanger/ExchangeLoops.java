@@ -1,6 +1,10 @@
 /*
- * @test
+ * @test %I% %E%
+ * @bug 4486658
  * @summary checks to make sure a pipeline of exchangers passes data.
+ *
+ * @compile -source 1.5 ExchangeLoops.java
+ * @run main ExchangeLoops
  */
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166

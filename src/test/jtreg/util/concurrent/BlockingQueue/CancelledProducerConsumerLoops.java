@@ -1,8 +1,12 @@
 /*
- * @test
+ * @test %I% %E%
+ * @bug 4486658
  * @summary Checks for responsiveness of blocking queues to cancellation. 
  * Runs under the assumption that ITERS computations require more than
  * TIMEOUT msecs to complete.
+ *
+ * @compile -source 1.5 CancelledProducerConsumerLoops.java
+ * @run main CancelledProducerConsumerLoops
  */
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166

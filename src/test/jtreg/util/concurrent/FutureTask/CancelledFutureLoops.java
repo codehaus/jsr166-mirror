@@ -1,9 +1,13 @@
 /*
- * @test
+ * @test %I% %E%
+ * @bug 4486658
  * @summary Checks for responsiveness of futures to cancellation. 
- * Runs under
- * the assumption that ITERS computations require more than TIMEOUT
- * msecs to complete.
+ *
+ * @compile -source 1.5 CancelledFutureLoops.java
+ * @run main CancelledFutureLoops
+ *
+ * Runs under the assumption that ITERS computations require more than
+ * TIMEOUT msecs to complete.
  */
 
 /*

@@ -1,6 +1,10 @@
 /**
- * @test
- * @synopsis Times and checks basic map operations
+ * @test %I% %E%
+ * @bug 4486658
+ * @summary Times and checks basic map operations
+ *
+ * @compile -source 1.5 MapCheck.java
+ * @run main MapCheck
  */
 import java.util.*;
 import java.io.*;

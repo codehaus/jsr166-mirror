@@ -1,6 +1,10 @@
 /*
- * @test
- * @synopsis  multiple producers and consumers using blocking queues
+ * @test %I% %E%
+ * @bug 4486658
+ * @summary  multiple producers and consumers using blocking queues
+ *
+ * @compile -source 1.5 ProducerConsumerLoops.java
+ * @run main ProducerConsumerLoops
  */
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166

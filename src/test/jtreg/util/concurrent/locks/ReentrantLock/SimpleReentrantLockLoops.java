@@ -1,6 +1,10 @@
 /*
- * @test
- * @synopsis multiple threads using a single lock
+ * @test %I% %E%
+ * @bug 4486658
+ * @summary multiple threads using a single lock
+ *
+ * @compile -source 1.5 SimpleReentrantLockLoops.java
+ * @run main SimpleReentrantLockLoops
  */
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166

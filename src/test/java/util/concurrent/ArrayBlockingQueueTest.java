@@ -2,6 +2,7 @@ package java.util.concurrent;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.ConcurrentModificationException;
 
 import junit.framework.TestCase;
 
@@ -30,24 +31,26 @@ public class ArrayBlockingQueueTest extends TestCase {
 
         final ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(3);
 
-        q.add(3);
-        q.add(2);
         q.add(1);
+        q.add(2);
+        q.add(3);
 
         assertEquals("queue should be full", 0, q.remainingCapacity());
 
         int k = 0;
         for (Integer i : q) {
-            ++k;
+            assertEquals("items should come out in order", ++k, i);
         }
 
-        // Broken?
-        //assertEquals("should go through 3 elements", 3, k);
+        assertEquals("should go through 3 elements", 3, k);
 
-        // Broken, returns 3 null elements instead of 1, 2, 3.
-        Object[] qa = q.toArray();
-        for (Object i : qa) {
-            System.out.println("q has " + i);
+        try {
+            for (Integer i : q) {
+                q.remove();
+            }
+            fail("should get CME");
+        }
+        catch (ConcurrentModificationException e) {
         }
     }
 
@@ -65,8 +68,8 @@ public class ArrayBlockingQueueTest extends TestCase {
 
         final ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(2);
 
-        q.add(2);
         q.add(1);
+        q.add(2);
 
         if (!EMULATING) {
 

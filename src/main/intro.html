@@ -24,17 +24,20 @@ To join a mailing list discussing this JSR, go to:
  their inclusion in a product.
 </em>
 
-<p> JSR166 introduces package <tt>java.util.concurrent</tt> containing utility
-classes commonly useful in concurrent programming. Like package
-java.util, it includes a few small standardized extensible frameworks,
-as well as some classes that provide useful functionality and are
-otherwise tedious or difficult to implement.  Descriptions of the main
-components may be found in the associated package documentation.
+<p> JSR166 introduces package <tt>java.util.concurrent</tt> containing
+utility classes commonly useful in concurrent programming. Like
+package java.util, it includes a few small standardized extensible
+frameworks, as well as some classes that provide useful functionality
+and are otherwise tedious or difficult to implement. JSR-166 focusses
+on breadth, prviding critical functionality useful across a wide range
+of concurrent programming styles and applications, ranging from
+low-level atomic operations, to customizable locks and synchronization
+aids, to various concurrent data structures, to thread pools.
+Descriptions of the main components may be found in the associated
+package documentation.
 
 <p> JSR166 also includes a few changes and additions in packages
-outside of java.util.concurrent: java.lang, to address uncaught
-exceptions, and java.util to better integrate with collections.  Here
-are brief descriptions.
+outside of java.util.concurrent.  Here are brief descriptions.
 
 <h2>Queues</h2>
 
@@ -53,8 +56,16 @@ combination of features in JSR166 make ThreadGroups even less likely
 to be used in most programs. Perhaps they will eventually be
 deprecated.)
 
-<p> Additionally, java.lang.ThreadLocal now supports a means to remove
-a ThreadLocal, which is needed in some thread-pool and worker-thread
+<h2>High precision timing</h2>
+
+Method <tt>nanoTime</tt> is added to <tt>java.lang.System</tt>. It
+provides a high-precision timing facility that is distinct from
+and uncoordinated with <tt>System.currentTimeMillis</tt>.
+
+<h2>Removing ThreadLocals</h2>
+
+The java.lang.ThreadLocal class now supports a means to remove a
+ThreadLocal, which is needed in some thread-pool and worker-thread
 designs.
 
   <hr>

@@ -101,8 +101,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/07 18:20:21 $
+ * @revised $Date: 2003/06/24 14:34:48 $
  * @editor $Author: dl $
+ * @author Doug Lea
  *
  */
 public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializable  {
@@ -113,11 +114,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     */
 
     /** Inner class providing readlock */
-    private transient final Lock readerLock = new ReaderLock();
+    private final Lock readerLock = new ReaderLock();
     /** Inner class providing writelock */
-    private transient final Lock writerLock = new WriterLock();
+    private final Lock writerLock = new WriterLock();
 
     public Lock writeLock() { return writerLock; }
+
     public Lock readLock() { return readerLock; }
 
     /** 
@@ -128,7 +130,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * subclass defined below that surrounds WriteLock condition waits
      * with bookeeping to save and restore writer state.
      **/
-    private transient final RRWLock entryLock = new RRWLock();
+    private final RRWLock entryLock = new RRWLock();
 
     /** 
      * Number of threads that have entered read lock.  This is never
@@ -160,12 +162,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Lock used by exiting readers and entering writers
      */
 
-    private transient final ReentrantLock writeCheckLock = new ReentrantLock();
+    private final ReentrantLock writeCheckLock = new ReentrantLock();
 
     /**
      * Condition waited on by blocked entering writers.
      */
-    private transient final Condition writeEnabled = writeCheckLock.newCondition();
+    private final Condition writeEnabled = writeCheckLock.newCondition();
 
     /**
      * Reader exit protocol, called from unlock. if this is the last
@@ -193,6 +195,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * Writer enter protocol, called after acquiring entry lock.
      * Wait until all readers have exited.
+     * @throws InterruptedException if interrupted while waiting
     */
     private void writerEnter() throws InterruptedException {
         writeCheckLock.lock();
@@ -206,6 +209,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     }
 
+    /**
+     * Trylock version of Writer enter protocol
+     * @return true if successful
+     */
     private boolean tryWriterEnter() {
         writeCheckLock.lock();
         boolean ok = (exreaders == readers);
@@ -213,6 +220,13 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         return ok;
     }
 
+    /**
+     * Timed version of writer enter protocol, called after acquiring
+     * entry lock.  Wait until all readers have exited.
+     * @param nanos the wait time
+     * @return true if successful
+     * @throws InterruptedException if interrupted while waiting
+     */
     private boolean tryWriterEnter(long nanos) throws InterruptedException {
         writeCheckLock.lock();
         try {
@@ -229,6 +243,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
 
+    /**
+     * The Reader lock
+     */
     private class ReaderLock implements Lock {
 
         public void lock() {
@@ -275,6 +292,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
     }
 
+    /**
+     * The writer lock
+     */
     private class WriterLock implements Lock  {
         public void lock() {
             entryLock.lock();
@@ -355,7 +375,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         
         public void unlock() {
             // must perform owner check before clearing "writing"
-            entryLock.checkOwner(Thread.currentThread());
+            if (!entryLock.isHeldByCurrentThread())
+                throw new IllegalMonitorStateException();
             writing = false;
             entryLock.unlock();
         }
@@ -394,5 +415,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
     }
+
 }
 

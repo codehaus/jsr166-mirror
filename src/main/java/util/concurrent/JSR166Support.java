@@ -10,6 +10,8 @@ import java.lang.reflect.*;
 
 /**
  * Package-private native methods for classes introduced in JSR166
+ * @since 1.5
+ * @author Doug Lea
  */
 final class JSR166Support {
     private static native void registerNatives();

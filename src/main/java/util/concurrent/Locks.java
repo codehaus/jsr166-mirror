@@ -5,7 +5,6 @@
  */
 
 package java.util.concurrent;
-import sun.misc.Unsafe;
 import java.util.Date;
 
 /**
@@ -53,8 +52,9 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/09 02:32:05 $
+ * @revised $Date: 2003/06/24 14:34:48 $
  * @editor $Author: dl $
+ * @author Doug Lea
  *
  **/
 public class Locks {
@@ -192,7 +192,7 @@ public class Locks {
      * Returns a conservative indicator of whether the given lock is
      * held by any thread. This method always returns true if
      * the lock is held, but may return true even if not held.
-     *
+     * @param lock the object serving as a lock
      * @return true if lock is held, and either true or false if not held.
      */
     public static boolean mightBeLocked(Object lock) {

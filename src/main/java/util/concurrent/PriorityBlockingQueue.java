@@ -10,7 +10,9 @@ import java.util.*;
 /**
  * An unbounded blocking queue based on a {@link PriorityQueue},
  * obeying its ordering rules and implementation characteristics.
- **/
+ * @since 1.5
+ * @author Doug Lea
+**/
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
@@ -71,7 +73,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public boolean offer(E x) {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         lock.lock();
         try {
             boolean ok = q.offer(x);

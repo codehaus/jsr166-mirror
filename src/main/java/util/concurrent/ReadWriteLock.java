@@ -79,18 +79,18 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/07 18:20:21 $
+ * @revised $Date: 2003/06/24 14:34:48 $
  * @editor $Author: dl $
-
+ * @author Doug Lea
  */
 public interface ReadWriteLock {
     /**
      * Return the lock used for reading.
      **/
-    public Lock readLock();
+    Lock readLock();
 
     /**
      * Return the lock used for writing.
      **/
-    public Lock writeLock();
+    Lock writeLock();
 }

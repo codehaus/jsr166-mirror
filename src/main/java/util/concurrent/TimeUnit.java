@@ -41,9 +41,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/09 23:42:27 $
- * @editor $Author: dholmes $
- *
+ * @revised $Date: 2003/06/24 14:34:49 $
+ * @editor $Author: dl $
+ * @author Doug Lea
  */
 public final class TimeUnit implements java.io.Serializable {
 
@@ -152,7 +152,7 @@ public final class TimeUnit implements java.io.Serializable {
      * Perform a <tt>Thread.sleep</tt> using the current time unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.sleep</tt> method.
-     * @param time the minimum time to sleep 
+     * @param timeout the minimum time to sleep 
      * @throws InterruptedException if interrupted while sleeping.
      * @see Thread#sleep
      */
@@ -168,10 +168,10 @@ public final class TimeUnit implements java.io.Serializable {
     private static final int MS = 2;
     private static final int S  = 3;
 
-    /* quick lookup table for conversion factors */
+    /** quick lookup table for conversion factors */
     static final int[] multipliers = { 1, 1000, 1000*1000, 1000*1000*1000 };
 
-    /* the index of this unit */
+    /** the index of this unit */
     int index;
 
     /** private constructor */

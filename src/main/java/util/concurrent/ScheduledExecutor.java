@@ -36,6 +36,7 @@ import java.util.*;
  * @see Executors
  *
  * @spec JSR-166
+ * @author Doug Lea
  */
 public class ScheduledExecutor extends ThreadPoolExecutor {
 
@@ -49,11 +50,15 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * A delayed or periodic action.
      */
     public static class DelayedTask extends CancellableTask implements Delayed {
+        /** Sequence number to break ties FIFO */
         private final long sequenceNumber;
+        /** The time the task is enabled to execute in nanoTime units */
         private final long time;
+        /** The delay forllowing next time, or <= 0 if non-periodic */
         private final long period;
-        private final boolean rateBased; // true if at fixed rate;
-                                         // false if fixed delay
+        /** true if at fixed rate; false if fixed delay */
+        private final boolean rateBased; 
+
         /**
          * Creates a one-shot action with given nanoTime-based trigger time
          */
@@ -99,6 +104,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
         /**
          * Return true if this is a periodic (not a one-shot) action.
+         * @return true if periodic
          */
         public boolean isPeriodic() {
             return period > 0;
@@ -106,6 +112,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
         /**
          * Returns the period, or zero if non-periodic
+         * @return the period
          */
         public long getPeriod(TimeUnit unit) {
             return unit.convert(period, TimeUnit.NANOSECONDS);
@@ -273,7 +280,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Creates and executes a one-shot action that becomes enabled after the given date.
+     * Creates and executes a one-shot action that becomes enabled
+     * after the given date.
      * @param command the task to execute.
      * @param date the time to commence excution.
      * @return a handle that can be used to cancel the task.
@@ -430,6 +438,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * If executed task was periodic, cause the task for the next
      * period to execute.
+     * @param r the task (assumed to be a DelayedTask)
+     * @param t the exception
      */
     protected void afterExecute(Runnable r, Throwable t) { 
         if (isShutdown()) 

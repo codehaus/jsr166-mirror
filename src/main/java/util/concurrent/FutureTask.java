@@ -9,12 +9,13 @@ package java.util.concurrent;
 /**
  * A cancellable asynchronous computation.
  *
- * <p>Provides methods to start and cancel the computation, query to see if
- * the computation is complete, and retrieve the result of the computation.
- * The result can only be retrieved when the computation has completed;
- * the <tt>get</tt> method will block if the computation has not yet completed.
- * Once the computation is completed, the result cannot be changed, nor can the
- * computation be restarted or cancelled.
+ * <p><tt>FutureTask</tt> provides methods to start and cancel the
+ * computation, query to see if the computation is complete, and
+ * retrieve the result of the computation.  The result can only be
+ * retrieved when the computation has completed; the <tt>get</tt>
+ * method will block if the computation has not yet completed.  Once
+ * the computation is completed, the result cannot be changed, nor can
+ * the computation be restarted or cancelled.
  *
  * <p>Because <tt>FutureTask</tt> implements <tt>Runnable</tt>, a
  * <tt>FutureTask</tt> can be submitted to an {@link Executor} for 
@@ -32,8 +33,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/03 16:44:36 $
+ * @revised $Date: 2003/06/24 14:34:48 $
  * @editor $Author: dl $
+ * @author Doug Lea
  */
 public class FutureTask<V> extends CancellableTask implements Cancellable, Future<V>, Runnable {
 
@@ -77,8 +79,10 @@ public class FutureTask<V> extends CancellableTask implements Cancellable, Futur
      * @return the computed result
      * @throws CancellationException if task producing this value was
      * cancelled before completion
-     * @throws ExecutionException if the underlying computation threw an exception
-     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws ExecutionException if the underlying computation threw
+     * an exception
+     * @throws InterruptedException if current thread was interrupted
+     * while waiting
      */
     public V get() throws InterruptedException, ExecutionException {
         return ((InnerCancellableFuture<V>)getRunnable()).get();
@@ -91,10 +95,12 @@ public class FutureTask<V> extends CancellableTask implements Cancellable, Futur
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
      * @return value of this task
-     * @throws CancellationException if task producing this value was cancelled before completion
-     * @throws ExecutionException if the underlying computation
-     * threw an exception.
-     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws CancellationException if task producing this value was 
+     * cancelled before completion
+     * @throws ExecutionException if the underlying computation threw
+     * an exception.
+     * @throws InterruptedException if current thread was interrupted
+     * while waiting
      * @throws TimeoutException if the wait timed out
      */
     public V get(long timeout, TimeUnit unit)

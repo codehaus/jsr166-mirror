@@ -25,15 +25,16 @@ import java.util.Queue;
  * report a remaining capacity of <tt>Integer.MAX_VALUE</tt>.
  *
  * <p> While <tt>BlockingQueues</tt> are designed to be used primarily
- * as producer-consumer queues, they additionally support the <tt>Collection</tt>
- * interface.  So, for example, it is possible to remove an arbitrary
- * element from within a queue using <tt>remove(x)</tt>. However,
- * such operations are in general <em>NOT</em> performed very
- * efficiently, and are intended for only occasional use, such as when
- * a queued message is cancelled.  Also, the bulk operations, most
- * notably <tt>addAll</tt> are <em>NOT</em> performed atomically, so
- * it is possible for <tt>addAll(c)</tt> to fail (throwing an
- * exception) after adding only some of the elements in <tt>c</tt>.
+ * as producer-consumer queues, they additionally support the
+ * <tt>Collection</tt> interface.  So, for example, it is possible to
+ * remove an arbitrary element from within a queue using
+ * <tt>remove(x)</tt>. However, such operations are in general
+ * <em>NOT</em> performed very efficiently, and are intended for only
+ * occasional use, such as when a queued message is cancelled.  Also,
+ * the bulk operations, most notably <tt>addAll</tt> are <em>NOT</em>
+ * performed atomically, so it is possible for <tt>addAll(c)</tt> to
+ * fail (throwing an exception) after adding only some of the elements
+ * in <tt>c</tt>.
  *
  * <p><tt>BlockingQueue</tt>s do <em>not</em> intrinsically support
  * any kind of &quot;close&quot; or &quot;shutdown&quot; operation to
@@ -88,28 +89,32 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/23 02:26:16 $
- * @editor $Author: brian $
+ * @revised $Date: 2003/06/24 14:34:47 $
+ * @editor $Author: dl $
+ * @author Doug Lea
  */
 public interface BlockingQueue<E> extends Queue<E> {
     /**
-     * Retrieve and remove the first element from the queue, waiting if no objects are
-     * present on the queue.
+     * Retrieve and remove the first element from the queue, waiting
+     * if no objects are present on the queue.
      * @return the object
      * @throws InterruptedException if interrupted while waiting.
      */
-    public E take() throws InterruptedException;
+    E take() throws InterruptedException;
 
     /**
-     * Retrieve and remove the first element from the queue, waiting if necessary up to a specified wait
-     * time if no objects are present on the queue.
-     * @param timeout how long to wait before giving up, in units of <tt>unit</tt>
-     * @param unit a TimeUnit determining how to interpret the timeout parameter
-     * @return the object, or <tt>null</tt> if the specified
-     * waiting time elapses before an object is present.
+     * Retrieve and remove the first element from the queue, waiting
+     * if necessary up to a specified wait time if no objects are
+     * present on the queue.
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a TimeUnit determining how to interpret the timeout
+     * parameter
+     * @return the object, or <tt>null</tt> if the specified waiting
+     * time elapses before an object is present.
      * @throws InterruptedException if interrupted while waiting.
      */
-    public E poll(long timeout, TimeUnit unit) 
+    E poll(long timeout, TimeUnit unit) 
         throws InterruptedException;
 
     /**
@@ -118,19 +123,21 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @param x the object to add
      * @throws InterruptedException if interrupted while waiting.
      */
-    public void put(E x) throws InterruptedException;
+    void put(E x) throws InterruptedException;
 
     /**
-     * Add the given object to the queue, waiting if necessary up to a specified wait time for space
-     * to become available.
+     * Add the given object to the queue, waiting if necessary up to a
+     * specified wait time for space to become available.
      * @param x the object to add
-     * @param timeout how long to wait before giving up, in units of <tt>unit</tt>
-     * @param unit a TimeUnit determining how to interpret the timeout parameter
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a TimeUnit determining how to interpret the timeout
+     * parameter
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
      * the specified waiting time elapses before space is available.
      * @throws InterruptedException if interrupted while waiting.
      */
-    public boolean offer(E x, long timeout, TimeUnit unit) 
+    boolean offer(E x, long timeout, TimeUnit unit) 
         throws InterruptedException;
 
     /**
@@ -143,7 +150,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * case that a waiting consumer is ready to <tt>take</tt> an
      * element out of an otherwise full queue.
      * @return the remaining capacity
-     **/
-    public int remainingCapacity();
+     */
+    int remainingCapacity();
 
 }

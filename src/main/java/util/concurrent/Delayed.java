@@ -11,6 +11,8 @@ import java.util.*;
  * A mix-in style interface for representing actions, events, etc
  * that should be executed, accessed or acted upon only after
  * a given delay.
+ * @since 1.5
+ * @author Doug Lea
  */
 public interface Delayed extends Comparable {
 
@@ -20,5 +22,5 @@ public interface Delayed extends Comparable {
      * @return the delay; zero or negative values indicate that the
      * delay has already elapsed
      */
-    public long getDelay(TimeUnit unit);
+    long getDelay(TimeUnit unit);
 }

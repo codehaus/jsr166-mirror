@@ -25,15 +25,16 @@ package java.util;
  * in fixed-capacity (or &ldquo;bounded&rdquo;) queues.
 
  * 
- * <p>The {@link #remove()} and {@link #poll()} methods remove and return an
- * element in accord with the implementation's ordering policy. 
- * Exactly which element is removed from the queue is a function
- * of the queue's ordering policy, which differs from implementation
- * to implementation.  Possible orderings include (but are not limited
- * to) first-in-first-out (FIFO), last-in-first-out (LIFO), element priority, and arbitrary.
- * The <tt>remove()</tt> and <tt>poll()</tt> methods differ only in their
- * behavior when the queue is empty: the <tt>remove()</tt> method throws an
- * exception, while the <tt>poll()</tt> method returns <tt>null</tt>.
+ * <p>The {@link #remove()} and {@link #poll()} methods remove and
+ * return an element in accord with the implementation's ordering
+ * policy.  Exactly which element is removed from the queue is a
+ * function of the queue's ordering policy, which differs from
+ * implementation to implementation.  Possible orderings include (but
+ * are not limited to) first-in-first-out (FIFO), last-in-first-out
+ * (LIFO), element priority, and arbitrary.  The <tt>remove()</tt> and
+ * <tt>poll()</tt> methods differ only in their behavior when the
+ * queue is empty: the <tt>remove()</tt> method throws an exception,
+ * while the <tt>poll()</tt> method returns <tt>null</tt>.
  *
  * <p>The {@link #element()} and {@link #peek()} methods return but do
  * not delete the element that would be obtained by a call to
@@ -45,13 +46,13 @@ package java.util;
  * defined in the {@link java.util.concurrent.BlockingQueue} interface, which
  * extends this interface.
  *
- * <p><tt>Queue</tt> implementations generally do not allow insertion of
- * <tt>null</tt> elements, although some implementations, such as
+ * <p><tt>Queue</tt> implementations generally do not allow insertion
+ * of <tt>null</tt> elements, although some implementations, such as
  * {@link LinkedList}, do not prohibit insertion of <tt>null</tt>.
- * Even in the implementations that permit it, <tt>null</tt> should not be inserted into
- * a <tt>Queue</tt>, as <tt>null</tt> is also used as a special return value
- * by the <tt>poll</tt> method to indicate that the queue contains no
- * elements.
+ * Even in the implementations that permit it, <tt>null</tt> should
+ * not be inserted into a <tt>Queue</tt>, as <tt>null</tt> is also
+ * used as a special return value by the <tt>poll</tt> method to
+ * indicate that the queue contains no elements.
  *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -65,6 +66,8 @@ package java.util;
  * @see java.util.concurrent.ArrayBlockingQueue
  * @see java.util.concurrent.LinkedBlockingQueue
  * @see java.util.concurrent.PriorityBlockingQueue
+ * @since 1.5
+ * @author Doug Lea
  */
 public interface Queue<E> extends Collection<E> {
     /**
@@ -73,7 +76,7 @@ public interface Queue<E> extends Collection<E> {
      * @param element the element to add.
      * @return true if it was possible to add the element to the queue.
      */
-    public boolean offer(E element);
+    boolean offer(E element);
 
     /**
      * Remove and return an element from the queue if one is available.
@@ -81,7 +84,7 @@ public interface Queue<E> extends Collection<E> {
      * @return an element previously on the queue, or <tt>null</tt> if the
      *         queue is empty. 
      */
-    public E poll();
+    E poll();
 
     /**
      * Remove and return an element from the queue.  This method differs
@@ -91,7 +94,7 @@ public interface Queue<E> extends Collection<E> {
      * @return an element previously on the queue.
      * @throws NoSuchElementException if the queue is empty.
      */
-    public E remove() throws NoSuchElementException;
+    E remove() throws NoSuchElementException;
 
     /**
      * Return, but do not remove, an element from the queue, or <tt>null</tt>
@@ -101,7 +104,7 @@ public interface Queue<E> extends Collection<E> {
      *
      * @return an element on the queue, or <tt>null</tt> if the queue is empty.
      */
-    public E peek();
+    E peek();
 
     /**
      * Return, but do not remove, an element from the queue.  This method
@@ -111,5 +114,5 @@ public interface Queue<E> extends Collection<E> {
      * @return an element on the queue.
      * @throws NoSuchElementException if the queue is empty.
      */
-    public E element() throws NoSuchElementException;
+    E element() throws NoSuchElementException;
 }

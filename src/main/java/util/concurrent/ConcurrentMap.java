@@ -10,7 +10,9 @@ import java.util.Map;
 /**
  * A {@link java.util.Map} providing an additional atomic
  * <tt>putIfAbsent</tt> method.
- **/
+ * @since 1.5
+ * @author Doug Lea
+ */
 public interface ConcurrentMap<K, V> extends Map<K, V> {
     /**
      * If the specified key is not already associated
@@ -40,5 +42,5 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *            <tt>null</tt>.
      *
      **/
-    public V putIfAbsent(K key, V value);
+    V putIfAbsent(K key, V value);
 }

@@ -5,6 +5,8 @@
  * indicate that their elements or mappings are stored in sorted
  * order.  This allows consumers of collections to determine if the collection
  * is sorted, and if so, retrieve the sort comparator.
+ * @since 1.5
+ * @author Josh Bloch
  */
 
 public interface Sorted {

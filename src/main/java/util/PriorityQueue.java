@@ -11,25 +11,27 @@
  * elements are tied for least value, no guarantees are made as to
  * which of these elements is returned.
  *
- * <p>A priority queue has a <i>capacity</i>.  The capacity is the size of
- * the array used internally to store the elements on the queue.  It is always at least
- * as large as the queue size.  As elements are added to a priority queue,
- * its capacity grows automatically.  The details of the growth policy are not
- * specified.
+ * <p>A priority queue has a <i>capacity</i>.  The capacity is the
+ * size of the array used internally to store the elements on the
+ * queue.  It is always at least as large as the queue size.  As
+ * elements are added to a priority queue, its capacity grows
+ * automatically.  The details of the growth policy are not specified.
  *
- *<p>Implementation note: this implementation provides O(log(n)) time for
- * the insertion methods (<tt>offer</tt>, <tt>poll</tt>, <tt>remove()</tt> and <tt>add</tt>)
- * methods; linear time for the <tt>remove(Object)</tt> and
- * <tt>contains(Object)</tt> methods; and constant time for the retrieval methods (<tt>peek</tt>,
- * <tt>element</tt>, and <tt>size</tt>).
+ *<p>Implementation note: this implementation provides O(log(n)) time
+ *for the insertion methods (<tt>offer</tt>, <tt>poll</tt>,
+ *<tt>remove()</tt> and <tt>add</tt>) methods; linear time for the
+ *<tt>remove(Object)</tt> and <tt>contains(Object)</tt> methods; and
+ *constant time for the retrieval methods (<tt>peek</tt>,
+ *<tt>element</tt>, and <tt>size</tt>).
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
+ * @since 1.5
+ * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-                              implements Queue<E>
-{
+                              implements Queue<E> {
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 
     /**
@@ -65,8 +67,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     private transient int modCount = 0;
 
     /**
-     * Create a new priority queue with the default initial capacity (11)
-     * that orders its elements according to their natural ordering (using <tt>Comparable</tt>.)
+     * Create a new priority queue with the default initial capacity
+     * (11) that orders its elements according to their natural
+     * ordering (using <tt>Comparable</tt>.)
      */
     public PriorityQueue() {
         this(DEFAULT_INITIAL_CAPACITY);
@@ -74,7 +77,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Create a new priority queue with the specified initial capacity
-     * that orders its elements according to their natural ordering (using <tt>Comparable</tt>.)
+     * that orders its elements according to their natural ordering
+     * (using <tt>Comparable</tt>.)
      *
      * @param initialCapacity the initial capacity for this priority queue.
      */
@@ -141,9 +145,10 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     // Queue Methods
 
     /**
-     * Remove and return the minimal element from this priority queue if
-     * it contains one or more elements, otherwise return <tt>null</tt>.  The term
-     * <i>minimal</i> is defined according to this priority queue's order.
+     * Remove and return the minimal element from this priority queue
+     * if it contains one or more elements, otherwise return
+     * <tt>null</tt>.  The term <i>minimal</i> is defined according to
+     * this priority queue's order.
      *
      * @return the minimal element from this priority queue if it contains
      *         one or more elements, otherwise <tt>null</tt>.
@@ -155,12 +160,13 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Return, but do not remove, the minimal element from the priority queue,
-     * or return <tt>null</tt> if the queue is empty.  The term <i>minimal</i> is
-     * defined according to this priority queue's order.  This method returns
-     * the same object reference that would be returned by by the
-     * <tt>poll</tt> method.  The two methods differ in that this method 
-     * does not remove the element from the priority queue.
+     * Return, but do not remove, the minimal element from the
+     * priority queue, or return <tt>null</tt> if the queue is empty.
+     * The term <i>minimal</i> is defined according to this priority
+     * queue's order.  This method returns the same object reference
+     * that would be returned by by the <tt>poll</tt> method.  The two
+     * methods differ in that this method does not remove the element
+     * from the priority queue.
      *
      * @return the minimal element from this priority queue if it contains
      *         one or more elements, otherwise <tt>null</tt>.
@@ -177,11 +183,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * specified element (or equivalently, if this collection changed as a
      * result of the call).
      *
-     * @param element the element to be removed from this collection, if present.
+     * @param element the element to be removed from this collection,
+     * if present.
      * @return <tt>true</tt> if this collection changed as a result of the
      *         call
      * @throws ClassCastException if the specified element cannot be compared
-     * 		  with elements currently in the priority queue according
+     *            with elements currently in the priority queue according
      *            to the priority queue's ordering.
      * @throws NullPointerException if the specified element is null.
      */
@@ -216,46 +223,46 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @return an <tt>Iterator</tt> over the elements in this priority queue.
      */
     public Iterator<E> iterator() {
-	return new Itr();
+        return new Itr();
     }
 
     private class Itr implements Iterator<E> {
-	/**
-	 * Index (into queue array) of element to be returned by
+        /**
+         * Index (into queue array) of element to be returned by
          * subsequent call to next.
-	 */
-	int cursor = 1;
+         */
+        private int cursor = 1;
 
-	/**
-	 * Index of element returned by most recent call to next or
-	 * previous.  Reset to 0 if this element is deleted by a call
-	 * to remove.
-	 */
-	int lastRet = 0;
+        /**
+         * Index of element returned by most recent call to next or
+         * previous.  Reset to 0 if this element is deleted by a call
+         * to remove.
+         */
+        private int lastRet = 0;
 
-	/**
-	 * The modCount value that the iterator believes that the backing
-	 * List should have.  If this expectation is violated, the iterator
-	 * has detected concurrent modification.
-	 */
-	int expectedModCount = modCount;
+        /**
+         * The modCount value that the iterator believes that the backing
+         * List should have.  If this expectation is violated, the iterator
+         * has detected concurrent modification.
+         */
+        private int expectedModCount = modCount;
 
-	public boolean hasNext() {
-	    return cursor <= size;
-	}
+        public boolean hasNext() {
+            return cursor <= size;
+        }
 
-	public E next() {
+        public E next() {
             checkForComodification();
             if (cursor > size)
-		throw new NoSuchElementException();
+                throw new NoSuchElementException();
             E result = queue[cursor];
             lastRet = cursor++;
             return result;
-	}
+        }
 
-	public void remove() {
-	    if (lastRet == 0)
-		throw new IllegalStateException();
+        public void remove() {
+            if (lastRet == 0)
+                throw new IllegalStateException();
             checkForComodification();
 
             PriorityQueue.this.remove(lastRet);
@@ -263,12 +270,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                 cursor--;
             lastRet = 0;
             expectedModCount = modCount;
-	}
+        }
 
-	final void checkForComodification() {
-	    if (modCount != expectedModCount)
-		throw new ConcurrentModificationException();
-	}
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
     }
 
     /**
@@ -286,7 +293,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @param element the element to add.
      * @return true
      * @throws ClassCastException if the specified element cannot be compared
-     * 		  with elements currently in the priority queue according
+     *            with elements currently in the priority queue according
      *            to the priority queue's ordering.
      * @throws NullPointerException if the specified element is null.
      */
@@ -405,7 +412,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * <tt>null</tt> if it uses its elements' natural ordering.
      *
      * @return the comparator associated with this priority queue, or
-     * 	       <tt>null</tt> if it uses its elements' natural ordering.
+     *         <tt>null</tt> if it uses its elements' natural ordering.
      */
     Comparator comparator() {
         return comparator;
@@ -418,35 +425,37 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @serialData The length of the array backing the instance is
      * emitted (int), followed by all of its elements (each an
      * <tt>Object</tt>) in the proper order.
+     * @param s the stream
      */
     private synchronized void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException{
-	// Write out element count, and any hidden stuff
-	s.defaultWriteObject();
+        // Write out element count, and any hidden stuff
+        s.defaultWriteObject();
 
         // Write out array length
         s.writeInt(queue.length);
 
-	// Write out all elements in the proper order.
-	for (int i=0; i<size; i++)
+        // Write out all elements in the proper order.
+        for (int i=0; i<size; i++)
             s.writeObject(queue[i]);
     }
 
     /**
      * Reconstitute the <tt>ArrayList</tt> instance from a stream (that is,
      * deserialize it).
+     * @param s the stream
      */
     private synchronized void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-	// Read in size, and any hidden stuff
-	s.defaultReadObject();
+        // Read in size, and any hidden stuff
+        s.defaultReadObject();
 
         // Read in array length and allocate array
         int arrayLength = s.readInt();
         queue = new E[arrayLength];
 
-	// Read in all elements in the proper order.
-	for (int i=0; i<size; i++)
+        // Read in all elements in the proper order.
+        for (int i=0; i<size; i++)
             queue[i] = (E)s.readObject();
     }
 

@@ -20,9 +20,10 @@ import java.lang.reflect.*;
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of
  * <tt>compareAndSet</tt> and <tt>set</tt>.
+ * @since 1.5
+ * @author Doug Lea
  */
-
-public class  AtomicIntegerFieldUpdater<T> { 
+public class  AtomicIntegerFieldUpdater<T>  { 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
@@ -39,7 +40,7 @@ public class  AtomicIntegerFieldUpdater<T> {
      * volatile integer type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
-     **/
+     */
     public AtomicIntegerFieldUpdater(T[] ta, String fieldName) {
         Field field = null;
         try {
@@ -67,10 +68,13 @@ public class  AtomicIntegerFieldUpdater<T> {
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
+     * @param obj An object whose field to conditionally set
+     * @param expect the expected value
+     * @param update the new value
      * @return true if successful.
      * @throws ClassCastException if <tt>obj</tt> is not an instance
      * of the class possessing the field established in the constructor.
-     **/
+     */
 
     public final boolean compareAndSet(T obj, int expect, int update) {
         return unsafe.compareAndSwapInt(obj, offset, expect, update);
@@ -83,10 +87,13 @@ public class  AtomicIntegerFieldUpdater<T> {
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
+     * @param obj An object whose field to conditionally set
+     * @param expect the expected value
+     * @param update the new value
      * @return true if successful.
      * @throws ClassCastException if <tt>obj</tt> is not an instance
      * of the class possessing the field established in the constructor.
-     **/
+     */
 
     public final boolean weakCompareAndSet(T obj, int expect, int update) {
         return unsafe.compareAndSwapInt(obj, offset, expect, update);
@@ -96,6 +103,8 @@ public class  AtomicIntegerFieldUpdater<T> {
      * Set the field of the given object managed by this updater. This
      * operation is guaranteed to act as a volatile store with respect
      * to subsequent invocations of <tt>compareAndSet</tt>.
+     * @param obj An object whose field to set
+     * @param newValue the new value
      */
     public final void set(T obj, int newValue) {
         // Unsafe puts do not know about barriers, so manually apply
@@ -106,6 +115,8 @@ public class  AtomicIntegerFieldUpdater<T> {
 
     /**
      * Get the current value held in the field by the given object.
+     * @param obj An object whose field to get
+     * @return the current value
      */
     public final int get(T obj) {
         // Unsafe gets do not know about barriers, so manually apply
@@ -116,7 +127,10 @@ public class  AtomicIntegerFieldUpdater<T> {
 
     /**
      * Set to the given value and return the old value
-     **/
+     * @param obj An object whose field to get and set
+     * @param newValue the new value
+     * @return the previous value
+     */
     public int getAndSet(T obj, int newValue) {
         for (;;) {
             int current = get(obj);
@@ -127,12 +141,13 @@ public class  AtomicIntegerFieldUpdater<T> {
 
     /**
      * Atomically increment the current value.
+     * @param obj An object whose field to get and set
      * @return the previous value;
-     **/
+     */
     public int getAndIncrement(T obj) {
         for (;;) {
             int current = get(obj);
-            int next = current+1;
+            int next = current + 1;
             if (compareAndSet(obj, current, next))
                 return current;
         }
@@ -141,12 +156,13 @@ public class  AtomicIntegerFieldUpdater<T> {
   
     /**
      * Atomically decrement the current value.
+     * @param obj An object whose field to get and set
      * @return the previous value;
-     **/
+     */
     public int getAndDecrement(T obj) {
         for (;;) {
             int current = get(obj);
-            int next = current-1;
+            int next = current - 1;
             if (compareAndSet(obj, current, next))
                 return current;
         }
@@ -155,12 +171,14 @@ public class  AtomicIntegerFieldUpdater<T> {
   
     /**
      * Atomically add the given value to current value.
+     * @param obj An object whose field to get and set
+     * @param delta the value to add
      * @return the previous value;
-     **/
-    public int getAndAdd(T obj, int y) {
+     */
+    public int getAndAdd(T obj, int delta) {
         for (;;) {
             int current = get(obj);
-            int next = current+y;
+            int next = current + delta;
             if (compareAndSet(obj, current, next))
                 return current;
         }

@@ -8,10 +8,11 @@ package java.util.concurrent;
 import java.util.Date;
 
 /**
- * <tt>Conditions</tt> abstract out the <tt>Object</tt> monitor 
- * methods ({@link Object#wait() wait}, {@link Object#notify notify} and
- * {@link Object#notifyAll notifyAll}) into distinct objects to give the effect of having multiple wait-sets per
- * object monitor. They also generalise the monitor methods to allow them to 
+ * <tt>Conditions</tt> abstract out the <tt>Object</tt> monitor
+ * methods ({@link Object#wait() wait}, {@link Object#notify notify}
+ * and {@link Object#notifyAll notifyAll}) into distinct objects to
+ * give the effect of having multiple wait-sets per object
+ * monitor. They also generalise the monitor methods to allow them to
  * be used with arbitrary {@link Lock} implementations when needed.
  *
  * <p>Conditions (also known as condition queues or condition variables) 
@@ -170,9 +171,10 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/23 02:26:16 $
- * @editor $Author: brian $
- **/
+ * @revised $Date: 2003/06/24 14:34:47 $
+ * @editor $Author: dl $
+ * @author Doug Lea
+ */
 public interface Condition {
 
     /**
@@ -225,7 +227,7 @@ public interface Condition {
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
      **/
-    public void await() throws InterruptedException;
+    void await() throws InterruptedException;
 
     /**
      * Causes the current thread to wait until it is signalled.
@@ -261,7 +263,7 @@ public interface Condition {
      * implementation must document that fact.
      *
      **/
-    public void awaitUninterruptibly();
+    void awaitUninterruptibly();
 
     /**
      * Causes the current thread to wait until it is signalled or interrupted,
@@ -349,7 +351,7 @@ public interface Condition {
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
      */
-    public long awaitNanos(long nanosTimeout) throws InterruptedException;
+    long awaitNanos(long nanosTimeout) throws InterruptedException;
 
     /**
      * Causes the current thread to wait until it is signalled or interrupted,
@@ -362,8 +364,10 @@ public interface Condition {
      * @param unit the time unit of the <tt>time</tt> argument.
      * @return <tt>false</tt> if the waiting time detectably elapsed
      * before return from the method, else <tt>true</tt>.
+     * @throws InterruptedException if the current thread is interrupted (and
+     * interruption of thread suspension is supported).
      */
-    public boolean await(long time, TimeUnit unit) throws InterruptedException;
+    boolean await(long time, TimeUnit unit) throws InterruptedException;
     
     /**
      * Causes the current thread to wait until it is signalled or interrupted,
@@ -437,7 +441,7 @@ public interface Condition {
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
      */
-    public boolean awaitUntil(Date deadline) throws InterruptedException;
+    boolean awaitUntil(Date deadline) throws InterruptedException;
 
     /**
      * Wakes up one waiting thread.
@@ -446,7 +450,7 @@ public interface Condition {
      * is selected for waking up. That thread must then re-acquire the
      * lock before returning from <tt>await</tt>.
      **/
-    public void signal();
+    void signal();
 
     /**
      * Wake up all waiting threads.
@@ -455,7 +459,7 @@ public interface Condition {
      * all woken up. Each thread must re-acquire the lock before it can
      * return from <tt>await</tt>.
      **/
-    public void signalAll();
+    void signalAll();
 
 }
 

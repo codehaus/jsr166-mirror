@@ -23,9 +23,11 @@ import java.lang.reflect.*;
  *
  * <p> <em>Development note: This class is currently missing
  * some planned methods </em>
+ * @since 1.5
+ * @author Doug Lea
  */
 
-public class  AtomicLongFieldUpdater<T> { 
+public class  AtomicLongFieldUpdater<T>  { 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
@@ -42,7 +44,7 @@ public class  AtomicLongFieldUpdater<T> {
      * volatile long type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
-     **/
+     */
     public AtomicLongFieldUpdater(T[] ta, String fieldName) {
         Field field = null;
         try {
@@ -70,10 +72,13 @@ public class  AtomicLongFieldUpdater<T> {
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
+     * @param obj An object whose field to conditionally set
+     * @param expect the expected value
+     * @param update the new value
      * @return true if successful.
      * @throws ClassCastException if <tt>obj</tt> is not an instance
      * of the class possessing the field established in the constructor.
-     **/
+     */
 
     public final boolean compareAndSet(T obj, long expect, long update) {
         return unsafe.compareAndSwapLong(obj, offset, expect, update);
@@ -86,10 +91,13 @@ public class  AtomicLongFieldUpdater<T> {
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
+     * @param obj An object whose field to conditionally set
+     * @param expect the expected value
+     * @param update the new value
      * @return true if successful.
      * @throws ClassCastException if <tt>obj</tt> is not an instance
      * of the class possessing the field established in the constructor.
-     **/
+     */
 
     public final boolean weakCompareAndSet(T obj, long expect, long update) {
         return unsafe.compareAndSwapLong(obj, offset, expect, update);

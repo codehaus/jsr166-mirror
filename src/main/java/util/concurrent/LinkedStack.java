@@ -27,7 +27,9 @@ import java.util.concurrent.atomic.*;
  * method is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these stacks, determining the current number
  * of elements requires an O(n) traversal.
- **/
+ * @since 1.5
+ * @author Doug Lea
+**/
 
 public class LinkedStack<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {
@@ -44,9 +46,10 @@ public class LinkedStack<E> extends AbstractQueue<E>
      * so all traversals must detect and relink lingering nulls.
      */
 
+    /** Head of the linked list */
     private transient volatile AtomicLinkedNode head;
 
-    private final static AtomicReferenceFieldUpdater<LinkedStack, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<LinkedStack, AtomicLinkedNode>(new LinkedStack[0], new AtomicLinkedNode[0], "head");
+    private static final AtomicReferenceFieldUpdater<LinkedStack, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<LinkedStack, AtomicLinkedNode>(new LinkedStack[0], new AtomicLinkedNode[0], "head");
 
     private boolean casHead(AtomicLinkedNode cmp, AtomicLinkedNode val) {
         return headUpdater.compareAndSet(this, cmp, val);
@@ -98,10 +101,10 @@ public class LinkedStack<E> extends AbstractQueue<E>
      * Pushes the given element on the stack.
      * @param x the element to insert
      * @return true -- (as per the general contract of Queue.offer). 
-     * @throws IllegalArgumentException if x is null
+     * @throws NullPointerException if x is null
      **/
     public boolean offer(E x) {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         AtomicLinkedNode p = new AtomicLinkedNode(x);
         for (;;) {
             AtomicLinkedNode h = head;
@@ -326,7 +329,7 @@ public class LinkedStack<E> extends AbstractQueue<E>
             lastRet = nextNode;
             E x = nextItem;
             
-            AtomicLinkedNode p = (nextNode == null)? head : nextNode.getNext();
+            AtomicLinkedNode p = (nextNode == null) ? head : nextNode.getNext();
             for (;;) {
                 if (p == null) {
                     nextNode = null;
@@ -371,6 +374,7 @@ public class LinkedStack<E> extends AbstractQueue<E>
      *
      * @serialData All of the elements (each an <tt>E</tt>) in
      * the proper order, followed by a null
+     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -398,13 +402,14 @@ public class LinkedStack<E> extends AbstractQueue<E>
     /**
      * Reconstitute the Queue instance from a stream (that is,
      * deserialize it).
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-	// Read in capacity, and any hidden stuff
-	s.defaultReadObject();
+        // Read in capacity, and any hidden stuff
+        s.defaultReadObject();
 
-	// Read in all elements into array and then insert in reverse order.
+        // Read in all elements into array and then insert in reverse order.
         ArrayList<E> al = new ArrayList<E>();
         for (;;) {
             E item = (E)s.readObject();

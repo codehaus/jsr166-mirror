@@ -93,8 +93,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/06 18:42:17 $
+ * @revised $Date: 2003/06/24 14:34:49 $
  * @editor $Author: dl $
+ * @author Doug Lea
  *
  */
 public class Semaphore implements java.io.Serializable {
@@ -108,6 +109,11 @@ public class Semaphore implements java.io.Serializable {
     final Condition available;
     long count;
 
+    /** 
+     * Package-private constructor used by FairSemaphore
+     * @param permits the initial number of permits available
+     * @param lock the lock to use
+     */
     Semaphore(long permits, ReentrantLock lock) {
         this.count = permits;
         this.lock = lock;
@@ -156,7 +162,8 @@ public class Semaphore implements java.io.Serializable {
     public void acquire() throws InterruptedException {
         lock.lockInterruptibly();
         try {
-            while (count <= 0) available.await();
+            while (count <= 0) 
+                available.await();
             --count;
         }
         catch (InterruptedException ie) {
@@ -191,7 +198,8 @@ public class Semaphore implements java.io.Serializable {
     public void acquireUninterruptibly() {
         lock.lock();
         try {
-            while (count <= 0) available.awaitUninterruptibly();
+            while (count <= 0) 
+                available.awaitUninterruptibly();
             --count;
         }
         finally {

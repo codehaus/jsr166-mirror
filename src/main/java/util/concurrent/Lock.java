@@ -122,8 +122,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/11 23:03:06 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/06/24 14:34:48 $
+ * @editor $Author: dl $
+ * @author Doug Lea
  *
  **/
 public interface Lock {
@@ -142,7 +143,7 @@ public interface Lock {
      * <tt>Lock</tt> implementation.
      *
      **/
-    public void lock();
+    void lock();
 
     /**
      * Acquires the lock unless the current thread is  
@@ -186,7 +187,7 @@ public interface Lock {
      * @see Thread#interrupt
      *
      **/
-    public void lockInterruptibly() throws InterruptedException;
+    void lockInterruptibly() throws InterruptedException;
 
 
     /**
@@ -214,7 +215,7 @@ public interface Lock {
      * @return <tt>true</tt> if the lock was acquired and <tt>false</tt>
      * otherwise.
      **/
-    public boolean tryLock();
+    boolean tryLock();
 
     /**
      * Acquires the lock if it is free within the given waiting time and the
@@ -270,7 +271,7 @@ public interface Lock {
      * @see Thread#interrupt
      *
      **/
-    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
+    boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
 
     /**
      * Releases the lock.
@@ -282,7 +283,7 @@ public interface Lock {
      * Any restrictions and the exception
      * type must be documented by that <tt>Lock</tt> implementation.
      **/
-    public void unlock();
+    void unlock();
 
     /**
      * Returns a {@link Condition} instance that is bound to this <tt>Lock</tt>
@@ -306,7 +307,7 @@ public interface Lock {
      * @throws UnsupportedOperationException if this <tt>Lock</tt> 
      * implementation does not support conditions.
      **/
-    public Condition newCondition();
+    Condition newCondition();
 
 }
 

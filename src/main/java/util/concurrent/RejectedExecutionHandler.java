@@ -12,8 +12,9 @@ package java.util.concurrent;
  * @since 1.5
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 15:50:14 $
+ * @revised $Date: 2003/06/24 14:34:48 $
  * @editor $Author: dl $
+ * @author Doug Lea
  */
 public interface RejectedExecutionHandler {
     

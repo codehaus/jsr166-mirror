@@ -63,8 +63,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:40 $
+ * @revised $Date: 2003/06/24 14:34:47 $
  * @editor $Author: dl $
+ * @author Doug Lea
  */
 public class Exchanger<V> {
     private final ReentrantLock lock = new ReentrantLock();
@@ -79,6 +80,9 @@ public class Exchanger<V> {
      */
     private int arrivalCount;
 
+    /**
+     * Main exchange function, handling the different policy variants.
+     */
     private V doExchange(V x, boolean timed, long nanos) throws InterruptedException, TimeoutException {
         lock.lock();
         try {
@@ -173,7 +177,8 @@ public class Exchanger<V> {
      *
      * @param x the object to exchange
      * @return the object provided by the other thread.
-     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws InterruptedException if current thread was interrupted 
+     * while waiting
      **/
     public V exchange(V x) throws InterruptedException {
         try {
@@ -223,7 +228,8 @@ public class Exchanger<V> {
      * @param timeout the maximum time to wait
      * @param unit the time unit of the <tt>timeout</tt> argument.
      * @return the object provided by the other thread.
-     * @throws InterruptedException if current thread was interrupted while waiting
+     * @throws InterruptedException if current thread was interrupted
+     * while waiting
      * @throws TimeoutException if the specified waiting time elapses before
      * another thread enters the exchange.
      **/

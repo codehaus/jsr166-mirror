@@ -22,8 +22,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/07 16:07:09 $
+ * @revised $Date: 2003/06/24 14:34:48 $
  * @editor $Author: dl $
+ * @author Doug Lea
  *
  */
 public class FairSemaphore extends Semaphore {

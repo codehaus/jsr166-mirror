@@ -38,9 +38,10 @@ import java.lang.reflect.*;
  * purposes of atomic access, it can guarantee atomicity and volatile
  * semantics only with respect to other invocations of
  * <tt>compareAndSet</tt> and <tt>set</tt>.
+ * @since 1.5
+ * @author Doug Lea
  */
-
-public class  AtomicReferenceFieldUpdater<T, V> { 
+public class  AtomicReferenceFieldUpdater<T,V>  { 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
@@ -59,7 +60,7 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * @throws IllegalArgumentException if the field is not a volatile reference type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
-     **/
+     */
     public AtomicReferenceFieldUpdater(T[] ta, V[] va, String fieldName) {
         Field field = null;
         Class vclass = null;
@@ -90,8 +91,11 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
+     * @param obj An object whose field to conditionally set
+     * @param expect the expected value
+     * @param update the new value
      * @return true if successful.
-     **/
+     */
 
     public final boolean compareAndSet(T obj, V expect, V update) {
         return unsafe.compareAndSwapObject(obj, offset, expect, update);
@@ -104,12 +108,11 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
      * changes in the field.
+     * @param obj An object whose field to conditionally set
+     * @param expect the expected value
+     * @param update the new value
      * @return true if successful.
-     * @throws ClassCastException if <tt>obj</tt> is not an instance
-     * of the class possessing the field established in the constructor, or
-     * if the <tt>update</tt> argument is not of the type of this field.
-     **/
-
+     */
     public final boolean weakCompareAndSet(T obj, V expect, V update) {
         return unsafe.compareAndSwapObject(obj, offset, expect, update);
     }
@@ -119,6 +122,8 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * Set the field of the given object managed by this updater. This
      * operation is guaranteed to act as a volatile store with respect
      * to subsequent invocations of <tt>compareAndSet</tt>.
+     * @param obj An object whose field to set
+     * @param newValue the new value
      */
     public final void set(T obj, V newValue) {
         // Unsafe puts do not know about barriers, so manually apply
@@ -129,6 +134,8 @@ public class  AtomicReferenceFieldUpdater<T, V> {
 
     /**
      * Get the current value held in the field by the given object.
+     * @param obj An object whose field to get
+     * @return the current value
      */
     public final V get(T obj) {
         // Unsafe gets do not know about barriers, so manually apply
@@ -139,7 +146,10 @@ public class  AtomicReferenceFieldUpdater<T, V> {
 
     /**
      * Set to the given value and return the old value
-     **/
+     * @param obj An object whose field to get and set
+     * @param newValue the new value
+     * @return the previous value
+     */
     public V getAndSet(T obj, V newValue) {
         for (;;) {
             V current = get(obj);

@@ -16,8 +16,9 @@ package java.util.concurrent;
  * @see FutureTask#get(long, TimeUnit)
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:39 $
+ * @revised $Date: 2003/06/24 14:34:47 $
  * @editor $Author: dl $
+ * @author Doug Lea
  */
 public class CancellationException extends IllegalStateException {
 

@@ -10,15 +10,17 @@ import java.util.concurrent.atomic.*;
 /**
  * A linked list node supporting atomic operations on both item and
  * next fields, Used by non-blocking linked-list based classes.
+ * @since 1.5
+ * @author Doug Lea
  */
 
 final class AtomicLinkedNode {
     private volatile Object item;
     private volatile AtomicLinkedNode next;
 
-    private final static AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode> nextUpdater =
+    private static final AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode> nextUpdater =
     new AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode>(new AtomicLinkedNode[0], new AtomicLinkedNode[0], "next");
-    private final static AtomicReferenceFieldUpdater<AtomicLinkedNode, Object> itemUpdater
+    private static final AtomicReferenceFieldUpdater<AtomicLinkedNode, Object> itemUpdater
      = new AtomicReferenceFieldUpdater<AtomicLinkedNode, Object>(new AtomicLinkedNode[0], new Object[0], "item");
 
     AtomicLinkedNode(Object x) { item = x; }

@@ -11,15 +11,20 @@ import java.util.*;
 /**
  * An unbounded queue of <tt>Delayed</tt> elements, in which
  * elements can only be taken when their delay has expired.
- **/
+ * @since 1.5
+ * @author Doug Lea
+*/
 
 public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     implements BlockingQueue<E> {
     
     private transient final ReentrantLock lock = new ReentrantLock();
-    private transient final Condition canTake = lock.newCondition();
+    private transient final Condition available = lock.newCondition();
     private final PriorityQueue<E> q = new PriorityQueue<E>();
 
+    /**
+     * Creates a new DelayQeueu
+     */
     public DelayQueue() {}
 
     public boolean offer(E x) {
@@ -28,7 +33,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             E first = q.peek();
             q.offer(x);
             if (first == null || x.compareTo(first) < 0)
-                canTake.signalAll();
+                available.signalAll();
             return true;
         }
         finally {
@@ -54,16 +59,16 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             for (;;) {
                 E first = q.peek();
                 if (first == null)
-                    canTake.await();
+                    available.await();
                 else {
                     long delay =  first.getDelay(TimeUnit.NANOSECONDS);
                     if (delay > 0)
-                        canTake.awaitNanos(delay);
+                        available.awaitNanos(delay);
                     else {
                         E x = q.poll();
                         assert x != null;
                         if (q.size() != 0)
-                            canTake.signalAll(); // wake up other takers
+                            available.signalAll(); // wake up other takers
                         return x;
                         
                     }
@@ -85,21 +90,21 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                     if (nanos <= 0)
                         return null;
                     else
-                        nanos = canTake.awaitNanos(nanos);
+                        nanos = available.awaitNanos(nanos);
                 }
                 else {
                     long delay =  first.getDelay(TimeUnit.NANOSECONDS);
                     if (delay > 0) {
                         if (delay > nanos)
                             delay = nanos;
-                        long timeLeft = canTake.awaitNanos(delay);
+                        long timeLeft = available.awaitNanos(delay);
                         nanos -= delay - timeLeft;
                     }
                     else {
                         E x = q.poll();
                         assert x != null;
                         if (q.size() != 0)
-                            canTake.signalAll(); 
+                            available.signalAll(); 
                         return x;
                     }
                 }
@@ -121,7 +126,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                 E x = q.poll();
                 assert x != null;
                 if (q.size() != 0)
-                    canTake.signalAll(); 
+                    available.signalAll(); 
                 return x;
             }
         }

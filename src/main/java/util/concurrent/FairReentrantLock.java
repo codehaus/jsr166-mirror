@@ -12,6 +12,8 @@ package java.util.concurrent;
  * locks may display lower overall throughput (i.e., are slower) than
  * those using default locks, but have but smaller variances in times
  * to obtain locks.
+ * @since 1.5
+ * @author Doug Lea
  */
 
 public class FairReentrantLock extends ReentrantLock {
@@ -23,6 +25,7 @@ public class FairReentrantLock extends ReentrantLock {
     /**
      * Return true if it is OK to take fast path to lock.  For fair
      * locks, we allow barging only when there are no waiters.
+     * @return true if queue empty
      */
     boolean canBarge() {
         return queueEmpty();

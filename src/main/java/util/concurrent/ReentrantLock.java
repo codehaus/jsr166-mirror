@@ -53,8 +53,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/11 23:06:34 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/06/24 14:34:48 $
+ * @editor $Author: dl $
  * @author Doug Lea
  * 
  **/
@@ -221,11 +221,11 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
     // Atomics support
 
-    private final static AtomicReferenceFieldUpdater<ReentrantLock, Thread>  ownerUpdater = new AtomicReferenceFieldUpdater<ReentrantLock, Thread>(new ReentrantLock[0], new Thread[0], "owner");
-    private final static AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode> tailUpdater = new AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>(new ReentrantLock[0], new ReentrantLockQueueNode[0], "tail");
-    private final static AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>  headUpdater = new AtomicReferenceFieldUpdater<ReentrantLock, ReentrantLockQueueNode>(new ReentrantLock[0], new ReentrantLockQueueNode[0], "head");
-    private final static AtomicIntegerFieldUpdater<ReentrantLockQueueNode> releaseStatusUpdater = 
-        new AtomicIntegerFieldUpdater<ReentrantLockQueueNode>(new ReentrantLockQueueNode[0], "releaseStatus");
+    private final static AtomicReferenceFieldUpdater   ownerUpdater = new AtomicReferenceFieldUpdater (new ReentrantLock[0], new Thread[0], "owner");
+    private final static AtomicReferenceFieldUpdater  tailUpdater = new AtomicReferenceFieldUpdater (new ReentrantLock[0], new ReentrantLockQueueNode[0], "tail");
+    private final static AtomicReferenceFieldUpdater   headUpdater = new AtomicReferenceFieldUpdater (new ReentrantLock[0], new ReentrantLockQueueNode[0], "head");
+    private final static AtomicIntegerFieldUpdater  releaseStatusUpdater = 
+        new AtomicIntegerFieldUpdater (new ReentrantLockQueueNode[0], "releaseStatus");
 
     private boolean acquireOwner(Thread current) {
         return ownerUpdater.compareAndSet(this, null, current);
@@ -248,32 +248,24 @@ public class ReentrantLock extends ReentrantLockQueueNode
      * Special value for releaseStatus indicating that node is cancelled.
      * Must be a large positive number.
      */
-    static private final int CANCELLED = Integer.MAX_VALUE;
+    private static final int CANCELLED = Integer.MAX_VALUE;
 
     /**
      * Special value for node releaseStatus indicating that node is on a
      * condition queue. Must be large negative number.
      */
-    static private final int ON_CONDITION_QUEUE = Integer.MIN_VALUE;
+    private static final int ON_CONDITION_QUEUE = Integer.MIN_VALUE;
 
     /**
      * Special value for node releaseStatus indicating that node is in
      * process of transfer. Must be negative and greater than
      * ON_CONDITION_QUEUE.
      */
-    static private final int TRANSFERRING = ON_CONDITION_QUEUE+1;
-
-
-    /**
-     * Utility to throw an exception if lock not held by given thread.
-     */
-    final void checkOwner(Thread current) {
-        if (current != owner)
-            throw new IllegalMonitorStateException();
-    }
+    private static final int TRANSFERRING = ON_CONDITION_QUEUE + 1;
 
     /**
      * Return whether lock wait queue is empty
+     * @return true if no threrads are waiting for lock
      */
     final boolean queueEmpty() {
         ReentrantLockQueueNode h = head; // force order of the volatile reads
@@ -282,6 +274,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
     /**
      * Insert node into queue. Return predecessor.
+     * @param node the node to insert
+     * @return node's predecessor
      */
     private ReentrantLockQueueNode enq(ReentrantLockQueueNode node) {
         for (;;) { 
@@ -297,6 +291,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
     /**
      * Return true if it is OK to take fast path to lock.
      * Overridden in FairReentrantLock.
+     * @return true (for non-fair locks)
      */
     boolean canBarge() {
         return true;
@@ -402,7 +397,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
              *
              */
             else if (casReleaseStatus(p, releaseStatus, 
-                                      (releaseStatus > 0)? 0 : -1) && 
+                                      (releaseStatus > 0) ? 0 : -1) && 
                      releaseStatus <= 0) {
 
                 // Update and check timeout value
@@ -425,7 +420,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
                 }
                 else if (nanos < 0 || current.isInterrupted()) {
                     node.thread = null;      // disable signals
-                    releaseStatusUpdater.set(node, CANCELLED);  // don't need CAS here
+                    // don't need CAS here:
+                    releaseStatusUpdater.set(node, CANCELLED);  
                     signalSuccessor(node);   
                     return false;
                 }
@@ -435,6 +431,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
     /**
      * Wake up node's successor, if one exists
+     * @param node the current node
      */
     private void signalSuccessor(ReentrantLockQueueNode node) {
         /*
@@ -511,7 +508,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
         }
 
         Thread thr = s.thread;
-        if (thr != null && thr != owner) // don't bother signalling if has lock
+        // don't bother signalling if has lock
+        if (thr != null && thr != owner) 
             JSR166Support.unpark(thr);
     }
 
@@ -533,7 +531,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
             if (owner != null) // Don't bother if some thread got lock
                 return;
 
-            if (casReleaseStatus(h, c, (c < 0)? 0 : 1)) { // saturate at 1
+            if (casReleaseStatus(h, c, (c < 0) ? 0 : 1)) { // saturate at 1
                 if (c < 0) 
                     signalSuccessor(h);
                 return;
@@ -553,7 +551,9 @@ public class ReentrantLock extends ReentrantLockQueueNode
      * hold this lock.
      */
     public void unlock() {
-        checkOwner(Thread.currentThread());
+        if (Thread.currentThread() != owner) 
+            throw new IllegalMonitorStateException();
+
         if (recursions > 0) 
             --recursions;
         else {
@@ -690,6 +690,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
      * The given waiting time is a best-effort lower bound. If the time is 
      * less than or equal to zero, the method will not wait at all.
      *
+     * @param timeout the time to wait for the lock
+     * @param unit the time unit of the timeout argument
      *
      * @return <tt>true</tt> if the lock was free and was acquired by the
      * current thread, or the lock was already held by the current thread; and
@@ -791,6 +793,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
     /**
      * Reconstitute by resetting head and tail to point back to the lock.
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException  {
@@ -824,6 +827,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
      * <li>The order in which threads returning from a wait, and threads trying
      * to acquire the lock, are granted the lock, is not specified.
      * </ul>
+     * @return the Condition object
      */
     public Condition newCondition() {
         return new ReentrantLockConditionObject();
@@ -937,6 +941,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
          * Main code for signal.  Dequeue and transfer nodes until hit
          * non-cancelled one or null. Split out from signal to
          * encourage compilers to inline the case of no waiters.
+         * @param first the first node on condition queue
          */
         private void doSignal(ReentrantLockQueueNode first) {
             do {
@@ -950,14 +955,16 @@ public class ReentrantLock extends ReentrantLockQueueNode
         }
         
         public void signal() {
-            checkOwner(Thread.currentThread());
+            if (Thread.currentThread() != owner) 
+                throw new IllegalMonitorStateException();
             ReentrantLockQueueNode w = firstWaiter;
             if (w != null)
                 doSignal(w);
         }
             
         public void signalAll() {
-            checkOwner(Thread.currentThread());
+            if (Thread.currentThread() != owner) 
+                throw new IllegalMonitorStateException();
             // Pull off list all at once and traverse.
             ReentrantLockQueueNode w = firstWaiter;
             if (w != null) {
@@ -978,7 +985,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
         public void await() throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            if (current != owner) throw new IllegalMonitorStateException();
 
             ReentrantLockQueueNode w = addWaiter(current);
             beforeWait();
@@ -1016,7 +1023,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
         
         public void awaitUninterruptibly() {
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            if (current != owner) throw new IllegalMonitorStateException();
+
 
             ReentrantLockQueueNode w = addWaiter(current);
             beforeWait();
@@ -1041,7 +1049,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
         public long awaitNanos(long nanos) throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            if (current != owner) throw new IllegalMonitorStateException();
+
 
             ReentrantLockQueueNode w = addWaiter(current);
             beforeWait();
@@ -1088,7 +1097,8 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
         public boolean awaitUntil(Date deadline) throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            if (current != owner) throw new IllegalMonitorStateException();
+
 
             ReentrantLockQueueNode w = addWaiter(current);
             beforeWait();

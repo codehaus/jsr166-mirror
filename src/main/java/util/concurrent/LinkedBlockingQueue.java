@@ -17,6 +17,8 @@ import java.util.*;
  * way to prevent unlmited queue expansion.  Linked nodes are
  * dynamically created upon each insertion unless this would bring the
  * queue above capacity.
+ * @since 1.5
+ * @author Doug Lea
  * 
  **/
 public class LinkedBlockingQueue<E> extends AbstractQueue<E>
@@ -36,24 +38,39 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * iterators acquire both locks.
     */
 
+    /**
+     * Linked list node class
+     */
     static class Node<E> {
+        /** The item, volatile to ensure barrier separating write and read */
         volatile E item;
         Node<E> next;
         Node(E x) { item = x; }
     }
 
+    /** The capacity bound, or Integer.MAX_VALUE if none */
     private final int capacity;
+
+    /** Current number of elements */
     private transient final AtomicInteger count = new AtomicInteger(0);
 
-    private transient Node<E> head = new Node<E>(null);
-    private transient Node<E> last = head;
+    /** Head of linked list */
+    private transient Node<E> head;
 
+    /** Tail of lined list */
+    private transient Node<E> last;
+
+    /** Lock held by take, poll, etc */
     private final ReentrantLock takeLock = new ReentrantLock();
+
+    /** Wait queue for waiting takes */
     private final Condition notEmpty = takeLock.newCondition();
 
+    /** Lock held by put, offer, etc */
     private final ReentrantLock putLock = new ReentrantLock();
-    private final Condition notFull = putLock.newCondition();
 
+    /** Wait queue for waiting puts */
+    private final Condition notFull = putLock.newCondition();
 
     /**
      * Signal a waiting take. Called only from put/offer (which do not
@@ -84,6 +101,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Create a node and link it and end of queue
+     * @param x the item
      */
     private void insert(E x) {
         last = last.next = new Node<E>(x);
@@ -91,6 +109,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Remove a node from head of queue,
+     * @return the node
      */
     private E extract() {
         Node<E> first = head.next;
@@ -126,15 +145,19 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a LinkedBlockingQueue with the given capacity constraint.
+     * @param capacity the maminum number of elements to hold without blocking.
      */
     public LinkedBlockingQueue(int capacity) {
-        if (capacity <= 0) throw new IllegalArgumentException();
+        if (capacity <= 0) throw new NullPointerException();
         this.capacity = capacity;
+        last = head = new Node<E>(null);
     }
 
     /**
      * Creates a LinkedBlockingQueue without an intrinsic capacity
-     * constraint, initially holding the given elements.
+     * constraint, initially holding the given elements, added in
+     * traveral order of the collection's iterator.
+     * @param initialElements the elements to initially contain
      */
     public LinkedBlockingQueue(Collection<E> initialElements) {
         this(Integer.MAX_VALUE);
@@ -151,7 +174,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public void put(E x) throws InterruptedException {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         // Note: convention in all put/take/etc is to preset
         // local var holding count  negative to indicate failure unless set.
         int c = -1; 
@@ -176,7 +199,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             }
             insert(x);
             c = count.getAndIncrement();
-            if (c+1 < capacity)
+            if (c + 1 < capacity)
                 notFull.signal();
         }
         finally {
@@ -187,7 +210,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public boolean offer(E x, long timeout, TimeUnit unit) throws InterruptedException {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         putLock.lockInterruptibly();
         long nanos = unit.toNanos(timeout);
         int c = -1;
@@ -196,7 +219,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 if (count.get() < capacity) {
                     insert(x);
                     c = count.getAndIncrement();
-                    if (c+1 < capacity)
+                    if (c + 1 < capacity)
                         notFull.signal();
                     break;
                 }
@@ -220,7 +243,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public boolean offer(E x) {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         if (count.get() == capacity)
             return false;
         putLock.tryLock();
@@ -229,7 +252,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             if (count.get() < capacity) {
                 insert(x);
                 c = count.getAndIncrement();
-                if (c+1 < capacity)
+                if (c + 1 < capacity)
                     notFull.signal();
             }
         }
@@ -270,7 +293,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-
         E x = null;
         int c = -1;
         takeLock.lockInterruptibly();
@@ -494,6 +516,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * @serialData The capacity is emitted (int), followed by all of
      * its elements (each an <tt>Object</tt>) in the proper order,
      * followed by a null
+     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -518,13 +541,14 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Reconstitute the Queue instance from a stream (that is,
      * deserialize it).
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
 	// Read in capacity, and any hidden stuff
 	s.defaultReadObject();
 
-	// Read in all elements and place in queue
+        // Read in all elements and place in queue
         for (;;) {
             E item = (E)s.readObject();
             if (item == null)

@@ -28,11 +28,11 @@ import java.util.*;
  * to preclude interference among concurrent threads.  The iterator
  * method uses a reference to the state of the array at the point that
  * the iterator was created. This array never changes during the
- * lifetime of the iterator, so interference is impossible and the iterator
- * is guaranteed not to throw <tt>ConcurrentModificationException</tt>.  The
- * iterator will not reflect additions, removals, or changes to the List since the
- * iterator was created.
- * <p>
+ * lifetime of the iterator, so interference is impossible and the
+ * iterator is guaranteed not to throw
+ * <tt>ConcurrentModificationException</tt>.  The iterator will not
+ * reflect additions, removals, or changes to the List since the
+ * iterator was created.  <p>
  *
  * Because of the copy-on-write policy, some one-by-one mutative
  * operations in the java.util.Arrays and java.util.Collections
@@ -41,12 +41,14 @@ import java.util.*;
  * operations on iterators (remove, set, and add) are not
  * supported. These are the only methods throwing
  * UnsupportedOperationException.  <p>
- **/
+ * @since 1.5
+ * @author Doug Lea
+ */
 public class CopyOnWriteArrayList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
 
     /**
-     * The held array. Directly access only within synchronized
+     * The held array. Directly accessed only within synchronized
      *  methods
      */
     private volatile transient E[] array_;
@@ -69,6 +71,7 @@ public class CopyOnWriteArrayList<E>
      * Constructs an list containing the elements of the specified
      * Collection, in the order they are returned by the Collection's
      * iterator.
+     * @param c the collection of initially held elements
      */
     public CopyOnWriteArrayList(Collection<E> c) {
         array_ = new E[c.size()];
@@ -126,7 +129,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Returns true if this list contains the specified element.
      *
-     * @param o element whose presence in this List is to be tested.
+     * @param elem element whose presence in this List is to be tested.
      */
     public boolean contains(Object elem) {
         E[] elementData = array();
@@ -295,7 +298,7 @@ public class CopyOnWriteArrayList<E>
      *            be stored, if it is big enough; otherwise, a new array of the
      *            same runtime type is allocated for this purpose.
      * @return an array containing the elements of the list.
-     * @exception ArrayStoreException the runtime type of a is not a supertype
+     * @throws ArrayStoreException the runtime type of a is not a supertype
      * of the runtime type of every element in this list.
      */
     public <T> T[] toArray(T a[]) {
@@ -320,7 +323,8 @@ public class CopyOnWriteArrayList<E>
      * Returns the element at the specified position in this list.
      *
      * @param index index of element to return.
-     * @exception IndexOutOfBoundsException index is out of range (index
+     * @return the element
+     * @throws IndexOutOfBoundsException index is out of range (index
      *              &lt; 0 || index &gt;= size()).
      */
     public E get(int index) {
@@ -336,7 +340,7 @@ public class CopyOnWriteArrayList<E>
      * @param index index of element to replace.
      * @param element element to be stored at the specified position.
      * @return the element previously at the specified position.
-     * @exception IndexOutOfBoundsException index out of range
+     * @throws IndexOutOfBoundsException index out of range
      *              (index &lt; 0 || index &gt;= size()).
      */
     public synchronized E set(int index, E element) {
@@ -377,7 +381,7 @@ public class CopyOnWriteArrayList<E>
      *
      * @param index index at which the specified element is to be inserted.
      * @param element element to be inserted.
-     * @exception IndexOutOfBoundsException index is out of range
+     * @throws IndexOutOfBoundsException index is out of range
      *              (index &lt; 0 || index &gt; size()).
      */
     public synchronized void add(int index, E element) {
@@ -397,7 +401,7 @@ public class CopyOnWriteArrayList<E>
      * Shifts any subsequent elements to the left (subtracts one from their
      * indices).  Returns the element that was removed from the list.
      *
-     * @exception IndexOutOfBoundsException index out of range (index
+     * @throws IndexOutOfBoundsException index out of range (index
      *              &lt; 0 || index &gt;= size()).
      * @param index the index of the element to removed.
      */
@@ -468,8 +472,8 @@ public class CopyOnWriteArrayList<E>
      * toIndex==fromIndex, this operation has no effect.)
      *
      * @param fromIndex index of first element to be removed.
-     * @param fromIndex index after last element to be removed.
-     * @exception IndexOutOfBoundsException fromIndex or toIndex out of
+     * @param toIndex index after last element to be removed.
+     * @throws IndexOutOfBoundsException fromIndex or toIndex out of
      *              range (fromIndex &lt; 0 || fromIndex &gt;= size() || toIndex
      *              &gt; size() || toIndex &lt; fromIndex).
      */
@@ -521,14 +525,15 @@ public class CopyOnWriteArrayList<E>
      * each element returned by the Iterator in turn to see if it's
      * contained in this Collection.  If all elements are so contained
      * true is returned, otherwise false.
-     *
+     * @param c the collection
+     * @return true if all elements are contained
      */
     public <T> boolean containsAll(Collection<T> c) {
         E[] elementData = array();
         int len = elementData.length;
         Iterator<T> e = c.iterator();
         while (e.hasNext())
-            if(indexOf(e.next(), elementData, len) < 0)
+            if (indexOf(e.next(), elementData, len) < 0)
                 return false;
 
         return true;
@@ -541,6 +546,7 @@ public class CopyOnWriteArrayList<E>
      * in this class because of the need for an internal temporary array.
      * <p>
      *
+     * @param c the collection
      * @return true if this Collection changed as a result of the call.
      */
     public synchronized <T> boolean removeAll(Collection<T> c) {
@@ -572,6 +578,7 @@ public class CopyOnWriteArrayList<E>
      * specified Collection (optional operation).  In other words, removes from
      * this Collection all of its elements that are not contained in the
      * specified Collection.
+     * @param c the collection
      * @return true if this Collection changed as a result of the call.
      */
     public synchronized <T> boolean retainAll(Collection<T> c) {
@@ -647,6 +654,7 @@ public class CopyOnWriteArrayList<E>
      * specified Collection's Iterator.
      *
      * @param c elements to be inserted into this list.
+     * @return true if any elements are added
      */
     public synchronized <T extends E> boolean addAll(Collection<T> c) {
         int numNew = c.size();
@@ -674,8 +682,9 @@ public class CopyOnWriteArrayList<E>
      * @param index index at which to insert first element
      *                from the specified collection.
      * @param c elements to be inserted into this list.
-     * @exception IndexOutOfBoundsException index out of range (index
+     * @throws IndexOutOfBoundsException index out of range (index
      *              &lt; 0 || index &gt; size()).
+     * @return true if any elements are added
      */
     public synchronized <T extends E> boolean addAll(int index, Collection<T> c) {
         int len = array_.length;
@@ -713,6 +722,7 @@ public class CopyOnWriteArrayList<E>
      * @serialData The length of the array backing the list is emitted
      *               (int), followed by all of its elements (each an Object)
      *               in the proper order.
+     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException{
@@ -731,6 +741,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Reconstitute the list from a stream (i.e., deserialize it).
+     * @param s the stream
      */
     private synchronized void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
@@ -861,7 +872,7 @@ public class CopyOnWriteArrayList<E>
      *
      * @param index index of first element to be returned from the
      *                ListIterator (by a call to getNext).
-     * @exception IndexOutOfBoundsException index is out of range
+     * @throws IndexOutOfBoundsException index is out of range
      *              (index &lt; 0 || index &gt; size()).
      */
     public ListIterator<E> listIterator(final int index) {
@@ -923,7 +934,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @exception UnsupportedOperationException remove is not supported
+         * @throws UnsupportedOperationException remove is not supported
          *            by this Iterator.
          */
 
@@ -933,7 +944,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @exception UnsupportedOperationException set is not supported
+         * @throws UnsupportedOperationException set is not supported
          *            by this Iterator.
          */
         public void set(E o) {
@@ -942,7 +953,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @exception UnsupportedOperationException add is not supported
+         * @throws UnsupportedOperationException add is not supported
          *            by this Iterator.
          */
         public void add(E o) {
@@ -965,9 +976,9 @@ public class CopyOnWriteArrayList<E>
      * a fashion that iterations in progress may yield incorrect results.)
      *
      * @param fromIndex low endpoint (inclusive) of the subList.
-     * @param toKey high endpoint (exclusive) of the subList.
+     * @param toIndex high endpoint (exclusive) of the subList.
      * @return a view of the specified range within this List.
-     * @exception IndexOutOfBoundsException Illegal endpoint index value
+     * @throws IndexOutOfBoundsException Illegal endpoint index value
      *     (fromIndex &lt; 0 || toIndex &gt; size || fromIndex &gt; toIndex).
      */
     public synchronized List<E> subList(int fromIndex, int toIndex) {

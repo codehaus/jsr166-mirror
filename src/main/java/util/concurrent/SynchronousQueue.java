@@ -14,7 +14,9 @@ import java.util.*;
  * an object running in one thread must synch up with an object
  * running in another thread in order to hand it some information,
  * event, or task.
- **/
+ * @since 1.5
+ * @author Doug Lea
+**/
 public class SynchronousQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
@@ -64,9 +66,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * rendezvous.
      */
     private static class Node extends ReentrantLock {
+        /** Condition to wait on for other party; lazily constructed */
         Condition done;
+        /** The item being transferred */
         Object item;
+        /** Next node in wait queue */
         Node next;
+
         Node(Object x) { item = x; }
 
         /**
@@ -228,7 +234,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Main put algorithm, used by put, timed offer
      */ 
     private boolean doPut(E x, boolean timed, long nanos) throws InterruptedException {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         for (;;) { 
             Node node;
             boolean mustWait;
@@ -307,7 +313,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     // Untimed nonblocking versions
 
     public boolean offer(E x) {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         
         for (;;) { 
             qlock.lock();

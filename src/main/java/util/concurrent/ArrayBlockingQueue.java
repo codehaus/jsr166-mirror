@@ -20,13 +20,19 @@ import java.util.*;
  * in the offer operation blocking; attempts to retrieve an element from
  * an empty queue will similarly block.  Threads blocked on an insertion or
  * removal will be services in FIFO order.
- **/
+ * @since 1.5
+ * @author Doug Lea
+ */
 public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
+    /** The queued items */
     private transient final E[] items; 
-    private transient int takeIndex;           
+    /** items index for next take, poll or remove */
+    private transient int takeIndex; 
+    /** items index for next put, offer, or add. */
     private transient int putIndex; 
+    /** Number of items in the queue */
     private int count;
     
     /**
@@ -41,8 +47,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * found in any textbook.
      */
 
+    /** Main lock gurding all access */
     private final FairReentrantLock lock = new FairReentrantLock();
+    /** Condition wor waiting takes */
     private final Condition notEmpty = lock.newCondition();
+    /** Condition for wiating puts */
     private final Condition notFull =  lock.newCondition();
 
     // Internal helper methods
@@ -167,7 +176,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /** Insert a new element into the queue, blocking if the queue is full. */
     public void put(E x) throws InterruptedException {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         lock.lockInterruptibly();
         try {
             try {
@@ -187,7 +196,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /** Remove and return the first element from the queue, blocking
-     * is the queue is empty. */
+     * if the queue is empty. 
+     */
     public E take() throws InterruptedException {
         lock.lockInterruptibly();
         try {
@@ -210,10 +220,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
    /** Attempt to insert a new element into the queue, but return
     * immediately without inserting the element if the queue is full.
-    * @return <tt>true</tt> if the element was inserted successfully, <tt>false</tt> otherwise
+    * @return <tt>true</tt> if the element was inserted successfully,
+    * <tt>false</tt> otherwise
     */
     public boolean offer(E x) {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         lock.lock();
         try {
             if (count == items.length) 
@@ -231,7 +242,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /** Attempt to retrieve the first insert element from the queue,
      * but return immediately if the queue is empty.
-     * @return The first element of the queue if the queue is not empty, or <tt>null</tt> otherwise.
+     * @return The first element of the queue if the queue is not
+     * empty, or <tt>null</tt> otherwise.
      */
     public E poll() {
         lock.lock();
@@ -257,9 +269,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * parameter
      * @return <tt>true</tt> if the element was inserted successfully,
      * <tt>false</tt> otherwise
+     * @throws InterruptedException if interrupted while waiting
      */
     public boolean offer(E x, long timeout, TimeUnit unit) throws InterruptedException {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         lock.lockInterruptibly();
         long nanos = unit.toNanos(timeout);
         try {
@@ -295,6 +308,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * parameter
      * @return The first element of the queue if an item was
      * successfully retrieved, or <tt>null</tt> otherwise.
+     * @throws InterruptedException if interrupted while waiting
      *
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
@@ -333,7 +347,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public E peek() {
         lock.lock();
         try {
-            return (count == 0)? null : items[takeIndex];
+            return (count == 0) ? null : items[takeIndex];
         }
         finally {
             lock.unlock();
@@ -341,23 +355,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
 
-    /**
-     * Removes one occurrence in this list of the specified element.
-     * If this list does not contain the element, it is
-     * unchanged.  More formally, removes an element
-     * such that <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt> (if
-     * such an element exists).
-     *
-     * @param o element to be removed from this list, if present.
-     * @return <tt>true</tt> if this list contained the specified element.
-     * @throws ClassCastException if the type of the specified element
-     * 	          is incompatible with this list (optional).
-     * @throws NullPointerException if the specified element is null and this
-     *            list does not support null elements (optional).
-     * @throws UnsupportedOperationException if the <tt>remove</tt> method is
-     *		  not supported by this list.
-     */
     public boolean remove(Object x) {
+        if (x == null) return false;
         lock.lock();
         try {
             int i = takeIndex;
@@ -378,21 +377,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-
-    /**
-     * Returns <tt>true</tt> if this list contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this list contains
-     * at least one element <tt>e</tt> such that
-     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
-     *
-     * @param o element whose presence in this list is to be tested.
-     * @return <tt>true</tt> if this list contains the specified element.
-     * @throws ClassCastException if the type of the specified element
-     * 	       is incompatible with this list (optional).
-     * @throws NullPointerException if the specified element is null and this
-     *         list does not support null elements (optional).
-     */
     public boolean contains(Object x) {
+        if (x == null) return false;
         lock.lock();
         try {
             int i = takeIndex;
@@ -409,15 +395,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Returns an array containing all of the elements in the queue in proper
-     * sequence.  Obeys the general contract of the
-     * <tt>Collection.toArray</tt> method.
-     *
-     * @return an array containing all of the elements in this list in proper
-     *	       sequence.
-     * @see Arrays#asList(Object[])
-     */
     public Object[] toArray() {
         lock.lock();
         try {
@@ -435,22 +412,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Returns an array containing all of the elements in this queue in proper
-     * sequence; the runtime type of the returned array is that of the
-     * specified array.  Obeys the general contract of the
-     * <tt>Collection.toArray(Object[])</tt> method.
-     *
-     * @param a the array into which the elements of this list are to
-     *		be stored, if it is big enough; otherwise, a new array of the
-     * 		same runtime type is allocated for this purpose.
-     * @return  an array containing the elements of this list.
-     *
-     * @throws ArrayStoreException if the runtime type of the specified array
-     * 		  is not a supertype of the runtime type of every element in
-     * 		  this list.
-     * @throws NullPointerException if the specified array is <tt>null</tt>.
-     */
     public <T> T[] toArray(T[] a) {
         lock.lock();
         try {
@@ -496,13 +457,16 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-    
+
+    /**
+     * Iterator for ArrayBlockingQueue
+     */
     private class Itr implements Iterator<E> {
         /**
          * Index of element to be returned by next,
          * or a negative number if no such.
          */
-        int nextIndex;
+        private int nextIndex;
 
         /** 
          * nextItem holds on to item fields because once we claim
@@ -510,13 +474,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * the following next() call even if it was in the process of
          * being removed when hasNext() was called.
          **/
-        E nextItem;
+        private E nextItem;
 
         /**
          * Index of element returned by most recent call to next.
          * Reset to -1 if this element is deleted by a call to remove.
          */
-        int lastRet;
+        private int lastRet;
         
         Itr() {
             lastRet = -1;
@@ -592,6 +556,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      *
      * @serialData The maximumSize is emitted (int), followed by all of
      * its elements (each an <tt>E</tt>) in the proper order.
+     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -613,6 +578,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Reconstitute the Queue instance from a stream (that is,
      * deserialize it).
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
@@ -634,6 +600,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Throw away the object created with readObject, and replace it
      * with a usable ArrayBlockingQueue.
+     * @return the ArrayBlockingQueue
      */
     private Object readResolve() throws java.io.ObjectStreamException {
         E[] array = deserializedItems;

@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.*;
  * framework. In addition to serving as a standalone class, this
  * provides <tt>protected</tt> functionality that may be useful when
  * creating customized task classes.
+ * @since 1.5
+ * @author Doug Lea
  */
 
 public class CancellableTask implements Cancellable, Runnable {
@@ -25,12 +27,12 @@ public class CancellableTask implements Cancellable, Runnable {
      */
     private volatile Object runner;
 
-    /*
+    /**
      * Special value for "runner" indicating task is completed
      */
     private static final Object DONE = new Object();
 
-    /*
+    /**
      * Special value for "runner" indicating task is cancelled
      */
     private static final Object CANCELLED = new Object();
@@ -46,6 +48,7 @@ public class CancellableTask implements Cancellable, Runnable {
     /**
      * Creates a new CancellableTask which invokes the given
      * <tt>Runnable</tt> when executed.
+     * @param r the runnable action
      */
     public CancellableTask(Runnable r) {
         this.runnable = r;
@@ -89,6 +92,7 @@ public class CancellableTask implements Cancellable, Runnable {
 
     /**
      * Return the Runnable forming the basis of this task.
+     * @return the runnable action
      */
     protected Runnable getRunnable() {
         return runnable;
@@ -96,6 +100,7 @@ public class CancellableTask implements Cancellable, Runnable {
 
     /**
      * Set the Runnable forming the basis of this task.
+     * @param r the runnable action
      */
     protected void setRunnable(Runnable r) {
         runnable = r;
@@ -154,6 +159,12 @@ public class CancellableTask implements Cancellable, Runnable {
         private final Condition accessible = lock.newCondition();
         private V result;
         private Throwable exception;
+
+        /**
+         * Create an InnerCancellableFuture that will execute the
+         * given callable.
+         * @param callable the function to execute
+         */
         protected InnerCancellableFuture(Callable<V> callable) {
             this.callable = callable;
         }

@@ -20,18 +20,18 @@ package java.util.concurrent;
  * a {@link CyclicBarrier}.
  *
  * <p>A <tt>CountDownLatch</tt> is a versatile synchronization tool
- * and can be used for a number of purposes. 
- * A <tt>CountDownLatch</tt> initialized with a count of one serves as a simple on/off
- * latch, or gate: all threads invoking {@link #await} wait at the gate until
- * it is opened by a thread invoking {@link #countDown}.
- * A <tt>CountDownLatch</tt> initialized to <em>N</em> can be used to make 
- * one thread wait until <em>N</em> threads have completed some action, or some
- * action has been completed N times.
- * <p>A useful property of a <tt>CountDownLatch</tt> is that it doesn't
- * require that threads calling <tt>countDown</tt> wait for the count to reach zero
- * before proceeding, it simply
- * prevents any thread from proceeding past the {@link #await wait} until
- * all threads could pass.
+ * and can be used for a number of purposes.  A
+ * <tt>CountDownLatch</tt> initialized with a count of one serves as a
+ * simple on/off latch, or gate: all threads invoking {@link #await}
+ * wait at the gate until it is opened by a thread invoking {@link
+ * #countDown}.  A <tt>CountDownLatch</tt> initialized to <em>N</em>
+ * can be used to make one thread wait until <em>N</em> threads have
+ * completed some action, or some action has been completed N times.
+ * <p>A useful property of a <tt>CountDownLatch</tt> is that it
+ * doesn't require that threads calling <tt>countDown</tt> wait for
+ * the count to reach zero before proceeding, it simply prevents any
+ * thread from proceeding past the {@link #await wait} until all
+ * threads could pass.
  *
  * <p><b>Sample usage:</b> Here is a pair of classes in which a group
  * of worker threads use two countdown latches:
@@ -79,9 +79,10 @@ package java.util.concurrent;
  *
  * </pre>
  *
- * <p>Another typical usage would be to divide a problem into N parts, describe each part
- * with a Runnable that executes that portion and counts down on the latch, and queue all
- * the Runnables to an Executor.  When all sub-parts are complete, the coordinating thread
+ * <p>Another typical usage would be to divide a problem into N parts,
+ * describe each part with a Runnable that executes that portion and
+ * counts down on the latch, and queue all the Runnables to an
+ * Executor.  When all sub-parts are complete, the coordinating thread
  * will be able to pass through await.
  *
  * <pre>
@@ -119,8 +120,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/23 02:26:16 $
- * @editor $Author: brian $
+ * @revised $Date: 2003/06/24 14:34:47 $
+ * @editor $Author: dl $
+ * @author Doug Lea
  */
 public class CountDownLatch {
     private final ReentrantLock lock = new ReentrantLock();

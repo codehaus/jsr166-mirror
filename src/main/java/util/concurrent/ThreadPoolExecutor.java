@@ -137,9 +137,9 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/11 13:17:21 $
+ * @revised $Date: 2003/06/24 14:34:49 $
  * @editor $Author: dl $
- *
+ * @author Doug Lea
  */
 public class ThreadPoolExecutor implements ExecutorService {
     /**
@@ -197,8 +197,11 @@ public class ThreadPoolExecutor implements ExecutorService {
     private volatile int shutdownStatus;
 
     // Special values for status
+    /** Normal, not-shutdown mode */
     private static final int NOT_SHUTDOWN       = 0;
+    /** Controlled shutdown mode */
     private static final int SHUTDOWN_WHEN_IDLE = 1;
+    /*8 Immediate shutdown mode */
     private static final int SHUTDOWN_NOW       = 2;        
 
     /**
@@ -227,6 +230,9 @@ public class ThreadPoolExecutor implements ExecutorService {
      */ 
     private long completedTaskCount;
 
+    /**
+     * The default thread facotry 
+     */
     private static final ThreadFactory defaultThreadFactory = 
         new ThreadFactory() {
             public Thread newThread(Runnable r) {
@@ -234,12 +240,18 @@ public class ThreadPoolExecutor implements ExecutorService {
             }
         };
 
+    /**
+     * The default rejectect execution handler
+     */
     private static final RejectedExecutionHandler defaultHandler = 
         new AbortPolicy();
 
     /**
      * Create and return a new thread running firstTask as its first
      * task. Call only while holding mainLock
+     * @param firstTask the task the new thread should run first (or
+     * null if none)
+     * @return the new thread
      */
     private Thread addThread(Runnable firstTask) {
         Worker w = new Worker(firstTask);
@@ -255,14 +267,16 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Create and start a new thread running firstTask as its first
      * task, only if less than corePoolSize threads are running.
+     * @param firstTask the task the new thread should run first (or
+     * null if none)
      * @return true if successful.
      */
-    boolean addIfUnderCorePoolSize(Runnable task) {
+    boolean addIfUnderCorePoolSize(Runnable firstTask) {
         Thread t = null;
         mainLock.lock();
         try {
             if (poolSize < corePoolSize) 
-                t = addThread(task);
+                t = addThread(firstTask);
         }
         finally {
             mainLock.unlock();
@@ -277,9 +291,11 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Create and start a new thread only if less than maximumPoolSize
      * threads are running.  The new thread runs as its first task the
      * next task in queue, or if there is none, the given task.
+     * @param firstTask the task the new thread should run first (or
+     * null if none)
      * @return null on failure, else the first task to be run by new thread.
      */
-    private Runnable addIfUnderMaximumPoolSize(Runnable task) {
+    private Runnable addIfUnderMaximumPoolSize(Runnable firstTask) {
         Thread t = null;
         Runnable next = null;
         mainLock.lock();
@@ -287,7 +303,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             if (poolSize < maximumPoolSize) {
                 next = workQueue.poll();
                 if (next == null)
-                    next = task;
+                    next = firstTask;
                 t = addThread(next);
             }
         }
@@ -303,6 +319,8 @@ public class ThreadPoolExecutor implements ExecutorService {
 
     /**
      * Get the next task for a worker thread to run.
+     * @return the task
+     * @throws InterruptedException if interrupted while waiting for task
      */
     private Runnable getTask() throws InterruptedException {
         for (;;) {
@@ -327,6 +345,7 @@ public class ThreadPoolExecutor implements ExecutorService {
 
     /**
      * Perform bookkeeping for a terminated worker thread.
+     * @param w the worker 
      */
     private void workerDone(Worker w) {
         boolean allDone = false;
@@ -647,7 +666,8 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @param command the task to execute
      * @throws RejectedExecutionException at discretion of
-     * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted for execution
+     * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted
+     * for execution
      */
     public void execute(Runnable command) { 
         for (;;) {
@@ -768,7 +788,8 @@ public class ThreadPoolExecutor implements ExecutorService {
      * causing it not to be run if it has not already started.  This
      * method may be useful as one part of a cancellation scheme.
      * 
-     * #return true if the task was removed
+     * @param task the task to remove
+     * @return true if the task was removed
      */
     public boolean remove(Runnable task) {
         return getQueue().remove(task);
@@ -804,7 +825,8 @@ public class ThreadPoolExecutor implements ExecutorService {
      * they next become idle.
      *
      * @param corePoolSize the new core size
-     * @throws IllegalArgumentException if <tt>corePoolSize</tt> less than zero
+     * @throws IllegalArgumentException if <tt>corePoolSize</tt> 
+     * less than zero
      */
     public void setCorePoolSize(int corePoolSize) {
         if (corePoolSize < 0)
@@ -1054,7 +1076,8 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * A handler for unexecutable tasks that throws a <tt>RejectedExecutionException</tt>.
+     * A handler for unexecutable tasks that throws a
+     * <tt>RejectedExecutionException</tt>.
      */
     public static class AbortPolicy implements RejectedExecutionHandler {
 
@@ -1106,7 +1129,8 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * A handler for unexecutable tasks that discards the oldest unhandled request.
+     * A handler for unexecutable tasks that discards the oldest
+     * unhandled request.
      */
     public static class DiscardOldestPolicy implements RejectedExecutionHandler {
         /**

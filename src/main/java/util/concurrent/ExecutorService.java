@@ -23,8 +23,9 @@ import java.util.List;
  * @see Executors
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/04 11:34:19 $
+ * @revised $Date: 2003/06/24 14:34:48 $
  * @editor $Author: dl $
+ * @author Doug Lea
  */
 public interface ExecutorService extends Executor {
 

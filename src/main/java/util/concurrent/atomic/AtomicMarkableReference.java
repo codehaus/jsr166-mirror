@@ -1,19 +1,25 @@
 /*
- * @(#)AtomicMarkableReference.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent.atomic;
 
 /**
- * An <tt>AtomicMarkableReference</tt> maintains an object reference along with a
- * mark bit, that can be updated atomically.
+ * An <tt>AtomicMarkableReference</tt> maintains an object reference
+ * along with a mark bit, that can be updated atomically.
+ * <p>
+ * Implementation note. This implementation maintains marked references
+ * by internally "boxing" [reference, boolean] pairs.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 16:18:04 $
+ * @revised $Date: 2003/06/24 14:34:49 $
  * @editor $Author: dl $
+ * @author Doug Lea
  */
-public class AtomicMarkableReference<V> {
+public class AtomicMarkableReference<V>  {
 
     private class ReferenceBooleanPair {
         private final V reference;
@@ -23,16 +29,17 @@ public class AtomicMarkableReference<V> {
         }
     }
 
-    private final AtomicReference<ReferenceBooleanPair> atomicRef;
+    private final AtomicReference  atomicRef;
 
     /**
-     * Creates a new <tt>AtomicMarkableReference</tt> with the given initial values.
+     * Creates a new <tt>AtomicMarkableReference</tt> with the given
+     * initial values.
      *
      * @param initialRef the intial reference
      * @param initialMark the intial mark
      */
     public AtomicMarkableReference(V initialRef, boolean initialMark) {
-        atomicRef = new AtomicReference<ReferenceBooleanPair>(new ReferenceBooleanPair(initialRef, initialMark));
+        atomicRef = new AtomicReference (new ReferenceBooleanPair(initialRef, initialMark));
     }
 
     /**
@@ -125,8 +132,8 @@ public class AtomicMarkableReference<V> {
         ReferenceBooleanPair current = (ReferenceBooleanPair)(atomicRef.get());
         return  expectedReference == current.reference &&
             (newMark == current.bit ||
-             atomicRef.compareAndSet(current,
-                                     new ReferenceBooleanPair(expectedReference,
-                                                              newMark)));
+             atomicRef.compareAndSet
+             (current, new ReferenceBooleanPair(expectedReference,
+                                                newMark)));
     }
 }

@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.*;
  * is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
  * of elements requires an O(n) traversal.
+ * @since 1.5
+ * @author Doug Lea
  * 
  **/
 public class LinkedQueue<E> extends AbstractQueue<E>
@@ -41,8 +43,8 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
     // Atomics support
 
-    private final static AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> tailUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "tail");
-    private final static AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "head");
+    private static final AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> tailUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "tail");
+    private static final AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, AtomicLinkedNode>(new LinkedQueue[0], new AtomicLinkedNode[0], "head");
 
     private boolean casTail(AtomicLinkedNode cmp, AtomicLinkedNode val) {
         return tailUpdater.compareAndSet(this, cmp, val);
@@ -81,7 +83,7 @@ public class LinkedQueue<E> extends AbstractQueue<E>
     }
 
     public boolean offer(E x) {
-        if (x == null) throw new IllegalArgumentException();
+        if (x == null) throw new NullPointerException();
         AtomicLinkedNode n = new AtomicLinkedNode(x, null);
         for(;;) {
             AtomicLinkedNode t = tail;
@@ -333,6 +335,7 @@ public class LinkedQueue<E> extends AbstractQueue<E>
      *
      * @serialData All of the elements (each an <tt>E</tt>) in
      * the proper order, followed by a null
+     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -354,6 +357,7 @@ public class LinkedQueue<E> extends AbstractQueue<E>
     /**
      * Reconstitute the Queue instance from a stream (that is,
      * deserialize it).
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

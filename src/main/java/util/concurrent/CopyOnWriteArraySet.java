@@ -51,10 +51,10 @@ import java.util.*;
  *          ((Handler)(it.next()).handle();
  *    }
  * }
- * </pre>
- * <p>[<a href="http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html"> Introduction to this package. </a>]
  * @see CopyOnWriteArrayList
- **/
+ * @since 1.5
+ * @author Doug Lea
+ */
 public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         implements Cloneable, java.io.Serializable {
 
@@ -70,6 +70,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     /**
      * Constructs a set containing all of the elements of the specified
      * Collection.
+     * @param c the collection
      */
     public <T extends E> CopyOnWriteArraySet(Collection<T> c) {
         al = new CopyOnWriteArrayList<E>();

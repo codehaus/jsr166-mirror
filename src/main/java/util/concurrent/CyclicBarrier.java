@@ -97,17 +97,22 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/23 02:26:16 $
- * @editor $Author: brian $
+ * @revised $Date: 2003/06/24 14:34:47 $
+ * @editor $Author: dl $
  * @see CountDownLatch
  *
  * @fixme Is the above property actually true in this implementation?
  * @fixme Should we have a timeout version of await()?
+ * @author Doug Lea
  */
 public class CyclicBarrier {
+    /** The lock for guarding barrier entry */
     private final ReentrantLock lock = new ReentrantLock();
+    /** Condition to wait on until tripped */
     private final Condition trip = lock.newCondition();
+    /** The number of parties */
     private final int parties;
+    /* The command to run when tripped */
     private Runnable barrierCommand;
 
     /**
@@ -141,6 +146,9 @@ public class CyclicBarrier {
         if (broken == g) broken = generation;
     }
 
+    /**
+     * Main barrier code, covering the various pilicies.
+     */
     private int dowait(boolean timed, long nanos) throws InterruptedException, BrokenBarrierException, TimeoutException {
         lock.lock();
         try {
@@ -350,6 +358,8 @@ public class CyclicBarrier {
      * If an exception occurs during the barrier action then that exception
      * will be propagated in the current thread.
      *
+     * @param timeout the time to wait for the barrier
+     * @param unit the time unit of the timeout parameter
      * @return the arrival index of the current thread, where index
      *  <tt>{@link #getParties()} - 1</tt> indicates the first to arrive and 
      * zero indicates the last to arrive.

@@ -50,7 +50,9 @@ import java.io.ObjectOutputStream;
  * <p> Like Hashtable but unlike java.util.HashMap, this class does
  * NOT allow <tt>null</tt> to be used as a key or value.
  *
-**/
+ * @since 1.5
+ * @author Doug Lea
+ */
 public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         implements ConcurrentMap<K, V>, Cloneable, Serializable {
 
@@ -65,7 +67,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * The default initial number of table slots for this table (32).
      * Used when not otherwise specified in constructor.
      */
-    static int DEFAULT_INITIAL_CAPACITY = 16; 
+    private static int DEFAULT_INITIAL_CAPACITY = 16; 
 
     /**
      * The maximum capacity, used if a higher value is implicitly
@@ -114,6 +116,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Return a hash code for non-null Object x.  
      * Uses the same hash code spreader as most other j.u hash tables.
+     * @param x the object serving as a key
+     * @return the hash code
      */
     private static int hash(Object x) {
         int h = x.hashCode();
@@ -159,7 +163,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * subclasses from ReentrantLock opportunistically, just to
      * simplify some locking and avoid separate construction.
      **/
-    private final static class Segment<K,V> extends ReentrantLock implements Serializable {
+    private static final class Segment<K,V> extends ReentrantLock implements Serializable {
         /*
          * Segments maintain a table of entry lists that are ALWAYS
          * kept in a consistent state, so can be read without locking.
@@ -214,7 +218,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * (The value of this field is always (int)(capacity *
          * loadFactor).)
          */
-        transient private int threshold;
+        private transient int threshold;
 
         /**
          * The per-segment table
@@ -366,8 +370,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         // Clone all remaining nodes
                         for (HashEntry<K,V> p = e; p != lastRun; p = p.next) {
                             int k = p.hash & sizeMask;
-                            newTable[k] = new HashEntry<K,V>(p.hash, p.key, 
-                                                             p.value, newTable[k]);
+                            newTable[k] = new HashEntry<K,V>(p.hash, 
+                                                             p.key, 
+                                                             p.value, 
+                                                             newTable[k]);
                         }
                     }
                 }
@@ -402,7 +408,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 // all preceeding ones need to be cloned.  
                 HashEntry<K,V> newFirst = e.next;
                 for (HashEntry<K,V> p = first; p != e; p = p.next) 
-                    newFirst = new HashEntry<K,V>(p.hash, p.key, p.value, newFirst);
+                    newFirst = new HashEntry<K,V>(p.hash, p.key, 
+                                                  p.value, newFirst);
                 tab[index] = newFirst;
                 
                 count--; // write-volatile
@@ -493,7 +500,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * negative or the load factor or number of segments are
      * nonpositive.
      */
-    public ConcurrentHashMap(int initialCapacity, float loadFactor, int segments) {
+    public ConcurrentHashMap(int initialCapacity, 
+                             float loadFactor, int segments) {
         if (!(loadFactor > 0) || initialCapacity < 0 || segments <= 0)
             throw new IllegalArgumentException();
 
@@ -505,7 +513,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             ssize <<= 1;
         }
         segmentShift = sshift;
-        segmentMask = ssize-1;
+        segmentMask = ssize - 1;
         this.segments = new Segment<K,V>[ssize];
 
         if (initialCapacity > MAXIMUM_CAPACITY)
@@ -577,7 +585,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @return  the value to which the key is mapped in this table;
      *          <code>null</code> if the key is not mapped to any value in
      *          this table.
-     * @exception  NullPointerException  if the key is
+     * @throws  NullPointerException  if the key is
      *               <code>null</code>.
      * @see     #put(Object, Object)
      */
@@ -593,7 +601,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @return  <code>true</code> if and only if the specified object 
      *          is a key in this table, as determined by the 
      *          <tt>equals</tt> method; <code>false</code> otherwise.
-     * @exception  NullPointerException  if the key is
+     * @throws  NullPointerException  if the key is
      *               <code>null</code>.
      * @see     #contains(Object)
      */
@@ -611,7 +619,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param value value whose presence in this map is to be tested.
      * @return <tt>true</tt> if this map maps one or more keys to the
      * specified value.  
-     * @exception  NullPointerException  if the value is <code>null</code>.
+     * @throws  NullPointerException  if the value is <code>null</code>.
      */
     public boolean containsValue(Object value) {
         if (value == null) 
@@ -636,10 +644,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *             <code>value</code> argument in this table as 
      *             determined by the <tt>equals</tt> method;
      *             <code>false</code> otherwise.
-     * @exception  NullPointerException  if the value is <code>null</code>.
+     * @throws  NullPointerException  if the value is <code>null</code>.
      * @see        #containsKey(Object)
      * @see        #containsValue(Object)
-     * @see	   Map
+     * @see   Map
      */
     public boolean contains(Object value) {
         return containsValue(value);
@@ -657,7 +665,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param      value   the value.
      * @return     the previous value of the specified key in this table,
      *             or <code>null</code> if it did not have one.
-     * @exception  NullPointerException  if the key or value is
+     * @throws  NullPointerException  if the key or value is
      *               <code>null</code>.
      * @see     Object#equals(Object)
      * @see     #get(Object)
@@ -708,9 +716,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param t Mappings to be stored in this map.
      */
     public <K1 extends K, V1 extends V> void putAll(Map<K1,V1> t) {
-	Iterator<Map.Entry<K1,V1>> it = t.entrySet().iterator();
-	while (it.hasNext()) {
-	    Entry<K,V> e = (Entry) it.next();
+        Iterator<Map.Entry<K1,V1>> it = t.entrySet().iterator();
+        while (it.hasNext()) {
+            Entry<K,V> e = (Entry) it.next();
             put(e.getKey(), e.getValue());
         }
     }
@@ -722,7 +730,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param   key   the key that needs to be removed.
      * @return  the value to which the key had been mapped in this table,
      *          or <code>null</code> if the key did not have a mapping.
-     * @exception  NullPointerException  if the key is
+     * @throws  NullPointerException  if the key is
      *               <code>null</code>.
      */
     public V remove(Object key) {
@@ -740,7 +748,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *                   it means "any value".
      * @return  the value to which the key had been mapped in this table,
      *          or <code>null</code> if the key did not have a mapping.
-     * @exception  NullPointerException  if the key is
+     * @throws  NullPointerException  if the key is
      *               <code>null</code>.
      */
     public V remove(Object key, Object value) {
@@ -790,7 +798,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     public Set<K> keySet() {
         Set<K> ks = keySet;
-        return (ks != null)? ks : (keySet = new KeySet());
+        return (ks != null) ? ks : (keySet = new KeySet());
     }
 
 
@@ -807,7 +815,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     public Collection<V> values() {
         Collection<V> vs = values;
-        return (vs != null)? vs : (values = new Values());
+        return (vs != null) ? vs : (values = new Values());
     }
 
 
@@ -867,7 +875,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         private HashEntry<K, V> lastReturned;
 
         private HashIterator() {
-            nextSegmentIndex = segments.length-1;
+            nextSegmentIndex = segments.length - 1;
             nextTableIndex = -1;
             advance();
         }
@@ -887,9 +895,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 Segment<K,V> seg = segments[nextSegmentIndex--];
                 if (seg.count != 0) {
                     currentTable = seg.table;
-                    for (int j = currentTable.length-1; j >= 0; --j) {
+                    for (int j = currentTable.length - 1; j >= 0; --j) {
                         if ( (nextEntry = currentTable[j]) != null) {
-                            nextTableIndex = j-1;
+                            nextTableIndex = j - 1;
                             return;
                         }
                     }
@@ -993,6 +1001,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Save the state of the <tt>ConcurrentHashMap</tt>
      * instance to a stream (i.e.,
      * serialize it).
+     * @param s the stream
      * @serialData
      * the key (Object) and value (Object)
      * for each key-value mapping, followed by a null pair.
@@ -1025,6 +1034,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Reconstitute the <tt>ConcurrentHashMap</tt>
      * instance from a stream (i.e.,
      * deserialize it).
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws IOException, ClassNotFoundException  {

@@ -7,15 +7,19 @@
 package java.util.concurrent.atomic;
 
 /**
- * An <tt>AtomicStampedReference</tt> maintains an object reference along with an
- * integer "stamp", that can be updated atomically.
+ * An <tt>AtomicStampedReference</tt> maintains an object reference
+ * along with an integer "stamp", that can be updated atomically.
+ * <p>
+ * Implementation note. This implementation maintains stamped references
+ * by internally "boxing" [reference, integer] pairs.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 16:18:04 $
+ * @revised $Date: 2003/06/24 14:34:49 $
  * @editor $Author: dl $
+ * @author Doug Lea
  */
-public class AtomicStampedReference<V> {
+public class AtomicStampedReference<V>  {
 
     private class ReferenceIntegerPair {
         private final V reference;
@@ -25,16 +29,18 @@ public class AtomicStampedReference<V> {
         }
     }
 
-    private final AtomicReference<ReferenceIntegerPair> atomicRef;
+    private final AtomicReference  atomicRef;
 
     /**
-     * Creates a new <tt>AtomicStampedReference</tt> with the given initial values.
+     * Creates a new <tt>AtomicStampedReference</tt> with the given
+     * initial values.
      *
      * @param initialRef the intial reference
      * @param initialStamp the intial stamp
      */
     public AtomicStampedReference(V initialRef, int initialStamp) {
-        atomicRef = new AtomicReference<ReferenceIntegerPair>(new ReferenceIntegerPair(initialRef, initialStamp));
+        atomicRef = new AtomicReference 
+            (new ReferenceIntegerPair(initialRef, initialStamp));
     }
 
     /**
@@ -92,7 +98,8 @@ public class AtomicStampedReference<V> {
         ReferenceIntegerPair current = (ReferenceIntegerPair)(atomicRef.get());
         return  expectedReference == current.reference &&
             expectedStamp == current.integer &&
-            ((newReference == current.reference && newStamp == current.integer) ||
+            ((newReference == current.reference && 
+              newStamp == current.integer) ||
              atomicRef.compareAndSet(current,
                                      new ReferenceIntegerPair(newReference,
                                                               newStamp)));

@@ -12,6 +12,8 @@ package java.util;
  * exceptions instead of indicating failure via false or null returns.
  * The provided implementations all assume that the base implementation
  * does <em>not</em> allow <tt>null</tt> elements.
+ * @since 1.5
+ * @author Doug Lea
  */
  
 public abstract class AbstractQueue<E> extends AbstractCollection<E> implements Queue<E> {

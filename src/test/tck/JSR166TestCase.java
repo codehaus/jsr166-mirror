@@ -112,6 +112,7 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(AbstractQueueTest.class));
         suite.addTest(new TestSuite(AbstractQueuedSynchronizerTest.class));
         suite.addTest(new TestSuite(ArrayBlockingQueueTest.class));
+        suite.addTest(new TestSuite(ArrayDequeTest.class));
         suite.addTest(new TestSuite(AtomicBooleanTest.class)); 
         suite.addTest(new TestSuite(AtomicIntegerArrayTest.class)); 
         suite.addTest(new TestSuite(AtomicIntegerFieldUpdaterTest.class)); 
@@ -126,6 +127,10 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(AtomicStampedReferenceTest.class)); 
         suite.addTest(new TestSuite(ConcurrentHashMapTest.class));
         suite.addTest(new TestSuite(ConcurrentLinkedQueueTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListMapTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListSubMapTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListSetTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListSubSetTest.class));
         suite.addTest(new TestSuite(CopyOnWriteArrayListTest.class));
         suite.addTest(new TestSuite(CopyOnWriteArraySetTest.class));
         suite.addTest(new TestSuite(CountDownLatchTest.class));
@@ -135,6 +140,7 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(ExecutorsTest.class));
         suite.addTest(new TestSuite(ExecutorCompletionServiceTest.class));
         suite.addTest(new TestSuite(FutureTaskTest.class));
+        suite.addTest(new TestSuite(LinkedBlockingDequeTest.class));
         suite.addTest(new TestSuite(LinkedBlockingQueueTest.class));
         suite.addTest(new TestSuite(LinkedListTest.class));
         suite.addTest(new TestSuite(LockSupportTest.class));
@@ -149,7 +155,8 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(ThreadLocalTest.class));
         suite.addTest(new TestSuite(ThreadPoolExecutorTest.class));
         suite.addTest(new TestSuite(ThreadTest.class));
-        suite.addTest(new TestSuite(TimeUnitTest.class));
+        suite.addTest(new TestSuite(TreeMapTest.class));
+        suite.addTest(new TestSuite(TreeSetTest.class));
 		
         return suite;
     }

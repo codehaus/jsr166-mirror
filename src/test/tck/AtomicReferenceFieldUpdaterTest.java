@@ -76,8 +76,8 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 	assertEquals(one,a.get(this));
 	a.set(this,two);
 	assertEquals(two,a.get(this));
-	a.set(this,-3);
-	assertEquals(-3,a.get(this));
+	a.set(this,m3);
+	assertEquals(m3,a.get(this));
 	
     }
     /**

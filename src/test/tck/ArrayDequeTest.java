@@ -2,32 +2,30 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
  */
 
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class LinkedListTest extends JSR166TestCase {
+public class ArrayDequeTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
 
     public static Test suite() {
-	return new TestSuite(LinkedListTest.class);
+	return new TestSuite(ArrayDequeTest.class);
     }
 
     /**
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private LinkedList populatedQueue(int n) {
-        LinkedList q = new LinkedList();
+    private ArrayDeque populatedDeque(int n) {
+        ArrayDeque q = new ArrayDeque();
         assertTrue(q.isEmpty());
 	for(int i = 0; i < n; ++i)
-	    assertTrue(q.offer(new Integer(i)));
+	    assertTrue(q.offerLast(new Integer(i)));
         assertFalse(q.isEmpty());
 	assertEquals(n, q.size());
         return q;
@@ -37,7 +35,7 @@ public class LinkedListTest extends JSR166TestCase {
      * new queue is empty
      */
     public void testConstructor1() {
-        assertEquals(0, new LinkedList().size());
+        assertEquals(0, new ArrayDeque().size());
     }
 
     /**
@@ -45,7 +43,7 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            LinkedList q = new LinkedList((Collection)null);
+            ArrayDeque q = new ArrayDeque((Collection)null);
             shouldThrow();
         }
         catch (NullPointerException success) {}
@@ -60,9 +58,9 @@ public class LinkedListTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
-            LinkedList q = new LinkedList(Arrays.asList(ints));
+            ArrayDeque q = new ArrayDeque(Arrays.asList(ints));
             for (int i = 0; i < SIZE; ++i)
-                assertEquals(ints[i], q.poll());
+                assertEquals(ints[i], q.pollFirst());
         }
         finally {}
     }
@@ -71,13 +69,13 @@ public class LinkedListTest extends JSR166TestCase {
      * isEmpty is true before add, false after
      */
     public void testEmpty() {
-        LinkedList q = new LinkedList();
+        ArrayDeque q = new ArrayDeque();
         assertTrue(q.isEmpty());
         q.add(new Integer(1));
         assertFalse(q.isEmpty());
         q.add(new Integer(2));
-        q.remove();
-        q.remove();
+        q.removeFirst();
+        q.removeFirst();
         assertTrue(q.isEmpty());
     }
 
@@ -85,10 +83,10 @@ public class LinkedListTest extends JSR166TestCase {
      * size changes when elements added and removed
      */
     public void testSize() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(SIZE-i, q.size());
-            q.remove();
+            q.removeFirst();
         }
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
@@ -97,31 +95,76 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     * offer(null) succeeds
+     * push(null) throws NPE
      */
-    public void testOfferNull() {
+    public void testPushNull() {
 	try {
-            LinkedList q = new LinkedList();
-            q.offer(null);
-        } catch (NullPointerException ie) { 
-            unexpectedException();
+            ArrayDeque q = new ArrayDeque(1);
+            q.push(null);
+            shouldThrow();
+        } catch (NullPointerException success) { }   
+    }
+
+    /**
+     * peekFirst returns element inserted with push
+     */
+    public void testPush() {
+        ArrayDeque q = populatedDeque(3);
+        q.pollLast();
+	q.push(four);
+	assertEquals(four,q.peekFirst());
+    }	
+
+    /**
+     *  pop removes next element, or throws NSEE if empty
+     */
+    public void testPop() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, ((Integer)q.pop()).intValue());
+        }
+        try {
+            q.pop();
+            shouldThrow();
+        } catch (NoSuchElementException success){
+	}   
+    }
+
+    /**
+     * offer(null) throws NPE
+     */
+    public void testOfferFirstNull() {
+	try {
+            ArrayDeque q = new ArrayDeque();
+            q.offerFirst(null);
+            shouldThrow();
+        } catch (NullPointerException success) { 
         }   
     }
 
     /**
-     * Offer succeeds 
+     * OfferFirst succeeds 
      */
-    public void testOffer() {
-        LinkedList q = new LinkedList();
-        assertTrue(q.offer(new Integer(0)));
-        assertTrue(q.offer(new Integer(1)));
+    public void testOfferFirst() {
+        ArrayDeque q = new ArrayDeque();
+        assertTrue(q.offerFirst(new Integer(0)));
+        assertTrue(q.offerFirst(new Integer(1)));
+    }
+
+    /**
+     * OfferLast succeeds 
+     */
+    public void testOfferLast() {
+        ArrayDeque q = new ArrayDeque();
+        assertTrue(q.offerLast(new Integer(0)));
+        assertTrue(q.offerLast(new Integer(1)));
     }
 
     /**
      * add succeeds
      */
     public void testAdd() {
-        LinkedList q = new LinkedList();
+        ArrayDeque q = new ArrayDeque();
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             assertTrue(q.add(new Integer(i)));
@@ -133,7 +176,7 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testAddAll1() {
         try {
-            LinkedList q = new LinkedList();
+            ArrayDeque q = new ArrayDeque();
             q.addAll(null);
             shouldThrow();
         }
@@ -149,48 +192,42 @@ public class LinkedListTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
-            LinkedList q = new LinkedList();
+            ArrayDeque q = new ArrayDeque();
             assertFalse(q.addAll(Arrays.asList(empty)));
             assertTrue(q.addAll(Arrays.asList(ints)));
             for (int i = 0; i < SIZE; ++i)
-                assertEquals(ints[i], q.poll());
+                assertEquals(ints[i], q.pollFirst());
         }
         finally {}
     }
 
     /**
-     * addAll with too large an index throws IOOBE
+     *  pollFirst succeeds unless empty
      */
-    public void testAddAll2_IndexOutOfBoundsException() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    LinkedList m = new LinkedList();
-	    m.add(new Object());
-	    l.addAll(4,m);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success) {}
+    public void testPollFirst() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, ((Integer)q.pollFirst()).intValue());
+        }
+	assertNull(q.pollFirst());
     }
 
     /**
-     * addAll with negative index throws IOOBE
+     *  pollLast succeeds unless empty
      */
-    public void testAddAll4_BadIndex() {
-	try {
-	    LinkedList l = new LinkedList();
-	    l.add(new Object());
-	    LinkedList m = new LinkedList();
-	    m.add(new Object());
-	    l.addAll(-1,m);
-	    shouldThrow();
-	} catch(IndexOutOfBoundsException  success){}
+    public void testPollLast() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = SIZE-1; i >= 0; --i) {
+            assertEquals(i, ((Integer)q.pollLast()).intValue());
+        }
+	assertNull(q.pollLast());
     }
 
     /**
      *  poll succeeds unless empty
      */
     public void testPoll() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
         }
@@ -198,40 +235,10 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  peek returns next element, or null if empty
-     */
-    public void testPeek() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.peek()).intValue());
-            q.poll();
-            assertTrue(q.peek() == null ||
-                       i != ((Integer)q.peek()).intValue());
-        }
-	assertNull(q.peek());
-    }
-
-    /**
-     * element returns next element, or throws NSEE if empty
-     */
-    public void testElement() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.element()).intValue());
-            q.poll();
-        }
-        try {
-            q.element();
-            shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
-    }
-
-    /**
      *  remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.remove()).intValue());
         }
@@ -243,28 +250,134 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     * remove(x) removes x and returns true if present
+     *  peekFirst returns next element, or null if empty
      */
-    public void testRemoveElement() {
-        LinkedList q = populatedQueue(SIZE);
+    public void testPeekFirst() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, ((Integer)q.peekFirst()).intValue());
+            q.pollFirst();
+            assertTrue(q.peekFirst() == null ||
+                       i != ((Integer)q.peekFirst()).intValue());
+        }
+	assertNull(q.peekFirst());
+    }
+
+    /**
+     *  peek returns next element, or null if empty
+     */
+    public void testPeek() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, ((Integer)q.peek()).intValue());
+            q.poll();
+            assertTrue(q.peek() == null ||
+                       i != ((Integer)q.peek()).intValue());
+        }
+	assertNull(q.peek());
+    }
+
+    /**
+     *  peekLast returns next element, or null if empty
+     */
+    public void testPeekLast() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = SIZE-1; i >= 0; --i) {
+            assertEquals(i, ((Integer)q.peekLast()).intValue());
+            q.pollLast();
+            assertTrue(q.peekLast() == null ||
+                       i != ((Integer)q.peekLast()).intValue());
+        }
+	assertNull(q.peekLast());
+    }
+
+    /**
+     * getFirst returns next getFirst, or throws NSEE if empty
+     */
+    public void testFirstElement() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, ((Integer)q.getFirst()).intValue());
+            q.pollFirst();
+        }
+        try {
+            q.getFirst();
+            shouldThrow();
+        }
+        catch (NoSuchElementException success) {}
+    }
+
+    /**
+     *  getLast returns next element, or throws NSEE if empty
+     */
+    public void testLastElement() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = SIZE-1; i >= 0; --i) {
+            assertEquals(i, ((Integer)q.getLast()).intValue());
+            q.pollLast();
+        }
+        try {
+            q.getLast();
+            shouldThrow();
+        }
+        catch (NoSuchElementException success) {}
+	assertNull(q.peekLast());
+    }
+
+
+    /**
+     *  removeFirst removes next element, or throws NSEE if empty
+     */
+    public void testRemoveFirst() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, ((Integer)q.removeFirst()).intValue());
+        }
+        try {
+            q.removeFirst();
+            shouldThrow();
+        } catch (NoSuchElementException success){
+	}   
+    }
+
+    /**
+     * removeFirstOccurrence(x) removes x and returns true if present
+     */
+    public void testRemoveFirstOccurrence() {
+        ArrayDeque q = populatedDeque(SIZE);
         for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.remove(new Integer(i)));
+            assertTrue(q.removeFirstOccurrence(new Integer(i)));
         }
         for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.remove(new Integer(i)));
-            assertFalse(q.remove(new Integer(i+1)));
+            assertTrue(q.removeFirstOccurrence(new Integer(i)));
+            assertFalse(q.removeFirstOccurrence(new Integer(i+1)));
         }
         assertTrue(q.isEmpty());
     }
-	
+
+    /**
+     * removeLastOccurrence(x) removes x and returns true if present
+     */
+    public void testRemoveLastOccurrence() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
+            assertTrue(q.removeLastOccurrence(new Integer(i)));
+        }
+        for (int i = 0; i < SIZE; i+=2) {
+            assertTrue(q.removeLastOccurrence(new Integer(i)));
+            assertFalse(q.removeLastOccurrence(new Integer(i+1)));
+        }
+        assertTrue(q.isEmpty());
+    }
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
     public void testContains() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
-            q.poll();
+            q.pollFirst();
             assertFalse(q.contains(new Integer(i)));
         }
     }
@@ -273,7 +386,7 @@ public class LinkedListTest extends JSR166TestCase {
      * clear removes all elements
      */
     public void testClear() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
@@ -287,8 +400,8 @@ public class LinkedListTest extends JSR166TestCase {
      * containsAll(c) is true when c contains a subset of elements
      */
     public void testContainsAll() {
-        LinkedList q = populatedQueue(SIZE);
-        LinkedList p = new LinkedList();
+        ArrayDeque q = populatedDeque(SIZE);
+        ArrayDeque p = new ArrayDeque();
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.containsAll(p));
             assertFalse(p.containsAll(q));
@@ -301,8 +414,8 @@ public class LinkedListTest extends JSR166TestCase {
      * retainAll(c) retains only those elements of c and reports true if changed
      */
     public void testRetainAll() {
-        LinkedList q = populatedQueue(SIZE);
-        LinkedList p = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
+        ArrayDeque p = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             boolean changed = q.retainAll(p);
             if (i == 0)
@@ -312,7 +425,7 @@ public class LinkedListTest extends JSR166TestCase {
 
             assertTrue(q.containsAll(p));
             assertEquals(SIZE-i, q.size());
-            p.remove();
+            p.removeFirst();
         }
     }
 
@@ -321,12 +434,12 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {
-            LinkedList q = populatedQueue(SIZE);
-            LinkedList p = populatedQueue(i);
+            ArrayDeque q = populatedDeque(SIZE);
+            ArrayDeque p = populatedDeque(i);
             assertTrue(q.removeAll(p));
             assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
-                Integer I = (Integer)(p.remove());
+                Integer I = (Integer)(p.removeFirst());
                 assertFalse(q.contains(I));
             }
         }
@@ -336,23 +449,23 @@ public class LinkedListTest extends JSR166TestCase {
      *  toArray contains all elements
      */
     public void testToArray() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
 	for(int i = 0; i < o.length; i++)
-	    assertEquals(o[i], q.poll());
+	    assertEquals(o[i], q.pollFirst());
     }
 
     /**
      *  toArray(a) contains all elements
      */
     public void testToArray2() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for(int i = 0; i < ints.length; i++)
-            assertEquals(ints[i], q.poll());
+            assertEquals(ints[i], q.pollFirst());
     }
 
     /**
@@ -360,7 +473,7 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testToArray_BadArg() {
 	try {
-	    LinkedList l = new LinkedList();
+	    ArrayDeque l = new ArrayDeque();
 	    l.add(new Object());
 	    Object o[] = l.toArray(null);
 	    shouldThrow();
@@ -372,7 +485,7 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testToArray1_BadArg() {
 	try {
-	    LinkedList l = new LinkedList();
+	    ArrayDeque l = new ArrayDeque();
 	    l.add(new Integer(5));
 	    Object o[] = l.toArray(new String[10] );
 	    shouldThrow();
@@ -383,7 +496,7 @@ public class LinkedListTest extends JSR166TestCase {
      *  iterator iterates through all elements
      */
     public void testIterator() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
         while(it.hasNext()) {
@@ -397,7 +510,7 @@ public class LinkedListTest extends JSR166TestCase {
      *  iterator ordering is FIFO
      */
     public void testIteratorOrdering() {
-        final LinkedList q = new LinkedList();
+        final ArrayDeque q = new ArrayDeque();
         q.add(new Integer(1));
         q.add(new Integer(2));
         q.add(new Integer(3));
@@ -414,7 +527,7 @@ public class LinkedListTest extends JSR166TestCase {
      * iterator.remove removes current element
      */
     public void testIteratorRemove () {
-        final LinkedList q = new LinkedList();
+        final ArrayDeque q = new ArrayDeque();
         q.add(new Integer(1));
         q.add(new Integer(2));
         q.add(new Integer(3));
@@ -432,7 +545,7 @@ public class LinkedListTest extends JSR166TestCase {
      * toString contains toStrings of elements
      */
     public void testToString() {
-        LinkedList q = populatedQueue(SIZE);
+        ArrayDeque q = populatedDeque(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
@@ -440,155 +553,21 @@ public class LinkedListTest extends JSR166TestCase {
     }        
 
     /**
-     * peek returns element inserted with addFirst
+     * peekFirst returns element inserted with addFirst
      */
     public void testAddFirst() {
-        LinkedList q = populatedQueue(3);
+        ArrayDeque q = populatedDeque(3);
 	q.addFirst(four);
-	assertEquals(four,q.peek());
-    }	
-
-    /**
-     * peekFirst returns element inserted with push
-     */
-    public void testPush() {
-        LinkedList q = populatedQueue(3);
-        q.pollLast();
-	q.push(four);
 	assertEquals(four,q.peekFirst());
     }	
 
     /**
-     *  pop removes next element, or throws NSEE if empty
+     * peekLast returns element inserted with addLast
      */
-    public void testPop() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.pop()).intValue());
-        }
-        try {
-            q.pop();
-            shouldThrow();
-        } catch (NoSuchElementException success){
-	}   
-    }
-
-    /**
-     * OfferFirst succeeds 
-     */
-    public void testOfferFirst() {
-        LinkedList q = new LinkedList();
-        assertTrue(q.offerFirst(new Integer(0)));
-        assertTrue(q.offerFirst(new Integer(1)));
-    }
-
-    /**
-     * OfferLast succeeds 
-     */
-    public void testOfferLast() {
-        LinkedList q = new LinkedList();
-        assertTrue(q.offerLast(new Integer(0)));
-        assertTrue(q.offerLast(new Integer(1)));
-    }
-
-    /**
-     *  pollLast succeeds unless empty
-     */
-    public void testPollLast() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
-            assertEquals(i, ((Integer)q.pollLast()).intValue());
-        }
-	assertNull(q.pollLast());
-    }
-
-    /**
-     *  peekFirst returns next element, or null if empty
-     */
-    public void testPeekFirst() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.peekFirst()).intValue());
-            q.pollFirst();
-            assertTrue(q.peekFirst() == null ||
-                       i != ((Integer)q.peekFirst()).intValue());
-        }
-	assertNull(q.peekFirst());
-    }
-
-
-    /**
-     *  peekLast returns next element, or null if empty
-     */
-    public void testPeekLast() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
-            assertEquals(i, ((Integer)q.peekLast()).intValue());
-            q.pollLast();
-            assertTrue(q.peekLast() == null ||
-                       i != ((Integer)q.peekLast()).intValue());
-        }
-	assertNull(q.peekLast());
-    }
-
-    public void testFirstElement() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.getFirst()).intValue());
-            q.pollFirst();
-        }
-        try {
-            q.getFirst();
-            shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
-    }
-
-    /**
-     *  getLast returns next element, or throws NSEE if empty
-     */
-    public void testLastElement() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
-            assertEquals(i, ((Integer)q.getLast()).intValue());
-            q.pollLast();
-        }
-        try {
-            q.getLast();
-            shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
-	assertNull(q.peekLast());
-    }
-
-    /**
-     * removeFirstOccurrence(x) removes x and returns true if present
-     */
-    public void testRemoveFirstOccurrence() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.removeFirstOccurrence(new Integer(i)));
-        }
-        for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.removeFirstOccurrence(new Integer(i)));
-            assertFalse(q.removeFirstOccurrence(new Integer(i+1)));
-        }
-        assertTrue(q.isEmpty());
-    }
-
-    /**
-     * removeLastOccurrence(x) removes x and returns true if present
-     */
-    public void testRemoveLastOccurrence() {
-        LinkedList q = populatedQueue(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.removeLastOccurrence(new Integer(i)));
-        }
-        for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.removeLastOccurrence(new Integer(i)));
-            assertFalse(q.removeLastOccurrence(new Integer(i+1)));
-        }
-        assertTrue(q.isEmpty());
-    }
+    public void testAddLast() {
+        ArrayDeque q = populatedDeque(3);
+	q.addLast(four);
+	assertEquals(four,q.peekLast());
+    }	
 
 }

@@ -7,20 +7,20 @@ package java.util.concurrent;
 import java.util.List;
 
 /**
- * A {@link ThreadedExecutor} that executes each submitted task on one of
- * several pooled threads.
+ * A {@link ThreadedExecutor} that executes each submitted task on one
+ * of several pooled threads.
  *
- * <p>Thread pools address two different problems at the
- * same time: they usually provide faster performance when executing large
+ * <p>Thread pools address two different problems at the same time:
+ * they usually provide improved performance when executing large
  * numbers of asynchronous tasks, due to reduced per-task invocation
  * overhead, and they provide a means of bounding and managing the
  * resources, including threads, consumed in executing a collection of
  * tasks.
  *
- * <p>This class is very configurable and can be configured to create a new
- * thread for each task, or even to execute tasks sequentially in a single
- * thread, in addition to its most common configuration, which reuses a pool
- * of threads.
+ * <p>This class is very configurable and can be configured to create
+ * a new thread for each task, or even to execute tasks sequentially
+ * in a single thread, in addition to its most common configuration,
+ * which reuses a pool of threads.
  *
  * <p>To be useful across a wide range of contexts, this class
  * provides many adjustable parameters and extensibility hooks.
@@ -133,8 +133,8 @@ import java.util.List;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/02/26 15:09:10 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/02/28 03:53:49 $
+ * @editor $Author: brian $
  */
 public class ThreadPoolExecutor implements ThreadedExecutor {
 

@@ -7,30 +7,32 @@ package java.util.concurrent;
 import java.util.List;
 
 /**
- * A {@link ThreadedExecutor} that runs tasks on a single background thread.
- * Tasks are executed sequentially in the order they were submitted, with
- * no more than one task executing at a time.  Generally, the tasks will
- * all execute in the same background thread, but if this single thread
- * terminates due to a failure during execution, a new thread will take
- * its place if needed to execute subsequent tasks.
+ * A {@link ThreadedExecutor} that runs tasks on a single background
+ * thread.  Tasks are executed sequentially in the order they were
+ * submitted, with no more than one task executing at a time.
+ * Generally, the tasks will all execute in the same thread, but if
+ * this single thread terminates due to a failure during execution, a
+ * new thread will take its place if needed to execute subsequent
+ * tasks.
  *
  * @since 1.5
  *
  * @spec JSR-166
- * @revised $Date: 2003/02/26 10:48:09 $
- * @editor $Author: jozart $
+ * @revised $Date: 2003/02/28 03:53:49 $
+ * @editor $Author: brian $
  */
 public class SingleThreadedExecutor implements ThreadedExecutor {
 
     private final ThreadedExecutor executor;
 
     /**
-     * Creates a threaded executor that uses a single thread operating off an
-     * unbounded queue. (Note however that if this single thread terminates
-     * due to a failure during execution prior to shutdown, a new one will
-     * take its place if needed to execute subsequent tasks.)  Tasks are
-     * guaranteed to execute sequentially, and no more than one task will be
-     * active at any given time.
+     * Creates a threaded executor that uses a single thread operating
+     * off an unbounded queue. (Note however that if this single
+     * thread terminates due to a failure during execution prior to
+     * shutdown, a new one will take its place if needed to execute
+     * subsequent tasks.)  Tasks are guaranteed to execute
+     * sequentially, and no more than one task will be active at any
+     * given time.
      */
     public SingleThreadedExecutor() {
         executor = new ThreadPoolExecutor(1, 1,

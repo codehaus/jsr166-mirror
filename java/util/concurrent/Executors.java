@@ -8,22 +8,30 @@ package java.util.concurrent;
  * A factory for the <tt>Executor</tt> classes defined in
  * <tt>java.util.concurrent</tt>.
  *
+ * <p>An Executor is a framework for executing Runnables.  The
+ * Executor manages queueing and scheduling of tasks, and creation and
+ * teardown of threads.  Depending on which concrete Executor class is
+ * being used, tasks may execute in a newly created thread, an
+ * existing task-execution thread, or the thread calling execute(),
+ * and may execute sequentially or concurrently.
+ *
  * @since 1.5
  * @see Executor
  * @see ThreadedExecutor
+ * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/02/26 10:48:09 $
- * @editor $Author: jozart $
+ * @revised $Date: 2003/02/28 03:53:49 $
+ * @editor $Author: brian $
  */
 public class Executors {
 
     /**
-     * Creates a threaded executor that reuses a fixed set of threads
+     * Creates a thread pool that reuses a fixed set of threads
      * operating off a shared unbounded queue.
      *
      * @param nThreads the number of threads in the pool
-     * @return fixed thread executor
+     * @return the newly created thread pool
      */
     public static ThreadedExecutor newFixedThreadPool(int nThreads) {
         return new ThreadPoolExecutor(nThreads, nThreads,
@@ -32,17 +40,18 @@ public class Executors {
     }
 
     /**
-     * Creates a threaded executor that creates new threads as needed, but
-     * will reuse previously constructed threads when they are available.
-     * These pools will typically improve the performance of programs that
-     * execute many short-lived asynchronous tasks.  Calls to <tt>execute</tt>
-     * reuse previously constructed threads, if available. If no existing
-     * thread is available, a new thread will be created and added to the
-     * cache. Threads that have not been used for sixty seconds are terminated
-     * and removed from the cache. Thus, a pool that remains idle for long
-     * enough will not consume any resources.
+     * Creates a thread pool that creates new threads as needed, but
+     * will reuse previously constructed threads when they are
+     * available.  These pools will typically improve the performance
+     * of programs that execute many short-lived asynchronous tasks.
+     * Calls to <tt>execute</tt> will reuse previously constructed
+     * threads if available. If no existing thread is available, a new
+     * thread will be created and added to the pool. Threads that have
+     * not been used for sixty seconds are terminated and removed from
+     * the cache. Thus, a pool that remains idle for long enough will
+     * not consume any resources.
      *
-     * @return cached thread pool
+     * @return the newly created thread pool
      */
     public static ThreadedExecutor newCachedThreadPool() {
         return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
@@ -51,7 +60,8 @@ public class Executors {
     }
 
     /**
-     * Creates a threaded executor that reuses a limited pool of cached threads.
+     * Creates a thread pool that reuses a limited pool of cached
+     * threads.
      *
      * @param minThreads the minimum number of threads to keep in the
      * pool, even if they are idle.
@@ -65,7 +75,7 @@ public class Executors {
      * @param queue the queue to use for holding tasks before they
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
-     * @return cached thread pool
+     * @return the newly created thread pool
      * @throws IllegalArgumentException if minThreads, maxThreads, or
      * keepAliveTime less than zero, or if minThreads greater than
      * maxThreads.  
@@ -82,44 +92,35 @@ public class Executors {
     }
 
     /**
-     * Creates a threaded executor that uses a single thread operating off an
-     * unbounded queue. (Note however that if this single thread terminates
-     * due to a failure during execution prior to shutdown, a new one will
-     * take its place if needed to execute subsequent tasks.)  Tasks are
-     * guaranteed to execute sequentially, and no more than one task will be
-     * active at any given time.
+     * Creates an Executor that uses a single worker thread operating
+     * off an unbounded queue. (Note however that if this single
+     * thread terminates due to a failure during execution prior to
+     * shutdown, a new one will take its place if needed to execute
+     * subsequent tasks.)  Tasks are guaranteed to execute
+     * sequentially, and no more than one task will be active at any
+     * given time.
      *
-     * @fixme return (ThreadedExecutor) newFixedThreadExecutor(1) ?
-     *
-     * @return single threaded executor
+     * @return the newly-created single-threaded Executor
      */
     public static SingleThreadedExecutor newSingleThreadExecutor() {
         return new SingleThreadedExecutor();
     }
 
     /**
-     * Constructs a thread pool using parameters that cause it to use a
-     * new thread for each task.  This provides no efficiency savings
-     * over manually creating new threads, but still offers the
-     * manageability benefits of <tt>ThreadedExecutor</tt> for tracking
-     * active threads, shutdown, and so on.
+     * Constructs a ScheduledExecutor.  A ScheduledExecutor is an
+     * Executor which can schedule tasks to run at a given future
+     * time, or to execute periodically.
      *
-     * @fixme move to javadoc example in ThreadPoolExecutor
-     *
-     * @return executor
-     */
-    public static ThreadedExecutor newThreadPerTaskExecutor() {
-        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                      0, TimeUnit.MILLISECONDS,
-                                      new SynchronousQueue());
-    }
-
-    /**
-     * Constructs a ScheduledExecutor.  A ScheduledExecutor is an Executor
-     * which can schedule tasks to run at a given future time, or to execute
-     * periodically.
-     *
-     * @return scheduled executor
+     * @param minThreads the minimum number of threads to keep in the
+     * pool, even if they are idle.
+     * @param maxThreads the maximum number of threads to allow in the
+     * pool.
+     * @param keepAliveTime when the number of threads is greater than
+     * the minimum, this is the maximum time that excess idle threads
+     * will wait for new tasks before terminating.
+     * @param granularity the time unit for the keepAliveTime
+     * argument.
+     * @return the newly created ScheduledExecutor
      */
     public static ScheduledExecutor newScheduledExecutor(int minThreads,
                                                          int maxThreads,
@@ -130,13 +131,16 @@ public class Executors {
     }
 
     /**
-     * Executes a task and returns a future for the completion of that task.
+     * Executes a Runnable task and returns a Future representing that
+     * task.
      *
-     * @param executor ??
-     * @param task ??
-     * @param value ??
-     * @return future representing pending completion of the task
-     * @throws CannotExecuteException if task cannot be scheduled for execution
+     * @param executor the Executor to which the task will be submitted
+     * @param task the task to submit
+     * @param value the value which will become the return value of
+     * the task upon task completion
+     * @return a Future representing pending completion of the task
+     * @throws CannotExecuteException if the task cannot be scheduled
+     * for execution
      */
     public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
         FutureTask<T> ftask = new FutureTask<T>(task, value);
@@ -145,12 +149,12 @@ public class Executors {
     }
 
     /**
-     * Executes a value-returning task and returns a future representing the
-     * pending results of the task.
+     * Executes a value-returning task and returns a Future
+     * representing the pending results of the task.
      *
-     * @param executor ??
-     * @param task ??
-     * @return future representing pending completion of the task
+     * @param executor the Executor to which the task will be submitted
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task
      * @throws CannotExecuteException if task cannot be scheduled for execution
      */
     public static <T> Future<T> execute(Executor executor, Callable<T> task) {
@@ -160,11 +164,11 @@ public class Executors {
     }
 
     /**
-     * Executes a task and blocks until it completes normally or throws
-     * an exception.
+     * Executes a Runnable task and blocks until it completes normally
+     * or throws an exception.
      *
-     * @param executor ??
-     * @param task ??
+     * @param executor the Executor to which the task will be submitted
+     * @param task the task to submit
      * @throws CannotExecuteException if task cannot be scheduled for execution
      */
     public static void invoke(Executor executor, Runnable task)
@@ -175,12 +179,12 @@ public class Executors {
     }
 
     /**
-     * Executes a value-returning task and blocks until it returns a value
-     * or throws an exception.
+     * Executes a value-returning task and blocks until it returns a
+     * value or throws an exception.
      *
-     * @param executor ??
-     * @param task ??
-     * @return future representing pending completion of the task
+     * @param executor the Executor to which the task will be submitted
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task
      * @throws CannotExecuteException if task cannot be scheduled for execution
      */
     public static <T> T invoke(Executor executor, Callable<T> task)

@@ -1,14 +1,16 @@
  package java.util;
 
 /**
- * An unbounded priority queue based on a priority heap.  This queue orders
+ * A priority queue based on a priority heap.  This queue orders
  * elements according to an order specified at construction time, which is
- * specified in the same manner as {@link java.util.TreeSet} and {@link java.util.TreeMap}:
- * elements are ordered
+ * specified in the same manner as {@link java.util.TreeSet} and 
+ * {@link java.util.TreeMap}: elements are ordered
  * either according to their <i>natural order</i> (see {@link Comparable}), or
- * according to a {@link java.util.Comparator}, depending on which constructor is used.
- * The <em>head</em> of this queue is the least element with respect to the
- * specified ordering. If multiple elements are tied for least value, the
+ * according to a {@link java.util.Comparator}, depending on which 
+ * constructor is used.
+ * <p>The <em>head</em> of this queue is the <em>least</em> element with 
+ * respect to the specified ordering. 
+ * If multiple elements are tied for least value, the
  * head is one of those elements. A priority queue does not permit
  * <tt>null</tt> elements.
  *
@@ -20,7 +22,8 @@
  *
  * <p>A priority queue has a <i>capacity</i>.  The capacity is the
  * size of the array used internally to store the elements on the
- * queue.  It is always at least as large as the queue size.  As
+ * queue, and is limited to <tt>Integer.MAX_VALUE-1</tt>.  
+ * It is always at least as large as the queue size.  As
  * elements are added to a priority queue, its capacity grows
  * automatically.  The details of the growth policy are not specified.
  *
@@ -38,7 +41,7 @@
  * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-    implements Queue<E>, java.io.Serializable {
+    implements Sorted, Queue<E>, java.io.Serializable {
 
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 
@@ -115,7 +118,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Create a <tt>PriorityQueue</tt> containing the elements in the specified
      * collection.  The priority queue has an initial capacity of 110% of the
-     * size of the specified collection; or 1 if the collection is empty.
+     * size of the specified collection (bounded by 
+     * <tt>Integer.MAX_VALUE-1</tt>); or 1 if the collection is empty. 
      * If the specified collection
      * implements the {@link Sorted} interface, the priority queue will be
      * sorted according to the same comparator, or according to its elements'
@@ -141,16 +145,17 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         this.queue = new Object[initialCapacity + 1];
 
+        // FIXME: if c is larger than Integer.MAX_VALUE we'll 
+        // overflow the array
+
         if (c instanceof Sorted) {
-            // FIXME: this code assumes too much
-            this.comparator = (Comparator<? super E>) ((Sorted)c).comparator();
-            for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
-                queue[++size] = i.next();
+            comparator = ((Sorted)c).comparator();
         } else {
             comparator = null;
-            for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
-                add(i.next());
         }
+
+        for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
+            add(i.next());
     }
 
     // Queue Methods
@@ -158,27 +163,28 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * Add the specified element to this priority queue.
      *
-     * @param element the element to add.
      * @return <tt>true</tt>
      * @throws ClassCastException if the specified element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
-     * @throws NullPointerException if the specified element is null.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E element) {
-        if (element == null)
+    public boolean offer(E o) {
+        if (o == null)
             throw new NullPointerException();
         modCount++;
         ++size;
 
         // Grow backing store if necessary
+        // FIXME: watch for overflow
+        // FIXME: what if we're full?
         while (size >= queue.length) {
             Object[] newQueue = new Object[2 * queue.length];
             System.arraycopy(queue, 0, newQueue, 0, queue.length);
             queue = newQueue;
         }
 
-        queue[size] = element;
+        queue[size] = o;
         fixUp(size);
         return true;
     }
@@ -203,15 +209,16 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
      */
-    public boolean add(E element) {
-        return super.add(element);
+    public boolean add(E o) {
+        return super.add(o);
     }
 
     /**
-     * @throws NullPointerException if any element is <tt>null</tt>.
      * @throws ClassCastException if any element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
+     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
+     * is <tt>null</tt>
      */
     public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);

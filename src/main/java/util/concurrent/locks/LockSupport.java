@@ -29,13 +29,12 @@ public class LockSupport {
     /**
      * Unblock the given thread blocked on <tt>park</tt>, or, if it is not
      * blocked, cause its subsequent call to <tt>park</tt> not to block.
-     * @param thread the thread to unpark.
-     * @throws NullPointerException if thread is null
+     * @param thread the thread to unpark, or null, in which case
+     * this operation has no effect.
      */
     public static void unpark(Thread thread) {
-        if (thread == null)
-            throw new NullPointerException();
-        unsafe.unpark(thread);
+        if (thread != null)
+            unsafe.unpark(thread);
     }
 
     /**

@@ -64,8 +64,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/08 20:05:08 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/13 14:13:49 $
+ * @editor $Author: dl $
  * @author Doug Lea
  * 
  **/
@@ -249,18 +249,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          */
         transient Thread thread;
 
-
         /**
-         * Link to next node waiting on condition.
-         * These are only necessary for nodes created in Conditions
+         * Link to next node waiting on condition.  These are only
+         * necessary for nodes created in Conditions.  but are
+         * included in all nodes just for simplicity.
          */
         transient ReentrantLockQueueNode nextWaiter;
-
-        /**
-         * TEMPORARY field for use only by emulated version of park/unpark.
-         * Remove when emulation package is phased out.
-         */
-        transient int parkSemaphore;
 
         ReentrantLockQueueNode() { }
         ReentrantLockQueueNode(Thread t) { 
@@ -320,7 +314,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     // Atomics support
 
     private final static 
-        AtomicReferenceFieldUpdater<ReentrantLock, Thread>   
+        AtomicReferenceFieldUpdater<ReentrantLock, Thread> 
         ownerUpdater = 
         AtomicReferenceFieldUpdater.newUpdater
         (ReentrantLock.class, Thread.class, "owner");
@@ -340,22 +334,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         AtomicIntegerFieldUpdater.newUpdater 
         (ReentrantLockQueueNode.class, "releaseStatus");
 
-    private boolean acquireOwner(Thread current) {
-        return ownerUpdater.compareAndSet(this, null, current);
-    }
-
-    private boolean casTail(ReentrantLockQueueNode cmp, ReentrantLockQueueNode val) {
-        return tailUpdater.compareAndSet(this, cmp, val);
-    }
-
-    private boolean casHead(ReentrantLockQueueNode cmp, ReentrantLockQueueNode val) {
-        return headUpdater.compareAndSet(this, cmp, val);
-    }
-
-    private boolean casReleaseStatus(ReentrantLockQueueNode node, int cmp, int val) {
-        return releaseStatusUpdater.compareAndSet(node, cmp, val);
-    }
-
     /**
      * Special value for releaseStatus indicating that node is cancelled.
      * Must be a large positive number.
@@ -369,23 +347,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     private static final int ON_CONDITION_QUEUE = Integer.MIN_VALUE;
 
     /**
-     * Return whether lock wait queue is empty
-     * @return true if no threads are waiting for lock
-     */
-    private boolean queueEmpty() {
-        ReentrantLockQueueNode h = head; // force order of the volatile reads
-        return h == tail; 
-    }
-
-    /**
-     * Throw IllegalMonitorStateException if t not owner
-     */
-    final void checkOwner(Thread t) {
-        if (owner != t) 
-            throw new IllegalMonitorStateException();
-    }
-
-    /**
      * Insert node into queue. Return predecessor.
      * @param node the node to insert
      * @return node's predecessor
@@ -395,7 +356,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         ReentrantLockQueueNode t;
         while ( (t = tail) == null) {
             ReentrantLockQueueNode h = new ReentrantLockQueueNode();
-            if (casHead(null, h)) {
+            if (headUpdater.compareAndSet(this, null, h)) {
                 tail = h;
                 break;
             }
@@ -404,7 +365,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         ReentrantLockQueueNode p;
         do {
             node.prev = p = tail; // prev must be valid before/upon CAS
-        } while (!casTail(p, node));
+        } while (!tailUpdater.compareAndSet(this, p, node));
         p.next = node;      // Note: next field assignment lags CAS
         return p;
     }
@@ -444,7 +405,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         if (node == null) {
             node = new ReentrantLockQueueNode(current);
             // Last chance to retry fast path before queuing
-            if ((!fair || queueEmpty()) && acquireOwner(current))
+            if (owner == null &&
+                (!fair || head == tail) && 
+                ownerUpdater.compareAndSet(this, null, current))
                 return true;
             p = enq(node);
         } else 
@@ -462,13 +425,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * us.
          */
         for (;;) {
-            if (p == head && acquireOwner(current)) {
-                // Set head and unlink after successfully getting owenership
+            if (owner == null &&
+                p == head &&
+                ownerUpdater.compareAndSet(this, null, current)) {
+                // Set head and unlink after successful acquire
                 head = node;
                 p.next = null; 
                 node.thread = null;
                 node.prev = null; 
-                if (wasInterrupted)            // Re-interrupt on normal exit
+                if (wasInterrupted) // Re-interrupt on normal exit
                     current.interrupt();
                 return true;
             }
@@ -492,9 +457,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              * occurred since the above failed ownership CAS.)
              */
             else if (releaseStatus > 0) {
-                casReleaseStatus(p, releaseStatus, 0);
+                releaseStatusUpdater.compareAndSet(p, releaseStatus, 0);
             }
-
 
             /*
              * Wait if we are not not first in queue, or if we are
@@ -516,7 +480,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              * incrementing if already positive.
              *
              */
-            else if (casReleaseStatus(p, releaseStatus, -1)) {
+            else if (releaseStatus < 0 ||
+                     releaseStatusUpdater.compareAndSet(p, 0, -1)) {
                 long timeLeft = 0;
                 if (nanos > 0) {
                     long now = System.nanoTime();
@@ -548,7 +513,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 }
             }
         }
-
     }
 
     /**
@@ -558,8 +522,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     private void signalSuccessor(ReentrantLockQueueNode node) { 
         /*
-         * Find successor -- normally just node.next.
-         * But if its is cancelled, traverse through next's. 
+         * Find successor -- normally just node.next.  But if it is
+         * cancelled, traverse through its next's.
          */
         ReentrantLockQueueNode s = node.next;
         while (s != null && s.releaseStatus == CANCELLED) {
@@ -570,7 +534,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         /*
          * If successor appears to be null, check to see if a newly
          * queued node is successor by starting at tail and working
-         * backwards.
+         * backwards. This doesn't trigger often, because normally
+         * nodes are signalled only when they are sure to exist.
          */
         if (s == null) {
             s = tail;
@@ -593,29 +558,26 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         Thread thr = s.thread;
-        if (thr != null && thr != owner) // don't bother to signal if has lock
+        if (thr != owner) // don't bother to signal if has lock
             LockSupport.unpark(thr);
     }
 
     /**
      * Release and signal if necessary the first waiting thread, if
      * one exists.
+     * @param h the first waiting thread
      */
-    private void releaseFirst() {
-        ReentrantLockQueueNode h = head;
-        if (h != null) {
-            int c;
-            while ((c = h.releaseStatus) <= 0 && owner == null) {
-                if (casReleaseStatus(h, c, c+1)) {
-                    if (c < 0)
-                        signalSuccessor(h);
-                    break;
-                }
-                // Retry if CAS fails
+    private void releaseFirst(ReentrantLockQueueNode h) {
+        int c;
+        while ((c = h.releaseStatus) <= 0 && owner == null) {
+            if (releaseStatusUpdater.compareAndSet(h, c, c+1)) {
+                if (c < 0)
+                    signalSuccessor(h);
+                break;
             }
+            // Retry if CAS fails
         }
     }
-
 
     /**
      * Attempts to release this lock.  
@@ -628,12 +590,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * hold this lock.
      */
     public void unlock() {
-        checkOwner(Thread.currentThread());
-        if (recursions > 0) 
+        if (Thread.currentThread() != owner)
+            throw new IllegalMonitorStateException();
+        else if (recursions > 0) 
             --recursions;
         else {
             owner = null;
-            releaseFirst();
+            ReentrantLockQueueNode h = head;
+            if (h != null)
+                releaseFirst(h);
         }
     }
 
@@ -651,7 +616,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lock() {
         Thread current = Thread.currentThread();
-        if ((fair && !queueEmpty()) || !acquireOwner(current))
+        if ((fair && head != tail) || 
+            !ownerUpdater.compareAndSet(this, null, current))
             waitForLock(current, null, false, 0);
     }
 
@@ -691,7 +657,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         Thread current = Thread.currentThread();
         if (Thread.interrupted())
             throw new InterruptedException();
-        if ((!fair || queueEmpty()) && acquireOwner(current))
+        if ((!fair || head == tail) && 
+            ownerUpdater.compareAndSet(this, null, current))
             return;
         if (waitForLock(current, null, true, 0))
             return;
@@ -720,7 +687,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public boolean tryLock() {
         Thread current = Thread.currentThread();
-        if (acquireOwner(current))
+        if (ownerUpdater.compareAndSet(this, null, current))
             return true;
         if (owner == current) {
             ++recursions;
@@ -787,7 +754,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         if (Thread.interrupted()) 
             throw new InterruptedException();
         Thread current = Thread.currentThread();
-        if ((!fair || queueEmpty()) && acquireOwner(current))
+        if ((!fair || head == tail) && 
+            ownerUpdater.compareAndSet(this, null, current))
             return true;
         if (owner == current) { // check recursions before timeout
             ++recursions;
@@ -906,6 +874,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     // Helper methods for Conditions
 
     /**
+     * Throw IllegalMonitorStateException if t not owner
+     */
+    final void checkOwner(Thread t) {
+        if (owner != t) 
+            throw new IllegalMonitorStateException();
+    }
+
+    /**
      * Variant of unlock used by condition wait. 
      * Fully unlocks, setting recursions to zero.
      * @return current recursion count.
@@ -913,8 +889,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     final int unlockForWait() {
         int recs = recursions;
         recursions = 0;
-        owner = null;
-        releaseFirst();
+        unlock();
         return recs;
     }
 
@@ -939,15 +914,21 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return true;
         /*
          * w.prev can be non-null, but not yet on lock queue because
-         * the CAS to place it on queue can fail. So we have
-         * to traverse from tail to make sure it actually made it.
-         * It will always be near the tail in calls to this method,
-         * so we won't need to traverse much.
+         * the CAS to place it on queue can fail. So we have to
+         * traverse from tail to make sure it actually made it.  It
+         * will always be near the tail in calls to this method, and
+         * unless the CAS failed (which is unlikely), it will be
+         * there, so we hardly ever traverse much.
          */
-        for (ReentrantLockQueueNode t = tail; t != null; t = t.prev)
+        ReentrantLockQueueNode t = tail; 
+        for (;;) {
             if (t == w)
                 return true;
-        return false;
+            else if (t == null)
+                return false;
+            else
+                t = t.prev;
+        }
     } 
 
     /**
@@ -959,7 +940,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * If cannot change status, then the node has already been
          * cancelled.
          */
-        if (!casReleaseStatus(node, ON_CONDITION_QUEUE, 0))
+        if (!releaseStatusUpdater.compareAndSet(node, ON_CONDITION_QUEUE, 0))
             return false;
 
         /*
@@ -975,13 +956,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          */
         
         int c = p.releaseStatus;
-        if (c == CANCELLED || c < 0 || !casReleaseStatus(p, c, -1)) {
+        if (c == CANCELLED || 
+            c < 0 || 
+            !releaseStatusUpdater.compareAndSet(p, c, -1)) {
             c = p.releaseStatus;
             if (c <= 0) 
-                casReleaseStatus(p, c, 1);
-            Thread thr = node.thread;
-            if (thr != null)
-                LockSupport.unpark(thr);
+                releaseStatusUpdater.compareAndSet(p, c, 1);
+            LockSupport.unpark(node.thread);
         }
 
         return true;
@@ -993,15 +974,18 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     final void relockAfterCancelledWait(Thread current, 
                                         ReentrantLockQueueNode node, 
-                                       int recs) {
+                                        int recs) {
         /*
-         * Try to place node on lock queue.  If we lost race to a
-         * signal(), then we can't proceed until it succeeds in
-         * placing us on lock queue.  So just spin.
+         * Try to place node on lock queue.  
          */
-        if (casReleaseStatus(node, ON_CONDITION_QUEUE, 0)) 
+        if (releaseStatusUpdater.compareAndSet(node, ON_CONDITION_QUEUE, 0)) 
             enq(node);
         else {
+            /*
+             * If we lost race to a signal(), then we can't proceed
+             * until it finishes placing us on lock queue.  This is
+             * both uncommon and transient, so just spin.
+             */
             while (!isOnLockQueue(node))
                 Thread.yield();
         }
@@ -1031,8 +1015,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * Add new waiter:  Bookkeeping plus linked queue insertion.
          */
         private ReentrantLockQueueNode addWaiter(Thread current) {
-            if (current != owner) throw new IllegalMonitorStateException();
-            ReentrantLockQueueNode w = new ReentrantLockQueueNode(current, ON_CONDITION_QUEUE);
+            checkOwner(current);
+            ReentrantLockQueueNode w = 
+                new ReentrantLockQueueNode(current, ON_CONDITION_QUEUE);
             if (lastWaiter == null) 
                 firstWaiter = lastWaiter = w;
             else {
@@ -1044,7 +1029,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         /**
-         * Main code for signal.  Dequeue and transfer nodes until hit
+         * Main code for signal.  Remove and transfer nodes until hit
          * non-cancelled one or null. Split out from signal to
          * encourage compilers to inline the case of no waiters.
          * @param first the first node on condition queue
@@ -1059,27 +1044,33 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 first = firstWaiter;
             } while (first != null);
         }
-        
-        public void signal() {
+
+        /**
+         * Main code for signalAll.  Remove and transfer all nodes.
+         * @param first the first node on condition queue
+         */
+        private void doSignalAll(ReentrantLockQueueNode first) {
+            lastWaiter = firstWaiter  = null;
+            do {
+                ReentrantLockQueueNode n = first.nextWaiter;
+                first.nextWaiter = null;
+                transferForSignal(first);
+                first = n;
+            } while (first != null);
+        }
+
+        public final void signal() {
             checkOwner(Thread.currentThread());
             ReentrantLockQueueNode w = firstWaiter;
             if (w != null)
                 doSignal(w);
         }
-            
-        public void signalAll() {
+         
+        public final void signalAll() {
             checkOwner(Thread.currentThread());
-            // Pull off list all at once and traverse.
             ReentrantLockQueueNode w = firstWaiter;
-            if (w != null) {
-                lastWaiter = firstWaiter  = null;
-                do {
-                    ReentrantLockQueueNode n = w.nextWaiter;
-                    w.nextWaiter = null;
-                    transferForSignal(w);
-                    w = n;
-                } while (w != null);
-            }
+            if (w != null) 
+                doSignalAll(w);
         }
 
         /*
@@ -1087,15 +1078,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * annoyingly different.
          */
 
-        public void await() throws InterruptedException {
+        public final void await() throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
             int recs = unlockForWait();
 
             for (;;) {
                 if (Thread.interrupted()) {
                     relockAfterCancelledWait(current, w, recs);
+                    signalAll(); // to conform to likely JSR-133 spec
                     throw new InterruptedException();
                 }
                 if (isOnLockQueue(w)) {
@@ -1108,9 +1099,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             }
         }
 
-        public void awaitUninterruptibly() {
+        public final void awaitUninterruptibly() {
             Thread current = Thread.currentThread();
-            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
             int recs = unlockForWait();
 
@@ -1128,9 +1118,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
 
-        public long awaitNanos(long nanos) throws InterruptedException {
+        public final long awaitNanos(long nanos) throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
             int recs = unlockForWait();
 
@@ -1141,10 +1130,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             for (;;) {
                 if (Thread.interrupted()) {
                     relockAfterCancelledWait(current, w, recs);
+                    signalAll(); // to conform to likely JSR-133 spec
                     throw new InterruptedException();
                 }
                 if ((timeLeft = nanos - (System.nanoTime()-startTime)) <= 0) {
                     relockAfterCancelledWait(current, w, recs);
+                    signalAll(); // to conform to likely JSR-133 spec
                     return timeLeft;
                 }
                 if (isOnLockQueue(w)) {
@@ -1157,9 +1148,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             }
         }
 
-        public boolean awaitUntil(Date deadline) throws InterruptedException {
+        public final boolean awaitUntil(Date deadline) throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
             ReentrantLockQueueNode w = addWaiter(current);
             int recs = unlockForWait();
             long abstime = deadline.getTime();
@@ -1167,10 +1157,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             for (;;) {
                 if (Thread.interrupted()) {
                     relockAfterCancelledWait(current, w, recs);
+                    signalAll(); // to conform to likely JSR-133 spec
                     throw new InterruptedException();
                 }
                 if (System.currentTimeMillis() > abstime) {
                     relockAfterCancelledWait(current, w, recs);
+                    signalAll(); // to conform to likely JSR-133 spec
                     return false;
                 }
                 if (isOnLockQueue(w)) {
@@ -1183,11 +1175,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             }
         }
 
-        public boolean await(long time, TimeUnit unit) throws InterruptedException {
-            return awaitNanos(unit.toNanos(time)) > 0;
+        public final boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+            return awaitNanos(unit.toNanos(timeout)) > 0;
         }
-
     }
-
 }
 

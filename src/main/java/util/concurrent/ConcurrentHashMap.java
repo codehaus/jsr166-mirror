@@ -15,12 +15,13 @@ import java.io.ObjectOutputStream;
 /**
  * A hash table supporting full concurrency of retrievals and
  * adjustable expected concurrency for updates. This class obeys the
- * same functional specification as
- * <tt>java.util.Hashtable</tt>. However, even though all operations
- * are thread-safe, retrieval operations do <em>not</em> entail
- * locking, and there is <em>not</em> any support for locking the
- * entire table in a way that prevents all access.  This class is
- * fully interoperable with Hashtable in programs that rely on its
+ * same functional specification as <tt>java.util.Hashtable</tt>, and
+ * includes versions of methods corresponding to each method of
+ * <tt>Hashtable</tt> . However, even though all operations are
+ * thread-safe, retrieval operations do <em>not</em> entail locking,
+ * and there is <em>not</em> any support for locking the entire table
+ * in a way that prevents all access.  This class is fully
+ * interoperable with <tt>Hashtable</tt> in programs that rely on its
  * thread safety but not on its synchronization details.
  *
  * <p> Retrieval operations (including <tt>get</tt>) ordinarily
@@ -36,16 +37,17 @@ import java.io.ObjectOutputStream;
  * However, Iterators are designed to be used by only one thread at a
  * time.
  *
- * <p> The allowed concurrency among update operations is controlled
- * by the optional <tt>segments</tt> constructor argument (default
- * 16). The table is divided into this many independent parts, each of
- * which can be updated concurrently. Because placement in hash tables
- * is essentially random, the actual concurrency will vary. As a rough
- * rule of thumb, you should choose at least as many segments as you
- * expect concurrent threads. However, using more segments than you
- * need can waste space and time. Using a value of 1 for
- * <tt>segments</tt> results in a table that is concurrently readable
- * but can only be updated by one thread at a time.
+ * <p> The allowed concurrency among update operations is guided by
+ * the optional <tt>concurrencyLevel</tt> constructor argument
+ * (default 16). The table is internally partitioned to permit the
+ * indicated number of concurrent updates without contention. Because
+ * placement in hash tables is essentially random, the actual
+ * concurrency will vary.  Ideally, you should choose a value to
+ * accommodate as many threads as will ever concurrently access the
+ * table. Using a significantly higher value than you need can waste
+ * space and time, and a significantly lower value can lead to thread
+ * contention. But overestimates and underestimates within an order of
+ * magnitude do not usually have much noticeable impact.
  *
  * <p> Like Hashtable but unlike java.util.HashMap, this class does
  * NOT allow <tt>null</tt> to be used as a key or value.
@@ -64,7 +66,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Constants -------------- */
 
     /**
-     * The default initial number of table slots for this table (16).
+     * The default initial number of table slots for this table.
      * Used when not otherwise specified in constructor.
      */
     private static int DEFAULT_INITIAL_CAPACITY = 16;
@@ -159,11 +161,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * number of elements, can also serve as the volatile variable
          * providing proper read/write barriers. This is convenient
          * because this field needs to be read in many read operations
-         * anyway. The use of volatiles for this purpose is only
-         * guaranteed to work in accord with reuirements in
-         * multithreaded environments when run on JVMs conforming to
-         * the clarified JSR133 memory model specification.  This true
-         * for hotspot as of release 1.4.
+         * anyway. 
          *
          * Implementors note. The basic rules for all this are:
          *
@@ -467,24 +465,25 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Constructs a new, empty map with the specified initial
      * capacity and the specified load factor.
      *
-     * @param initialCapacity the initial capacity.  The actual
-     * initial capacity is rounded up to the nearest power of two.
+     * @param initialCapacity the initial capacity. The implementation
+     * performs internal sizing to accommodate this many elements.
      * @param loadFactor  the load factor threshold, used to control resizing.
-     * @param segments the number of concurrently accessible segments. the
-     * actual number of segments is rounded to the next power of two.
+     * @param concurrencyLevel the estimated number of concurrently
+     * updating threads. The implementation performs internal sizing
+     * to accommodate this many threads.  
      * @throws IllegalArgumentException if the initial capacity is
-     * negative or the load factor or number of segments are
+     * negative or the load factor or concurrencyLevel are
      * nonpositive.
      */
     public ConcurrentHashMap(int initialCapacity,
-                             float loadFactor, int segments) {
-        if (!(loadFactor > 0) || initialCapacity < 0 || segments <= 0)
+                             float loadFactor, int concurrencyLevel) {
+        if (!(loadFactor > 0) || initialCapacity < 0 || concurrencyLevel <= 0)
             throw new IllegalArgumentException();
 
         // Find power-of-two sizes best matching arguments
         int sshift = 0;
         int ssize = 1;
-        while (ssize < segments) {
+        while (ssize < concurrencyLevel) {
             ++sshift;
             ssize <<= 1;
         }
@@ -507,10 +506,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Constructs a new, empty map with the specified initial
-     * capacity,  and with default load factor and segments.
+     * capacity,  and with default load factor and concurrencyLevel.
      *
-     * @param initialCapacity the initial capacity of the
-     * ConcurrentHashMap.
+     * @param initialCapacity The implementation performs internal
+     * sizing to accommodate this many elements.
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative.
      */
@@ -520,7 +519,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Constructs a new, empty map with a default initial capacity,
-     * load factor, and number of segments.
+     * load factor, and number of concurrencyLevel.
      */
     public ConcurrentHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_SEGMENTS);
@@ -559,10 +558,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * @param   key   a key in the table.
      * @return  the value to which the key is mapped in this table;
-     *          <code>null</code> if the key is not mapped to any value in
+     *          <tt>null</tt> if the key is not mapped to any value in
      *          this table.
      * @throws  NullPointerException  if the key is
-     *               <code>null</code>.
+     *               <tt>null</tt>.
      * @see     #put(Object, Object)
      */
     public V get(Object key) {
@@ -574,11 +573,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Tests if the specified object is a key in this table.
      *
      * @param   key   possible key.
-     * @return  <code>true</code> if and only if the specified object
+     * @return  <tt>true</tt> if and only if the specified object
      *          is a key in this table, as determined by the
-     *          <tt>equals</tt> method; <code>false</code> otherwise.
+     *          <tt>equals</tt> method; <tt>false</tt> otherwise.
      * @throws  NullPointerException  if the key is
-     *               <code>null</code>.
+     *               <tt>null</tt>.
      * @see     #contains(Object)
      */
     public boolean containsKey(Object key) {
@@ -595,7 +594,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param value value whose presence in this map is to be tested.
      * @return <tt>true</tt> if this map maps one or more keys to the
      * specified value.
-     * @throws  NullPointerException  if the value is <code>null</code>.
+     * @throws  NullPointerException  if the value is <tt>null</tt>.
      */
     public boolean containsValue(Object value) {
         if (value == null)
@@ -607,23 +606,24 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         return false;
     }
+
     /**
      * Legacy method testing if some key maps into the specified value
      * in this table.  This operation is more expensive than the
-     * <code>containsKey</code> method.
+     * <tt>containsKey</tt> method.
      * 
      * <p> Note that this method is identical in functionality to
      * <tt>containsValue</tt>, This method esists solely to ensure
-     * plug-in compatibility with class {@link java.util.Hashtable},
+     * full compatibility with class {@link java.util.Hashtable},
      * which supported this method prior to introduction of the
      * collections framework.
 
      * @param      value   a value to search for.
-     * @return     <code>true</code> if and only if some key maps to the
-     *             <code>value</code> argument in this table as
+     * @return     <tt>true</tt> if and only if some key maps to the
+     *             <tt>value</tt> argument in this table as
      *             determined by the <tt>equals</tt> method;
-     *             <code>false</code> otherwise.
-     * @throws  NullPointerException  if the value is <code>null</code>.
+     *             <tt>false</tt> otherwise.
+     * @throws  NullPointerException  if the value is <tt>null</tt>.
      * @see        #containsKey(Object)
      * @see        #containsValue(Object)
      * @see   Map
@@ -633,19 +633,19 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Maps the specified <code>key</code> to the specified
-     * <code>value</code> in this table. Neither the key nor the
-     * value can be <code>null</code>. <p>
+     * Maps the specified <tt>key</tt> to the specified
+     * <tt>value</tt> in this table. Neither the key nor the
+     * value can be <tt>null</tt>. <p>
      *
-     * The value can be retrieved by calling the <code>get</code> method
+     * The value can be retrieved by calling the <tt>get</tt> method
      * with a key that is equal to the original key.
      *
      * @param      key     the table key.
      * @param      value   the value.
      * @return     the previous value of the specified key in this table,
-     *             or <code>null</code> if it did not have one.
+     *             or <tt>null</tt> if it did not have one.
      * @throws  NullPointerException  if the key or value is
-     *               <code>null</code>.
+     *               <tt>null</tt>.
      * @see     Object#equals(Object)
      * @see     #get(Object)
      */
@@ -713,9 +713,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * @param   key   the key that needs to be removed.
      * @return  the value to which the key had been mapped in this table,
-     *          or <code>null</code> if the key did not have a mapping.
+     *          or <tt>null</tt> if the key did not have a mapping.
      * @throws  NullPointerException  if the key is
-     *               <code>null</code>.
+     *               <tt>null</tt>.
      */
     public V remove(Object key) {
         int hash = hash(key);

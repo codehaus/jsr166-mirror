@@ -32,12 +32,12 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         private static class Sync extends AbstractQueuedSynchronizer {
             boolean isLocked() { return getState() == 1; }
 
-            public boolean tryAcquireExclusiveState(boolean isQueued, int acquires) {
+            public boolean tryAcquireExclusive(boolean isQueued, int acquires) {
                 assert acquires == 1; // Does not use multiple acquires
                 return compareAndSetState(0, 1);
             }
             
-            public boolean releaseExclusiveState(int releases) {
+            public boolean tryReleaseExclusive(int releases) {
                 setState(0);
                 return true;
             }
@@ -53,10 +53,10 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
                 setState(0); // reset to unlocked state
             }
         }
-        
+         
         private final Sync sync = new Sync();
         public boolean tryLock() { 
-            return sync.tryAcquireExclusiveState(false, 1);
+            return sync.tryAcquireExclusive(false, 1);
         }
         public void lock() { 
             sync.acquireExclusiveUninterruptibly(1);

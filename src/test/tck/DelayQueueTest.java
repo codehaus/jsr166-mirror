@@ -665,8 +665,10 @@ public class DelayQueueTest extends JSR166TestCase {
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
         assertEquals(NOCAP, q.remainingCapacity());
-        q.add(new PDelay(1));
+        PDelay x = new PDelay(1);
+        q.add(x);
         assertFalse(q.isEmpty());
+        assertTrue(q.contains(x));
         q.clear();
         assertTrue(q.isEmpty());
     }
@@ -910,11 +912,28 @@ public class DelayQueueTest extends JSR166TestCase {
      * drainTo(c) empties queue into another collection c
      */ 
     public void testDrainTo() {
-        DelayQueue q = populatedQueue(SIZE);
+        DelayQueue q = new DelayQueue();
+        PDelay[] elems = new PDelay[SIZE];
+        for (int i = 0; i < SIZE; ++i) {
+            elems[i] = new PDelay(i);
+            q.add(elems[i]);
+        }
         ArrayList l = new ArrayList();
         q.drainTo(l);
         assertEquals(q.size(), 0);
-        assertEquals(l.size(), SIZE);
+        for (int i = 0; i < SIZE; ++i) 
+            assertEquals(l.get(i), elems[i]);
+        q.add(elems[0]);
+        q.add(elems[1]);
+        assertFalse(q.isEmpty());
+        assertTrue(q.contains(elems[0]));
+        assertTrue(q.contains(elems[1]));
+        l.clear();
+        q.drainTo(l);
+        assertEquals(q.size(), 0);
+        assertEquals(l.size(), 2);
+        for (int i = 0; i < 2; ++i) 
+            assertEquals(l.get(i), elems[i]);
     }
 
     /**

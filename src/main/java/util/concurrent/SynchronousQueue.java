@@ -371,8 +371,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         if (o == null) throw new NullPointerException();
 
         for (;;) {
-            qlock.lock();
             Node node;
+            qlock.lock();
             try {
                 node = waitingTakes.deq();
             } finally {

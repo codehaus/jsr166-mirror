@@ -28,9 +28,14 @@ import java.util.concurrent.*;
  * other operations.
  *
  * <p>Beware that, unlike in most collections, the <tt>size</tt>
- * method is <em>NOT</em> a constant-time operation. Because of the
+ * method is <em>not</em> a constant-time operation. Because of the
  * asynchronous nature of these sets, determining the current number
- * of elements requires a traversal of the elements.
+ * of elements requires a traversal of the elements. Additionally, the
+ * bulk operations <tt>addAll</tt>, <tt>removeAll</tt>,
+ * <<tt>retainAll</tt>, and tt>containsAll</tt> are <em>not</em>
+ * guaranteed to be performed atomically. For example, an iterator
+ * operating concurrently with an <tt>addAll</tt> operation might view
+ * only some of the added elements.
  *
  * <p>This class and its iterators implement all of the
  * <em>optional</em> methods of the {@link Set} and {@link Iterator}
@@ -85,7 +90,8 @@ public class ConcurrentSkipListSet<E>
      *
      * @throws ClassCastException if the elements in the specified
      * collection are not comparable, or are not mutually comparable.
-     * @throws NullPointerException if the specified collection is <tt>null</tt>.
+     * @throws NullPointerException if the specified collection is
+     * <tt>null</tt>.
      */
     public ConcurrentSkipListSet(Collection<? extends E> c) {
         m = new ConcurrentSkipListMap<E,Object>();
@@ -97,7 +103,8 @@ public class ConcurrentSkipListSet<E>
      * sorted set, sorted according to the same ordering.
      *
      * @param s sorted set whose elements will comprise the new set.
-     * @throws NullPointerException if the specified sorted set is <tt>null</tt>.
+     * @throws NullPointerException if the specified sorted set is
+     * <tt>null</tt>.
      */
     public ConcurrentSkipListSet(SortedSet<E> s) {
         m = new ConcurrentSkipListMap<E,Object>(s.comparator());
@@ -212,6 +219,60 @@ public class ConcurrentSkipListSet<E>
     public Iterator<E> iterator() {
 	return m.keyIterator();
     }
+
+    /* ---------------- AbstractSet Overrides -------------- */
+
+    /**
+     * Compares the specified object with this set for equality.  Returns
+     * <tt>true</tt> if the specified object is also a set, the two sets
+     * have the same size, and every member of the specified set is
+     * contained in this set (or equivalently, every member of this set is
+     * contained in the specified set).  This definition ensures that the
+     * equals method works properly across different implementations of the
+     * set interface.
+     *
+     * @param o Object to be compared for equality with this set.
+     * @return <tt>true</tt> if the specified Object is equal to this set.
+     */
+    public boolean equals(Object o) {
+        // Override AbstractSet version to avoid calling size()
+	if (o == this)
+	    return true;
+	if (!(o instanceof Set))
+	    return false;
+	Collection c = (Collection) o;
+        try {
+            return containsAll(c) && c.containsAll(this);
+        } catch(ClassCastException unused)   {
+            return false;
+        } catch(NullPointerException unused) {
+            return false;
+        }
+    }
+    
+    /**
+     * Removes from this set all of its elements that are contained in
+     * the specified collection.  If the specified collection is also
+     * a set, this operation effectively modifies this set so that its
+     * value is the <i>asymmetric set difference</i> of the two sets.
+     *
+     * @param  c collection that defines which elements will be removed from
+     *           this set.
+     * @return <tt>true</tt> if this set changed as a result of the call.
+     * 
+     * @throws ClassCastException if the types of one or more elements in this
+     *            set are incompatible with the specified collection
+     * @throws NullPointerException if the specified collection, or any
+     * of its elements are <tt>null</tt>.
+     */
+    public boolean removeAll(Collection<?> c) {
+        // Override AbstractSet version to avoid unnecessary call to size()
+        boolean modified = false;
+        for (Iterator<?> i = c.iterator(); i.hasNext(); )
+            if (remove(i.next()))
+                modified = true;
+        return modified;
+    }
     
     /* ---------------- Relational operations -------------- */
 
@@ -220,8 +281,8 @@ public class ConcurrentSkipListSet<E>
      * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
-     * @return an element greater than or equal to given element, or <tt>null</tt>
-     * if there is no such element.
+     * @return an element greater than or equal to given element, or
+     * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>
@@ -231,8 +292,8 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Returns an element strictly less than the given element, or <tt>null</tt> if
-     * there is no such element.
+     * Returns an element strictly less than the given element, or
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
      * @return the greatest element less than the given element, or
@@ -246,8 +307,8 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Returns an element less than or equal to the given element, or <tt>null</tt>
-     * if there is no such element.
+     * Returns an element less than or equal to the given element, or
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
      * @return the greatest element less than or equal to given
@@ -261,8 +322,8 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Returns an element strictly greater than the given element, or <tt>null</tt>
-     * if there is no such element.
+     * Returns an element strictly greater than the given element, or
+     * <tt>null</tt> if there is no such element.
      * 
      * @param o the value to match
      * @return the least element greater than the given element, or
@@ -327,6 +388,8 @@ public class ConcurrentSkipListSet<E>
     public E last() {
         return m.lastKey();
     }
+
+
 
     /**
      * Returns a view of the portion of this set whose elements range from
@@ -734,6 +797,4 @@ public class ConcurrentSkipListSet<E>
                                                    fromElement, fence);
         }
     }
-
-
 }    

@@ -82,10 +82,11 @@ package java.util.concurrent;
  * acquire permits. If you need deterministic guarantees, consider
  * using {@link FifoSemaphore}.
  *
+ * @fixme Barging needs to be discussed. Need to see implementation.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/22 00:31:59 $
+ * @revised $Date: 2003/01/22 01:01:43 $
  * @editor $Author: dholmes $
  *
  */

@@ -37,8 +37,9 @@ import java.util.*;
  * generally decreases throughput but reduces variability and avoids
  * starvation.
  *
- * <p>This class implements all of the <em>optional</em> methods
- * of the {@link Collection} and {@link Iterator} interfaces.
+ * <p>This class and its iterator implement all of the
+ * <em>optional</em> methods of the {@link Collection} and {@link
+ * Iterator} interfaces. 
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">

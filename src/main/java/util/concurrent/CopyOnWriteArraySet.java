@@ -17,22 +17,19 @@ import java.util.*;
  *       vastly outnumber mutative operations, and you need
  *       to prevent interference among threads during traversal.
  *  <li>It is thread-safe.
- *  <li>Mutative operations(add, set, remove, etc) are expensive
+ *  <li>Mutative operations (add, set, remove, etc) are expensive
  *      since they usually entail copying the entire underlying array.
- *  <li>Iterators do not support the mutative remove operation
- *  <li>Traversal via iterators is very fast and cannot ever encounter
+ *  <li>Iterators do not support the mutative remove operation.
+ *  <li>Traversal via iterators is fast and cannot encounter
  *      interference from other threads. Iterators rely on
  *      unchanging snapshots of the array at the time the iterators were
  *     constructed.
  * </ul>
- * <p>
- * <b>Sample Usage.</b> Probably the main application
- * of copy-on-write sets are classes that maintain
- * sets of Handler objects
- * that must be multicasted to upon an update command. This
- * is a classic case where you do not want to be holding a
- * lock while sending a message, and where traversals normally
- * vastly overwhelm additions.
+ *
+ * <p> <b>Sample Usage.</b> The following code sketch uses a
+ * copy-on-write set to maintain a set of Handler objects that 
+ * perform some action upon state updates. 
+ *
  * <pre>
  * class Handler { void handle(); ... }
  *
@@ -45,8 +42,7 @@ import java.util.*;
  *
  *    public void update() {
  *       changeState();
- *       Iterator&lt;Handler&gt; it = handlers.iterator();
- *       while (it.hasNext())
+ *       for (Handler handler : handlers)
  *          it.next().handle();
  *    }
  * }
@@ -62,7 +58,7 @@ import java.util.*;
  * @param <E> the type of elements held in this collection
  */
 public class CopyOnWriteArraySet<E> extends AbstractSet<E>
-        implements Cloneable, java.io.Serializable {
+        implements java.io.Serializable {
     private static final long serialVersionUID = 5457747651344034263L;
 
     private final CopyOnWriteArrayList<E> al;
@@ -99,5 +95,4 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     public boolean  removeAll(Collection<?> c)        { return al.removeAll(c); }
     public boolean  retainAll(Collection<?> c)        { return al.retainAll(c); }
 
-    public Object clone() { return new CopyOnWriteArraySet(al); }
 }

@@ -296,7 +296,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Removes a single instance of the specified element from this
-     * collection, if it is present.
+     * queue, if it is present.
      */
     public boolean remove(Object o) {
         if (o == null) return false;

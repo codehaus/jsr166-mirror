@@ -19,16 +19,13 @@ import java.util.*;
  * ordering also does not permit insertion of non-comparable objects
  * (doing so results in <tt>ClassCastException</tt>).
  *
- * <p>This class implements all of the <em>optional</em> methods
- * of the {@link Collection} and {@link Iterator} interfaces.
- * <p>The Iterator provided in method {@link #iterator()} is
- * <em>not</em> guaranteed to traverse the elements of the
- * PriorityBlockingQueue in any particular order. If you need ordered
- * traversal, consider using <tt>Arrays.sort(pq.toArray())</tt>.
- *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
  * Iterator} interfaces. 
+ * The Iterator provided in method {@link #iterator()} is
+ * <em>not</em> guaranteed to traverse the elements of the
+ * PriorityBlockingQueue in any particular order. If you need ordered
+ * traversal, consider using <tt>Arrays.sort(pq.toArray())</tt>.
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -277,7 +274,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Removes a single instance of the specified element from this
-     * collection, if it is present.
+     * queue, if it is present.
      */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;

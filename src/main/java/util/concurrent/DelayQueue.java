@@ -159,7 +159,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * <tt>timeout</tt> parameter
      * @return the head of this queue, or <tt>null</tt> if the
      * specified waiting time elapses before an element with
-     * an unexpired dealy is present.
+     * an unexpired delay is present.
      * @throws InterruptedException if interrupted while waiting.
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
@@ -345,7 +345,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
     /**
      * Removes a single instance of the specified element from this
-     * collection, if it is present.
+     * queue, if it is present.
      */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;

@@ -28,8 +28,9 @@ import java.util.*;
  * dynamically created upon each insertion unless this would bring the
  * queue above capacity.
  *
- * <p>This class implements all of the <em>optional</em> methods
- * of the {@link Collection} and {@link Iterator} interfaces.
+ * <p>This class and its iterator implement all of the
+ * <em>optional</em> methods of the {@link Collection} and {@link
+ * Iterator} interfaces. 
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -447,7 +448,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Removes a single instance of the specified element from this
-     * collection, if it is present.
+     * queue, if it is present.
      */
     public boolean remove(Object o) {
         if (o == null) return false;

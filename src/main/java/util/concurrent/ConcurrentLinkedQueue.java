@@ -33,8 +33,9 @@ import java.util.concurrent.atomic.*;
  * asynchronous nature of these queues, determining the current number
  * of elements requires a traversal of the elements.
  *
- * <p>This class implements all of the <em>optional</em> methods
- * of the {@link Collection} and {@link Iterator} interfaces.
+ * <p>This class and its iterator implement all of the
+ * <em>optional</em> methods of the {@link Collection} and {@link
+ * Iterator} interfaces. 
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">

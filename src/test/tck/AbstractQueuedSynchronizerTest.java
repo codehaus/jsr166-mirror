@@ -73,6 +73,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         public boolean isLocked() { return sync.isLocked(); }
         public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
         public boolean hasContended() { return sync.hasContended(); }
+        public boolean isQueued(Thread t) { return sync.isQueued(t); }
     }
 
     /**
@@ -146,6 +147,39 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             lock.unlock();
             Thread.sleep(SHORT_DELAY_MS);
             assertFalse(lock.hasQueuedThreads());
+            t1.join();
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
+    /**
+     * isQueued reports whether a thread is queued.
+     */
+    public void testIsQueued() { 
+	final Mutex lock = new Mutex();
+        Thread t1 = new Thread(new InterruptedLockRunnable(lock));
+        Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
+        try {
+            assertFalse(lock.isQueued(t1));
+            assertFalse(lock.isQueued(t2));
+            lock.lock();
+            t1.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.isQueued(t1));
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.isQueued(t1));
+            assertTrue(lock.isQueued(t2));
+            t1.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(lock.isQueued(t1));
+            assertTrue(lock.isQueued(t2));
+            lock.unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(lock.isQueued(t1));
+            assertFalse(lock.isQueued(t2));
             t1.join();
             t2.join();
         } catch(Exception e){

@@ -161,7 +161,7 @@ public class JSR166TestCase extends TestCase {
      * be reimplemented to use for example a Property.
      */ 
     protected long getShortDelay() {
-        return 100;
+        return 10;
     }
 
 

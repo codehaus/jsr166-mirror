@@ -889,7 +889,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 		public void run() {
 		    try {
 			lock.lock();
-                        c.awaitNanos(SHORT_DELAY_MS * 2 * 1000000);
+                        c.awaitNanos(1000 * 1000 * 1000); // 1 sec
                         lock.unlock();
                         threadShouldThrow();
 		    }

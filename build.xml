@@ -96,6 +96,15 @@
           description="Runs all tests"/>
 
 
+  <target name="checkstyle" depends="init, clean-filtered-src, filter-src">
+    <taskdef resource="checkstyletask.properties"
+            classpath="${lib.dir}/checkstyle-all-2.4.jar"/>
+
+    <checkstyle>
+      <fileset dir="${build.filter.src.dir}" includes="**/*.java"/>
+    </checkstyle>
+  </target>
+
   <target name="docs" depends="init, clean-filtered-src, filter-src"
           description="Builds javadocs with custom tags to build folder">
     <delete dir="${build.javadocs.dir}"/>
@@ -207,7 +216,7 @@
     <mkdir dir="${build.filter.src.dir}"/>
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
-        <include name="**/*.java"/>
+        <include name="java/**/*.java"/>
       </fileset>
       <filterchain>
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"

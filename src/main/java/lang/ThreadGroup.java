@@ -950,7 +950,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * <li>If this thread group has a parent thread group, the
      *     <code>uncaughtException</code> method of that parent is called
      *     with the same two arguments. 
-     * <li>Otherwise, this method checks to see if there is a {
+     * <li>Otherwise, this method checks to see if there is a 
      *     {@linkplain Thread#getDefaultUncaughtExceptionHandler default
      *     uncaught exception handler} installed, and if so, its
      *     <code>uncaughtException</code> method is called with the same 

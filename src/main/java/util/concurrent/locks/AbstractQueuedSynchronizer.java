@@ -1236,47 +1236,42 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Version of getFirstQueuedThread called when fastpath fails
      */
     private Thread fullGetFirstQueuedThread() {
+        Node h = head;
+        if (h == null)                    // No queue
+            return null;
+        
         /*
-         * This loops only if the queue changes while we read sets of
-         * fields.
+         * The first node is normally h.next. Try to get its
+         * thread field, ensuring consistent reads: If thread
+         * field is nulled out or s.prev is no longer head, then
+         * some other thread(s) concurrently performed setHead in
+         * between some of our reads.
          */
-        for (;;) {
-            Node h = head;
-            if (h == null)                    // No queue
-                return null;
-
-            /*
-             * The first node is normally h.next. Try to get its
-             * thread field, ensuring consistent reads: If thread
-             * field is nulled out or s.prev is no longer head, then
-             * some other thread(s) concurrently performed setHead in
-             * between some of our reads, so we must reread.
-             */
-            Node s = h.next;
-            if (s != null) {
-                Thread st = s.thread;
-                Node sp = s.prev;
-                if (st != null && sp == head)
-                    return st;
-            }
-
-            /*
-             * Head's next field might not have been set yet, or may
-             * have been unset after setHead. So we must check to see
-             * if tail is actually first node, in almost the same way
-             * as above.
-             */
-            Node t = tail;
-            if (t == h)                       // Empty queue
-                return null;
-
-            if (t != null) {
-                Thread tt = t.thread;
-                Node tp = t.prev;
-                if (tt != null && tp == head)
-                    return tt;
-            }
+        Node s = h.next;
+        if (s != null) {
+            Thread st = s.thread;
+            Node sp = s.prev;
+            if (st != null && sp == head)
+                return st;
         }
+        
+        /*
+         * Head's next field might not have been set yet, or may have
+         * been unset after setHead. So we must check to see if tail
+         * is actually first node. If not, we continue on, safely
+         * traversing from tail back to head to find first,
+         * guaranteeing termination.
+         */
+
+        Node t = tail;
+        Thread firstThread = null;
+        while (t != null && t != head) {
+            Thread tt = t.thread;
+            if (tt != null)
+                firstThread = tt;
+            t = t.prev;
+        }
+        return firstThread;
     }
 
     /**

@@ -21,7 +21,7 @@ import java.util.*;
  * to add to the queue; if there are no queued threads then no element
  * is being added and the head is <tt>null</tt>.  For purposes of
  * other <tt>Collection</tt> methods (for example <tt>contains</tt>),
- * a <tt>SynchronousQueue<//t> acts as an empty collection.  This
+ * a <tt>SynchronousQueue</tt> acts as an empty collection.  This
  * queue does not permit <tt>null</tt> elements.
  *
  * <p>Synchronous queues are similar to rendezvous channels used in
@@ -29,6 +29,8 @@ import java.util.*;
  * object running in one thread must synch up with an object running
  * in another thread in order to hand it some information, event, or
  * task.
+ * <p>This class implements all of the <em>optional</em> methods
+ * of the {@link Collection} and {@link Iterator} interfaces.
  * @since 1.5
  * @author Doug Lea
 **/

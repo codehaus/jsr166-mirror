@@ -206,7 +206,7 @@ public class CyclicBarrier {
      * @param parties the number of threads that must invoke {@link #await}
      * before the barrier is tripped.
      * @param barrierAction the command to execute when the barrier is
-     * tripped.
+     * tripped, or <tt>null</tt> if there is no action.
      *
      * @throws IllegalArgumentException if <tt>parties</tt> is less than 1.
      */

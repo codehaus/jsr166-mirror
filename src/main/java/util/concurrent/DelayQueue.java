@@ -16,6 +16,8 @@ import java.util.*;
  * expired furthest in the past - if no delay has expired there is no head and
  * <tt>poll</tt> will return <tt>null</tt>.
  * This queue does not permit <tt>null</tt> elements.
+ * <p>This class implements all of the <em>optional</em> methods
+ * of the {@link Collection} and {@link Iterator} interfaces.
  * @since 1.5
  * @author Doug Lea
 */
@@ -247,7 +249,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue. The iterator
      * does not return the elements in any particular order. The
-     * returned iterator is a "fast-fail" iterator that will
+     * returned iterator is a thread-safe "fast-fail" iterator that will
      * throw {@link java.util.ConcurrentModificationException}
      * upon detected interference.
      *

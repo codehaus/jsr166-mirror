@@ -202,6 +202,8 @@ public class Executors {
      * @param task the task to submit
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
+     * @throws ExecutionException if the task encountered an exception
+     * while executing
      */
     public static void invoke(Executor executor, Runnable task)
             throws ExecutionException, InterruptedException {
@@ -221,6 +223,8 @@ public class Executors {
      * for execution
      * @throws InterruptedException if interrupted while waiting for
      * completion
+     * @throws ExecutionException if the task encountered an exception
+     * while executing
      */
     public static <T> T invoke(Executor executor, Callable<T> task)
             throws ExecutionException, InterruptedException {

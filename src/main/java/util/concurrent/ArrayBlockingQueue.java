@@ -32,6 +32,9 @@ import java.util.*;
  * threads access in FIFO order. Fairness generally decreases
  * throughput but reduces variablility and avoids starvation.
  *
+ * <p>This class implements all of the <em>optional</em> methods
+ * of the {@link Collection} and {@link Iterator} interfaces.
+ *
  * @since 1.5
  * @author Doug Lea
  */

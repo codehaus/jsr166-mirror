@@ -34,8 +34,9 @@ public final class AtomicReferenceArray<V> implements java.io.Serializable {
      */
     public AtomicReferenceArray(int length) {
         array = new Object[length];
-        for (int i = 0; i < length; ++i)
-            unsafe.putObjectVolatile(array, rawIndex(i), null);
+        // must perform at least one volatile write to conform to JMM
+        if (length > 0) 
+            unsafe.putObjectVolatile(array, rawIndex(0), null);
     }
 
     /**

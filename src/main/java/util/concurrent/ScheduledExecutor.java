@@ -73,7 +73,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             extends CancellableTask implements ScheduledCancellable {
         
         /** Sequence number to break ties FIFO */
-        private long sequenceNumber;
+        private final long sequenceNumber;
         /** The time the task is enabled to execute in nanoTime units */
         private long time;
         /** The delay following next time, or <= 0 if non-periodic */
@@ -93,8 +93,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * Creates a one-shot action with given nanoTime-based trigger time
-         * but does not establish the action (need for Future subclass).
+         * Creates a one-shot action with given nanoTime-based trigger
+         * time but does not establish the action. (This is needed for
+         * the Future-based subclass).
          */
         ScheduledCancellableTask(long ns) {
             super();
@@ -120,7 +121,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
         public long getDelay(TimeUnit unit) {
             long d =  unit.convert(time - System.nanoTime(), 
-                                TimeUnit.NANOSECONDS);
+                                   TimeUnit.NANOSECONDS);
             return d;
         }
 
@@ -157,7 +158,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * Override run method not to setDone if periodic
+         * Overrides CancellableTask version so as to not setDone if
+         * periodic.
          */ 
         public void run() {
             if (setRunning()) {
@@ -171,15 +173,14 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * Return a new ScheduledCancellable task (which may be the
-         * this task) that will trigger in the period subsequent to
-         * current task, or null if non-periodic or cancelled.
+         * Return a ScheduledCancellable task (which may be this task)
+         * that will trigger in the period subsequent to current task,
+         * or null if non-periodic or cancelled.
          */
         ScheduledCancellableTask nextTask() {
             if (period <= 0 || !reset())
                 return null;
             time = period + (rateBased ? time : System.nanoTime());
-            sequenceNumber = sequencer.getAndIncrement();
             return this;
         }
     }
@@ -232,10 +233,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
         public boolean add(Runnable x) { return dq.add((ScheduledCancellableTask)x); }
         public boolean offer(Runnable x) { return dq.offer((ScheduledCancellableTask)x); }
-        public void put(Runnable x) throws InterruptedException {
+        public void put(Runnable x)  {
             dq.put((ScheduledCancellableTask)x); 
         }
-        public boolean offer(Runnable x, long timeout, TimeUnit unit) throws InterruptedException {
+        public boolean offer(Runnable x, long timeout, TimeUnit unit) {
             return dq.offer((ScheduledCancellableTask)x, timeout, unit);
         }
 
@@ -261,7 +262,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Creates a new ScheduledExecutor with the given initial parameters.
+     * Creates a new ScheduledExecutor with the given core pool size.
      * 
      * @param corePoolSize the number of threads to keep in the pool,
      * even if they are idle.
@@ -355,6 +356,23 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
+     * Creates and executes a ScheduledFuture that becomes enabled after the
+     * given delay.
+     * @param callable the function to execute.
+     * @param delay the time from now to delay execution.
+     * @param unit the time unit of the delay parameter.
+     * @return a ScheduledFuture that can be used to extract result or cancel.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution because the executor has been shut down.
+     */
+    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+        long triggerTime = System.nanoTime() + unit.toNanos(delay);
+        ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
+        delayedExecute(t);
+        return t;
+    }
+
+    /**
      * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and subsequently with the given
      * period; that is executions will commence after
@@ -404,22 +422,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         return t;
     }
     
-    /**
-     * Creates and executes a ScheduledFuture that becomes enabled after the
-     * given delay.
-     * @param callable the function to execute.
-     * @param delay the time from now to delay execution.
-     * @param unit the time unit of the delay parameter.
-     * @return a ScheduledFuture that can be used to extract result or cancel.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     */
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-        long triggerTime = System.nanoTime() + unit.toNanos(delay);
-        ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
-        delayedExecute(t);
-        return t;
-    }
 
     /**
      * Execute command with zero required delay. This has effect
@@ -521,7 +523,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * <tt>ExecuteExistingDelayedTasksAfterShutdownPolicy</tt> has
      * been set <tt>false</tt>, existing delayed tasks whose delays
      * have not yet elapsed are cancelled. And unless the
-     * <tt>ContinueExistingPeriodicTasksAfterShutdownPolicy</tt> hase
+     * <tt>ContinueExistingPeriodicTasksAfterShutdownPolicy</tt> has
      * been set <tt>true</tt>, future executions of existing periodic
      * tasks will be cancelled.
      */

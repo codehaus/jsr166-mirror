@@ -8,32 +8,31 @@
 package java.util;
 
 /**
- * An unbounded priority {@linkplain Queue queue} based on a priority heap.
- * This queue orders elements according to an order specified at construction
- * time, which is specified in the same manner as {@link java.util.TreeSet}
- * and {@link java.util.TreeMap}: elements are ordered either according to
- * their <i>natural order</i> (see {@link Comparable}), or according to a
- * {@link java.util.Comparator}, depending on which constructor is used.
+ * An unbounded priority {@linkplain Queue queue} based on a priority
+ * heap.  This queue orders elements according to an order specified
+ * at construction time, which is specified either according to their
+ * <i>natural order</i> (see {@link Comparable}), or according to a
+ * {@link java.util.Comparator}, depending on which constructor is
+ * used. A priority queue does not permit <tt>null</tt> elements.
  *
- * <p>The <em>head</em> of this queue is the <em>least</em> element with
- * respect to the specified ordering.  If multiple elements are tied for least
- * value, the head is one of those elements. A priority queue does not permit
- * <tt>null</tt> elements. 
+ * <p>The <em>head</em> of this queue is the <em>least</em> element
+ * with respect to the specified ordering.  If multiple elements are
+ * tied for least value, the head is one of those elements -- ties are
+ * broken arbitrarily.  The {@link #remove()} and {@link #poll()}
+ * methods remove and return the head of the queue, and the {@link
+ * #element()} and {@link #peek()} methods return, but do not delete,
+ * the head of the queue.
  *
- * <p>The {@link #remove()} and {@link #poll()} methods remove and
- * return the head of the queue.
- *
- * <p>The {@link #element()} and {@link #peek()} methods return, but do
- * not delete, the head of the queue.
- *
- * <p>A priority queue is unbounded, but has a <i>capacity</i>.  The
- * capacity is the size of the array used internally to store the
+ * <p>A priority queue is unbounded, but has an internal
+ * <i>capacity</i> governing the size of an array used to store the
  * elements on the queue.  It is always at least as large as the queue
  * size.  As elements are added to a priority queue, its capacity
  * grows automatically.  The details of the growth policy are not
  * specified.
  *
- * <p>The Iterator provided in method {@link #iterator()} is <em>not</em>
+ * <p>This class implements all of the <em>optional</em> methods of
+ * the {@link Collection} and {@link Iterator} interfaces.  The
+ * Iterator provided in method {@link #iterator()} is <em>not</em>
  * guaranteed to traverse the elements of the PriorityQueue in any
  * particular order. If you need ordered traversal, consider using
  * <tt>Arrays.sort(pq.toArray())</tt>.
@@ -321,7 +320,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * to the priority queue's ordering.
      */
     public boolean add(E o) {
-        return super.add(o);
+        return offer(o);
     }
 
    

@@ -32,6 +32,10 @@ import java.util.concurrent.atomic.*;
  * is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
  * of elements requires a traversal of the elements.
+ *
+ * <p>This class implements all of the <em>optional</em> methods
+ * of the {@link Collection} and {@link Iterator} interfaces.
+ *
  * @since 1.5
  * @author Doug Lea
  *

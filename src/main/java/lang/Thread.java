@@ -1394,6 +1394,7 @@ class Thread implements Runnable {
      * (see {@link #setDefaultUncaughtExceptionHandler}) acts as it's handler.
      * If there is no default handler set then the thread's 
      * <tt>ThreadGroup</tt> acts as its handler.
+     * @since 1.5
      */
     public interface UncaughtExceptionHandler { 
         /** 
@@ -1419,6 +1420,7 @@ class Thread implements Runnable {
      * (&quot;setDefaultUncaughtExceptionHandler&quot;)</tt>
      *
      * @see #setUncaughtExceptionHandler
+     * @since 1.5
      */
     public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
 	SecurityManager sm = System.getSecurityManager();
@@ -1435,6 +1437,7 @@ class Thread implements Runnable {
      * Return the default handler invoked when a Thread abruptly terminates
      * due to an uncaught exception. If the returned value is <tt>null</tt>,
      * there is no default.
+     * @since 1.5
      */
     public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler(){
         return defaultUncaughtExceptionHandler;
@@ -1447,6 +1450,7 @@ class Thread implements Runnable {
      * {@link #setDefaultUncaughtExceptionHandler default handler} will be
      * returned. If there is no default handler then the thread's
      * <tt>ThreadGroup</tt> is returned.
+     * @since 1.5
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() { 
         return (uncaughtExceptionHandler != null ?
@@ -1464,6 +1468,7 @@ class Thread implements Runnable {
      * @exception  SecurityException  if the current thread is not allowed to
      *               modify this thread.
      * @see #setDefaultUncaughtExceptionHandler
+     * @since 1.5
      */
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) { 
         checkAccess();

@@ -97,12 +97,12 @@ public interface BlockingQueue<E> extends Queue<E> {
      * using queues that may impose insertion restrictions (for
      * example capacity bounds), method <tt>offer</tt> is generally
      * preferable to method {@link Collection#add}, which can fail to
-     * inserts an element only by throwing an exception.
+     * insert an element only by throwing an exception.
      *
-     * @param o the element to insert.
+     * @param o the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
-     * this queue, else <tt>false</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *         this queue, else <tt>false</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     boolean offer(E o);
 

@@ -145,6 +145,9 @@ public class CancellableTask implements Cancellable, Runnable {
         return runnerUpdater.compareAndSet(this, null, Thread.currentThread());
     }
 
+    /**
+     * Runs the runnable if not cancelled, maintaining run status.
+     */
     public void run() {
         if (setRunning()) {
             try {

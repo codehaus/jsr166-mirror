@@ -13,7 +13,7 @@ package java.util.concurrent;
  * the computation.  The result can only be retrieved using method
  * <tt>get</tt> when the computation has completed, blocking if
  * necessary until it is ready.  Once the computation has completed,
- * the computation cannot be restarted or cancelled.
+ * the computation cannot be cancelled.
  *
  * <p>
  * <b>Sample Usage</b> (Note that the following classes are all

@@ -274,7 +274,7 @@ public final class System {
     public static native long currentTimeMillis();
 
     /**
-     * Return the current value of the system timer, in nanoseconds.
+     * Returns the current value of the system timer, in nanoseconds.
      * <p>This method can only be used to measure elapsed time and is
      * not related to any other notion of system or wall-clock time.
      * The value returned represents nanoseconds since some fixed but
@@ -294,7 +294,7 @@ public final class System {
      * </pre>
      * 
      * @return The current value of the system timer, in nanoseconds.
-     *
+     * @since 1.5
      */
     public static native long nanoTime();
 

@@ -1,7 +1,7 @@
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group.  Adapted and released under explicit permission
- * from JDK1.2 ArrayList.java which carries the following copyright:
+ * from JDK ArrayList.java which carries the following copyright:
  *
  * Copyright 1997 by Sun Microsystems, Inc.,
  * 901 San Antonio Road, Palo Alto, California, 94303, U.S.A.
@@ -26,15 +26,16 @@ import java.util.*;
  * than alternatives when traversal operations vastly outnumber
  * mutations, and is useful when you cannot or don't want to
  * synchronize traversals, yet need to preclude interference among
- * concurrent threads.  The iterator method uses a reference to the
- * state of the array at the point that the iterator was created. This
- * array never changes during the lifetime of the iterator, so
- * interference is impossible and the iterator is guaranteed not to
- * throw <tt>ConcurrentModificationException</tt>.  The iterator will
- * not reflect additions, removals, or changes to the list since the
- * iterator was created.  Element-changing operations on iterators
- * themselves (remove, set, and add) are not supported. These methods
- * throw <tt>UnsupportedOperationException</tt>.
+ * concurrent threads.  The "snapshot" style iterator method uses a
+ * reference to the state of the array at the point that the iterator
+ * was created. This array never changes during the lifetime of the
+ * iterator, so interference is impossible and the iterator is
+ * guaranteed not to throw <tt>ConcurrentModificationException</tt>.
+ * The iterator will not reflect additions, removals, or changes to
+ * the list since the iterator was created.  Element-changing
+ * operations on iterators themselves (remove, set, and add) are not
+ * supported. These methods throw
+ * <tt>UnsupportedOperationException</tt>.
  * @since 1.5
  * @author Doug Lea
  */
@@ -55,14 +56,14 @@ public class CopyOnWriteArrayList<E>
     private E[] array() { return array; }
 
     /**
-     * Constructs an empty list.
+     * Creates an empty list.
      */
     public CopyOnWriteArrayList() {
         array = (E[]) new Object[0];
     }
 
     /**
-     * Constructs an list containing the elements of the specified
+     * Creates a list containing the elements of the specified
      * Collection, in the order they are returned by the Collection's
      * iterator.
      * @param c the collection of initially held elements
@@ -104,18 +105,18 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns the number of components in this list.
+     * Returns the number of elements in this list.
      *
-     * @return  the number of components in this list.
+     * @return  the number of elements in this list.
      */
     public int size() {
         return array().length;
     }
 
     /**
-     * Tests if this list has no components.
+     * Tests if this list has no elements.
      *
-     * @return  <tt>true</tt> if this list has no components;
+     * @return  <tt>true</tt> if this list has no elements;
      *          <tt>false</tt> otherwise.
      */
     public boolean isEmpty() {
@@ -123,9 +124,11 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns true if this list contains the specified element.
+     * Returns <tt>true</tt> if this list contains the specified element.
      *
      * @param elem element whose presence in this List is to be tested.
+     * @return  <code>true</code> if the specified element is present;
+     *		<code>false</code> otherwise.
      */
     public boolean contains(Object elem) {
         E[] elementData = array();
@@ -134,8 +137,8 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Searches for the first occurence of the given argument, testing
-     * for equality using the <tt>equals</tt> method.
+     * Searches for the first occurence of the given argument, testing 
+     * for equality using the <tt>equals</tt> method. 
      *
      * @param   elem   an object.
      * @return  the index of the first occurrence of the argument in this
@@ -147,7 +150,6 @@ public class CopyOnWriteArrayList<E>
         int len = elementData.length;
         return indexOf(elem, elementData, len);
     }
-
 
     /**
      * static version allows repeated call without needed
@@ -198,7 +200,7 @@ public class CopyOnWriteArrayList<E>
      * Returns the index of the last occurrence of the specified object in
      * this list.
      *
-     * @param   elem   the desired component.
+     * @param   elem   the desired element.
      * @return  the index of the last occurrence of the specified object in
      *          this list; returns -1 if the object is not found.
      */
@@ -225,7 +227,7 @@ public class CopyOnWriteArrayList<E>
      * Searches backwards for the specified object, starting from the
      * specified index, and returns an index to it.
      *
-     * @param  elem    the desired component.
+     * @param  elem    the desired element.
      * @param  index   the index to start searching from.
      * @return the index of the last occurrence of the specified object in this
      *          List at position less than index in the List;
@@ -268,6 +270,8 @@ public class CopyOnWriteArrayList<E>
     /**
      * Returns an array containing all of the elements in this list
      * in the correct order.
+     * @return an array containing all of the elements in this list
+     * 	       in the correct order.
      */
     public Object[] toArray() {
         Object[] elementData = array();
@@ -318,10 +322,10 @@ public class CopyOnWriteArrayList<E>
     /**
      * Returns the element at the specified position in this list.
      *
-     * @param index index of element to return.
-     * @return the element
-     * @throws IndexOutOfBoundsException index is out of range (index
-     *              &lt; 0 || index &gt;= size()).
+     * @param  index index of element to return.
+     * @return the element at the specified position in this list.
+     * @throws    IndexOutOfBoundsException if index is out of range <tt>(index
+     * 		  &lt; 0 || index &gt;= size())</tt>.
      */
     public E get(int index) {
         E[] elementData = array();
@@ -336,8 +340,8 @@ public class CopyOnWriteArrayList<E>
      * @param index index of element to replace.
      * @param element element to be stored at the specified position.
      * @return the element previously at the specified position.
-     * @throws IndexOutOfBoundsException index out of range
-     *              (index &lt; 0 || index &gt;= size()).
+     * @throws    IndexOutOfBoundsException if index out of range
+     *		  <tt>(index &lt; 0 || index &gt;= size())</tt>.
      */
     public synchronized E set(int index, E element) {
         int len = array.length;
@@ -377,8 +381,8 @@ public class CopyOnWriteArrayList<E>
      *
      * @param index index at which the specified element is to be inserted.
      * @param element element to be inserted.
-     * @throws IndexOutOfBoundsException index is out of range
-     *              (index &lt; 0 || index &gt; size()).
+     * @throws    IndexOutOfBoundsException if index is out of range
+     *		  <tt>(index &lt; 0 || index &gt; size())</tt>.
      */
     public synchronized void add(int index, E element) {
         int len = array.length;
@@ -395,11 +399,12 @@ public class CopyOnWriteArrayList<E>
     /**
      * Removes the element at the specified position in this list.
      * Shifts any subsequent elements to the left (subtracts one from their
-     * indices).  Returns the element that was removed from the list.
+     * indices).
      *
-     * @throws IndexOutOfBoundsException index out of range (index
-     *              &lt; 0 || index &gt;= size()).
      * @param index the index of the element to removed.
+     * @return the element that was removed from the list.
+     * @throws    IndexOutOfBoundsException if index out of range <tt>(index
+     * 		  &lt; 0 || index &gt;= size())</tt>.
      */
     public synchronized E remove(int index) {
         int len = array.length;
@@ -415,18 +420,18 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Removes a single instance of the specified element from this Collection,
-     * if it is present (optional operation).  More formally, removes an
-     * element <tt>e</tt> such that <tt>(o==null ? e==null :
-     * o.equals(e))</tt>, if the Collection contains one or more such
-     * elements.  Returns true if the Collection contained the specified
-     * element (or equivalently, if the Collection changed as a result of the
-     * call).
+     * Removes a single instance of the specified element from this
+     * list, if it is present (optional operation).  More formally,
+     * removes an element <tt>e</tt> such that <tt>(o==null ? e==null :
+     * o.equals(e))</tt>, if the list contains one or more such
+     * elements.  Returns <tt>true</tt> if the list contained the
+     * specified element (or equivalently, if the list changed as a
+     * result of the call).<p>
      *
-     * @param element element to be removed from this Collection, if present.
-     * @return true if the Collection changed as a result of the call.
+     * @param o element to be removed from this list, if present.
+     * @return <tt>true</tt> if the list contained the specified element.
      */
-    public synchronized boolean remove(Object element) {
+    public synchronized boolean remove(Object o) {
         int len = array.length;
         if (len == 0) return false;
 
@@ -437,8 +442,8 @@ public class CopyOnWriteArrayList<E>
         E[] newArray = (E[]) new Object[newlen];
 
         for (int i = 0; i < newlen; ++i) {
-            if (element == array[i] ||
-            (element != null && element.equals(array[i]))) {
+            if (o == array[i] ||
+            (o != null && o.equals(array[i]))) {
                 // found one;  copy remaining and exit
                 for (int k = i + 1; k < len; ++k) newArray[k-1] = array[k];
                 array = newArray;
@@ -448,13 +453,12 @@ public class CopyOnWriteArrayList<E>
         }
         // special handling for last cell
 
-        if (element == array[newlen] ||
-        (element != null && element.equals(array[newlen]))) {
+        if (o == array[newlen] ||
+        (o != null && o.equals(array[newlen]))) {
             array = newArray;
             return true;
         } else
             return false; // throw away copy
-
     }
 
 
@@ -462,8 +466,8 @@ public class CopyOnWriteArrayList<E>
      * Removes from this List all of the elements whose index is between
      * fromIndex, inclusive and toIndex, exclusive.  Shifts any succeeding
      * elements to the left (reduces their index).
-     * This call shortens the List by (toIndex - fromIndex) elements.  (If
-     * toIndex==fromIndex, this operation has no effect.)
+     * This call shortens the list by <tt>(toIndex - fromIndex)</tt> elements.
+     * (If <tt>toIndex==fromIndex</tt>, this operation has no effect.)
      *
      * @param fromIndex index of first element to be removed.
      * @param toIndex index after last element to be removed.
@@ -813,10 +817,9 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns the hash code value for this List.
-     * <p>
-     * This implementation uses exactly the code that is used to define
-     * the List hash function in the documentation for List.hashCode.
+     * Returns the hash code value for this List.  <p> This
+     * implementation uses the definition in {@link List#hashCode}.
+     * @return the hash code
      */
     public int hashCode() {
         int hashCode = 1;

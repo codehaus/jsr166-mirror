@@ -21,11 +21,8 @@ import java.util.*;
  * statistics, such as the number of completed tasks.
  *
  * <p>To be useful across a wide range of contexts, this class
- * provides many adjustable parameters and extensibility hooks.  For
- * example, it can be configured to create a new thread for each task,
- * or even to execute tasks sequentially in a single thread, in
- * addition to its most common configuration, which reuses a pool of
- * threads.  However, programmers are urged to use the more convenient
+ * provides many adjustable parameters and extensibility
+ * hooks. However, programmers are urged to use the more convenient
  * {@link Executors} factory methods {@link
  * Executors#newCachedThreadPool} (unbounded thread pool, with
  * automatic thread reclamation), {@link Executors#newFixedThreadPool}
@@ -33,7 +30,7 @@ import java.util.*;
  * Executors#newSingleThreadExecutor} (single background thread), that
  * preconfigure settings for the most common usage
  * scenarios. Otherwise, use the following guide when manually
- * configuring and tuning <tt>ThreadPoolExecutor</tt>:
+ * configuring and tuning this class:
  *
  * <dl>
  *
@@ -124,7 +121,7 @@ import java.util.*;
  * new thread will be constructed. This policy avoids lockups when
  * handling sets of requests that might have internal dependencies.
  * Direct handoffs generally require unbounded maximumPoolSizes to
- * avoid rejection of new submitted tasks, which in turn admits the
+ * avoid rejection of new submitted tasks. This in turn admits the
  * possibility of unbounded thread growth when commands continue to
  * arrive on average faster than they can be processed.  </li>
  *
@@ -150,9 +147,9 @@ import java.util.*;
  * lead to artifically low throughput.  If tasks frequently block (for
  * example if they are I/O bound), a system may be able to schedule
  * time for more threads than you otherwise allow. Use of small queues
- * or queueless handoffs generally requires larger pool sizes, which
- * keeps CPUs busier but may encounter unacceptable scheduling
- * overhead, which also decreases throughput.  </li>
+ * generally requires larger pool sizes, which keeps CPUs busier but
+ * may encounter unacceptable scheduling overhead, which also
+ * decreases throughput.  </li>
  *
  * </ol>
  *
@@ -211,14 +208,13 @@ import java.util.*;
  *
  * <dt>Queue maintenance</dt>
  *
- * <dd> Method {@link ThreadPoolExecutor#getQueue} allows access
- * to the work queue for purposes of monitoring and debugging.
- * Use of this method for any other purpose is strongly discouraged.
- * Two supplied methods, {@link ThreadPoolExecutor#remove} and
- * {@link ThreadPoolExecutor#purge} are available to assist in
- * storage reclamation when large numbers of not-yet-executed
- * tasks become cancelled.</dd>
- * </dl>
+ * <dd> Method {@link ThreadPoolExecutor#getQueue} allows access to
+ * the work queue for purposes of monitoring and debugging.  Use of
+ * this method for any other purpose is strongly discouraged.  Two
+ * supplied methods, {@link ThreadPoolExecutor#remove} and {@link
+ * ThreadPoolExecutor#purge} are available to assist in storage
+ * reclamation when large numbers of queued tasks become
+ * cancelled.</dd> </dl>
  *
  * @since 1.5
  * @author Doug Lea
@@ -1236,7 +1232,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * <tt>super.afterExecute</tt> at the beginning of this method.
      *
      * @param r the runnable that has completed.
-     * @param t the exception that cause termination, or null if
+     * @param t the exception that caused termination, or null if
      * execution completed normally.
      */
     protected void afterExecute(Runnable r, Throwable t) { }
@@ -1258,10 +1254,16 @@ public class ThreadPoolExecutor implements ExecutorService {
    public static class CallerRunsPolicy implements RejectedExecutionHandler {
 
         /**
-         * Constructs a <tt>CallerRunsPolicy</tt>.
+         * Creates a <tt>CallerRunsPolicy</tt>.
          */
         public CallerRunsPolicy() { }
 
+        /**
+         * Executes task r in the caller's thread, unless the executor
+         * has been shut down, in which case the task is discarded.
+         * @param r the runnable task requested to be executed
+         * @param e the executor attempting to execute this task
+         */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             if (!e.isShutdown()) {
                 r.run();
@@ -1276,10 +1278,16 @@ public class ThreadPoolExecutor implements ExecutorService {
     public static class AbortPolicy implements RejectedExecutionHandler {
 
         /**
-         * Constructs a <tt>AbortPolicy</tt>.
+         * Creates a <tt>AbortPolicy</tt>.
          */
         public AbortPolicy() { }
 
+        /**
+         * Always throws  RejectedExecutionException
+         * @param r the runnable task requested to be executed
+         * @param e the executor attempting to execute this task
+         * @throws RejectedExecutionException always.
+         */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             throw new RejectedExecutionException();
         }
@@ -1292,10 +1300,15 @@ public class ThreadPoolExecutor implements ExecutorService {
     public static class DiscardPolicy implements RejectedExecutionHandler {
 
         /**
-         * Constructs <tt>DiscardPolicy</tt>.
+         * Creates <tt>DiscardPolicy</tt>.
          */
         public DiscardPolicy() { }
 
+        /**
+         * Does nothing, which has the effect of discarding task r.
+         * @param r the runnable task requested to be executed
+         * @param e the executor attempting to execute this task
+         */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
         }
     }
@@ -1307,10 +1320,18 @@ public class ThreadPoolExecutor implements ExecutorService {
      */
     public static class DiscardOldestPolicy implements RejectedExecutionHandler {
         /**
-         * Constructs a <tt>DiscardOldestPolicy</tt> for the given executor.
+         * Creates a <tt>DiscardOldestPolicy</tt> for the given executor.
          */
         public DiscardOldestPolicy() { }
 
+        /**
+         * Obtains and ignores the next task that the executor
+         * would otherwise execute, if one is immediately available,
+         * and then retries execution of task r, unless the executor
+         * is shut down, in which case task r is instead discarded.
+         * @param r the runnable task requested to be executed
+         * @param e the executor attempting to execute this task
+         */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             if (!e.isShutdown()) {
                 e.getQueue().poll();

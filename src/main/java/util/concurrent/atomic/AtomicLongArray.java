@@ -35,8 +35,9 @@ public final class AtomicLongArray implements java.io.Serializable {
      */
     public AtomicLongArray(int length) {
         array = new long[length];
-        for (int i = 0; i < length; ++i)
-            unsafe.putLongVolatile(array, rawIndex(i), 0);
+        // must perform at least one volatile write to conform to JMM
+        if (length > 0) 
+            unsafe.putLongVolatile(array, rawIndex(0), 0);
     }
 
     /**

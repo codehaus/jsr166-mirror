@@ -28,6 +28,9 @@ import java.util.*;
  * dynamically created upon each insertion unless this would bring the
  * queue above capacity.
  *
+ * <p>This class implements all of the <em>optional</em> methods
+ * of the {@link Collection} and {@link Iterator} interfaces.
+ *
  * @since 1.5
  * @author Doug Lea
  *

@@ -25,7 +25,7 @@ import java.lang.reflect.*;
  */
 public abstract class  AtomicIntegerFieldUpdater<T>  {
     /**
-     * Create an updater for objects with the given field.  The Class
+     * Creates an updater for objects with the given field.  The Class
      * argument is needed to check that reflective types and generic
      * types match.
      * @param tclass the class of the objects holding the field
@@ -33,7 +33,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * @return the updater
      * @throws IllegalArgumentException if the field is not a
      * volatile integer type.
-     * @throws RuntimeException with an nested reflection-based
+     * @throws RuntimeException with a nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U> AtomicIntegerFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {

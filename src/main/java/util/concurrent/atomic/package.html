@@ -18,8 +18,13 @@ operation of the form:
 <p> This method (which varies in argument types across different
 classes) atomically sets a variable to the <tt>updateValue</tt> if it
 currently holds the <tt>expectedValue</tt>, reporting <tt>true</tt> on
-success.  The classes additionally support a weaker version of this
-operation:
+success.  The memory effects for accesses and updates of atomics
+follow the rules for volatiles, so an invocation of
+<tt>compareAndSet</tt> has the memory effects of a <tt>volatile</tt>
+read followed by a <tt>volatile</tt> write.
+
+<p>The classes in this package additionally support a weaker version
+of this operation:
 
 <pre>
   boolean weakCompareAndSet(expectedValue, updateValue);
@@ -39,21 +44,15 @@ on contemporary processors. However on some platforms, support may
 entail some form of internal locking. Thus the methods are not
 strictly guaranteed to be non-blocking.
 
-<p> Method <tt>compareAndSet</tt>, along with method
-<tt>get</tt> that returns the current value, minimally suffice for
-programming with atomic operations. The classes and methods in this
-package provide a few related operations to form a small toolkit of
-common constructions using atomics.
-
-<p>Instances of classes <tt>AtomicBoolean</tt>,
-<tt>AtomicInteger</tt>, <tt>AtomicLong</tt>, and
-<tt>AtomicReference</tt> each provide access and updates to a
-single variable of the corresponding type.  The memory effects for
-accesses and updates are exactly the same as those of
-<tt>volatile</tt> fields.  Each class also provides appropriate
-utility methods for that type.  For example, <tt>AtomicLong</tt>
-and <tt>AtomicInt</tt> provide atomic increment methods.  One
-application is to generate sequence numbers, as in:
+<p> The classes and methods in this package provide a few related
+operations and capabilities to form a small toolkit of common
+constructions using atomics.  <p>Instances of classes {@link
+AtomicBoolean}, {@link java.util.concurrent.atomic.AtomicInteger}, {@link java.util.concurrent.atomic.AtomicLong}, and {@link
+AtomicReference} each provide access and updates to a single variable
+of the corresponding type.  Each class also provides appropriate
+utility methods for that type.  For example, classes <tt>AtomicLong</tt> and
+<tt>AtomicInt</tt> provide atomic increment methods.  One application
+is to generate sequence numbers, as in:
 
 <pre>
 class Sequencer {
@@ -65,9 +64,9 @@ class Sequencer {
 <p>In addition to classes representing single values, this package
 contains <em>Updater</em> classes that can be used to obtain
 <tt>compareAndSet</tt> operations on any selected <tt>volatile</tt>
-field of any selected class.  <tt>AtomicReferenceFieldUpdater</tt>,
-<tt>AtomicIntegerFieldUpdater</tt>, and
-<tt>AtomicLongFieldUpdater</tt> are reflection-based utilities that
+field of any selected class.  {@link java.util.concurrent.atomic.AtomicReferenceFieldUpdater},
+{@link java.util.concurrent.atomic.AtomicIntegerFieldUpdater}, and
+{@link java.util.concurrent.atomic.AtomicLongFieldUpdater} are reflection-based utilities that
 provide access to the associated field types. These are mainly of use
 in atomic data structures in which several <tt>volatile</tt> fields of
 the same node (for example, the links of a tree node) are
@@ -76,16 +75,16 @@ flexibility in how and when to use atomic updates, at the expense of
 more awkward reflection-based setup, less convenient usage, and weaker
 guarantees.
 
-<p>The <tt>AtomicIntegerArray</tt>, <tt>AtomicLongArray</tt>, and
-<tt>AtomicReferenceArray</tt> classes further extend atomic operation
+<p>The {@link java.util.concurrent.atomic.AtomicIntegerArray}, {@link java.util.concurrent.atomic.AtomicLongArray}, and
+{@link java.util.concurrent.atomic.AtomicReferenceArray} classes further extend atomic operation
 support to arrays of these types. These classes are also notable in
 providing <tt>volatile</tt> access semantics for their array elements,
 which is not otherwise supported for ordinary Java arrays.
 
-<p> The <tt>AtomicMarkableReference</tt> class associates a single
+<p> The {@link java.util.concurrent.atomic.AtomicMarkableReference} class associates a single
 boolean with a reference. For example, this bit might be used inside a
 data structure to mean that the object being referenced has logically
-been deleted. The <tt>AtomicStampedReference</tt> class associates an
+been deleted. The {@link java.util.concurrent.atomic.AtomicStampedReference} class associates an
 integer value with a reference. This may be used for example, to
 represent version numbers corresponding to series of updates.
 

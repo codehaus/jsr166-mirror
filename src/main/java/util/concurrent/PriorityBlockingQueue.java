@@ -17,6 +17,8 @@ import java.util.*;
  * attempted additions may fail due to resource exhaustion (causing
  * <tt>OutOfMemoryError</tt>).
  *
+ * <p>This class implements all of the <em>optional</em> methods
+ * of the {@link Collection} and {@link Iterator} interfaces.
  * <p>The Iterator provided in method {@link #iterator()} is
  * <em>not</em> guaranteed to traverse the elements of the
  * PriorityBlockingQueue in any particular order. If you need ordered
@@ -337,12 +339,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns an iterator over the elements in this queue. The iterator
-     * does not return the elements in any particular order.
-     * The
-     * returned iterator is a "fast-fail" iterator that will
-     * throw {@link java.util.ConcurrentModificationException}
-     * upon detected interference.     
+     * Returns an iterator over the elements in this queue. The
+     * iterator does not return the elements in any particular order.
+     * The returned iterator is a thread-safe "fast-fail" iterator
+     * that will throw {@link
+     * java.util.ConcurrentModificationException} upon detected
+     * interference.
      *
      * @return an iterator over the elements in this queue.
      */

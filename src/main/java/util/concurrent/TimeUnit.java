@@ -33,9 +33,10 @@ package java.util.concurrent;
  *  Lock lock = ...;
  *  if ( lock.tryLock(50L, TimeUnit.SECONDS) ) ...
  * </pre>
- * Note however, that there is no guarantee that a particular lock, in this
- * case, will be able to notice the passage of time at the same granularity
- * as the given <tt>TimeUnit</tt>.
+ *
+ * Note however, that there is no guarantee that a particular timeout
+ * implementation will be able to notice the passage of time at the
+ * same granularity as the given <tt>TimeUnit</tt>.
  *
  * @since 1.5
  * @author Doug Lea
@@ -84,9 +85,7 @@ public final class TimeUnit implements java.io.Serializable {
 
     /**
      * Utility method to compute the excess-nanosecond argument to
-     * wait, sleep, join. The results may overflow, so public methods
-     * invoking this should document possible overflow unless
-     * overflow is known not to be possible for the given arguments.
+     * wait, sleep, join.
      */
     private int excessNanos(long time, long ms) {
         if (index == NS)
@@ -202,7 +201,7 @@ public final class TimeUnit implements java.io.Serializable {
     public void timedWait(Object obj, long timeout)
         throws InterruptedException {
         if (timeout > 0) {
-            long ms = MILLISECONDS.convert(timeout, this);
+            long ms = toMillis(timeout);
             int ns = excessNanos(timeout, ms);
             obj.wait(ms, ns);
         }
@@ -220,7 +219,7 @@ public final class TimeUnit implements java.io.Serializable {
     public void timedJoin(Thread thread, long timeout)
         throws InterruptedException {
         if (timeout > 0) {
-            long ms = MILLISECONDS.convert(timeout, this);
+            long ms = toMillis(timeout);
             int ns = excessNanos(timeout, ms);
             thread.join(ms, ns);
         }
@@ -236,7 +235,7 @@ public final class TimeUnit implements java.io.Serializable {
      */
     public void sleep(long timeout) throws InterruptedException {
         if (timeout > 0) {
-            long ms = MILLISECONDS.convert(timeout, this);
+            long ms = toMillis(timeout);
             int ns = excessNanos(timeout, ms);
             Thread.sleep(ms, ns);
         }

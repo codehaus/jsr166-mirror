@@ -96,7 +96,8 @@ public interface Queue<E> extends Collection<E> {
     boolean offer(E o);
 
     /**
-     * Retrieves and removes the head of this queue, if it is available.
+     * Retrieves and removes the head of this queue, or <tt>null</tt>
+     * if this queue is empty.
      *
      * @return the head of this queue, or <tt>null</tt> if this
      *         queue is empty.
@@ -104,10 +105,9 @@ public interface Queue<E> extends Collection<E> {
     E poll();
 
     /**
-     * Retrieves and removes the head of this queue.
-     * This method differs
-     * from the <tt>poll</tt> method in that it throws an exception if this
-     * queue is empty.
+     * Retrieves and removes the head of this queue.  This method
+     * differs from the <tt>poll</tt> method in that it throws an
+     * exception if this queue is empty.
      *
      * @return the head of this queue.
      * @throws NoSuchElementException if this queue is empty.
@@ -115,12 +115,11 @@ public interface Queue<E> extends Collection<E> {
     E remove();
 
     /**
-     * Retrieves, but does not remove, the head of this queue.
-     * This method differs from the <tt>poll</tt>
-     * method only in that this method does not remove the head element from
-     * this queue.
+     * Retrieves, but does not remove, the head of this queue,
+     * returning <tt>null</tt> if this queue is empty.
      *
-     * @return the head of this queue, or <tt>null</tt> if this queue is empty.
+     * @return the head of this queue, or <tt>null</tt> if this queue
+     * is empty.
      */
     E peek();
 

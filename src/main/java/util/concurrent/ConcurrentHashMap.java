@@ -50,6 +50,9 @@ import java.io.ObjectOutputStream;
  * overestimates and underestimates within an order of magnitude do
  * not usually have much noticeable impact.
  *
+ * <p>This class implements all of the <em>optional</em> methods
+ * of the {@link Map} and {@link Iterator} interfaces.
+ *
  * <p> Like {@link java.util.Hashtable} but unlike {@link
  * java.util.HashMap}, this class does NOT allow <tt>null</tt> to be
  * used as a key or value.
@@ -541,7 +544,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Constructs a new, empty map with a default initial capacity,
-     * load factor, and number of concurrencyLevel.
+     * load factor, and concurrencyLevel.
      */
     public ConcurrentHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_SEGMENTS);
@@ -595,7 +598,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public int size() {
         int[] mc = new int[segments.length];
         for (;;) {
-            int sum = 0;
+            long sum = 0;
             int mcsum = 0;
             for (int i = 0; i < segments.length; ++i) {
                 sum += segments[i].count;
@@ -611,8 +614,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     }
                 }
             }
-            if (check == sum)
-                return sum;
+            if (check == sum) {
+                if (sum > Integer.MAX_VALUE)
+                    return Integer.MAX_VALUE;
+                else
+                    return (int)sum;
+            }
         }
     }
 
@@ -626,7 +633,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *          this table.
      * @throws  NullPointerException  if the key is
      *               <tt>null</tt>.
-     * @see     #put(Object, Object)
      */
     public V get(Object key) {
         int hash = hash(key); // throws NullPointerException if key null
@@ -642,7 +648,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *          <tt>equals</tt> method; <tt>false</tt> otherwise.
      * @throws  NullPointerException  if the key is
      *               <tt>null</tt>.
-     * @see     #contains(Object)
      */
     public boolean containsKey(Object key) {
         int hash = hash(key); // throws NullPointerException if key null
@@ -691,14 +696,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Legacy method testing if some key maps into the specified value
-     * in this table.  This operation is more expensive than the
-     * <tt>containsKey</tt> method.
-     * 
-     * <p> Note that this method is identical in functionality to
-     * <tt>containsValue</tt>, This method exists solely to ensure
+     * in this table.  This method is identical in functionality to
+     * {@link #containsValue}, and  exists solely to ensure
      * full compatibility with class {@link java.util.Hashtable},
      * which supported this method prior to introduction of the
-     * collections framework.
+     * Java Collections framework.
 
      * @param      value   a value to search for.
      * @return     <tt>true</tt> if and only if some key maps to the
@@ -706,9 +708,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *             determined by the <tt>equals</tt> method;
      *             <tt>false</tt> otherwise.
      * @throws  NullPointerException  if the value is <tt>null</tt>.
-     * @see        #containsKey(Object)
-     * @see        #containsValue(Object)
-     * @see   Map
      */
     public boolean contains(Object value) {
         return containsValue(value);
@@ -728,8 +727,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *             or <tt>null</tt> if it did not have one.
      * @throws  NullPointerException  if the key or value is
      *               <tt>null</tt>.
-     * @see     Object#equals(Object)
-     * @see     #get(Object)
      */
     public V put(K key, V value) {
         if (value == null)
@@ -782,8 +779,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param t Mappings to be stored in this map.
      */
     public void putAll(Map<? extends K, ? extends V> t) {
-        Iterator<Map.Entry<? extends K, ? extends V>> it = t.entrySet().iterator();
-        while (it.hasNext()) {
+        for (Iterator<Map.Entry<? extends K, ? extends V>> it = (Iterator<Map.Entry<? extends K, ? extends V>>) t.entrySet().iterator(); it.hasNext(); ) {
             Entry<? extends K, ? extends V> e = it.next();
             put(e.getKey(), e.getValue());
         }
@@ -917,7 +913,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     public Set<Map.Entry<K,V>> entrySet() {
         Set<Map.Entry<K,V>> es = entrySet;
-        return (es != null) ? es : (entrySet = new EntrySet());
+        return (es != null) ? es : (entrySet = (Set<Map.Entry<K,V>>) (Set) new EntrySet());
     }
 
 
@@ -925,10 +921,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Returns an enumeration of the keys in this table.
      *
      * @return  an enumeration of the keys in this table.
-     * @see     Enumeration
-     * @see     #elements()
-     * @see     #keySet()
-     * @see     Map
+     * @see     #keySet
      */
     public Enumeration<K> keys() {
         return new KeyIterator();
@@ -940,10 +933,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * sequentially.
      *
      * @return  an enumeration of the values in this table.
-     * @see     java.util.Enumeration
-     * @see     #keys()
-     * @see     #values()
-     * @see     Map
+     * @see     #values
      */
     public Enumeration<V> elements() {
         return new ValueIterator();

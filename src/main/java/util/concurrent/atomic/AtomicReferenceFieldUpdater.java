@@ -44,7 +44,7 @@ import java.lang.reflect.*;
 public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
     /**
-     * Create an updater for objects with the given field.  The Class
+     * Creates an updater for objects with the given field.  The Class
      * arguments are needed to check that reflective types and generic
      * types match.
      * @param tclass the class of the objects holding the field.
@@ -52,7 +52,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * @param fieldName the name of the field to be updated.
      * @return the updater
      * @throws IllegalArgumentException if the field is not a volatile reference type.
-     * @throws RuntimeException with an nested reflection-based
+     * @throws RuntimeException with a nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {

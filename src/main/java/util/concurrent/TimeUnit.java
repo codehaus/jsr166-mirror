@@ -41,9 +41,64 @@ package java.util.concurrent;
  * @author Doug Lea
  */
 public final class TimeUnit implements java.io.Serializable {
+    /* ordered indices for each time unit */
+    private static final int NS = 0;
+    private static final int US = 1;
+    private static final int MS = 2;
+    private static final int S  = 3;
+
+    /** quick lookup table for conversion factors */
+    private static final int[] multipliers = { 1, 
+                                       1000, 
+                                       1000*1000, 
+                                       1000*1000*1000 };
+
+    /** lookup table to check saturation */
+    private static final long[] overflows = { 
+        // Note that because we are dividing these down anyway, 
+        // we don't have to deal with asymmetry of MIN/MAX values.
+        0, // unused
+        Long.MAX_VALUE / 1000,
+        Long.MAX_VALUE / (1000 * 1000),
+        Long.MAX_VALUE / (1000 * 1000 * 1000) };
+
+    /** the index of this unit */
+    private int index;
+    /** Common name for unit */
+    private final String unitName;
+
+    /** private constructor */
+    TimeUnit(int index, String name) { 
+        this.index = index; 
+        this.unitName = name;
+    }
+
+    /** Unit for one-second granularities. */
+    public static final TimeUnit SECONDS = new TimeUnit(S, "seconds");
+    /** Unit for one-millisecond granularities. */
+    public static final TimeUnit MILLISECONDS = new TimeUnit(MS, "milliseconds");
+    /** Unit for one-microsecond granularities. */
+    public static final TimeUnit MICROSECONDS = new TimeUnit(US, "microseconds");
+    /** Unit for one-nanosecond granularities. */
+    public static final TimeUnit NANOSECONDS = new TimeUnit(NS, "nanoseconds");
 
     /**
-     * Perform the conversion based on given index representing the
+     * Utility method to compute the excess-nanosecond argument to
+     * wait, sleep, join. The results may overflow, so public methods
+     * invoking this should document possible overflow unless
+     * overflow is known not to be possible for the given arguments.
+     */
+    private int excessNanos(long time, long ms) {
+        if (index == NS)
+            return (int) (time  - (ms * multipliers[MS-NS]));
+        else if (index == US)
+            return (int) ((time * multipliers[US-NS]) - (ms * multipliers[MS-NS]));
+        else
+            return 0;
+    }
+
+    /**
+     * Perform conversion based on given delta representing the
      * difference between units
      * @param delta the difference in index values of source and target units
      * @param duration the duration
@@ -194,84 +249,17 @@ public final class TimeUnit implements java.io.Serializable {
         return unitName;
     }
 
-
     /**
-     * Returns true if the given object is a TimeUnit representing
-     * the same unit as this TimeUnit.
-     * @param x the object to compare
-     * @return true if equal
+     * Resolves instances being deserialized to a single instance per
+     * unit.
      */
-    public boolean equals(Object x) {
-        if (!(x instanceof TimeUnit))
-            return false;
-        return ((TimeUnit)x).index == index;
+    private Object readResolve() {
+        switch(index) {
+        case NS: return NANOSECONDS;
+        case US: return MICROSECONDS;
+        case MS: return MILLISECONDS;
+        case  S: return SECONDS;
+        default: assert(false); return null;
+        }
     }
-
-    /**
-     * Returns a hash code for this TimeUnit.
-     * @return the hash code
-     */
-    public int hashCode() {
-        return unitName.hashCode();
-    }
-
-    private final String unitName;
-
-    /* ordered indices for each time unit */
-    private static final int NS = 0;
-    private static final int US = 1;
-    private static final int MS = 2;
-    private static final int S  = 3;
-
-    /** quick lookup table for conversion factors */
-    static final int[] multipliers = { 1, 
-                                       1000, 
-                                       1000*1000, 
-                                       1000*1000*1000 };
-
-    /** lookup table to check saturation */
-    static final long[] overflows = { 
-        // Note that because we are dividing these down anyway, 
-        // we don't have to deal with asymmetry of MIN/MAX values.
-        0, // unused
-        Long.MAX_VALUE / 1000,
-        Long.MAX_VALUE / (1000 * 1000),
-        Long.MAX_VALUE / (1000 * 1000 * 1000) };
-
-    /** the index of this unit */
-    int index;
-
-    /** private constructor */
-    TimeUnit(int index, String name) { 
-        this.index = index; 
-        this.unitName = name;
-    }
-
-    /**
-     * Utility method to compute the excess-nanosecond argument to
-     * wait, sleep, join. The results may overflow, so public methods
-     * invoking this should document possible overflow unless
-     * overflow is known not to be possible for the given arguments.
-     */
-    private int excessNanos(long time, long ms) {
-        if (index == NS)
-            return (int) (time  - (ms * multipliers[MS-NS]));
-        else if (index == US)
-            return (int) ((time * multipliers[US-NS]) - (ms * multipliers[MS-NS]));
-        else
-            return 0;
-    }
-
-    /** Unit for one-second granularities. */
-    public static final TimeUnit SECONDS = new TimeUnit(S, "seconds");
-
-    /** Unit for one-millisecond granularities. */
-    public static final TimeUnit MILLISECONDS = new TimeUnit(MS, "milliseconds");
-
-    /** Unit for one-microsecond granularities. */
-    public static final TimeUnit MICROSECONDS = new TimeUnit(US, "microseconds");
-
-    /** Unit for one-nanosecond granularities. */
-    public static final TimeUnit NANOSECONDS = new TimeUnit(NS, "nanoseconds");
-
 }

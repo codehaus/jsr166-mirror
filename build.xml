@@ -13,7 +13,7 @@
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
-  <property name="build.sourcelevel"    value="1.4"/>
+  <property name="build.sourcelevel"    value="1.5"/>
 
   <!-- Build locations -->
   <property name="build.dir"            location="build"/>
@@ -40,7 +40,7 @@
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
 
   <property name="gj.compiler.args"
-           value='-J-Xbootclasspath/p:${javac.jar} -gj'
+           value='-J-Xbootclasspath/p:${javac.jar}'
   />
 
   <path id="gj.compiler.bootclasspath">

@@ -179,7 +179,7 @@ public class TimeUnitTest extends JSR166TestCase {
      */
     public void testToString() {
         String s = TimeUnit.SECONDS.toString();
-        assertTrue(s.indexOf("econd") >= 0);
+        assertTrue(s.indexOf("ECOND") >= 0);
     }
 
     

@@ -9,22 +9,15 @@ package java.util.concurrent;
 /**
  * A <tt>TimeUnit</tt> represents time durations at a given unit of
  * granularity and provides utility methods to convert across units,
- * and to perform timing and delay operations in these units.
- * <tt>TimeUnit</tt> is a &quot;featherweight&quot; class.
- * It does not maintain time information, but only helps organize and
- * use time representations that may be maintained separately across
- * various contexts.
+ * and to perform timing and delay operations in these units.  A
+ * <tt>TimeUnit</tt> does not maintain time information, but only
+ * helps organize and use time representations that may be maintained
+ * separately across various contexts.
  *
- * <p>This class cannot be directly instantiated.  Use the {@link
- * #SECONDS}, {@link #MILLISECONDS}, {@link #MICROSECONDS}, and {@link
- * #NANOSECONDS} static instances that provide predefined units of
- * precision. If you use these frequently, consider statically
- * importing this class.
- *
- * <p>A <tt>TimeUnit</tt> is mainly used to inform blocking timeout
- * methods how the timeout parameter should be interpreted. For
- * example, the following code will timeout in 50 milliseconds if the
- * {@link java.util.concurrent.locks.Lock lock} is not available:
+ * <p>A <tt>TimeUnit</tt> is mainly used to inform time-based methods
+ * how a given timing parameter should be interpreted. For example,
+ * the following code will timeout in 50 milliseconds if the {@link
+ * java.util.concurrent.locks.Lock lock} is not available:
  *
  * <pre>  Lock lock = ...;
  *  if ( lock.tryLock(50L, TimeUnit.MILLISECONDS) ) ...
@@ -42,60 +35,36 @@ package java.util.concurrent;
  * @since 1.5
  * @author Doug Lea
  */
-public final class TimeUnit implements java.io.Serializable {
-    /* ordered indices for each time unit */
-    private static final int NS = 0;
-    private static final int US = 1;
-    private static final int MS = 2;
-    private static final int S  = 3;
+public enum TimeUnit {
+    NANOSECONDS(0), MICROSECONDS(1), MILLISECONDS(2), SECONDS(3);
 
-    /** quick lookup table for conversion factors */
-    private static final int[] multipliers = { 1, 
-                                       1000, 
-                                       1000*1000, 
-                                       1000*1000*1000 };
+    /** the index of this unit */
+    private final int index;
 
-    /** lookup table to check saturation */
+    /** Internal constructor */
+    TimeUnit(int index) { 
+        this.index = index; 
+    }
+
+    /** Lookup table for conversion factors */
+    private static final int[] multipliers = { 
+        1, 
+        1000, 
+        1000 * 1000, 
+        1000 * 1000 * 1000 
+    };
+    
+    /** 
+     * Lookup table to check saturation.  Note that because we are
+     * dividing these down, we don't have to deal with asymmetry of
+     * MIN/MAX values.
+     */
     private static final long[] overflows = { 
-        // Note that because we are dividing these down anyway, 
-        // we don't have to deal with asymmetry of MIN/MAX values.
         0, // unused
         Long.MAX_VALUE / 1000,
         Long.MAX_VALUE / (1000 * 1000),
-        Long.MAX_VALUE / (1000 * 1000 * 1000) };
-
-    /** the index of this unit */
-    private int index;
-    /** Common name for unit */
-    private final String unitName;
-
-    /** private constructor */
-    TimeUnit(int index, String name) { 
-        this.index = index; 
-        this.unitName = name;
-    }
-
-    /** Unit for one-second granularities. */
-    public static final TimeUnit SECONDS = new TimeUnit(S, "seconds");
-    /** Unit for one-millisecond granularities. */
-    public static final TimeUnit MILLISECONDS = new TimeUnit(MS, "milliseconds");
-    /** Unit for one-microsecond granularities. */
-    public static final TimeUnit MICROSECONDS = new TimeUnit(US, "microseconds");
-    /** Unit for one-nanosecond granularities. */
-    public static final TimeUnit NANOSECONDS = new TimeUnit(NS, "nanoseconds");
-
-    /**
-     * Utility method to compute the excess-nanosecond argument to
-     * wait, sleep, join.
-     */
-    private int excessNanos(long time, long ms) {
-        if (index == NS)
-            return (int) (time  - (ms * multipliers[MS-NS]));
-        else if (index == US)
-            return (int) ((time * multipliers[US-NS]) - (ms * multipliers[MS-NS]));
-        else
-            return 0;
-    }
+        Long.MAX_VALUE / (1000 * 1000 * 1000) 
+    };
 
     /**
      * Perform conversion based on given delta representing the
@@ -157,7 +126,7 @@ public final class TimeUnit implements java.io.Serializable {
      * @see #convert
      */
     public long toMicros(long duration) {
-        return doConvert(index - US, duration);
+        return doConvert(index - MICROSECONDS.index, duration);
     }
 
     /**
@@ -169,7 +138,7 @@ public final class TimeUnit implements java.io.Serializable {
      * @see #convert
      */
     public long toMillis(long duration) {
-        return doConvert(index - MS, duration);
+        return doConvert(index - MILLISECONDS.index, duration);
     }
 
     /**
@@ -179,7 +148,20 @@ public final class TimeUnit implements java.io.Serializable {
      * @see #convert
      */
     public long toSeconds(long duration) {
-        return doConvert(index - S, duration);
+        return doConvert(index - SECONDS.index, duration);
+    }
+
+
+    /**
+     * Utility method to compute the excess-nanosecond argument to
+     * wait, sleep, join.
+     */
+    private int excessNanos(long time, long ms) {
+        if (this == NANOSECONDS)
+            return (int) (time  - (ms * 1000 * 1000));
+        if (this == MICROSECONDS)
+            return (int) ((time * 1000) - (ms * 1000 * 1000));
+        return 0;
     }
 
     /**
@@ -246,24 +228,4 @@ public final class TimeUnit implements java.io.Serializable {
         }
     }
 
-    /**
-     * Return the common name for this unit.
-     */
-    public String toString() {
-        return unitName;
-    }
-
-    /**
-     * Resolves instances being deserialized to a single instance per
-     * unit.
-     */
-    private Object readResolve() {
-        switch(index) {
-        case NS: return NANOSECONDS;
-        case US: return MICROSECONDS;
-        case MS: return MILLISECONDS;
-        case  S: return SECONDS;
-        default: assert(false); return null;
-        }
-    }
 }

@@ -75,7 +75,7 @@ public final class CheckedLockLoops {
         Thread.sleep(10);
         
         if (print)
-            System.out.print("FairSemaphore         ");
+            System.out.print("fair Semaphore        ");
         new FairSemaphoreLoop().test(v, nthreads, iters);
         Thread.sleep(10);
 

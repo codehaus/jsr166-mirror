@@ -137,7 +137,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/09 19:55:30 $
+ * @revised $Date: 2003/08/14 15:34:04 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -192,22 +192,19 @@ public class ThreadPoolExecutor implements ExecutorService {
     private volatile int   poolSize;
 
     /**
-     * Shutdown status, becomes (and remains) nonzero when shutdown called.
+     * Lifecycle state
      */
-    private volatile int shutdownStatus;
+    private volatile int runState;
 
-    // Special values for status
+    // Special values for runState
     /** Normal, not-shutdown mode */
-    private static final int NOT_SHUTDOWN       = 0;
+    private static final int RUNNING    = 0;
     /** Controlled shutdown mode */
-    private static final int SHUTDOWN_WHEN_IDLE = 1;
-    /*8 Immediate shutdown mode */
-    private static final int SHUTDOWN_NOW       = 2;
-
-    /**
-     * Latch that becomes true when all threads terminate after shutdown.
-     */
-    private volatile boolean isTerminated;
+    private static final int SHUTDOWN   = 1;
+    /** Immediate shutdown mode */
+    private static final int STOP       = 2;
+    /** Final state */
+    private static final int TERMINATED = 3;
 
     /**
      * Handler called when saturated or shutdown in execute.
@@ -231,7 +228,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     private long completedTaskCount;
 
     /**
-     * The default thread facotry
+     * The default thread factory
      */
     private static final ThreadFactory defaultThreadFactory =
         new ThreadFactory() {
@@ -253,7 +250,6 @@ public class ThreadPoolExecutor implements ExecutorService {
         handler.rejectedExecution(command, this);
     }
 
-
     /**
      * Create and return a new thread running firstTask as its first
      * task. Call only while holding mainLock
@@ -272,7 +268,7 @@ public class ThreadPoolExecutor implements ExecutorService {
         return t;
     }
 
-    // addIfUnderCorePoolSize is non-private; accessible to ScheduledExecutor
+
 
     /**
      * Create and start a new thread running firstTask as its first
@@ -281,7 +277,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * null if none)
      * @return true if successful.
      */
-    boolean addIfUnderCorePoolSize(Runnable firstTask) {
+    private boolean addIfUnderCorePoolSize(Runnable firstTask) {
         Thread t = null;
         mainLock.lock();
         try {
@@ -332,22 +328,63 @@ public class ThreadPoolExecutor implements ExecutorService {
      */
     private Runnable getTask() throws InterruptedException {
         for (;;) {
-            int stat = shutdownStatus;
-            if (stat == SHUTDOWN_NOW)
+            switch(runState) {
+            case RUNNING: {
+                if (poolSize <= corePoolSize)   // untimed wait if core
+                    return workQueue.take();
+                
+                long timeout = keepAliveTime;
+                if (timeout <= 0) // die immediately for 0 timeout
+                    return null;
+                Runnable r =  workQueue.poll(timeout, TimeUnit.NANOSECONDS);
+                if (r != null)
+                    return r;
+                if (poolSize > corePoolSize) // timed out
+                    return null;
+                // else, after timeout, pool shrank so shouldn't die, so retry
+                break;
+            }
+
+            case SHUTDOWN: {
+                // Help drain queue 
+                Runnable r = workQueue.poll();
+                if (r != null)
+                    return r;
+                    
+                // Check if can terminate
+                if (workQueue.isEmpty()) {
+                    interruptIdleWorkers();
+                    return null;
+                }
+
+                // There could still be delayed tasks in queue.
+                // Wait for one, re-checking state upon interruption
+                try {
+                    return workQueue.take();
+                }
+                catch(InterruptedException ignore) {
+                }
+                break;
+            }
+
+            case STOP:
                 return null;
-            if (stat == SHUTDOWN_WHEN_IDLE) // help drain queue before dying
-                return workQueue.poll();
-            if (poolSize <= corePoolSize)   // untimed wait if core
-                return workQueue.take();
-            long timeout = keepAliveTime;
-            if (timeout <= 0) // must die immediately for 0 timeout
-                return null;
-            Runnable task =  workQueue.poll(timeout, TimeUnit.NANOSECONDS);
-            if (task != null)
-                return task;
-            if (poolSize > corePoolSize) // timed out
-                return null;
-            // else, after timeout, pool shrank so shouldn't die, so retry
+            default:
+                assert false; 
+            }
+        }
+    }
+
+    /**
+     * Wake up all threads that might be waiting for tasks.
+     */
+    void interruptIdleWorkers() {
+        mainLock.lock();
+        try {
+            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
+                it.next().interruptIfIdle();
+        } finally {
+            mainLock.unlock();
         }
     }
 
@@ -356,40 +393,50 @@ public class ThreadPoolExecutor implements ExecutorService {
      * @param w the worker
      */
     private void workerDone(Worker w) {
-        boolean allDone = false;
         mainLock.lock();
         try {
             completedTaskCount += w.completedTasks;
             workers.remove(w);
-
             if (--poolSize > 0)
                 return;
 
-            // If this was last thread, deal with potential shutdown
-            int stat = shutdownStatus;
+            // Else, this is the last thread. Deal with potential shutdown.
 
-            // If there are queued tasks but no threads, create replacement.
-            if (stat != SHUTDOWN_NOW) {
+            int state = runState;
+            assert state != TERMINATED;
+
+            if (state != STOP) {
+                // If there are queued tasks but no threads, create
+                // replacement.
                 Runnable r = workQueue.poll();
                 if (r != null) {
                     addThread(r).start();
                     return;
                 }
+
+                // If there are some (presumably delayed) tasks but
+                // none pollable, create an idle replacement to wait.
+                if (!workQueue.isEmpty()) { 
+                    addThread(null).start();
+                    return;
+                }
+
+                // Otherwise, we can exit without replacement
+                if (state == RUNNING)
+                    return;
             }
 
-            // if no tasks and not shutdown, can exit without replacement
-            if (stat == NOT_SHUTDOWN)
-                return;
-
-            allDone = true;
-            isTerminated = true;
+            // Either state is STOP, or state is SHUTDOWN and there is
+            // no work to do. So we can terminate.
+            runState = TERMINATED;
             termination.signalAll();
+            // fall through to call terminate() outside of lock.
         } finally {
             mainLock.unlock();
         }
 
-        if (allDone) // call outside lock
-            terminated();
+        assert runState == TERMINATED;
+        terminated(); 
     }
 
     /**
@@ -458,7 +505,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             try {
                 // Abort now if immediate cancel.  Otherwise, we have
                 // committed to run this task.
-                if (shutdownStatus == SHUTDOWN_NOW)
+                if (runState == STOP)
                     return;
 
                 Thread.interrupted(); // clear interrupt status on entry
@@ -672,7 +719,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      */
     public void execute(Runnable command) {
         for (;;) {
-            if (shutdownStatus != NOT_SHUTDOWN) {
+            if (runState != RUNNING) {
                 reject(command);
                 return;
             }
@@ -694,9 +741,8 @@ public class ThreadPoolExecutor implements ExecutorService {
     public void shutdown() {
         mainLock.lock();
         try {
-            if (shutdownStatus == NOT_SHUTDOWN) // don't override shutdownNow
-                shutdownStatus = SHUTDOWN_WHEN_IDLE;
-
+            if (runState == RUNNING) // don't override shutdownNow
+                runState = SHUTDOWN;
             for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
                 it.next().interruptIfIdle();
         } finally {
@@ -704,10 +750,12 @@ public class ThreadPoolExecutor implements ExecutorService {
         }
     }
 
+
     public List shutdownNow() {
         mainLock.lock();
         try {
-            shutdownStatus = SHUTDOWN_NOW;
+            if (runState != TERMINATED)
+                runState = STOP;
             for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
                 it.next().interruptNow();
         } finally {
@@ -717,11 +765,25 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     public boolean isShutdown() {
-        return shutdownStatus != NOT_SHUTDOWN;
+        return runState != RUNNING;
+    }
+
+    /** 
+     * Return true if this executor is in the process of terminating
+     * after <tt>shutdown</tt> or <tt>shutdownNow</tt> but has not
+     * completely terminated.  This method may be useful for
+     * debugging. A return of <tt>true</tt> reported a sufficient
+     * period after shutdown may indicate that submitted tasks have
+     * ignored or suppressed interruption, causing this executor not
+     * to properly terminate.
+     * @return true if terminating but not yet terminated.
+     */
+    public boolean isTerminating() {
+        return runState == STOP;
     }
 
     public boolean isTerminated() {
-        return isTerminated;
+        return runState == TERMINATED;
     }
 
     public boolean awaitTermination(long timeout, TimeUnit unit)
@@ -807,24 +869,31 @@ public class ThreadPoolExecutor implements ExecutorService {
 
 
     /**
-     * Removes from the work queue all {@link Cancellable} tasks
-     * that have been cancelled. This method can be useful as a
-     * storage reclamation operation, that has no other impact
-     * on functionality. Cancelled tasks are never executed, but
-     * may accumulate in work queues until worker threads can
-     * actively remove them. Invoking this method ensures that they
-     * are instead removed now.
+     * Tries to remove from the work queue all {@link Cancellable}
+     * tasks that have been cancelled. This method can be useful as a
+     * storage reclamation operation, that has no other impact on
+     * functionality. Cancelled tasks are never executed, but may
+     * accumulate in work queues until worker threads can actively
+     * remove them. Invoking this method instead tries to remove them now.
+     * However, this method may fail to remove all such tasks in
+     * the presence of interference by other threads.
      */
 
     public void purge() {
-        Iterator<Runnable> it = getQueue().iterator();
-        while (it.hasNext()) {
-            Runnable r = it.next();
-            if (r instanceof Cancellable) {
-                Cancellable c = (Cancellable)r;
-                if (c.isCancelled())
-                    it.remove();
+        // Fail if we encounter interference during traversal
+        try {
+            Iterator<Runnable> it = getQueue().iterator();
+            while (it.hasNext()) {
+                Runnable r = it.next();
+                if (r instanceof Cancellable) {
+                    Cancellable c = (Cancellable)r;
+                    if (c.isCancelled())
+                        it.remove();
+                }
             }
+        }
+        catch(ConcurrentModificationException ex) {
+            return; 
         }
     }
 
@@ -870,6 +939,30 @@ public class ThreadPoolExecutor implements ExecutorService {
      */
     public int getCorePoolSize() {
         return corePoolSize;
+    }
+
+    /**
+     * Start a core thread, causing it to idly wait for work. This
+     * overrides the default policy of starting core threads only when
+     * new tasks are executed. This method will return <tt>false</tt>
+     * if all core threads have already been started.
+     * @return true if a thread was started
+     */ 
+    public boolean prestartCoreThread() {
+        return addIfUnderCorePoolSize(null);
+    }
+
+    /**
+     * Start all core threads, causing them to idly wait for work. This
+     * overrides the default policy of starting core threads only when
+     * new tasks are executed. 
+     * @return the number of threads started.
+     */ 
+    public int prestartAllCoreThreads() {
+        int n = 0;
+        while (addIfUnderCorePoolSize(null))
+            ++n;
+        return n;
     }
 
     /**

@@ -48,6 +48,17 @@ import java.util.*;
 public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
+     * False if should cancel/suppress periodic tasks on shutdown.
+     */
+    private volatile boolean continueExistingPeriodicTasksAfterShutdown;
+
+    /**
+     * False if should cancel non-periodic tasks on shutdown.
+     */
+    private volatile boolean executeExistingDelayedTasksAfterShutdown = true;
+
+
+    /**
      * Sequence number to break scheduling ties, and in turn to
      * guarantee FIFO order among tied entries.
      */
@@ -98,7 +109,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         public int compareTo(Object other) {
-            if (other == this)
+            if (other == this) // compare zero ONLY if same object
                 return 0;
             DelayedTask x = (DelayedTask)other;
             long diff = time - x.time;
@@ -140,7 +151,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             long nextTime = period + (rateBased ? time : System.nanoTime());
             return new DelayedTask(getRunnable(), nextTime, period, rateBased);
         }
-
     }
 
     /**
@@ -275,16 +285,16 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * Specialized variant of ThreadPoolExecutor.execute for delayed tasks.
      */
-    void delayedExecute(Runnable command) {
+    private void delayedExecute(Runnable command) {
         if (isShutdown()) {
             reject(command);
             return;
         }
-        // Prestart thread if necessary. We cannot prestart it running
-        // the task because the task (probably) shouldn't be run yet,
-        // so thread will just idle until delay elapses.
+        // Prestart a thread if necessary. We cannot prestart it
+        // running the task because the task (probably) shouldn't be
+        // run yet, so thread will just idle until delay elapses.
         if (getPoolSize() < getCorePoolSize())
-            addIfUnderCorePoolSize(null);
+            prestartCoreThread();
             
         getQueue().offer(command);
     }
@@ -480,6 +490,99 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         schedule(command, 0, TimeUnit.NANOSECONDS);
     }
 
+
+    /**
+     * Set policy on whether to continue executing existing periodic
+     * tasks even when this executor has been <tt>shutdown</tt>. In
+     * this case, these tasks will only terminate upon
+     * <tt>shutdownNow</tt>, or after setting the policy to
+     * <tt>false</tt> when already shutdown. This value is by default
+     * false.
+     * @param value if true, continue after shutdown, else don't.
+     */
+    public void setContinueExistingPeriodicTasksAfterShutdownPolicy(boolean value) {
+        continueExistingPeriodicTasksAfterShutdown = value;
+        if (!value && isShutdown())
+            cancelUnwantedTasks();
+    }
+
+    /**
+     * Get the policy on whether to continue executing existing
+     * periodic tasks even when this executor has been
+     * <tt>shutdown</tt>. In this case, these tasks will only
+     * terminate upon <tt>shutdownNow</tt> or after setting the policy
+     * to <tt>false</tt> when already shutdown. This value is by
+     * default false.
+     * @return true if will continue after shutdown.
+     */
+    public boolean getContinueExistingPeriodicTasksAfterShutdownPolicy() {
+        return continueExistingPeriodicTasksAfterShutdown;
+    }
+
+    /**
+     * Set policy on whether to execute existing delayed
+     * tasks even when this executor has been <tt>shutdown</tt>. In
+     * this case, these tasks will only terminate upon
+     * <tt>shutdownNow</tt>, or after setting the policy to
+     * <tt>false</tt> when already shutdown. This value is by default
+     * true.
+     * @param value if true, execute after shutdown, else don't.
+     */
+    public void setExecuteExistingDelayedTasksAfterShutdownPolicy(boolean value) {
+        executeExistingDelayedTasksAfterShutdown = value;
+        if (!value && isShutdown())
+            cancelUnwantedTasks();
+    }
+
+    /**
+     * Set policy on whether to execute existing delayed
+     * tasks even when this executor has been <tt>shutdown</tt>. In
+     * this case, these tasks will only terminate upon
+     * <tt>shutdownNow</tt>, or after setting the policy to
+     * <tt>false</tt> when already shutdown. This value is by default
+     * true.
+     * @return true if will execute after shutdown.
+     */
+    public boolean getExecuteExistingDelayedTasksAfterShutdownPolicy() {
+        return executeExistingDelayedTasksAfterShutdown;
+    }
+
+    /**
+     * Cancel and clear the queue of all tasks that should not be run
+     * due to shutdown policy.
+     */
+    private void cancelUnwantedTasks() {
+        boolean keepDelayed = getExecuteExistingDelayedTasksAfterShutdownPolicy();
+        boolean keepPeriodic = getContinueExistingPeriodicTasksAfterShutdownPolicy();
+        if (!keepDelayed && !keepPeriodic) 
+            getQueue().clear();
+        else if (keepDelayed || keepPeriodic) {
+            Object[] entries = getQueue().toArray();
+            for (int i = 0; i < entries.length; ++i) {
+                DelayedTask t = (DelayedTask)entries[i];
+                if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
+                    t.cancel(false);
+            }
+            entries = null;
+            purge();
+        }
+    }
+
+    /**
+     * Initiates an orderly shutdown in which previously submitted
+     * tasks are executed, but no new tasks will be accepted. If the
+     * <tt>ExecuteExistingDelayedTasksAfterShutdownPolicy</tt> has
+     * been set <tt>false</tt>, existing delayed tasks whose delays
+     * have not yet elapsed are cancelled. And unless the
+     * <tt>ContinueExistingPeriodicTasksAfterShutdownPolicy>/tt> hase
+     * been set <tt>true</tt>, future executions of existing periodic
+     * tasks will be cancelled.
+     */
+    public void shutdown() {
+        cancelUnwantedTasks();
+        super.shutdown();
+    }
+            
     /**
      * Removes this task from internal queue if it is present, thus
      * causing it not to be run if it has not already started.  This
@@ -517,19 +620,17 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @param t the exception
      */
     protected void afterExecute(Runnable r, Throwable t) { 
-        if (isShutdown()) 
-            return;
         super.afterExecute(r, t);
-        DelayedTask d = (DelayedTask)r;
-        DelayedTask next = d.nextTask();
-        if (next == null) 
-            return;
-        try {
-            delayedExecute(next);
-        } catch(RejectedExecutionException ex) {
-            // lost race to detect shutdown; ignore
-        }
+        DelayedTask next = ((DelayedTask)r).nextTask();
+        if (next != null &&
+            (!isShutdown() ||
+             (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
+              !isTerminating())))
+            getQueue().offer(next);
+
+        // This might have been the final executed delayed task.  Wake
+        // up threads to check.
+        else if (isShutdown()) 
+            interruptIdleWorkers();
     }
 }
-
-

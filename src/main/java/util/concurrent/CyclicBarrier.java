@@ -90,8 +90,8 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/23 19:47:29 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/25 22:32:40 $
+ * @editor $Author: dholmes $
  * @see CountDownLatch
  *
  * @author Doug Lea
@@ -140,7 +140,8 @@ public class CyclicBarrier {
     /**
      * Main barrier code, covering the various policies.
      */
-    private int dowait(boolean timed, long nanos) throws InterruptedException, BrokenBarrierException, TimeoutException {
+    private int dowait(boolean timed, long nanos) 
+        throws InterruptedException, BrokenBarrierException, TimeoutException {
         lock.lock();
         try {
             int index = --count;
@@ -163,6 +164,10 @@ public class CyclicBarrier {
                         barrierCommand.run();
                     return 0;
                 } catch (RuntimeException ex) {
+                    broken = generation; // next generation is broken
+                    throw ex;
+                }
+                catch (Error ex) {
                     broken = generation; // next generation is broken
                     throw ex;
                 }
@@ -357,7 +362,10 @@ public class CyclicBarrier {
      * interrupted while the current thread was waiting, or the barrier was
      * reset, or the barrier was broken when <tt>await</tt> was called.
      */
-    public int await(long timeout, TimeUnit unit) throws InterruptedException, BrokenBarrierException, TimeoutException {
+    public int await(long timeout, TimeUnit unit) 
+        throws InterruptedException, 
+        BrokenBarrierException, 
+        TimeoutException {
         return dowait(true, unit.toNanos(timeout));
     }
 
@@ -413,5 +421,3 @@ public class CyclicBarrier {
     }
 
 }
-
-

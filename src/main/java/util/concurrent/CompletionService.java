@@ -8,14 +8,14 @@ package java.util.concurrent;
 
 /**
  * A service that decouples the production of new asynchronous tasks
- * versus the comsumption of the results of completed tasks.
- * Producers <tt>submit</tt> tasks for execution. Consumers
- * <tt>take</tt> completed tasks and process their results in whatever
- * order they become available.  A <tt>CompletionService</tt> can for
- * example be used to manage asynchronous IO, in which tasks that
- * perform reads are submitted in one part of a program or system, and
- * then acted upon in a different part of the program when the reads
- * complete, possibly in a different order than they were requested.
+ * from the consumption of the results of completed tasks.  Producers
+ * <tt>submit</tt> tasks for execution. Consumers <tt>take</tt>
+ * completed tasks and process their results in the order they
+ * complete.  A <tt>CompletionService</tt> can for example be used to
+ * manage asynchronous IO, in which tasks that perform reads are
+ * submitted in one part of a program or system, and then acted upon
+ * in a different part of the program when the reads complete,
+ * possibly in a different order than they were requested.
 
  * <p>
  *

@@ -14,35 +14,38 @@ descriptions of the main components. See also the <tt>locks</tt> and
 
 <h2>Executors</h2>
 
-{@link java.util.concurrent.Executor} is a simple standardized
-interface for defining custom thread-like subsystems, including thread
-pools, asynchronous IO, and lightweight task frameworks.  Depending on
-which concrete Executor class is being used, tasks may execute in a
-newly created thread, an existing task-execution thread, or the thread
-calling <tt>execute()</tt>, and may execute sequentially or
-concurrently.  
- 
-<p> {@link java.util.concurrent.ExecutorService} provides a more
-complete framework for executing Runnables.  An ExecutorService
-manages queueing and scheduling of tasks, and allows controlled
-shutdown.  The two primary implementations of ExecutorService are
-{@link java.util.concurrent.ThreadPoolExecutor}, a tunable and
-flexible thread pool and {@link
-java.util.concurrent.ScheduledExecutor}, which adds support for
-delayed and periodic task execution.  The {@link
+<b>Interfaces.</b> {@link java.util.concurrent.Executor} is a simple
+standardized interface for defining custom thread-like subsystems,
+including thread pools, asynchronous IO, and lightweight task
+frameworks.  Depending on which concrete Executor class is being used,
+tasks may execute in a newly created thread, an existing
+task-execution thread, or the thread calling <tt>execute()</tt>, and
+may execute sequentially or concurrently.  {@link
+java.util.concurrent.ExecutorService} provides a more complete
+asynchronous task execution framework.  An ExecutorService manages
+queueing and scheduling of tasks, and allows controlled shutdown.  The
+{@link java.util.concurrent.ScheduledExecutorService} subinterface
+adds support for delayed and periodic task execution.
+ExecutorServices provide methods arranging asynchronous execution of
+any function expressed as {@link java.util.concurrent.Callable}, the
+result-bearing analog of {@link java.lang.Runnable}.  A {@link
+java.util.concurrent.Future} returns the results of a function, allows
+determination if execution has completed, and provides a means to
+cancel execution.
+
+<p>
+
+<b>Implementations.</b> The two primary Executor implementations are
+tunable, flexible thread pool classes {@link
+java.util.concurrent.ThreadPoolExecutor} and {@link
+java.util.concurrent.ScheduledThreadPoolExecutor}. The {@link
 java.util.concurrent.Executors} class provides factory methods for the
 most common kinds and configurations of Executors, as well as a few
-utility methods for using them.
-
-<p> Executors may be used with threads that compute functions
-returning results. A {@link java.util.concurrent.Future} returns the
-results of a {@link java.util.concurrent.Callable}, the result-bearing
-analog of {@link java.lang.Runnable}. Instances of concrete class
-{@link java.util.concurrent.FutureTask} may be submitted to Executors
-to asynchronously start a potentially long-running computation, query
-to determine if its execution has completed, or cancel it.  The {@link
-java.util.concurrent.CancellableTask} class provides similar control
-for actions that do not bear results.
+utility methods for using them. Other utilities based on Executors
+include the concrete class {@link java.util.concurrent.FutureTask}
+providing a common extensible implementation of Futures, and {@link
+java.util.concurrent.ExecutorCompletionService}, that assists in
+coordinating the processing of groups of asynchronous tasks.
 
 <h2>Queues</h2>
 

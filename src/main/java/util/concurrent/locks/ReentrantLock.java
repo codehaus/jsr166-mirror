@@ -695,7 +695,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * are waiting for the lock. This is in contrast to the {@link #tryLock()}
      * method. If you want a timed <tt>tryLock</tt> that does permit barging on
      * a fair lock then combine the timed and un-timed forms together:
-     * <pre><tt>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
+     * <pre>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
      * </pre>
      * <p>If the current thread
      * already holds this lock then the hold count is incremented by one and

@@ -13,8 +13,7 @@ package java.util.concurrent;
  */
 public class ExecutorCompletionService<V> implements CompletionService<V> {
     private final Executor executor;
-    private final LinkedBlockingQueue<Future<V>> cq = 
-        new LinkedBlockingQueue<Future<V>>();
+    private final BlockingQueue<Future<V>> completionQueue;
 
     /**
      * FutureTask extension to enqueue upon completion
@@ -22,30 +21,40 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
     private class QueueingFuture<T> extends FutureTask<T> {
         QueueingFuture(Callable<T> c) { super(c); }
         QueueingFuture(Runnable t, T r) { super(t, r); }
-        protected void done() { cq.add((Future<V>)this); }
+        protected void done() { completionQueue.add((Future<V>)this); }
     }
 
     /**
      * Creates an ExecutorCompletionService using the supplied
-     * executor for base task execution. Normally, this
-     * executor should be dedicated for use by this service
-     8 @throws NullPointerException if executor is null
+     * executor for base task execution and a
+     * {@link LinkedBlockingQueue} as a completion queue.
+     * @param executor the executor to use; normally
+     * one dedicated for use by this service
+     8 @throws NullPointerException if executor is <tt>null</tt>
      */
     public ExecutorCompletionService(Executor executor) {
         if (executor == null) 
             throw new NullPointerException();
         this.executor = executor;
+        this.completionQueue = new LinkedBlockingQueue<Future<V>>();
     }
 
-
     /**
-     * Return the {@link Executor} used for base
-     * task execution. This may for example be used to shut
-     * down the service.
-     * @return the executor
+     * Creates an ExecutorCompletionService using the supplied
+     * executor for base task execution and the supplied queue as its
+     * completion queue.
+     * @param executor the executor to use; normally
+     * one dedicated for use by this service
+     * @param completionQueue the queue to use as the completion queue;
+     * normally one dedicated for use by this service
+     8 @throws NullPointerException if executor or completionQueue are <tt>null</tt>
      */
-    public Executor getExecutor() { 
-        return executor; 
+    public ExecutorCompletionService(Executor executor,
+                                     BlockingQueue<Future<V>> completionQueue) {
+        if (executor == null || completionQueue == null) 
+            throw new NullPointerException();
+        this.executor = executor;
+        this.completionQueue = completionQueue;
     }
 
     public Future<V> submit(Callable<V> task) {
@@ -61,15 +70,15 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
     }
 
     public Future<V> take() throws InterruptedException {
-        return cq.take();
+        return completionQueue.take();
     }
 
     public Future<V> poll() {
-        return cq.poll();
+        return completionQueue.poll();
     }
 
     public Future<V> poll(long timeout, TimeUnit unit) throws InterruptedException {
-        return cq.poll(timeout, unit);
+        return completionQueue.poll(timeout, unit);
     }
 }
 

@@ -188,6 +188,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             sync.release(1);
             Thread.sleep(SHORT_DELAY_MS);
             assertFalse(sync.isQueued(t1));
+            Thread.sleep(SHORT_DELAY_MS);
             assertFalse(sync.isQueued(t2));
             t1.join();
             t2.join();
@@ -213,6 +214,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             assertEquals(t1, sync.getFirstQueuedThread());
             t1.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
             Thread.sleep(SHORT_DELAY_MS);
             assertEquals(t2, sync.getFirstQueuedThread());
             sync.release(1);

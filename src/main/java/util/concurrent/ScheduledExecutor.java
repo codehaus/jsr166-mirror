@@ -574,7 +574,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * <tt>ExecuteExistingDelayedTasksAfterShutdownPolicy</tt> has
      * been set <tt>false</tt>, existing delayed tasks whose delays
      * have not yet elapsed are cancelled. And unless the
-     * <tt>ContinueExistingPeriodicTasksAfterShutdownPolicy>/tt> hase
+     * <tt>ContinueExistingPeriodicTasksAfterShutdownPolicy</tt> hase
      * been set <tt>true</tt>, future executions of existing periodic
      * tasks will be cancelled.
      */

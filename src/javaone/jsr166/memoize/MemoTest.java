@@ -99,7 +99,7 @@ class MemoTest {
     f = new Function();
     mf = new Memoize<String, BigInteger>(f);
     assert f.compute("42").equals(mf.compute("42"));
-    assert mf.compute("42").equals(mf.compute("42"));
+    assert mf.compute("1"+"1") == mf.compute("1"+"1");
   }
 }
 

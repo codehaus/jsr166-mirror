@@ -3,6 +3,7 @@
  */
 
 package java.util.concurrent;
+import java.util.*;
 
 /**
  * An <tt>Executor</tt> that can schedule tasks to run after a given delay,
@@ -20,136 +21,87 @@ package java.util.concurrent;
  */
 public class ScheduledExecutor extends ThreadPoolExecutor {
 
+    private static class DelayedWorkQueue extends AbstractQueue<Runnable> implements BlockingQueue<Runnable> {
+        private DelayQueue<Runnable> dq = new DelayQueue<Runnable>();
+
+        DelayQueue<Runnable> getDelayQueue() { return dq; }
+
+        public Runnable take() throws InterruptedException {
+            return dq.take().get();
+        }
+
+        public Runnable poll(long timeout, TimeUnit unit) throws InterruptedException {
+            DelayEntry<Runnable> e = dq.poll(timeout, unit);
+            return (e == null) ? null : e.get();
+        }
+
+        public Runnable poll() {
+            DelayEntry<Runnable> e = dq.poll();
+            return (e == null) ? null : e.get();
+        }
+
+        public Runnable peek() {
+            DelayEntry<Runnable> e = dq.peek();
+            return (e == null) ? null : e.get();
+        }
+
+        public int size() { return dq.size(); }
+        public int remainingCapacity() { return dq.remainingCapacity(); }
+        public void put(Runnable r) {
+            assert false;
+        }
+        public boolean offer(Runnable r) {
+            assert false;
+            return false;
+        }
+        public boolean offer(Runnable r, long time, TimeUnit unit) {
+            assert false;
+            return false;
+        }
+        public Iterator<Runnable> iterator() {
+            assert false;
+            return null; // for now
+        }
+
+        public boolean remove(Object x) {
+            assert false;
+            return false; // for now
+        }
+
+        public Object[] toArray() {
+            assert false;
+            return null; // for now
+        }
+        public <T> T[] toArray(T[] a) {
+            assert false;
+            return null; // for now
+        }
+    }
+
+
     /**
      * Creates a new ScheduledExecutor with the given initial parameters.
      * 
-     * @param minThreads the minimum number of threads to keep in the pool,
-     * even if they are idle
-     * @param maxThreads the maximum number of threads to allow in the pool
-     * @param keepAliveTime when the number of threads is greater than
-     * the minimum, this is the maximum time that excess idle threads
-     * will wait for new tasks before terminating
-     * @param granularity the time unit for the keepAliveTime argument
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
      */
-    public ScheduledExecutor(int minThreads,
-                             int maxThreads,
-                             long keepAliveTime,
-                             TimeUnit granularity) {
-        super(minThreads, maxThreads, keepAliveTime, granularity,
-              new PriorityBlockingQueue());
+    public ScheduledExecutor(int corePoolSize) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+              new DelayedWorkQueue());
     }
 
-    /**
-     * A delayed or periodic task that can be run by a <tt>ScheduledExecutor</tt>.
-     */
-    public abstract class ScheduledTask implements Runnable, Cancellable, Comparable {
-
-        /**
-         * Returns the time interval until this task can run next,
-         * in the specified unit.
-         *
-         * @param unit time unit for interval returned
-         * @return time interval until task can run again
-         */
-        long getExecutionTime(TimeUnit unit) {
-            return 0;
+    public void execute(DelayEntry<Runnable> r) {
+        if (isShutdown()) {
+            getRejectedExecutionHandler().rejectedExecution(r.get(), this);
+            return;
         }
 
-        /**
-         * Constructs scheduled task.
-         * @fixme default package access?
-         */
-        ScheduledTask() {
-        }
+        addIfUnderCorePoolSize(null);
+        ((DelayedWorkQueue)getQueue()).getDelayQueue().put(r);
     }
 
-    /**
-     * A delayed result-bearing action that can be run by a <tt>ScheduledExecutor</tt>.
-     *
-     * @see Future
-     */
-    public abstract class ScheduledFutureTask extends ScheduledTask implements Future {
-
-        /**
-         * Constructs scheduled future task.
-         * @fixme default package access?
-         */
-        ScheduledFutureTask() {
-        }
+    public void execute(Runnable r) {
+        execute(new DelayEntry(r, 0, TimeUnit.NANOSECONDS));
     }
 
-    /**
-     * Creates a delayed task that can be scheduled on this executor.
-     * A delayed task becomes eligible to run after the specified delay expires.
-     *
-     * @param r ???
-     * @param delay ???
-     * @param unit ???
-     * @return a task that becomes eligible to run after the specified delay
-     */
-    public static ScheduledTask newDelayedTask(Runnable r, long delay, TimeUnit unit) {
-        return null;
-    }
-
-    /**
-     * Creates a periodic task.  A periodic task is like a
-     * delayed task, except that upon its completion, it is rescheduled
-     * for repeated execution after the specified delay.  Periodic tasks
-     * will run no more than once every delay cycle, but are subject to
-     * drift over time.
-     *
-     * @param r ???
-     * @param delay ???
-     * @param period ???
-     * @param unit ???
-     * @return a task that executes periodically
-     */
-    public static ScheduledTask newPeriodicTask(Runnable r, long delay, long period, TimeUnit unit) {
-        return null;
-    }
-
-    /**
-     * Creates a fixed-rate task.  A fixed rate task is like
-     * a periodic task, except that upon completion, it is rescheduled
-     * to run at the specified delay after the scheduled start time of
-     * the current execution.  ScheduledExecutor attempts to execute
-     * fixed rate tasks at the desired frequency, even if the previous
-     * execution was delayed.
-     *
-     * @param r ???
-     * @param delay ???
-     * @param period ???
-     * @param unit ???
-     * @return a task that executes periodically at a fixed rate
-     */
-    public static ScheduledTask newFixedRateTask(Runnable r, long delay, long period, TimeUnit unit) {
-        return null;
-    }
-
-    /**
-     * Creates a delayed Callable task, which computes a result.
-     *
-     * @param c ???
-     * @param delay ???
-     * @param unit ???
-     * @return a task that computes a result after the specified delay
-     */
-    public static ScheduledFutureTask newDelayedFutureTask(Callable c, long delay, TimeUnit unit) {
-        return null;
-    }
-
-    /**
-     * Schedules a ScheduledTask for execution.
-     *
-     * @param t ???
-     * @throws CannotExecuteException if command cannot be scheduled for
-     * execution
-     */
-    public void schedule(ScheduledTask t) {
-    }
 }
-
-
-/*
- * @fixme static factories on internal or external classes?
- */

@@ -85,7 +85,7 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:39 $
+ * @revised $Date: 2003/05/28 23:00:40 $
  * @editor $Author: dl $
  */
 public interface BlockingQueue<E> extends Queue<E> {
@@ -101,12 +101,12 @@ public interface BlockingQueue<E> extends Queue<E> {
      * Take an object from the queue if one is available within given wait 
      * time
      * @param timeout the maximum time to wait
-     * @param granularity the time unit of the timeout argument.
+     * @param unit the time unit of the timeout argument.
      * @return the object, or <tt>null</tt> if the specified
      * waiting time elapses before an object is present.
      * @throws InterruptedException if interrupted while waiting.
      */
-    public E poll(long timeout, TimeUnit granularity) 
+    public E poll(long timeout, TimeUnit unit) 
         throws InterruptedException;
 
     /**
@@ -122,12 +122,12 @@ public interface BlockingQueue<E> extends Queue<E> {
      * given wait time.
      * @param x the object to add
      * @param timeout the maximum time to wait
-     * @param granularity the time unit of the timeout argument.
+     * @param unit the time unit of the timeout argument.
      * @return <tt>true</tt> if successful, or <tt>false</tt> if 
      * the specified waiting time elapses before space is available.
      * @throws InterruptedException if interrupted while waiting.
      */
-    public boolean offer(E x, long timeout, TimeUnit granularity) 
+    public boolean offer(E x, long timeout, TimeUnit unit) 
         throws InterruptedException;
 
     /**

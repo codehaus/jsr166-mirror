@@ -142,7 +142,7 @@ public interface ExecutorService extends Executor {
     /**
      * Submits a value-returning task for execution and returns a
      * Future representing the pending results of the task. The
-     * Future's <tt>get</tt> method will return the given result upon
+     * Future's <tt>get</tt> method will return the task's result upon
      * <em>successful</em> completion.
      *
      * <p>
@@ -180,7 +180,7 @@ public interface ExecutorService extends Executor {
     /**
      * Submits a Runnable task for execution and returns a Future 
      * representing that task. The Future's <tt>get</tt> method will 
-     * return <tt>null>/tt> upon successful completion.
+     * return <tt>null</tt> upon successful completion.
      *
      * @param task the task to submit
      * @return a Future representing pending completion of the task

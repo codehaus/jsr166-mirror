@@ -629,7 +629,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     // Implementation Note: SimpleEntry and SimpleImmutableEntry
     // are distinct unrelated classes, even though they share
     // some code. Since you can't add or subtract final-ness
-    // of a field in a subclass, they can't share represenations,
+    // of a field in a subclass, they can't share representations,
     // and the amount of duplicated code is too small to warrant
     // exposing a common abstract class.
 

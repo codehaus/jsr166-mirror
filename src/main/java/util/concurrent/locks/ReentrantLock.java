@@ -136,7 +136,7 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
         return owner;
     }
 
-    boolean tryInitialAcquire(int mode, Thread current) {
+    boolean tryReentrantAcquire(int mode, Thread current) {
         Thread o = owner;
         if (o == null && !fair && ownerUpdater.acquire(this, current))
             return true;
@@ -146,6 +146,17 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
         }
         return false;
     }
+
+    void checkOwner(Thread thread) {
+        if (owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
+
+    void checkOwnerForWait(Thread thread) {
+        if (owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
+
 
     // Public Lock methods
 
@@ -336,8 +347,8 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * {@link Lock} instance.
      * @return the Condition object
      */
-    public ConditionObject newCondition() {
-        return new ConditionObject(this);
+    public ReentrantLock.ConditionObject newCondition() {
+        return new ReentrantLock.ConditionObject(this);
     }
 
     /**
@@ -426,7 +437,20 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
     }
 
 
-    // Helper methods for Conditions
+    /**
+     * Condition implementation for use with <tt>ReentrantLock</tt>.
+     * Instances of this class can be constructed only using method
+     * {@link Lock#newCondition}.
+     * 
+     * <p>This class supports the same basic semantics and styles of
+     * usage as the {@link Object} monitor methods.  Methods may be
+     * invoked only when holding the <tt>ReentrantLock</tt> associated
+     * with this Condition. Failure to comply results in {@link
+     * IllegalMonitorStateException}.
+     */
+    public static class ConditionObject extends AbstractReentrantLock.AbstractConditionObject {
+        protected ConditionObject(ReentrantLock lock) { super(lock); }
+    }
 
 
     /**

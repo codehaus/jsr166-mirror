@@ -183,7 +183,7 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         }
     }
 
-    boolean tryInitialAcquire(int mode, Thread current) {
+    boolean tryReentrantAcquire(int mode, Thread current) {
         if (!isReader(mode)) {
             int c = count.get();
             if (isWriting(c) && current == owner) {
@@ -215,6 +215,16 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
 
     protected Thread getOwner() {
         return (isWriting(count.get()))? owner : null;
+    }
+
+    void checkOwner(Thread thread) {
+        if ((count.get() & 1) == 0 ||  owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
+
+    void checkOwnerForWait(Thread thread) {
+        if (count.get() != 1 || owner != thread) 
+            throw new IllegalMonitorStateException();
     }
 
 
@@ -329,8 +339,8 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
             }
         }
 
-        public AbstractReentrantLock.ConditionObject newCondition() { 
-            return new AbstractReentrantLock.ConditionObject(ReentrantReadWriteLock.this);
+        public WriterConditionObject newCondition() { 
+            return new WriterConditionObject(ReentrantReadWriteLock.this);
         }
 
     }
@@ -433,6 +443,24 @@ public class ReentrantReadWriteLock extends AbstractReentrantLock implements Rea
         s.defaultReadObject();
         // reset to unlocked state
         count.set(0);
+    }
+
+    /**
+     * Condition implementation for use with reentrant write locks.
+     * Instances of this class can be constructed only using method
+     * {@link Lock#newCondition}.
+     * 
+     * <p>This class supports the same basic semantics and styles of
+     * usage as the {@link Object} monitor methods.  Methods may be
+     * invoked only when holding the lock associated with this
+     * Condition. Failure to comply results in {@link
+     * IllegalMonitorStateException}. Additionally, this exception is
+     * thrown by waiting methods if the thread holding the write lock
+     * also holds any read locks.
+     *
+     */
+    public static class WriterConditionObject extends AbstractReentrantLock.AbstractConditionObject {
+        protected WriterConditionObject(ReentrantReadWriteLock lock) { super(lock); }
     }
 
 }

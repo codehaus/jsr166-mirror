@@ -12,11 +12,10 @@ import java.lang.reflect.*;
 import sun.misc.*;
 
 /**
- * AbstractReentrantLock provides shared data structures and utility
- * methods for the reentrant lock classes in this package. It also
- * provides a common public {@link Condition} implementation, as well
- * as instrumentation methods. This class is not designed to be
- * subclassed outside of this package.
+ * Provides shared data structures, utility methods, base {@link
+ * Condition} implementations, and instrumentation methods for the
+ * reentrant lock classes defined in this package.  This class is not
+ * designed to be subclassed outside of this package.
  *
  * @since 1.5
  * @author Doug Lea
@@ -387,7 +386,7 @@ public abstract class AbstractReentrantLock {
      * @param current current thread
      * @return true if successful
      */
-    abstract boolean tryInitialAcquire(int mode, Thread current);
+    abstract boolean tryReentrantAcquire(int mode, Thread current);
 
 
     // Queuing utilities
@@ -480,7 +479,7 @@ public abstract class AbstractReentrantLock {
         if ((mode & INTERRUPT) != 0 && Thread.interrupted())
             return INTERRUPT;
 
-        if (tryInitialAcquire(mode, current))
+        if (tryReentrantAcquire(mode, current))
             return UNINTERRUPTED;
 
         long lastTime = ((mode & TIMEOUT) == 0)? 0 : System.nanoTime();
@@ -689,6 +688,21 @@ public abstract class AbstractReentrantLock {
     protected abstract Thread getOwner();
 
     /**
+     * Throw IllegalMonitorStateException if given thread is not owner
+     * @param thread the thread
+     * @throws IllegalMonitorStateException if thread not owner
+     */
+    abstract void checkOwner(Thread thread);
+
+    /**
+     * Throw IllegalMonitorStateException if given thread cannot
+     * wait on condition
+     * @param thread the thread
+     * @throws IllegalMonitorStateException if thread cannot wait
+     */
+    abstract void checkOwnerForWait(Thread thread);
+
+    /**
      * Return true if a node, always one that was initially placed on
      * a condition queue, is now on the lock queue.
      * @param node the node
@@ -775,14 +789,7 @@ public abstract class AbstractReentrantLock {
 
     /**
      * Condition implementation for use with <tt>AbstractReentrantLock</tt>.
-     * Instances of this class can be constructed only using method
-     * {@link Lock#newCondition}.
-     * 
-     * <p>This class supports the same basic semantics and styles of
-     * usage as the {@link Object} monitor methods.  Methods may be
-     * invoked only when holding the <tt>AbstractReentrantLock</tt> associated
-     * with this Condition. Failure to comply results in {@link
-     * IllegalMonitorStateException}.
+     * Instances of this class can be constructed only by subclasses.
      *
      * <p>In addition to implementing the {@link Condition} interface,
      * this class defines methods <tt>hasWaiters</tt> and
@@ -790,7 +797,7 @@ public abstract class AbstractReentrantLock {
      * <tt>protected</tt> access methods, that may be useful for
      * instrumentation and monitoring.
      */
-    public static class ConditionObject implements Condition, java.io.Serializable {
+    protected static class AbstractConditionObject implements Condition, java.io.Serializable {
 
         private static final long serialVersionUID = 1173984872572414699L;
 
@@ -803,11 +810,11 @@ public abstract class AbstractReentrantLock {
 
         /**
          * Constructor for use by subclasses to create a
-         * ConditionObject associated with given lock.  
+         * AbstractConditionObject associated with given lock.  
          * @param lock the lock for this condition
          * @throws NullPointerException if lock null
          */
-        protected ConditionObject(AbstractReentrantLock lock) {
+        protected AbstractConditionObject(AbstractReentrantLock lock) {
             if (lock == null)
                 throw new NullPointerException();
             this.lock = lock;
@@ -815,15 +822,6 @@ public abstract class AbstractReentrantLock {
 
         // Internal methods
 
-        /**
-         * Throw IllegalMonitorStateException if given thread is not owner
-         * @param thread the thread
-         * @throws IllegalMonitorStateException if thread not owner
-         */
-        void checkOwner(Thread thread) {
-            if (lock.getOwner() != thread) 
-                throw new IllegalMonitorStateException();
-        }
 
 
         /**
@@ -892,7 +890,7 @@ public abstract class AbstractReentrantLock {
          * with this Condition is not held by the current thread
          **/
         public void signal() {
-            checkOwner(Thread.currentThread());
+            lock.checkOwner(Thread.currentThread());
             Node w = firstWaiter;
             if (w != null)
                 doSignal(w);
@@ -908,7 +906,7 @@ public abstract class AbstractReentrantLock {
          * with this Condition is not held by the current thread
          */
         public void signalAll() {
-            checkOwner(Thread.currentThread());
+            lock.checkOwner(Thread.currentThread());
             Node w = firstWaiter;
             if (w != null) 
                 doSignalAll(w);
@@ -955,7 +953,7 @@ public abstract class AbstractReentrantLock {
          */
         public void awaitUninterruptibly() {
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            lock.checkOwnerForWait(current);
             Node w = addConditionWaiter(current);
             int recs = lock.fullyUnlock();
             boolean interrupted = false;
@@ -1011,7 +1009,7 @@ public abstract class AbstractReentrantLock {
          **/
         public void await() throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            lock.checkOwnerForWait(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
@@ -1097,7 +1095,7 @@ public abstract class AbstractReentrantLock {
          */
         public long awaitNanos(long nanosTimeout) throws InterruptedException {
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            lock.checkOwnerForWait(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
@@ -1186,7 +1184,7 @@ public abstract class AbstractReentrantLock {
             if (deadline == null)
                 throw new NullPointerException();
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            lock.checkOwnerForWait(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
@@ -1248,7 +1246,7 @@ public abstract class AbstractReentrantLock {
 
             long nanosTimeout = unit.toNanos(time);
             Thread current = Thread.currentThread();
-            checkOwner(current);
+            lock.checkOwnerForWait(current);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
@@ -1300,7 +1298,7 @@ public abstract class AbstractReentrantLock {
          * with this Condition is not held by the current thread
          */ 
         public boolean hasWaiters() {
-            checkOwner(Thread.currentThread());
+            lock.checkOwner(Thread.currentThread());
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.status == CONDITION)
                     return true;
@@ -1320,7 +1318,7 @@ public abstract class AbstractReentrantLock {
          * with this Condition is not held by the current thread
          */ 
         public int getWaitQueueLength() {
-            checkOwner(Thread.currentThread());
+            lock.checkOwner(Thread.currentThread());
             int n = 0;
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.status == CONDITION)
@@ -1343,7 +1341,7 @@ public abstract class AbstractReentrantLock {
          * with this Condition is not held by the current thread
          */
         protected Collection<Thread> getWaitingThreads() {
-            checkOwner(Thread.currentThread());
+            lock.checkOwner(Thread.currentThread());
             ArrayList<Thread> list = new ArrayList<Thread>();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.status == CONDITION) {

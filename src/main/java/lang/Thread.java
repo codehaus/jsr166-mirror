@@ -1460,7 +1460,7 @@ class Thread implements Runnable {
      * <tt>uncaughtException</tt> method will be invoked.
      * <p>By setting the default uncaught exception handler, an application
      * can change the way in which uncaught exceptions are handled (such as
-     * logging to a specific device, or file) for those thread's that would
+     * logging to a specific device, or file) for those threads that would
      * already accept whatever &quot;default&quot; behavior the system
      * provided.
      *

@@ -19,8 +19,10 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * with a value, associate it with the given value.
      * This is equivalent to
      * <pre>
-     *   if (!map.containsKey(key)) map.put(key, value);
-     *   return get(key);
+     *   if (!map.containsKey(key)) 
+     *      return map.put(key, value);
+     *   else
+     *      return map.get(key);
      * </pre>
      * Except that the action is performed atomically.
      * @param key key with which the specified value is to be associated.

@@ -76,7 +76,10 @@ import java.util.*;
  * be in the same {@link ThreadGroup} and with the same
  * <tt>NORM_PRIORITY</tt> priority and non-daemon status. By supplying
  * a different ThreadFactory, you can alter the thread's name, thread
- * group, priority, daemon status, etc.  </dd>
+ * group, priority, daemon status, etc. If a ThreadFactory fails to create
+ * a thread when asked (i.e., if it returns <tt>null</tt> or throws
+ * a <tt>RuntimeException</tt>), the executor will continue, but might
+ * not be able to execute any tasks. </dd>
  *
  * <dt>Keep-alive times</dt>
  *
@@ -381,16 +384,23 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * task. Call only while holding mainLock
      * @param firstTask the task the new thread should run first (or
      * null if none)
-     * @return the new thread
+     * @return the new thread, or null if threadFactory fails to create thread
      */
     private Thread addThread(Runnable firstTask) {
         Worker w = new Worker(firstTask);
-        Thread t = threadFactory.newThread(w);
-        w.thread = t;
-        workers.add(w);
-        int nt = ++poolSize;
-        if (nt > largestPoolSize)
-            largestPoolSize = nt;
+        Thread t = null;
+        try {
+            t = threadFactory.newThread(w);
+        }
+        catch(RuntimeException ex) { // fall through
+        }
+        if (t != null) {
+            w.thread = t;
+            workers.add(w);
+            int nt = ++poolSize;
+            if (nt > largestPoolSize)
+                largestPoolSize = nt;
+        }
         return t;
     }
 
@@ -533,17 +543,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
             if (state != STOP) {
                 // If there are queued tasks but no threads, create
-                // replacement.
-                Runnable r = workQueue.poll();
-                if (r != null) {
-                    addThread(r).start();
-                    return;
-                }
-
-                // If there are some (presumably delayed) tasks but
-                // none pollable, create an idle replacement to wait.
+                // replacement thread. We must create it initially
+                // idle to avoid orphaned tasks in case addThread
+                // fails.  This also handles case of delayed tasks
+                // that will sometime later become runnable.
                 if (!workQueue.isEmpty()) { 
-                    addThread(null).start();
+                    Thread t = addThread(null);
+                    if (t != null)
+                        t.start();
                     return;
                 }
 
@@ -1158,10 +1165,17 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             int extra = this.corePoolSize - corePoolSize;
             this.corePoolSize = corePoolSize;
             if (extra < 0) {
-                Runnable r;
-                while (extra++ < 0 && poolSize < corePoolSize &&
-                       (r = workQueue.poll()) != null)
-                    addThread(r).start();
+                int n = workQueue.size();
+                // We have to create initially-idle threads here
+                // because we otherwise have no recourse about
+                // what to do with a dequeued task if addThread fails.
+                while (extra++ < 0 && n-- > 0 && poolSize < corePoolSize ) {
+                    Thread t = addThread(null);
+                    if (t != null) 
+                        t.start();
+                    else
+                        break;
+                }
             }
             else if (extra > 0 && poolSize > corePoolSize) {
                 Iterator<Worker> it = workers.iterator();

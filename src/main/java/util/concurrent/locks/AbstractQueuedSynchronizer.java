@@ -11,42 +11,47 @@ import java.util.concurrent.atomic.*;
 
 /**
  * Provides a framework for implementing blocking locks and related
- * synchronization aids that rely on first-in-first-out wait queues.
+ * synchronizers (semaphores, events, etc) that rely on 
+ * first-in-first-out (FIFO) wait queues.
  * This class is designed to be a useful basis for most kinds of
  * synchronizers that rely on a single atomic <tt>int</tt> value to
- * represent status. Subclasses must define the methods that change
- * this status.  Given these, the other methods in this class carry
- * out all queuing and blocking mechanics using an internal
- * specialized FIFO queue. Implementation classes can maintain other
- * fields, but only the {@link AtomicInteger} state underlying this
+ * represent state. Subclasses must define the protected methods that change
+ * this state, and which define what that state means in terms of this
+ * object being acquired or released.  Given these, the other public methods 
+ * in this class carry out all queuing and blocking mechanics using an internal
+ * specialized FIFO queue. Subclasses can maintain other
+ * state fields, but only the {@link AtomicInteger} state underlying this
  * class is tracked with respect to synchronization.
  *
- * <p> Subclasses should be defined as non-public internal helper
- * classes that are used to implement synchronization needed by their
- * enclosing class.  <tt>AbstractQueuedSynchronizer</tt> does not
+ * <p>Subclasses should be defined as non-public internal helper
+ * classes that are used to implement the synchronization properties of 
+ * their enclosing class.  
+ * <tt>AbstractQueuedSynchronizer</tt> does not
  * implement any synchronization interface.  Instead it defines
  * methods such as {@link #acquireExclusiveUninterruptibly} that can
  * be invoked as appropriate by concrete locks and related
- * synchronizers to implement their public methods. (Note that this
- * class does not directly provide untimed "trylock" forms, since the
- * state acquire methods can be used for these purposes.)
+ * synchronizers to implement their public methods. Note that this
+ * class does not directly provide non-blocking &quot;trylock&quot; forms, 
+ * since the subclass methods for querying and modifying the state can be 
+ * used for these purposes - and can be made public by the subclass when 
+ * needed.
  *
- * <p> This class supports either or both <em>exclusive</em> and
+ * <p>This class supports either or both <em>exclusive</em> and
  * <em>shared</em> modes. When acquired in exclusive mode, attempted
  * acquires by other threads cannot succeed. Shared mode acquires may
  * (but need not) succeed by multiple threads. This class does not
- * "understand" these differences except in the mechanical sense that
+ * &quot;understand&quot; these differences except in the mechanical sense that
  * when a shared mode acquire succeeds, the next waiting thread (if
  * one exists) must also determine whether it can acquire as
- * well. Implementations that support only exclusive or only shared
- * modes need not define the methods for the unused mode.
+ * well. Subclasses that support only exclusive or only shared
+ * modes need not redefine the methods for the unused mode.
  *
- * <p> This class defines a nested {@link Condition} class that can be
+ * <p>This class defines a nested {@link Condition} class that can be
  * used with subclasses for which method {@link #releaseExclusive}
- * invoked with the current state value fully releases the lock, and
+ * invoked with the current state value fully releases this object, and
  * {@link #acquireExclusiveUninterruptibly}, given this saved state
- * value, eventually restores the lock to its previous lock state. No
- * <tt>AbstractQueuedSynchronizer</tt> method otherwise creates such a
+ * value, eventually restores this object to its previous acquired state. 
+ * No <tt>AbstractQueuedSynchronizer</tt> method otherwise creates such a
  * condition, so if this constraint cannot be met, do not use it.  The
  * detailed behavior of {@link ConditionObject} depends of course on
  * the semantics of its synchronizer implementation.
@@ -62,8 +67,9 @@ import java.util.concurrent.atomic.*;
  * serializability will define a <tt>readObject</tt> method that
  * restores this to a known initial state upon deserialization.
  *
- * <p> To use this class as the basis of a synchronization
- * implementation, implement the following methods, as applicable.
+ * <h3>Usage</h3>
+ * <p> To use this class as the basis of a synchronizer
+ * redefine the following methods, as applicable.
  * Each by default throws {@link UnsupportedOperationException}:
  *
  * <ul>
@@ -78,37 +84,49 @@ import java.util.concurrent.atomic.*;
  * using this class. All other methods are declared <tt>final</tt>
  * because they cannot be independently varied.
  *
- * <p>
+ * <h3>Usage Example</h3>
  *
- * <b>Extension Example.</b> Here is a non-reentrant mutual exclusion
- * lock class that uses the value zero to represent unlocked state,
- * and one for locked:
+ * <p>Here is a non-reentrant mutual exclusion
+ * lock class that uses the value zero to represent the unlocked state,
+ * and one to represent the locked state:
  *
  * <pre>
  * class Mutex implements Lock, java.io.Serializable {
+ *
+ *    // Our internal helper class
  *    private static class Sync extends AbstractQueuedSynchronizer {
+ *
+ *       // acquire the lock if state is zero
  *       public int acquireExclusiveState(boolean isQueued, int acquires) {
  *         assert acquires == 1; // Otherwise unused
  *         return compareAndSet(0, 1)? 0 : -1;
  *       }
  *
+ *       // release the lock by setting state to zero
  *       public boolean releaseExclusiveState(int releases) {
  *         assert releases == 1; // Otherwise unused
  *         set(0);
  *         return true;
  *       }
  *       
+ *       // Allow condition use only when locked
  *       public void checkConditionAccess(Thread thread, boolean waiting) {
  *         if (get() == 0) throw new IllegalMonitorStateException();
  *       }
  *
+ *       // provide a Condition for our lock
  *       Condition newCondition() { return new ConditionObject(); }
  *
+ *
+ *       // deserialize properly
  *       private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
  *         s.defaultReadObject();
  *         set(0); // reset to unlocked state
  *       }
  *    }
+ *
+ *    // our sync object does all the hard work we just forward our
+ *    // &quot;acquire&quot; methods to its acquire methods
  *
  *    private final Sync sync = new Sync();
  *    public boolean tryLock() { 
@@ -134,7 +152,8 @@ import java.util.concurrent.atomic.*;
  * @author Doug Lea
  * 
  */
-public abstract class AbstractQueuedSynchronizer extends AtomicInteger implements java.io.Serializable {
+public abstract class AbstractQueuedSynchronizer extends AtomicInteger 
+    implements java.io.Serializable {
     /*
      *  General description and notes.
      *
@@ -445,44 +464,53 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
     protected AbstractQueuedSynchronizer() { }
 
     /**
-     * Try to set status for an attempt to acquire in exclusive mode.
-     * This method is always invoked by the thread performing acquire.
-     * If this method reports failure, the thread may be blocked
-     * until signalled upon a release by some other thread.
-     * Default implementation throws {@link UnsupportedOperationException}
-     * @param isQueued true if the thread has been queued, possibly
-     * blocking before this call. If this argument is false,
-     * then the thread has not yet been queued. This can be used
-     * to help implement a fairness policy.
+     * Attempt to acquire in exclusive mode. This method should query
+     * if the state of the object permits it to be acquired in the exclusive
+     * mode, and if so to acquire it if possible.
+     * <p>This method is always invoked by the thread performing acquire.
+     * If this method reports failure, the acquire method may queue the thread 
+     * until it is signalled by a release from some other thread.
+     * <p>The default implementation throws 
+     * {@link UnsupportedOperationException}
+     *
+     * @param isQueued if <tt>true</tt> the current thread is in the queue 
+     * when making this call; if <tt>false</tt> the current thread is not
+     * in the queue. Knowing whether the current thread is in the queue may
+     * be needed when implementing a fairness policy. The calling acquire
+     * method often has this information at hand and can save the need for
+     * this method to interrogate the queue directly.
      * @param acquires the number of acquires requested. This value
-     * is always the one given in an <tt>acquire</tt> method,
+     * is always the one passed to an acquire method,
      * or is the value saved on entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return negative on failure, zero on success. (These
+     * @return a negative value on failure, zero on success. (These
      * unusual return value conventions match those needed for
-     * shared modes.)
+     * shared modes.) Upon success, this object has been acquired the
+     * requested number of times.
      * @throws IllegalMonitorStateException if acquiring would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
      * correctly.
-     * @throws UnsupportedOperationException if exclusive mode not supported
+     * @throws UnsupportedOperationException if exclusive mode is not supported
      */
     protected int acquireExclusiveState(boolean isQueued, int acquires) {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Set status to reflect a release in exclusive mode..
-     * This method is always invoked by the thread performing release.
-     * Default implementation throws {@link UnsupportedOperationException}
+     * Set the state to reflect a release in exclusive mode.
+     * <p>This method is always invoked by the thread performing release.
+     * <p>The default implementation throws 
+     * {@link UnsupportedOperationException}
      * @param releases the number of releases. This value
-     * is always the one given in a <tt>release</tt> method,
-     * or the current value upon entry to a condition wait.
+     * is always the one passed to a release method,
+     * or the current state value upon entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return true if now in a fully released state, so that
-     * any waiting threads may attempt to acquire.
+     * @return <tt>true</tt> if this object is now in a fully released state, 
+     * so that any waiting threads may attempt to acquire; and <tt>false</tt>
+     * otherwise.
      * @throws IllegalMonitorStateException if releasing would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
@@ -494,22 +522,31 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
     }
 
     /**
-     * Try to set status for an attempt to acquire in shared mode.
-     * This method is always invoked by the thread performing acquire.
-     * If this method reports failure, the thread may be blocked
-     * until signalled upon a release by some other thread.
-     * Default implementation throws {@link UnsupportedOperationException}
-     * @param isQueued true if the thread has been queued, possibly
-     * blocking before this call. If this argument is false,
-     * then the thread has not yet been queued. This can be used
-     * to help implement a fairness policy.
+     * Attempt to acquire in exclusive mode. This method should query
+     * if the state of the object permits it to be acquired in the exclusive
+     * mode, and if so to acquire it if possible.
+     * <p>This method is always invoked by the thread performing acquire.
+     * If this method reports failure, the acquire method may queue the thread 
+     * until it is signalled by a release from some other thread.
+     * <p>The default implementation throws 
+     * {@link UnsupportedOperationException}
+     *
+     * @param isQueued if <tt>true</tt> the current thread is in the queue 
+     * when making this call; if <tt>false</tt> the current thread is not
+     * in the queue. Knowing whether the current thread is in the queue may
+     * be needed when implementing a fairness policy. The calling acquire
+     * method often has this information at hand and can save the need for
+     * this method to interrogate the queue directly.
      * @param acquires the number of acquires requested. This value
-     * is always the one given in an <tt>acquire</tt> method.
+     * is always the one passed to an acquire method,
+     * or is the value saved on entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return negative on failure, zero on exclusive success, and
-     * positive if non-exclusively successful, in which case a
+     * @return a negative value on failure, zero on exclusive success, and
+     * a positive value if non-exclusively successful, in which case a
      * subsequent waiting thread must check availability.
+     * Upon success, this object has been acquired the
+     * requested number of times.
      * @throws IllegalMonitorStateException if acquiring would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
@@ -521,15 +558,18 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
     }
 
     /**
-     * Set status to reflect a release in shared mode.
-     * This method is always invoked by the thread performing release.
-     * Default implementation throws {@link UnsupportedOperationException}
+     * Set the state to reflect a release in shared mode.
+     * <p>This method is always invoked by the thread performing release.
+     * <p> The default implementation throws 
+     * {@link UnsupportedOperationException}
      * @param releases the number of releases. This value
-     * is always the one given in a <tt>release</tt> method.
+     * is always the one passed to a release method,
+     * or the current state value upon entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return true if now in a fully released state, so that
-     * any waiting threads may attempt to acquire.
+     * @return <tt>true</tt> if this object is now in a fully released state, 
+     * so that any waiting threads may attempt to acquire; and <tt>false</tt>
+     * otherwise.
      * @throws IllegalMonitorStateException if releasing would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
@@ -542,15 +582,19 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
 
 
     /**
-     * Throws {@link IllegalMonitorStateException} if given thread
+     * Throws {@link IllegalMonitorStateException} if the given thread
      * should not access a {@link Condition} method. This method is
      * invoked upon each call to a {@link ConditionObject} method.
-     * Default implementation throws {@link UnsupportedOperationException}
-     * @param thread the thread
-     * @param waiting true if the access is for a condition-wait method,
-     * and false if any other method (such as <tt>signal</tt>).
-     * @throws IllegalMonitorStateException if cannot access
-     * @throws UnsupportedOperationException if conditions not supported
+     * A typical usage example is to check if the thread has acquired
+     * this synchronizer.
+     * <p>The default implementation throws 
+     * {@link UnsupportedOperationException}
+     * @param thread the thread that wants to access the condition
+     * @param waiting <tt>true</tt> if the access is for a condition-wait 
+     * method, and <tt>false</tt> if any other method 
+     * (such as <tt>signal</tt>).
+     * @throws IllegalMonitorStateException if access is not permitted
+     * @throws UnsupportedOperationException if conditions are not supported
      */
     protected void checkConditionAccess(Thread thread, boolean waiting) {
         throw new UnsupportedOperationException();
@@ -722,7 +766,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger implement
      * {@link Lock#unlock}
      * @param releases the number of releases.
      * This value is conveyed to {@link #releaseSharedState} but
-     * otherwise uninterpreted and can represent anything
+     * is otherwise uninterpreted and can represent anything
      * you like.
      */
     public final void releaseShared(int releases) {

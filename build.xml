@@ -27,7 +27,9 @@
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
   <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
+  <property name="build.stripped.dir"   location="${build.dir}/stripped"/>
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
+  <property name="build.doccheck.dir"   location="${build.dir}/doccheck"/>
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
 
   <!-- Source locations -->
@@ -96,16 +98,33 @@
           description="Runs all tests"/>
 
 
-  <target name="checkstyle" depends="init, clean-filtered-src, filter-src">
+  <target name="checkstyle" depends="filter-src"
+          description="Reports on style errors in Java source">
     <taskdef resource="checkstyletask.properties"
             classpath="${lib.dir}/checkstyle-all-2.4.jar"/>
 
     <checkstyle>
+      <formatter type="plain"/>  <!-- also available: type="xml" -->
       <fileset dir="${build.filter.src.dir}" includes="**/*.java"/>
     </checkstyle>
   </target>
 
-  <target name="docs" depends="init, clean-filtered-src, filter-src"
+
+  <target name="doccheck" depends="filter-src"
+          description="Reports on javadoc style errors">
+    <delete dir="${build.doccheck.dir}"/>
+    <mkdir dir="${build.doccheck.dir}"/>
+    <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
+         docletpath="${lib.dir}/doccheck.jar"
+            destdir="${build.doccheck.dir}">
+      <packageset dir="${build.filter.src.dir}">
+        <include name="java/**"/>
+      </packageset>
+    </javadoc>
+  </target>
+
+
+  <target name="docs" depends="filter-src"
           description="Builds javadocs with custom tags to build folder">
     <delete dir="${build.javadocs.dir}"/>
     <mkdir dir="${build.javadocs.dir}"/>
@@ -126,7 +145,28 @@
   </target>
 
 
-  <target name="dist" depends="init, dist-clean, dist-jar, dist-docs"/>
+  <target name="strip" depends="init">
+    <mkdir dir="${build.stripped.dir}"/>
+    <javac srcdir="${src.dir}"
+          destdir="${build.stripped.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <bootclasspath refid="javac.bootclasspath"/>
+      <compilerarg line="${javac.args} ${build.warnings.option} -s"/>
+
+      <!-- need this because srcdir is basedir! -->
+      <include name="java/**/*.java"/>
+
+    </javac>
+  </target>
+
+
+  <target name="dist" depends="init, dist-clean, dist-jar, dist-docs"
+          description="Puts all distributable products in single hierarchy"/>
 
 
   <target name="clean"
@@ -165,9 +205,11 @@
     <property name="build.warnings.option" value="-warnunchecked"/>
   </target>
 
+
   <target name="set-warnings-unless" unless="build.warnings">
     <property name="build.warnings.option" value=""/>
   </target>
+
 
   <target name="init" depends="set-warnings-if, set-warnings-unless">
     <!-- Version is kept in a separate file -->
@@ -176,17 +218,12 @@
   </target>
 
 
-  <target name="clean-filtered-src">
-    <delete dir="${build.filter.src.dir}"/>
-  </target>
-
-
   <target name="dist-jar" depends="clean, jar">
     <copy file="${product.jar}" todir="${dist.dir}"/>
   </target>
 
 
-  <target name="dist-docs" depends="clean-filtered-src, filter-src"
+  <target name="dist-docs" depends="filter-src"
           description="Builds javadocs without custom tags to dist folder">
     <delete dir="${dist.javadocs.dir}"/>
     <mkdir dir="${dist.javadocs.dir}"/>
@@ -203,7 +240,7 @@
   </target>
 
 
-  <target name="compile-ant-filter">
+  <target name="compile-ant-filter" depends="init">
     <mkdir dir="${build.ant.dir}"/>
     <javac srcdir="${ant.src.dir}"
           destdir="${build.ant.dir}"

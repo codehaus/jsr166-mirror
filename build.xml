@@ -74,11 +74,12 @@ ant [target], where target is one of:
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
 
 
+
   <!--
    ! Bootclasspath munging for source compilation.
    -->
 
-  <path id="javac.bootclasspath.prepend">
+  <path id="javac.bootclasspath.prefix">
     <!-- <pathelement location="${src.dir}"/> -->
     <pathelement location="${javac.jar}"/>
   </path>
@@ -90,10 +91,11 @@ ant [target], where target is one of:
   </path>
 
   <!-- Flatten bootclasspath prefix into a platform-appropriate string -->
-  <property name="javac.bootclasspath.prepend" refid="javac.bootclasspath.prepend"/>
+  <property name="javac.bootclasspath.prefix" refid="javac.bootclasspath.prefix"/>
 
   <!-- Turn the flattened bootclasspath prefix into a javac argument -->
-  <property name="javac.args" value='-J-Xbootclasspath/p:${javac.bootclasspath.prepend}'/>
+  <property name="javac.args" value='-J-Xbootclasspath/p:${javac.bootclasspath.prefix}'/>
+
 
 
   <!--
@@ -115,9 +117,18 @@ ant [target], where target is one of:
 
 
 
+  <!-- Files excluded from emulation and dist-docs -->
+  <patternset id="emulation.excludes">
+    <exclude name="java/util/Random.*"/>
+    <exclude name="sun/misc/Unsafe.*"/>
+  </patternset>
+
+
+
   <!-- Main targets -->
 
-  <target name="compile" depends="init"
+  <target name="compile"
+          depends="init"
           description="Compiles main sources to build folder">
 
     <mkdir dir="${build.classes.dir}"/>
@@ -138,15 +149,18 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="jar" depends="native-jar, emulation-jar"/>
+  <target name="jar"
+          depends="native-jar, emulation-jar"
+          description="Builds library jar from compiled sources"/>
 
 
-  <target name="test" depends="init, check-junit, report-tests"
-          description="Runs all tests (requires JUnit 3.8+ in ${ant.home}/lib)"
-  />
+  <target name="test"
+          depends="init, check-junit, report-tests"
+          description="Runs all tests (requires JUnit 3.8+ in ${ant.home}/lib)" />
 
 
-  <target name="checkstyle" depends="filter-src"
+  <target name="checkstyle"
+          depends="filter-src"
           description="Reports on style errors in Java source (verbose, mostly chaff)">
 
     <taskdef resource="checkstyletask.properties"
@@ -160,7 +174,8 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="doccheck" depends="filter-src"
+  <target name="doccheck"
+          depends="filter-src"
           description="Reports on javadoc style errors (not working yet)">
 
     <delete dir="${build.doccheck.dir}"/>
@@ -175,7 +190,8 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="docs" depends="filter-src"
+  <target name="docs"
+          depends="filter-src"
           description="Builds javadocs with custom tags to build folder">
 
     <delete dir="${build.javadocs.dir}"/>
@@ -202,7 +218,8 @@ ant [target], where target is one of:
    # bridge methods (marked as "synthetic") that can have identical
    # signatures to existing methods except for the return value.
    -->
-  <target name="strip" depends="init">
+  <target name="strip"
+          depends="init">
 
     <mkdir dir="${build.stripped.dir}"/>
 
@@ -222,7 +239,8 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="dist" depends="init, dist-clean, dist-jar, dist-docs"
+  <target name="dist"
+          depends="init, dist-clean, dist-jar, dist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -244,24 +262,24 @@ ant [target], where target is one of:
   </target>
 
 
-  <!-- Anthill targets -->
+  <target name="dist-docs"
+          depends="filter-src"
+          description="Builds javadocs without custom tags to dist folder">
 
-  <!-- Should really run the tests instead of just the jar target -->
-  <target name="anthill-build" depends="jar, test, docs, dist-docs"/>
+    <delete dir="${dist.javadocs.dir}"/>
+    <mkdir dir="${dist.javadocs.dir}"/>
 
-  <target name="anthill-publish">
-    <copy todir="${deployDir}/docs/private">
-      <fileset dir="${build.javadocs.dir}"/>
-    </copy>
-    <copy todir="${deployDir}/docs/public">
-      <fileset dir="${dist.javadocs.dir}"/>
-    </copy>
-    <copy tofile="${deployDir}/index.html"
-          file="${basedir}/etc/anthill-index.html"/>
-    <copy todir="${deployDir}/notes">
-      <fileset dir="${basedir}/etc/notes"/>
-    </copy>
+    <javadoc destdir="${dist.javadocs.dir}"
+                link="http://java.sun.com/j2se/1.4.1/docs/api"
+            overview="${src.dir}/intro.html"
+              source="${build.docsourcelevel}">
+
+      <packageset dir="${build.filter.src.dir}"/>
+
+    </javadoc>
+
   </target>
+
 
 
   <!-- Internal targets -->
@@ -280,7 +298,8 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="init" depends="set-warnings-if, set-warnings-unless">
+  <target name="init"
+          depends="set-warnings-if, set-warnings-unless">
 
     <!-- Version is kept in a separate file -->
     <loadfile property="version" srcFile="version.properties"/>
@@ -289,10 +308,16 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="native-jar" depends="compile"
-          description="Builds library jar from compiled sources">
+  <target name="init-jar">
 
     <mkdir dir="${build.lib.dir}"/>
+
+  </target>
+
+
+  <target name="native-jar"
+          depends="compile, init-jar"
+          unless="build.emulation">
 
     <jar destfile="${product.jar}">
       <fileset dir="${build.classes.dir}"/>
@@ -301,9 +326,21 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="compile-emulation" depends="init"
-          if="build.emulation"
-          description="Compiles emulation sources to build folder">
+  <target name="base-jar"
+          depends="compile, init-jar">
+
+    <jar destfile="${product.jar}">
+      <fileset dir="${build.classes.dir}">
+        <patternset refid="emulation.excludes"/>
+      </fileset>
+    </jar>
+
+  </target>
+
+
+  <target name="compile-emulation"
+          depends="init"
+          if="build.emulation">
 
     <mkdir dir="${build.emulation.dir}"/>
 
@@ -323,7 +360,8 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="emulation-jar" depends="native-jar, compile-emulation"
+  <target name="emulation-jar"
+          depends="base-jar, compile-emulation"
           if="build.emulation">
 
     <jar destfile="${product.jar}" update="true" duplicate="add">
@@ -333,32 +371,16 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="dist-jar" depends="clean, jar">
+  <target name="dist-jar"
+          depends="clean, jar">
 
     <copy file="${product.jar}" todir="${dist.dir}"/>
 
   </target>
 
 
-  <target name="dist-docs" depends="filter-src"
-          description="Builds javadocs without custom tags to dist folder">
-
-    <delete dir="${dist.javadocs.dir}"/>
-    <mkdir dir="${dist.javadocs.dir}"/>
-
-    <javadoc destdir="${dist.javadocs.dir}"
-                link="http://java.sun.com/j2se/1.4.1/docs/api"
-            overview="${src.dir}/intro.html"
-              source="${build.docsourcelevel}">
-
-      <packageset dir="${build.filter.src.dir}"/>
-
-    </javadoc>
-
-  </target>
-
-
-  <target name="compile-ant-filter" depends="init">
+  <target name="compile-ant-filter"
+          depends="init">
 
     <mkdir dir="${build.ant.dir}"/>
 
@@ -370,15 +392,14 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="filter-src" depends="compile-ant-filter">
+  <target name="filter-src"
+          depends="compile-ant-filter">
 
     <mkdir dir="${build.filter.src.dir}"/>
 
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
-        <include name="**/*.java"/>
-        <exclude name="**/Random.java"/>
-        <exclude name="**/Unsafe.java"/>
+        <patternset refid="emulation.excludes"/>
       </fileset>
       <filterchain>
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"
@@ -416,7 +437,8 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="compile-tests" depends="jar">
+  <target name="compile-tests"
+          depends="jar">
 
     <mkdir dir="${build.testcases.dir}"/>
 
@@ -437,7 +459,8 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="run-tests" depends="compile-tests">
+  <target name="run-tests"
+          depends="compile-tests">
 
     <!-- May be overridden by user.properties -->
     <property name="testcase" value="*"/>
@@ -466,7 +489,9 @@ ant [target], where target is one of:
   </target>
 
 
-  <target name="report-tests" depends="run-tests">
+  <target name="report-tests"
+          depends="run-tests">
+
     <!-- Sets junit.report.format to frames if Xalan is present,
          otherwise sets it to noframes. -->
     <available property="junit.report.format"
@@ -486,14 +511,45 @@ ant [target], where target is one of:
     </junitreport>
 
     <fail message="Test Cases Failed" if="junit.failed"/>
+
   </target>
 
 
   <target name="check-junit">
-    <!-- FIXME: this test isn't specific enough -->
+
+    <!-- junit.framework.Protectable is in JUnit 3.8.1 but not in 3.7 -->
     <available property="junit.available"
-               classname="junit.framework.TestCase"/>
-    <fail message="Need JUnit 3.8 to run tests" unless="junit.available"/>
+               classname="junit.framework.Protectable"/>
+
+    <fail message="Need JUnit 3.8.1 in ${ant.home}${file.separator}lib to run tests"
+          unless="junit.available"/>
+
+  </target>
+
+
+
+  <!-- Anthill targets -->
+
+  <target name="anthill-build"
+          depends="jar, test, docs, dist-docs"/>
+
+  <target name="anthill-publish">
+
+    <copy todir="${deployDir}/docs/private">
+      <fileset dir="${build.javadocs.dir}"/>
+    </copy>
+
+    <copy todir="${deployDir}/docs/public">
+      <fileset dir="${dist.javadocs.dir}"/>
+    </copy>
+
+    <copy tofile="${deployDir}/index.html"
+          file="${basedir}/etc/anthill-index.html"/>
+
+    <copy todir="${deployDir}/notes">
+      <fileset dir="${basedir}/etc/notes"/>
+    </copy>
+
   </target>
 
 

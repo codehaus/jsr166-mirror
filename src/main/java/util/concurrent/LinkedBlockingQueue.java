@@ -525,6 +525,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         fullyLock();
         try {
             head.next = null;
+            head.item = null;
+            last = head;
             if (count.getAndSet(0) == capacity)
                 notFull.signalAll();
         } finally {
@@ -542,6 +544,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         try {
             first = head.next;
             head.next = null;
+            last = head;
             if (count.getAndSet(0) == capacity)
                 notFull.signalAll();
         } finally {
@@ -554,6 +557,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             p.item = null;
             ++n;
         }
+        head.item = null; // Just for GC, so OK if not within lock
         return n;
     }
         
@@ -576,6 +580,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             }
             if (n != 0) {
                 head.next = p;
+                head.item = null;
+                if (p == null)
+                    last = head;
                 if (count.getAndAdd(-n) == capacity)
                     notFull.signalAll();
             }

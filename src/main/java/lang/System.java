@@ -4,7 +4,6 @@
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
-
 package java.lang;
 
 import java.io.*;
@@ -14,6 +13,8 @@ import java.util.StringTokenizer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.AllPermission;
+import java.nio.channels.Channel;
+import java.nio.channels.spi.SelectorProvider;
 import sun.net.InetAddressCachePolicy;
 import sun.reflect.Reflection;
 import sun.security.util.SecurityConstants;
@@ -21,12 +22,27 @@ import sun.security.util.SecurityConstants;
 /**
  * The <code>System</code> class contains several useful class fields
  * and methods. It cannot be instantiated.
- * <p>
- * Among the facilities provided by the <code>System</code> class
+ *
+ * <p>Among the facilities provided by the <code>System</code> class
  * are standard input, standard output, and error output streams;
- * access to externally defined "properties"; a means of
- * loading files and libraries; and a utility method for quickly
- * copying a portion of an array.
+ * access to externally defined "properties" and "environment
+ * variables"; a means of loading files and libraries; and a utility
+ * method for quickly copying a portion of an array.
+ *
+ * <p><a name="EnvironmentVSSystemProperties"><i>System properties</i>
+ * and <i>environment variables</i> are both conceptually mappings
+ * between names and values.  Both mechanisms can be used to pass
+ * user-defined information to a Java process.  Environment variables
+ * have a more global effect, because they are visible to all
+ * descendants of the process which defines them, not just the
+ * immediate Java subprocess.  They can have subtly different
+ * semantics, such as case insensitivity, on different operating
+ * systems.  For these reasons, environment variables are more likely
+ * to have unintended side effects.  It is best to use system
+ * properties where possible.  Environment variables should be used
+ * when a global effect is desired, or when an external system
+ * interface requires an environment variable (such as
+ * <code>PATH</code>).
  *
  * @author  Arthur van Hoff
  * @version %I%, %G%
@@ -168,6 +184,36 @@ public final class System {
     public static void setErr(PrintStream err) {
 	checkIO();
 	setErr0(err);
+    }
+
+
+    /** 
+     * Returns the channel inherited from the entity that created this
+     * Java virtual machine.
+     *
+     * <p> This method returns the channel obtained by invoking the
+     * {@link java.nio.channels.spi.SelectorProvider#inheritedChannel
+     * inheritedChannel} method of the system-wide default
+     * {@link java.nio.channels.spi.SelectorProvider} object. </p>
+     *
+     * <p> In addition to the network-oriented channels described in
+     * {@link java.nio.channels.spi.SelectorProvider#inheritedChannel
+     * inheritedChannel}, this method may return other kinds of
+     * channels in the future.
+     *
+     * @return	The inherited channel, if any, otherwise <tt>null</tt>.
+     *
+     * @throws	IOException
+     *		If an I/O error occurs
+     *
+     * @throws	SecurityException
+     *		If a security manager is present and it does not
+     *		permit access to the channel.
+     *
+     * @since 1.5
+     */
+    public static Channel inheritedChannel() throws IOException {
+        return SelectorProvider.provider().inheritedChannel();
     }
 
     private static void checkIO() {
@@ -512,6 +558,9 @@ public final class System {
      * <code>getProperties</code> operation, it may choose to permit the
      * {@link #getProperty(String)} operation.
      *
+     * <p>Prefer system properties to
+     * <a href=#EnvironmentVSSystemProperties>environment variables</a>.
+     *
      * @return     the system properties
      * @exception  SecurityException  if a security manager exists and its
      *             <code>checkPropertiesAccess</code> method doesn't allow access
@@ -572,6 +621,9 @@ public final class System {
      * properties is first created and initialized in the same manner as
      * for the <code>getProperties</code> method.
      *
+     * <p>Prefer system properties to
+     * <a href=#EnvironmentVSSystemProperties>environment variables</a>.
+     *
      * @param      key   the name of the system property.
      * @return     the string value of the system property,
      *             or <code>null</code> if there is no property with that key.
@@ -605,6 +657,9 @@ public final class System {
      * If there is no current set of system properties, a set of system
      * properties is first created and initialized in the same manner as
      * for the <code>getProperties</code> method.
+     *
+     * <p>Prefer system properties to
+     * <a href=#EnvironmentVSSystemProperties>environment variables</a>.
      *
      * @param      key   the name of the system property.
      * @param      def   a default value.
@@ -708,40 +763,76 @@ public final class System {
             throw new IllegalArgumentException("key can't be empty");
         }
     }
-    
+
     /**
-     * Gets an environment variable. An environment variable is a
-     * system-dependent external variable that has a string value.
+     * Gets the value of the specified environment variable. An
+     * environment variable is a system-dependent external named
+     * value.
      *
-     * @deprecated The preferred way to extract system-dependent information
-     *             is the system properties of the
-     *             <code>java.lang.System.getProperty</code> methods and the
-     *             corresponding <code>get</code><em>TypeName</em> methods of
-     *             the <code>Boolean</code>, <code>Integer</code>, and
-     *             <code>Long</code> primitive types.  For example:
-     * <blockquote><pre>
-     *     String classPath = System.getProperty("java.class.path",".");
-     * <br>
-     *     if (Boolean.getBoolean("myapp.exper.mode"))
-     *         enableExpertCommands();
-     * </pre></blockquote>
+     * <p>If a security manager exists, its
+     * {@link SecurityManager#checkPermission checkPermission}
+     * method is called with a
+     * <code>{@link RuntimePermission}("getenv."+name)</code>
+     * permission.  This may result in a {@link SecurityException}
+     * being thrown.  If no exception is thrown the value of the
+     * variable <code>name</code> is returned.
      *
-     * @param  name of the environment variable
-     * @return the value of the variable, or <code>null</code> if the variable
-     *           is not defined.
-     * @see    java.lang.Boolean#getBoolean(java.lang.String)
-     * @see    java.lang.Integer#getInteger(java.lang.String)
-     * @see    java.lang.Integer#getInteger(java.lang.String, int)
-     * @see    java.lang.Integer#getInteger(java.lang.String, java.lang.Integer)
-     * @see    java.lang.Long#getLong(java.lang.String)
-     * @see    java.lang.Long#getLong(java.lang.String, long)
-     * @see    java.lang.Long#getLong(java.lang.String, java.lang.Long)
-     * @see    java.lang.System#getProperties()
-     * @see    java.lang.System#getProperty(java.lang.String)
-     * @see    java.lang.System#getProperty(java.lang.String, java.lang.String)
+     * <p>Consider using <a href=#EnvironmentVSSystemProperties>system
+     * properties</a> instead.
+     *
+     * @param  name the name of the environment variable
+     * @return the string value of the variable, or <code>null</code>
+     *         if the variable is not defined in the system environment
+     * @throws NullPointerException if <code>name</code> is <code>null</code>
+     * @throws SecurityException
+     *         if a security manager exists and its
+     *         {@link SecurityManager#checkPermission checkPermission}
+     *         method doesn't allow access to the environment variable
+     *         <code>name</code>
+     * @see    #getenv()
+     * @see    ProcessBuilder#environment()
      */
     public static String getenv(String name) {
-	throw new Error("getenv no longer supported, use properties and -D instead: " + name);
+	if (security != null)
+	    security.checkPermission(new RuntimePermission("getenv."+name));
+
+	return ProcessEnvironment.getenv(name);
+    }
+
+    
+    /**
+     * Returns an unmodifiable string map view of the current system environment.
+     * The environment is a system-dependent mapping from names to
+     * values which is passed from parent to child processes.
+     *
+     * <p>If a security manager exists, its
+     * {@link SecurityManager#checkPermission checkPermission}
+     * method is called with a
+     * <code>{@link RuntimePermission}("getenv.*")</code>
+     * permission.  This may result in a {@link SecurityException} being
+     * thrown.  If no exception is thrown the system environment is
+     * returned.
+     *
+     * <p>If the system does not support environment variables, an
+     * empty map is returned.
+     *
+     * <p>Consider using <a href=#EnvironmentVSSystemProperties>system
+     * properties</a> instead.
+     *
+     * @return the environment as a map of variable names to values
+     * @throws SecurityException
+     *         if a security manager exists and its
+     *         {@link SecurityManager#checkPermission checkPermission}
+     *         method doesn't allow access to the process environment
+     * @see    #getenv(String)
+     * @see    ProcessBuilder#environment()
+     * @since  1.5
+     */
+    public static java.util.Map<String,String> getenv() {
+	if (security != null)
+	    security.checkPermission(new RuntimePermission("getenv.*"));
+
+	return ProcessEnvironment.getenv();
     }
 
     /**

@@ -98,14 +98,12 @@ calling threads that compute functions returning results, via
 Futures. This is supported in part by defining java.lang.Callable, the
 argument/result analog of Runnable.
 
-<p> While the Executor framework is intended to be extensible (so
-includes for example, AbstractExecutor that simplifies construction of
-new implementations), the most commonly used Executor will be
-ThreadExecutor, which can be configured to act as all sorts of thread
-pools, background threads, etc. The class is designed to be general
-enough to suffice for the vast majority of usages, even sophisticated
-ones, yet also includes methods and functionality that simplify
-routine usage.
+<p> While the Executor framework is intended to be extensible the most
+commonly used Executor will be ThreadExecutor, which can be configured
+to act as all sorts of thread pools, background threads, etc. The
+class is designed to be general enough to suffice for the vast
+majority of usages, even sophisticated ones, yet also includes methods
+and functionality that simplify routine usage.
 
 <p>
 A few methods will also be added to the java.util.Timer to support

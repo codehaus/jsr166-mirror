@@ -490,6 +490,51 @@ public class ConcurrentHashMap extends AbstractMap implements Map, Cloneable, Se
         return null;
     }
 
+    public Object putIfAbsent(Object key, Object value) {
+        if (value == null)
+            throw new NullPointerException();
+
+        int hash = hash(key);
+        Segment seg = segments[hash & SEGMENT_MASK];
+        int segcount;
+        Entry[] tab;
+        int votes;
+
+        synchronized(seg) {
+            tab = table;
+            int index = hash & (tab.length-1);
+            Entry first = tab[index];
+
+            for (Entry e = first; e != null; e = e.next) {
+                if (e.hash == hash && eq(key, e.key)) {
+                    Object oldValue = e.value;
+                    return oldValue;
+                }
+            }
+
+            //  Add to front of list
+            Entry newEntry = new Entry(hash, key, value, first);
+            tab[index] = newEntry;
+
+            if ((segcount = ++seg.count) < threshold)
+                return null;
+
+            int bit = (1 << (hash & SEGMENT_MASK));
+            votes = votesForResize;
+            if ((votes & bit) == 0)
+                votes = votesForResize |= bit;
+        }
+
+        // Attempt resize if 1/4 segs vote,
+        // or if this seg itself reaches the overall threshold.
+        // (The latter check is just a safeguard to avoid pathological cases.)
+        if (bitcount(votes) >= CONCURRENCY_LEVEL / 4  ||
+        segcount > (threshold * CONCURRENCY_LEVEL))
+            resize(0, tab);
+
+        return value;
+    }
+
     /**
      * Gather all locks in order to call rehash, by
      * recursing within synch blocks for each segment index.

@@ -1,4 +1,4 @@
-package java.lang;
+package java.util.concurrent;
 
 /**
  * A Clock performs system timing functions at a given unit

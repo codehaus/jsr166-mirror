@@ -55,8 +55,8 @@ public class ExecutorIntercepts implements ThreadFactory {
      * cases by querying the executor.  Default implementation is to run
      * the command in the current thread unless <tt>p.isShutdown</tt>,
      * in which case to do nothing.
-     * @param p the Executor
      * @param r the runnable task requested to be executed.
+     * @param e the Executor
      * @return false if <tt>execute</tt> should be retried, else true.
      * You may alternatively throw an unchecked exception, which
      * will be propagated to the caller of <tt>execute</tt>.

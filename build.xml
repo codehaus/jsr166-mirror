@@ -70,12 +70,14 @@
   <!-- Main targets -->
 
   <target name="compile"
-          depends="init, configure-compiler"
+          depends="init, configure-compiler, prepare-src"
           description="Compiles main sources to build folder">
+
+    <property name="prepare.src.dir" value="${src.dir}"/>
 
     <mkdir dir="${build.classes.dir}"/>
 
-    <javac srcdir="${src.dir}"
+    <javac srcdir="${prepare.src.dir}"
           destdir="${build.classes.dir}"
             debug="${build.debug}"
        debuglevel="${build.debuglevel}"
@@ -510,8 +512,30 @@
     <property name="build.javac.args"
              value="${build.bootclasspath.arg} ${build.warnunchecked} ${build.novariance}"/>
 
-    <echo>javac ${build.javac.args}
-bootclasspath is ${javac.bootclasspath}</echo>
+    <echo>javac ${build.javac.args}</echo>
+    <echo>bootclasspath=${javac.bootclasspath}</echo>
+
+  </target>
+
+
+  <target name="configure-src">
+
+    <condition property="prepare.src.dir" value="${build.dir}/prepare-src">
+      <istrue value="${build.nothreads}"/>
+    </condition>
+
+  </target>
+
+  <target name="prepare-src"
+          depends="configure-src"
+          if="prepare.src.dir">
+
+    <mkdir dir="${prepare.src.dir}"/>
+    <copy todir="${prepare.src.dir}">
+      <fileset dir="${src.dir}">
+        <exclude name="java/lang/**"/>
+      </fileset>
+    </copy>
 
   </target>
 

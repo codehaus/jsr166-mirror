@@ -478,7 +478,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      * @return <tt>false</tt>
      */
-    public boolean containsAll(Collection<? extends E> c) {
+    public boolean containsAll(Collection<?> c) {
         return false;
     }
 
@@ -487,7 +487,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      * @return <tt>false</tt>
      */
-    public boolean removeAll(Collection<? extends E> c) {
+    public boolean removeAll(Collection<?> c) {
         return false;
     }
 
@@ -496,7 +496,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      * @return <tt>false</tt>
      */
-    public boolean retainAll(Collection<? extends E> c) {
+    public boolean retainAll(Collection<?> c) {
         return false;
     }
 

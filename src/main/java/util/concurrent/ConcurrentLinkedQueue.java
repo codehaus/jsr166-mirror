@@ -239,8 +239,11 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     public int size() {
         int count = 0;
         for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
-            if (p.getItem() != null)
-                ++count; 
+            if (p.getItem() != null) {
+                // Collections.size() spec says to max out
+                if (++count == Integer.MAX_VALUE)
+                    break;
+            }
         }
         return count;
     }

@@ -146,13 +146,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             long lastTime = System.nanoTime();
             while (n-- > 0) {
                 Future<T> f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
-                if (f == null) {
-                    if (nanos <= 0)
-                        throw new TimeoutException();
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
-                }
+                if (f == null)
+                    throw new TimeoutException();
                 try {
                     return f.get();
                 } catch(ExecutionException eex) {
@@ -160,6 +155,9 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 } catch(RuntimeException rex) {
                     re = rex;
                 }
+                long now = System.nanoTime();
+                nanos -= now - lastTime;
+                lastTime = now;
             }    
             if (ee != null)
                 throw ee;
@@ -229,13 +227,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             long lastTime = System.nanoTime();
             while (n-- > 0) {
                 Future<T> f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
-                if (f == null) {
-                    if (nanos <= 0)
-                        throw new TimeoutException();
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
-                }
+                if (f == null)
+                    throw new TimeoutException();
                 try {
                     return f.get();
                 } catch(ExecutionException eex) {
@@ -243,6 +236,9 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 } catch(RuntimeException rex) {
                     re = rex;
                 }
+                long now = System.nanoTime();
+                nanos -= now - lastTime;
+                lastTime = now;
             }    
             if (ee != null)
                 throw ee;
@@ -307,14 +303,14 @@ public abstract class AbstractExecutorService implements ExecutorService {
                         return futures;
                     try { 
                         f.get(nanos, TimeUnit.NANOSECONDS); 
-                        long now = System.nanoTime();
-                        nanos -= now - lastTime;
-                        lastTime = now;
                     } catch(CancellationException ignore) {
                     } catch(ExecutionException ignore) {
                     } catch(TimeoutException toe) {
                         return futures;
                     }
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;
+                    lastTime = now;
                 }
             }
             done = true;
@@ -377,14 +373,14 @@ public abstract class AbstractExecutorService implements ExecutorService {
                         return futures; 
                     try { 
                         f.get(nanos, TimeUnit.NANOSECONDS); 
-                        long now = System.nanoTime();
-                        nanos -= now - lastTime;
-                        lastTime = now;
                     } catch(CancellationException ignore) {
                     } catch(ExecutionException ignore) {
                     } catch(TimeoutException toe) {
                         return futures;
                     }
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;
+                    lastTime = now;
                 }
             }
             done = true;

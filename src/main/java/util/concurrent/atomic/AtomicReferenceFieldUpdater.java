@@ -9,11 +9,12 @@ import sun.misc.Unsafe;
 import java.lang.reflect.*;
 
 /**
- * An AtomicReferenceFieldUpdater is a reflection-based utility that
- * enables atomic updates to designated reference fields of designated
- * classes.  It is designed for use in atomic data structures in which
- * several reference fields of the same node are independently subject
- * to atomic updates. For example, a tree node might be declared as
+ * A reflection-based utility that enables atomic updates to
+ * designated <tt>volatile</tt> reference fields of designated
+ * classes.  This class is designed for use in atomic data structures
+ * in which several reference fields of the same node are
+ * independently subject to atomic updates. For example, a tree node
+ * might be declared as
  *
  * <pre>
  * class Node {

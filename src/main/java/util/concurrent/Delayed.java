@@ -8,9 +8,8 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A mix-in style interface for representing actions, events, etc that
- * should be executed, accessed or acted upon only after a given
- * delay. 
+ * A mix-in style interface for marking objects that should be
+ * acted upon after a given delay.
  *
  * <p>An implementation of this interface must define a
  * <tt>compareTo</tt> method that provides an ordering consistent with

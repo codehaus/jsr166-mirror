@@ -8,9 +8,10 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * An AtomicIntegerArray maintains a <tt>int</tt> array in which
- * elements may be updated atomically, and are accessed using
- * <tt>volatile</tt> semantics.
+ * An <tt>int</tt> array in which elements may be updated atomically.
+ * See the package
+ * specification for description of the properties of atomic
+ * variables.
  * @since 1.5
  * @author Doug Lea
  */

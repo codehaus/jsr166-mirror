@@ -16,15 +16,11 @@ descriptions of the main components. See also the <tt>locks</tt> and
 
 {@link java.util.concurrent.Executor} is a simple standardized
 interface for defining custom thread-like subsystems, including thread
-pools, asynchronous IO, and lightweight task frameworks.  Depending on which
-concrete Executor class is being used, tasks may execute in a newly
-created thread, an existing task-execution thread, or the thread
+pools, asynchronous IO, and lightweight task frameworks.  Depending on
+which concrete Executor class is being used, tasks may execute in a
+newly created thread, an existing task-execution thread, or the thread
 calling <tt>execute()</tt>, and may execute sequentially or
-concurrently.  Executors also standardize ways of calling threads that
-compute functions returning results, via a {@link
-java.util.concurrent.Future}. This is supported in part by defining
-interface {@link java.util.concurrent.Callable}, the argument/result
-analog of Runnable.
+concurrently.  
  
 <p> {@link java.util.concurrent.ExecutorService} provides a more
 complete framework for executing Runnables.  An ExecutorService
@@ -33,16 +29,20 @@ shutdown.  The two primary implementations of ExecutorService are
 {@link java.util.concurrent.ThreadPoolExecutor}, a tunable and
 flexible thread pool and {@link
 java.util.concurrent.ScheduledExecutor}, which adds support for
-delayed and periodic task execution.  These, and other Executors can
-be used in conjunction with a {@link
-java.util.concurrent.CancellableTask} or {@link
-java.util.concurrent.FutureTask} to asynchronously start a potentially
-long-running computation and query to determine if its execution has
-completed, or cancel it.
+delayed and periodic task execution.  The {@link
+java.util.concurrent.Executors} class provides factory methods for the
+most common kinds and configurations of Executors, as well as a few
+utility methods for using them.
 
-<p> The {@link java.util.concurrent.Executors} class provides factory
-methods for the most common kinds and configurations of Executors, as
-well as a few utility methods for using them.
+<p> Executors may be used with threads that compute functions
+returning results. A {@link java.util.concurrent.Future} returns the
+results of a {@link java.util.concurrent.Callable}, the result-bearing
+analog of {@link java.lang.Runnable}. Instances of concrete class
+{@link java.util.concurrent.FutureTask} may be submitted to Executors
+to asynchronously start a potentially long-running computation, query
+to determine if its execution has completed, or cancel it.  The {@link
+java.util.concurrent.CancellableTask} class provides similar control
+for actions that do not bear results.
 
 <h2>Queues</h2>
 
@@ -65,16 +65,14 @@ tasking, and related concurrent designs.
 
 The {@link java.util.concurrent.TimeUnit} class provides multiple
 granularities (including nanoseconds) for specifying and controlling
-time-out based operations. Nearly all other classes in the package
-contain operations based on time-outs in addition to indefinite waits.
-In all cases that time-outs are used, the time-out specifies the
-minimum time that the method should wait before indicating that it
-timed-out. The virtual machine should make a &quot;best effort&quot;
-to detect time-outs as soon as possible after they occur. Regardless
-of the efforts of the virtual machine, the normal scheduling
-mechanisms, and the need to re-acquire locks in many cases, can lead
-to an indefinite amount of time elapsing between a time-out being
-detected and a thread actually executing again after that time-out.
+time-out based operations. Most classes in the package contain
+operations based on time-outs in addition to indefinite waits.  In all
+cases that time-outs are used, the time-out specifies the minimum time
+that the method should wait before indicating that it
+timed-out. Implementations make a &quot;best effort&quot; to detect
+time-outs as soon as possible after they occur. However, an indefinite
+amount of time may elapse between a time-out being detected and a
+thread actually executing again after that time-out.
 
 <h2>Synchronizers</h2>
 
@@ -104,12 +102,13 @@ synchronized. But {@link java.util.concurrent.ConcurrentHashMap} is
 "concurrent".  A concurrent collection is thread-safe, but not
 governed by a single exclusion lock. In the particular case of
 ConcurrentHashMap, it safely permits any number of concurrent reads as
-well as a tunable number of concurrent writes.  There may still be a
-role for "synchronized" classes in some multithreaded programs -- they
-can sometimes be useful when you need to prevent all access to a
-collection via a single lock, at the expense of much poorer
-scalability. In all other cases, "concurrent" versions are normally
-preferable.
+well as a tunable number of concurrent writes.  "Synchronized" classes
+can be useful when you need to prevent all access to a collection via
+a single lock, at the expense of poorer scalability. In other cases in
+which multiple threads are expected to access a common collection,
+"concurrent" versions are normally preferable. And unsynchronized
+collections are preferable when either collections are unshared, or
+are accessible only when holding other locks.
 
 <p> Most concurrent Collection implementations (including most Queues)
 also differ from the usual java.util conventions in that their Iterators

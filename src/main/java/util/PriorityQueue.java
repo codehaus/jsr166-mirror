@@ -177,7 +177,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     public PriorityQueue(Collection<? extends E> c) {
         initializeArray(c);
         if (c instanceof SortedSet) {
-            SortedSet<? extends E> s = (SortedSet<? extends E>) c;
+            // @fixme double-cast workaround for compiler
+            SortedSet<? extends E> s = (SortedSet<? extends E>) (SortedSet)c;
             comparator = (Comparator<? super E>)s.comparator();
             fillFromSorted(s);
         } else if (c instanceof PriorityQueue) {

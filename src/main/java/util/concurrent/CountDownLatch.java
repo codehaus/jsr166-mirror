@@ -129,19 +129,26 @@ public class CountDownLatch {
      */
     private static final class Sync extends AbstractQueuedSynchronizer {
         Sync(int count) {
-            set(count); 
+            setState(count); 
         }
         
-        public int acquireSharedState(boolean isQueued, int acquires) {
-            return get() == 0? 1 : -1;
+        int getCount() {
+            return getState();
+        }
+
+        public int tryAcquireSharedState(boolean isQueued, int acquires) {
+            return getState() == 0? 1 : -1;
         }
         
         public boolean releaseSharedState(int releases) {
             // Decrement count; signal when transition to zero
-            int c;
-            while ( (c = get()) > 0 && !compareAndSet(c, c-1))
-                ;
-            return c == 1;
+            for (;;) {
+                int c = getState();
+                if (c == 0)
+                    return false;
+                if (compareAndSetState(c, c-1)) 
+                    return c == 1;
+            }
         }
     }
 
@@ -255,6 +262,6 @@ public class CountDownLatch {
      * @return the current count.
      */
     public long getCount() {
-        return sync.get();
+        return sync.getCount();
     }
 }

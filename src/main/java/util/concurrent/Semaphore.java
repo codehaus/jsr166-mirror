@@ -131,26 +131,39 @@ public class Semaphore implements java.io.Serializable {
         final boolean fair;
         Sync(int permits, boolean fair) {
             this.fair = fair;
-            set(permits);
+            setState(permits);
         }
         
-        public int acquireSharedState(boolean isQueued, int acquires) {
+        public int getPermits() {
+            return getState();
+        }
+
+        public int tryAcquireSharedState(boolean isQueued, int acquires) {
             if (!isQueued && fair && hasQueuedThreads())
                 return -1;
             for (;;) {
-                int available = get();
+                int available = getState();
                 int remaining = available - acquires;
                 if (remaining < 0 ||
-                    compareAndSet(available, remaining))
+                    compareAndSetState(available, remaining))
                     return remaining;
             }
         }
         
         public boolean releaseSharedState(int releases) {
             for (;;) {
-                int p = get();
-                if (compareAndSet(p, p + releases)) 
+                int p = getState();
+                if (compareAndSetState(p, p + releases)) 
                     return true;
+            }
+        }
+
+        void reducePermits(int reductions) {
+            for (;;) {
+                int current = getState();
+                int next = current - reductions;
+                if (compareAndSetState(current, next))
+                    return;
             }
         }
     }
@@ -248,7 +261,7 @@ public class Semaphore implements java.io.Serializable {
      * otherwise.
      */
     public boolean tryAcquire() {
-        return sync.acquireSharedState(true, 1) >= 0;
+        return sync.tryAcquireSharedState(true, 1) >= 0;
     }
 
     /**
@@ -415,7 +428,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.acquireSharedState(true, permits) >= 0;
+        return sync.tryAcquireSharedState(true, permits) >= 0;
     }
 
     /**
@@ -510,7 +523,7 @@ public class Semaphore implements java.io.Serializable {
      * @return the number of permits available in this semaphore.
      */
     public int availablePermits() {
-        return sync.get();
+        return sync.getPermits();
     }
 
     /**
@@ -525,7 +538,7 @@ public class Semaphore implements java.io.Serializable {
      */
     protected void reducePermits(int reduction) {
 	if (reduction < 0) throw new IllegalArgumentException();
-        sync.getAndAdd(-reduction);
+        sync.reducePermits(reduction);
     }
 
     /**

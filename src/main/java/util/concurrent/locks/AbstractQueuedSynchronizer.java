@@ -8,20 +8,22 @@ package java.util.concurrent.locks;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import sun.misc.Unsafe;
 
 /**
  * Provides a framework for implementing blocking locks and related
- * synchronizers (semaphores, events, etc) that rely on 
- * first-in-first-out (FIFO) wait queues.
- * This class is designed to be a useful basis for most kinds of
- * synchronizers that rely on a single atomic <tt>int</tt> value to
- * represent state. Subclasses must define the protected methods that change
- * this state, and which define what that state means in terms of this
- * object being acquired or released.  Given these, the other public methods 
- * in this class carry out all queuing and blocking mechanics using an internal
- * specialized FIFO queue. Subclasses can maintain other
- * state fields, but only the {@link AtomicInteger} state underlying this
- * class is tracked with respect to synchronization.
+ * synchronizers (semaphores, events, etc) that rely on
+ * first-in-first-out (FIFO) wait queues.  This class is designed to
+ * be a useful basis for most kinds of synchronizers that rely on a
+ * single atomic <tt>int</tt> value to represent state. Subclasses
+ * must define the protected methods that change this state, and which
+ * define what that state means in terms of this object being acquired
+ * or released.  Given these, the other public methods in this class
+ * carry out all queuing and blocking mechanics using an internal
+ * specialized FIFO queue. Subclasses can maintain other state fields,
+ * but only the <tt>int</tt> value manipulated using methods {@link
+ * #getState}, {@link #setState} and {@link #compareAndSetState} is
+ * tracked with respect to synchronization.
  *
  * <p>Subclasses should be defined as non-public internal helper
  * classes that are used to implement the synchronization properties of 
@@ -33,17 +35,17 @@ import java.util.concurrent.atomic.*;
  * synchronizers to implement their public methods. Note that this
  * class does not directly provide non-blocking &quot;trylock&quot; forms, 
  * since the subclass methods for querying and modifying the state can be 
- * used for these purposes - and can be made public by the subclass when 
+ * used for these purposes, and can be made public by the subclass when 
  * needed.
  *
  * <p>This class supports either or both <em>exclusive</em> and
  * <em>shared</em> modes. When acquired in exclusive mode, attempted
  * acquires by other threads cannot succeed. Shared mode acquires may
  * (but need not) succeed by multiple threads. This class does not
- * &quot;understand&quot; these differences except in the mechanical sense that
- * when a shared mode acquire succeeds, the next waiting thread (if
- * one exists) must also determine whether it can acquire as
- * well. Subclasses that support only exclusive or only shared
+ * &quot;understand&quot; these differences except in the mechanical
+ * sense that when a shared mode acquire succeeds, the next waiting
+ * thread (if one exists) must also determine whether it can acquire
+ * as well. Subclasses that support only exclusive or only shared
  * modes need not redefine the methods for the unused mode.
  *
  * <p>This class defines a nested {@link Condition} class that can be
@@ -73,9 +75,9 @@ import java.util.concurrent.atomic.*;
  * Each by default throws {@link UnsupportedOperationException}:
  *
  * <ul>
- * <li> {@link #acquireExclusiveState}
+ * <li> {@link #tryAcquireExclusiveState}
  * <li> {@link #releaseExclusiveState}
- * <li> {@link #acquireSharedState}
+ * <li> {@link #tryAcquireSharedState}
  * <li> {@link #releaseSharedState}
  * <li> {@link #checkConditionAccess}
  *</ul>
@@ -84,7 +86,7 @@ import java.util.concurrent.atomic.*;
  * using this class. All other methods are declared <tt>final</tt>
  * because they cannot be independently varied.
  *
- * <h3>Usage Example</h3>
+ * <h3>Usage Examples</h3>
  *
  * <p>Here is a non-reentrant mutual exclusion
  * lock class that uses the value zero to represent the unlocked state,
@@ -95,33 +97,33 @@ import java.util.concurrent.atomic.*;
  *
  *    // Our internal helper class
  *    private static class Sync extends AbstractQueuedSynchronizer {
+ *       public boolean isLocked() { return getState() == 1; }
  *
  *       // acquire the lock if state is zero
- *       public int acquireExclusiveState(boolean isQueued, int acquires) {
+ *       public boolean tryAcquireExclusiveState(boolean isQueued, int acquires) {
  *         assert acquires == 1; // Otherwise unused
- *         return compareAndSet(0, 1)? 0 : -1;
+ *         return compareAndSetState(0, 1);
  *       }
  *
  *       // release the lock by setting state to zero
- *       public boolean releaseExclusiveState(int releases) {
+ *       protected boolean releaseExclusiveState(int releases) {
  *         assert releases == 1; // Otherwise unused
- *         set(0);
+ *         setState(0);
  *         return true;
  *       }
  *       
  *       // Allow condition use only when locked
- *       public void checkConditionAccess(Thread thread, boolean waiting) {
- *         if (get() == 0) throw new IllegalMonitorStateException();
+ *       protected void checkConditionAccess(Thread thread, boolean waiting) {
+ *         if (!isLocked()) throw new IllegalMonitorStateException();
  *       }
  *
  *       // provide a Condition for our lock
  *       Condition newCondition() { return new ConditionObject(); }
  *
- *
  *       // deserialize properly
  *       private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
  *         s.defaultReadObject();
- *         set(0); // reset to unlocked state
+ *         setState(0); // reset to unlocked state
  *       }
  *    }
  *
@@ -130,7 +132,7 @@ import java.util.concurrent.atomic.*;
  *
  *    private final Sync sync = new Sync();
  *    public boolean tryLock() { 
- *       return sync.acquireExclusiveState(false, 1) >= 0;
+ *       return sync.tryAcquireExclusiveState(false, 1);
  *    }
  *    public void lock() { 
  *       sync.acquireExclusiveUninterruptibly(1);
@@ -143,17 +145,44 @@ import java.util.concurrent.atomic.*;
  *    }
  *    public void unlock() { sync.releaseExclusive(1); }
  *    public Condition newCondition() { return sync.newCondition(); }
- *    public boolean isLocked() { return sync.get() != 0; }
+ *    public boolean isLocked() { return sync.isLockedt(); }
  *    public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
  * }
  * </pre>
  *
+ * <p> Here is a latch class that is like {@link CountDownLatch}
+ * except that it only requires a single <tt>signal</tt> to
+ * fire. Because a latch is non-exclusive, it uses the <tt>shared</tt>
+ * acquire and release methods.
+ *
+ * <pre>
+ * class BooleanLatch {
+ *    private final Sync sync = new Sync();
+ *    private static class Sync extends AbstractQueuedSynchronizer {
+ *      boolean isSignalled() { return getState() != 0; }
+ *
+ *      protected int tryAcquireSharedState(boolean isQueued, int ignore) {
+ *         return isSignalled()? 1 : -1;
+ *      }
+ *        
+ *      protected boolean releaseSharedState(int ignore) {
+ *         setState(1);
+ *         return true;
+ *      }
+ *    }
+ *
+ *    public void signal() { sync.releaseShared(1); }
+ *    public void await() throws InterruptedException {
+ *        sync.acquireSharedInterruptibly(1);
+ *    }
+ *    public boolean isSignalled() { return sync.isSignalled(); }
+ * }
+ * </pre>
  * @since 1.5
  * @author Doug Lea
  * 
  */
-public abstract class AbstractQueuedSynchronizer extends AtomicInteger 
-    implements java.io.Serializable {
+public abstract class AbstractQueuedSynchronizer implements java.io.Serializable {
     /*
      *  General description and notes.
      *
@@ -295,11 +324,11 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * Node class for threads waiting for acquires or conditions.  
      */
     static final class Node {
-        /** status value to indicate thread has cancelled */
+        /** waitStatus value to indicate thread has cancelled */
         static final int CANCELLED =  1;
-        /** status value to indicate thread needs unparking */
+        /** waitStatus value to indicate thread needs unparking */
         static final int SIGNAL    = -1;
-        /** status value to indicate thread is waiting on condition */
+        /** waitStatus value to indicate thread is waiting on condition */
         static final int CONDITION = -2;
 
         /**
@@ -325,14 +354,13 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          *
          * The field is initialized to 0 for normal sync nodes, and
          * CONDITION for condition nodes.  It is modified only using
-         * CAS, except for transitions to CANCELLED, which are
-         * unconditionally, "finally" assigned.
+         * CAS.
          */
-        volatile int status;
+        volatile int waitStatus;
 
         /**
          * Link to predecessor node that current node/thread relies on
-         * for checking status. Assigned during enqueing, and nulled
+         * for checking waitStatus. Assigned during enqueing, and nulled
          * out (for sake of GC) only upon dequeuing.  Also, upon
          * cancellation of a predecessor, we short-circuit while
          * finding a non-cancelled one, which will always exist
@@ -387,35 +415,22 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
             this.shared = shared;
         }
 
-        Node(Thread thread, boolean shared, int status) { 
+        Node(Thread thread, boolean shared, int waitStatus) { 
             this.thread = thread; 
             this.shared = shared;
-            this.status = status;
-        }
-
-        /**
-         * Updater to provide CAS for status field
-         */
-        private static final 
-            AtomicIntegerFieldUpdater<Node> statusUpdater = 
-            AtomicIntegerFieldUpdater.<Node>newUpdater 
-            (Node.class, "status");
-
-        /**
-         * CAS the status field
-         * @param cmp expected value
-         * @param val the new value
-         * @return true if successful
-         */
-        final boolean compareAndSetStatus(int cmp, int val) {
-            return statusUpdater.compareAndSet(this, cmp, val);
+            this.waitStatus = waitStatus;
         }
     }
+
+    /**
+     * The synchronization state.
+     */
+    private volatile int state;
 
     /** 
      * Head of the wait queue, lazily initialized.  Except for
      * initialization, it is modified only by a thread upon acquiring.
-     * If head exists, its node status is guaranteed not to be
+     * If head exists, its node waitStatus is guaranteed not to be
      * CANCELLED.
      */
     private transient volatile Node head; 
@@ -427,20 +442,75 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
     private transient volatile Node tail; 
 
     /**
-     * Updater to provide CAS for tail field
+     * Setup to support compareAndSet. We need to natively implement
+     * this here: For the sake of permitting future enhancements, we
+     * cannot explicitly subclass AtomicInteger, which would be
+     * efficient and useful otherwise. So, as the lesser of evils, we
+     * directly implement. And while we are at it, we do the same for
+     * other CASable fields.
      */
-    private static final 
-        AtomicReferenceFieldUpdater<AbstractQueuedSynchronizer, Node> tailUpdater = 
-        AtomicReferenceFieldUpdater.<AbstractQueuedSynchronizer, Node>newUpdater 
-        (AbstractQueuedSynchronizer.class, Node.class, "tail");
+    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final long stateOffset;
+    private static final long headOffset;
+    private static final long tailOffset;
+    private static final long waitStatusOffset;
+
+    static {
+      try {
+        stateOffset = unsafe.objectFieldOffset
+            (AbstractQueuedSynchronizer.class.getDeclaredField("state"));
+        headOffset = unsafe.objectFieldOffset
+            (AbstractQueuedSynchronizer.class.getDeclaredField("head"));
+        tailOffset = unsafe.objectFieldOffset
+            (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+        waitStatusOffset = unsafe.objectFieldOffset
+            (Node.class.getDeclaredField("waitStatus"));
+
+      } catch(Exception ex) { throw new Error(ex); }
+    }
+
+    private boolean compareAndSetHead(Node expect, Node update) {
+        return unsafe.compareAndSwapObject(this, headOffset, expect, update);
+    }
+    
+    private boolean compareAndSetTail(Node expect, Node update) {
+        return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+    }
+
+    private boolean compareAndSetWaitStatus(Node node, int expect, int update) {
+        return unsafe.compareAndSwapInt(node, waitStatusOffset, expect, update);
+    }
 
     /**
-     * Updater to provide CAS for head field
+     * Atomically set synchronization state to the given updated value
+     * if the current state value <tt>==</tt> the expected value.
+     * This operation has memory semantics of a <tt>volatile</tt> read and write.
+     * @param expect the expected value
+     * @param update the new value
+     * @return true if successful. False return indicates that
+     * the actual value was not equal to the expected value.
      */
-    private static final 
-        AtomicReferenceFieldUpdater<AbstractQueuedSynchronizer, Node> headUpdater = 
-        AtomicReferenceFieldUpdater.<AbstractQueuedSynchronizer, Node>newUpdater 
-        (AbstractQueuedSynchronizer.class,  Node.class, "head");
+    protected final boolean compareAndSetState(int expect, int update) {
+        return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
+    }
+
+    /**
+     * Returns the current value of synchronization state.
+     * This operation has memory semantics of a <tt>volatile</tt> read.
+     * @return current state value
+     */
+    protected final int getState() {
+        return state;
+    }
+
+    /**
+     * Set the value of synchronization state
+     * This operation has memory semantics of a <tt>volatile</tt> read.
+     * @param newState the new state value
+     */
+    protected final void setState(int newState) {
+        state = newState;
+    }
 
     /*
      * Mode words are used internally to handle combinations of
@@ -463,15 +533,17 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      */
     protected AbstractQueuedSynchronizer() { }
 
+
     /**
      * Attempt to acquire in exclusive mode. This method should query
-     * if the state of the object permits it to be acquired in the exclusive
-     * mode, and if so to acquire it if possible.
-     * <p>This method is always invoked by the thread performing acquire.
-     * If this method reports failure, the acquire method may queue the thread 
-     * until it is signalled by a release from some other thread.
-     * <p>The default implementation throws 
-     * {@link UnsupportedOperationException}
+     * if the state of the object permits it to be acquired in the
+     * exclusive mode, and if so to acquire it if possible.
+     *
+     * <p>This method is always invoked by the thread performing
+     * acquire.  If this method reports failure, the acquire method
+     * may queue the thread until it is signalled by a release from
+     * some other thread.  <p>The default implementation throws {@link
+     * UnsupportedOperationException}
      *
      * @param isQueued if <tt>true</tt> the current thread is in the queue 
      * when making this call; if <tt>false</tt> the current thread is not
@@ -484,17 +556,15 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * or is the value saved on entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return a negative value on failure, zero on success. (These
-     * unusual return value conventions match those needed for
-     * shared modes.) Upon success, this object has been acquired the
-     * requested number of times.
+     * @return true if successful. Upon success, this object has been
+     * acquired the requested number of times.
      * @throws IllegalMonitorStateException if acquiring would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
-    protected int acquireExclusiveState(boolean isQueued, int acquires) {
+    protected boolean tryAcquireExclusiveState(boolean isQueued, int acquires) {
         throw new UnsupportedOperationException();
     }
 
@@ -553,7 +623,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * correctly.
      * @throws UnsupportedOperationException if shared mode not supported
      */
-    protected int acquireSharedState(boolean isQueued, int acquires) {
+    protected int tryAcquireSharedState(boolean isQueued, int acquires) {
         throw new UnsupportedOperationException();
     }
 
@@ -602,40 +672,40 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
 
     /**
      * Acquire in exclusive mode, ignoring interrupts.  Implemented by
-     * first invoking {@link #acquireExclusiveState} with
+     * first invoking {@link #tryAcquireExclusiveState} with
      * <tt>isQueued</tt> false, returning on success.  Otherwise the
      * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #acquireExclusiveState} until success.  With an
+     * invoking {@link #tryAcquireExclusiveState} until success.  With an
      * argument of 1, this can be used to implement method {@link
      * Lock#lock}
      * @param acquires the number of times to acquire.
-     * This value is conveyed to {@link #acquireExclusiveState} but
+     * This value is conveyed to {@link #tryAcquireExclusiveState} but
      * otherwise uninterpreted and can represent anything
      * you like.
      */
     public final void acquireExclusiveUninterruptibly(int acquires) {
-        if (acquireExclusiveState(false, acquires) < 0)
+        if (!tryAcquireExclusiveState(false, acquires))
             doAcquire(false, acquires, UNINTERRUPTED, 0L);
     }
 
     /**
      * Acquire in exclusive mode, aborting if interrupted.
      * Implemented by first checking interrupt status, then invoking
-     * {@link #acquireExclusiveState} with <tt>isQueued</tt> false,
+     * {@link #tryAcquireExclusiveState} with <tt>isQueued</tt> false,
      * returning on success.  Otherwise the thread is queued, possibly
      * repeatedly blocking and unblocking, invoking {@link
-     * #acquireExclusiveState} until success or the thread is
+     * #tryAcquireExclusiveState} until success or the thread is
      * interrupted.  With an argument of 1, this can be used to
      * implement method {@link Lock#lockInterruptibly}
      * @param acquires the number of times to acquire.
-     * This value is conveyed to {@link #acquireExclusiveState} but
+     * This value is conveyed to {@link #tryAcquireExclusiveState} but
      * otherwise uninterpreted and can represent anything
      * you like.
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireExclusiveInterruptibly(int acquires) throws InterruptedException {
         if (Thread.interrupted() ||
-            (acquireExclusiveState(false, acquires) < 0 &&
+            (!tryAcquireExclusiveState(false, acquires) &&
              doAcquire(false, acquires, INTERRUPT, 0L) != UNINTERRUPTED))
             throw new InterruptedException();
    }
@@ -643,15 +713,15 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
     /**
      * Acquire in exclusive mode, aborting if interrupted or the given
      * timeout elapses.  Implemented by first checking interrupt
-     * status, then invoking {@link #acquireExclusiveState} with
+     * status, then invoking {@link #tryAcquireExclusiveState} with
      * <tt>isQueued</tt> false, returning on success.  Otherwise, the
      * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #acquireExclusiveState} until success or the
+     * invoking {@link #tryAcquireExclusiveState} until success or the
      * thread is interrupted or the timeout elapses.  With an argument
      * of 1, this can be used to implement method {@link
      * Lock#lockInterruptibly}
      * @param acquires the number of times to acquire.
-     * This value is conveyed to {@link #acquireExclusiveState} but
+     * This value is conveyed to {@link #tryAcquireExclusiveState} but
      * otherwise uninterpreted and can represent anything
      * you like.
      * @param nanosTimeout the maximum number of nanoseconds to wait
@@ -660,13 +730,13 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      */
    public final boolean acquireExclusiveTimed(int acquires, long nanosTimeout) throws InterruptedException {
        if (!Thread.interrupted()) {
-            if (acquireExclusiveState(false, acquires) >= 0)
+            if (tryAcquireExclusiveState(false, acquires))
                 return true;
            int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, 
                              nanosTimeout);
            if (s == UNINTERRUPTED)
                return true;
-           if (s != INTERRUPT)
+           if (s == TIMEOUT)
                return false;
        }
        throw new InterruptedException();
@@ -683,46 +753,49 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * you like.
      */
     public final void releaseExclusive(int releases) {
-        if (releaseExclusiveState(releases)) 
-            signalFirst();
+        if (releaseExclusiveState(releases)) {
+            Node h = head;
+            if (h != null && h.waitStatus < 0)
+                unparkSuccessor(h);
+        }
     }
 
     /**
      * Acquire in shared mode, ignoring interrupts.  Implemented by
-     * first invoking {@link #acquireSharedState} with
+     * first invoking {@link #tryAcquireSharedState} with
      * <tt>isQueued</tt> false, returning on success.  Otherwise the
      * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #acquireSharedState} until success.  With an
+     * invoking {@link #tryAcquireSharedState} until success.  With an
      * argument of 1, this can be used to implement method {@link
      * Lock#lock}
      * @param acquires the number of times to acquire.
-     * This value is conveyed to {@link #acquireSharedState} but
+     * This value is conveyed to {@link #tryAcquireSharedState} but
      * otherwise uninterpreted and can represent anything
      * you like.
      */
     public final void acquireSharedUninterruptibly(int acquires) {
-        if (acquireSharedState(false, acquires) < 0)
+        if (tryAcquireSharedState(false, acquires) < 0)
             doAcquire(true, acquires, UNINTERRUPTED, 0L);
     }
 
     /**
      * Acquire in shared mode, aborting if interrupted.  Implemented
      * by first checking interrupt status, then invoking {@link
-     * #acquireSharedState} with <tt>isQueued</tt> false, returning on
+     * #tryAcquireSharedState} with <tt>isQueued</tt> false, returning on
      * success.  Otherwise the thread is queued, possibly repeatedly
-     * blocking and unblocking, invoking {@link #acquireSharedState}
+     * blocking and unblocking, invoking {@link #tryAcquireSharedState}
      * until success or the thread is interrupted.  With an argument
      * of 1, this can be used to implement method {@link
      * Lock#lockInterruptibly}
      * @param acquires the number of times to acquire.
-     * This value is conveyed to {@link #acquireSharedState} but
+     * This value is conveyed to {@link #tryAcquireSharedState} but
      * otherwise uninterpreted and can represent anything
      * you like.
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireSharedInterruptibly(int acquires) throws InterruptedException {
         if (Thread.interrupted() ||
-            (acquireSharedState(false, acquires) < 0 &&
+            (tryAcquireSharedState(false, acquires) < 0 &&
              doAcquire(true, acquires, INTERRUPT, 0L) != UNINTERRUPTED))
             throw new InterruptedException();
    }
@@ -730,15 +803,15 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
     /**
      * Acquire in shared mode, aborting if interrupted or the given
      * timeout elapses.  Implemented by first checking interrupt
-     * status, then invoking {@link #acquireSharedState} with
+     * status, then invoking {@link #tryAcquireSharedState} with
      * <tt>isQueued</tt> false, returning on success.  Otherwise, the
      * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #acquireSharedState} until success or the
+     * invoking {@link #tryAcquireSharedState} until success or the
      * thread is interrupted or the timeout elapses.  With an argument
      * of 1, this can be used to implement method {@link
      * Lock#lockInterruptibly}
      * @param acquires the number of times to acquire.
-     * This value is conveyed to {@link #acquireSharedState} but
+     * This value is conveyed to {@link #tryAcquireSharedState} but
      * otherwise uninterpreted and can represent anything
      * you like.
      * @param nanosTimeout the maximum number of nanoseconds to wait
@@ -747,13 +820,13 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      */
    public final boolean acquireSharedTimed(int acquires, long nanosTimeout) throws InterruptedException {
        if (!Thread.interrupted()) {
-           if (acquireSharedState(false, acquires) >= 0)
+           if (tryAcquireSharedState(false, acquires) >= 0)
                return true;
            int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, 
                              nanosTimeout);
            if (s == UNINTERRUPTED)
                return true;
-           if (s != INTERRUPT)
+           if (s == TIMEOUT)
                return false;
        }
        throw new InterruptedException();
@@ -770,8 +843,11 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * you like.
      */
     public final void releaseShared(int releases) {
-        if (releaseSharedState(releases)) 
-            signalFirst();
+        if (releaseSharedState(releases)) {
+            Node h = head;
+            if (h != null && h.waitStatus < 0)
+                unparkSuccessor(h);
+        }
     }
 
     // Queuing utilities
@@ -783,12 +859,13 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
         Node t = tail;
         if (t == null) {         
             Node h = new Node(null, false);
-            // This will rarely loop; tight spin is OK even if it does
             while ((t = tail) == null) {     
-                if (headUpdater.compareAndSet(this, null, h)) {
+                if (compareAndSetHead(null, h)) {
                     tail = h;
-                    return;
+                    break;
                 }
+                else
+                    Thread.yield();
             }
         }
     }
@@ -799,13 +876,13 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      */
     private void enq(Node node) {
         Node t = tail;
-        if (t == null) {         // Must initialize first
+        if (t == null) {
             initializeQueue();
             t = tail;
         }
         for (;;) {
             node.prev = t;      // Prev field must be valid before/upon CAS
-            if (tailUpdater.compareAndSet(this, t, node)) {
+            if (compareAndSetTail(t, node)) {
                 t.next = node;  // Next field assignment lags CAS
                 return;
             }
@@ -819,7 +896,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      */
     private void unparkSuccessor(Node node) {
         /*
-         * Reset status before unparking. This improves performance
+         * Reset waitStatus before unparking. This improves performance
          * when called from a release method to enable next thread: A
          * given head-node can be in effect across multiple releases
          * that acquired by barging. When they do so, and later
@@ -829,10 +906,10 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          * relatively expensive. We don't bother to loop on failed CAS
          * here though, since the reset is just for performance.  Note
          * that the CAS will fail when this method is called from
-         * cancellation code since status will be set to CANCELLED.
+         * cancellation code since waitStatus will be set to CANCELLED.
          * This doesn't occur frequently enough to bother avoiding.
          */
-        node.compareAndSetStatus(Node.SIGNAL, 0);
+        compareAndSetWaitStatus(node, Node.SIGNAL, 0);
 
         /*
          * Successor is normally just the next node.  But if cancelled
@@ -840,7 +917,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          * the actual non-cancelled successor.
          */
         Node s = node.next;
-        if ((s != null && s.status != Node.CANCELLED) ||
+        if ((s != null && s.waitStatus != Node.CANCELLED) ||
             (s = findSuccessorFromTail(node)) != null)
             LockSupport.unpark(s.thread);
     }
@@ -858,19 +935,10 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
         for (;;) {
             if (p == null || p == node)
                 return s;
-            if (p.status != Node.CANCELLED) 
+            if (p.waitStatus != Node.CANCELLED) 
                 s = p; 
             p = p.prev;
         }
-    }
-
-    /**
-     * Wake up the first waiting thread on queue
-     */
-    private void signalFirst() {
-        Node h = head;
-        if (h != null && h.status < 0)
-            unparkSuccessor(h);
     }
 
     /**
@@ -878,8 +946,8 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * @param node the node
      */
     private void cancelAcquire(Node node) {
+        node.waitStatus = Node.CANCELLED;
         node.thread = null;   
-        node.status = Node.CANCELLED;
         unparkSuccessor(node);
     }
 
@@ -899,66 +967,72 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
         enq(node);
 
         /*
-         * Repeatedly try to set status if first in queue; block
-         * (park) on failure.  If we are the first thread in queue, we
-         * must try to acquire, and we must not try if we are not
-         * first. We can park only if we are sure that some other
-         * thread will (eventually) release and signal us.  Along the
-         * way, make sure that the predecessor hasn't been
-         * cancelled. If it has, relink to its predecessor.  When
-         * about to park, first try to set status enabling holder
-         * to signal, and then recheck one final time before actually
-         * blocking. This also has effect of retrying failed status
-         * CAS due to contention.
+         * Repeatedly try to acquire if first in queue; block (park)
+         * on failure.  If we are the first thread in queue, we must
+         * try to acquire, and we must not try if we are not first. We
+         * can park only if we are sure that some other thread will
+         * (eventually) release and signal us.  Along the way, make
+         * sure that the predecessor hasn't been cancelled. If it has,
+         * relink to its predecessor.  When about to park, first try
+         * to set waitStatus enabling holder to signal, and then
+         * recheck one final time before actually blocking. This also
+         * has effect of retrying failed waitStatus CAS due to
+         * contention.
          */ 
 
         for (;;) {
-            Node p = node.prev; 
+            Node p = node.prev;
             if (p == head) {
-                int acq;
+                boolean acquired = false;
+                boolean propagate = false;
+                
                 try {
-                    if (shared) 
-                        acq = acquireSharedState(true, acquires);
+                    if (shared) {
+                        int a = tryAcquireSharedState(true, acquires);
+                        if (acquired = (a >= 0))
+                            propagate = a > 0;
+                    }
                     else
-                        acq = acquireExclusiveState(true, acquires);
+                        acquired = tryAcquireExclusiveState(true, acquires);
+                    
                 } catch (RuntimeException ex) {
                     cancelAcquire(node);
                     throw ex;
                 }
-                if (acq >= 0) {
+                
+                if (acquired) {
                     head = node;
                     p.next = null; 
                     node.thread = null;
                     node.prev = null; 
-                    if (acq > 0 && node.status < 0) {
+
+                    if (propagate && node.waitStatus < 0) {
                         Node s = node.next; 
                         if (s == null || s.shared)
                             unparkSuccessor(node);
                     }
+
                     if ((mode & REINTERRUPT) != 0)
                         current.interrupt();
                     return UNINTERRUPTED;
                 }
             }
-
-            int status = p.status;
-            if (status == 0) 
-                p.compareAndSetStatus(0, Node.SIGNAL);
-            else if (status == Node.CANCELLED) 
+            
+            int waitStatus = p.waitStatus;
+            if (waitStatus == 0) 
+                compareAndSetWaitStatus(p, 0, Node.SIGNAL);
+            else if (waitStatus == Node.CANCELLED) 
                 node.prev = p.prev;
             else {
                 if ((mode & TIMEOUT) != 0) {
-                    if (nanosTimeout > 0) {
-                        long now = System.nanoTime();
-                        nanosTimeout -= now - lastTime;
-                        lastTime = now;
-                    }
+                    long now = System.nanoTime();
+                    nanosTimeout -= now - lastTime;
+                    lastTime = now;
                     if (nanosTimeout <= 0) {
                         cancelAcquire(node);
                         return TIMEOUT;
                     }
-                    else
-                        LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(nanosTimeout);
                 }
                 else
                     LockSupport.park();
@@ -968,8 +1042,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
                         cancelAcquire(node);
                         return INTERRUPT;
                     }
-                    else
-                        mode |= REINTERRUPT;
+                    mode |= REINTERRUPT;
                 }
             }
         }
@@ -990,26 +1063,23 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
         for (;;) {
             Node p = node.prev; 
             if (p == head) {
-                int acq;
                 try {
-                    acq = acquireExclusiveState(true, savedState);
+                    if (tryAcquireExclusiveState(true, savedState)) {
+                        head = node;
+                        p.next = null; 
+                        node.thread = null;
+                        node.prev = null; 
+                        return interrupted;
+                    }
                 } catch (RuntimeException ex) {
                     cancelAcquire(node);
                     throw ex;
                 }
-                if (acq >= 0) {
-                    head = node;
-                    p.next = null; 
-                    node.thread = null;
-                    node.prev = null; 
-                    return interrupted;
-                }
             }
-            
-            int status = p.status;
-            if (status == 0) 
-                p.compareAndSetStatus(0, Node.SIGNAL);
-            else if (status == Node.CANCELLED) 
+            int waitStatus = p.waitStatus;
+            if (waitStatus == 0) 
+                compareAndSetWaitStatus(p, 0, Node.SIGNAL);
+            else if (waitStatus == Node.CANCELLED) 
                 node.prev = p.prev;
             else { 
                 LockSupport.park();
@@ -1021,12 +1091,12 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
 
     /**
      * Fully release: invoke releaseExclusive with current value of
-     * state.get(). Called only by Condition methods on entry to
+     * getState(). Called only by Condition methods on entry to
      * await.
      * @return the state before unlocking
      */
     final int fullyReleaseExclusive() {
-        int c = get();
+        int c = getState();
         releaseExclusive(c);
         return c;
     }
@@ -1111,7 +1181,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * @return true if is reacquiring
      */
     final boolean isOnSyncQueue(Node node) {
-        if (node.status == Node.CONDITION || node.prev == null)
+        if (node.waitStatus == Node.CONDITION || node.prev == null)
             return false;
         // If node has successor, it must be on queue
         if (node.next != null) 
@@ -1143,22 +1213,22 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      */
     final boolean transferForSignal(Node node) {
         /*
-         * If cannot change status, the node has been cancelled.
+         * If cannot change waitStatus, the node has been cancelled.
          */
-        if (!node.compareAndSetStatus(Node.CONDITION, 0))
+        if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
             return false;
 
         /*
-         * Splice onto queue and try to set status of predecessor to
+         * Splice onto queue and try to set waitStatus of predecessor to
          * indicate that thread is (probably) waiting. If cancelled or
-         * attempt to set status fails, wake up to resync (in which
-         * case the status can be transiently/harmlessly wrong).
+         * attempt to set waitStatus fails, wake up to resync (in which
+         * case the waitStatus can be transiently/harmlessly wrong).
          */
         enq(node);
         Node p = node.prev;
-        int c = p.status;
+        int c = p.waitStatus;
         if (c == Node.CANCELLED || 
-            !p.compareAndSetStatus(c, Node.SIGNAL))
+            !compareAndSetWaitStatus(p, c, Node.SIGNAL))
             LockSupport.unpark(node.thread);
 
         return true;
@@ -1173,7 +1243,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
      * @return true if cancelled before the node was signalled.
      */
     final boolean transferAfterCancelledWait(Thread current, Node node) {
-        if (node.compareAndSetStatus(Node.CONDITION, 0)) {
+        if (compareAndSetWaitStatus(node, Node.CONDITION, 0)) {
             enq(node);
             return true;
         }
@@ -1369,7 +1439,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          * Implements uninterruptible condition wait.
          * <ol>
          * <li> Invoke {@link #checkConditionAccess} 
-         * <li> Save lock state returned by {@link #get} 
+         * <li> Save lock state returned by {@link #getState} 
          * <li> Release by invoking {@link #releaseExclusive} with 
          *      saved state as argument
          * <li> Block until signalled
@@ -1400,7 +1470,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          * <ol>
          * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #get} 
+         * <li> Save lock state returned by {@link #getState} 
          * <li> Release by invoking {@link #releaseExclusive} with 
          *      saved state as argument
          * <li> Block until signalled or interrupted
@@ -1447,7 +1517,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          * <ol>
          * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #get} 
+         * <li> Save lock state returned by {@link #getState} 
          * <li> Release by invoking {@link #releaseExclusive} with 
          *      saved state as argument
          * <li> Block until signalled, interrupted, or timed out
@@ -1503,7 +1573,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          * <ol>
          * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #get} 
+         * <li> Save lock state returned by {@link #getState} 
          * <li> Release by invoking {@link #releaseExclusive} with 
          *      saved state as argument
          * <li> Block until signalled, interrupted, or timed out
@@ -1560,7 +1630,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
          * <ol>
          * <li> Invoke {@link #checkConditionAccess} 
          * <li> If current thread is interrupted, throw InterruptedException
-         * <li> Save lock state returned by {@link #get} 
+         * <li> Save lock state returned by {@link #getState} 
          * <li> Release by invoking {@link #releaseExclusive} with 
          *      saved state as argument
          * <li> Block until signalled, interrupted, or timed out
@@ -1638,7 +1708,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
         final boolean hasWaiters() {
             checkConditionAccess(Thread.currentThread(), false);
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.status == Node.CONDITION)
+                if (w.waitStatus == Node.CONDITION)
                     return true;
             }
             return false;
@@ -1656,7 +1726,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
             checkConditionAccess(Thread.currentThread(), false);
             int n = 0;
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.status == Node.CONDITION)
+                if (w.waitStatus == Node.CONDITION)
                     ++n;
             }
             return n;
@@ -1674,7 +1744,7 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
             checkConditionAccess(Thread.currentThread(), false);
             ArrayList<Thread> list = new ArrayList<Thread>();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.status == Node.CONDITION) {
+                if (w.waitStatus == Node.CONDITION) {
                     Thread t = w.thread;
                     if (t != null)
                         list.add(t);
@@ -1684,3 +1754,5 @@ public abstract class AbstractQueuedSynchronizer extends AtomicInteger
         }
     }
 }
+
+        

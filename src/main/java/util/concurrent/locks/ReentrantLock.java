@@ -84,53 +84,76 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     private final static class Sync  extends AbstractQueuedSynchronizer {
         /** true if barging disabled */
-        final boolean fair;
-        /** Current (exclusive) owner thread */
+        private final boolean fair;
+        /** Current owner thread */
         private transient Thread owner;
 
-        public Sync(boolean fair) { this.fair = fair; }
-
-        public int acquireExclusiveState(boolean isQueued, int acquires) { 
-            final Thread current = Thread.currentThread();
-            int c = get();
-            if ((!isQueued && fair && c == 0 && hasQueuedThreads()) ||
-                (c != 0 && current != owner))
-                return -1;
-            if (!compareAndSet(c, c + acquires))
-                return -1;
-            owner = current;
-            return 0;
+        public Sync(boolean fair) {
+            this.fair = fair;
         }
 
-        public boolean releaseExclusiveState(int releases) {
+        // Implement AQS state methods
+        public boolean tryAcquireExclusiveState(boolean isQueued, int acquires) { 
             final Thread current = Thread.currentThread();
-            boolean free = true;
-            int c = get() - releases;
-            if (owner != current || c < 0)
+            int c = getState();
+            if (c == 0) {
+                if ((isQueued || !fair || !hasQueuedThreads()) &&
+                    compareAndSetState(0, acquires)) {
+                    owner = current;
+                    return true;
+                }
+            }
+            else if (current == owner) {
+                setState(c + acquires);
+                return true;
+            }
+            return false;
+        }
+
+        protected boolean releaseExclusiveState(int releases) {
+            int c = getState() - releases;
+            if (Thread.currentThread() != owner)
                 throw new IllegalMonitorStateException();
-            if (c == 0)
+            boolean free = false;
+            if (c == 0) {
+                free = true;
                 owner = null;
-            else
-                free = false;
-            set(c);
+            }
+            setState(c);
             return free;
         }
 
-        public void checkConditionAccess(Thread thread, boolean waiting) {
-            if (get() == 0 || owner != thread) 
+        protected void checkConditionAccess(Thread thread, boolean waiting) {
+            if (getState() == 0 || owner != thread) 
                 throw new IllegalMonitorStateException();
         }
 
         ConditionObject newCondition() {
             return new ConditionObject();
         }
-        
+
+        /**
+         * For main lock method, try fastpath before full lock
+         */
+        final void lock() {
+            if (!hasQueuedThreads() && compareAndSetState(0, 1)) // fastpath
+                owner = Thread.currentThread();
+            else
+                acquireExclusiveUninterruptibly(1);
+        }
+
+        // Methods relayed from outer class
+
+        boolean isFair() {
+            return fair;
+        }
+
         Thread getOwner() {
-            return (get() != 0)? owner : null;
+            return (getState() != 0)? owner : null;
         }
         
         int getHoldCount() {
-            int c = get();
+            int c = getState();
             return (owner == Thread.currentThread())? c : 0;
         }
         
@@ -139,7 +162,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
         
         boolean isLocked() {
-            return get() != 0;
+            return getState() != 0;
         }
 
         /**
@@ -149,7 +172,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {
             s.defaultReadObject();
-            set(0); // reset to unlocked state
+            setState(0); // reset to unlocked state
         }
     }
 
@@ -185,7 +208,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * at which time the lock hold count is set to one. 
      */
     public void lock() {
-        sync.acquireExclusiveUninterruptibly(1);
+        sync.lock();
     }
 
     /**
@@ -267,7 +290,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <tt>false</tt> otherwise.
      */
     public boolean tryLock() {
-        return sync.acquireExclusiveState(true, 1) >= 0;
+        return sync.tryAcquireExclusiveState(true, 1);
     }
 
     /**
@@ -503,7 +526,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @return true if this lock has fairness set true.
      */
     public final boolean isFair() {
-        return sync.fair;
+        return sync.isFair();
     }
 
     /**

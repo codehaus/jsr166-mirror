@@ -92,14 +92,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Implements AQS base acquire to succeed if not in WAITING state
          */
-        public int acquireExclusiveState(boolean b, int ignore) {
-            return get() == WAITING ? -1 : 0;
+        public boolean tryAcquireExclusiveState(boolean b, int ignore) {
+            return getState() != WAITING;
         }
 
         /**
          * Implements AQS base release to always signal.
          * Status is changed in ack or cancel methods before calling,
-         * which is needed to ensure we win cancel race.
+         * which is needed to handle cancellation races.
          */
         public boolean releaseExclusiveState(int ignore) {
             return true; 
@@ -109,7 +109,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * Try to acknowledge; fail if not waiting
          */
         private boolean ack() { 
-            if (!compareAndSet(WAITING, ACKED)) 
+            if (!compareAndSetState(WAITING, ACKED)) 
                 return false;
             releaseExclusive(0); 
             return true;
@@ -119,7 +119,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * Try to cancel; fail if not waiting
          */
         private boolean cancel() { 
-            if (!compareAndSet(WAITING, CANCELLED)) 
+            if (!compareAndSetState(WAITING, CANCELLED)) 
                 return false;
             releaseExclusive(0); 
             return true;

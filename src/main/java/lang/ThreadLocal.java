@@ -398,7 +398,9 @@ public class ThreadLocal<T> {
             int len = tab.length;
             int i = key.threadLocalHashCode & (len-1);
 
-            for (Entry<T> e = (Entry<T>) tab[i]; e != null; e = (Entry<T>) tab[i = nextIndex(i, len)]) {
+            for (Entry<T> e = (Entry<T>) tab[i];
+		 e != null;
+		 e = (Entry<T>) tab[i = nextIndex(i, len)]) {
                 ThreadLocal<T> k = e.get();
 
                 if (k == key) {
@@ -427,7 +429,9 @@ public class ThreadLocal<T> {
             Entry[] tab = table;
             int len = tab.length;
             int i = key.threadLocalHashCode & (len-1);
-            for (Entry<T> e = (Entry<T>) tab[i]; e != null; e = (Entry<T>) tab[i = nextIndex(i, len)]) {
+            for (Entry<T> e = (Entry<T>) tab[i];
+		 e != null;
+		 e = (Entry<T>) tab[i = nextIndex(i, len)]) {
                 if (e.get() == key) {
                     e.clear();
                     expungeStaleEntry(i);
@@ -469,14 +473,16 @@ public class ThreadLocal<T> {
             // incremental rehashing due to garbage collector freeing
             // up refs in bunches (i.e., whenever the collector runs).
             int slotToExpunge = staleSlot;
-            for (int i = prevIndex(staleSlot, len); (e = (Entry<T>) tab[i]) != null;
+            for (int i = prevIndex(staleSlot, len);
+		 (e = (Entry<T>) tab[i]) != null;
                  i = prevIndex(i, len)) 
                 if (e.get() == null) 
                     slotToExpunge = i;
 
             // Find either the key or trailing null slot of run, whichever
             // occurs first
-            for (int i = nextIndex(staleSlot, len); (e = (Entry<T>) tab[i]) != null;
+            for (int i = nextIndex(staleSlot, len);
+		 (e = (Entry<T>) tab[i]) != null;
                  i = nextIndex(i, len)) {
                 ThreadLocal<T> k = e.get();
 
@@ -544,7 +550,8 @@ public class ThreadLocal<T> {
             // Rehash until we encounter null
             Entry<T> e;
             int i;
-            for (i = nextIndex(staleSlot, len); (e = (Entry<T>) tab[i]) != null;
+            for (i = nextIndex(staleSlot, len);
+		 (e = (Entry<T>) tab[i]) != null;
                  i = nextIndex(i, len)) {
                 ThreadLocal<T> k = e.get();
                 if (k == null) {

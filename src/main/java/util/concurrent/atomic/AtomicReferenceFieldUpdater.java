@@ -59,7 +59,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
-        // Currently rely on standard instrinsics implmentation
+        // Currently rely on standard instrinsics implementation
         return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass, 
                                                         vclass, 
                                                         fieldName);
@@ -170,7 +170,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         }
 
         public boolean weakCompareAndSet(T obj, V expect, V update) {
-            // same implmentation as strong form for now
+            // same implementation as strong form for now
             if (!tclass.isInstance(obj) ||
                 (update != null && !vclass.isInstance(update)))
                 throw new ClassCastException();

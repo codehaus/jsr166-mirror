@@ -249,7 +249,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         /* Specialized implementations of map methods */
 
-        V get(K key, int hash) {
+        V get(Object key, int hash) {
             if (count != 0) { // read-volatile
                 HashEntry[] tab = table;
                 int index = hash & (tab.length - 1);
@@ -332,7 +332,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
              * offset. We eliminate unnecessary node creation by catching
              * cases where old nodes can be reused because their next
              * fields won't change. Statistically, at the default
-             * threshhold, only about one-sixth of them need cloning when
+             * threshold, only about one-sixth of them need cloning when
              * a table doubles. The nodes they replace will be garbage
              * collectable as soon as they are no longer referenced by any
              * reader thread that may be in the midst of traversing table
@@ -408,7 +408,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     return null;
 
                 // All entries following removed node can stay in list, but
-                // all preceeding ones need to be cloned.
+                // all preceding ones need to be cloned.
                 HashEntry<K,V> newFirst = e.next;
                 for (HashEntry<K,V> p = first; p != e; p = p.next)
                     newFirst = new HashEntry<K,V>(p.hash, p.key,
@@ -642,7 +642,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     public V get(Object key) {
         int hash = hash(key); // throws NullPointerException if key null
-        return segmentFor(hash).get((K) key, hash);
+        return segmentFor(hash).get(key, hash);
     }
 
     /**

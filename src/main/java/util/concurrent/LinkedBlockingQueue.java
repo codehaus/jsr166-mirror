@@ -521,8 +521,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
         // Transfer the elements outside of locks
         int n = 0;
-        for (Node p = first; p != null; p = p.next) {
-            c.add((E)p.item);
+        for (Node<E> p = first; p != null; p = p.next) {
+            c.add(p.item);
             p.item = null;
             ++n;
         }
@@ -539,9 +539,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         fullyLock();
         try {
             int n = 0;
-            Node p = head.next;
+            Node<E> p = head.next;
             while (p != null && n < maxElements) {
-                c.add((E)p.item);
+                c.add(p.item);
                 p.item = null;
                 p = p.next;
                 ++n;

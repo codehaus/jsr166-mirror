@@ -76,7 +76,7 @@ import sun.misc.Unsafe;
 public class LockSupport {
     private LockSupport() {} // Cannot be instantiated.
 
-    // Hotspot implmentation via intrinsics API
+    // Hotspot implementation via intrinsics API
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
 
     /**

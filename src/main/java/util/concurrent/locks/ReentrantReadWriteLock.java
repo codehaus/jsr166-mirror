@@ -195,9 +195,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     static final int UNINTERRUPTED =  0;
     /** As arg, allow interrupt; as result, was interrupted */ 
     static final int INTERRUPT     =  2;
-    /** As arg, allow timeouts; as reasult, did time out */
+    /** As arg, allow timeouts; as result, did time out */
     static final int TIMEOUT       =  4;
-    /** As arg, reset interrupt staus upon return */
+    /** As arg, reset interrupt status upon return */
     static final int REINTERRUPT   =  8;
 
     /**
@@ -456,7 +456,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * Main locking code.
      * @param mode mode representing r/w, interrupt, timeout control
-     * @param nanos timout time
+     * @param nanos timeout time
      * @return UNINTERRUPTED on success, INTERRUPT on interrupt,
      * TIMEOUT on timeout
      */
@@ -793,7 +793,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Transfer a node from a condition queue onto lock queue. 
      * Return true if successful.
      * @param node the node
-     * @return true if succesfully transferred (else the node was
+     * @return true if successfully transferred (else the node was
      * cancelled before signal).
      */
     final boolean transferForSignal(Node node) {
@@ -835,7 +835,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         else {
             /*
              * If we lost out to a signal(), then we can't proceed
-             * until it finishes its enq().  Cancelling during an an
+             * until it finishes its enq().  Cancelling during an
              * incomplete transfer is both rare and transient, so just
              * spin.
              */
@@ -968,7 +968,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * waiter (if one exists) may be one that had been waiting at
          * the point of the lost signal/cancel race (or not, in which
          * case the wakeup is spurious). But no other thread could
-         * have have already been waiting if the first one wasn't, so
+         * have already been waiting if the first one wasn't, so
          * a signal((), as opposed to a signalAll(), suffices.
          *
          * This is done only when the cancelling thread has reacquired
@@ -1082,7 +1082,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          *
          * </ul>
          *
-         * <p>In all cases, before this method can return the current
+         * <p>In all cases, before this method can return, the current
          * thread must re-acquire the lock associated with this
          * condition. When the thread returns it is
          * <em>guaranteed</em> to hold this lock.

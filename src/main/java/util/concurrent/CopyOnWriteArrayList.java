@@ -530,7 +530,7 @@ public class CopyOnWriteArrayList<E>
         int len = elementData.length;
         Iterator e = c.iterator();
         while (e.hasNext())
-            if (indexOf((E) e.next(), elementData, len) < 0)
+            if (indexOf(e.next(), elementData, len) < 0)
                 return false;
 
         return true;
@@ -618,9 +618,9 @@ public class CopyOnWriteArrayList<E>
 
         E[] temp = (E[]) new Object[numNew];
         int added = 0;
-        Iterator e = c.iterator();
+        Iterator<? extends E> e = c.iterator();
         while (e.hasNext()) {
-            E element = (E) e.next();
+            E element = e.next();
             if (indexOf(element, elementData, len) < 0) {
                 if (indexOf(element, temp, added) < 0) {
                     temp[added++] = element;
@@ -660,9 +660,9 @@ public class CopyOnWriteArrayList<E>
         int len = array.length;
         E[] newArray = (E[]) new Object[len+numNew];
         System.arraycopy(array, 0, newArray, 0, len);
-        Iterator e = c.iterator();
+        Iterator<? extends E> e = c.iterator();
         for (int i=0; i<numNew; i++)
-            newArray[len++] = (E) e.next();
+            newArray[len++] = e.next();
         array = newArray;
 
         return true;
@@ -696,9 +696,9 @@ public class CopyOnWriteArrayList<E>
         int numMoved = len - index;
         if (numMoved > 0)
             System.arraycopy(array, index, newArray, index + numNew, numMoved);
-        Iterator e = c.iterator();
+        Iterator<? extends E> e = c.iterator();
         for (int i=0; i<numNew; i++)
-            newArray[index++] = (E) e.next();
+            newArray[index++] = e.next();
         array = newArray;
 
         return true;
@@ -997,7 +997,7 @@ public class CopyOnWriteArrayList<E>
           base operations invoked by those defined in AbstractList,
           all is well.  While inefficient, this is not worth
           improving.  The kinds of list operations inherited from
-          AbstractList are are already so slow on COW sublists that
+          AbstractList are already so slow on COW sublists that
           adding a bit more space/time doesn't seem even noticeable.
          */
 

@@ -417,7 +417,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     
     /**
      * Creates and executes a periodic action that becomes enabled first
-     * after the given initial delay, and and subsequently with the
+     * after the given initial delay, and subsequently with the
      * given delay between the termination of one execution and the
      * commencement of the next. 
      * The task will only terminate via cancellation.
@@ -592,7 +592,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             return super.remove(task);
 
         // The task might actually have been wrapped as a ScheduledCancellable
-        // in execute(), in which case we need to maually traverse
+        // in execute(), in which case we need to manually traverse
         // looking for it.
 
         ScheduledCancellable wrap = null;

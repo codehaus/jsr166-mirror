@@ -123,7 +123,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *    wait queue is FIFO, but newly entering threads can barge
      *    ahead and grab lock before woken waiters, so acquires
      *    are not strictly FIFO, and transfer is not
-     *    deterministically fair. It is probablistically fair in
+     *    deterministically fair. It is probabilistically fair in
      *    the sense that earlier queued threads are allowed to
      *    recontend before later queued threads, and each
      *    recontention has an unbiased chance to succeed against
@@ -284,7 +284,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         /**
          * Link to the successor node that the current node/thread
-         * unparks upon lock release. Assigned once during enquing,
+         * unparks upon lock release. Assigned once during enqueuing,
          * and nulled out (for sake of GC) when no longer needed.
          * Upon cancellation, we do NOT adjust this field, but simply
          * traverse through next's until we hit a non-cancelled node,
@@ -327,7 +327,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /** 
      * Head of the wait queue, lazily initialized.  Except for
-     * initialisation, it is modified only by a thread upon acquiring
+     * initialization, it is modified only by a thread upon acquiring
      * the lock. If head exists, its node status is guaranteed not to
      * be CANCELLED.
      */
@@ -1066,7 +1066,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         else {
             /*
              * If we lost out to a signal(), then we can't proceed
-             * until it finishes its enq().  Cancelling during an an
+             * until it finishes its enq().  Cancelling during an
              * incomplete transfer is both rare and transient, so just
              * spin.
              */
@@ -1204,7 +1204,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * waiter (if one exists) may be one that had been waiting at
          * the point of the lost signal/cancel race (or not, in which
          * case the wakeup is spurious). But no other thread could
-         * have have already been waiting if the first one wasn't, so
+         * have already been waiting if the first one wasn't, so
          * a signal((), as opposed to a signalAll(), suffices.
          *
          * This is done only when the cancelling thread has reacquired

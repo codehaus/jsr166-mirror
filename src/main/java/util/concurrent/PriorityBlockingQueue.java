@@ -388,7 +388,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             /*
              * No sync -- we rely on underlying hasNext to be
              * stateless, in which case we can return true by mistake
-             * only when next() willl subsequently throw
+             * only when next() will subsequently throw
              * ConcurrentModificationException.
              */
             return iter.hasNext();

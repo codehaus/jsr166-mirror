@@ -246,7 +246,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     private final HashSet<Worker> workers = new HashSet<Worker>();
 
     /**
-     * Timeout in nanosecods for idle threads waiting for work.
+     * Timeout in nanoseconds for idle threads waiting for work.
      * Threads use this timeout only when there are more than
      * corePoolSize present. Otherwise they wait forever for new work.
      */
@@ -310,7 +310,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     private long completedTaskCount;
 
     /**
-     * The default rejectect execution handler
+     * The default rejected execution handler
      */
     private static final RejectedExecutionHandler defaultHandler =
         new AbortPolicy();

@@ -61,7 +61,11 @@ java.util.concurrent.SynchronousQueue}, {@link
 java.util.concurrent.PriorityBlockingQueue}, and {@link
 java.util.concurrent.DelayQueue}. The different classes cover the most
 common usage contexts for producer-consumer, messaging, parallel
-tasking, and related concurrent designs.
+tasking, and related concurrent designs. The {@link
+java.util.concurrent.BlockingDeque} interface extends
+<tt>BlockingQueue</tt> to support both FIFO and LIFO (stack-based)
+operations. Class {@link java.util.concurrent.LinkedBlockingDeque}
+provides an implementation.
 
 
 <h2>Timing</h2>
@@ -91,11 +95,21 @@ in several pipeline designs.
 
 <h2>Concurrent Collections</h2>
 
-Besides Queues, this package supplies a few Collection implementations
-designed for use in multithreaded contexts: {@link
-java.util.concurrent.ConcurrentHashMap}, {@link
-java.util.concurrent.CopyOnWriteArrayList}, and {@link
-java.util.concurrent.CopyOnWriteArraySet}.
+Besides Queues, this package supplies Collection implementations
+designed for use in multithreaded contexts:
+{@link java.util.concurrent.ConcurrentHashMap},
+{@link java.util.concurrent.ConcurrentSkipListMap},
+{@link java.util.concurrent.ConcurrentSkipListSet},
+{@link java.util.concurrent.CopyOnWriteArrayList}, and
+{@link java.util.concurrent.CopyOnWriteArraySet}.
+When many threads are expected to access a given collection,
+a <tt>ConcurrentHashMap</tt> is normally preferable to
+a synchronized <tt>HashMap</tt>, and a
+<tt>ConcurrentSkipListMap</tt> is normally preferable
+to a synchronized <tt>TreeMap</tt>. A
+<tt>CopyOnWriteArrayList</tt> is preferable to
+a synchronized <tt>ArrayList</tt> when the expected number of reads
+and traversals greatly outnumber the number of updates to a list.
 
 <p>The "Concurrent" prefix used with some classes in this package is a
 shorthand indicating several differences from similar "synchronized"

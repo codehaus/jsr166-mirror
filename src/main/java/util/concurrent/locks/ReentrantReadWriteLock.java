@@ -969,6 +969,21 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
+     * Queries whether the given thread is waiting to acquire this
+     * lock. Note that because cancellations may occur at any time, a
+     * <tt>true</tt> return does not guarantee that this thread
+     * will ever acquire.  This method is designed primarily for use
+     * in monitoring of the system state.
+     *
+     * @param thread the thread
+     * @return true if the given thread is queued waiting for this lock.
+     * @throws NullPointerException if thread is null
+     */
+    public final boolean hasQueuedThread(Thread thread) { 
+        return sync.isQueued(thread);
+    }
+
+    /**
      * Returns an estimate of the number of threads waiting to
      * acquire.  The value is only an estimate because the number of
      * threads may change dynamically while this method traverses

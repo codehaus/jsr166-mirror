@@ -89,15 +89,28 @@ public class SyntaxTest extends TestCase {
 
         int total = argTotal(1, 2, 3, 4);
         assertEquals("wrong total", 10, total);
+
+        total = totalAll(new int[] { 1, 2 }, new int[] { 3, 4 }, new int[] { 5 });
+        assertEquals("wrong totalAll", 15, total);
     }
 
-    private int argCount (int[] args ...) {
+    private int argCount (Integer[] args ...) {
         return args.length;
     }
 
-    private int argTotal (int[] args ...) {
+    private int argTotal (Integer[] args ...) {
         int total = 0;
-        for (int i : args) total += i;
+        for (Integer i : args) total += i.intValue();
+        return total;
+    }
+
+    private int totalAll (int[][] args ...) {
+        int total = 0;
+        for (int[] ia : args) {
+            for (int i : ia) {
+                total += i;
+            }
+        }
         return total;
     }
 

@@ -13,12 +13,15 @@ import sun.misc.Unsafe;
  * description of the properties of atomic variables. An
  * <tt>AtomicInteger</tt> is used in applications such as atomically
  * incremented counters, and cannot be used as a replacement for an
- * {@link java.lang.Integer}.
+ * {@link java.lang.Integer}. However, this class does extend
+ * <tt>Number</tt> to allow uniform access by tools and utilities that
+ * deal with numerically-based classes.
+ * 
  *
  * @since 1.5
  * @author Doug Lea
 */
-public class AtomicInteger implements java.io.Serializable { 
+public class AtomicInteger extends Number implements java.io.Serializable { 
     private static final long serialVersionUID = 6214790243416807050L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
@@ -197,4 +200,22 @@ public class AtomicInteger implements java.io.Serializable {
     public String toString() {
         return Integer.toString(get());
     }
+
+
+    public int intValue() {
+	return get();
+    }
+
+    public long longValue() {
+	return (long)get();
+    }
+
+    public float floatValue() {
+	return (float)get();
+    }
+
+    public double doubleValue() {
+	return (double)get();
+    }
+
 }

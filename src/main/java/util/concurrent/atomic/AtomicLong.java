@@ -8,17 +8,19 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * A <tt>long</tt> value that may be updated atomically.
- * See the
+ * A <tt>long</tt> value that may be updated atomically.  See the
  * {@link java.util.concurrent.atomic} package specification for
  * description of the properties of atomic variables. An
  * <tt>AtomicLong</tt> is used in applications such as atomically
- * incremented counters, and cannot be used as a replacement for a
- * {@link java.lang.Long}.
+ * incremented sequence numbers, and cannot be used as a replacement
+ * for a {@link java.lang.Long}. However, this class does extend
+ * <tt>Number</tt> to allow uniform access by tools and utilities that
+ * deal with numerically-based classes.
+ *
  * @since 1.5
  * @author Doug Lea
  */
-public class AtomicLong implements java.io.Serializable { 
+public class AtomicLong extends Number implements java.io.Serializable { 
     private static final long serialVersionUID = 1927816293512124184L;
 
     // setup to use Unsafe.compareAndSwapLong for updates
@@ -194,6 +196,23 @@ public class AtomicLong implements java.io.Serializable {
      */
     public String toString() {
         return Long.toString(get());
+    }
+
+
+    public int intValue() {
+	return (int)get();
+    }
+
+    public long longValue() {
+	return (long)get();
+    }
+
+    public float floatValue() {
+	return (float)get();
+    }
+
+    public double doubleValue() {
+	return (double)get();
     }
   
 }

@@ -112,6 +112,7 @@
 
 
   <target name="clean-docs">
+    <delete dir="${build.filter.src.dir}"/>
     <delete dir="${build.javadocs.dir}"/>
   </target>
 

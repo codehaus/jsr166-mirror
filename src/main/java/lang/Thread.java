@@ -185,8 +185,8 @@ class Thread implements Runnable {
     }
 
     /* The object in which this thread is blocked in an interruptible I/O
-     * operation, if any.  The blocker's interrupt method() should be invoked
-     * before setting this thread's interrupt status.
+     * operation, if any.  The blocker's interrupt method should be invoked
+     * after setting this thread's interrupt status.
      */
     private volatile Interruptible blocker;
     private Object blockerLock = new Object();
@@ -711,8 +711,8 @@ class Thread implements Runnable {
      * @see        java.lang.Thread#stop()
      * @see        SecurityManager#checkAccess(Thread)
      * @see        SecurityManager#checkPermission
-     * @deprecated This method is inherently unsafe.  See {@link #stop}
-     *        (with no arguments) for details.  An additional danger of this
+     * @deprecated This method is inherently unsafe.  See {@link #stop()}
+     *        for details.  An additional danger of this
      *        method is that it may be used to generate exceptions that the
      *        target thread is unprepared to handle (including checked
      *        exceptions that the thread could not possibly throw, were it
@@ -778,8 +778,8 @@ class Thread implements Runnable {
 	synchronized (blockerLock) {
 	    Interruptible b = blocker;
 	    if (b != null) {
-		b.interrupt();
 		interrupt0();		// Just to set the interrupt flag
+		b.interrupt();
 		return;
 	    }
 	}

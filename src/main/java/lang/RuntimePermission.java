@@ -265,6 +265,19 @@ import java.util.StringTokenizer;
  *   of a thread</td>
  * </tr>
  *
+ * <tr>
+ *   <td>preferences</td>
+ *   <td>Represents the permission required to get access to the
+ *   java.util.prefs.Preferences implementations user or system root
+ *   which in turn allows retrieval or update operations within the
+ *   Preferences persistent backing store.) </td>
+ *   <td>This permission allows the user to read from or write to the
+ *   preferences backing store if the user running the code has 
+ *   sufficient OS privileges to read/write to that backing store.
+ *   The actual backing store may reside within a traditional filesystem
+ *   directory or within a registry depending on the platform OS</td>
+ * </tr>
+
  * </table>
  *
  * @see java.security.BasicPermission

@@ -953,10 +953,13 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *     <code>uncaughtException</code> method is called with the same 
      *     two arguments.
      * <li>Otherwise, this method determines if the <code>Throwable</code>
-     *     argument is an instance of <code>ThreadDeath</code>. If so, nothing
-     *     special is done. Otherwise, the <code>Throwable</code>'s
-     *     <code>printStackTrace</code> method is called to print a stack
-     *     backtrace to the standard error stream.
+     *     argument is an instance of {@link ThreadDeath}. If so, nothing
+     *     special is done. Otherwise, a message containing the
+     *     thread's name, as returned from the thread's {@link
+     *     Thread#getName getName} method, and a stack backtrace,
+     *     using the <code>Throwable</code>'s {@link
+     *     Throwable#printStackTrace printStackTrace} method, is
+     *     printed to the {@linkplain System#err standard error stream}.
      * </ul>
      * <p>
      * Applications can override this method in subclasses of 
@@ -965,10 +968,6 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *
      * @param   t   the thread that is about to exit.
      * @param   e   the uncaught exception.
-     * @see     java.lang.System#err
-     * @see     java.lang.ThreadDeath
-     * @see     java.lang.Throwable#printStackTrace(java.io.PrintStream)
-     * @see     java.lang.Thread#getDefaultUncaughtExceptionHandler
      * @since   JDK1.0
      */
     public void uncaughtException(Thread t, Throwable e) {
@@ -980,6 +979,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (ueh != null) {
                 ueh.uncaughtException(t, e);
             } else if (!(e instanceof ThreadDeath)) {
+		System.err.print("Exception in thread \""
+				 + t.getName() + "\" ");
                 e.printStackTrace(System.err);
             }
         }

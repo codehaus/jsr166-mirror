@@ -506,7 +506,7 @@ public class ThreadLocal<T> {
                 }
                 
                 // If we didn't find stale entry on backward scan, the
-                // the first stale entry seen while scanning for key is the
+                // first stale entry seen while scanning for key is the
                 // first still present in the run.
                 if (k == null && slotToExpunge == staleSlot) 
                     slotToExpunge = i; 

@@ -221,6 +221,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         public boolean contains(Object x) { return dq.contains(x); }
         public int size() { return dq.size(); }
         public boolean isEmpty() { return dq.isEmpty(); }
+        public Object[] toArray() { return dq.toArray(); }
+        public <T> T[] toArray(T[] array) { return dq.toArray(array); }
         public Iterator<Runnable> iterator() { 
             return new Iterator<Runnable>() {
                 private Iterator<ScheduledCancellableTask> it = dq.iterator();

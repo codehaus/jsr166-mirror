@@ -97,7 +97,7 @@ public class Executors {
      * Execute a task and return a future for the completion of that task.
      */
     public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
-        FutureTask<T> ftask = new FutureTask(task, value);
+        FutureTask<T> ftask = new FutureTask<T>(task, value);
         executor.execute(ftask);
         return ftask;
     }
@@ -107,7 +107,7 @@ public class Executors {
      * return value.
      */
     public static <T> Future<T> execute(Executor executor, Callable<T> task) {
-        FutureTask<T> ftask = new FutureTask(task);
+        FutureTask<T> ftask = new FutureTask<T>(task);
         executor.execute(ftask);
         return ftask;
     }
@@ -118,7 +118,7 @@ public class Executors {
      */
     public static <T> T invoke(Executor executor, Runnable task, T value)
             throws ExecutionException, InterruptedException {
-        FutureTask<T> ftask = new FutureTask(task, value);
+        FutureTask<T> ftask = new FutureTask<T>(task, value);
         executor.execute(ftask);
         return ftask.get();
     }
@@ -129,7 +129,7 @@ public class Executors {
      */
     public static <T> T invoke(Executor executor, Callable<T> task)
             throws ExecutionException, InterruptedException {
-        FutureTask<T> ftask = new FutureTask(task);
+        FutureTask<T> ftask = new FutureTask<T>(task);
         executor.execute(ftask);
         return ftask.get();
     }

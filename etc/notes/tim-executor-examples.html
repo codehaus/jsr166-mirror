@@ -128,7 +128,7 @@ underlying <code>NativeImpl</code>. </p>
 <pre>
     class SingleThreadAdapter {
 
-        public SingleThreadAdapter(String library) {
+        public SingleThreadAdapter(final String library) {
             this.executor = Executors.newSingleThreadExecutor();
             try {
                 Executors.invoke(executor, new Runnable() {
@@ -136,28 +136,38 @@ underlying <code>NativeImpl</code>. </p>
                 }, Boolean.TRUE);
             } catch (ExecutionException e) {
                 // System.loadLibrary does not throw checked exceptions.
-                if (e.getCause() instanceof RuntimeException) {
-                    throw (RuntimeException) e.getCause();
+                Throwable cause = e.getCause();
+                if (cause instanceof RuntimeException) {
+                    throw (RuntimeException) cause;
                 }
-                throw (Error) e.getCause();
+                else {
+                    throw (Error) cause;
+                }
             }
-            // ... other invocation or interruption related catch clauses ...
+            catch (InterruptedException e) {
+                throw new RuntimeException(e); // what should this really be?
+            }
         }
 
-        public Object newInstance(Callable creator) throws Exception {
+        public &lt;T&gt; T newInstance(Callable&lt;T&gt; creator) throws Exception {
             try {
-                Object instance = Executors.invoke(executor, creator);
-                return Proxy.newProxyInstance(
+                T instance = Executors.invoke(executor, creator);
+                return (T) Proxy.newProxyInstance(
                     instance.getClass().getClassLoader(),
                     instance.getClass().getInterfaces(),
                     new Handler(instance));
             } catch (ExecutionException e) {
-                if (e.getCause() instanceof Exception) {
-                    throw (Exception) e.getCause();
+                Throwable cause = e.getCause();
+                if (cause instanceof Exception) {
+                    throw (Exception) cause;
                 }
-                throw (Error) e.getCause();
+                else {
+                    throw (Error) cause;
+                }
             }
-            // ... other invocation or interruption related catch clauses ...
+            catch (InterruptedException e) {
+                throw new RuntimeException(e); // what should this really be?
+            }
         }
 
         private class Handler implements InvocationHandler {
@@ -165,24 +175,23 @@ underlying <code>NativeImpl</code>. </p>
                                  final Method method,
                                  final Object[] args) throws Throwable {
                 try {
-                    Callable task = new Callable() {
+                    return Executors.invoke(executor, new Callable&lt;Object&gt;() {
                         public Object call () throws Exception {
-                            try {
-                                return method.invoke(instance, args);
-                            }
-                            catch (Exception e) {
-                                throw e;
-                            }
-                            catch (Throwable e) {
-                                throw (Error) e;
-                            }
+                            return method.invoke(instance, args);
                         }
-                    };
-                    return Executors.invoke(executor, task);
+                    });
                 } catch (ExecutionException e) {
-                    throw e.getCause();
+                    Throwable cause = e.getCause();
+                    if (cause instanceof InvocationTargetException) {
+                        throw cause.getCause();
+                    }
+                    else {
+                        throw cause;
+                    }
                 }
-                // ... other invocation or interruption related catch clauses ...
+                catch (InterruptedException e) {
+                    throw new RuntimeException(e); // what should this really be?
+                }
             }
 
             Handler(Object instance) {

@@ -10,8 +10,22 @@ package java.util.concurrent;
  * An object that executes submitted {@link Runnable} tasks. This
  * interface provides a way of decoupling task submission from the
  * mechanics of how each task will be run, including details of thread
- * use, scheduling, etc.  In the simplest case, an executor can run
- * the submitted task immediately in the caller's thread:
+ * use, scheduling, etc.  An <tt>Executor</tt> is normally used
+ * instead of explicitly creating threads. For example, rather than
+ * invoking <tt>new Thread(new(RunnableTask())).start()</tt> for each
+ * of a set of tasks, you might use:
+ *
+ * <pre>
+ * Executor executor = <em>anExecutor</em>;
+ * executor.execute(new RunnableTask1());
+ * executor.execute(new RunnableTask2());
+ * ...
+ * </pre>
+ * 
+ * However, the <tt>Executor</tt> interface does not strictly
+ * require that execution be asynchronous. In the simplest case, an
+ * executor can run the submitted task immediately in the caller's
+ * thread:
  *
  * <pre>
  * class DirectExecutor implements Executor {
@@ -20,9 +34,9 @@ package java.util.concurrent;
  *     }
  * }</pre>
  *
- * However, tasks are typically executed in a different thread than
- * the caller's thread.  The executor below spawns a new thread for
- * each task.
+ * More typically, tasks are typically executed in a different thread
+ * than the caller's thread.  The executor below spawns a new thread
+ * for each task.
  *
  * <pre>
  * class ThreadPerTaskExecutor implements Executor {
@@ -31,7 +45,7 @@ package java.util.concurrent;
  *     }
  * }</pre>
  *
- * Most <tt>Executor</tt> implementations will impose some sort of
+ * Many <tt>Executor</tt> implementations impose some sort of
  * limitation on how and when tasks are scheduled.  The executor below
  * serializes the submission of tasks to a second executor,
  * illustrating a composite executor.

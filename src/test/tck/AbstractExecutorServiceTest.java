@@ -91,10 +91,10 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         Policy.setPolicy(policy);
         try {
             ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(new PrivilegedAction() {
+            Future future = e.submit(Executors.callable(new PrivilegedAction() {
                     public Object run() {
                         return TEST_STRING;
-                    }});
+                    }}));
 
             Object result = future.get();
             assertSame(TEST_STRING, result);
@@ -121,10 +121,10 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         Policy.setPolicy(policy);
         try {
             ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(new PrivilegedExceptionAction() {
+            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() {
                         return TEST_STRING;
-                    }});
+                    }}));
 
             Object result = future.get();
             assertSame(TEST_STRING, result);
@@ -151,10 +151,10 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         Policy.setPolicy(policy);
         try {
             ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(new PrivilegedExceptionAction() {
+            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() throws Exception {
                         throw new IndexOutOfBoundsException();
-                    }});
+                    }}));
 
             Object result = future.get();
             shouldThrow();

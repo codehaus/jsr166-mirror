@@ -6,24 +6,34 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.regex.*;
 
 public final class LinkParser {
+
+    private static Logger log =
+        Logger.getLogger(LinkParser.class.getPackage().getName());
+
 
     public LinkParser () {}
 
     public void parse(URL url, Queue<URL> result) throws IOException {
         URLConnection conn = url.openConnection();
         String type = conn.getContentType(); // e.g., text/html; charset=ISO-8859-1
+        if (type == null) {
+            log.fine("no content type for "+url);
+            return;
+        }
+
         Matcher typeMatcher = typePat.matcher(type);
         if (!typeMatcher.matches()) {
-            //System.out.println("rejecting "+url+" with type="+type);
+            log.fine("rejecting "+url+" with type="+type);
             return;
         }
 
         String charset = typeMatcher.group(1);
         if (charset == null) charset = "ISO-8859-1";
-        //System.out.println("charset="+charset);
+        log.fine("charset="+charset);
 
         CharsetDecoder decoder = Charset.forName(charset).newDecoder();
         decoder.onMalformedInput(CodingErrorAction.REPLACE);

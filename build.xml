@@ -100,6 +100,8 @@
            source="${build.sourcelevel}"
              fork="true">
 
+      <include name="**/*.java"/>
+      <exclude name="java/lang/**"/>
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -712,9 +714,15 @@
   <target name="j1" depends="compile-j1"
           description="Runs a standalone JavaOne program">
 
-    <java classname="jsr166.random.TestRandom" fork="true">
+    <java classname="${j1.test}" fork="true">
       <classpath refid="j1.classpath"/>
       <jvmarg value="-client"/>
+
+      <!-- WebCrawler args -->
+      <arg value="jsr166.webcrawler.WebCrawler3"/>
+      <arg value="http://www.priorartisans.com"/>
+      <arg value="25"/>
+
     </java>
 
   </target>

@@ -1,4 +1,11 @@
- package java.util;
+/*
+ * %W% %E%
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package java.util;
 
 /**
  * An unbounded priority {@linkplain Queue queue} based on a priority heap.
@@ -48,6 +55,7 @@
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
  * @since 1.5
+ * @version %I%, %G%
  * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>

@@ -1,5 +1,5 @@
 /*
- * @(#)Thread.java      1.131 03/07/11
+ * %W% %E%
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -101,7 +101,7 @@ import sun.security.util.SecurityConstants;
  * a thread is created, a new name is generated for it. 
  *
  * @author  unascribed
- * @version 1.131, 07/11/03
+ * @version %I%, %G%
  * @see     java.lang.Runnable
  * @see     java.lang.Runtime#exit(int)
  * @see     java.lang.Thread#run()
@@ -710,7 +710,9 @@ class Thread implements Runnable {
      * Interrupts this thread.
      * 
      * <p> First the {@link #checkAccess() checkAccess} method of this thread
-     * is invoked, which may cause a {@link SecurityException} to be thrown.
+     * is invoked, which may cause a {@link SecurityException} to be thrown
+     * unless the current thread is interrupting itself, which is always 
+     * permitted.
      *
      * <p> If this thread is blocked in an invocation of the {@link
      * Object#wait() wait()}, {@link Object#wait(long) wait(long)}, or {@link
@@ -738,7 +740,7 @@ class Thread implements Runnable {
      * @throws  SecurityException
      *          if the current thread cannot modify this thread
      *
-     * @revised 1.4
+     * @revised 1.5
      * @spec JSR-51
      */
     public void interrupt() {

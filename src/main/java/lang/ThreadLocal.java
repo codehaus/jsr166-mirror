@@ -1,5 +1,5 @@
 /*
- * @(#)ThreadLocal.java 1.27 03/06/22
+ * %W% %E%
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -46,7 +46,7 @@ import java.lang.ref.*;
  * references to these copies exist). 
  *
  * @author  Josh Bloch and Doug Lea
- * @version 1.27, 06/22/03
+ * @version %I%, %G%
  * @since   1.2
  */
 public class ThreadLocal<T> {

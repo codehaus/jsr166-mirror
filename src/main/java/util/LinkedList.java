@@ -1,5 +1,5 @@
 /*
- * @(#)LinkedList.java	1.53 03/06/22
+ * %W% %E%
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -62,7 +62,7 @@ package java.util;
  * Java Collections Framework</a>.
  *
  * @author  Josh Bloch
- * @version 1.53, 06/22/03
+ * @version %I%, %G%
  * @see	    List
  * @see	    ArrayList
  * @see	    Vector

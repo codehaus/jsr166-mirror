@@ -73,7 +73,7 @@ public interface Future<V> extends Cancellable {
      * to complete, and then retrieves its result.
      *
      * @param timeout the maximum time to wait
-     * @param granularity the time unit of the timeout argument
+     * @param unit the time unit of the timeout argument
      * @return computed result
      * @throws ExecutionException if underlying computation threw an
      * exception
@@ -81,7 +81,7 @@ public interface Future<V> extends Cancellable {
      * while waiting
      * @throws TimeoutException if the wait timed out
      */
-    V get(long timeout, TimeUnit granularity)
+    V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException;
 }
 

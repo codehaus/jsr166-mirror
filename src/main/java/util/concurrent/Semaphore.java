@@ -260,7 +260,7 @@ public class Semaphore implements java.io.Serializable {
      * less than or equal to zero, the method will not wait at all.
      *
      * @param timeout the maximum time to wait for a permit
-     * @param granularity the time unit of the <tt>timeout</tt> argument.
+     * @param unit the time unit of the <tt>timeout</tt> argument.
      * @return <tt>true</tt> if a permit was acquired and <tt>false</tt>
      * if the waiting time elapsed before a permit was acquired.
      *
@@ -269,10 +269,10 @@ public class Semaphore implements java.io.Serializable {
      * @see Thread#interrupt
      *
      */
-    public boolean tryAcquire(long timeout, TimeUnit granularity)
+    public boolean tryAcquire(long timeout, TimeUnit unit)
         throws InterruptedException {
         lock.lockInterruptibly();
-        long nanos = granularity.toNanos(timeout);
+        long nanos = unit.toNanos(timeout);
         try {
             for (;;) {
                 if (count > 0) {

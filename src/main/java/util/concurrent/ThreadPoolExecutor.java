@@ -10,7 +10,8 @@ import java.util.*;
 
 /**
  * An {@link ExecutorService} that executes each submitted task using
- * one of possibly several pooled threads.
+ * one of possibly several pooled threads, normally configured
+ * using {@link Executors} factory methods.
  *
  * <p>Thread pools address two different problems: they usually
  * provide improved performance when executing large numbers of

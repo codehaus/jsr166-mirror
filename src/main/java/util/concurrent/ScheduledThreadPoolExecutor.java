@@ -142,12 +142,11 @@ public class ScheduledThreadPoolExecutor
             if (!isPeriodic())
                 ScheduledFutureTask.super.run();
             else {
-                if (!ScheduledFutureTask.super.runAndReset())
-                    return;
+                boolean ok = (ScheduledFutureTask.super.runAndReset());
                 boolean down = isShutdown();
-                if (!down ||
+                if (ok && (!down ||
                     (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
-                     !isTerminating())) {
+                     !isTerminating()))) {
                     time = period + (rateBased ? time : System.nanoTime());
                     ScheduledThreadPoolExecutor.super.getQueue().add(this);
                 }

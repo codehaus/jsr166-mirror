@@ -41,6 +41,28 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
+     * Create a new AtomicReferenceArray with the same length as, and
+     * all elements copied from, the given array.
+     *
+     * @param array the array to copy elements from
+     * @throws NullPointerException if array is null
+     */
+    public AtomicReferenceArray(E[] array) {
+        if (array == null) 
+            throw new NullPointerException();
+        int length = array.length;
+        this.array = new Object[length];
+        if (length > 0) {
+            int last = length-1;
+            for (int i = 0; i < last; ++i)
+                this.array[i] = array[i];
+            // Do the last write as volatile
+            E e = array[last];
+            unsafe.putObjectVolatile(this.array, rawIndex(last), e);
+        }
+    }
+
+    /**
      * Return the length of the array.
      */
     public final int length() {

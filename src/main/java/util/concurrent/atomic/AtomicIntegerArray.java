@@ -40,7 +40,27 @@ public class AtomicIntegerArray implements java.io.Serializable {
         // must perform at least one volatile write to conform to JMM
         if (length > 0)
             unsafe.putIntVolatile(array, rawIndex(0), 0);
+    }
 
+    /**
+     * Create a new AtomicIntegerArray with the same length as, and
+     * all elements copied from, the given array.
+     *
+     * @param array the array to copy elements from
+     * @throws NullPointerException if array is null
+     */
+    public AtomicIntegerArray(int[] array) {
+        if (array == null) 
+            throw new NullPointerException();
+        int length = array.length;
+        this.array = new int[length];
+        if (length > 0) {
+            int last = length-1;
+            for (int i = 0; i < last; ++i)
+                this.array[i] = array[i];
+            // Do the last write as volatile
+            unsafe.putIntVolatile(this.array, rawIndex(last), array[last]);
+        }
     }
 
     /**

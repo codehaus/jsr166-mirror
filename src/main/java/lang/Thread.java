@@ -479,7 +479,7 @@ class Thread implements Runnable {
      * <tt>stackSize</tt> parameter may allow a thread to achieve greater
      * recursion depth before throwing a {@link StackOverflowError}.
      * Similarly, specifying a lower value may allow a greater number of
-     * threads to exist concurrently without throwing an an {@link
+     * threads to exist concurrently without throwing an {@link
      * OutOfMemoryError} (or other internal error).  The details of
      * the relationship between the value of the <tt>stackSize</tt> parameter
      * and the maximum recursion depth and concurrency level are

@@ -1,5 +1,5 @@
 /*
- * @(#)RuntimePermission.java	1.48 03/08/23
+ * %W% %E%
  *
  * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -130,7 +130,7 @@ import java.util.StringTokenizer;
  *   <td>Setting of System.out, System.in, and System.err</td>
  *   <td>This allows changing the value of the standard system streams.
  * An attacker may change System.in to monitor and
- * steal user input, or may set System.err to a "null" OutputSteam,
+ * steal user input, or may set System.err to a "null" OutputStream,
  * which would hide any error messages sent to System.err. </td>
  * </tr>
  *
@@ -204,7 +204,7 @@ import java.util.StringTokenizer;
  *   <td>accessClassInPackage.{package name}</td>
  *   <td>Access to the specified package via a class loader's
  * <code>loadClass</code> method when that class loader calls
- * the SecurityManager <code>checkPackageAcesss</code> method</td>
+ * the SecurityManager <code>checkPackageAccess</code> method</td>
  *   <td>This gives code access to classes in packages
  * to which it normally does not have access. Malicious code
  * may use these classes to help in its attempt to compromise
@@ -273,7 +273,7 @@ import java.util.StringTokenizer;
  * @see java.security.PermissionCollection
  * @see java.lang.SecurityManager
  *
- * @version 1.48 03/08/23
+ * @version %I% %E%
  *
  * @author Marianne Mueller
  * @author Roland Schemers

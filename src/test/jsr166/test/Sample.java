@@ -71,7 +71,7 @@ public final class Sample {
     }
     
     private static final ScheduledExecutorService se = 
-        Executors.newScheduledThreadPool();
+        Executors.newScheduledThreadPool(1);
         
     private static final List< ScheduledFuture<?> > blurts = 
         new ArrayList< ScheduledFuture<?> >();

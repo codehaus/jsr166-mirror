@@ -1428,7 +1428,7 @@ class Thread implements Runnable {
      * Dispatch an uncaught exception to the handler. This method is 
      * intended to be called by the JVM.
      */
-    void doUncaughtException(Throwable e) {
+    private final void dispatchUncaughtException(Throwable e) {
         getUncaughtExceptionHandler().uncaughtException(this, e);
     }
 

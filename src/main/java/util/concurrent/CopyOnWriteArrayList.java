@@ -259,7 +259,7 @@ public class CopyOnWriteArrayList<E>
     public Object clone() {
         try {
             E[] elementData = array();
-            CopyOnWriteArrayList<E> v = (CopyOnWriteArrayList)super.clone();
+            CopyOnWriteArrayList<E> v = (CopyOnWriteArrayList<E>)super.clone();
             v.array_ = (E[]) new Object[elementData.length];
             System.arraycopy(elementData, 0, v.array_, 0, elementData.length);
             return v;
@@ -805,7 +805,7 @@ public class CopyOnWriteArrayList<E>
         if (!(o instanceof List))
             return false;
 
-        List<E> l2 = (List)(o);
+        List<E> l2 = (List<E>)(o);
         if (size() != l2.size())
             return false;
 
@@ -1082,7 +1082,7 @@ public class CopyOnWriteArrayList<E>
         public Iterator<E> iterator() {
             synchronized(l) {
                 checkForComodification();
-                return new COWSubListIterator(l, 0, offset, size);
+                return new COWSubListIterator<E>(l, 0, offset, size);
             }
         }
 
@@ -1091,7 +1091,7 @@ public class CopyOnWriteArrayList<E>
                 checkForComodification();
                 if (index<0 || index>size)
                     throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
-                return new COWSubListIterator(l, index, offset, size);
+                return new COWSubListIterator<E>(l, index, offset, size);
             }
         }
 

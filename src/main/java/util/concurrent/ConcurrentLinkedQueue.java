@@ -225,9 +225,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     public Object[] toArray() {
         // Use ArrayList to deal with resizing.
-        ArrayList al = new ArrayList();
+        ArrayList<E> al = new ArrayList<E>();
         for (AtomicLinkedNode p = first(); p != null; p = p.getNext()) {
-            Object item = p.getItem();
+            E item = (E) p.getItem();
             if (item != null)
                 al.add(item);
         }
@@ -250,9 +250,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         // If won't fit, use ArrayList version
-        ArrayList al = new ArrayList();
+        ArrayList<E> al = new ArrayList<E>();
         for (AtomicLinkedNode q = first(); q != null; q = q.getNext()) {
-            Object item = q.getItem();
+            E item = (E) q.getItem();
             if (item != null)
                 al.add(item);
         }

@@ -32,7 +32,7 @@ public abstract class AbstractQueue<E>
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException if the element is null
+     * @throws NullPointerException if the specified element is <tt>null</tt>
      */
     public boolean add(E o) {
         if (offer(o))
@@ -54,8 +54,9 @@ public abstract class AbstractQueue<E>
      * @param c collection whose elements are to be added to this queue
      * @return <tt>true</tt> if this collection changed as a result of the
      *         call.
-     * @throws NullPointerException if <tt>c</tt> is <tt>null</tt>
-     *
+     * @throws NullPointerException if <tt>c</tt> or any element in <tt>c</tt>
+     * is <tt>null</tt>
+     * 
      */
     public boolean addAll(Collection<? extends E> c) {
         return super.addAll(c);

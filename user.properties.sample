@@ -3,11 +3,11 @@
 #
 # Modify this file to taste and save as user.properties
 #
-# $Id: user.properties.sample,v 1.8 2003/06/25 20:44:31 tim Exp $
+# $Id: user.properties.sample,v 1.9 2003/07/25 21:24:56 tim Exp $
 # ---------------------------------------------------------------------------
 
 
-# ----- Which gj compiler: 2.0 or 2.1? (default 2.0) -----
+# ----- Which gj compiler: 2.0 or 2.2? (default 2.0) -----
 gjc.version = 2.0
 
 

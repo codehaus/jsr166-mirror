@@ -412,6 +412,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             e.invokeAny(l);
         } catch (NullPointerException success) {
         } catch(Exception ex) {
+            ex.printStackTrace();
             unexpectedException();
         } finally {
             joinPool(e);

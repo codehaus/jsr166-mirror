@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+ <head>
+   <title>JSR 166 Snapshot Introduction.</title>
+  </head>
+
+  <body bgcolor="#ffffee" vlink="#0000aa" link="#cc0000">
+  <h1>JSR 166 Snapshot Introduction.</h1>
+
+  by <a href="http://gee.cs.oswego.edu/dl">Doug Lea</a>
+  <p>
+
+To join a mailing list discussing this JSR, go to:
+<A HREF="http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest"> http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest</A> .
+
+<p>
+Package java.util.concurrent contains utility classes that are
+commonly useful in concurrent programming. Like package java.util, it
+includes a few small standardized extensible frameworks, as well as
+some classes that provide useful functionality and are otherwise
+tedious or difficult to implement.  In this JSR, we have been
+conservative in selecting only those APIs and implementations that are
+useful enough to encourage nearly all concurrent programmers to use
+routinely.  JSR 166 also includes a few changes and additions in
+packages outside of java.util.concurrent: java.lang, to address timing
+and uncaught exceptions, and java.util to better integrate queues, and
+to make Timers conform to new frameworks. The API covers:
+
+  <ul>
+    <li> Queues
+    <li> Executors
+    <li> Locks
+    <li> Condition variables
+    <li> Atomic variables
+    <li> Timing
+    <li> Barriers
+    <li> Concurrent Collections 
+    <li> Uncaught Exception Handlers
+  </ul>
+
+
+The main rationale for JSR 166 is that threading primitives, such as
+synchronized blocks, Object.wait and Object.notify, are insufficient
+for many programming tasks.  Currently, developers can use only the
+concurrency control constructs provided in the Java language
+itself. These are too low level for some applications, and are
+incomplete for others.  As a result, application programmers are often
+forced to implement their own concurrency facilities, resulting in
+enormous duplication of effort creating facilities that are
+notoriously hard to get right and even harder to optimize.  Offering a
+standard set of concurrency utilities will ease the task of writing a
+wide variety of multithreaded applications and generally improve the
+quality of the applications that use them.
+
+<p>
+Here are brief descriptions and rationales of the main components.
+For details see the javadocs at <a
+href="http://gee.cs.oswego.edu/dl/concurrent/index.html">http://gee.cs.oswego.edu/dl/concurrent/index.html</a>
+
+
+<h2>Queues</h2>
+
+A basic (nonblocking) Queue interface that is compatatible with
+java.util.Collections will be introduced into java.util. Also,
+although it is at the borders of being in scope of JSR-166, 
+java.util.LinkedList will be adapted to support Queue, and
+a new non-thread-safe java.util.HeapPriorityQueue will be added.
+
+<p>
+Four implementations in java.util.concurrent support the extended
+BlockingQueue interface, that defines blocking versions of put and
+take: LinkedBlockingQueue, ArrayBlockingQueue, SynchronousQueue, and
+PriorityBlockingQueue. Additionally, java.util.concurrent.LinkedQueue
+supplies an efficient thread-safe non-blocking queue.
+<p>
+Since the target release is JDK1.5, and generics are slated to be in
+1.5, Queues should be parametrized on element type. (Also some others
+below.) We are ignoring this for now.
+
+
+<h2>Executors</h2>
+
+Executors provide a simple standardized interface for defining custom
+thread-like subsystems, including thread pools, asynch-IO, and
+lightweight task frameworks.  Executors also standardize ways of
+calling threads that compute functions returning results, via
+Futures. This is supported in part by defining java.lang.Callable, the
+argument/result analog of Runnable.
+
+<p> While the Executor framework is intended to be extensible (so
+includes for example, AbstractExecutor that simplifies construction of
+new implementations), the most commonly used Executor will be
+ThreadExecutor, which can be configured to act as all sorts of thread
+pools, background threads, etc. The class is designed to be general
+enough to suffice for the vast majority of usages, even sophisticated
+ones, yet also includes methods and functionality that simplify
+routine usage.
+
+<p>
+A few methods will also be added to the java.util.Timer to support
+Futures, and address other requests for enhancement.
+
+<h2>Locks</h2>
+
+The Lock interface supports locking disciplines that differ in
+semantics (reentrant, semaphore-based, etc), and that can be used in
+non-block-structured contexts including hand-over-hand and lock
+reordering algorithms. This flexibility comes at the price of more
+awkward syntax.  Implementations include Semaphore, ReentrantMutex
+FIFOSemaphore, and CountDownLatch.
+
+<p>
+The Locks class additionally supports trylock-designs using builtin
+locks without needing to use Lock classes.  This requires adding new
+capabilities to builtin locks inside JVMs.
+
+<p>
+A ReadWriteLock interface similarly defines locks that may be shared
+among readers but are exclusive to writers. For this release, only a
+single implementation, ReentrantReadWriteLock, is planned, since it
+covers all standard usage contexts. But programmers may create their
+own implementations to cover nonstandard requirements.
+
+<h2>Conditions</h2>
+
+A Condition class provides the kinds of condition variables associated
+with monitors in other cocurrent languages, as well as pthreads
+condvars.  Their support reduces the need for tricky and/or
+inefficient solutions to many classic concurrent problems.  Conditions
+also address the annoying problem that Object.wait(msecs) does not
+return an indication of whether the wait timed out. This leads to
+error-prone code. Since this method is in class Object, the problem is
+basically unfixable.
+<p>
+To avoid compatibility problems, the names of Condition methods need
+to be different than Object versions. The downside of this is that
+people can make the mistake of calling cond.notify instead of
+cond.signal. However, they will get IllegalMonitorState exceptions if
+they do, so they can detect the error if they ever run the code.
+<p>
+The implementation requires VM magic to atomically suspend and release
+lock. But it is unlikely to be very challenging for JVM providers,
+since most layer Java monitors on top of posix condvars or similar
+low-level functionality anyway.
+
+<h2>Atomic variables</h2>
+
+Classes AtomicInteger, AtomicLong, AtomicDouble, AtomicFloat, and
+AtomicReference provide simple scalar variables supporting
+compareAndSwap (CAS) and related atomic operations. These are
+desparately needed by those performing low-level concurrent system
+programming, but much less commonly useful in higher-level frameworks.
+
+
+<h2>Timing</h2>
+
+Java has always supported sub-millisecond versions of several native
+time-out-based methods (such as Object.wait), but not methods to
+actually perform timing in finer-grained units. We address this by
+introducing java.lang.Clock, which provides multiple granularities for
+both accessing time and performing time-out based operations.
+
+
+<h2>Barriers</h2>
+
+Barriers (multiway synchronization points) are very common in some
+styles of parallel programming, yet tricky to get right. The two most
+useful flavors (CyclicBarriers and Exchangers) don't have much of an
+interface in common, and only have one standard implementation each,
+so these are simply defined as public classes rather than interfaces
+and implementations.
+
+
+<h2>Concurrent Collections</h2>
+
+There are no new interfaces, but JSR 166 will supply a few Collection
+implementations designed for use in multithreaded contexts:
+ConcurrentHashTable, CopyOnWriteArrayList, and CopyOnWriteArraySet.
+
+<h2>Uncaught Exception Handlers</h2>
+
+The java.lang.Thread class will be modified to allow per-thread
+installation of handlers for uncaught exceptions. Ths optionally
+disassociates these handlers from ThreadGroups, which has proven to be
+too inflexible in many multithreaded programs. (Note that the combination
+of features in JSR 166 make ThreadGroups even less likely to
+be used in most programs. Perhaps they will eventually be deprecated.)
+<p>
+Additionally, Threads and ThreadLocals will now support a means to
+clear and remove ThreadLocals, which is needed in some thread-pool and
+worker-thread designs.
+
+  <hr>
+  <address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
+ </body>
+</html>

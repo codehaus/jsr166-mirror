@@ -27,12 +27,12 @@ import java.lang.reflect.*;
  * @author Doug Lea
  */
 
-public abstract class  AtomicLongFieldUpdater<T>  { 
+public abstract class  AtomicLongFieldUpdater<T>  {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
     // Standin for upcoming synthesized version
-    static class AtomicLongFieldUpdaterImpl<T> extends AtomicLongFieldUpdater {
+    static class AtomicLongFieldUpdaterImpl<T> extends AtomicLongFieldUpdater<T> {
         AtomicLongFieldUpdaterImpl(Class<T> tclass, String fieldName) {
             super(tclass, fieldName);
         }
@@ -45,14 +45,14 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * that reflective types and generic types match.
      * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
+     * @return the updater
      * @throws IllegalArgumentException if the field is not a
      * volatile long type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
-
     public static <U> AtomicLongFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
-        return new AtomicLongFieldUpdaterImpl(tclass, fieldName);
+        return new AtomicLongFieldUpdaterImpl<U>(tclass, fieldName);
     }
 
 

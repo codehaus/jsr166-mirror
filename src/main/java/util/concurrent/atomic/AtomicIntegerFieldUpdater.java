@@ -23,12 +23,12 @@ import java.lang.reflect.*;
  * @since 1.5
  * @author Doug Lea
  */
-public abstract class  AtomicIntegerFieldUpdater<T>  { 
+public abstract class  AtomicIntegerFieldUpdater<T>  {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
     // Standin for upcoming synthesized version
-    static class AtomicIntegerFieldUpdaterImpl<T> extends AtomicIntegerFieldUpdater {
+    static class AtomicIntegerFieldUpdaterImpl<T> extends AtomicIntegerFieldUpdater<T> {
         AtomicIntegerFieldUpdaterImpl(Class<T> tclass, String fieldName) {
             super(tclass, fieldName);
         }
@@ -47,7 +47,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U> AtomicIntegerFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
-        return new AtomicIntegerFieldUpdaterImpl(tclass, fieldName);
+        return new AtomicIntegerFieldUpdaterImpl<U>(tclass, fieldName);
     }
 
     AtomicIntegerFieldUpdater(Class<T> tclass, String fieldName) {

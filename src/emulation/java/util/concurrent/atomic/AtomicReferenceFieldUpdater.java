@@ -36,6 +36,13 @@ import java.lang.reflect.*;
 public class AtomicReferenceFieldUpdater<T, V> {
     private final Field field;
 
+    // Standin for upcoming synthesized version
+    static class AtomicReferenceFieldUpdaterImpl<T,V> extends AtomicReferenceFieldUpdater<T,V> {
+        AtomicReferenceFieldUpdaterImpl(Class<T> tclass, Class<V> vclass, String fieldName) {
+            super(tclass, vclass, fieldName);
+        }
+    }
+
     /**
      * Create an updater for objects with the given field.
      * The Class constructor arguments are needed to check
@@ -43,11 +50,16 @@ public class AtomicReferenceFieldUpdater<T, V> {
      * @param tclass the class of the objects holding the field.
      * @param vclass the class of the field
      * @param fieldName the name of the field to be updated.
+     * @return the updater
      * @throws IllegalArgumentException if the field is not a volatile reference type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      **/
-    public AtomicReferenceFieldUpdater(Class<T> tclass, Class<V> vclass, String fieldName) {
+    public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
+        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass, vclass, fieldName);
+    }
+
+    AtomicReferenceFieldUpdater(Class<T> tclass, Class<V> vclass, String fieldName) {
         Class fieldClass = null;
         try {
             field = tclass.getDeclaredField(fieldName);

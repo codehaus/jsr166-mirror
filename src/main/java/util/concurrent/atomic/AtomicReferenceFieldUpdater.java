@@ -41,12 +41,12 @@ import java.lang.reflect.*;
  * @since 1.5
  * @author Doug Lea
  */
-public abstract class  AtomicReferenceFieldUpdater<T, V>  { 
+public abstract class AtomicReferenceFieldUpdater<T, V>  {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private final long offset;
 
     // Standin for upcoming synthesized version
-    static class AtomicReferenceFieldUpdaterImpl<T,V> extends AtomicReferenceFieldUpdater {
+    static class AtomicReferenceFieldUpdaterImpl<T,V> extends AtomicReferenceFieldUpdater<T,V> {
         AtomicReferenceFieldUpdaterImpl(Class<T> tclass, Class<V> vclass, String fieldName) {
             super(tclass, vclass, fieldName);
         }
@@ -59,12 +59,13 @@ public abstract class  AtomicReferenceFieldUpdater<T, V>  {
      * @param tclass the class of the objects holding the field.
      * @param vclass the class of the field
      * @param fieldName the name of the field to be updated.
+     * @return the updater
      * @throws IllegalArgumentException if the field is not a volatile reference type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
-        return new AtomicReferenceFieldUpdaterImpl(tclass, vclass, fieldName);
+        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass, vclass, fieldName);
     }
 
     AtomicReferenceFieldUpdater(Class<T> tclass, Class<V> vclass, String fieldName) {

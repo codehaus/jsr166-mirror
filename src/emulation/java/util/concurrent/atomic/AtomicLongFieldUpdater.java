@@ -29,18 +29,31 @@ import java.lang.reflect.*;
 public class  AtomicLongFieldUpdater<T> {
     private final Field field;
 
+    // Standin for upcoming synthesized version
+    static class AtomicLongFieldUpdaterImpl<T> extends AtomicLongFieldUpdater<T> {
+        AtomicLongFieldUpdaterImpl(Class<T> tclass, String fieldName) {
+            super(tclass, fieldName);
+        }
+    }
+
     /**
      * Create an updater for objects with the given field.
      * The Class constructor argument is needed to check
      * that reflective types and generic types match.
      * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
+     * @return the updater
      * @throws IllegalArgumentException if the field is not a
      * volatile long type.
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
-    public AtomicLongFieldUpdater(Class<T> tclass, String fieldName) {
+    public static <U> AtomicLongFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
+        return new AtomicLongFieldUpdaterImpl<U>(tclass, fieldName);
+    }
+
+
+    AtomicLongFieldUpdater(Class<T> tclass, String fieldName) {
         try {
             field = tclass.getDeclaredField(fieldName);
             field.setAccessible(true);

@@ -1314,7 +1314,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         
         public final boolean await(long timeout, TimeUnit unit) throws InterruptedException {
             if (unit == null)
-XS                throw new NullPointerException();
+                throw new NullPointerException();
             return awaitNanos(unit.toNanos(timeout)) > 0L;
         }
     }

@@ -1,5 +1,5 @@
 /*
- * @(#)Random.java	1.39 03/01/23
+ * %W% %E%
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * class <code>Math</code> simpler to use.
  *
  * @author  Frank Yellin
- * @version 1.39, 01/23/03
+ * @version %I%, %G%
  * @see     java.lang.Math#random()
  * @since   JDK1.0
  */
@@ -55,17 +55,13 @@ class Random implements java.io.Serializable {
     private final static long addend = 0xBL;
     private final static long mask = (1L << 48) - 1;
 
-    /** 
-     * Creates a new random number generator. Its seed is initialized to 
-     * a value based on the current time:
-     * <blockquote><pre>
-     * public Random() { this(System.currentTimeMillis()); }</pre></blockquote>
-     * Two Random objects created within the same millisecond will have
-     * the same sequence of random numbers.
-     *
-     * @see     java.lang.System#currentTimeMillis()
+    /**
+     * Creates a new random number generator. This constructor sets
+     * the seed of the random number generator to a value very likely
+     * to be distinct from any other invocation of this constructor.
      */
-    public Random() { this(System.currentTimeMillis()); }
+    public Random() { this(++seedUniquifier + System.nanoTime()); }
+    private static volatile long seedUniquifier = 8682522807148012L;
 
     /** 
      * Creates a new random number generator using a single 

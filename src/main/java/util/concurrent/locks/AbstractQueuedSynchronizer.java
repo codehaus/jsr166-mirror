@@ -5,37 +5,115 @@
  */
 
 package java.util.concurrent.locks;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.*;
-import java.lang.reflect.*;
-import sun.misc.*;
 
 /**
- * Provides shared data structures, utility methods, base {@link
- * Condition} implementations, and instrumentation methods for the
- * reentrant lock classes defined in this package.  This class is not
- * designed to be directly subclassed outside of this
- * package. However, subclasses {@link ReentrantLock} and {@link
- * ReentrantReadWriteLock} may in turn be usefully extended.
+ * Provides a framework for creating blocking locks and related
+ * synchronization aids that relying on First-in-first-out wait
+ * queues.  This class is designed to be a suitable superclass for
+ * most kinds of synchronizers that rely on a single atomic
+ * <tt>int</tt> value to represent status. Subclasses must define the
+ * methods that change this status.  Given these, the other methods in
+ * this class carry out all queuing using an internal specialized FIFO
+ * queue. Implementation classes can maintain other fields, but only
+ * the {@link AtomicInteger} provided by {@link #getState} is tracked
+ * with respect to synchronization mechanics.
+ *
+ * <p> This class does not directly implement any synchronization
+ * interface.  Instead it defines <tt>protected</tt> methods
+ * <tt>acquireExclusiveUninterruptibly</tt> and so on that can be
+ * invoked as appropriate by concrete locks and related synchronizers
+ * to implement their public methods. (Note that this class does not
+ * directly provide untimed "trylock" forms, since the state acquire
+ * methods can be used for these purposes.)
+ *
+ * <p> This class does provide <tt>public</tt> instrumentation and
+ * monitoring methods such as {@link #hasWaiters}.
+ *
+ * <p> This class supports either or both <em>exclusive</em> and
+ * <em>shared</em> modes. When acquired in exclusive mode, it cannot
+ * be acquired by another thread. Shared modes may (but need not be)
+ * held by multiple threads. This class does not "understand" these
+ * differences except in the mechanical sense that when a shared mode
+ * acquire succeeds, the next waiting thread (if one exists) must also
+ * determine whether it can acquire as well. For implementations that
+ * support only exclusive or only shared modes, define the abstract
+ * methods for the unused mode to throw {@link UnsupportedOperationException}.
+ *
+ * <p> This class defines a nested {@link Condition} class that can be
+ * used with subclasses for which method <tt>releaseExclusive</tt>
+ * invoked with the current state value fully releases the lock, and
+ * <tt>acquireExclusive</tt>, given this saved state value, restores
+ * the lock to its previous lock state. No public method creates such
+ * a condition, so if this does not apply, do not use it.
+ * 
+ * <p> Serialization of this class serializes only the 
+ * atomic integer maintaining state.
+ *
+ * <p>
+ * <b>Usage Example.</b> Here is a fair mutual exclusion lock class:
+ * <pre>
+ *   class FairMutex extends AbstractQueuedSynchronizer implements Lock {
+ *       // Uses 0 for unlocked, 1 for locked state
+ *
+ *       protected int acquireExclusiveState(boolean isQueued, int acquires, 
+ *                                           Thread current) {
+ *           assert acquires == 1; // Does not use multiple acquires
+ *           if ((isQueued || !hasWaiters()) &amp;&amp;
+ *                getState().compareAndSet(0, 1))
+ *               return 0;
+ *           return -1;
+ *       }
+ *
+ *       protected boolean releaseExclusiveState(int releases) {
+ *           getLockWord.set(0);
+ *           return true;
+ *       }
+ *       
+ *       protected int acquireSharedState(boolean isQueued, int acquires, 
+ *                                        Thread current) {
+ *           throw new UnsupportedOperationException();
+ *       }
+ *
+ *       protected boolean releaseSharedState(int releases) {
+ *           throw new UnsupportedOperationException();
+ *       }
+ *
+ *       protected void checkConditionAccess(Thread thread, boolean waiting) {
+ *           if (getState().get() == 0)
+ *               throw new IllegalMonitorException();
+ *       }
+ *
+ *       public void lock() { acquireExclusiveUninterruptibly(1); }
+ *       public void unlock() { releaseExclusive(1); }
+ *       public boolean tryLock() { 
+ *           return acquireExclusiveState(false, 1, null);
+ *       }
+ *       // ... and so on for other lock methods
+ *
+ *       public Condition newCondition() { return new LockCondition(); }
+ *   }
+ * <pre>
  *
  * @since 1.5
  * @author Doug Lea
  * 
  */
-public abstract class AbstractReentrantLock implements java.io.Serializable {
+public abstract class AbstractQueuedSynchronizer implements java.io.Serializable {
     /*
      *  General description and notes.
      *
      *  The basic idea, ignoring all sorts of things
-     *  (reentrance, modes, cancellation, timeouts, error checking etc) is:
-     *    Lock:
-     *      if (atomically set lock status) // fastpath
+     *  (modes, cancellation, timeouts, error checking etc) is:
+     *    acquire:
+     *      if (atomically set status) // fastpath
      *        return;
      *      node = create and enq a wait node;
      *      for (;;) {
      *        if (node is first on queue) {
-     *          if (atomically set lock status) 
+     *          if (atomically set status) 
      *             deq(node);
      *             return;
      *           }
@@ -43,18 +121,17 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
      *        park(currentThread);
      *      }
      *
-     *    Unlock:
-     *      atomically release lockStatus;
-     *      h = first node on queue;
-     *      if (h != null) unpark(h's successor's thread);
+     *    release:
+     *      atomically lockStatus;
+     *      if (is now fully released) {
+     *         h = first node on queue;
+     *         if (h != null) unpark(h's successor's thread);
+     *      }
      *
-     *  * The particular atomic actions needed in the Reentrant
-     *    vs ReentrantReadWrite subclasses differ, but both
-     *    follow the same basic logic. This base class contains
-     *    the code that doesn't need to vary with respect to
-     *    these. 
+     *  * The particular atomic actions needed to atomically lock and
+     *    unlock can vary in subclasses.
      *
-     *  * By default, contended locks use a kind of "greedy" /
+     *  * By default, contended acquires use a kind of "greedy" /
      *    "renouncement" / barging / convoy-avoidance strategy:
      *    When a lock is released, a waiting thread is signalled
      *    so that it can (re)contend for the lock. It might lose
@@ -70,40 +147,33 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
      *    recontention has an unbiased chance to succeed against
      *    any incoming barging threads.
      *
-     *  * Even non-fair locks don't do a bare atomic CAS in the
-     *    fast path (except in tryLock). Instead, if the wait queue
-     *    appears to be non-empty, they use a test-and-test-and-set
-     *    approach,  which avoids most failed CASes.
+     * * "Fair" variants differ only in that they can disable barging
+     *    in the fast path if there is contention (see the "isQueued"
+     *    argument to state methods). There can be races in detecting
+     *    contention, but it is still FIFO from a definable (although
+     *    complicated to describe) single point, so qualifies as a
+     *    FIFO lock.
      *
-     *  * The "fair" variant differs only in that barging is disabled
-     *    when there is contention, so locks proceed FIFO. There can be
-     *    some races in detecting contention, but it is still FIFO from
-     *    a definable (although complicated to describe) single point,
-     *    so qualifies as a FIFO lock.
+     * * While acquires never "spin" in the usual sense, they perform
+     *    multiple test-and-test-and sets interspersed with other
+     *    computations before blocking.  This gives most of the
+     *    benefits of spins when they are only briefly held without
+     *    most of the liabilities when they aren't.
      *
-     *  * While this lock never "spins" in the usual sense, it 
-     *    perfroms multiple test-and-test-and sets (four in the most
-     *    common case of a call from <tt>lock</tt>) interspersed with
-     *    other computations before the first call to <tt>park</tt>.
-     *    This gives most of the benefits of spins when locks are only
-     *    briefly held without most of the liabilities when they
-     *    aren't.
-     *
-     *  * The wait queue is a variant of a "CLH" (Craig, Landin, and
+     * * The wait queue is a variant of a "CLH" (Craig, Landin, and
      *    Hagersten) lock. CLH locks are normally used for spinlocks.
-     *    We instead use them for blocking locks, but use the same
-     *    basic tactic of holding some of the control information
+     *    We instead use them for blocking synchronizers, but use the
+     *    same basic tactic of holding some of the control information
      *    about a thread in the predecessor of its node.  A "status"
      *    field in each node keeps track of whether a thread is/should
      *    block.  A node is signalled when its predecessor releases
      *    the lock. Each node of the queue otherwise serves as a
      *    specific-notification-style monitor holding a single waiting
      *    thread. The status field does NOT control whether threads
-     *    are granted locks though.  A thread may try to acquire
-     *    lock if it is first in the queue. But being first does
-     *    not guarantee the lock; it only gives the right to contend
-     *    for it.  So the currently released
-     *    contender thread may need to rewait.
+     *    are granted locks though.  A thread may try to acquire lock
+     *    if it is first in the queue. But being first does not
+     *    guarantee success; it only gives the right to contend.  So
+     *    the currently released contender thread may need to rewait.
      *
      *    To enqueue into a CLH lock, you atomically splice it in as new
      *    tail. To dequeue, you just set the head field.  
@@ -147,16 +217,16 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
      *  
      *  * CLH queues need a dummy header node to get started. But
      *    we don't create them on construction, because it would be wasted
-     *    effort if the lock is never contended. Instead, the node
+     *    effort if there never contention. Instead, the node
      *    is constructed and head and tail pointers are set upon first
      *    contention.
      *
      *  * Threads waiting on Conditions use the same nodes, but
      *    use an additional link. Conditions only need to link nodes
      *    in simple (non-concurrent) linked queues because they are
-     *    only accessed when lock is held.  Upon await, a node is
+     *    only accessed when exclusively held.  Upon await, a node is
      *    inserted into a condition queue.  Upon signal, the node is
-     *    transferred to the lock queue.  A special value of status
+     *    transferred to the main queue.  A special value of status
      *    field is used to mark which queue a node is on.
      *
      *  * All suspension and resumption of threads uses the JSR166
@@ -171,38 +241,30 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
      *    expert group, for helpful ideas, discussions, and critiques.
      */
 
-    /**
-     * Serialization ID. Note that all fields are defined in a way so
-     * that deserialized locks are in initial unlocked state, and
-     * there is no explicit serialization code.
-     */
-    private static final long serialVersionUID = 7373984872572414691L;
-
-    /** Node status value to indicate thread has cancelled */
-    static final int CANCELLED =  1;
-    /** Node status value to indicate thread needs unparking */
-    static final int SIGNAL    = -1;
-    /** Node status value to indicate thread is waiting on condition */
-    static final int CONDITION = -2;
+    private static final long serialVersionUID = 7373984972572414691L;
 
     /**
-     * Node class for threads waiting for locks or conditions.  Rather
-     * than using special node subtypes for r/w locks and conditions,
-     * fields are declared that are only used for these purposes,
-     * and ignored when not needed.
+     * Node class for threads waiting for synch or conditions.  
      */
     static final class Node {
+        /** status value to indicate thread has cancelled */
+        static final int CANCELLED =  1;
+        /** status value to indicate thread needs unparking */
+        static final int SIGNAL    = -1;
+        /** status value to indicate thread is waiting on condition */
+        static final int CONDITION = -2;
+
         /**
          * Status field, taking on only the values:
          *   SIGNAL:     The successor of this node is (or will soon be) 
          *               blocked (via park), so the current node must 
-         *               unpark its successor when it releases lock or 
+         *               unpark its successor when it releases or 
          *               cancels.
          *   CANCELLED:  Node is cancelled due to timeout or interrupt
          *               Nodes never leave this state. In particular,
          *               a thread with cancelled node never again blocks.
          *   CONDITION:  Node is currently on a condition queue
-         *               It will not be used as a lock queue node until
+         *               It will not be used as a sync queue node until
          *               transferred. (Use of this value here
          *               has nothing to do with the other uses
          *               of the field, but simplifies mechanics.)
@@ -213,7 +275,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * signal. So, some code doesn't need to check for particular
          * values, just for sign.
          *
-         * The field is initialized to 0 for normal lock nodes, and
+         * The field is initialized to 0 for normal sync nodes, and
          * CONDITION for condition nodes.  It is modified only using
          * CAS, except for transitions to CANCELLED, which are
          * unconditionally, "finally" assigned.
@@ -227,15 +289,15 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * cancellation of a predecessor, we short-circuit while
          * finding a non-cancelled one, which will always exist
          * because the head node is never cancelled: A node becomes
-         * head only as a result of a thread getting the lock. A
-         * cancelled thread never gets the lock, and a thread only
+         * head only as a result of successful acquire. A
+         * cancelled thread never succeeds in acquiring, and a thread only
          * cancels itself, not any other node.
          */
         volatile Node prev;
 
         /**
          * Link to the successor node that the current node/thread
-         * unparks upon lock release. Assigned once during enqueuing,
+         * unparks upon release. Assigned once during enqueuing,
          * and nulled out (for sake of GC) when no longer needed.
          * Upon cancellation, we do NOT adjust this field, but simply
          * traverse through next's until we hit a non-cancelled node,
@@ -250,17 +312,17 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
         volatile Node next;
 
         /**
-         * Type of lock, used to distinguish readers from writers
-         * in read-write locks
+         * True if waiting in shared mode.  If so, successful acquires
+         * cascade to wake up subsequent nodes.
          */
-        final int mode;
+        final boolean shared;
         
         /** 
          * Link to next node waiting on condition.  Because condition
-         * queues are accessed only when locks are already held, we
+         * queues are accessed only when holding in exclusive mode, we
          * just need a simple linked queue to hold nodes while they
          * are waiting on conditions. They are then transferred to the
-         * lock queue to re-acquire locks.
+         * queue to re-acquire.
          */
         Node nextWaiter;
 
@@ -275,68 +337,49 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
 
         Node(Thread thread) { 
             this.thread = thread; 
-            this.mode = 0;
+            this.shared = false;
         }
 
-        Node(Thread thread, int mode) { 
+        Node(Thread thread, boolean shared) { 
             this.thread = thread; 
-            this.mode = mode;
+            this.shared = shared;
         }
 
-        Node(Thread thread, int mode, int status) { 
+        Node(Thread thread, boolean shared, int status) { 
             this.thread = thread; 
-            this.mode = mode;
+            this.shared = shared;
             this.status = status;
+        }
+
+        /**
+         * Updater to provide CAS for status field
+         */
+        private static final 
+            AtomicIntegerFieldUpdater<Node> statusUpdater = 
+            AtomicIntegerFieldUpdater.<Node>newUpdater 
+            (Node.class, "status");
+
+        /**
+         * CAS the status field
+         * @param cmp expected value
+         * @param val the new value
+         * @return true if successful
+         */
+        final boolean compareAndSetStatus(int cmp, int val) {
+            return statusUpdater.compareAndSet(this, cmp, val);
         }
     }
 
-    /** true if barging disabled */
-    private final boolean fair;
-
     /** 
-     * Lock hold status is kept in a separate AtomicInteger.  It is
-     * logically divided into two shorts: The lower one representing
-     * the exclusive (write) lock hold count, and the upper the shared
-     * hold count.
+     * Status is kept in a separate AtomicInteger.  
      */
-    private final AtomicInteger count = new AtomicInteger();
-
-    // shared vs write count extraction constants and functions
-
-    static final int SHARED_SHIFT = 16;
-    static final int SHARED_UNIT = (1 << SHARED_SHIFT);
-    static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
-
-    /**
-     * Return true if count indicates lock is held in exclusive mode
-     * @param c a lock status count
-     * @return true if count indicates lock is held in exclusive mode
-     */
-    static final boolean isExclusive(int c) { return (c & EXCLUSIVE_MASK) != 0; }
-
-    /**
-     * Return the number of shared holds represented in count
-     */
-    static final int sharedCount(int c)  { return c >>> SHARED_SHIFT; }
-
-    /**
-     * Return the number of exclusive holds represented in count
-     */
-    static final int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
-
-    /** Return current shared count */
-    final int getSharedCount() { return sharedCount(count.get()); }
-    /** Return current exclusive count */
-    final int getExclusiveCount() { return exclusiveCount(count.get()) ; }
-
-    /** Current (exclusive) owner thread */
-    private transient Thread owner;
+    private final AtomicInteger state = new AtomicInteger();
 
     /** 
      * Head of the wait queue, lazily initialized.  Except for
-     * initialization, it is modified only by a thread upon acquiring
-     * the lock. If head exists, its node status is guaranteed not to
-     * be CANCELLED.
+     * initialization, it is modified only by a thread upon acquiring.
+     * If head exists, its node status is guaranteed not to be
+     * CANCELLED.
      */
     private transient volatile Node head; 
 
@@ -346,48 +389,28 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
      */
     private transient volatile Node tail; 
 
-    // Atomics support
-
+    /**
+     * Updater to provide CAS for tail field
+     */
     private static final 
-        AtomicReferenceFieldUpdater<AbstractReentrantLock, Node> tailUpdater = 
-        AtomicReferenceFieldUpdater.<AbstractReentrantLock, Node>newUpdater 
-        (AbstractReentrantLock.class, Node.class, "tail");
-    private static final 
-        AtomicReferenceFieldUpdater<AbstractReentrantLock, Node> headUpdater = 
-        AtomicReferenceFieldUpdater.<AbstractReentrantLock, Node>newUpdater 
-        (AbstractReentrantLock.class,  Node.class, "head");
-    static final 
-        AtomicIntegerFieldUpdater<Node> statusUpdater = 
-        AtomicIntegerFieldUpdater.newUpdater 
-        (Node.class, "status");
+        AtomicReferenceFieldUpdater<AbstractQueuedSynchronizer, Node> tailUpdater = 
+        AtomicReferenceFieldUpdater.<AbstractQueuedSynchronizer, Node>newUpdater 
+        (AbstractQueuedSynchronizer.class, Node.class, "tail");
 
     /**
-     * Creates an instance of <tt>AbstractReentrantLock</tt> with 
-     * non-fair fairness policy.
+     * Updater to provide CAS for head field
      */
-    protected AbstractReentrantLock() { 
-        fair = false;
-    }
-
-    /**
-     * Creates an instance of <tt>AbstractReentrantLock</tt> with the
-     * given fairness policy.
-     */
-    protected AbstractReentrantLock(boolean fair) { 
-        this.fair = fair;
-    }
+    private static final 
+        AtomicReferenceFieldUpdater<AbstractQueuedSynchronizer, Node> headUpdater = 
+        AtomicReferenceFieldUpdater.<AbstractQueuedSynchronizer, Node>newUpdater 
+        (AbstractQueuedSynchronizer.class,  Node.class, "head");
 
     /*
-     * Mode words are used to handle all of the combinations of r/w
-     * interrupt, timeout, etc for lock methods.  These are OR'ed
-     * together as appropriate for arguments, status fields, and
-     * results.
+     * Mode words are used internally to handle combinations of
+     * interruptiblity and timeout.  These are OR'ed together as
+     * appropriate for arguments and results.
      */
 
-    /** As arg or node field, lock in exclusive mode */
-    private static final int EXCLUSIVE     =  0;
-    /** As arg or node field, lock in shared mode */
-    private static final int SHARED        =  1;
     /** As arg, don't interrupt; as result, was not interrupted */
     private static final int UNINTERRUPTED =  0;
     /** As arg, allow interrupt; as result, was interrupted */ 
@@ -396,68 +419,223 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
     private static final int TIMEOUT       =  4;
     /** As arg, reset interrupt status upon return */
     private static final int REINTERRUPT   =  8;
-    /** As arg, don't acquire unowned lock unless unfair or queue is empty */
-    private static final int CHECK_FAIRNESS = 16;
 
     /**
-     * Return true if mode denotes a shared-lock
-     * @param mode mode
-     * @return true if shared mode
+     * Constructor for use by subclasses
      */
-    static final boolean isSharedMode(int mode) { return (mode & SHARED) != 0; }
+    protected AbstractQueuedSynchronizer() { }
 
     /**
-     * Try to set lock status
-     * @param mode lock mode
+     * Returns the atomic integer maintaining synchronization status.
+     * The returned {@link AtomicInteger} should be used inside
+     * methods that acquire and release state to effect these state
+     * changes.
+     * @return the state
+     */
+    protected AtomicInteger getState() {
+        return state;
+    }
+
+    /**
+     * Try to set status for an attempt to acquire in exclusive mode.
+     * Failures are presumed to be due to unavailability of the
+     * synchronizer.
+     * @param isQueued true if the thread has been queued, possibly
+     * blocking before this call. If this argument is false,
+     * then the thread has not yet been queued. This can be used
+     * to help implement a fairness policy
+     * @param acquires the number of acquires requested. This value
+     * is always the one given in an <tt>acquire</tt> method,
+     * or is the value saved on entry to a condition wait.
      * @param current current thread
-     * @return true if successful
+     * @return negative on failure, zero on success. (These
+     * unusual return value conventions match those needed for
+     * shared modes.)
+     * @throws IllegalMonitorStateException if acquiring would place
+     * this synchronizer in an illegal state. This exception must be
+     * thrown in a consistent fashion for synchronization to work
+     * correctly.
+     * @throws UnsupportedOperationException if exclusive mode not supported
      */
-    private boolean tryAcquire(int mode, Thread current) {
-        final AtomicInteger count = this.count;
-        boolean nobarge = (mode & CHECK_FAIRNESS) != 0 && fair;
-        for (;;) {
-            int c = count.get();
-            int w = exclusiveCount(c);
-            int r = sharedCount(c);
-            if (isSharedMode(mode)) {
-                if (w != 0 && current != owner)
-                    return false;
-                if (nobarge && head != tail)
-                    return false;
-                int nextc = c + SHARED_UNIT;
-                if (nextc < c)
-                    throw new Error("Maximum lock count exceeded");
-                if (count.compareAndSet(c, nextc)) 
-                    return true;
-            }
-            else {
-                if (r != 0)
-                    return false;
-                if (w != 0) {
-                    if (current != owner)
-                        return false;
-                    if (w + 1 >= SHARED_UNIT)
-                        throw new Error("Maximum lock count exceeded");
-                    if (count.compareAndSet(c, c + 1)) 
-                        return true;
-                }
-                else {
-                    if (nobarge && head != tail)
-                        return false;
-                    if (count.compareAndSet(c, c + 1)) {
-                        owner = current;
-                        return true;
-                    }
-                }
-            }
-            // Recheck count if lost any of the above CAS's
+    protected abstract int acquireExclusiveState(boolean isQueued, 
+                                                 int acquires, 
+                                                 Thread current);
+
+    /**
+     * Set status to reflect a release in exclusive mode..
+     * @param releases the number of releases. This value
+     * is always the one given in a <tt>release</tt> method,
+     * or the current value upon entry to a condition wait.
+     * @return true if now in a fully released state, so that
+     * any waiting threads may attempt to acquire.
+     * @throws IllegalMonitorStateException if releasing would place
+     * this synchronizer in an illegal state. This exception must be
+     * thrown in a consistent fashion for synchronization to work
+     * correctly.
+     * @throws UnsupportedOperationException if exclusive mode not supported
+     */
+    protected abstract boolean releaseExclusiveState(int releases);
+
+    /**
+     * Try to set status for an attempt to acquire in shared mode.
+     * Failures are presumed to be due to unavailability of the
+     * synchronizer.
+     * @param isQueued true if the thread has been queued, possibly
+     * blocking before this call. If this argument is false,
+     * then the thread has not yet been queued. This can be used
+     * to help implement a fairness policy
+     * @param acquires the number of acquires requested. This value
+     * is always the one given in an <tt>acquire</tt> method.
+     * @param current current thread
+     * @return negative on failure, zero on exclusive success, and
+     * positive if non-exclusively successful, in which case a
+     * subsequent waiting thread can check availability.
+     * @throws IllegalMonitorStateException if acquiring would place
+     * this synchronizer in an illegal state. This exception must be
+     * thrown in a consistent fashion for synchronization to work
+     * correctly.
+     * @throws UnsupportedOperationException if shared mode not supported
+     */
+    protected abstract int acquireSharedState(boolean isQueued, 
+                                              int acquires, 
+                                              Thread current);
+    /**
+     * Set status to reflect a release in shared mode.
+     * @param releases the number of releases. This value
+     * is always the one given in a <tt>release</tt> method.
+     * @return true if now in a fully released state, so that
+     * any waiting threads may attempt to acquire.
+     * @throws IllegalMonitorStateException if releasing would place
+     * this synchronizer in an illegal state. This exception must be
+     * thrown in a consistent fashion for synchronization to work
+     * correctly.
+     * @throws UnsupportedOperationException if shared mode not supported
+     */
+    protected abstract boolean releaseSharedState(int releases);
+
+    /**
+     * Throw IllegalMonitorStateException if given thread should not
+     * access a {@link Condition} method. This method is invoked upon
+     * each call to a {@link LockCondition} method.
+     * @param thread the thread
+     * @param waiting true if the access is for a condition-wait method,
+     * and false if any other method (such as <tt>signal</tt>).
+     * @throws IllegalMonitorStateException if cannot access
+     * @throws UnsupportedOperationException if conditions not supported
+     */
+    protected abstract void checkConditionAccess(Thread thread, 
+                                                 boolean waiting);
+
+    /**
+     * Acquire in exclusive mode, ignoring interrupts.
+     * With an argument of 1, this can be used to 
+     * implement method {@link Lock#lock}
+     * @param acquires the number of times to acquire
+     */
+    protected final void acquireExclusiveUninterruptibly(int acquires) {
+        doAcquire(false, acquires, UNINTERRUPTED, 0L);
+    }
+
+    /**
+     * Acquire in exclusive mode, aborting if interrupted.
+     * With an argument of 1, this can be used to 
+     * implement method {@link Lock#lockInterruptibly}
+     * @param acquires the number of times to acquire
+     * @throws InterruptedException if the current thread is interrupted
+     */
+    protected final void acquireExclusiveInterruptibly(int acquires) throws InterruptedException {
+       if (doAcquire(false, acquires, INTERRUPT, 0L) == INTERRUPT)
+           throw new InterruptedException();
+   }
+
+    /**
+     * Acquire in exclusive mode, aborting if interrupted or
+     * the given timeout elapses.
+     * With an argument of 1, this can be used to 
+     * implement method {@link Lock#lockInterruptibly}
+     * @param acquires the number of times to acquire
+     * @param nanos the maximum number of nanoseconds to wait
+     * @return true if acquired; false if timed out
+     * @throws InterruptedException if the current thread is interrupted
+     */
+   protected boolean acquireExclusiveTimed(int acquires, long nanos) throws InterruptedException {
+       int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, nanos);
+       if (s == UNINTERRUPTED)
+           return true;
+       if (s != INTERRUPT)
+           return false;
+       throw new InterruptedException();
+   }
+
+    /**
+     * Release in exclusive mode. With an argument of 1, this method
+     * can be used to implement method {@link Lock#unlock}
+     * @param releases the number of releases
+     */
+    protected final void releaseExclusive(int releases) {
+        if (releaseExclusiveState(releases)) {
+            Node h = head;
+            if (h != null && h.status < 0)
+                unparkSuccessor(h);
         }
     }
-    
+
+    /**
+     * Acquire in shared mode, ignoring interrupts.  With an argument
+     * of 1, this can be used to implement method {@link Lock#lock}
+     * @param acquires the number of times to acquire
+     */
+    protected final void acquireSharedUninterruptibly(int acquires) {
+        doAcquire(true, acquires, UNINTERRUPTED, 0L);
+    }
+
+    /**
+     * Acquire in shared mode, aborting if interrupted.  With an
+     * argument of 1, this can be used to implement method {@link
+     * Lock#lockInterruptibly}
+     * @param acquires the number of times to acquire
+     * @throws InterruptedException if the current thread is interrupted
+     */
+    protected final void acquireSharedInterruptibly(int acquires) throws InterruptedException {
+       if (doAcquire(true, acquires, INTERRUPT, 0L) == INTERRUPT)
+           throw new InterruptedException();
+   }
+
+    /**
+     * Acquire in shared mode, aborting if interrupted or the given
+     * timeout elapses.  With an argument of 1, this can be used to
+     * implement method {@link Lock#lockInterruptibly}
+     * @param acquires the number of times to acquire
+     * @param nanos the maximum number of nanoseconds to wait
+     * @return true if acquired; false if timed out
+     * @throws InterruptedException if the current thread is interrupted
+     */
+   protected boolean acquireSharedTimed(int acquires, long nanos) throws InterruptedException {
+       int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, nanos);
+       if (s == UNINTERRUPTED)
+           return true;
+       if (s != INTERRUPT)
+           return false;
+       throw new InterruptedException();
+   }
+
+    /**
+     * Release in shared mode. With an argument of 1, this method can
+     * be used to implement method {@link Lock#unlock}
+     * @param releases the number of releases
+     */
+    protected final void releaseShared(int releases) {
+        if (releaseSharedState(releases)) {
+            Node h = head;
+            if (h != null && h.status < 0)
+                unparkSuccessor(h);
+        }
+    }
+
     // Queuing utilities
 
     /**
-     * Initialize queue. Called on first contended lock attempt
+     * Initialize queue. Called on first contention.
      */
     private void initializeQueue() {
         Node t = tail;
@@ -499,10 +677,10 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
     private void unparkSuccessor(Node node) {
         /*
          * Reset status before unparking. This improves performance
-         * when called from unlock to release next thread: A given
-         * head-node can be in effect across multiple unlockers
+         * when called from a releaase method to enable next thread: A
+         * given head-node can be in effect across multiple releases
          * that acquired by barging. When they do so, and later
-         * unlock, the successor that lost a previous race and
+         * release, the successor that lost a previous race and
          * re-parked must be re-unparked. But otherwise, we'd like to
          * minimize unnecessary calls to unpark, which may be
          * relatively expensive. We don't bother to loop on failed CAS
@@ -511,7 +689,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * cancellation code since status will be set to CANCELLED.
          * This doesn't occur frequently enough to bother avoiding.
          */
-        statusUpdater.compareAndSet(node, SIGNAL, 0);
+        node.compareAndSetStatus(Node.SIGNAL, 0);
 
         /*
          * Successor is normally just the next node.  But if cancelled
@@ -519,7 +697,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * the actual non-cancelled successor.
          */
         Node s = node.next;
-        if ((s != null && s.status != CANCELLED) ||
+        if ((s != null && s.status != Node.CANCELLED) ||
             (s = findSuccessorFromTail(node)) != null)
             LockSupport.unpark(s.thread);
     }
@@ -537,43 +715,56 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
         for (;;) {
             if (p == null || p == node)
                 return s;
-            if (p.status != CANCELLED) 
+            if (p.status != Node.CANCELLED) 
                 s = p; 
             p = p.prev;
         }
     }
 
     /**
-     * Main locking code.
-     * @param mode mode representing r/w, interrupt, timeout control
+     * Cancel an ongoing attempt to acquire.
+     * @param node the node
+     */
+    private void cancelAcquire(Node node) {
+        node.thread = null;   
+        node.status = Node.CANCELLED;
+        unparkSuccessor(node);
+    }
+
+    /**
+     * Main code for all varieties of acquire.
+     * @param shared if acquiring in shared mode
+     * @param mode mode representing interrupt/timeout control
      * @param nanos timeout time
      * @return UNINTERRUPTED on success, INTERRUPT on interrupt,
      * TIMEOUT on timeout
      */
-    private int doLock(int mode, long nanos) {
+    private int doAcquire(boolean shared, int acquires, int mode, long nanos) {
         final Thread current = Thread.currentThread();
 
         if ((mode & INTERRUPT) != 0 && Thread.interrupted())
             return INTERRUPT;
 
-        // Try initial barging or recursive acquire
-        if (tryAcquire(mode | CHECK_FAIRNESS, current))
+        int precheck = (shared)?
+            acquireSharedState(false, acquires, current):
+            acquireExclusiveState(false, acquires, current);
+        if (precheck >= 0)
             return UNINTERRUPTED;
 
         long lastTime = ((mode & TIMEOUT) == 0)? 0 : System.nanoTime();
 
-        final Node node = new Node(current, mode & SHARED);
+        final Node node = new Node(current, shared);
         enq(node);
 
         /*
-         * Repeatedly try to set lock status if first in queue; block
+         * Repeatedly try to set status if first in queue; block
          * (park) on failure.  If we are the first thread in queue, we
-         * must try to get the lock, and we must not try to get lock
-         * if we are not first. We can park only if we are sure that
-         * some other thread holds lock and will signal us.  Along the
+         * must try to acquire, and we must not try if we are not
+         * first. We can park only if we are sure that some other
+         * thread will (eventually) release and signal us.  Along the
          * way, make sure that the predecessor hasn't been
          * cancelled. If it has, relink to its predecessor.  When
-         * about to park, first try to set status enabling lock-holder
+         * about to park, first try to set status enabling holder
          * to signal, and then recheck one final time before actually
          * blocking. This also has effect of retrying failed status
          * CAS due to contention.
@@ -581,26 +772,36 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
 
         for (;;) {
             Node p = node.prev; 
-            if (p == head && tryAcquire(mode, current)) {
-                p.next = null; 
-                node.thread = null;
-                node.prev = null; 
-                head = node;
-                if (isSharedMode(mode) && node.status < 0) {
-                    Node s = node.next; // wake up other readers
-                    if (s == null || isSharedMode(s.mode))
-                        unparkSuccessor(node);
+            if (p == head) {
+                int acq;
+                try {
+                    acq = shared?
+                        acquireSharedState(true, acquires, current):
+                        acquireExclusiveState(true, acquires, current);
+                } catch (RuntimeException ex) {
+                    cancelAcquire(node);
+                    throw ex;
                 }
-                
-                if ((mode & REINTERRUPT) != 0)
-                    current.interrupt();
-                return UNINTERRUPTED;
+                if (acq >= 0) {
+                    p.next = null; 
+                    node.thread = null;
+                    node.prev = null; 
+                    head = node;
+                    if (acq > 0 && node.status < 0) {
+                        Node s = node.next; 
+                        if (s == null || s.shared)
+                            unparkSuccessor(node);
+                    }
+                    if ((mode & REINTERRUPT) != 0)
+                        current.interrupt();
+                    return UNINTERRUPTED;
+                }
             }
 
             int status = p.status;
             if (status == 0) 
-                statusUpdater.compareAndSet(p, 0, SIGNAL);
-            else if (status == CANCELLED) 
+                p.compareAndSetStatus(0, Node.SIGNAL);
+            else if (status == Node.CANCELLED) 
                 node.prev = p.prev;
             else {
                 if ((mode & TIMEOUT) != 0) {
@@ -610,11 +811,9 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
                         lastTime = now;
                     }
                     if (nanos <= 0) {
-                        node.thread = null;   
-                        node.status = CANCELLED;
-                        unparkSuccessor(node);
+                        cancelAcquire(node);
                         return TIMEOUT;
-                    }
+                }
                     else
                         LockSupport.parkNanos(nanos);
                 }
@@ -622,10 +821,8 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
                     LockSupport.park();
                 
                 if (Thread.interrupted()) {
-                    if ((mode & INTERRUPT) != 0)  {  
-                        node.thread = null;   
-                        node.status = CANCELLED;
-                        unparkSuccessor(node);
+                    if ((mode & INTERRUPT) != 0) {
+                        cancelAcquire(node);
                         return INTERRUPT;
                     }
                     else
@@ -636,21 +833,19 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
     }
 
     /**
-     * Re-acquire lock after a wait, resetting lock count.
-     * Assumes (does not check) that lock was, and will be, held in
-     * exclusive-mode.
+     * Re-acquire after a wait, resetting state.  Called only by
+     * Condition methods after returning from condition-waits.
      * @param current the waiting thread
      * @param node its node
-     * @param holds number of holds on lock before entering wait
-     * @return true if interrupted while re-acquiring lock
+     * @param savedState the value of state before entering wait
+     * @return true if interrupted while re-acquiring
      */
-    boolean relock(Thread current, Node node, int holds) {
+    boolean reacquireExclusive(Thread current, Node node, int savedState) {
         boolean interrupted = false;
         for (;;) {
             Node p = node.prev; 
-            if (p == head && tryAcquire(EXCLUSIVE, current)) {
-                if (holds != 1)
-                    count.set(holds);
+            if (p == head && 
+                acquireExclusiveState(true, savedState, current) >= 0) {
                 p.next = null; 
                 node.thread = null;
                 node.prev = null; 
@@ -660,8 +855,8 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
             
             int status = p.status;
             if (status == 0) 
-                statusUpdater.compareAndSet(p, 0, SIGNAL);
-            else if (status == CANCELLED) 
+                p.compareAndSetStatus(0, Node.SIGNAL);
+            else if (status == Node.CANCELLED) 
                 node.prev = p.prev;
             else { 
                 LockSupport.park();
@@ -671,164 +866,43 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
         }
     }
 
-    // Exportable versions of main lock/unlock methods
-
-    /** Acquire shared lock */
-    final void lockShared() {
-        if (!fair || head == tail) {             // fast path
-            final AtomicInteger count = this.count;
-            int c = count.get();
-            if (!isExclusive(c) && count.compareAndSet(c, c + SHARED_UNIT))
-                return;
-        }
-        doLock(SHARED | UNINTERRUPTED, 0);
-    }
-
-    /** trylock for shared lock */
-    final boolean tryLockShared() {
-        final AtomicInteger count = this.count;
-        int c = count.get();
-        if (!isExclusive(c) && count.compareAndSet(c, c + SHARED_UNIT))
-            return true;
-        return tryAcquire(SHARED, Thread.currentThread());
-    }
-
-    /** Trylock for shared lock */
-    final boolean tryLockShared(long timeout, TimeUnit unit) throws InterruptedException {
-        int s = doLock(SHARED | INTERRUPT | TIMEOUT, unit.toNanos(timeout));
-        if (s == UNINTERRUPTED)
-            return true;
-        if (s != INTERRUPT)
-            return false;
-        throw new InterruptedException();
-    }
-
-    /** Interruptibly lock shared lock */
-    final void lockInterruptiblyShared() throws InterruptedException {
-        if (doLock(SHARED | INTERRUPT, 0) == INTERRUPT)
-            throw new InterruptedException();
-    }
-
-
-    /** Release shared lock */
-    final void unlockShared() {
-        final AtomicInteger count = this.count;
-        for (;;) {
-            int c = count.get();
-            int nextc = c - SHARED_UNIT;
-            if (nextc < 0)
-                throw new IllegalMonitorStateException();
-            if (count.compareAndSet(c, nextc)) {
-                if (nextc == 0) {
-                    Node h = head;
-                    if (h != null && h.status < 0)
-                        unparkSuccessor(h);
-                }
-                return;
-            }
-        }
-    }
-
-    /** Acquire exclusive (write) lock */
-    final void lockExclusive() {
-        if ((!fair || head == tail) && count.compareAndSet(0, 1)) 
-            owner = Thread.currentThread();
-        else
-            doLock(UNINTERRUPTED, 0);
-    }
-
-    /** Trylock for exclusive (write) lock */
-    final boolean tryLockExclusive() {
-        if (count.compareAndSet(0, 1)) {
-            owner = Thread.currentThread();
-            return true;
-        }
-        return tryAcquire(0, Thread.currentThread());
-    }
-
-    /** Release exclusive (write) lock */
-    final void unlockExclusive() {
-        Node h;
-        final AtomicInteger count = this.count;
-        Thread current = Thread.currentThread();
-        if (count.get() != 1 || current != owner) 
-            slowUnlockExclusive(current);
-        else {
-            owner = null;
-            count.set(0);
-            if ((h = head) != null && h.status < 0)
-                unparkSuccessor(h);
-        }
-    }
-
     /**
-     * Handle uncommon cases for unlockExclusive
-     * @param current current Thread
+     * Fully release. Called only by Condition methods on entry to await.
+     * @return the state before unlocking
      */
-    private void slowUnlockExclusive(Thread current) {
-        Node h;
-        int c = count.get();
-        int w = exclusiveCount(c) - 1;
-        if (w < 0 || owner != current)
-            throw new IllegalMonitorStateException();
-        if (w == 0) 
-            owner = null;
-        count.set(c - 1);
-        if (w == 0 && (h = head) != null && h.status < 0)
-            unparkSuccessor(h);
+    int fullyReleaseExclusive() {
+        int c = state.get();
+        releaseExclusive(c);
+        return c;
     }
 
-    /** Trylock for exclusive (write) lock */
-    final boolean tryLockExclusive(long timeout, TimeUnit unit) throws InterruptedException {
-        int s = doLock(INTERRUPT | TIMEOUT, unit.toNanos(timeout));
-        if (s == UNINTERRUPTED)
-            return true;
-        if (s != INTERRUPT)
-            return false;
-        throw new InterruptedException();
-    }
-
-    /** Interruptible lock exclusive (write) lock */
-    final void lockInterruptiblyExclusive() throws InterruptedException { 
-        if (doLock(INTERRUPT, 0) == INTERRUPT)
-            throw new InterruptedException();
-    }
+    // Instrumentation and monitoring methods
 
     /**
-     * Fully unlock the lock, setting lock holds to zero.  Assumes
-     * (does not check) that lock is held in exclusive-mode.
-     * @return current hold count.
+     * Queries whether any threads are waiting to acquire. Note that
+     * because cancellations may occur at any time, a <tt>true</tt>
+     * return does not guarantee that any other thread will ever
+     * acquire.  This method is designed primarily for use in
+     * monitoring of the system state.
+     *
+     * @return true if there may be other threads waiting to acquire
+     * the lock.
      */
-    final int fullyUnlock() {
-        int holds = count.get();
-        owner = null;
-        count.set(0);
-        Node h = head;
-        if (h != null && h.status < 0)
-            unparkSuccessor(h);
-        return holds;
+    public final boolean hasWaiters() { 
+        return head != tail; 
     }
 
-    // Instrumentation and status
 
     /**
-     * Return true if this lock has fairness set true.
-     * @return true if this lock has fairness set true.
-     */
-    public boolean isFair() {
-        return fair;
-    }
-
-    /**
-     * Returns an estimate of the number of threads waiting to acquire
-     * this lock. The value is only an estimate because the number of
+     * Returns an estimate of the number of threads waiting to
+     * acquire.  The value is only an estimate because the number of
      * threads may change dynamically while this method traverses
      * internal data structures.  This method is designed for use in
      * monitoring of the system state, not for synchronization
      * control.
      * @return the estimated number of threads waiting for this lock
      */
-    public int getQueueLength() {
+    public final int getQueueLength() {
         int n = 0;
         for (Node p = tail; p != null && p != head; p = p.prev)
             ++n;
@@ -837,12 +911,12 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
 
     /**
      * Returns a collection containing threads that may be waiting to
-     * acquire this lock.  Because the actual set of threads may
-     * change dynamically while constructing this result, the returned
+     * acquire.  Because the actual set of threads may change
+     * dynamically while constructing this result, the returned
      * collection is only a best-effort estimate.  The elements of the
      * returned collection are in no particular order.  This method is
      * designed to facilitate construction of subclasses that provide
-     * more extensive lock monitoring facilities.
+     * more extensive monitoring facilities.
      * @return the collection of threads
      */
     protected Collection<Thread> getQueuedThreads() {
@@ -857,15 +931,14 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
 
     /**
      * Returns a collection containing threads that may be waiting to
-     * acquire lock with given mode. 
+     * acquire with given mode.
      * @param shared true if shared mode, else exclusive
      * @return the collection of threads
      */
-    Collection<Thread> getQueuedThreads(boolean shared) {
-        int mode = shared? SHARED : EXCLUSIVE;
+    protected Collection<Thread> getQueuedThreads(boolean shared) {
         ArrayList<Thread> list = new ArrayList<Thread>();
         for (Node p = tail; p != null; p = p.prev) {
-            if (p.mode == mode) {
+            if (p.shared == shared) {
                 Thread t = p.thread;
                 if (t != null)
                     list.add(t);
@@ -874,55 +947,21 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
         return list;
     }
 
-    /**
-     * Returns the thread that currently owns the exclusive lock, or
-     * <tt>null</tt> if not owned. Note that the owner may be
-     * momentarily <tt>null</tt> even if there are threads trying to
-     * acquire the lock but have not yet done so.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive lock monitoring facilities.
-     * @return the owner, or <tt>null</tt> if not owned.
-     */
-    protected Thread getOwner() {
-        return (isExclusive(count.get()))? owner : null;
-    }
-
-    /**
-     * Throw IllegalMonitorStateException if given thread is not owner
-     * @param thread the thread
-     * @throws IllegalMonitorStateException if thread not owner
-     */
-    final void checkOwner(Thread thread) {
-        if (!isExclusive(count.get()) || owner != thread) 
-            throw new IllegalMonitorStateException();
-    }
-
-    /**
-     * Throw IllegalMonitorStateException if given thread cannot
-     * wait on condition
-     * @param thread the thread
-     * @throws IllegalMonitorStateException if thread cannot wait
-     */
-    final void checkOwnerForWait(Thread thread) {
-        // Waiters cannot hold shared locks
-        if (count.get() != 1 || owner != thread) 
-            throw new IllegalMonitorStateException();
-    }
 
     /**
      * Return true if a node, always one that was initially placed on
-     * a condition queue, is now on the lock queue.
+     * a condition queue, is now waiting to reacquire on sync queue.
      * @param node the node
-     * @return true if on lock queue
+     * @return true if is reacquiring
      */
-    final boolean isOnLockQueue(Node node) {
-        if (node.status == CONDITION || node.prev == null)
+    final boolean isReacquiring(Node node) {
+        if (node.status == Node.CONDITION || node.prev == null)
             return false;
-        // If node has successor, it must be on lock queue
+        // If node has successor, it must be on queue
         if (node.next != null) 
             return true;
         /*
-         * node.prev can be non-null, but not yet on lock queue because
+         * node.prev can be non-null, but not yet on queue because
          * the CAS to place it on queue can fail. So we have to
          * traverse from tail to make sure it actually made it.  It
          * will always be near the tail in calls to this method, and
@@ -940,7 +979,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
     } 
 
     /**
-     * Transfer a node from a condition queue onto lock queue. 
+     * Transfer a node from a condition queue onto sync queue. 
      * Return true if successful.
      * @param node the node
      * @return true if succesfully transferred (else the node was
@@ -950,7 +989,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
         /*
          * If cannot change status, the node has been cancelled.
          */
-        if (!statusUpdater.compareAndSet(node, CONDITION, 0))
+        if (!node.compareAndSetStatus(Node.CONDITION, 0))
             return false;
 
         /*
@@ -962,14 +1001,15 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
         enq(node);
         Node p = node.prev;
         int c = p.status;
-        if (c == CANCELLED || !statusUpdater.compareAndSet(p, c, SIGNAL))
+        if (c == Node.CANCELLED || 
+            !p.compareAndSetStatus(c, Node.SIGNAL))
             LockSupport.unpark(node.thread);
 
         return true;
     }
 
     /**
-     * Transfer node, if necessary, to lock queue after a cancelled
+     * Transfer node, if necessary, to sync queue after a cancelled
      * wait. Return true if thread was cancelled before being
      * signalled.
      * @param current the waiting thread
@@ -977,7 +1017,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
      * @return true if cancelled before the node was signalled.
      */
     final boolean transferAfterCancelledWait(Thread current, Node node) {
-        if (statusUpdater.compareAndSet(node, CONDITION, 0)) {
+        if (node.compareAndSetStatus(Node.CONDITION, 0)) {
             enq(node);
             return true;
         }
@@ -988,27 +1028,14 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
              * incomplete transfer is both rare and transient, so just
              * spin.
              */
-            while (!isOnLockQueue(node)) 
+            while (!isReacquiring(node)) 
                 Thread.yield();
             return false;
         }
     }
 
-    // Serialization support
-
     /**
-     * Reconstitute this lock instance from a stream (that is,
-     * deserialize it).
-     * @param s the stream
-     */
-    private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        count.set(0); // reset to unlocked state
-    }
-
-    /**
-     * Condition implementation for use with <tt>AbstractReentrantLock</tt>.
+     * Condition implementation.
      * Instances of this class can be constructed only by subclasses.
      *
      * <p>In addition to implementing the {@link Condition} interface,
@@ -1017,28 +1044,18 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
      * <tt>protected</tt> access methods that may be useful for
      * instrumentation and monitoring.
      */
-    protected static class AbstractConditionObject implements Condition, java.io.Serializable {
-
+    public class LockCondition implements Condition, java.io.Serializable {
         private static final long serialVersionUID = 1173984872572414699L;
 
-        /** The lock we are serving as a condition for. */
-        private final AbstractReentrantLock lock;
         /** First node of condition queue. */
         private transient Node firstWaiter;
         /** Last node of condition queue. */
         private transient Node lastWaiter;
 
         /**
-         * Constructor for use by subclasses to create a
-         * AbstractConditionObject associated with given lock.  
-         * @param lock the lock for this condition
-         * @throws NullPointerException if lock null
+         * Constructor for use by subclasses 
          */
-        protected AbstractConditionObject(AbstractReentrantLock lock) {
-            if (lock == null)
-                throw new NullPointerException();
-            this.lock = lock;
-        }
+        protected LockCondition() { }
 
         // Internal methods
 
@@ -1048,7 +1065,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * @return its new wait node
          */
         private Node addConditionWaiter(Thread current) {
-            Node w = new Node(current, 0, CONDITION);
+            Node w = new Node(current, false, Node.CONDITION);
             Node t = lastWaiter;
             if (t == null) 
                 firstWaiter = w;
@@ -1069,7 +1086,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
                 if ( (firstWaiter = first.nextWaiter) == null) 
                     lastWaiter = null;
                 first.nextWaiter = null;
-            } while (!lock.transferForSignal(first) &&
+            } while (!transferForSignal(first) &&
                      (first = firstWaiter) != null);
         }
 
@@ -1082,7 +1099,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
             do {
                 Node next = first.nextWaiter;
                 first.nextWaiter = null;
-                lock.transferForSignal(first);
+                transferForSignal(first);
                 first = next;
             } while (first != null);
         }
@@ -1105,10 +1122,10 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * thread releases the lock associated with this Condition.
          * 
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          **/
         public void signal() {
-            lock.checkOwner(Thread.currentThread());
+            checkConditionAccess(Thread.currentThread(), false);
             Node w = firstWaiter;
             if (w != null)
                 doSignal(w);
@@ -1121,10 +1138,10 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * are all woken up. Each thread must re-acquire the lock
          * before it returns.
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          */
         public void signalAll() {
-            lock.checkOwner(Thread.currentThread());
+            checkConditionAccess(Thread.currentThread(), false);
             Node w = firstWaiter;
             if (w != null) 
                 doSignalAll(w);
@@ -1167,20 +1184,20 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * <em>interrupted status</em> will still be set.
          * 
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          */
         public void awaitUninterruptibly() {
             Thread current = Thread.currentThread();
-            lock.checkOwnerForWait(current);
+            checkConditionAccess(current, true);
             Node w = addConditionWaiter(current);
-            int holds = lock.fullyUnlock();
+            int savedState = fullyReleaseExclusive();
             boolean interrupted = false;
-            while (!lock.isOnLockQueue(w)) {
+            while (!isReacquiring(w)) {
                 LockSupport.park();
                 if (Thread.interrupted()) 
                     interrupted = true;
             }
-            if (lock.relock(current, w, holds))
+            if (reacquireExclusive(current, w, savedState))
                 interrupted = true;
             if (interrupted)
                 current.interrupt();
@@ -1223,33 +1240,33 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * @throws InterruptedException if the current thread is
          * interrupted
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          **/
         public void await() throws InterruptedException {
             Thread current = Thread.currentThread();
-            lock.checkOwnerForWait(current);
+            checkConditionAccess(current, true);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int holds = lock.fullyUnlock();
+            int savedState = fullyReleaseExclusive();
             boolean throwIE = false;
             boolean interrupted = false;
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    if (lock.transferAfterCancelledWait(current, w))
+                    if (transferAfterCancelledWait(current, w))
                         throwIE = true;
                     else
                         interrupted = true;
                     break;
                 }
-                if (lock.isOnLockQueue(w)) 
+                if (isReacquiring(w)) 
                     break;
                 LockSupport.park();
             }
 
-            if (lock.relock(current, w, holds))
+            if (reacquireExclusive(current, w, savedState))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1309,33 +1326,33 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * @throws InterruptedException if the current thread is
          * interrupted.
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          */
         public long awaitNanos(long nanosTimeout) throws InterruptedException {
             Thread current = Thread.currentThread();
-            lock.checkOwnerForWait(current);
+            checkConditionAccess(current, true);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int holds = lock.fullyUnlock();
+            int savedState = fullyReleaseExclusive();
             long lastTime = System.nanoTime();
             boolean throwIE = false;
             boolean interrupted = false;
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    if (lock.transferAfterCancelledWait(current, w))
+                    if (transferAfterCancelledWait(current, w))
                         throwIE = true;
                     else
                         interrupted = true;
                     break;
                 }
                 if (nanosTimeout <= 0L) {
-                    lock.transferAfterCancelledWait(current, w); 
+                    transferAfterCancelledWait(current, w); 
                     break;
                 }
-                if (lock.isOnLockQueue(w)) 
+                if (isReacquiring(w)) 
                     break;
                 LockSupport.parkNanos(nanosTimeout);
                 long now = System.nanoTime();
@@ -1343,7 +1360,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
                 lastTime = now;
             }
 
-            if (lock.relock(current, w, holds))
+            if (reacquireExclusive(current, w, savedState))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1395,19 +1412,19 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          *
          * @throws InterruptedException if the current thread is interrupted
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          * @throws NullPointerException if deadline is null
          */
         public boolean awaitUntil(Date deadline) throws InterruptedException {
             if (deadline == null)
                 throw new NullPointerException();
             Thread current = Thread.currentThread();
-            lock.checkOwnerForWait(current);
+            checkConditionAccess(current, true);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int holds = lock.fullyUnlock();
+            int savedState = fullyReleaseExclusive();
             long abstime = deadline.getTime();
             boolean timedout = false;
             boolean throwIE = false;
@@ -1415,22 +1432,22 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
             
             for (;;) {
                 if (Thread.interrupted()) {
-                    if (lock.transferAfterCancelledWait(current, w))
+                    if (transferAfterCancelledWait(current, w))
                         throwIE = true;
                     else
                         interrupted = true;
                     break;
                 }
                 if (System.currentTimeMillis() > abstime) {
-                    timedout = lock.transferAfterCancelledWait(current, w); 
+                    timedout = transferAfterCancelledWait(current, w); 
                     break;
                 }
-                if (lock.isOnLockQueue(w)) 
+                if (isReacquiring(w)) 
                     break;
                 LockSupport.parkUntil(abstime);
             }
 
-            if (lock.relock(current, w, holds))
+            if (reacquireExclusive(current, w, savedState))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1455,7 +1472,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * @throws InterruptedException if the current thread is
          * interrupted
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          * @throws NullPointerException if unit is null
          */
         public boolean await(long time, TimeUnit unit) throws InterruptedException {
@@ -1464,12 +1481,12 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
 
             long nanosTimeout = unit.toNanos(time);
             Thread current = Thread.currentThread();
-            lock.checkOwnerForWait(current);
+            checkConditionAccess(current, true);
             if (Thread.interrupted()) 
                 throw new InterruptedException();
 
             Node w = addConditionWaiter(current);
-            int holds = lock.fullyUnlock();
+            int savedState = fullyReleaseExclusive();
             long lastTime = System.nanoTime();
             boolean timedout = false;
             boolean throwIE = false;
@@ -1477,17 +1494,17 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    if (lock.transferAfterCancelledWait(current, w))
+                    if (transferAfterCancelledWait(current, w))
                         throwIE = true;
                     else
                         interrupted = true;
                     break;
                 }
                 if (nanosTimeout <= 0L) {
-                    timedout = lock.transferAfterCancelledWait(current, w); 
+                    timedout = transferAfterCancelledWait(current, w); 
                     break;
                 }
-                if (lock.isOnLockQueue(w)) 
+                if (isReacquiring(w)) 
                     break;
                 LockSupport.parkNanos(nanosTimeout);
                 long now = System.nanoTime();
@@ -1495,7 +1512,7 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
                 lastTime = now;
             }
 
-            if (lock.relock(current, w, holds))
+            if (reacquireExclusive(current, w, savedState))
                 interrupted = true;
             if (throwIE)
                 throw new InterruptedException();
@@ -1513,12 +1530,12 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * monitoring of the system state.
          * @return <tt>true</tt> if there are any waiting threads.
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          */ 
         public boolean hasWaiters() {
-            lock.checkOwner(Thread.currentThread());
+            checkConditionAccess(Thread.currentThread(), false);
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.status == CONDITION)
+                if (w.status == Node.CONDITION)
                     return true;
             }
             return false;
@@ -1533,13 +1550,13 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * synchronization control.
          * @return the estimated number of waiting threads.
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          */ 
         public int getWaitQueueLength() {
-            lock.checkOwner(Thread.currentThread());
+            checkConditionAccess(Thread.currentThread(), false);
             int n = 0;
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.status == CONDITION)
+                if (w.status == Node.CONDITION)
                     ++n;
             }
             return n;
@@ -1556,13 +1573,13 @@ public abstract class AbstractReentrantLock implements java.io.Serializable {
          * condition monitoring facilities.
          * @return the collection of threads
          * @throws IllegalMonitorStateException if the lock associated
-         * with this Condition is not held by the current thread
+         * with this Condition is not held
          */
         protected Collection<Thread> getWaitingThreads() {
-            lock.checkOwner(Thread.currentThread());
+            checkConditionAccess(Thread.currentThread(), false);
             ArrayList<Thread> list = new ArrayList<Thread>();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.status == CONDITION) {
+                if (w.status == Node.CONDITION) {
                     Thread t = w.thread;
                     if (t != null)
                         list.add(t);

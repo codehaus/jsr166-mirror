@@ -5,11 +5,9 @@
  */
 
 package java.util.concurrent.locks;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.*;
-import java.lang.reflect.*;
-import sun.misc.*;
 
 /**
  * A reentrant mutual exclusion {@link Lock} with the same basic
@@ -23,9 +21,7 @@ import sun.misc.*;
  * the lock is not owned by another thread. The method will return
  * immediately if the current thread already owns the lock. This can
  * be checked using methods {@link #isHeldByCurrentThread}, and {@link
- * #getHoldCount}.  A <tt>ReentrantLock</tt> may be used in a
- * non-reentrant way by checking that the lock is not already held by
- * the current thread prior to locking.
+ * #getHoldCount}.  
  *
  * <p> The constructor for this class accepts an optional
  * <em>fairness</em> parameter.  When set <tt>true</tt>, under
@@ -71,7 +67,7 @@ import sun.misc.*;
  * locks: a deserialized lock is in the unlocked state, regardless of
  * its state when serialized.
  *
- * <p> This lock supports a maximum of 655536 recursive locks by
+ * <p> This lock supports a maximum of 2147483648 recursive locks by
  * the same thread. Attempts to exceed this limit result in {@link
  * Error} throws from locking methods.
  *
@@ -79,7 +75,7 @@ import sun.misc.*;
  * @author Doug Lea
  * 
  */
-public class ReentrantLock extends AbstractReentrantLock implements Lock, java.io.Serializable {
+public class ReentrantLock extends AbstractQueuedSynchronizer implements Lock, java.io.Serializable {
     /*
      * See the internal documentation for AbstractReentrantLock for
      * description of approach and algorithm.
@@ -87,12 +83,18 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
 
     private static final long serialVersionUID = 7373984872572414699L;
 
+    /** true if barging disabled */
+    private final boolean fair;
+
+    /** Current (exclusive) owner thread */
+    private transient Thread owner;
+
     /**
      * Creates an instance of <tt>ReentrantLock</tt>.
      * This is equivalent to using <tt>ReentrantLock(false)</tt>.
      */
     public ReentrantLock() { 
-        super();
+        fair = false;
     }
 
     /**
@@ -100,9 +102,84 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * given fairness policy.
      */
     public ReentrantLock(boolean fair) { 
-        super(fair);
+        this.fair = fair;
     }
 
+    // Instrumentation and status
+
+    /**
+     * Return true if this lock has fairness set true.
+     * @return true if this lock has fairness set true.
+     */
+    public final boolean isFair() {
+        return fair;
+    }
+
+    /**
+     * Returns the thread that currently owns the exclusive lock, or
+     * <tt>null</tt> if not owned. Note that the owner may be
+     * momentarily <tt>null</tt> even if there are threads trying to
+     * acquire the lock but have not yet done so.  This method is
+     * designed to facilitate construction of subclasses that provide
+     * more extensive lock monitoring facilities.
+     * @return the owner, or <tt>null</tt> if not owned.
+     */
+    protected Thread getOwner() {
+        return (getState().get() != 0)? owner : null;
+    }
+
+
+    protected final int acquireExclusiveState(boolean isQueued, int acquires, 
+                                              Thread current) {
+        final AtomicInteger count = getState();
+        boolean nobarge = !isQueued && fair;
+        for (;;) {
+            int c = count.get();
+            int nextc = c + acquires;
+            if (nextc < 0)
+                throw new Error("Maximum lock count exceeded");
+            if (c != 0) {
+                if (current != owner)
+                    return -1;
+                count.set(nextc);
+                return 0;
+            }
+            else {
+                if (nobarge && hasWaiters())
+                    return -1;
+                if (count.compareAndSet(c, nextc)) {
+                    owner = current;
+                    return 0;
+                }
+            }
+            // Recheck count if lost CAS
+        }
+    }
+
+    protected final boolean releaseExclusiveState(int releases) {
+        final AtomicInteger count = getState();
+        Thread current = Thread.currentThread();
+        int c = count.get() - releases;
+        if (c < 0 || owner != current)
+            throw new IllegalMonitorStateException();
+        if (c == 0) 
+            owner = null;
+        count.set(c);
+        return c == 0;
+    }
+
+    protected final void checkConditionAccess(Thread thread, boolean waiting) {
+        if (getState().get() == 0 || owner != thread) 
+            throw new IllegalMonitorStateException();
+    }
+
+    protected int acquireSharedState(boolean isQueued, int acquires, Thread current) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected boolean releaseSharedState(int releases) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Acquires the lock. 
@@ -120,7 +197,12 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * at which time the lock hold count is set to one. 
      */
     public void lock() {
-        lockExclusive();
+        final AtomicInteger count = getState();
+        if ((!fair || !hasWaiters()) && count.compareAndSet(0, 1)) {
+            owner = Thread.currentThread();
+            return;
+        }
+        acquireExclusiveUninterruptibly(1);
     }
 
     /**
@@ -171,7 +253,7 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * @throws InterruptedException if the current thread is interrupted
      */
     public void lockInterruptibly() throws InterruptedException { 
-        lockInterruptiblyExclusive();
+        acquireExclusiveInterruptibly(1);
     }
 
     /**
@@ -202,7 +284,11 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * <tt>false</tt> otherwise.
      */
     public boolean tryLock() {
-        return tryLockExclusive();
+        if (getState().compareAndSet(0, 1)) {
+            owner = Thread.currentThread();
+            return true;
+        }
+        return acquireExclusiveState(true, 1, Thread.currentThread()) >= 0;
     }
 
     /**
@@ -280,7 +366,7 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      *
      */
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-        return tryLockExclusive(timeout, unit);
+        return acquireExclusiveTimed(1, unit.toNanos(timeout));
     }
 
     /**
@@ -295,7 +381,7 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * hold this lock.
      */
     public void unlock() {
-        unlockExclusive();
+        releaseExclusive(1);
     }
 
     /**
@@ -303,8 +389,8 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * {@link Lock} instance.
      * @return the Condition object
      */
-    public ReentrantLock.ConditionObject newCondition() {
-        return new ReentrantLock.ConditionObject(this);
+    public ConditionObject newCondition() {
+        return new ConditionObject();
     }
 
     /**
@@ -339,7 +425,8 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * or zero if this lock is not held by the current thread.
      */
     public int getHoldCount() {
-        return getExclusiveCount();
+        int c = getState().get();
+        return (owner == Thread.currentThread())? c : 0;
     }
 
     /**
@@ -396,22 +483,31 @@ public class ReentrantLock extends AbstractReentrantLock implements Lock, java.i
      * <tt>false</tt> otherwise.
      */
     public boolean isLocked() {
-        return getExclusiveCount() != 0;
+        return getState().get() != 0;
     }
 
     /**
-     * Condition implementation for use with <tt>ReentrantLock</tt>.
-     * Instances of this class can be constructed only using method
-     * {@link Lock#newCondition}.
-     * 
-     * <p>This class supports the same basic semantics and styles of
-     * usage as the {@link Object} monitor methods.  Methods may be
-     * invoked only when holding the <tt>ReentrantLock</tt> associated
-     * with this Condition. Failure to comply results in {@link
-     * IllegalMonitorStateException}.
+     * Reconstitute this lock instance from a stream (that is,
+     * deserialize it).
+     * @param s the stream
      */
-    public static class ConditionObject extends AbstractReentrantLock.AbstractConditionObject {
-        protected ConditionObject(ReentrantLock lock) { super(lock); }
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        getState().set(0); // reset to unlocked state
+    }
+
+    /**
+     * Condition implementation. This class supports the same basic
+     * semantics and styles of usage as the {@link Object} monitor
+     * methods.  Methods may be invoked only when holding the lock
+     * associated with this Condition. Failure to comply results in
+     * {@link IllegalMonitorStateException}.
+     *
+     */
+    public class ConditionObject extends AbstractQueuedSynchronizer.LockCondition {
+        /** Constructor for use by subclasses */
+        protected ConditionObject() {}
     }
 
 }

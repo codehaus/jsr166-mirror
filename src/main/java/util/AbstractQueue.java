@@ -25,7 +25,7 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements 
             throw new IllegalStateException("Queue full");
     }
 
-    public E remove() throws NoSuchElementException {
+    public E remove() {
         E x = poll();
         if (x != null)
             return x;
@@ -33,7 +33,7 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements 
             throw new NoSuchElementException();
     }
 
-    public E element() throws NoSuchElementException {
+    public E element() {
         E x = peek();
         if (x != null)
             return x;

@@ -26,7 +26,7 @@ package java.util;
  * failure. It is designed for use in collections in which failure to
  * add is a normal, rather than exceptional occurrence, for example,
  * in fixed-capacity (or &quot;bounded&quot;) queues.
- * 
+ *
  * <p>The {@link #remove()} and {@link #poll()} methods remove and
  * return the head of the queue.
  * Exactly which element is removed from the queue is a
@@ -74,7 +74,7 @@ public interface Queue<E> extends Collection<E> {
      * Add the specified element to this queue, if possible.
      *
      * @param element the element to add.
-     * @return <tt>true</tt> if it was possible to add the element to 
+     * @return <tt>true</tt> if it was possible to add the element to
      * this queue.
      */
     boolean offer(E element);
@@ -83,25 +83,25 @@ public interface Queue<E> extends Collection<E> {
      * Retrieve and remove the head of this queue, if it is available.
      *
      * @return the head of this queue, or <tt>null</tt> if this
-     *         queue is empty. 
+     *         queue is empty.
      */
     E poll();
 
     /**
-     * Retrieve and remove the head of this queue.  
+     * Retrieve and remove the head of this queue.
      * This method differs
      * from the <tt>poll</tt> method in that it throws an exception if the
-     * queue is empty. 
+     * queue is empty.
      *
      * @return the head of this queue.
      * @throws NoSuchElementException if this queue is empty.
      */
-    E remove() throws NoSuchElementException;
+    E remove();
 
     /**
      * Retrieve, but do not remove, the head of this queue, or <tt>null</tt>
-     * if this queue is empty.  This method differs from the <tt>poll</tt> 
-     * method only in that this method does not remove the element from 
+     * if this queue is empty.  This method differs from the <tt>poll</tt>
+     * method only in that this method does not remove the element from
      * this queue.
      *
      * @return the head of this queue, or <tt>null</tt> if this queue is empty.
@@ -110,13 +110,13 @@ public interface Queue<E> extends Collection<E> {
 
     /**
      * Retrieve, but do not remove, the head of this queue.  This method
-     * differs from the <tt>peek</tt> method only in that it throws an 
+     * differs from the <tt>peek</tt> method only in that it throws an
      * exception if this queue is empty.
      *
      * @return the head of this queue.
      * @throws NoSuchElementException if this queue is empty.
      */
-    E element() throws NoSuchElementException;
+    E element();
 }
 
 

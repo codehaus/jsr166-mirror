@@ -36,6 +36,7 @@ public interface CompletionService<V> {
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
+     * @throws NullPointerException if task null     
      */
     Future<V> submit(Callable<V> task);
 
@@ -52,6 +53,7 @@ public interface CompletionService<V> {
      * upon completion
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
+     * @throws NullPointerException if task null     
      */
     Future<V> submit(Runnable task, V result);
 

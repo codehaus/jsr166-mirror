@@ -12,10 +12,9 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 
 /**
- * An <tt>Executor</tt> that provides methods to manage termination
- * and methods that can produce a {@link Future} for tracking
- * progress of one or more asynchronous tasks.
- * <p>
+ * An {@link Executor} that provides methods to manage termination and
+ * methods that can produce a {@link Future} for tracking progress of
+ * one or more asynchronous tasks.  <p>
  *
  * An <tt>ExecutorService</tt> can be shut down, which will cause it
  * to stop accepting new tasks.  After being shut down, the executor
@@ -23,14 +22,14 @@ import java.security.PrivilegedExceptionAction;
  * executing, no tasks are awaiting execution, and no new tasks can be
  * submitted.
  *
- * <p> Method <tt>submit</tt> extends base method <tt>execute</tt> by
- * creating and returning a {@link Future} that can be used to cancel
- * execution and/or wait for completion.  Methods <tt>invokeAny</tt>
- * and <tt>invokeAll</tt> perform the most commonly useful forms of
- * bulk execution, executing a collection of tasks and then waiting
- * for at least one, or all to complete. (Class {@link
- * ExecutorCompletionService} can be used to write customizable
- * versions of such methods.)
+ * <p> Method <tt>submit</tt> extends base method {@link
+ * Executor#execute} by creating and returning a {@link Future} that
+ * can be used to cancel execution and/or wait for completion.
+ * Methods <tt>invokeAny</tt> and <tt>invokeAll</tt> perform the most
+ * commonly useful forms of bulk execution, executing a collection of
+ * tasks and then waiting for at least one, or all, to
+ * complete. (Class {@link ExecutorCompletionService} can be used to
+ * write customized variants of these methods.)
  *
  * <p>The {@link Executors} class provides factory methods for the
  * executor services provided in this package.
@@ -39,7 +38,6 @@ import java.security.PrivilegedExceptionAction;
  * @author Doug Lea
  */
 public interface ExecutorService extends Executor {
-
 
     /**
      * Initiates an orderly shutdown in which previously submitted
@@ -109,15 +107,38 @@ public interface ExecutorService extends Executor {
      * representing the pending results of the task. 
      *
      * <p>
-     * Note that if you would like to immediately block waiting
+     * If you would like to immediately block waiting
      * for a task, you can use constructions of the form
      * <tt>result = exec.submit(aCallable).get();</tt>
+     *
+     * <p> Note: The {@link Executors} class includes a set of methods
+     * that can convert some other common closure-like objects,
+     * for example, {@link java.security.PrivilegedAction} to
+     * {@link Callable} form so they can be submitted.
+     *
      * @param task the task to submit
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
+     * @throws NullPointerException if task null
      */
     <T> Future<T> submit(Callable<T> task);
+
+    /**
+     * Submits a Runnable task for execution and returns a Future 
+     * representing that task that will upon completion return 
+     * the given result
+     *
+     * @param task the task to submit
+     * @param result the result to return
+     * @return a Future representing pending completion of the task,
+     * and whose <tt>get()</tt> method will return the given result
+     * upon completion.
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     * @throws NullPointerException if task null     
+     */
+    <T> Future<T> submit(Runnable task, T result);
 
     /**
      * Submits a Runnable task for execution and returns a Future 
@@ -129,6 +150,7 @@ public interface ExecutorService extends Executor {
      * upon completion.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
+     * @throws NullPointerException if task null
      */
     Future<?> submit(Runnable task);
 

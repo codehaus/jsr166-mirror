@@ -14,8 +14,24 @@ import java.security.PrivilegedExceptionAction;
 
 /**
  * Factory and utility methods for {@link Executor}, {@link
- * ExecutorService}, and {@link ThreadFactory} classes defined in this
- * package.
+ * ExecutorService}, {@link ScheduledExecutorService}, {@link
+ * ThreadFactory}, and {@link Callable} classes defined in this
+ * package. This class supports the following kinds of methods:
+ * 
+ * <ul>
+ *   <li> Methods that create and return an {@link ExecutorService} 
+ *        set up with commonly useful configuration settings. 
+ *   <li> Methods that create and return a {@link ScheduledExecutorService} 
+ *        set up with commonly useful configuration settings. 
+ *   <li> Methods that create and return a "wrapped" ExecutorService, that
+ *        disables reconfiguration by making implementation-specific methods
+ *        inaccessible.
+ *   <li> Methods that create and return a {@link ThreadFactory}
+ *        that sets newly created threads to a known state.
+ *   <li> Methods that create a return a {@link Callable} 
+ *        out of other closure-like forms, so they can be used
+ *        in execution methods requiring <tt>Callable</tt>
+ * </ul>
  *
  * @since 1.5
  * @author Doug Lea
@@ -564,7 +580,10 @@ public class Executors {
         public <T> Future<T> submit(Callable<T> task) {
             return e.submit(task);
         }
-        public     <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
+        public <T> Future<T> submit(Runnable task, T result) {
+            return e.submit(task, result);
+        }
+        public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
             throws InterruptedException {
             return e.invokeAll(tasks);
         }

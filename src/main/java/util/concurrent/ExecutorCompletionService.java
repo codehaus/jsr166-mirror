@@ -9,7 +9,10 @@ package java.util.concurrent;
 
 /**
  * A {@link CompletionService} that uses a supplied {@link Executor}
- * to execute tasks. 
+ * to execute tasks.  This class arranges that submitted tasks are,
+ * upon completion, placed on a queue accessible using <tt>take</tt>.
+ * The class is lightweight enough to be suitable for transient use
+ * when processing groups of tasks.
  *
  * <p>
  *
@@ -100,7 +103,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * executor for base task execution and the supplied queue as its
      * completion queue.
      * @param executor the executor to use
-     * @param completionQueue the queue to use as the completion queue;
+     * @param completionQueue the queue to use as the completion queue
      * normally one dedicated for use by this service
      8 @throws NullPointerException if executor or completionQueue are <tt>null</tt>
      */
@@ -113,12 +116,14 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
     }
 
     public Future<V> submit(Callable<V> task) {
+        if (task == null) throw new NullPointerException();
         QueueingFuture f = new QueueingFuture(task);
         executor.execute(f);
         return f;
     }
 
     public Future<V> submit(Runnable task, V result) {
+        if (task == null) throw new NullPointerException();
         QueueingFuture f = new QueueingFuture(task, result);
         executor.execute(f);
         return f;

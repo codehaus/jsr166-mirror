@@ -17,8 +17,10 @@ package java.util.concurrent;
  * <tt>Runnable</tt>, however, does not return a result and cannot
  * throw a checked exception.
  *
+ * <p> The {@link Executors} class contains utility methods to
+ * convert from other common forms to <tt>Callable</tt> classes.
+ *
  * @see Executor
- * @see FutureTask
  * @since 1.5
  * @author Doug Lea
  * @param <V> the result type of method <tt>call</tt>

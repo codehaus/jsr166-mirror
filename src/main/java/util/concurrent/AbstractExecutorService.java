@@ -25,12 +25,21 @@ import java.util.*;
 public abstract class AbstractExecutorService implements ExecutorService {
 
     public Future<?> submit(Runnable task) {
+        if (task == null) throw new NullPointerException();
         FutureTask<Object> ftask = new FutureTask<Object>(task, null);
         execute(ftask);
         return ftask;
     }
 
+    public <T> Future<T> submit(Runnable task, T result) {
+        if (task == null) throw new NullPointerException();
+        FutureTask<T> ftask = new FutureTask<T>(task, result);
+        execute(ftask);
+        return ftask;
+    }
+
     public <T> Future<T> submit(Callable<T> task) {
+        if (task == null) throw new NullPointerException();
         FutureTask<T> ftask = new FutureTask<T>(task);
         execute(ftask);
         return ftask;

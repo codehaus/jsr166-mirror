@@ -186,4 +186,19 @@ public class CountDownLatchTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString indicates current count
+     */
+    public void testToString() {
+        CountDownLatch s = new CountDownLatch(2);
+        String us = s.toString();
+        assertTrue(us.indexOf("Count = 2") >= 0);
+        s.countDown();
+        String s1 = s.toString();
+        assertTrue(s1.indexOf("Count = 1") >= 0);
+        s.countDown();
+        String s2 = s.toString();
+        assertTrue(s2.indexOf("Count = 0") >= 0);
+    }
+
 }

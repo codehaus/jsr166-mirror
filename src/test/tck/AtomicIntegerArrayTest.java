@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
+import java.util.*;
 
 public class AtomicIntegerArrayTest extends JSR166TestCase {
 
@@ -325,5 +326,13 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
 
+    /**
+     * toString returns current value.
+     */ 
+    public void testToString() {
+        int[] a = { 17, 3, -42, 99, -7};
+        AtomicIntegerArray ai = new AtomicIntegerArray(a);
+        assertEquals(Arrays.toString(a), ai.toString());
+    }
 
 }

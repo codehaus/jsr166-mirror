@@ -899,5 +899,19 @@ public class SemaphoreTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString indicates current number of permits
+     */
+    public void testToString() {
+        Semaphore s = new Semaphore(0);
+        String us = s.toString();
+        assertTrue(us.indexOf("Permits = 0") >= 0);
+        s.release();
+        String s1 = s.toString();
+        assertTrue(s1.indexOf("Permits = 1") >= 0);
+        s.release();
+        String s2 = s.toString();
+        assertTrue(s2.indexOf("Permits = 2") >= 0);
+    }
 
 }

@@ -520,6 +520,42 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString indicates current state
+     */
+    public void testToString() {
+        Mutex lock = new Mutex();
+        String us = lock.toString();
+        assertTrue(us.indexOf("State = 0") >= 0);
+        lock.acquireExclusiveUninterruptibly(1);
+        String ls = lock.toString();
+        assertTrue(ls.indexOf("State = 1") >= 0);
+    }
+
+    /**
+     * A serialized AQS deserializes with current state
+     */
+    public void testSerialization() {
+        Mutex l = new Mutex();
+        l.acquireExclusiveUninterruptibly(1);
+        assertTrue(l.isLocked());
+
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            Mutex r = (Mutex) in.readObject();
+            assertTrue(r.isLocked());
+        } catch(Exception e){
+            e.printStackTrace();
+            unexpectedException();
+        }
+    }
+
 
     /**
      * Latch isSignalled initially returns false, then true after release
@@ -676,5 +712,6 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             unexpectedException();
         }
     }
+
     
 }

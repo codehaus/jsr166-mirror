@@ -1016,4 +1016,16 @@ public class ReentrantLockTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString indicates current lock state
+     */
+    public void testToString() {
+        ReentrantLock lock = new ReentrantLock();
+        String us = lock.toString();
+        assertTrue(us.indexOf("Unlocked") >= 0);
+        lock.lock();
+        String ls = lock.toString();
+        assertTrue(ls.indexOf("Locked") >= 0);
+    }
+
 }

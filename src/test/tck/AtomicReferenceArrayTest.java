@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
+import java.util.*;
 
 public class AtomicReferenceArrayTest extends JSR166TestCase 
 {
@@ -189,4 +190,12 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
 
+    /**
+     * toString returns current value.
+     */ 
+    public void testToString() {
+        Integer[] a = { two, one, three, four, seven};
+        AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
+        assertEquals(Arrays.toString(a), ai.toString());
+    }
 }

@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
+import java.util.*;
 
 public class AtomicLongArrayTest extends JSR166TestCase {
     public static void main (String[] args) {
@@ -318,6 +319,15 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         } catch(Exception e){
             unexpectedException();
         }
+    }
+
+    /**
+     * toString returns current value.
+     */ 
+    public void testToString() {
+        long[] a = { 17, 3, -42, 99, -7};
+        AtomicLongArray ai = new AtomicLongArray(a);
+        assertEquals(Arrays.toString(a), ai.toString());
     }
 
 

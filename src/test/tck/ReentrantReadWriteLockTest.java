@@ -1224,4 +1224,49 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * toString indicates current lock state
+     */
+    public void testToString() {
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        String us = lock.toString();
+        assertTrue(us.indexOf("Write locks = 0") >= 0);
+        assertTrue(us.indexOf("Read locks = 0") >= 0);
+        lock.writeLock().lock();
+        String ws = lock.toString();
+        assertTrue(ws.indexOf("Write locks = 1") >= 0);
+        assertTrue(ws.indexOf("Read locks = 0") >= 0);
+        lock.writeLock().unlock();
+        lock.readLock().lock();
+        lock.readLock().lock();
+        String rs = lock.toString();
+        assertTrue(rs.indexOf("Write locks = 0") >= 0);
+        assertTrue(rs.indexOf("Read locks = 2") >= 0);
+    }
+
+    /**
+     * readLock.toString indicates current lock state
+     */
+    public void testReadLockToString() {
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        String us = lock.readLock().toString();
+        assertTrue(us.indexOf("Read locks = 0") >= 0);
+        lock.readLock().lock();
+        lock.readLock().lock();
+        String rs = lock.readLock().toString();
+        assertTrue(rs.indexOf("Read locks = 2") >= 0);
+    }
+
+    /**
+     * writeLock.toString indicates current lock state
+     */
+    public void testWriteLockToString() {
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        String us = lock.writeLock().toString();
+        assertTrue(us.indexOf("Unlocked") >= 0);
+        lock.writeLock().lock();
+        String ls = lock.writeLock().toString();
+        assertTrue(ls.indexOf("Locked") >= 0);
+    }
+
 }

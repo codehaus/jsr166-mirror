@@ -515,7 +515,7 @@ public class ThreadLocal<T> {
             // If key not found, put new entry in stale slot
             if (actAsGet)
                 value = key.initialValue();
-            ( tab[staleSlot]).value = null;   // Help the GC
+            tab[staleSlot].value = null;   // Help the GC
             tab[staleSlot] = new Entry(key, value);
 
             // If there are any other stale entries in run, expunge them

@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * <tt>Lock</tt> implementations provide more flexible locking operations than
  * can be obtained using <tt>synchronized</tt> methods and statements.
+ * They allow more flexible structuring, may have quite different properties
+ * and may support multiple associated {@link Condition} objects.
  *
  * <p>A lock is a tool for controlling access to a shared
  * resource by multiple threads. Commonly, a lock provides exclusive access
@@ -51,7 +53,10 @@ import java.util.concurrent.TimeUnit;
  *         l.unlock();
  *     }
  * </tt></pre>
- *
+ * When locking and unlocking occur in different scopes, care must be taken
+ * to ensure that all code that is executed while the lock is held, is 
+ * protected by try-finally, or try-catch, to ensure that the lock is released
+ * when necessary.
  * <p><tt>Lock</tt> implementations provide additional functionality over the 
  * use
  * of <tt>synchronized</tt> methods and statements by providing a non-blocking
@@ -120,8 +125,8 @@ import java.util.concurrent.TimeUnit;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/06 18:46:28 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/25 22:40:46 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  *
  **/
@@ -148,11 +153,11 @@ public interface Lock {
      * {@link Thread#interrupt interrupted}. 
      * <p>Acquires the lock if it is available and returns immediately.
      * <p>If the lock is not available then
-     * the current thread thread becomes disabled for thread scheduling 
+     * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of two things happens:
      * <ul>
-     * <li> The lock is acquired by the current thread; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>The lock is acquired by the current thread; or
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread, and interruption of lock acquisition is supported.
      * </ul>
      * <p>If the current thread:
@@ -224,10 +229,10 @@ public interface Lock {
      * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of three things happens:
      * <ul>
-     * <li> The lock is acquired by the current thread; or
-     * <li> Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>The lock is acquired by the current thread; or
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread, and interruption of lock acquisition is supported; or
-     * <li> The specified waiting time elapses
+     * <li>The specified waiting time elapses
      * </ul>
      * <p>If the lock is acquired then the value <tt>true</tt> is returned.
      * <p>If the current thread:
@@ -284,14 +289,8 @@ public interface Lock {
     void unlock();
 
     /**
-     * Returns a {@link Condition} instance that is bound to this <tt>Lock</tt>
-     * instance.
-     * <p>Conditions are primarily used with the built-in locking provided by
-     * <tt>synchronized</tt> methods and statements, 
-     * but in some rare circumstances it 
-     * can be useful to wait for a condition when working with a data 
-     * structure that is accessed using a stand-alone <tt>Lock</tt> instance 
-     * (see {@link ReentrantLock}). 
+     * Returns a new {@link Condition} instance that is bound to this 
+     * <tt>Lock</tt> instance.
      * <p>Before waiting on the condition the lock must be held by the 
      * current thread. 
      * A call to {@link Condition#await()} will atomically release the lock 
@@ -301,7 +300,8 @@ public interface Lock {
      * <tt>Lock</tt> implementation and must be documented by that
      * implementation.
      * 
-     * @return A {@link Condition} instance for this <tt>Lock</tt> instance.
+     * @return A new {@link Condition} instance for this <tt>Lock</tt> 
+     * instance.
      * @throws UnsupportedOperationException if this <tt>Lock</tt> 
      * implementation does not support conditions.
      **/

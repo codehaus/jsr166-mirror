@@ -1412,27 +1412,32 @@ class Thread implements Runnable {
     private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
     /**
-     * Set the default handler invoked when Threads abruptly terminate
-     * due uncaught exceptions. All Threads created subsequently will
-     * use this handler unless explicitly overridden.  Existing
-     * Threads that explicitly set their handlers to <tt>null</tt>
-     * will also use this default. All other threads will use the
-     * previous default (or their ThreadGroups, if no default had been
-     * set).
-     * @exception  SecurityException  If a security manager is present and it 
-     * denies <tt>{@link RuntimePermission}
-     * (&quot;setDefaultUncaughtExceptionHandler&quot;)</tt>
+     * Set the default handler invoked when a thread abruptly terminates
+     * due to an uncaught exception. 
+     *
+     * All threads created subsequently will use this handler unless explicitly 
+     * overridden with {@link #setUncaughtExceptionHandler}.  
+     *
+     * An existing thread for which the handler is explicitly set to 
+     * <tt>null</tt> will also use this default handler. 
+     *
+     * Any other thread will use the previous default handler, or its 
+     * ThreadGroup if no default had been set.
+     *
+     * @throws SecurityException if a security manager is present and it
+     *         denies <tt>{@link RuntimePermission}
+     *         (&quot;setDefaultUncaughtExceptionHandler&quot;)</tt>
      *
      * @see #setUncaughtExceptionHandler
      * @since 1.5
      */
     public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
-	SecurityManager sm = System.getSecurityManager();
-	if (sm != null) {
-	    sm.checkPermission(
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(
                 new RuntimePermission("setDefaultUncaughtExceptionHandler")
                     );
-	}
+        }
 
          defaultUncaughtExceptionHandler = eh;
      }
@@ -1463,7 +1468,7 @@ class Thread implements Runnable {
 
     /**
      * Set the handler invoked when this Thread abruptly terminates
-     * due to an uncaught exception. If unset or set to <tt>null</tt>,
+     * due to an uncaught exception. If set to <tt>null</tt>,
      * then the prevailing {@link #setDefaultUncaughtExceptionHandler
      * default handler} is used.  If the default handler is
      * <tt>null</tt> then the Thread's ThreadGroup serves as its
@@ -1481,7 +1486,7 @@ class Thread implements Runnable {
 
     /**
      * Dispatch an uncaught exception to the handler. This method is 
-     * intended to be called by the JVM.
+     * intended to be called only by the JVM.
      */
     private void dispatchUncaughtException(Throwable e) {
         getUncaughtExceptionHandler().uncaughtException(this, e);

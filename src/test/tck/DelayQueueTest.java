@@ -9,14 +9,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class DelayQueueTest extends TestCase {
-
-    private static final int N = 10;
-    private static final long SHORT_DELAY_MS = 100; 
-    private static final long MEDIUM_DELAY_MS = 1000;
-    private static final long LONG_DELAY_MS = 10000; 
-    private static final int NOCAP = Integer.MAX_VALUE;
-
+public class DelayQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
@@ -24,6 +17,8 @@ public class DelayQueueTest extends TestCase {
     public static Test suite() {
 	return new TestSuite(DelayQueueTest.class);
     }
+
+    private static final int NOCAP = Integer.MAX_VALUE;
 
     // Most Q/BQ tests use Pseudodelays, where delays are all elapsed
     // (so, no blocking solely for delays) but are still ordered
@@ -74,7 +69,7 @@ public class DelayQueueTest extends TestCase {
      * Create a queue of given size containing consecutive
      * PDelays 0 ... n.
      */
-    private DelayQueue fullQueue(int n) {
+    private DelayQueue populatedQueue(int n) {
         DelayQueue q = new DelayQueue();
         assertTrue(q.isEmpty());
 	for(int i = n-1; i >= 0; i-=2)
@@ -102,7 +97,7 @@ public class DelayQueueTest extends TestCase {
 
     public void testConstructor4(){
         try {
-            PDelay[] ints = new PDelay[N];
+            PDelay[] ints = new PDelay[SIZE];
             DelayQueue q = new DelayQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
         }
@@ -111,8 +106,8 @@ public class DelayQueueTest extends TestCase {
 
     public void testConstructor5(){
         try {
-            PDelay[] ints = new PDelay[N];
-            for (int i = 0; i < N-1; ++i)
+            PDelay[] ints = new PDelay[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new PDelay(i);
             DelayQueue q = new DelayQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
@@ -122,11 +117,11 @@ public class DelayQueueTest extends TestCase {
 
     public void testConstructor6(){
         try {
-            PDelay[] ints = new PDelay[N];
-            for (int i = 0; i < N; ++i)
+            PDelay[] ints = new PDelay[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new PDelay(i);
             DelayQueue q = new DelayQueue(Arrays.asList(ints));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -145,13 +140,13 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testRemainingCapacity(){
-        DelayQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(NOCAP, q.remainingCapacity());
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             q.remove();
         }
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(NOCAP, q.remainingCapacity());
             assertEquals(i, q.size());
             q.add(new PDelay(i));
@@ -174,7 +169,7 @@ public class DelayQueueTest extends TestCase {
 
     public void testAdd(){
         DelayQueue q = new DelayQueue();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             assertTrue(q.add(new PDelay(i)));
         }
@@ -191,7 +186,7 @@ public class DelayQueueTest extends TestCase {
     public void testAddAll2(){
         try {
             DelayQueue q = new DelayQueue();
-            PDelay[] ints = new PDelay[N];
+            PDelay[] ints = new PDelay[SIZE];
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
         }
@@ -200,8 +195,8 @@ public class DelayQueueTest extends TestCase {
     public void testAddAll3(){
         try {
             DelayQueue q = new DelayQueue();
-            PDelay[] ints = new PDelay[N];
-            for (int i = 0; i < N-1; ++i)
+            PDelay[] ints = new PDelay[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new PDelay(i);
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
@@ -212,13 +207,13 @@ public class DelayQueueTest extends TestCase {
     public void testAddAll5(){
         try {
             PDelay[] empty = new PDelay[0];
-            PDelay[] ints = new PDelay[N];
-            for (int i = N-1; i >= 0; --i)
+            PDelay[] ints = new PDelay[SIZE];
+            for (int i = SIZE-1; i >= 0; --i)
                 ints[i] = new PDelay(i);
             DelayQueue q = new DelayQueue();
             assertFalse(q.addAll(Arrays.asList(empty)));
             assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -237,12 +232,12 @@ public class DelayQueueTest extends TestCase {
      public void testPut() {
          try {
              DelayQueue q = new DelayQueue();
-             for (int i = 0; i < N; ++i) {
+             for (int i = 0; i < SIZE; ++i) {
                  PDelay I = new PDelay(i);
                  q.put(I);
                  assertTrue(q.contains(I));
              }
-             assertEquals(N, q.size());
+             assertEquals(SIZE, q.size());
          }
          finally {
         }
@@ -262,7 +257,7 @@ public class DelayQueueTest extends TestCase {
                         ++added;
                         q.put(new PDelay(0));
                         ++added;
-                        assertTrue(added == 4);
+                        threadAssertTrue(added == 4);
                     } finally {
                     }
                 }
@@ -285,15 +280,15 @@ public class DelayQueueTest extends TestCase {
                     try {
                         q.put(new PDelay(0));
                         q.put(new PDelay(0));
-                        assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS/2, TimeUnit.MILLISECONDS));
-                        assertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, TimeUnit.MILLISECONDS));
                     } finally { }
                 }
             });
         
         try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS);
+            Thread.sleep(SMALL_DELAY_MS);
             t.interrupt();
             t.join();
         } catch (Exception e){
@@ -303,8 +298,8 @@ public class DelayQueueTest extends TestCase {
 
     public void testTake(){
 	try {
-            DelayQueue q = fullQueue(N);
-            for (int i = 0; i < N; ++i) {
+            DelayQueue q = populatedQueue(SIZE);
+            for (int i = 0; i < SIZE; ++i) {
                 assertEquals(new PDelay(i), ((PDelay)q.take()));
             }
         } catch (InterruptedException e){
@@ -318,7 +313,7 @@ public class DelayQueueTest extends TestCase {
                 public void run(){
                     try {
                         q.take();
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success){ }                
                 }
             });
@@ -336,12 +331,12 @@ public class DelayQueueTest extends TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        DelayQueue q = fullQueue(N);
-                        for (int i = 0; i < N; ++i) {
-                            assertEquals(new PDelay(i), ((PDelay)q.take()));
+                        DelayQueue q = populatedQueue(SIZE);
+                        for (int i = 0; i < SIZE; ++i) {
+                            threadAssertEquals(new PDelay(i), ((PDelay)q.take()));
                         }
                         q.take();
-                        fail("take should block");
+                        threadFail("take should block");
                     } catch (InterruptedException success){
                     }   
                 }});
@@ -358,8 +353,8 @@ public class DelayQueueTest extends TestCase {
 
 
     public void testPoll(){
-        DelayQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(new PDelay(i), ((PDelay)q.poll()));
         }
 	assertNull(q.poll());
@@ -367,8 +362,8 @@ public class DelayQueueTest extends TestCase {
 
     public void testTimedPoll0() {
         try {
-            DelayQueue q = fullQueue(N);
-            for (int i = 0; i < N; ++i) {
+            DelayQueue q = populatedQueue(SIZE);
+            for (int i = 0; i < SIZE; ++i) {
                 assertEquals(new PDelay(i), ((PDelay)q.poll(0, TimeUnit.MILLISECONDS)));
             }
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
@@ -379,8 +374,8 @@ public class DelayQueueTest extends TestCase {
 
     public void testTimedPoll() {
         try {
-            DelayQueue q = fullQueue(N);
-            for (int i = 0; i < N; ++i) {
+            DelayQueue q = populatedQueue(SIZE);
+            for (int i = 0; i < SIZE; ++i) {
                 assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)));
             }
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -393,11 +388,11 @@ public class DelayQueueTest extends TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        DelayQueue q = fullQueue(N);
-                        for (int i = 0; i < N; ++i) {
-                            assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)));
+                        DelayQueue q = populatedQueue(SIZE);
+                        for (int i = 0; i < SIZE; ++i) {
+                            threadAssertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)));
                         }
-                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch (InterruptedException success){
                     }   
                 }});
@@ -417,16 +412,16 @@ public class DelayQueueTest extends TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run(){
                     try {
-                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success) { }                
                 }
             });
         try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS * 2);
+            Thread.sleep(SMALL_DELAY_MS);
             assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             t.interrupt();
             t.join();
@@ -437,8 +432,8 @@ public class DelayQueueTest extends TestCase {
 
 
     public void testPeek(){
-        DelayQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(new PDelay(i), ((PDelay)q.peek()));
             q.poll();
             assertTrue(q.peek() == null ||
@@ -448,8 +443,8 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testElement(){
-        DelayQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(new PDelay(i), ((PDelay)q.element()));
             q.poll();
         }
@@ -461,8 +456,8 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testRemove(){
-        DelayQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(new PDelay(i), ((PDelay)q.remove()));
         }
         try {
@@ -473,11 +468,11 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testRemoveElement(){
-        DelayQueue q = fullQueue(N);
-        for (int i = 1; i < N; i+=2) {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
             assertTrue(q.remove(new PDelay(i)));
         }
-        for (int i = 0; i < N; i+=2) {
+        for (int i = 0; i < SIZE; i+=2) {
             assertTrue(q.remove(new PDelay(i)));
             assertFalse(q.remove(new PDelay(i+1)));
         }
@@ -485,8 +480,8 @@ public class DelayQueueTest extends TestCase {
     }
 	
     public void testContains(){
-        DelayQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new PDelay(i)));
             q.poll();
             assertFalse(q.contains(new PDelay(i)));
@@ -494,7 +489,7 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testClear(){
-        DelayQueue q = fullQueue(N);
+        DelayQueue q = populatedQueue(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
@@ -506,9 +501,9 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testContainsAll(){
-        DelayQueue q = fullQueue(N);
+        DelayQueue q = populatedQueue(SIZE);
         DelayQueue p = new DelayQueue();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.containsAll(p));
             assertFalse(p.containsAll(q));
             p.add(new PDelay(i));
@@ -517,9 +512,9 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testRetainAll(){
-        DelayQueue q = fullQueue(N);
-        DelayQueue p = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        DelayQueue q = populatedQueue(SIZE);
+        DelayQueue p = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             boolean changed = q.retainAll(p);
             if (i == 0)
                 assertFalse(changed);
@@ -527,17 +522,17 @@ public class DelayQueueTest extends TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             p.remove();
         }
     }
 
     public void testRemoveAll(){
-        for (int i = 1; i < N; ++i) {
-            DelayQueue q = fullQueue(N);
-            DelayQueue p = fullQueue(i);
+        for (int i = 1; i < SIZE; ++i) {
+            DelayQueue q = populatedQueue(SIZE);
+            DelayQueue p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
                 PDelay I = (PDelay)(p.remove());
                 assertFalse(q.contains(I));
@@ -545,26 +540,8 @@ public class DelayQueueTest extends TestCase {
         }
     }
 
-    /*
-    public void testEqualsAndHashCode(){
-        DelayQueue q1 = fullQueue(N);
-        DelayQueue q2 = fullQueue(N);
-        assertTrue(q1.equals(q2));
-        assertTrue(q2.equals(q1));
-        assertEquals(q1.hashCode(), q2.hashCode());
-        q1.remove();
-        assertFalse(q1.equals(q2));
-        assertFalse(q2.equals(q1));
-        assertFalse(q1.hashCode() == q2.hashCode());
-        q2.remove();
-        assertTrue(q1.equals(q2));
-        assertTrue(q2.equals(q1));
-        assertEquals(q1.hashCode(), q2.hashCode());
-    }
-    */
-
     public void testToArray(){
-        DelayQueue q = fullQueue(N);
+        DelayQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
 	try {
@@ -576,8 +553,8 @@ public class DelayQueueTest extends TestCase {
     }
 
     public void testToArray2(){
-        DelayQueue q = fullQueue(N);
-	PDelay[] ints = new PDelay[N];
+        DelayQueue q = populatedQueue(SIZE);
+	PDelay[] ints = new PDelay[SIZE];
 	ints = (PDelay[])q.toArray(ints);
         Arrays.sort(ints);
 	try {
@@ -589,14 +566,14 @@ public class DelayQueueTest extends TestCase {
     }
     
     public void testIterator(){
-        DelayQueue q = fullQueue(N);
+        DelayQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
         while(it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, N);
+        assertEquals(i, SIZE);
     }
 
     public void testIteratorRemove () {
@@ -619,10 +596,10 @@ public class DelayQueueTest extends TestCase {
 
 
     public void testToString(){
-        DelayQueue q = fullQueue(N);
+        DelayQueue q = populatedQueue(SIZE);
         String s = q.toString();
-        for (int i = 0; i < N; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+        for (int i = 0; i < SIZE; ++i) {
+            assertTrue(s.indexOf(String.valueOf(Integer.MIN_VALUE+i)) >= 0);
         }
     }        
 
@@ -634,13 +611,13 @@ public class DelayQueueTest extends TestCase {
 
         executor.execute(new Runnable() {
             public void run() {
-                assertNull("poll should fail", q.poll());
+                threadAssertNull(q.poll());
                 try {
-                    assertTrue(null != q.poll(MEDIUM_DELAY_MS * 2, TimeUnit.MILLISECONDS));
-                    assertTrue(q.isEmpty());
+                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertTrue(q.isEmpty());
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
@@ -648,16 +625,16 @@ public class DelayQueueTest extends TestCase {
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    Thread.sleep(MEDIUM_DELAY_MS);
+                    Thread.sleep(SHORT_DELAY_MS);
                     q.put(new PDelay(1));
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
         
-        executor.shutdown();
+        joinPool(executor);
 
     }
 
@@ -705,17 +682,17 @@ public class DelayQueueTest extends TestCase {
 
     public void testDelay() {
         DelayQueue q = new DelayQueue();
-        NanoDelay[] elements = new NanoDelay[N];
-        for (int i = 0; i < N; ++i) {
-            elements[i] = new NanoDelay(1000000000L + 1000000L * (N - i));
+        NanoDelay[] elements = new NanoDelay[SIZE];
+        for (int i = 0; i < SIZE; ++i) {
+            elements[i] = new NanoDelay(1000000000L + 1000000L * (SIZE - i));
         }
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             q.add(elements[i]);
         }
 
         try {
             long last = 0;
-            for (int i = 0; i < N; ++i) {
+            for (int i = 0; i < SIZE; ++i) {
                 NanoDelay e = (NanoDelay)(q.take());
                 long tt = e.getTriggerTime();
                 assertTrue(tt <= System.nanoTime());

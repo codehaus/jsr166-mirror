@@ -10,13 +10,10 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
-public class LockSupportTest extends TestCase{
-
+public class LockSupportTest extends JSR166TestCase{
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
-    
-
     public static Test suite() {
 	return new TestSuite(LockSupportTest.class);
     }
@@ -27,7 +24,7 @@ public class LockSupportTest extends TestCase{
 		    try{
 			LockSupport.park();
 		    }catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -47,7 +44,7 @@ public class LockSupportTest extends TestCase{
 		    try{
 			LockSupport.parkNanos(1000);
 		    }catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -68,7 +65,7 @@ public class LockSupportTest extends TestCase{
                         long d = new Date().getTime() + 100;
 			LockSupport.parkUntil(d);
 		    }catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -80,6 +77,4 @@ public class LockSupportTest extends TestCase{
             fail("unexpected exception");
         }
     }
-
-
 }

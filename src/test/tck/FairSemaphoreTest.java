@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class FairSemaphoreTest extends TestCase{
+public class FairSemaphoreTest extends JSR166TestCase{
 
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -19,11 +19,6 @@ public class FairSemaphoreTest extends TestCase{
     public static Test suite() {
 	return new TestSuite(FairSemaphoreTest.class);
     }
-
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
-
 
     public void testConstructor1() {
         FairSemaphore s = new FairSemaphore(0);
@@ -119,7 +114,7 @@ public class FairSemaphoreTest extends TestCase{
                         s.acquire();
                         s.acquire();
 		    }catch(InterruptedException ie){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -147,7 +142,7 @@ public class FairSemaphoreTest extends TestCase{
                         s.acquire(2);
                         s.acquire(2);
 		    }catch(InterruptedException ie){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -206,14 +201,14 @@ public class FairSemaphoreTest extends TestCase{
 	Thread t = new Thread(new Runnable(){
 		public void run(){
 		    try{
-                        assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
 
 		    }catch(InterruptedException ie){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -235,12 +230,12 @@ public class FairSemaphoreTest extends TestCase{
 	Thread t = new Thread(new Runnable(){
 		public void run(){
 		    try{
-                        assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         s.release(2);
-                        assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         s.release(2);
 		    }catch(InterruptedException ie){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -262,7 +257,7 @@ public class FairSemaphoreTest extends TestCase{
 		public void run(){
 		    try{
 			s.acquire();
-			fail("should throw");
+			threadFail("should throw");
 		    }catch(InterruptedException success){}
 		}
 	    });
@@ -282,7 +277,7 @@ public class FairSemaphoreTest extends TestCase{
 		public void run(){
 		    try{
 			s.acquire(3);
-			fail("should throw");
+			threadFail("should throw");
 		    }catch(InterruptedException success){}
 		}
 	    });
@@ -302,7 +297,7 @@ public class FairSemaphoreTest extends TestCase{
 		public void run(){
 		    try{
 			s.tryAcquire(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-			fail("should throw");
+			threadFail("should throw");
 		    }catch(InterruptedException success){
                     }
 		}
@@ -323,7 +318,7 @@ public class FairSemaphoreTest extends TestCase{
 		public void run(){
 		    try{
 			s.tryAcquire(4, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-			fail("should throw");
+			threadFail("should throw");
 		    }catch(InterruptedException success){
                     }
 		}

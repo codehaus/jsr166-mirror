@@ -9,13 +9,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class LinkedListTest extends TestCase {
-
-    private static final int N = 10;
-    private static final long SHORT_DELAY_MS = 100; 
-    private static final long MEDIUM_DELAY_MS = 1000;
-    private static final long LONG_DELAY_MS = 10000; 
-
+public class LinkedListTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
@@ -28,7 +22,7 @@ public class LinkedListTest extends TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private LinkedList fullQueue(int n) {
+    private LinkedList populatedQueue(int n) {
         LinkedList q = new LinkedList();
         assertTrue(q.isEmpty());
 	for(int i = 0; i < n; ++i)
@@ -52,11 +46,11 @@ public class LinkedListTest extends TestCase {
 
     public void testConstructor6(){
         try {
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             LinkedList q = new LinkedList(Arrays.asList(ints));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -74,12 +68,12 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testSize() {
-        LinkedList q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
-            assertEquals(N-i, q.size());
+        LinkedList q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(SIZE-i, q.size());
             q.remove();
         }
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             q.add(new Integer(i));
         }
@@ -102,7 +96,7 @@ public class LinkedListTest extends TestCase {
 
     public void testAdd(){
         LinkedList q = new LinkedList();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             assertTrue(q.add(new Integer(i)));
         }
@@ -120,29 +114,29 @@ public class LinkedListTest extends TestCase {
     public void testAddAll5(){
         try {
             Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             LinkedList q = new LinkedList();
             assertFalse(q.addAll(Arrays.asList(empty)));
             assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
     }
 
     public void testPoll(){
-        LinkedList q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedList q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
         }
 	assertNull(q.poll());
     }
 
     public void testPeek(){
-        LinkedList q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedList q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.peek()).intValue());
             q.poll();
             assertTrue(q.peek() == null ||
@@ -152,8 +146,8 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testElement(){
-        LinkedList q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedList q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.element()).intValue());
             q.poll();
         }
@@ -165,8 +159,8 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testRemove(){
-        LinkedList q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedList q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.remove()).intValue());
         }
         try {
@@ -177,11 +171,11 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testRemoveElement(){
-        LinkedList q = fullQueue(N);
-        for (int i = 1; i < N; i+=2) {
+        LinkedList q = populatedQueue(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
         }
-        for (int i = 0; i < N; i+=2) {
+        for (int i = 0; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
             assertFalse(q.remove(new Integer(i+1)));
         }
@@ -189,8 +183,8 @@ public class LinkedListTest extends TestCase {
     }
 	
     public void testContains(){
-        LinkedList q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedList q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
             q.poll();
             assertFalse(q.contains(new Integer(i)));
@@ -198,7 +192,7 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testClear(){
-        LinkedList q = fullQueue(N);
+        LinkedList q = populatedQueue(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
@@ -209,9 +203,9 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testContainsAll(){
-        LinkedList q = fullQueue(N);
+        LinkedList q = populatedQueue(SIZE);
         LinkedList p = new LinkedList();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.containsAll(p));
             assertFalse(p.containsAll(q));
             p.add(new Integer(i));
@@ -220,9 +214,9 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testRetainAll(){
-        LinkedList q = fullQueue(N);
-        LinkedList p = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedList q = populatedQueue(SIZE);
+        LinkedList p = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             boolean changed = q.retainAll(p);
             if (i == 0)
                 assertFalse(changed);
@@ -230,17 +224,17 @@ public class LinkedListTest extends TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             p.remove();
         }
     }
 
     public void testRemoveAll(){
-        for (int i = 1; i < N; ++i) {
-            LinkedList q = fullQueue(N);
-            LinkedList p = fullQueue(i);
+        for (int i = 1; i < SIZE; ++i) {
+            LinkedList q = populatedQueue(SIZE);
+            LinkedList p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer I = (Integer)(p.remove());
                 assertFalse(q.contains(I));
@@ -249,7 +243,7 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testToArray(){
-        LinkedList q = fullQueue(N);
+        LinkedList q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
 	for(int i = 0; i < o.length; i++)
@@ -257,8 +251,8 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testToArray2(){
-        LinkedList q = fullQueue(N);
-	Integer[] ints = new Integer[N];
+        LinkedList q = populatedQueue(SIZE);
+	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for(int i = 0; i < ints.length; i++)
@@ -266,14 +260,14 @@ public class LinkedListTest extends TestCase {
     }
     
     public void testIterator(){
-        LinkedList q = fullQueue(N);
+        LinkedList q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
         while(it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, N);
+        assertEquals(i, SIZE);
     }
 
     public void testIteratorOrdering() {
@@ -312,37 +306,37 @@ public class LinkedListTest extends TestCase {
 
 
     public void testToString(){
-        LinkedList q = fullQueue(N);
+        LinkedList q = populatedQueue(SIZE);
         String s = q.toString();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
     }        
 
     public void testAddFirst(){
-        LinkedList q = fullQueue(3);
+        LinkedList q = populatedQueue(3);
 	q.addFirst(new Integer(4));
 	assertEquals(new Integer(4),q.get(0));
     }	
 
     public void testAddLast(){
-        LinkedList q = fullQueue(3);
+        LinkedList q = populatedQueue(3);
 	q.addLast(new Integer(3));
 	assertEquals(new Integer(3),q.get(3));
     }
     
     public void testGetFirst() {
-        LinkedList q = fullQueue(3);
+        LinkedList q = populatedQueue(3);
         assertEquals(new Integer(0),q.getFirst());
     }	
     
     public void testGetLast() {
-        LinkedList q = fullQueue(3);
+        LinkedList q = populatedQueue(3);
         assertEquals(new Integer(2),q.getLast());
     }
     
     public void testIndexOf(){
-        LinkedList q = fullQueue(3);
+        LinkedList q = populatedQueue(3);
 	assertEquals(0,q.indexOf(new Integer(0)));
 	assertEquals(1,q.indexOf(new Integer(1)));
 	assertEquals(2,q.indexOf(new Integer(2)));
@@ -350,14 +344,14 @@ public class LinkedListTest extends TestCase {
     }
 
     public void testLastIndexOf(){
-        LinkedList q = fullQueue(3);
+        LinkedList q = populatedQueue(3);
         q.add(new Integer(2));
 	assertEquals(3,q.lastIndexOf(new Integer(2)));
         assertEquals(-1, q.lastIndexOf("not there"));
     }
     
     public void testSet(){
-        LinkedList q = fullQueue(3);
+        LinkedList q = populatedQueue(3);
 	q.set(0,(new Integer(1)));
 	assertFalse(q.contains(new Integer(0)));
 	assertEquals(new Integer(1), q.get(0));

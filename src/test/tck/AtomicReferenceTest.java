@@ -9,22 +9,13 @@ import junit.framework.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
 
-public class AtomicReferenceTest extends TestCase {
+public class AtomicReferenceTest extends JSR166TestCase {
     public static void main (String[] args) {
         junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
         return new TestSuite(AtomicReferenceTest.class);
     }
-
-    static final Integer zero = new Integer(0);
-    static final Integer one = new Integer(1);
-    static final Integer two = new Integer(2);
-    static final Integer m3  = new Integer(-3);
-    static final Integer m4 = new Integer(-4);
-    static final Integer m5 = new Integer(-5);
-    static final Integer seven = new Integer(7);
-    static final Integer m10 = new Integer(-10);
 
     public void testConstructor(){
         AtomicReference ai = new AtomicReference(one);

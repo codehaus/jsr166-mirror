@@ -9,8 +9,9 @@ import java.util.concurrent.atomic.*;
 import junit.framework.*;
 import java.util.*;
 
-public class AtomicIntegerFieldUpdaterTest extends TestCase{
+public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     volatile int x = 0;
+    long z;
 
     public static void main(String[] args){
         junit.textui.TestRunner.run(suite());
@@ -26,6 +27,16 @@ public class AtomicIntegerFieldUpdaterTest extends TestCase{
             AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (getClass(), "y");
+            fail("Exception not thrown");
+        }
+        catch (RuntimeException rt) {}
+    }
+
+    public void testConstructor2(){
+        try{
+            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
+                a = AtomicIntegerFieldUpdater.newUpdater
+                (getClass(), "z");
             fail("Exception not thrown");
         }
         catch (RuntimeException rt) {}

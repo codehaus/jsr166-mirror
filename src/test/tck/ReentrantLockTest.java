@@ -10,7 +10,7 @@ import java.util.concurrent.locks.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class ReentrantLockTest extends TestCase {
+public class ReentrantLockTest extends JSR166TestCase {
     static int HOLD_COUNT_TEST_LIMIT = 20;
 
     public static void main(String[] args) {
@@ -21,15 +21,10 @@ public class ReentrantLockTest extends TestCase {
 	return new TestSuite(ReentrantLockTest.class);
     }
 
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
-
     /*
      * Unlocks an unlocked lock, throws Illegal Monitor State
      * 
      */
-    
     public void testIllegalMonitorStateException(){ 
 	ReentrantLock rl = new ReentrantLock();
 	try{
@@ -54,13 +49,18 @@ public class ReentrantLockTest extends TestCase {
                 public void run(){
                     try{
 			lock.lockInterruptibly();
-			fail("should throw");
+			threadFail("should throw");
 		    } catch(InterruptedException success){}
 		}
 	    });
-	t.start();
-	t.interrupt();
-	lock.unlock();
+        try {
+            t.start();
+            t.interrupt();
+            lock.unlock();
+            t.join();
+        } catch(Exception e){
+            fail("unexpected exception");
+        }
     } 
 
     /*
@@ -75,13 +75,17 @@ public class ReentrantLockTest extends TestCase {
 	Thread t = new Thread(new Runnable() {
                 public void run(){
                     try{
-			lock.tryLock(1000,TimeUnit.MILLISECONDS);
-			fail("should throw");
+			lock.tryLock(MEDIUM_DELAY_MS,TimeUnit.MILLISECONDS);
+			threadFail("should throw");
 		    } catch(InterruptedException success){}
 		}
 	    });
-	t.start();
-	t.interrupt();
+        try {
+            t.start();
+            t.interrupt();
+        } catch(Exception e){
+            fail("unexpected exception");
+        }
     }
 
 
@@ -90,7 +94,7 @@ public class ReentrantLockTest extends TestCase {
 	lock.lock();
 	Thread t = new Thread(new Runnable() {
                 public void run(){
-                    assertFalse(lock.tryLock());
+                    threadAssertFalse(lock.tryLock());
 		}
 	    });
         try {
@@ -108,9 +112,9 @@ public class ReentrantLockTest extends TestCase {
 	Thread t = new Thread(new Runnable() {
                 public void run(){
 		    try {
-                        assertFalse(lock.tryLock(1, TimeUnit.MILLISECONDS));
+                        threadAssertFalse(lock.tryLock(1, TimeUnit.MILLISECONDS));
                     } catch (Exception ex) {
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -148,9 +152,11 @@ public class ReentrantLockTest extends TestCase {
 		public void run() {
 		    lock.lock();
 		    try {
-			Thread.sleep(SHORT_DELAY_MS * 2);
+			Thread.sleep(SMALL_DELAY_MS);
 		    }
-		    catch(Exception e) {}
+		    catch(Exception e) {
+                        threadFail("unexpected exception");
+                    }
 		    lock.unlock();
 		}
 	    });
@@ -177,7 +183,7 @@ public class ReentrantLockTest extends TestCase {
 		public void run() {
 		    try {
 			lock.lockInterruptibly();
-			fail("should throw");
+			threadFail("should throw");
 		    }
 		    catch(InterruptedException e) {}
 		}
@@ -240,7 +246,7 @@ public class ReentrantLockTest extends TestCase {
         final Condition c = lock.newCondition();
         try {
             lock.lock();
-            assertFalse(c.await(10, TimeUnit.MILLISECONDS));
+            assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             lock.unlock();
         }
         catch (Exception ex) {
@@ -273,7 +279,7 @@ public class ReentrantLockTest extends TestCase {
                         lock.unlock();
 		    }
 		    catch(InterruptedException e) {
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -327,7 +333,7 @@ public class ReentrantLockTest extends TestCase {
 			lock.lock();
                         c.await();
                         lock.unlock();
-                        fail("should throw");
+                        threadFail("should throw");
 		    }
 		    catch(InterruptedException success) {
                     }
@@ -355,7 +361,7 @@ public class ReentrantLockTest extends TestCase {
 			lock.lock();
                         c.awaitNanos(SHORT_DELAY_MS * 2 * 1000000);
                         lock.unlock();
-                        fail("should throw");
+                        threadFail("should throw");
 		    }
 		    catch(InterruptedException success) {
                     }
@@ -384,7 +390,7 @@ public class ReentrantLockTest extends TestCase {
                         java.util.Date d = new java.util.Date();
                         c.awaitUntil(new java.util.Date(d.getTime() + 10000));
                         lock.unlock();
-                        fail("should throw");
+                        threadFail("should throw");
 		    }
 		    catch(InterruptedException success) {
                     }
@@ -414,7 +420,7 @@ public class ReentrantLockTest extends TestCase {
                         lock.unlock();
 		    }
 		    catch(InterruptedException e) {
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -427,7 +433,7 @@ public class ReentrantLockTest extends TestCase {
                         lock.unlock();
 		    }
 		    catch(InterruptedException e) {
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });

@@ -7,7 +7,7 @@
 
 import junit.framework.*;
 
-public class SystemTest extends TestCase {
+public class SystemTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run(suite());	
     }
@@ -16,55 +16,52 @@ public class SystemTest extends TestCase {
 	return new TestSuite(SystemTest.class);
     }
 
+    /**
+     * Nanos between readings of millis is no longer than millis.
+     * This shows only that nano timing not (much) worse than milli.
+     */
     public void testNanoTime1() {
-        // Nanos between readings of millis must be no longer than millis
-        long m1 = System.currentTimeMillis();
-        long n1 = System.nanoTime();
-
-        // Ensure some computation that is not optimized away.
-        long sum = 0;
-        for (long i = 1; i < 10000; ++i)
-            sum += i;
-        assertTrue(sum != 0);
-
-        long n2 = System.nanoTime();
-
-        for (long i = 1; i < 10000; ++i)
-            sum -= i;
-        assertTrue(sum == 0);
-
-        long m2 = System.currentTimeMillis();
-        long millis = m2 - m1;
-        long nanos = n2 - n1;
-
-        assertTrue(nanos >= 0);
-        assertTrue(nanos <= millis * 1000000);
+        try {
+            long m1 = System.currentTimeMillis();
+            Thread.sleep(1);
+            long n1 = System.nanoTime();
+            Thread.sleep(SHORT_DELAY_MS);
+            long n2 = System.nanoTime();
+            Thread.sleep(1);
+            long m2 = System.currentTimeMillis();
+            long millis = m2 - m1;
+            long nanos = n2 - n1;
+            
+            assertTrue(nanos >= 0);
+            assertTrue(nanos <= millis * 1000000);
+        }
+        catch(InterruptedException ie) {
+            fail("unexpected exception");
+        }
     }
 
+    /**
+     * Millis between readings of nanos is no longer than nanos
+     * This shows only that nano timing not (much) worse than milli.
+     */
     public void testNanoTime2() {
-        // Millis between readings of nanos must be no longer than nanos
-        long n1 = System.nanoTime();
-        long m1 = System.currentTimeMillis();
-
-        // Ensure some computation that is not optimized away.
-        long sum = 0;
-        for (long i = 1; i < 10000; ++i)
-            sum += i;
-        assertTrue(sum != 0);
-
-        long m2 = System.currentTimeMillis();
-
-        for (long i = 1; i < 10000; ++i)
-            sum -= i;
-        assertTrue(sum == 0);
-
-        long n2 = System.nanoTime();
-
-        long millis = m2 - m1;
-        long nanos = n2 - n1;
-
-        assertTrue(nanos >= 0);
-        assertTrue(millis * 1000000 <= nanos);
+        try {
+            long n1 = System.nanoTime();
+            Thread.sleep(1);
+            long m1 = System.currentTimeMillis();
+            Thread.sleep(SHORT_DELAY_MS);
+            long m2 = System.currentTimeMillis();
+            Thread.sleep(1);
+            long n2 = System.nanoTime();
+            long millis = m2 - m1;
+            long nanos = n2 - n1;
+            
+            assertTrue(nanos >= 0);
+            assertTrue(millis * 1000000 <= nanos);
+        }
+        catch(InterruptedException ie) {
+            fail("unexpected exception");
+        }
     }
 
 }

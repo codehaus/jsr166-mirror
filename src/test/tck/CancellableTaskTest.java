@@ -9,7 +9,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class CancellableTaskTest extends TestCase{
+public class CancellableTaskTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
@@ -17,10 +17,18 @@ public class CancellableTaskTest extends TestCase{
 	return new TestSuite(CancellableTaskTest.class);
     }
 
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
-
+    /**
+     * Subclass to expose protected methods
+     */
+    static class MyCancellableTask extends CancellableTask {
+        public MyCancellableTask() {}
+        public MyCancellableTask(Runnable r) { super(r); }
+        public boolean reset() { return super.reset(); }
+        public Runnable getRunnable() { return super.getRunnable(); }
+        public void setRunnable(Runnable r) { super.setRunnable(r); }
+        public void setCancelled() { super.setCancelled(); }
+        public void setDone() { super.setDone(); }
+    }
 
     public void testConstructor(){
         try {
@@ -32,25 +40,66 @@ public class CancellableTaskTest extends TestCase{
     }
     
     public void testIsDone(){
-        CancellableTask task = new CancellableTask(new Runnable() {
-                public void run() {} });
+        CancellableTask task = new CancellableTask(new NoOpRunnable());
 	task.run();
 	assertTrue(task.isDone());
 	assertFalse(task.isCancelled());
     }
 
+    public void testReset(){
+        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+	task.run();
+	assertTrue(task.isDone());
+	assertTrue(task.reset());
+    }
+
     public void testCancelBeforeRun() {
-        CancellableTask task = new CancellableTask(new Runnable() {
-                public void run() {} });
+        CancellableTask task = new CancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(false));
 	task.run();
 	assertTrue(task.isDone());
 	assertTrue(task.isCancelled());
     }
 
+    public void testResetAfterCancel() {
+        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+        assertTrue(task.cancel(false));
+	task.run();
+	assertTrue(task.isDone());
+	assertTrue(task.isCancelled());
+        assertFalse(task.reset());
+    }
+
+    public void testSetRunnable() {
+        MyCancellableTask task = new MyCancellableTask();
+        assertNull(task.getRunnable());
+        Runnable r = new NoOpRunnable();
+        task.setRunnable(r);
+        assertEquals(r, task.getRunnable());
+        assertTrue(task.cancel(false));
+	task.run();
+	assertTrue(task.isDone());
+	assertTrue(task.isCancelled());
+        assertFalse(task.reset());
+    }
+
+    public void testSetDone() {
+        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+	task.setDone();
+	assertTrue(task.isDone());
+	assertFalse(task.isCancelled());
+    }
+
+    public void testSetCancelled() {
+        MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
+        assertTrue(task.cancel(false));
+	task.setCancelled();
+	assertTrue(task.isDone());
+	assertTrue(task.isCancelled());
+    }
+
     public void testCancelBeforeRun2() {
-        CancellableTask task = new CancellableTask(new Runnable() {
-                public void run() {} });
+        CancellableTask task = new CancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(true));
 	task.run();
 	assertTrue(task.isDone());
@@ -58,8 +107,7 @@ public class CancellableTaskTest extends TestCase{
     }
 
     public void testCancelAfterRun() {
-        CancellableTask task = new CancellableTask(new Runnable() {
-                public void run() {} });
+        CancellableTask task = new CancellableTask(new NoOpRunnable());
 	task.run();
         assertFalse(task.cancel(false));
 	assertTrue(task.isDone());
@@ -67,18 +115,11 @@ public class CancellableTaskTest extends TestCase{
     }
 
     public void testCancelInterrupt(){
-        CancellableTask task = new CancellableTask(new Runnable() {
-                public void run() {
-                    try {
-                        Thread.sleep(SHORT_DELAY_MS* 2);
-                        fail("should throw");
-                    }
-                    catch (InterruptedException success) {}
-                } });
+        CancellableTask task = new CancellableTask(new SmallInterruptedRunnable());
         Thread t = new  Thread(task);
-        t.start();
         
         try{
+            t.start();
             Thread.sleep(SHORT_DELAY_MS);
             assertTrue(task.cancel(true));
             t.join();
@@ -91,19 +132,10 @@ public class CancellableTaskTest extends TestCase{
 
 
     public void testCancelNoInterrupt(){
-        CancellableTask task = new CancellableTask(new Runnable() {
-                public void run() {
-                    try {
-                        Thread.sleep(SHORT_DELAY_MS* 2);
-                    }
-                    catch (InterruptedException success) {
-                        fail("should not interrupt");
-                    }
-                } });
+        CancellableTask task = new CancellableTask(new SmallRunnable());
         Thread t = new  Thread(task);
-        t.start();
-        
         try{
+            t.start();
             Thread.sleep(SHORT_DELAY_MS);
             assertTrue(task.cancel(false));
             t.join();

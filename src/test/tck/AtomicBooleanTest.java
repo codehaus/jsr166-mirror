@@ -9,7 +9,7 @@ import junit.framework.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
 
-public class AtomicBooleanTest extends TestCase {
+public class AtomicBooleanTest extends JSR166TestCase {
     public static void main (String[] args) {
         junit.textui.TestRunner.run (suite());
     }

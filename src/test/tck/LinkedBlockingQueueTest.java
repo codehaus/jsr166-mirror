@@ -10,12 +10,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class LinkedBlockingQueueTest extends TestCase {
-
-    private static int N = 10;
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
+public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -25,11 +20,12 @@ public class LinkedBlockingQueueTest extends TestCase {
 	return new TestSuite(LinkedBlockingQueueTest.class);
     }
 
+
     /**
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private LinkedBlockingQueue fullQueue(int n) {
+    private LinkedBlockingQueue populatedQueue(int n) {
         LinkedBlockingQueue q = new LinkedBlockingQueue(n);
         assertTrue(q.isEmpty());
 	for(int i = 0; i < n; i++)
@@ -41,7 +37,7 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
  
     public void testConstructor1(){
-        assertEquals(N, new LinkedBlockingQueue(N).remainingCapacity());
+        assertEquals(SIZE, new LinkedBlockingQueue(SIZE).remainingCapacity());
     }
 
     public void testConstructor2(){
@@ -63,7 +59,7 @@ public class LinkedBlockingQueueTest extends TestCase {
 
     public void testConstructor4(){
         try {
-            Integer[] ints = new Integer[N];
+            Integer[] ints = new Integer[SIZE];
             LinkedBlockingQueue q = new LinkedBlockingQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
         }
@@ -72,8 +68,8 @@ public class LinkedBlockingQueueTest extends TestCase {
 
     public void testConstructor5(){
         try {
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N-1; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             LinkedBlockingQueue q = new LinkedBlockingQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
@@ -83,11 +79,11 @@ public class LinkedBlockingQueueTest extends TestCase {
 
     public void testConstructor6(){
         try {
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             LinkedBlockingQueue q = new LinkedBlockingQueue(Arrays.asList(ints));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -97,23 +93,23 @@ public class LinkedBlockingQueueTest extends TestCase {
         LinkedBlockingQueue q = new LinkedBlockingQueue(2);
         assertTrue(q.isEmpty());
         assertEquals("should have room for 2", 2, q.remainingCapacity());
-        q.add(new Integer(1));
+        q.add(one);
         assertFalse(q.isEmpty());
-        q.add(new Integer(2));
+        q.add(two);
         assertFalse(q.isEmpty());
         assertEquals("queue should be full", 0, q.remainingCapacity());
-        assertFalse("offer should be rejected", q.offer(new Integer(3)));
+        assertFalse("offer should be rejected", q.offer(three));
     }
 
     public void testRemainingCapacity(){
-        LinkedBlockingQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.remainingCapacity());
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             q.remove();
         }
-        for (int i = 0; i < N; ++i) {
-            assertEquals(N-i, q.remainingCapacity());
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(SIZE-i, q.remainingCapacity());
             assertEquals(i, q.size());
             q.add(new Integer(i));
         }
@@ -129,18 +125,18 @@ public class LinkedBlockingQueueTest extends TestCase {
 
     public void testOffer(){
         LinkedBlockingQueue q = new LinkedBlockingQueue(1);
-        assertTrue(q.offer(new Integer(0)));
-        assertFalse(q.offer(new Integer(1)));
+        assertTrue(q.offer(zero));
+        assertFalse(q.offer(one));
     }
 
     public void testAdd(){
 	try {
-            LinkedBlockingQueue q = new LinkedBlockingQueue(N);
-            for (int i = 0; i < N; ++i) {
+            LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
+            for (int i = 0; i < SIZE; ++i) {
                 assertTrue(q.add(new Integer(i)));
             }
             assertEquals(0, q.remainingCapacity());
-            q.add(new Integer(N));
+            q.add(new Integer(SIZE));
         } catch (IllegalStateException success){
 	}   
     }
@@ -155,8 +151,8 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
     public void testAddAll2(){
         try {
-            LinkedBlockingQueue q = new LinkedBlockingQueue(N);
-            Integer[] ints = new Integer[N];
+            LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
+            Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
         }
@@ -164,9 +160,9 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
     public void testAddAll3(){
         try {
-            LinkedBlockingQueue q = new LinkedBlockingQueue(N);
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N-1; ++i)
+            LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
@@ -176,8 +172,8 @@ public class LinkedBlockingQueueTest extends TestCase {
     public void testAddAll4(){
         try {
             LinkedBlockingQueue q = new LinkedBlockingQueue(1);
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             fail("Cannot add with insufficient capacity");
@@ -187,13 +183,13 @@ public class LinkedBlockingQueueTest extends TestCase {
     public void testAddAll5(){
         try {
             Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
-            LinkedBlockingQueue q = new LinkedBlockingQueue(N);
+            LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
             assertFalse(q.addAll(Arrays.asList(empty)));
             assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -201,7 +197,7 @@ public class LinkedBlockingQueueTest extends TestCase {
 
      public void testPutNull() {
 	try {
-            LinkedBlockingQueue q = new LinkedBlockingQueue(N);
+            LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
             q.put(null);
             fail("put should throw NPE");
         } 
@@ -214,8 +210,8 @@ public class LinkedBlockingQueueTest extends TestCase {
 
      public void testPut() {
          try {
-             LinkedBlockingQueue q = new LinkedBlockingQueue(N);
-             for (int i = 0; i < N; ++i) {
+             LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
+             for (int i = 0; i < SIZE; ++i) {
                  Integer I = new Integer(i);
                  q.put(I);
                  assertTrue(q.contains(I));
@@ -232,15 +228,15 @@ public class LinkedBlockingQueueTest extends TestCase {
                 public void run() {
                     int added = 0;
                     try {
-                        LinkedBlockingQueue q = new LinkedBlockingQueue(N);
-                        for (int i = 0; i < N; ++i) {
+                        LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
+                        for (int i = 0; i < SIZE; ++i) {
                             q.put(new Integer(i));
                             ++added;
                         }
-                        q.put(new Integer(N));
-                        fail("put should block");
+                        q.put(new Integer(SIZE));
+                        threadFail("put should block");
                     } catch (InterruptedException ie){
-                        assertEquals(added, N);
+                        threadAssertEquals(added, SIZE);
                     }   
                 }});
         t.start();
@@ -268,9 +264,9 @@ public class LinkedBlockingQueueTest extends TestCase {
                         ++added;
                         q.put(new Object());
                         ++added;
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException e){
-                        assertTrue(added >= 2);
+                        threadAssertTrue(added >= 2);
                     }
                 }
             });
@@ -292,16 +288,16 @@ public class LinkedBlockingQueueTest extends TestCase {
                     try {
                         q.put(new Object());
                         q.put(new Object());
-                        assertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, TimeUnit.MILLISECONDS));
+                        threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success){}
                 }
             });
         
         try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS);
+            Thread.sleep(SMALL_DELAY_MS);
             t.interrupt();
             t.join();
         } catch (Exception e){
@@ -311,8 +307,8 @@ public class LinkedBlockingQueueTest extends TestCase {
 
     public void testTake(){
 	try {
-            LinkedBlockingQueue q = fullQueue(N);
-            for (int i = 0; i < N; ++i) {
+            LinkedBlockingQueue q = populatedQueue(SIZE);
+            for (int i = 0; i < SIZE; ++i) {
                 assertEquals(i, ((Integer)q.take()).intValue());
             }
         } catch (InterruptedException e){
@@ -326,7 +322,7 @@ public class LinkedBlockingQueueTest extends TestCase {
                 public void run(){
                     try {
                         q.take();
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success){ }                
                 }
             });
@@ -344,12 +340,12 @@ public class LinkedBlockingQueueTest extends TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        LinkedBlockingQueue q = fullQueue(N);
-                        for (int i = 0; i < N; ++i) {
+                        LinkedBlockingQueue q = populatedQueue(SIZE);
+                        for (int i = 0; i < SIZE; ++i) {
                             assertEquals(i, ((Integer)q.take()).intValue());
                         }
                         q.take();
-                        fail("take should block");
+                        threadFail("take should block");
                     } catch (InterruptedException success){
                     }   
                 }});
@@ -366,8 +362,8 @@ public class LinkedBlockingQueueTest extends TestCase {
 
 
     public void testPoll(){
-        LinkedBlockingQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
         }
 	assertNull(q.poll());
@@ -375,8 +371,8 @@ public class LinkedBlockingQueueTest extends TestCase {
 
     public void testTimedPoll0() {
         try {
-            LinkedBlockingQueue q = fullQueue(N);
-            for (int i = 0; i < N; ++i) {
+            LinkedBlockingQueue q = populatedQueue(SIZE);
+            for (int i = 0; i < SIZE; ++i) {
                 assertEquals(i, ((Integer)q.poll(0, TimeUnit.MILLISECONDS)).intValue());
             }
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
@@ -387,8 +383,8 @@ public class LinkedBlockingQueueTest extends TestCase {
 
     public void testTimedPoll() {
         try {
-            LinkedBlockingQueue q = fullQueue(N);
-            for (int i = 0; i < N; ++i) {
+            LinkedBlockingQueue q = populatedQueue(SIZE);
+            for (int i = 0; i < SIZE; ++i) {
                 assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)).intValue());
             }
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -401,11 +397,11 @@ public class LinkedBlockingQueueTest extends TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        LinkedBlockingQueue q = fullQueue(N);
-                        for (int i = 0; i < N; ++i) {
-                            assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)).intValue());
+                        LinkedBlockingQueue q = populatedQueue(SIZE);
+                        for (int i = 0; i < SIZE; ++i) {
+                            threadAssertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)).intValue());
                         }
-                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch (InterruptedException success){
                     }   
                 }});
@@ -425,17 +421,17 @@ public class LinkedBlockingQueueTest extends TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run(){
                     try {
-                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success) { }                
                 }
             });
         try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS * 2);
-            assertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            Thread.sleep(SMALL_DELAY_MS);
+            assertTrue(q.offer(zero, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             t.interrupt();
             t.join();
         } catch (Exception e){
@@ -445,8 +441,8 @@ public class LinkedBlockingQueueTest extends TestCase {
 
 
     public void testPeek(){
-        LinkedBlockingQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.peek()).intValue());
             q.poll();
             assertTrue(q.peek() == null ||
@@ -456,8 +452,8 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
 
     public void testElement(){
-        LinkedBlockingQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.element()).intValue());
             q.poll();
         }
@@ -469,8 +465,8 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
 
     public void testRemove(){
-        LinkedBlockingQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.remove()).intValue());
         }
         try {
@@ -481,11 +477,11 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
 
     public void testRemoveElement(){
-        LinkedBlockingQueue q = fullQueue(N);
-        for (int i = 1; i < N; i+=2) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
         }
-        for (int i = 0; i < N; i+=2) {
+        for (int i = 0; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
             assertFalse(q.remove(new Integer(i+1)));
         }
@@ -493,8 +489,8 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
 	
     public void testContains(){
-        LinkedBlockingQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
             q.poll();
             assertFalse(q.contains(new Integer(i)));
@@ -502,21 +498,21 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
 
     public void testClear(){
-        LinkedBlockingQueue q = fullQueue(N);
+        LinkedBlockingQueue q = populatedQueue(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
-        assertEquals(N, q.remainingCapacity());
-        q.add(new Integer(1));
+        assertEquals(SIZE, q.remainingCapacity());
+        q.add(one);
         assertFalse(q.isEmpty());
         q.clear();
         assertTrue(q.isEmpty());
     }
 
     public void testContainsAll(){
-        LinkedBlockingQueue q = fullQueue(N);
-        LinkedBlockingQueue p = new LinkedBlockingQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        LinkedBlockingQueue p = new LinkedBlockingQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.containsAll(p));
             assertFalse(p.containsAll(q));
             p.add(new Integer(i));
@@ -525,9 +521,9 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
 
     public void testRetainAll(){
-        LinkedBlockingQueue q = fullQueue(N);
-        LinkedBlockingQueue p = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+        LinkedBlockingQueue p = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             boolean changed = q.retainAll(p);
             if (i == 0)
                 assertFalse(changed);
@@ -535,17 +531,17 @@ public class LinkedBlockingQueueTest extends TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             p.remove();
         }
     }
 
     public void testRemoveAll(){
-        for (int i = 1; i < N; ++i) {
-            LinkedBlockingQueue q = fullQueue(N);
-            LinkedBlockingQueue p = fullQueue(i);
+        for (int i = 1; i < SIZE; ++i) {
+            LinkedBlockingQueue q = populatedQueue(SIZE);
+            LinkedBlockingQueue p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer I = (Integer)(p.remove());
                 assertFalse(q.contains(I));
@@ -555,7 +551,7 @@ public class LinkedBlockingQueueTest extends TestCase {
 
 
     public void testToArray(){
-        LinkedBlockingQueue q = fullQueue(N);
+        LinkedBlockingQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
 	try {
 	for(int i = 0; i < o.length; i++)
@@ -566,8 +562,8 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
 
     public void testToArray2(){
-        LinkedBlockingQueue q = fullQueue(N);
-	Integer[] ints = new Integer[N];
+        LinkedBlockingQueue q = populatedQueue(SIZE);
+	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
 	try {
 	    for(int i = 0; i < ints.length; i++)
@@ -578,7 +574,7 @@ public class LinkedBlockingQueueTest extends TestCase {
     }
     
     public void testIterator(){
-        LinkedBlockingQueue q = fullQueue(N);
+        LinkedBlockingQueue q = populatedQueue(SIZE);
 	Iterator it = q.iterator();
 	try {
 	    while(it.hasNext()){
@@ -593,9 +589,9 @@ public class LinkedBlockingQueueTest extends TestCase {
 
         final LinkedBlockingQueue q = new LinkedBlockingQueue(3);
 
-        q.add(new Integer(1));
-        q.add(new Integer(2));
-        q.add(new Integer(3));
+        q.add(one);
+        q.add(two);
+        q.add(three);
 
         assertEquals("queue should be full", 0, q.remainingCapacity());
 
@@ -612,9 +608,9 @@ public class LinkedBlockingQueueTest extends TestCase {
 
         final LinkedBlockingQueue q = new LinkedBlockingQueue(3);
 
-        q.add(new Integer(1));
-        q.add(new Integer(2));
-        q.add(new Integer(3));
+        q.add(one);
+        q.add(two);
+        q.add(three);
 
         try {
             for (Iterator it = q.iterator(); it.hasNext();) {
@@ -631,9 +627,9 @@ public class LinkedBlockingQueueTest extends TestCase {
 
 
     public void testToString(){
-        LinkedBlockingQueue q = fullQueue(N);
+        LinkedBlockingQueue q = populatedQueue(SIZE);
         String s = q.toString();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
     }        
@@ -643,20 +639,20 @@ public class LinkedBlockingQueueTest extends TestCase {
 
         final LinkedBlockingQueue q = new LinkedBlockingQueue(2);
 
-        q.add(new Integer(1));
-        q.add(new Integer(2));
+        q.add(one);
+        q.add(two);
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
         executor.execute(new Runnable() {
             public void run() {
-                assertFalse("offer should be rejected", q.offer(new Integer(3)));
+                threadAssertFalse(q.offer(three));
                 try {
-                    assertTrue("offer should be accepted", q.offer(new Integer(3), MEDIUM_DELAY_MS * 2, TimeUnit.MILLISECONDS));
-                    assertEquals(0, q.remainingCapacity());
+                    threadAssertTrue(q.offer(three, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertEquals(0, q.remainingCapacity());
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
@@ -664,16 +660,16 @@ public class LinkedBlockingQueueTest extends TestCase {
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    Thread.sleep(MEDIUM_DELAY_MS);
-                    assertEquals("first item in queue should be 1", new Integer(1), q.take());
+                    Thread.sleep(SMALL_DELAY_MS);
+                    threadAssertEquals(one, q.take());
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
         
-        executor.shutdown();
+        joinPool(executor);
 
     }
 
@@ -685,13 +681,13 @@ public class LinkedBlockingQueueTest extends TestCase {
 
         executor.execute(new Runnable() {
             public void run() {
-                assertNull("poll should fail", q.poll());
+                threadAssertNull(q.poll());
                 try {
-                    assertTrue(null != q.poll(MEDIUM_DELAY_MS * 2, TimeUnit.MILLISECONDS));
-                    assertTrue(q.isEmpty());
+                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertTrue(q.isEmpty());
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
@@ -699,21 +695,20 @@ public class LinkedBlockingQueueTest extends TestCase {
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    Thread.sleep(MEDIUM_DELAY_MS);
-                    q.put(new Integer(1));
+                    Thread.sleep(SMALL_DELAY_MS);
+                    q.put(one);
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
         
-        executor.shutdown();
-
+        joinPool(executor);
     }
 
     public void testSerialization() {
-        LinkedBlockingQueue q = fullQueue(N);
+        LinkedBlockingQueue q = populatedQueue(SIZE);
 
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);

@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.*;
 import junit.framework.*;
 import java.util.*;
 
-public class AtomicLongFieldUpdaterTest extends TestCase{
+public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
     volatile long x = 0;
     long z;
     int w;

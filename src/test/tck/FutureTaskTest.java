@@ -7,8 +7,9 @@
 
 import junit.framework.*;
 import java.util.concurrent.*;
+import java.util.*;
 
-public class FutureTaskTest extends TestCase {
+public class FutureTaskTest extends JSR166TestCase {
 
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -17,9 +18,17 @@ public class FutureTaskTest extends TestCase {
 	return new TestSuite(FutureTaskTest.class);
     }
 
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
+    /**
+     * Subclass to expose protected methods
+     */
+    static class MyFutureTask extends FutureTask {
+        public MyFutureTask(Callable r) { super(r); }
+        public boolean reset() { return super.reset(); }
+        public void setCancelled() { super.setCancelled(); }
+        public void setDone() { super.setDone(); }
+        public void set(Object x) { super.set(x); }
+        public void setException(Throwable t) { super.setException(t); }
+    }
 
     public void testConstructor(){
         try {
@@ -40,16 +49,73 @@ public class FutureTaskTest extends TestCase {
     }
 
     public void testIsDone(){
-        FutureTask task = new FutureTask( new Callable() {
-                public Object call() { return Boolean.TRUE; } });
+        FutureTask task = new FutureTask( new NoOpCallable());
 	task.run();
 	assertTrue(task.isDone());
 	assertFalse(task.isCancelled());
     }
 
+    public void testReset(){
+        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+	task.run();
+	assertTrue(task.isDone());
+	assertTrue(task.reset());
+    }
+
+    public void testResetAfterCancel() {
+        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        assertTrue(task.cancel(false));
+	task.run();
+	assertTrue(task.isDone());
+	assertTrue(task.isCancelled());
+        assertFalse(task.reset());
+    }
+
+    public void testSetDone() {
+        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+	task.setDone();
+	assertTrue(task.isDone());
+	assertFalse(task.isCancelled());
+    }
+
+    public void testSetCancelled() {
+        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        assertTrue(task.cancel(false));
+	task.setCancelled();
+	assertTrue(task.isDone());
+	assertTrue(task.isCancelled());
+    }
+
+    public void testSet() {
+        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        task.set(one);
+        try {
+            assertEquals(task.get(), one);
+        }
+        catch(Exception e) {
+            fail("unexpected exception");
+        }
+    }
+
+    public void testSetException() {
+        Exception nse = new NoSuchElementException();
+        MyFutureTask task = new MyFutureTask(new NoOpCallable());
+        task.setException(nse);
+        try {
+            Object x = task.get();
+            fail("should throw");
+        }
+        catch(ExecutionException ee) {
+            Throwable cause = ee.getCause();
+            assertEquals(cause, nse);
+        }
+        catch(Exception e) {
+            fail("unexpected exception");
+        }
+    }
+
     public void testCancelBeforeRun() {
-        FutureTask task = new FutureTask( new Callable() {
-                public Object call() { return Boolean.TRUE; } });
+        FutureTask task = new FutureTask( new NoOpCallable());
         assertTrue(task.cancel(false));
 	task.run();
 	assertTrue(task.isDone());
@@ -57,8 +123,7 @@ public class FutureTaskTest extends TestCase {
     }
 
     public void testCancelBeforeRun2() {
-        FutureTask task = new FutureTask( new Callable() {
-                public Object call() { return Boolean.TRUE; } });
+        FutureTask task = new FutureTask( new NoOpCallable());
         assertTrue(task.cancel(true));
 	task.run();
 	assertTrue(task.isDone());
@@ -66,8 +131,7 @@ public class FutureTaskTest extends TestCase {
     }
 
     public void testCancelAfterRun() {
-        FutureTask task = new FutureTask( new Callable() {
-                public Object call() { return Boolean.TRUE; } });
+        FutureTask task = new FutureTask( new NoOpCallable());
 	task.run();
         assertFalse(task.cancel(false));
 	assertTrue(task.isDone());
@@ -78,8 +142,8 @@ public class FutureTaskTest extends TestCase {
         FutureTask task = new FutureTask( new Callable() {
                 public Object call() {
                     try {
-                        Thread.sleep(SHORT_DELAY_MS* 2);
-                        fail("should throw");
+                        Thread.sleep(MEDIUM_DELAY_MS);
+                        threadFail("should throw");
                     }
                     catch (InterruptedException success) {}
                     return Boolean.TRUE;
@@ -103,10 +167,10 @@ public class FutureTaskTest extends TestCase {
         FutureTask task = new FutureTask( new Callable() {
                 public Object call() {
                     try {
-                        Thread.sleep(SHORT_DELAY_MS* 2);
+                        Thread.sleep(MEDIUM_DELAY_MS);
                     }
                     catch (InterruptedException success) {
-                        fail("should not interrupt");
+                        threadFail("should not interrupt");
                     }
                     return Boolean.TRUE;
                 } });
@@ -130,7 +194,7 @@ public class FutureTaskTest extends TestCase {
 		    try{
 			Thread.sleep(MEDIUM_DELAY_MS);
 		    } catch(InterruptedException e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
                     return Boolean.TRUE;
 		}
@@ -140,7 +204,7 @@ public class FutureTaskTest extends TestCase {
 		    try{
 			ft.get();
 		    } catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -165,7 +229,7 @@ public class FutureTaskTest extends TestCase {
 		    try{
 			Thread.sleep(MEDIUM_DELAY_MS);
 		    } catch(InterruptedException e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
                     return Boolean.TRUE;
 		}
@@ -176,7 +240,7 @@ public class FutureTaskTest extends TestCase {
 			ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 		    } catch(TimeoutException success) {
                     } catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -201,7 +265,7 @@ public class FutureTaskTest extends TestCase {
 		    try{
 			Thread.sleep(MEDIUM_DELAY_MS);
 		    } catch(InterruptedException e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
                     return Boolean.TRUE;
 		}
@@ -212,11 +276,11 @@ public class FutureTaskTest extends TestCase {
 		    public void run(){
 			try{
 			    ft.get();
-			    fail("should throw");
+			    threadFail("should throw");
 			} catch(CancellationException success){
                         }
 			catch(Exception e){
-                            fail("unexpected exception");
+                            threadFail("unexpected exception");
                         }
 		    }
 		});
@@ -234,21 +298,21 @@ public class FutureTaskTest extends TestCase {
 		    try{
 			Thread.sleep(SHORT_DELAY_MS);
 		    } catch(InterruptedException e) {
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		    return Boolean.TRUE;
 		}
 	    });
 	try{
-	    Thread.sleep(100);
+	    Thread.sleep(SHORT_DELAY_MS);
 	    Thread t = new Thread(new Runnable(){
 		    public void run(){
 			try{
-			    ft.get(3 * SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-			    fail("should throw");
+			    ft.get(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+			    threadFail("should throw");
 			} catch(CancellationException success) {}
 			catch(Exception e){
-                            fail("unexpected exception");
+                            threadFail("unexpected exception");
 			}
 		    }
 		});
@@ -300,19 +364,15 @@ public class FutureTaskTest extends TestCase {
       
 
     public void testGet_InterruptedException(){
-	final FutureTask ft = new FutureTask(new Callable(){
-		public Object call(){
-		    return new Object();
-		}
-	    });
+	final FutureTask ft = new FutureTask(new NoOpCallable());
 	Thread t = new Thread(new Runnable(){
 		public void run(){		    
 		    try{
 			ft.get();
-			fail("should throw");
+			threadFail("should throw");
 		    } catch(InterruptedException success){
                     } catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
@@ -327,19 +387,15 @@ public class FutureTaskTest extends TestCase {
     }
 
     public void testTimedGet_InterruptedException2(){
-	final FutureTask ft = new FutureTask(new Callable(){
-	 	public Object call(){
-		    return new Object();
-		}
-	    });
+	final FutureTask ft = new FutureTask(new NoOpCallable());
 	Thread t = new Thread(new Runnable(){
 	 	public void run(){		    
 		    try{
-			ft.get(100,TimeUnit.SECONDS);
-			fail("should throw");
+			ft.get(LONG_DELAY_MS,TimeUnit.MILLISECONDS);
+			threadFail("should throw");
 		    } catch(InterruptedException success){}
 		    catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
 		    }
 		}
 	    });
@@ -354,20 +410,14 @@ public class FutureTaskTest extends TestCase {
     }
     
     public void testGet_TimeoutException(){
-	FutureTask ft = new FutureTask(new Callable(){
-	 	public Object call(){
-		    return new Object();
-		}
-	    });	
 	try{
+            FutureTask ft = new FutureTask(new NoOpCallable());
 	    ft.get(1,TimeUnit.MILLISECONDS);
 	    fail("should throw");
 	} catch(TimeoutException success){}
 	catch(Exception success){
 	    fail("unexpected exception");
 	}
-	
-	
     }
     
 }

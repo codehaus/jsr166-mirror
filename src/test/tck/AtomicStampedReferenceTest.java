@@ -8,7 +8,7 @@
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
 
-public class AtomicStampedReferenceTest extends TestCase{
+public class AtomicStampedReferenceTest extends JSR166TestCase{
     public static void main (String[] args) {
         junit.textui.TestRunner.run (suite());
     }

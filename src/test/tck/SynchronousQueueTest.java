@@ -10,12 +10,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class SynchronousQueueTest extends TestCase {
-
-    private final static int N = 1;
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
+public class SynchronousQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -66,7 +61,7 @@ public class SynchronousQueueTest extends TestCase {
     public void testAddAll2(){
         try {
             SynchronousQueue q = new SynchronousQueue();
-            Integer[] ints = new Integer[N];
+            Integer[] ints = new Integer[1];
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
         }
@@ -75,8 +70,8 @@ public class SynchronousQueueTest extends TestCase {
     public void testAddAll4(){
         try {
             SynchronousQueue q = new SynchronousQueue();
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[1];
+            for (int i = 0; i < 1; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             fail("Cannot add with insufficient capacity");
@@ -103,7 +98,7 @@ public class SynchronousQueueTest extends TestCase {
                     try {
                         SynchronousQueue q = new SynchronousQueue();
                         q.put(new Integer(0));
-                        fail("put should block");
+                        threadFail("put should block");
                     } catch (InterruptedException ie){
                     }   
                 }});
@@ -132,7 +127,7 @@ public class SynchronousQueueTest extends TestCase {
                         ++added;
                         q.put(new Object());
                         ++added;
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException e){
                         assertTrue(added >= 1);
                     }
@@ -156,16 +151,16 @@ public class SynchronousQueueTest extends TestCase {
                 public void run(){
                     try {
 
-                        assertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, TimeUnit.MILLISECONDS));
+                        threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success){}
                 }
             });
         
         try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS);
+            Thread.sleep(SMALL_DELAY_MS);
             t.interrupt();
             t.join();
         } catch (Exception e){
@@ -180,7 +175,7 @@ public class SynchronousQueueTest extends TestCase {
                 public void run(){
                     try {
                         q.take();
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success){ }                
                 }
             });
@@ -242,16 +237,16 @@ public class SynchronousQueueTest extends TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run(){
                     try {
-                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			fail("Should block");
+			threadFail("Should block");
                     } catch (InterruptedException success) { }                
                 }
             });
         try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS * 2);
+            Thread.sleep(SMALL_DELAY_MS);
             assertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             t.interrupt();
             t.join();
@@ -286,17 +281,13 @@ public class SynchronousQueueTest extends TestCase {
 
     public void testRemoveElement(){
         SynchronousQueue q = new SynchronousQueue();
-        for (int i = 1; i < N; i+=2) {
-            assertFalse(q.remove(new Integer(i)));
-        }
+        assertFalse(q.remove(new Integer(0)));
         assertTrue(q.isEmpty());
     }
 	
     public void testContains(){
         SynchronousQueue q = new SynchronousQueue();
-        for (int i = 0; i < N; ++i) {
-            assertFalse(q.contains(new Integer(i)));
-        }
+        assertFalse(q.contains(new Integer(0)));
     }
 
     public void testClear(){
@@ -379,13 +370,13 @@ public class SynchronousQueueTest extends TestCase {
 
         executor.execute(new Runnable() {
             public void run() {
-                assertFalse(q.offer(one));
+                threadAssertFalse(q.offer(one));
                 try {
-                    assertTrue(q.offer(one, MEDIUM_DELAY_MS * 2, TimeUnit.MILLISECONDS));
-                    assertEquals(0, q.remainingCapacity());
+                    threadAssertTrue(q.offer(one, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertEquals(0, q.remainingCapacity());
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
@@ -393,8 +384,8 @@ public class SynchronousQueueTest extends TestCase {
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    Thread.sleep(MEDIUM_DELAY_MS);
-                    assertEquals(one, q.take());
+                    Thread.sleep(SMALL_DELAY_MS);
+                    threadAssertEquals(one, q.take());
                 }
                 catch (InterruptedException e) {
                     fail("should not be interrupted");
@@ -402,7 +393,7 @@ public class SynchronousQueueTest extends TestCase {
             }
         });
         
-        executor.shutdown();
+        joinPool(executor);
 
     }
 
@@ -414,13 +405,13 @@ public class SynchronousQueueTest extends TestCase {
 
         executor.execute(new Runnable() {
             public void run() {
-                assertNull(q.poll());
+                threadAssertNull(q.poll());
                 try {
-                    assertTrue(null != q.poll(MEDIUM_DELAY_MS * 2, TimeUnit.MILLISECONDS));
-                    assertTrue(q.isEmpty());
+                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertTrue(q.isEmpty());
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
@@ -428,16 +419,16 @@ public class SynchronousQueueTest extends TestCase {
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    Thread.sleep(MEDIUM_DELAY_MS);
+                    Thread.sleep(SMALL_DELAY_MS);
                     q.put(new Integer(1));
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadFail("should not be interrupted");
                 }
             }
         });
         
-        executor.shutdown();
+        joinPool(executor);
 
     }
 

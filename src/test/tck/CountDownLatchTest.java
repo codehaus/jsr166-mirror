@@ -9,20 +9,20 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class CountDownLatchTest extends TestCase{
-    
+public class CountDownLatchTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
-    
-
     public static Test suite() {
 	return new TestSuite(CountDownLatchTest.class);
     }
 
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
+    public void testConstructor(){
+        try {
+            new CountDownLatch(-1);
+            fail("should throw IllegalArgumentException");
+        } catch(IllegalArgumentException success){}
+    }
 
     public void testGetCount(){
 	final CountDownLatch l = new CountDownLatch(2);
@@ -31,20 +31,20 @@ public class CountDownLatchTest extends TestCase{
 	assertEquals(1, l.getCount());
     }
 
-    public void testAwait1(){
+    public void testAwait(){
 	final CountDownLatch l = new CountDownLatch(2);
 
 	Thread t = new Thread(new Runnable(){
 		public void run(){
-		    try{
+		    try {
 			l.await();
-		    }catch(InterruptedException e){
-                        fail("unexpected exception");
+		    } catch(InterruptedException e){
+                        threadFail("unexpected exception");
                     }
 		}
 	    });
 	t.start();
-	try{
+	try {
             assertEquals(l.getCount(), 2);
             Thread.sleep(SHORT_DELAY_MS);
             l.countDown();
@@ -52,57 +52,78 @@ public class CountDownLatchTest extends TestCase{
             l.countDown();
             assertEquals(l.getCount(), 0);
             t.join();
-        }catch (InterruptedException e){
+        } catch (InterruptedException e){
+            fail("unexpected exception");
+        }
+    }
+    
+
+    public void testTimedAwait(){
+	final CountDownLatch l = new CountDownLatch(2);
+
+	Thread t = new Thread(new Runnable(){
+		public void run(){
+		    try {
+			threadAssertTrue(l.await(SMALL_DELAY_MS, TimeUnit.MILLISECONDS));
+		    } catch(InterruptedException e){
+                        threadFail("unexpected exception");
+                    }
+		}
+	    });
+	t.start();
+	try {
+            assertEquals(l.getCount(), 2);
+            Thread.sleep(SHORT_DELAY_MS);
+            l.countDown();
+            assertEquals(l.getCount(), 1);
+            l.countDown();
+            assertEquals(l.getCount(), 0);
+            t.join();
+        } catch (InterruptedException e){
             fail("unexpected exception");
         }
     }
     
 
 
-    public void testConstructor(){
-        try{
-            new CountDownLatch(-1);
-            fail("should throw IllegalArgumentException");
-        }catch(IllegalArgumentException success){}
-    }
 
-    public void testAwait1_InterruptedException(){
+    public void testAwait_InterruptedException(){
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new Runnable(){
                 public void run(){
-                    try{
+                    try {
                         l.await();
-                        fail("should throw");
-                    }catch(InterruptedException success){}
+                        threadFail("should throw");
+                    } catch(InterruptedException success){}
                 }
             });
 	t.start();
-	try{
+	try {
             assertEquals(l.getCount(), 1);
             t.interrupt();
             t.join();
-        }catch (InterruptedException e){
+        } catch (InterruptedException e){
             fail("unexpected exception");
         }
     }
 
-    public void testAwait2_InterruptedException(){
+    public void testTimedAwait_InterruptedException(){
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new Runnable(){
                 public void run(){
-                    try{
+                    try {
                         l.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        fail("should throw");                        
-                    }catch(InterruptedException success){}
+                        threadFail("should throw");                        
+                    } catch(InterruptedException success){}
                 }
             });
         t.start();
-        try{
+        try {
             Thread.sleep(SHORT_DELAY_MS);
             assertEquals(l.getCount(), 1);
             t.interrupt();
             t.join();
-        }catch (InterruptedException e){
+        } catch (InterruptedException e){
             fail("unexpected exception");
         }
     }
@@ -111,18 +132,18 @@ public class CountDownLatchTest extends TestCase{
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new Runnable(){
                 public void run(){
-                    try{
-                        assertFalse(l.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                    }catch(InterruptedException ie){
-                        fail("unexpected exception");
+                    try {
+                        threadAssertFalse(l.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                    } catch(InterruptedException ie){
+                        threadFail("unexpected exception");
                     }
                 }
             });
         t.start();
-        try{
+        try {
             assertEquals(l.getCount(), 1);
             t.join();
-        }catch (InterruptedException e){
+        } catch (InterruptedException e){
             fail("unexpected exception");
         }
     }

@@ -10,11 +10,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class ConcurrentLinkedQueueTest extends TestCase {
-    private static final int N = 10;
-    private static final long SHORT_DELAY_MS = 100; 
-    private static final long MEDIUM_DELAY_MS = 1000;
-    private static final long LONG_DELAY_MS = 10000; 
+public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -28,7 +24,7 @@ public class ConcurrentLinkedQueueTest extends TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private ConcurrentLinkedQueue fullQueue(int n) {
+    private ConcurrentLinkedQueue populatedQueue(int n) {
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         assertTrue(q.isEmpty());
 	for(int i = 0; i < n; ++i)
@@ -52,7 +48,7 @@ public class ConcurrentLinkedQueueTest extends TestCase {
 
     public void testConstructor4(){
         try {
-            Integer[] ints = new Integer[N];
+            Integer[] ints = new Integer[SIZE];
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
         }
@@ -61,8 +57,8 @@ public class ConcurrentLinkedQueueTest extends TestCase {
 
     public void testConstructor5(){
         try {
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N-1; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
@@ -72,11 +68,11 @@ public class ConcurrentLinkedQueueTest extends TestCase {
 
     public void testConstructor6(){
         try {
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue(Arrays.asList(ints));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -85,21 +81,21 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     public void testEmpty() {
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         assertTrue(q.isEmpty());
-        q.add(new Integer(1));
+        q.add(one);
         assertFalse(q.isEmpty());
-        q.add(new Integer(2));
+        q.add(two);
         q.remove();
         q.remove();
         assertTrue(q.isEmpty());
     }
 
     public void testSize() {
-        ConcurrentLinkedQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
-            assertEquals(N-i, q.size());
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(SIZE-i, q.size());
             q.remove();
         }
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             q.add(new Integer(i));
         }
@@ -115,13 +111,13 @@ public class ConcurrentLinkedQueueTest extends TestCase {
 
     public void testOffer() {
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
-        assertTrue(q.offer(new Integer(0)));
-        assertTrue(q.offer(new Integer(1)));
+        assertTrue(q.offer(zero));
+        assertTrue(q.offer(one));
     }
 
     public void testAdd(){
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             assertTrue(q.add(new Integer(i)));
         }
@@ -138,7 +134,7 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     public void testAddAll2(){
         try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
-            Integer[] ints = new Integer[N];
+            Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
         }
@@ -147,8 +143,8 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     public void testAddAll3(){
         try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N-1; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
@@ -159,29 +155,29 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     public void testAddAll5(){
         try {
             Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             assertFalse(q.addAll(Arrays.asList(empty)));
             assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
     }
 
     public void testPoll(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
         }
 	assertNull(q.poll());
     }
 
     public void testPeek(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.peek()).intValue());
             q.poll();
             assertTrue(q.peek() == null ||
@@ -191,8 +187,8 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testElement(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.element()).intValue());
             q.poll();
         }
@@ -204,8 +200,8 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testRemove(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.remove()).intValue());
         }
         try {
@@ -216,11 +212,11 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testRemoveElement(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-        for (int i = 1; i < N; i+=2) {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
         }
-        for (int i = 0; i < N; i+=2) {
+        for (int i = 0; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
             assertFalse(q.remove(new Integer(i+1)));
         }
@@ -228,8 +224,8 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 	
     public void testContains(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
             q.poll();
             assertFalse(q.contains(new Integer(i)));
@@ -237,20 +233,20 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testClear(){
-        ConcurrentLinkedQueue q = fullQueue(N);
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
-        q.add(new Integer(1));
+        q.add(one);
         assertFalse(q.isEmpty());
         q.clear();
         assertTrue(q.isEmpty());
     }
 
     public void testContainsAll(){
-        ConcurrentLinkedQueue q = fullQueue(N);
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
         ConcurrentLinkedQueue p = new ConcurrentLinkedQueue();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.containsAll(p));
             assertFalse(p.containsAll(q));
             p.add(new Integer(i));
@@ -259,9 +255,9 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testRetainAll(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-        ConcurrentLinkedQueue p = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+        ConcurrentLinkedQueue p = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             boolean changed = q.retainAll(p);
             if (i == 0)
                 assertFalse(changed);
@@ -269,17 +265,17 @@ public class ConcurrentLinkedQueueTest extends TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             p.remove();
         }
     }
 
     public void testRemoveAll(){
-        for (int i = 1; i < N; ++i) {
-            ConcurrentLinkedQueue q = fullQueue(N);
-            ConcurrentLinkedQueue p = fullQueue(i);
+        for (int i = 1; i < SIZE; ++i) {
+            ConcurrentLinkedQueue q = populatedQueue(SIZE);
+            ConcurrentLinkedQueue p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer I = (Integer)(p.remove());
                 assertFalse(q.contains(I));
@@ -288,7 +284,7 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testToArray(){
-        ConcurrentLinkedQueue q = fullQueue(N);
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
 	for(int i = 0; i < o.length; i++)
@@ -296,8 +292,8 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testToArray2(){
-        ConcurrentLinkedQueue q = fullQueue(N);
-	Integer[] ints = new Integer[N];
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
+	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for(int i = 0; i < ints.length; i++)
@@ -305,23 +301,21 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
     
     public void testIterator(){
-        ConcurrentLinkedQueue q = fullQueue(N);
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
         while(it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, N);
+        assertEquals(i, SIZE);
     }
 
     public void testIteratorOrdering() {
-
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
-
-        q.add(new Integer(1));
-        q.add(new Integer(2));
-        q.add(new Integer(3));
+        q.add(one);
+        q.add(two);
+        q.add(three);
 
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
@@ -333,12 +327,10 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testWeaklyConsistentIteration () {
-
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
-
-        q.add(new Integer(1));
-        q.add(new Integer(2));
-        q.add(new Integer(3));
+        q.add(one);
+        q.add(two);
+        q.add(three);
 
         try {
             for (Iterator it = q.iterator(); it.hasNext();) {
@@ -354,34 +346,30 @@ public class ConcurrentLinkedQueueTest extends TestCase {
     }
 
     public void testIteratorRemove () {
-
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
-
-        q.add(new Integer(1));
-        q.add(new Integer(2));
-        q.add(new Integer(3));
-
+        q.add(one);
+        q.add(two);
+        q.add(three);
         Iterator it = q.iterator();
         it.next();
         it.remove();
-
         it = q.iterator();
-        assertEquals(it.next(), new Integer(2));
-        assertEquals(it.next(), new Integer(3));
+        assertEquals(it.next(), two);
+        assertEquals(it.next(), three);
         assertFalse(it.hasNext());
     }
 
 
     public void testToString(){
-        ConcurrentLinkedQueue q = fullQueue(N);
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
         String s = q.toString();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
     }        
 
     public void testSerialization() {
-        ConcurrentLinkedQueue q = fullQueue(N);
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
             ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));

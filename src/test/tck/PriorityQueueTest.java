@@ -10,12 +10,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class PriorityQueueTest extends TestCase {
-
-    private static final int N = 10;
-    private static final long SHORT_DELAY_MS = 100; 
-    private static final long MEDIUM_DELAY_MS = 1000;
-    private static final long LONG_DELAY_MS = 10000; 
+public class PriorityQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -40,7 +35,7 @@ public class PriorityQueueTest extends TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private PriorityQueue fullQueue(int n) {
+    private PriorityQueue populatedQueue(int n) {
         PriorityQueue q = new PriorityQueue(n);
         assertTrue(q.isEmpty());
 	for(int i = n-1; i >= 0; i-=2)
@@ -53,7 +48,7 @@ public class PriorityQueueTest extends TestCase {
     }
  
     public void testConstructor1(){
-        assertEquals(0, new PriorityQueue(N).size());
+        assertEquals(0, new PriorityQueue(SIZE).size());
     }
 
     public void testConstructor2(){
@@ -75,7 +70,7 @@ public class PriorityQueueTest extends TestCase {
 
     public void testConstructor4(){
         try {
-            Integer[] ints = new Integer[N];
+            Integer[] ints = new Integer[SIZE];
             PriorityQueue q = new PriorityQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
         }
@@ -84,8 +79,8 @@ public class PriorityQueueTest extends TestCase {
 
     public void testConstructor5(){
         try {
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N-1; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             PriorityQueue q = new PriorityQueue(Arrays.asList(ints));
             fail("Cannot make with null elements");
@@ -95,11 +90,11 @@ public class PriorityQueueTest extends TestCase {
 
     public void testConstructor6(){
         try {
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             PriorityQueue q = new PriorityQueue(Arrays.asList(ints));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -107,12 +102,12 @@ public class PriorityQueueTest extends TestCase {
 
     public void testConstructor7(){
         try {
-            PriorityQueue q = new PriorityQueue(N, new MyReverseComparator());
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
+            PriorityQueue q = new PriorityQueue(SIZE, new MyReverseComparator());
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
-            for (int i = N-1; i >= 0; --i)
+            for (int i = SIZE-1; i >= 0; --i)
                 assertEquals(ints[i], q.poll());
         }
         finally {}
@@ -130,12 +125,12 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testSize() {
-        PriorityQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
-            assertEquals(N-i, q.size());
+        PriorityQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(SIZE-i, q.size());
             q.remove();
         }
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             q.add(new Integer(i));
         }
@@ -167,8 +162,8 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testAdd(){
-        PriorityQueue q = new PriorityQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = new PriorityQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
             assertTrue(q.add(new Integer(i)));
         }
@@ -184,8 +179,8 @@ public class PriorityQueueTest extends TestCase {
     }
     public void testAddAll2(){
         try {
-            PriorityQueue q = new PriorityQueue(N);
-            Integer[] ints = new Integer[N];
+            PriorityQueue q = new PriorityQueue(SIZE);
+            Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
         }
@@ -193,9 +188,9 @@ public class PriorityQueueTest extends TestCase {
     }
     public void testAddAll3(){
         try {
-            PriorityQueue q = new PriorityQueue(N);
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N-1; ++i)
+            PriorityQueue q = new PriorityQueue(SIZE);
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             fail("Cannot add null elements");
@@ -206,29 +201,29 @@ public class PriorityQueueTest extends TestCase {
     public void testAddAll5(){
         try {
             Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[N];
-            for (int i = 0; i < N; ++i)
-                ints[i] = new Integer(N-1-i);
-            PriorityQueue q = new PriorityQueue(N);
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
+                ints[i] = new Integer(SIZE-1-i);
+            PriorityQueue q = new PriorityQueue(SIZE);
             assertFalse(q.addAll(Arrays.asList(empty)));
             assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(new Integer(i), q.poll());
         }
         finally {}
     }
 
     public void testPoll(){
-        PriorityQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
         }
 	assertNull(q.poll());
     }
 
     public void testPeek(){
-        PriorityQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.peek()).intValue());
             q.poll();
             assertTrue(q.peek() == null ||
@@ -238,8 +233,8 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testElement(){
-        PriorityQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.element()).intValue());
             q.poll();
         }
@@ -251,8 +246,8 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testRemove(){
-        PriorityQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.remove()).intValue());
         }
         try {
@@ -263,11 +258,11 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testRemoveElement(){
-        PriorityQueue q = fullQueue(N);
-        for (int i = 1; i < N; i+=2) {
+        PriorityQueue q = populatedQueue(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
         }
-        for (int i = 0; i < N; i+=2) {
+        for (int i = 0; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
             assertFalse(q.remove(new Integer(i+1)));
         }
@@ -275,8 +270,8 @@ public class PriorityQueueTest extends TestCase {
     }
 	
     public void testContains(){
-        PriorityQueue q = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
             q.poll();
             assertFalse(q.contains(new Integer(i)));
@@ -284,7 +279,7 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testClear(){
-        PriorityQueue q = fullQueue(N);
+        PriorityQueue q = populatedQueue(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
@@ -295,9 +290,9 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testContainsAll(){
-        PriorityQueue q = fullQueue(N);
-        PriorityQueue p = new PriorityQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = populatedQueue(SIZE);
+        PriorityQueue p = new PriorityQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.containsAll(p));
             assertFalse(p.containsAll(q));
             p.add(new Integer(i));
@@ -306,9 +301,9 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testRetainAll(){
-        PriorityQueue q = fullQueue(N);
-        PriorityQueue p = fullQueue(N);
-        for (int i = 0; i < N; ++i) {
+        PriorityQueue q = populatedQueue(SIZE);
+        PriorityQueue p = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
             boolean changed = q.retainAll(p);
             if (i == 0)
                 assertFalse(changed);
@@ -316,17 +311,17 @@ public class PriorityQueueTest extends TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             p.remove();
         }
     }
 
     public void testRemoveAll(){
-        for (int i = 1; i < N; ++i) {
-            PriorityQueue q = fullQueue(N);
-            PriorityQueue p = fullQueue(i);
+        for (int i = 1; i < SIZE; ++i) {
+            PriorityQueue q = populatedQueue(SIZE);
+            PriorityQueue p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(N-i, q.size());
+            assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer I = (Integer)(p.remove());
                 assertFalse(q.contains(I));
@@ -335,7 +330,7 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testToArray(){
-        PriorityQueue q = fullQueue(N);
+        PriorityQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
 	for(int i = 0; i < o.length; i++)
@@ -343,8 +338,8 @@ public class PriorityQueueTest extends TestCase {
     }
 
     public void testToArray2(){
-        PriorityQueue q = fullQueue(N);
-	Integer[] ints = new Integer[N];
+        PriorityQueue q = populatedQueue(SIZE);
+	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for(int i = 0; i < ints.length; i++)
@@ -352,14 +347,14 @@ public class PriorityQueueTest extends TestCase {
     }
     
     public void testIterator(){
-        PriorityQueue q = fullQueue(N);
+        PriorityQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
         while(it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, N);
+        assertEquals(i, SIZE);
     }
 
     public void testIteratorRemove () {
@@ -382,15 +377,15 @@ public class PriorityQueueTest extends TestCase {
 
 
     public void testToString(){
-        PriorityQueue q = fullQueue(N);
+        PriorityQueue q = populatedQueue(SIZE);
         String s = q.toString();
-        for (int i = 0; i < N; ++i) {
+        for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
     }        
 
     public void testSerialization() {
-        PriorityQueue q = fullQueue(N);
+        PriorityQueue q = populatedQueue(SIZE);
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
             ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));

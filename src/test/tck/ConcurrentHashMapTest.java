@@ -11,19 +11,13 @@ import java.util.concurrent.*;
 import java.util.Enumeration;
 import java.io.*;
 
-public class ConcurrentHashMapTest extends TestCase{
+public class ConcurrentHashMapTest extends JSR166TestCase{
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
     public static Test suite() {
 	return new TestSuite(ConcurrentHashMapTest.class);
     }
-
-    static final Integer one = new Integer(1);
-    static final Integer two = new Integer(2);
-    static final Integer three = new Integer(3);
-    static final Integer four = new Integer(4);
-    static final Integer five = new Integer(5);
 
     private static ConcurrentHashMap map5() {   
 	ConcurrentHashMap map = new ConcurrentHashMap(5);
@@ -39,7 +33,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify clear correctly removes all key-element pairs from the map
+     *   clear  removes all key-element pairs from the map
      */
     public void testClear(){
         ConcurrentHashMap map = map5();
@@ -48,7 +42,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify contains gives the appropriate value
+     *   contains gives the appropriate value
      */
     public void testContains(){
         ConcurrentHashMap map = map5();
@@ -57,7 +51,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
     
     /**
-     *  Test to verify containsKey gives the appropriate value
+     *   containsKey gives the appropriate value
      */
     public void testContainsKey(){
         ConcurrentHashMap map = map5();
@@ -89,7 +83,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify get returns the correct element at the given index
+     *   get returns the correct element at the given index
      */
     public void testGet(){
         ConcurrentHashMap map = map5();
@@ -97,7 +91,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify get on a nonexistant key returns null
+     *   get on a nonexistant key returns null
      */
     public void testGet2(){
         ConcurrentHashMap empty = new ConcurrentHashMap();
@@ -115,7 +109,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify keys returns an enumeration containing all the keys from the map
+     *   keys returns an enumeration containing all the keys from the map
      */
     public void testKeys(){
         ConcurrentHashMap map = map5();
@@ -129,7 +123,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify keySet returns a Set containing all the keys
+     *   keySet returns a Set containing all the keys
      */
     public void testKeySet(){
         ConcurrentHashMap map = map5();
@@ -170,7 +164,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify putAll correctly adds all key-value pairs from the given map
+     *   putAll  adds all key-value pairs from the given map
      */
     public void testPutAll(){
         ConcurrentHashMap empty = new ConcurrentHashMap();
@@ -185,7 +179,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify putIfAbsent works when the given key is not present
+     *   putIfAbsent works when the given key is not present
      */
     public void testPutIfAbsent(){
         ConcurrentHashMap map = map5();
@@ -194,7 +188,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify putIfAbsent does not add the pair if the key is already present
+     *   putIfAbsent does not add the pair if the key is already present
      */
     public void testPutIfAbsent2(){
         ConcurrentHashMap map = map5();
@@ -202,7 +196,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Test to verify remove removes the correct key-value pair from the map
+     *   remove removes the correct key-value pair from the map
      */
     public void testRemove(){
         ConcurrentHashMap map = map5();
@@ -223,7 +217,7 @@ public class ConcurrentHashMapTest extends TestCase{
     }
 
     /**
-     *  Simple test to verify size returns the correct values
+     *   size returns the correct values
      */
     public void testSize(){
         ConcurrentHashMap map = map5();

@@ -9,7 +9,7 @@ import junit.framework.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
 
-public class AtomicIntegerTest extends TestCase {
+public class AtomicIntegerTest extends JSR166TestCase {
     public static void main (String[] args) {
         junit.textui.TestRunner.run (suite());
     }

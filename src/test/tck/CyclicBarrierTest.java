@@ -9,7 +9,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class CyclicBarrierTest extends TestCase{
+public class CyclicBarrierTest extends JSR166TestCase{
     
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -20,10 +20,6 @@ public class CyclicBarrierTest extends TestCase{
 	return new TestSuite(CyclicBarrierTest.class);
     }
     
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
-
     public void testConstructor1(){
         try{
             new CyclicBarrier(-1, (Runnable)null);
@@ -90,7 +86,7 @@ public class CyclicBarrierTest extends TestCase{
                         b.await();
                         b.await();
                     } catch(Exception e){
-                        fail("unexpected exception");
+                        threadFail("unexpected exception");
                     }}});
 
         try {
@@ -112,10 +108,10 @@ public class CyclicBarrierTest extends TestCase{
                 public void run(){
                     try{
                         c.await();
-                        fail("should throw");
+                        threadFail("should throw");
                     } catch(InterruptedException success){}                
                     catch(Exception b){
-                        fail("should throw IE");
+                        threadFail("should throw IE");
                     }
                 }
             });
@@ -123,10 +119,10 @@ public class CyclicBarrierTest extends TestCase{
                 public void run(){
                     try{
                         c.await();
-                        fail("should throw");                        
+                        threadFail("should throw");                        
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
-                        fail("should throw BBE");
+                        threadFail("should throw BBE");
                     }
                 }
             });
@@ -148,10 +144,10 @@ public class CyclicBarrierTest extends TestCase{
                 public void run(){
                     try{
                         c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        fail("should throw");
+                        threadFail("should throw");
                     } catch(InterruptedException success){
                     } catch(Exception b){
-                        fail("should throw IE");
+                        threadFail("should throw IE");
                     }
                 }
             });
@@ -159,10 +155,10 @@ public class CyclicBarrierTest extends TestCase{
                 public void run(){
                     try{
                         c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        fail("should throw");                        
+                        threadFail("should throw");                        
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
-                        fail("should throw BBE");
+                        threadFail("should throw BBE");
                     }
                 }
             });
@@ -184,10 +180,10 @@ public class CyclicBarrierTest extends TestCase{
                 public void run(){
                     try{
                         c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-                        fail("should throw");
+                        threadFail("should throw");
                     } catch(TimeoutException success){
                     } catch(Exception b){
-                        fail("should throw TOE");
+                        threadFail("should throw TOE");
                         
                     }
                 }

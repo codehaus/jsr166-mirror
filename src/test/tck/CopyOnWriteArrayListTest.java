@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class CopyOnWriteArrayListTest extends TestCase{
+public class CopyOnWriteArrayListTest extends JSR166TestCase{
     
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -20,7 +20,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
 	return new TestSuite(CopyOnWriteArrayListTest.class);
     }
 
-    static CopyOnWriteArrayList fullArray(int n){
+    static CopyOnWriteArrayList populatedArray(int n){
 	CopyOnWriteArrayList a = new CopyOnWriteArrayList();
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; ++i) 
@@ -30,92 +30,117 @@ public class CopyOnWriteArrayListTest extends TestCase{
         return a;
     }
 
+
+    public void testConstructor() {
+	CopyOnWriteArrayList a = new CopyOnWriteArrayList();
+        assertTrue(a.isEmpty());
+    }
+
+    public void testConstructor2() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
+	CopyOnWriteArrayList a = new CopyOnWriteArrayList(ints);
+        for (int i = 0; i < SIZE; ++i) 
+            assertEquals(ints[i], a.get(i));
+    }
+
+    public void testConstructor3() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
+	CopyOnWriteArrayList a = new CopyOnWriteArrayList(Arrays.asList(ints));
+        for (int i = 0; i < SIZE; ++i) 
+            assertEquals(ints[i], a.get(i));
+    }
+        
+
     /**
-     *  Test to verify addAll correctly adds each element from the given collection
+     *   addAll correctly adds each element from the given collection
      */
     public void testAddAll(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	Vector v = new Vector();
-	v.add(new Integer(3));
-	v.add(new Integer(4));
-	v.add(new Integer(5));
+	v.add(three);
+	v.add(four);
+	v.add(five);
 	full.addAll(v);
 	assertEquals(6, full.size());
     }
 
     /**
-     *  Test to verify addAllAbsent adds each element from the given collection that did not
+     *   addAllAbsent adds each element from the given collection that did not
      *  already exist in the List
      */
     public void testAddAllAbsent(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	Vector v = new Vector();
-	v.add(new Integer(3));
-	v.add(new Integer(4));
-	v.add(new Integer(1)); // will not add this element
+	v.add(three);
+	v.add(four);
+	v.add(one); // will not add this element
 	full.addAllAbsent(v);
 	assertEquals(5, full.size());
     }
 
     /**
-     *  Test to verify addIfAbsent will not add the element if it already exists in the list
+     *   addIfAbsent will not add the element if it already exists in the list
      */
     public void testAddIfAbsent(){
-	CopyOnWriteArrayList full = fullArray(3);
-	full.addIfAbsent(new Integer(1));
+	CopyOnWriteArrayList full = populatedArray(3);
+	full.addIfAbsent(one);
 	assertEquals(3, full.size());
     }
 
     /**
-     *  test to verify addIfAbsent correctly adds the element when it does not exist in the list
+     *   addIfAbsent correctly adds the element when it does not exist in the list
      */
     public void testAddIfAbsent2(){
-	CopyOnWriteArrayList full = fullArray(3);
-        full.addIfAbsent(new Integer(3));
-        assertTrue(full.contains(new Integer(3)));
+	CopyOnWriteArrayList full = populatedArray(3);
+        full.addIfAbsent(three);
+        assertTrue(full.contains(three));
     }
 
     /**
-     *  Test to verify clear correctly removes all elements from the list
+     *   clear correctly removes all elements from the list
      */
     public void testClear(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	full.clear();
 	assertEquals(0, full.size());
     }
 
     /**
-     *  Test to verify contains returns the correct values 
+     *   contains returns the correct values 
      */
     public void testContains(){
-	CopyOnWriteArrayList full = fullArray(3);
-	assertTrue(full.contains(new Integer(1)));
-	assertFalse(full.contains(new Integer(5)));
+	CopyOnWriteArrayList full = populatedArray(3);
+	assertTrue(full.contains(one));
+	assertFalse(full.contains(five));
     }
 
     public void testAddIndex() {
-	CopyOnWriteArrayList full = fullArray(3);
-        full.add(0, new Integer(-1));
+	CopyOnWriteArrayList full = populatedArray(3);
+        full.add(0, m1);
         assertEquals(4, full.size());
-        assertEquals(new Integer(-1), full.get(0));
-        assertEquals(new Integer(0), full.get(1));
+        assertEquals(m1, full.get(0));
+        assertEquals(zero, full.get(1));
 
-        full.add(2, new Integer(-2));
+        full.add(2, m2);
         assertEquals(5, full.size());
-        assertEquals(new Integer(-2), full.get(2));
-        assertEquals(new Integer(2), full.get(4));
+        assertEquals(m2, full.get(2));
+        assertEquals(two, full.get(4));
     }
 
     public void testEquals() {
-	CopyOnWriteArrayList a = fullArray(3);
-	CopyOnWriteArrayList b = fullArray(3);
+	CopyOnWriteArrayList a = populatedArray(3);
+	CopyOnWriteArrayList b = populatedArray(3);
         assertTrue(a.equals(b));
         assertTrue(b.equals(a));
         assertEquals(a.hashCode(), b.hashCode());
-        a.add(new Integer(-1));
+        a.add(m1);
         assertFalse(a.equals(b));
         assertFalse(b.equals(a));
-        b.add(new Integer(-1));
+        b.add(m1);
         assertTrue(a.equals(b));
         assertTrue(b.equals(a));
         assertEquals(a.hashCode(), b.hashCode());
@@ -123,60 +148,60 @@ public class CopyOnWriteArrayListTest extends TestCase{
 
     
     /**
-     *  Test to verify containsAll returns the correct values
+     *   containsAll returns the correct values
      */
     public void testContainsAll(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	Vector v = new Vector();
-	v.add(new Integer(1));
-	v.add(new Integer(2));
+	v.add(one);
+	v.add(two);
 	assertTrue(full.containsAll(v));
-	v.add(new Integer(6));
+	v.add(six);
 	assertFalse(full.containsAll(v));
     }
 
     /**
-     *  Test to verify get returns the correct value for the given index
+     *   get returns the correct value for the given index
      */
     public void testGet(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	assertEquals(0, ((Integer)full.get(0)).intValue());
     }
 
     /**
-     *  Test to verify indexOf gives the correct index for the given object
+     *   indexOf gives the correct index for the given object
      */
     public void testIndexOf(){
-	CopyOnWriteArrayList full = fullArray(3);
-	assertEquals(1, full.indexOf(new Integer(1)));
+	CopyOnWriteArrayList full = populatedArray(3);
+	assertEquals(1, full.indexOf(one));
 	assertEquals(-1, full.indexOf("puppies"));
     }
 
     /**
-     *  Test to verify indexOf gives the correct index based on the given index
+     *   indexOf gives the correct index based on the given index
      *  at which to start searching
      */
     public void testIndexOf2(){
-	CopyOnWriteArrayList full = fullArray(3);
-	assertEquals(1, full.indexOf(new Integer(1), 0));
-	assertEquals(-1, full.indexOf(new Integer(1), 2));
+	CopyOnWriteArrayList full = populatedArray(3);
+	assertEquals(1, full.indexOf(one, 0));
+	assertEquals(-1, full.indexOf(one, 2));
     }
 
     /**
-     *  Test to verify isEmpty returns the correct values
+     *   isEmpty returns the correct values
      */
     public void testIsEmpty(){
 	CopyOnWriteArrayList empty = new CopyOnWriteArrayList();
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	assertTrue(empty.isEmpty());
 	assertFalse(full.isEmpty());
     }
 
     /**
-     *  Test to verify iterator() returns an iterator containing the elements of the list 
+     *   iterator() returns an iterator containing the elements of the list 
      */
     public void testIterator(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	Iterator i = full.iterator();
 	int j;
 	for(j = 0; i.hasNext(); j++)
@@ -185,7 +210,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     public void testIteratorRemove () {
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
         Iterator it = full.iterator();
         it.next();
         try {
@@ -196,7 +221,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     public void testToString(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
         String s = full.toString();
         for (int i = 0; i < 3; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
@@ -204,32 +229,32 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }        
 
     /**
-     *  Test to verify lastIndexOf returns the correct index for the given object
+     *   lastIndexOf returns the correct index for the given object
      */
     public void testLastIndexOf1(){
-	CopyOnWriteArrayList full = fullArray(3);
-	full.add(new Integer(1));
-	full.add(new Integer(3));
-	assertEquals(3, full.lastIndexOf(new Integer(1)));
-	assertEquals(-1, full.lastIndexOf(new Integer(6)));
+	CopyOnWriteArrayList full = populatedArray(3);
+	full.add(one);
+	full.add(three);
+	assertEquals(3, full.lastIndexOf(one));
+	assertEquals(-1, full.lastIndexOf(six));
     }
 
     /**
-     *  Test to verify lastIndexOf returns the correct index from the given starting point
+     *   lastIndexOf returns the correct index from the given starting point
      */
     public void testlastIndexOf2(){
-	CopyOnWriteArrayList full = fullArray(3);
-	full.add(new Integer(1));
-	full.add(new Integer(3));
-	assertEquals(3, full.lastIndexOf(new Integer(1), 4));
-	assertEquals(-1, full.lastIndexOf(new Integer(3), 3));
+	CopyOnWriteArrayList full = populatedArray(3);
+	full.add(one);
+	full.add(three);
+	assertEquals(3, full.lastIndexOf(one, 4));
+	assertEquals(-1, full.lastIndexOf(three, 3));
     }
 
     /**
      *  Identical to testIterator, except ListInterator has more functionality
      */
     public void testListIterator1(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	ListIterator i = full.listIterator();
 	int j;
 	for(j = 0; i.hasNext(); j++)
@@ -242,7 +267,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
      *  after the given index
      */
     public void testListIterator2(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	ListIterator i = full.listIterator(1);
 	int j;
 	for(j = 0; i.hasNext(); j++)
@@ -251,50 +276,50 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify remove correctly removes and returns the object at the given index
+     *   remove correctly removes and returns the object at the given index
      */
     public void testRemove(){
-	CopyOnWriteArrayList full = fullArray(3);
-	assertEquals(new Integer(2), full.remove(2));
+	CopyOnWriteArrayList full = populatedArray(3);
+	assertEquals(two, full.remove(2));
 	assertEquals(2, full.size());
     }
 
     /**
-     *  Test to verify removeAll correctly removes all elements from the given collection
+     *   removeAll correctly removes all elements from the given collection
      */
     public void testRemoveAll(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	Vector v = new Vector();
-	v.add(new Integer(1));
-	v.add(new Integer(2));
+	v.add(one);
+	v.add(two);
 	full.removeAll(v);
 	assertEquals(1, full.size());
     }
 
     /**
-     *  Test to verify set correctly changes the element at the given index
+     *   set correctly changes the element at the given index
      */
     public void testSet(){
-	CopyOnWriteArrayList full = fullArray(3);
-	assertEquals(new Integer(2), full.set(2, new Integer(4)));
+	CopyOnWriteArrayList full = populatedArray(3);
+	assertEquals(two, full.set(2, four));
 	assertEquals(4, ((Integer)full.get(2)).intValue());
     }
 
     /**
-     *  Test to verify size returns the correct values
+     *   size returns the correct values
      */
     public void testSize(){
 	CopyOnWriteArrayList empty = new CopyOnWriteArrayList();
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	assertEquals(3, full.size());
 	assertEquals(0, empty.size());
     }
 
     /**
-     *  Test to verify toArray returns an Object array containing all elements from the list
+     *   toArray returns an Object array containing all elements from the list
      */
     public void testToArray(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	Object[] o = full.toArray();
 	assertEquals(3, o.length);
 	assertEquals(0, ((Integer)o[0]).intValue());
@@ -306,7 +331,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
      *  test to verify toArray returns an Integer array containing all elements from the list
      */
     public void testToArray2(){
-	CopyOnWriteArrayList full = fullArray(3);
+	CopyOnWriteArrayList full = populatedArray(3);
 	Integer[] i = new Integer[3];
 	i = (Integer[])full.toArray(i);
 	assertEquals(3, i.length);
@@ -317,7 +342,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
 
 
     public void testSubList() {
-	CopyOnWriteArrayList a = fullArray(10);
+	CopyOnWriteArrayList a = populatedArray(10);
         assertTrue(a.subList(1,1).isEmpty());
 	for(int j = 0; j < 9; ++j) {
 	    for(int i = j ; i < 10; ++i) {
@@ -328,10 +353,9 @@ public class CopyOnWriteArrayListTest extends TestCase{
 	    }
 	}
 
-        Integer m1 = new Integer(-1);
 	List s = a.subList(2, 5);
         assertEquals(s.size(), 3);
-        s.set(2, new Integer(m1));
+        s.set(2, m1);
         assertEquals(a.get(4), m1);
 	s.clear();
         assertEquals(a.size(), 7);
@@ -340,7 +364,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     // Exception tests
 
     /**
-     *  Test to verify toArray throws an ArrayStoreException when the given array
+     *   toArray throws an ArrayStoreException when the given array
      *  can not store the objects inside the list
      */
     public void testToArray_ArrayStoreException(){
@@ -354,7 +378,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify get throws an IndexOutOfBoundsException on a negative index
+     *   get throws an IndexOutOfBoundsException on a negative index
      */
     public void testGet1_IndexOutOfBoundsException(){
         try{
@@ -365,7 +389,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
     
     /**
-     *  Test to verify get throws an IndexOutOfBoundsException on a too high index
+     *   get throws an IndexOutOfBoundsException on a too high index
      */
     public void testGet2_IndexOutOfBoundsException(){
         try{
@@ -378,7 +402,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify set throws an IndexOutOfBoundsException on a negative index
+     *   set throws an IndexOutOfBoundsException on a negative index
      */
     public void testSet1_IndexOutOfBoundsException(){
         try{
@@ -389,7 +413,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
     
     /**
-     *  Test to verify set throws an IndexOutOfBoundsException on a too high index
+     *   set throws an IndexOutOfBoundsException on a too high index
      */
     public void testSet2(){
         try{
@@ -402,7 +426,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify add throws an IndexOutOfBoundsException on a negative index
+     *   add throws an IndexOutOfBoundsException on a negative index
      */
     public void testAdd1_IndexOutOfBoundsException(){
         try{
@@ -413,7 +437,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
     
     /**
-     *  Test to verify add throws an IndexOutOfBoundsException on a too high index
+     *   add throws an IndexOutOfBoundsException on a too high index
      */
     public void testAdd2_IndexOutOfBoundsException(){
         try{
@@ -426,7 +450,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify remove throws an IndexOutOfBoundsException on a negative index
+     *   remove throws an IndexOutOfBoundsException on a negative index
      */
     public void testRemove1_IndexOutOfBounds(){
         try{
@@ -437,7 +461,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify remove throws an IndexOutOfBoundsException on a too high index
+     *   remove throws an IndexOutOfBoundsException on a too high index
      */
     public void testRemove2_IndexOutOfBounds(){
         try{
@@ -450,7 +474,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
     
     /**
-     *  Test to verify addAll throws an IndexOutOfBoundsException on a negative index
+     *   addAll throws an IndexOutOfBoundsException on a negative index
      */
     public void testAddAll1_IndexOutOfBoundsException(){
         try{
@@ -461,7 +485,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
     
     /**
-     *  Test to verify addAll throws an IndexOutOfBoundsException on a too high index
+     *   addAll throws an IndexOutOfBoundsException on a too high index
      */
     public void testAddAll2_IndexOutOfBoundsException(){
         try{
@@ -474,7 +498,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify listIterator throws an IndexOutOfBoundsException on a negative index
+     *   listIterator throws an IndexOutOfBoundsException on a negative index
      */
     public void testListIterator1_IndexOutOfBoundsException(){
         try{
@@ -485,7 +509,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify listIterator throws an IndexOutOfBoundsException on a too high index
+     *   listIterator throws an IndexOutOfBoundsException on a too high index
      */
     public void testListIterator2_IndexOutOfBoundsException(){
         try{
@@ -498,7 +522,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify subList throws an IndexOutOfBoundsException on a negative index
+     *   subList throws an IndexOutOfBoundsException on a negative index
      */
     public void testSubList1_IndexOutOfBoundsException(){
         try{
@@ -510,7 +534,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify subList throws an IndexOutOfBoundsException on a too high index
+     *   subList throws an IndexOutOfBoundsException on a too high index
      */
     public void testSubList2_IndexOutOfBoundsException(){
         try{
@@ -522,7 +546,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     /**
-     *  Test to verify subList throws IndexOutOfBoundsException when the second index
+     *   subList throws IndexOutOfBoundsException when the second index
      *  is lower then the first 
      */
     public void testSubList3_IndexOutOfBoundsException(){
@@ -535,7 +559,7 @@ public class CopyOnWriteArrayListTest extends TestCase{
     }
 
     public void testSerialization() {
-        CopyOnWriteArrayList q = fullArray(10);
+        CopyOnWriteArrayList q = populatedArray(SIZE);
 
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);

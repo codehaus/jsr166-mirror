@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.math.BigInteger;
 
-public class ExecutorsTest extends TestCase{
+public class ExecutorsTest extends JSR166TestCase{
     
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
@@ -22,79 +22,51 @@ public class ExecutorsTest extends TestCase{
 	return new TestSuite(ExecutorsTest.class);
     }
 
-    private static long SHORT_DELAY_MS = 100; 
-    private static long MEDIUM_DELAY_MS = 1000;
-    private static long LONG_DELAY_MS = 10000; 
-
-    class SleepRun implements Runnable {
-        public void run() {
-            try{
-                Thread.sleep(MEDIUM_DELAY_MS);
-            } catch(InterruptedException e){
-                fail("unexpected exception");
-            }
-        }
-    }
-    
-
-    class SleepCall implements Callable {
-        public Object call(){
-            try{
-                Thread.sleep(MEDIUM_DELAY_MS);
-            }catch(InterruptedException e){
-                fail("unexpected exception");
-            }
-            return Boolean.TRUE;
-        }
-    }
-
-
-
     /**
-     *  Test to verify execute(Executor, Runnable) will throw
+     *   execute(Executor, Runnable) will throw
      *  RejectedExecutionException Attempting to execute a runnable on
      *  a full ThreadPool will cause such an exception here, up to 5
      *  runnables are attempted on a pool capable on handling one
      *  until it throws an exception
      */
     public void testExecute1(){
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,100L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
         try{
             
             for(int i = 0; i < 5; ++i){
-                Executors.execute(p, new SleepRun(), Boolean.TRUE);
+                Executors.execute(p, new MediumRunnable(), Boolean.TRUE);
             }
             fail("should throw");
         } catch(RejectedExecutionException success){}
-        p.shutdownNow();
+        joinPool(p);
     }
 
     /**
-     *  Test to verify execute(Executor, Callable) will throw
+     *   execute(Executor, Callable) will throw
      *  RejectedExecutionException Attempting to execute a callable on
      *  a full ThreadPool will cause such an exception here, up to 5
      *  runnables are attempted on a pool capable on handling one
      *  until it throws an exception
      */
     public void testExecute2(){
-         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,100L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
+         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
         try{
             for(int i = 0; i < 5; ++i) {
-                Executors.execute(p, new SleepCall());
+                Executors.execute(p, new SmallCallable());
             }
             fail("should throw");
         }catch(RejectedExecutionException e){}
-        p.shutdownNow();
+        joinPool(p);
     }
 
 
     /**
-     *  Test to verify invoke(Executor, Runnable) throws InterruptedException
+     *   invoke(Executor, Runnable) throws InterruptedException
      *  A single use of invoke starts that will wait long enough
      *  for the invoking thread to be interrupted
      */
     public void testInvoke2(){
-        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,100L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         Thread t = new Thread(new Runnable() {
                 public void run(){
                     try{
@@ -121,17 +93,17 @@ public class ExecutorsTest extends TestCase{
         }catch(Exception e){
             fail("unexpected exception");
         }
-        p.shutdownNow();
+        joinPool(p);
     }
 
     /**
-     *  Test to verify invoke(Executor, Runnable) will throw
+     *   invoke(Executor, Runnable) will throw
      *  ExecutionException An ExecutionException occurs when the
      *  underlying Runnable throws an exception, here the
      *  DivideByZeroException will cause an ExecutionException
      */
     public void testInvoke3(){
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,100L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         try{
             Runnable r = new Runnable(){
                     public void run(){
@@ -148,23 +120,23 @@ public class ExecutorsTest extends TestCase{
         } catch(Exception e){
             fail("should throw EE");
         }
-        p.shutdownNow();
+        joinPool(p);
     }
 
 
 
     /**
-     *  Test to verify invoke(Executor, Callable) throws
+     *   invoke(Executor, Callable) throws
      *  InterruptedException A single use of invoke starts that will
      *  wait long enough for the invoking thread to be interrupted
      */
     public void testInvoke5(){
-        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,100L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         
         final Callable c = new Callable(){
                 public Object call(){
                     try{
-                        Executors.invoke(p, new SleepCall());
+                        Executors.invoke(p, new SmallCallable());
                         fail("should throw");
                     }catch(InterruptedException e){}
                     catch(RejectedExecutionException e2){}
@@ -191,16 +163,16 @@ public class ExecutorsTest extends TestCase{
             fail("unexpected exception");
         }
         
-        p.shutdownNow();
+        joinPool(p);
     }
 
     /**
-     *  Test to verify invoke(Executor, Callable) will throw ExecutionException
+     *   invoke(Executor, Callable) will throw ExecutionException
      *  An ExecutionException occurs when the underlying Runnable throws
      *  an exception, here the DivideByZeroException will cause an ExecutionException
      */
     public void testInvoke6(){
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,100L,TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
 
         try{
             Callable c = new Callable(){
@@ -218,7 +190,7 @@ public class ExecutorsTest extends TestCase{
         }catch(RejectedExecutionException e){}
         catch(InterruptedException e2){}
         catch(ExecutionException e3){}
-        p.shutdownNow();
+        joinPool(p);
     }
 
     public void testExecuteRunnable () {
@@ -349,7 +321,7 @@ public class ExecutorsTest extends TestCase{
             assertTrue(elapsed < N);
         }
         finally {
-            executor.shutdownNow();
+            joinPool(executor);
         }
     }
 

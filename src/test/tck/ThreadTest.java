@@ -6,14 +6,8 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.Semaphore;
 
-/**
- * Test java.lang.Thread 
- *
- */
-
-public class ThreadTest extends TestCase {
+public class ThreadTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run(suite());	
     }

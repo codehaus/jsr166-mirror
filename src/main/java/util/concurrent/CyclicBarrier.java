@@ -84,14 +84,14 @@ import java.util.concurrent.locks.*;
  * model for failed synchronization attempts: If a thread leaves a
  * barrier point prematurely because of interruption, failure, or
  * timeout, all other threads, even those that have not yet resumed
- * from a previous {@link await}. will also leave abnormally via
+ * from a previous {@link #await}. will also leave abnormally via
  * {@link BrokenBarrierException} (or <tt>InterruptedException</tt> if
  * they too were interrupted at about the same time).
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/26 13:07:36 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/27 01:45:28 $
+ * @editor $Author: dholmes $
  * @see CountDownLatch
  *
  * @author Doug Lea
@@ -268,7 +268,8 @@ public class CyclicBarrier {
      * interrupted status is cleared.
      *
      * <p>If the barrier is {@link #reset} while any thread is waiting, or if 
-     * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked
+     * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked,
+     * or whilst any thread is waiting,
      * then {@link BrokenBarrierException} is thrown.
      *
      * <p>If any thread is {@link Thread#interrupt interrupted} while waiting,
@@ -281,7 +282,8 @@ public class CyclicBarrier {
      * current thread runs the action before allowing the other threads to 
      * continue.
      * If an exception occurs during the barrier action then that exception
-     * will be propagated in the current thread.
+     * will be propagated in the current thread and the barrier is placed in
+     * the broken state.
      *
      * @return the arrival index of the current thread, where index
      *  <tt>{@link #getParties()} - 1</tt> indicates the first to arrive and 
@@ -311,7 +313,7 @@ public class CyclicBarrier {
      * one of the following things happens:
      * <ul>
      * <li>The last thread arrives; or
-     * <li>The speceified timeout elapses; or
+     * <li>The specified timeout elapses; or
      * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread; or
      * <li>Some other thread  {@link Thread#interrupt interrupts} one of the
@@ -328,7 +330,8 @@ public class CyclicBarrier {
      * interrupted status is cleared.
      *
      * <p>If the barrier is {@link #reset} while any thread is waiting, or if 
-     * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked
+     * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked,
+     * or whilst any thread is waiting,
      * then {@link BrokenBarrierException} is thrown.
      *
      * <p>If any thread is {@link Thread#interrupt interrupted} while waiting,
@@ -341,7 +344,8 @@ public class CyclicBarrier {
      * current thread runs the action before allowing the other threads to 
      * continue.
      * If an exception occurs during the barrier action then that exception
-     * will be propagated in the current thread.
+     * will be propagated in the current thread and the barrier is placed in
+     * the broken state.
      *
      * @param timeout the time to wait for the barrier
      * @param unit the time unit of the timeout parameter
@@ -368,7 +372,8 @@ public class CyclicBarrier {
      * Query if this barrier is in a broken state.
      * @return <tt>true</tt> if one or more parties broke out of this
      * barrier due to interruption or timeout since construction or
-     * the last reset; and <tt>false</tt> otherwise.
+     * the last reset, or a barrier action failed due to an exception; 
+     * and <tt>false</tt> otherwise.
      */
     public boolean isBroken() {
         lock.lock();

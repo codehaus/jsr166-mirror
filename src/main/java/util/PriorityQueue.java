@@ -462,7 +462,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                     cursor--;
                 } else {
                     if (forgetMeNot == null)
-                        forgetMeNot = new ArrayList();
+                        forgetMeNot = new ArrayList<E>();
                     forgetMeNot.add(moved);
                 }
             } else if (lastRetElt != null) {
@@ -669,7 +669,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         // Read in all elements in the proper order.
         for (int i=0; i<size; i++)
-            queue[i] = s.readObject();
+            queue[i] = (E) s.readObject();
     }
 
 }

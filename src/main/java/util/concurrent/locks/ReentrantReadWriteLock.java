@@ -112,7 +112,7 @@ import java.util.concurrent.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/12 00:50:43 $
+ * @revised $Date: 2003/07/13 10:23:42 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -153,7 +153,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Boolean set to true when a writer is waiting to enter.
-     * Needed only by ReaderLock.tryLock 
+     * Needed only by ReaderLock.tryLock to avoid useless retries.
      */
     private transient volatile boolean waitingWriter;
 
@@ -202,6 +202,23 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             while (exreaders != readers) {
                 waitingWriter = true;
                 writeEnabled.await();
+                waitingWriter = false;
+            }
+        }
+        finally {
+            writeCheckLock.unlock();
+        }
+    }
+
+    /**
+     * Uninteruptible version of writerEnter
+     */ 
+    private void writerEnterUninterruptibly() {
+        writeCheckLock.lock();
+        try {
+            while (exreaders != readers) {
+                waitingWriter = true;
+                writeEnabled.awaitUninterruptibly();
                 waitingWriter = false;
             }
         }
@@ -303,7 +320,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         public  boolean tryLock() {
             // if we fail entry lock just due to contention, try again.
             while (!entryLock.tryLock()) {
-                // fail if a writer present
+                // fail if lost against a writer
                 if (exreaders == readers || waitingWriter)
                     return false;
                 else
@@ -345,19 +362,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     private class WriterLock implements Lock  {
         public void lock() {
             entryLock.lock();
-            boolean wasInterrupted = false;
-            for (;;) {
-                try {
-                    writerEnter();
-                    break;
-                }
-                catch (InterruptedException ie) {
-                    wasInterrupted = true;
-                }
-            }
-            if (wasInterrupted) {
-                Thread.currentThread().interrupt();
-            }
+            writerEnterUninterruptibly();
         }
 
         public void lockInterruptibly() throws InterruptedException {
@@ -401,7 +406,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
             catch (InterruptedException ie) {
                 entryLock.unlock();
-                
                 throw ie;
             }
             return true;

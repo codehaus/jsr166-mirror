@@ -64,7 +64,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/12 00:50:43 $
+ * @revised $Date: 2003/07/13 10:23:42 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -416,7 +416,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                               boolean interruptible,
                               long nanos) {
         /*
-         * Bypass queueing if a recursive lock
+         * Check for recursive lock
          */
         if (owner == current) {
             ++recursions;
@@ -425,8 +425,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         
         if (tail == null) // ensure initialization
             initializeQueue();
-
-        long lastTime = 0;           // for adjusting timeouts, below
 
         /*
          * p is our predecessor node, that holds releaseStatus giving
@@ -449,6 +447,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         else 
             p = node.prev;
 
+        boolean wasInterrupted = false;
+        long lastTime = 0;           // for adjusting timeouts, below
+
         /*
          * Repeatedly try to get ownership if first in queue, else
          * block.
@@ -463,10 +464,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              */
             if (p == head && acquireOwner(current)) {
                 head = node;
-                // Unlink for GC
-                p.next = null; 
+                p.next = null;                 // Unlink for GC
                 node.thread = null;
-                node.prev = null;    
+                node.prev = null; 
+                if (wasInterrupted)            // Re-interrupt on normal exit
+                    current.interrupt();
                 return true;
             }
 
@@ -512,8 +514,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              *
              */
             else if (casReleaseStatus(p, releaseStatus, -1)) {
-                // If interruptible, consume interrupt for now 
-                boolean interrupted = !interruptible && Thread.interrupted();
+                // If not interruptible, consume interrupt for now 
+                if (!interruptible && Thread.interrupted()) 
+                    wasInterrupted = true;
 
                 if (nanos > 0) { // Update and check timeout value
                     long now = System.nanoTime();
@@ -534,9 +537,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                         LockSupport.park(node);
                 }
                 
-                if (interrupted)  // reset interrupt status
-                    current.interrupt();
-                else if (interruptible &&
+                if (interruptible &&
                          (nanos < 0 || current.isInterrupted())) {
                     node.thread = null;      // disable signals
                     releaseStatusUpdater.set(node, CANCELLED);  
@@ -1071,7 +1072,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 LockSupport.park(w);
 
             /**
-             * If cancelled, kill node and allow relock, below to make
+             * If cancelled, kill node and allow relock below to make
              * a new one for lock re-acquistion.  If not cancelled,
              * our node is already in the lock queue when relock is
              * called.

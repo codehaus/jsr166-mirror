@@ -26,7 +26,7 @@ returns a <code>Future&lt;Response&gt;</code> without blocking. </p>
 
 <pre>
     interface NonBlockingService {
-        Future<Response> serve (Request req);
+        Future&lt;Response&gt; serve (Request req);
     }
 </pre>
 
@@ -56,13 +56,13 @@ proposal. </p>
             }
         }
 
-        public Future<Response> serve (final Request req) {
-            Callable<Response> task = new Callable<Response>() {
+        public Future&lt;Response&gt; serve (final Request req) {
+            Callable&lt;Response&gt; task = new Callable&lt;Response&gt;() {
                 public Response call () {
                     return blockingService.serve(req);
                 }
             };
-            FutureTask<Response> ftask = new FutureTask<Response>(task);
+            FutureTask&lt;Response&gt; ftask = new FutureTask&lt;Response&gt;(task);
             executor.execute(ftask);
             return ftask;
         }
@@ -225,7 +225,7 @@ underlying <code>NativeImpl</code>. </p>
     try {
         SingleThreadAdapter adapter = new SingleThreadAdapter("LegacyEngine.dll");
         NativeInterface ni = (NativeInterface)
-            adapter.newInstance(new Callable<NativeInterface> () {
+            adapter.newInstance(new Callable&lt;NativeInterface&gt; () {
                 public NativeInterface call () {
                     return new NativeImpl(); // may use native calls
                 }

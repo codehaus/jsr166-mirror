@@ -93,21 +93,18 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         // Implement AQS state methods
-        public boolean tryAcquireExclusive(boolean isQueued, int acquires) { 
+        public boolean tryAcquireExclusive(boolean isFirst, int acquires) { 
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if ((isQueued || !fair || !hasQueuedThreads()) && 
-                    compareAndSetState(0, acquires)) {
+                if ((isFirst || !fair) && compareAndSetState(0, acquires)) {
                     owner = current;
                     return true;
                 }
             }
-            else {
-                if (current == owner) {
-                    setState(c+acquires);
-                    return true;
-                }
+            else if (current == owner) {
+                setState(c+acquires);
+                return true;
             }
             return false;
         }

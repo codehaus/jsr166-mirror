@@ -108,7 +108,7 @@ import sun.misc.Unsafe;
  *       public boolean isLocked() { return getState() == 1; }
  *
  *       // acquire the lock if state is zero
- *       public boolean tryAcquireExclusive(boolean isQueued, int acquires) {
+ *       public boolean tryAcquireExclusive(boolean isFirst, int acquires) {
  *         assert acquires == 1; // Otherwise unused
  *         return compareAndSetState(0, 1);
  *       }
@@ -169,7 +169,7 @@ import sun.misc.Unsafe;
  *    private static class Sync extends AbstractQueuedSynchronizer {
  *      boolean isSignalled() { return getState() != 0; }
  *
- *      protected int tryAcquireShared(boolean isQueued, int ignore) {
+ *      protected int tryAcquireShared(boolean isFirst, int ignore) {
  *         return isSignalled()? 1 : -1;
  *      }
  *        
@@ -237,7 +237,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      *    any incoming barging threads.
      *
      * * "Fair" variants differ only in that they can disable barging
-     *    in the fast path if there is contention (see the "isQueued"
+     *    in the fast path if there is contention (see the "isFirst"
      *    argument to state methods). There can be races in detecting
      *    contention, but it is still FIFO from a definable (although
      *    complicated to describe) single point, so qualifies as a
@@ -538,17 +538,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      *
      * <p>This method is always invoked by the thread performing
      * acquire.  If this method reports failure, the acquire method
-     * may queue the thread until it is signalled by a release from
-     * some other thread. This can be used to implement method {@link
-     * Lock#tryLock()}. <p>The default implementation throws {@link
-     * UnsupportedOperationException}
+     * may queue the thread, if it is not already queued, until it is
+     * signalled by a release from some other thread. This can be used
+     * to implement method {@link Lock#tryLock()}. <p>The default
+     * implementation throws {@link UnsupportedOperationException}
      *
-     * @param isQueued if <tt>true</tt> the current thread is in the queue 
-     * when making this call; if <tt>false</tt> the current thread is not
-     * in the queue. Knowing whether the current thread is in the queue may
-     * be needed when implementing a fairness policy. The calling acquire
-     * method often has this information at hand and can save the need for
-     * this method to interrogate the queue directly.
+     * @param isFirst if <tt>true</tt> the current thread is the first
+     * (longest-waiting) element of the queue, or no other
+     * threads are queued at the point of this call. This can
+     * be used when implementing a fairness policy: Generally, a fair
+     * synchronizer will return <tt>false</tt> if <tt>isFirst</tt>
+     * is <tt>false</tt>.
      * @param arg the acquire argument. This value
      * is always the one passed to an acquire method,
      * or is the value saved on entry to a condition wait.
@@ -562,14 +562,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
-    protected boolean tryAcquireExclusive(boolean isQueued, int arg) {
+    protected boolean tryAcquireExclusive(boolean isFirst, int arg) {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Attemps to set the state to reflect a release in exclusive mode.
-     * <p>This method is always invoked by the thread performing release.
-     * <p>The default implementation throws 
+     * Attempts to set the state to reflect a release in exclusive
+     * mode.  <p>This method is always invoked by the thread
+     * performing release.  <p>The default implementation throws
      * {@link UnsupportedOperationException}
      * @param arg the release argument. This value
      * is always the one passed to a release method,
@@ -594,18 +594,18 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * the state of the object permits it to be acquired in the shared
      * mode, and if so to acquire it if possible.  <p>This method is
      * always invoked by the thread performing acquire.  If this
-     * method reports failure, the acquire method may queue the thread
-     * until it is signalled by a release from some other thread.
-     * This can be used to help implement method {@link
-     * Lock#tryLock()}. <p>The default implementation throws {@link
-     * UnsupportedOperationException}
+     * method reports failure, the acquire method may queue the
+     * thread, if it is not already queued, until it is signalled by a
+     * release from some other thread.  This method can be used to
+     * help implement method {@link Lock#tryLock()}. <p>The default
+     * implementation throws {@link UnsupportedOperationException}
      *
-     * @param isQueued if <tt>true</tt> the current thread is in the queue 
-     * when making this call; if <tt>false</tt> the current thread is not
-     * in the queue. Knowing whether the current thread is in the queue may
-     * be needed when implementing a fairness policy. The calling acquire
-     * method often has this information at hand and can save the need for
-     * this method to interrogate the queue directly.
+     * @param isFirst if <tt>true</tt> the current thread is the first
+     * (longest-waiting) element of the queue, or no other
+     * threads are queued at the point of this call. This can
+     * be used when implementing a fairness policy: Generally, a fair
+     * synchronizer will return <tt>false</tt> if <tt>isFirst</tt>
+     * is <tt>false</tt>.
      * @param arg the acquire argument. This value
      * is always the one passed to an acquire method,
      * or is the value saved on entry to a condition wait.
@@ -624,7 +624,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * correctly.
      * @throws UnsupportedOperationException if shared mode not supported
      */
-    protected int tryAcquireShared(boolean isQueued, int arg) {
+    protected int tryAcquireShared(boolean isFirst, int arg) {
         throw new UnsupportedOperationException();
     }
 
@@ -671,30 +671,29 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Acquires in exclusive mode, ignoring interrupts.  Implemented
-     * by first invoking at least once {@link #tryAcquireExclusive} with
-     * <tt>isQueued</tt> false, returning on success.  Otherwise the
-     * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #tryAcquireExclusive} until success.  This can
-     * be used to implement method {@link Lock#lock}
+     * by invoking at least once {@link #tryAcquireExclusive},
+     * returning on success.  Otherwise the thread is queued, possibly
+     * repeatedly blocking and unblocking, invoking {@link
+     * #tryAcquireExclusive} until success.  This method can be used
+     * to implement method {@link Lock#lock}
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireExclusive} but
      * otherwise uninterpreted and can represent anything
      * you like.
      */
     public final void acquireExclusiveUninterruptibly(int arg) {
-        if (!tryAcquireExclusive(false, arg)) 
+        if (!tryAcquireExclusive(head == tail, arg)) 
             doAcquireExclusiveUninterruptibly(arg);
     }
 
     /**
      * Acquires in exclusive mode, aborting if interrupted.
      * Implemented by first checking interrupt status, then invoking
-     * at least once {@link #tryAcquireExclusive} with
-     * <tt>isQueued</tt> false, returning on success.  Otherwise the
-     * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #tryAcquireExclusive} until success or the
-     * thread is interrupted.  This can be used to implement method
-     * {@link Lock#lockInterruptibly}
+     * at least once {@link #tryAcquireExclusive}, returning on
+     * success.  Otherwise the thread is queued, possibly repeatedly
+     * blocking and unblocking, invoking {@link #tryAcquireExclusive}
+     * until success or the thread is interrupted.  This method can be
+     * used to implement method {@link Lock#lockInterruptibly}
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireExclusive} but
      * otherwise uninterpreted and can represent anything
@@ -704,7 +703,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     public final void acquireExclusiveInterruptibly(int arg) throws InterruptedException {
         if (Thread.interrupted())
             throw new InterruptedException();
-        if (!tryAcquireExclusive(false, arg))
+        if (!tryAcquireExclusive(head == tail, arg))
             doAcquireExclusiveInterruptibly(arg);
     }
 
@@ -712,12 +711,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Acquires in exclusive mode, aborting if interrupted or the
      * given timeout elapses.  Implemented by first checking interrupt
      * status, then invoking at least once {@link
-     * #tryAcquireExclusive} with <tt>isQueued</tt> false, returning
-     * on success.  Otherwise, the thread is queued, possibly
-     * repeatedly blocking and unblocking, invoking {@link
-     * #tryAcquireExclusive} until success or the thread is
-     * interrupted or the timeout elapses.  This can be used to
-     * implement method {@link Lock#lockInterruptibly}
+     * #tryAcquireExclusive}, returning on success.  Otherwise, the
+     * thread is queued, possibly repeatedly blocking and unblocking,
+     * invoking {@link #tryAcquireExclusive} until success or the
+     * thread is interrupted or the timeout elapses.  This method can
+     * be used to implement method {@link Lock#lockInterruptibly}
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireExclusive} but
      * otherwise uninterpreted and can represent anything
@@ -729,7 +727,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
    public final boolean acquireExclusiveTimed(int arg, long nanosTimeout) throws InterruptedException {
        if (Thread.interrupted())
            throw new InterruptedException();
-       if (tryAcquireExclusive(false, arg))
+       if (tryAcquireExclusive(head == tail, arg))
            return true;
        return doAcquireExclusiveTimed(arg, nanosTimeout);
    }
@@ -754,30 +752,29 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Acquires in shared mode, ignoring interrupts.  Implemented by
-     * first invoking at least once {@link #tryAcquireShared} with
-     * <tt>isQueued</tt> false, returning on success.  Otherwise the
-     * thread is queued, possibly repeatedly blocking and unblocking,
-     * invoking {@link #tryAcquireShared} until success.  This can be
-     * used to implement method {@link Lock#lock}
+     * first invoking at least once {@link #tryAcquireShared},
+     * returning on success.  Otherwise the thread is queued, possibly
+     * repeatedly blocking and unblocking, invoking {@link
+     * #tryAcquireShared} until success.  This method can be used to
+     * implement method {@link Lock#lock}
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireShared} but
      * otherwise uninterpreted and can represent anything
      * you like.
      */
     public final void acquireSharedUninterruptibly(int arg) {
-        if (tryAcquireShared(false, arg) < 0)
+        if (tryAcquireShared(head == tail, arg) < 0)
             doAcquireSharedUninterruptibly(arg);
     }
 
     /**
      * Acquires in shared mode, aborting if interrupted.  Implemented
      * by first checking interrupt status, then invoking at least once
-     * {@link #tryAcquireShared} with <tt>isQueued</tt> false,
-     * returning on success.  Otherwise the thread is queued, possibly
-     * repeatedly blocking and unblocking, invoking {@link
-     * #tryAcquireShared} until success or the thread is interrupted.
-     * This can be used to implement method {@link
-     * Lock#lockInterruptibly}
+     * {@link #tryAcquireShared}, returning on success.  Otherwise the
+     * thread is queued, possibly repeatedly blocking and unblocking,
+     * invoking {@link #tryAcquireShared} until success or the thread
+     * is interrupted.  This method can be used to implement method
+     * {@link Lock#lockInterruptibly}
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireShared} but
      * otherwise uninterpreted and can represent anything
@@ -787,19 +784,19 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     public final void acquireSharedInterruptibly(int arg) throws InterruptedException {
         if (Thread.interrupted())
             throw new InterruptedException();
-        if (tryAcquireShared(false, arg) < 0)
+        if (tryAcquireShared(head == tail, arg) < 0)
             doAcquireSharedInterruptibly(arg);
    }
 
     /**
      * Acquires in shared mode, aborting if interrupted or the given
      * timeout elapses.  Implemented by first checking interrupt
-     * status, then invoking at least once {@link #tryAcquireShared}
-     * with <tt>isQueued</tt> false, returning on success.  Otherwise,
-     * the thread is queued, possibly repeatedly blocking and
-     * unblocking, invoking {@link #tryAcquireShared} until success or
-     * the thread is interrupted or the timeout elapses.  This can be
-     * used to implement method {@link Lock#lockInterruptibly}
+     * status, then invoking at least once {@link #tryAcquireShared},
+     * returning on success.  Otherwise, the thread is queued,
+     * possibly repeatedly blocking and unblocking, invoking {@link
+     * #tryAcquireShared} until success or the thread is interrupted
+     * or the timeout elapses.  This method can be used to implement
+     * method {@link Lock#lockInterruptibly}
      * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireShared} but
      * otherwise uninterpreted and can represent anything
@@ -811,7 +808,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
    public final boolean acquireSharedTimed(int arg, long nanosTimeout) throws InterruptedException {
        if (Thread.interrupted())
            throw new InterruptedException();
-       if (tryAcquireShared(false, arg) >= 0)
+       if (tryAcquireShared(head == tail, arg) >= 0)
            return true;
        return doAcquireSharedTimed(arg, nanosTimeout);
    }
@@ -960,7 +957,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         Node node = new Node(current, shared);
         Node pred = enq(node);
 
-        // Set initial wait status to indicate signal if not at head.
+        // Set initial wait status to clear signal if at at head.
         // This reduces useless retries and signals
         int s = pred.waitStatus;
         if (s < 0 && pred == head) 

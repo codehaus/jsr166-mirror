@@ -1,11 +1,12 @@
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain. Use, modify, and
- * redistribute this code in any way without acknowledgement.
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
  */
 
 package java.util.concurrent;
 import java.util.concurrent.locks.*;
+import java.util.concurrent.atomic.*;
 
 /**
  * A synchronization aid that allows one or more threads to wait until
@@ -122,10 +123,29 @@ import java.util.concurrent.locks.*;
  * @author Doug Lea
  */
 public class CountDownLatch {
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Condition zero = lock.newCondition();
-    private int count;
+    /**
+     * Synchronization control For CountDownLatch.
+     * Uses AQS state to represent count.
+     */
+    private static final class Sync extends AbstractQueuedSynchronizer {
+        Sync(int count) {
+            set(count); 
+        }
+        
+        public int acquireSharedState(boolean isQueued, int acquires) {
+            return get() == 0? 1 : -1;
+        }
+        
+        public boolean releaseSharedState(int releases) {
+            // Decrement count; signal when transition to zero
+            int c;
+            while ( (c = get()) > 0 && !compareAndSet(c, c-1))
+                ;
+            return c == 1;
+        }
+    }
 
+    private final Sync sync;
     /**
      * Constructs a <tt>CountDownLatch</tt> initialized with the given
      * count.
@@ -137,7 +157,7 @@ public class CountDownLatch {
      */
     public CountDownLatch(int count) { 
         if (count < 0) throw new IllegalArgumentException("count < 0");
-        this.count = count; 
+        this.sync = new Sync(count);
     }
 
     /**
@@ -167,16 +187,8 @@ public class CountDownLatch {
      * while waiting.
      */
     public void await() throws InterruptedException {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            while (count != 0)
-                zero.await();
-        } finally {
-            lock.unlock();
-        }
+        sync.acquireSharedInterruptibly(1);
     }
-
 
     /**
      * Causes the current thread to wait until the latch has counted down to 
@@ -221,23 +233,8 @@ public class CountDownLatch {
      */
     public boolean await(long timeout, TimeUnit unit) 
         throws InterruptedException {
-        long nanos = unit.toNanos(timeout);
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            for (;;) {
-                if (count == 0)
-                    return true;
-                nanos = zero.awaitNanos(nanos);
-                if (nanos <= 0)
-                    return false;
-            }
-        } finally {
-            lock.unlock();
-        }
+        return sync.acquireSharedTimed(1, unit.toNanos(timeout));
     }
-
-
 
     /**
      * Decrements the count of the latch, releasing all waiting threads if
@@ -249,14 +246,7 @@ public class CountDownLatch {
      * happens.
      */
     public void countDown() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (count > 0 && --count == 0)
-                zero.signalAll();
-        } finally {
-            lock.unlock();
-        }
+        sync.releaseShared(1);
     }
 
     /**
@@ -265,12 +255,6 @@ public class CountDownLatch {
      * @return the current count.
      */
     public long getCount() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            return count;
-        } finally {
-            lock.unlock();
-        }
+        return sync.get();
     }
 }

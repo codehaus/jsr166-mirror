@@ -380,6 +380,19 @@ public class SemaphoreTest extends JSR166TestCase {
         }
     } 
 
+    /**
+     * drainPermits reports and removes given number of permits
+     */
+    public void testDrainPermits() {
+        Semaphore s = new Semaphore(0, false);
+        assertEquals(0, s.availablePermits());
+        assertEquals(0, s.drainPermits());
+        s.release(10);
+        assertEquals(10, s.availablePermits());
+        assertEquals(10, s.drainPermits());
+        assertEquals(0, s.availablePermits());
+        assertEquals(0, s.drainPermits());
+    }
 
     /**
      * reducePermits reduces number of permits
@@ -606,8 +619,7 @@ public class SemaphoreTest extends JSR166TestCase {
 		public void run() {
 		    try {
 			s.acquire();
-                        s.release();
-                        s.release();
+                        s.release(2);
                         s.acquire();
 		    } catch(InterruptedException ie){
                         threadUnexpectedException();
@@ -617,11 +629,9 @@ public class SemaphoreTest extends JSR166TestCase {
         try {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
-            s.release();
-            s.release();
-            s.acquire();
-            s.acquire();
-            s.release();
+            s.release(2);
+            s.acquire(2);
+            s.release(1);
             t.join();
 	} catch( InterruptedException e){
             unexpectedException();

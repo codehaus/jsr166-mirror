@@ -42,7 +42,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
                 return true;
             }
             
-            public void checkConditionAccess(Thread thread, boolean waiting) {
+            public void checkConditionAccess(Thread thread) {
                 if (getState() == 0) throw new IllegalMonitorStateException();
             }
             
@@ -52,6 +52,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
                 s.defaultReadObject();
                 setState(0); // reset to unlocked state
             }
+
         }
          
         private final Sync sync = new Sync();
@@ -71,6 +72,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         public Condition newCondition() { return sync.newCondition(); }
         public boolean isLocked() { return sync.isLocked(); }
         public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
+        public boolean hasContended() { return sync.hasContended(); }
     }
 
     /**
@@ -144,6 +146,36 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             lock.unlock();
             Thread.sleep(SHORT_DELAY_MS);
             assertFalse(lock.hasQueuedThreads());
+            t1.join();
+            t2.join();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
+
+    /**
+     * hasContended reports whether there has been contention
+     */
+    public void testhasContended() { 
+	final Mutex lock = new Mutex();
+        Thread t1 = new Thread(new InterruptedLockRunnable(lock));
+        Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
+        try {
+            assertFalse(lock.hasContended());
+            lock.lock();
+            t1.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasContended());
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasContended());
+            t1.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasContended());
+            lock.unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertTrue(lock.hasContended());
             t1.join();
             t2.join();
         } catch(Exception e){

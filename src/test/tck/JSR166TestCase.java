@@ -111,7 +111,6 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(AtomicReferenceFieldUpdaterTest.class)); 
         suite.addTest(new TestSuite(AtomicReferenceTest.class)); 
         suite.addTest(new TestSuite(AtomicStampedReferenceTest.class)); 
-        suite.addTest(new TestSuite(CancellableTaskTest.class));
         suite.addTest(new TestSuite(ConcurrentHashMapTest.class));
         suite.addTest(new TestSuite(ConcurrentLinkedQueueTest.class));
         suite.addTest(new TestSuite(CopyOnWriteArrayListTest.class));

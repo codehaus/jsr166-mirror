@@ -332,9 +332,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testGetQueue() {
         BlockingQueue<Runnable> q = new ArrayBlockingQueue<Runnable>(10);
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, q);
-        CancellableTask[] tasks = new CancellableTask[5];
+        FutureTask[] tasks = new FutureTask[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = new CancellableTask(new MediumPossiblyInterruptedRunnable());
+            tasks[i] = new FutureTask(new MediumPossiblyInterruptedRunnable(), Boolean.TRUE);
             p1.execute(tasks[i]);
         }
         try {
@@ -357,9 +357,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testRemove() {
         BlockingQueue<Runnable> q = new ArrayBlockingQueue<Runnable>(10);
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, q);
-        CancellableTask[] tasks = new CancellableTask[5];
+        FutureTask[] tasks = new FutureTask[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = new CancellableTask(new MediumPossiblyInterruptedRunnable());
+            tasks[i] = new FutureTask(new MediumPossiblyInterruptedRunnable(), Boolean.TRUE);
             p1.execute(tasks[i]);
         }
         try {
@@ -386,9 +386,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testPurge() {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
-        CancellableTask[] tasks = new CancellableTask[5];
+        FutureTask[] tasks = new FutureTask[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = new CancellableTask(new MediumPossiblyInterruptedRunnable());
+            tasks[i] = new FutureTask(new MediumPossiblyInterruptedRunnable(), Boolean.TRUE);
             p1.execute(tasks[i]);
         }
         tasks[4].cancel(true);

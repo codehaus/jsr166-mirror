@@ -718,10 +718,17 @@
       <classpath refid="j1.classpath"/>
       <jvmarg value="-client"/>
 
+      <!-- TestPseudoRandom args -->
+      <arg value="2"/>
+      <arg value="25"/>
+      <arg value="100000"/>
+
       <!-- WebCrawler args -->
+      <!--
       <arg value="jsr166.webcrawler.WebCrawler3"/>
       <arg value="http://www.priorartisans.com"/>
       <arg value="25"/>
+      -->
 
     </java>
 

@@ -43,8 +43,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     // Atomics support
 
-    private static final AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> tailUpdater = new AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode>(new ConcurrentLinkedQueue[0], new AtomicLinkedNode[0], "tail");
-    private static final AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode>(new ConcurrentLinkedQueue[0], new AtomicLinkedNode[0], "head");
+    private static final AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> tailUpdater = new AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode>(ConcurrentLinkedQueue.class, AtomicLinkedNode.class, "tail");
+    private static final AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode> headUpdater = new AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, AtomicLinkedNode>(ConcurrentLinkedQueue.class,  AtomicLinkedNode.class, "head");
 
     private boolean casTail(AtomicLinkedNode cmp, AtomicLinkedNode val) {
         return tailUpdater.compareAndSet(this, cmp, val);

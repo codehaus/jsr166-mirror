@@ -19,9 +19,9 @@ final class AtomicLinkedNode {
     private volatile AtomicLinkedNode next;
 
     private static final AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode> nextUpdater =
-    new AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode>(new AtomicLinkedNode[0], new AtomicLinkedNode[0], "next");
+    new AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode>(AtomicLinkedNode.class, AtomicLinkedNode.class, "next");
     private static final AtomicReferenceFieldUpdater<AtomicLinkedNode, Object> itemUpdater
-     = new AtomicReferenceFieldUpdater<AtomicLinkedNode, Object>(new AtomicLinkedNode[0], new Object[0], "item");
+     = new AtomicReferenceFieldUpdater<AtomicLinkedNode, Object>(AtomicLinkedNode.class, Object.class, "item");
 
     AtomicLinkedNode(Object x) { item = x; }
 

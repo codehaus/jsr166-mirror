@@ -41,10 +41,9 @@ public class  AtomicIntegerFieldUpdater<T>  {
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
-    public AtomicIntegerFieldUpdater(T[] ta, String fieldName) {
+    public AtomicIntegerFieldUpdater(Class<T> tclass, String fieldName) {
         Field field = null;
         try {
-            Class tclass = ta.getClass().getComponentType();
             field = tclass.getDeclaredField(fieldName);
         }
         catch(Exception ex) {
@@ -107,10 +106,7 @@ public class  AtomicIntegerFieldUpdater<T>  {
      * @param newValue the new value
      */
     public final void set(T obj, int newValue) {
-        // Unsafe puts do not know about barriers, so manually apply
-        unsafe.storeStoreBarrier();
-        unsafe.putInt(obj, offset, newValue); 
-        unsafe.storeLoadBarrier();
+        unsafe.putIntVolatile(obj, offset, newValue); 
     }
 
     /**
@@ -119,10 +115,7 @@ public class  AtomicIntegerFieldUpdater<T>  {
      * @return the current value
      */
     public final int get(T obj) {
-        // Unsafe gets do not know about barriers, so manually apply
-        int v = unsafe.getInt(obj, offset); 
-        unsafe.loadLoadBarrier();
-        return v;
+        return unsafe.getIntVolatile(obj, offset); 
     }
 
     /**

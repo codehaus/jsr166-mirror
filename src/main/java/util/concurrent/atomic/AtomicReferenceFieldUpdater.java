@@ -61,14 +61,11 @@ public class  AtomicReferenceFieldUpdater<T,V>  {
      * @throws RuntimeException with an nested reflection-based
      * exception if the class does not hold field or is the wrong type.
      */
-    public AtomicReferenceFieldUpdater(T[] ta, V[] va, String fieldName) {
+    public AtomicReferenceFieldUpdater(Class<T> tclass, Class<V> vclass, String fieldName) {
         Field field = null;
-        Class vclass = null;
         Class fieldClass = null;
         try {
-            Class tclass = ta.getClass().getComponentType();
             field = tclass.getDeclaredField(fieldName);
-            vclass = va.getClass().getComponentType();
             fieldClass = field.getType();
         }
         catch(Exception ex) {
@@ -126,10 +123,7 @@ public class  AtomicReferenceFieldUpdater<T,V>  {
      * @param newValue the new value
      */
     public final void set(T obj, V newValue) {
-        // Unsafe puts do not know about barriers, so manually apply
-        unsafe.storeStoreBarrier();
-        unsafe.putObject(obj, offset, newValue); 
-        unsafe.storeLoadBarrier();
+        unsafe.putObjectVolatile(obj, offset, newValue); 
     }
 
     /**
@@ -138,10 +132,7 @@ public class  AtomicReferenceFieldUpdater<T,V>  {
      * @return the current value
      */
     public final V get(T obj) {
-        // Unsafe gets do not know about barriers, so manually apply
-        V v = (V)unsafe.getObject(obj, offset); 
-        unsafe.loadLoadBarrier();
-        return v;
+        return (V)unsafe.getObjectVolatile(obj, offset); 
     }
 
     /**

@@ -50,7 +50,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/17 21:20:29 $
+ * @revised $Date: 2003/05/25 19:31:17 $
  * @editor $Author: tim $
  *
  * @fixme add implementation notes for any performance issues related to
@@ -187,6 +187,12 @@ public class Locks {
         }
     }
 
+    /**
+     * Return true if the given lock is held by any thread.
+     */
+    public static boolean isLocked(Object lock) {
+        return JSR166Support.isLocked(lock);
+    }
 
     /**
      * Returns a {@link Condition} instance for use with the given object.

@@ -25,7 +25,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/17 21:20:29 $
+ * @revised $Date: 2003/05/25 19:31:16 $
  * @editor $Author: tim $
  *
  */
@@ -97,6 +97,10 @@ public class FairSemaphore extends Semaphore {
             while (count - permits < 0)
                 cond.await();
             count -= permits;
+        }
+        catch (InterruptedException ie) {
+            cond.signal();
+            throw ie;
         }
         finally {
             lock.unlock();
@@ -239,6 +243,10 @@ public class FairSemaphore extends Semaphore {
                     return false;
                 nanos = cond.awaitNanos(nanos);
             }
+        }
+        catch (InterruptedException ie) {
+            cond.signal();
+            throw ie;
         }
         finally {
             lock.unlock();

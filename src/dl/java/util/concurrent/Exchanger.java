@@ -57,7 +57,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/17 21:20:28 $
+ * @revised $Date: 2003/05/25 19:31:16 $
  * @editor $Author: tim $
  */
 public class Exchanger<V> {
@@ -104,6 +104,7 @@ public class Exchanger<V> {
             }
             catch (InterruptedException ie) {
                 interrupted = ie;
+                taken.signal();
             }
 
             // get and reset item and count after the wait.

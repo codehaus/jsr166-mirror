@@ -149,8 +149,14 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
              * maximumSize. Similarly for all other uses of count in
              * other wait guards.
              */
-            while (count.get() == maximumSize)
-                notFull.await();
+            try {
+                while (count.get() == maximumSize)
+                    notFull.await();
+            }
+            catch (InterruptedException ie) {
+                notFull.signal(); // propagate to a non-interrupted thread
+                throw ie;
+            }
             insert(x);
             c = count.getAndIncrement();
             if (c+1 < maximumSize)
@@ -179,7 +185,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 }
                 if (nanos <= 0)
                     return false;
-                nanos = notFull.awaitNanos(nanos);
+                try {
+                    nanos = notFull.awaitNanos(nanos);
+                }
+                catch (InterruptedException ie) {
+                    notFull.signal(); // propagate to a non-interrupted thread
+                    throw ie;
+                }
             }
         }
         finally {
@@ -218,8 +230,15 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         int c = -1;
         takeLock.lockInterruptibly();
         try {
-            while (count.get() == 0)
-                notEmpty.await();
+            try {
+                while (count.get() == 0)
+                    notEmpty.await();
+            }
+            catch (InterruptedException ie) {
+                notEmpty.signal(); // propagate to a non-interrupted thread
+                throw ie;
+            }
+
             x = extract();
             c = count.getAndDecrement();
             if (c > 1)
@@ -250,7 +269,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 }
                 if (nanos <= 0)
                     return null;
-                nanos = notEmpty.awaitNanos(nanos);
+                try {
+                    nanos = notEmpty.awaitNanos(nanos);
+                }
+                catch (InterruptedException ie) {
+                    notEmpty.signal(); // propagate to a non-interrupted thread
+                    throw ie;
+                }
             }
         }
         finally {

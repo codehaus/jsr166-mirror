@@ -138,6 +138,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 }
                 else {
                     item = CANCELLED;
+                    done.signal(); // propagate signal
                     throw ie;
                 }
             }
@@ -183,6 +184,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 }
                 else {
                     item = CANCELLED;
+                    done.signal(); // propagate signal
                     throw ie;
                 }
             }

@@ -87,7 +87,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/17 21:20:30 $
+ * @revised $Date: 2003/05/25 19:31:17 $
  * @editor $Author: tim $
  *
  */
@@ -152,6 +152,10 @@ public class Semaphore implements java.io.Serializable {
         try {
             while (count <= 0) cond.await();
             --count;
+        }
+        catch (InterruptedException ie) {
+            cond.signal();
+            throw ie;
         }
         finally {
             lock.unlock();
@@ -272,6 +276,10 @@ public class Semaphore implements java.io.Serializable {
                     return false;
                 nanos = cond.awaitNanos(nanos);
             }
+        }
+        catch (InterruptedException ie) {
+            cond.signal();
+            throw ie;
         }
         finally {
             lock.unlock();

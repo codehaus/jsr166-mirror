@@ -27,12 +27,12 @@ public class LinkedQueue<E> extends AbstractQueue<E>
 
     // Atomics support
 
-    private final static AtomicReferenceFieldUpdater<LinkedQueue, Node> tailUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, Node>(LinkedQueue.class, "tail");
-    private final static AtomicReferenceFieldUpdater<LinkedQueue, Node> headUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, Node>(LinkedQueue.class, "head");
+    private final static AtomicReferenceFieldUpdater<LinkedQueue, Node> tailUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, Node>(new LinkedQueue[0], new Node[0], "tail");
+    private final static AtomicReferenceFieldUpdater<LinkedQueue, Node> headUpdater = new AtomicReferenceFieldUpdater<LinkedQueue, Node>(new LinkedQueue[0], new Node[0], "head");
     private final static AtomicReferenceFieldUpdater<Node, Node> nextUpdater =
-    new AtomicReferenceFieldUpdater<Node, Node>(Node.class, "next");
+    new AtomicReferenceFieldUpdater<Node, Node>(new Node[0], new Node[0], "next");
     private final static AtomicReferenceFieldUpdater<Node, Object> itemUpdater
-     = new AtomicReferenceFieldUpdater<Node, Object>(Node.class, "item");
+     = new AtomicReferenceFieldUpdater<Node, Object>(new Node[0], new Object[0], "item");
 
     private boolean casTail(Node<E> cmp, Node<E> val) {
         return tailUpdater.compareAndSet(this, cmp, val);
@@ -112,7 +112,7 @@ public class LinkedQueue<E> extends AbstractQueue<E>
                 else if (casHead(h, first)) {
                     E item = first.item;
                     if (item != null) {
-                        first.item = null;
+                        itemUpdater.set(first, null);
                         return item;
                     }
                     // else skip over deleted item, continue loop,
@@ -274,7 +274,8 @@ public class LinkedQueue<E> extends AbstractQueue<E>
             // java.util.Iterator contract requires throw if already removed
             if (currentItem == null) throw new IllegalStateException();
             // rely on a future traversal to relink.
-            current.item = currentItem = null;
+            currentItem = null;
+            itemUpdater.set(current, null);
         }
     }
 

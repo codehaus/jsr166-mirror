@@ -147,7 +147,7 @@ import java.util.Date;
  * recommended that applications programmers always assume that they can
  * occur and so always wait in a loop.
  *
- * <p>It is recognised that the three forms of condition waiting
+ * <p>The three forms of condition waiting
  * (interruptible, non-interruptible, and timed) may differ in their ease of
  * implementation on some platforms and in their performance characteristics.
  * In particular, it may be difficult to provide these features and maintain
@@ -166,7 +166,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/17 21:20:28 $
+ * @revised $Date: 2003/05/25 19:31:16 $
  * @editor $Author: tim $
  **/
 public interface Condition {

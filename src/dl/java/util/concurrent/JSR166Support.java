@@ -1,10 +1,15 @@
 package java.util.concurrent;
 
+import sun.misc.Unsafe;
+import java.lang.reflect.*;
+
 /**
  * Package-private native methods for classes introduced in JSR166
  */
 final class JSR166Support {
     private static native void registerNatives();
+    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static int addressSize = unsafe.addressSize();
     static {
         registerNatives();
     }
@@ -78,4 +83,18 @@ final class JSR166Support {
      * @param thread the thread to unpark (no-op if null).
      */
     static native void unpark(Object thread);
+
+    /**
+     * Implementation of Locks.isLocked.
+     */
+    static boolean isLocked(Object x) {
+        // This is actually done non-natively via unsafe, but is
+        // highly dependent on JVM object layout details.
+        boolean l = (addressSize == 4)?
+            ((unsafe.getInt(x, 0L) & 3) == 1) :
+            ((unsafe.getLong(x, 0L) & 3) == 1);
+        unsafe.loadLoadBarrier();
+        return l;
+    }
+
 }

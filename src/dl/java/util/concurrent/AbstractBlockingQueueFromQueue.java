@@ -27,8 +27,14 @@ public abstract class AbstractBlockingQueueFromQueue<E> extends AbstractQueue<E>
         if (x == null) throw new IllegalArgumentException();
         lock.lockInterruptibly();
         try {
-            while (q.size() == maximumSize())
-                notFull.await();
+            try {
+                while (q.size() == maximumSize())
+                    notFull.await();
+            }
+            catch (InterruptedException ie) {
+                notFull.signal(); // propagate to non-interrupted thread
+                throw ie;
+            }
             boolean ok = q.offer(x);
             assert ok;
             notEmpty.signal();
@@ -41,8 +47,14 @@ public abstract class AbstractBlockingQueueFromQueue<E> extends AbstractQueue<E>
     public E take() throws InterruptedException {
         lock.lockInterruptibly();
         try {
-            while (q.size() == 0)
-                notEmpty.await();
+            try {
+                while (q.size() == 0)
+                    notEmpty.await();
+            }
+            catch (InterruptedException ie) {
+                notEmpty.signal(); // propagate to non-interrupted thread
+                throw ie;
+            }
             E x = q.poll();
             assert x != null;
             notFull.signal();
@@ -98,7 +110,13 @@ public abstract class AbstractBlockingQueueFromQueue<E> extends AbstractQueue<E>
                 }
                 if (nanos <= 0)
                     return false;
-                nanos = notFull.awaitNanos(nanos);
+                try {
+                    nanos = notFull.awaitNanos(nanos);
+                }
+                catch (InterruptedException ie) {
+                    notFull.signal(); // propagate to non-interrupted thread
+                    throw ie;
+                }
             }
         }
         finally {
@@ -118,7 +136,14 @@ public abstract class AbstractBlockingQueueFromQueue<E> extends AbstractQueue<E>
                 }
                 if (nanos <= 0)
                     return null;
-                nanos = notEmpty.awaitNanos(nanos);
+                try {
+                    nanos = notEmpty.awaitNanos(nanos);
+                }
+                catch (InterruptedException ie) {
+                    notEmpty.signal(); // propagate to non-interrupted thread
+                    throw ie;
+                }
+
             }
         }
         finally {
@@ -266,6 +291,4 @@ public abstract class AbstractBlockingQueueFromQueue<E> extends AbstractQueue<E>
         }
     }
 }
-
-
 

@@ -736,10 +736,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * This value is conveyed to {@link #releaseExclusiveState} but
      * otherwise uninterpreted and can represent anything
      * you like.
+     * @return the value returned from {@link #releaseExclusiveState} 
      */
-    public final void releaseExclusive(int releases) {
-        if (releaseExclusiveState(releases)) 
-            unparkFirst();
+    public final boolean releaseExclusive(int releases) {
+        if (!releaseExclusiveState(releases))
+            return false;
+        unparkFirst();
+        return true;
     }
 
     /**
@@ -817,10 +820,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * This value is conveyed to {@link #releaseSharedState} but
      * is otherwise uninterpreted and can represent anything
      * you like.
+     * @return the value returned from {@link #releaseSharedState} 
      */
-    public final void releaseShared(int releases) {
-        if (releaseSharedState(releases)) 
-            unparkFirst();
+    public final boolean releaseShared(int releases) {
+        if (!releaseSharedState(releases))
+            return false;
+        unparkFirst();
+        return true;
     }
 
     // Queuing utilities

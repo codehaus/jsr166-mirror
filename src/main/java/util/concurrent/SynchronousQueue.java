@@ -92,37 +92,29 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Implements AQS base acquire to succeed if not in WAITING state
          */
-        public boolean tryAcquireExclusiveState(boolean b, int ignore) {
+        protected boolean tryAcquireExclusiveState(boolean b, int ignore) {
             return getState() != WAITING;
         }
 
         /**
-         * Implements AQS base release to always signal.
-         * Status is changed in ack or cancel methods before calling,
-         * Which we need to do because we need their return values.
+         * Implements AQS base release to signal if state changed
          */
-        public boolean releaseExclusiveState(int ignore) {
-            return true; 
+        protected boolean releaseExclusiveState(int newState) {
+            return compareAndSetState(WAITING, newState);
         }
 
         /**
          * Try to acknowledge; fail if not waiting
          */
         private boolean ack() { 
-            if (!compareAndSetState(WAITING, ACKED)) 
-                return false;
-            releaseExclusive(0); 
-            return true;
+            return releaseExclusive(ACKED); 
         }
 
         /**
          * Try to cancel; fail if not waiting
          */
         private boolean cancel() { 
-            if (!compareAndSetState(WAITING, CANCELLED)) 
-                return false;
-            releaseExclusive(0); 
-            return true;
+            return releaseExclusive(CANCELLED); 
         }
 
         /**

@@ -98,6 +98,7 @@ public class JSR166TestCase extends TestCase {
     public static Test suite ( ) {
         TestSuite suite = new TestSuite("JSR166 Unit Tests");
         
+        suite.addTest(new TestSuite(AbstractExecutorServiceTest.class));
         suite.addTest(new TestSuite(ArrayBlockingQueueTest.class));
         suite.addTest(new TestSuite(AtomicBooleanTest.class)); 
         suite.addTest(new TestSuite(AtomicIntegerArrayTest.class)); 
@@ -126,7 +127,6 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(LockSupportTest.class));
         suite.addTest(new TestSuite(PriorityBlockingQueueTest.class));
         suite.addTest(new TestSuite(PriorityQueueTest.class));
-        suite.addTest(new TestSuite(PrivilegedFutureTaskTest.class));
         suite.addTest(new TestSuite(ReentrantLockTest.class));
         suite.addTest(new TestSuite(ReentrantReadWriteLockTest.class));
         suite.addTest(new TestSuite(ScheduledExecutorTest.class));
@@ -350,6 +350,20 @@ public class JSR166TestCase extends TestCase {
 
     static class NoOpCallable implements Callable {
         public Object call() { return Boolean.TRUE; }
+    }
+
+    static final String TEST_STRING = "a test string";
+
+    static class StringTask implements Callable<String> {
+        public String call() { return TEST_STRING; }
+    }
+
+    static class NPETask implements Callable<String> {
+        public String call() { throw new NullPointerException(); }
+    }
+
+    static class CallableOne implements Callable<Integer> {
+        public Integer call() { return one; }
     }
 
     class ShortRunnable implements Runnable {

@@ -76,11 +76,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 	ReentrantReadWriteLock rl = new ReentrantReadWriteLock();
         assertFalse(rl.isFair());
         assertFalse(rl.isWriteLocked());
-        assertEquals(0, rl.getReadLocks());
+        assertEquals(0, rl.getReadLockCount());
 	ReentrantReadWriteLock r2 = new ReentrantReadWriteLock(true);
         assertTrue(r2.isFair());
         assertFalse(r2.isWriteLocked());
-        assertEquals(0, r2.getReadLocks());
+        assertEquals(0, r2.getReadLockCount());
     }
 
     /**
@@ -91,19 +91,19 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         rl.writeLock().lock();
         assertTrue(rl.isWriteLocked());
         assertTrue(rl.isWriteLockedByCurrentThread());
-        assertEquals(0, rl.getReadLocks());
+        assertEquals(0, rl.getReadLockCount());
         rl.writeLock().unlock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
-        assertEquals(0, rl.getReadLocks());
+        assertEquals(0, rl.getReadLockCount());
         rl.readLock().lock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
-        assertEquals(1, rl.getReadLocks());
+        assertEquals(1, rl.getReadLockCount());
         rl.readLock().unlock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
-        assertEquals(0, rl.getReadLocks());
+        assertEquals(0, rl.getReadLockCount());
     }
 
 
@@ -115,19 +115,19 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         rl.writeLock().lock();
         assertTrue(rl.isWriteLocked());
         assertTrue(rl.isWriteLockedByCurrentThread());
-        assertEquals(0, rl.getReadLocks());
+        assertEquals(0, rl.getReadLockCount());
         rl.writeLock().unlock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
-        assertEquals(0, rl.getReadLocks());
+        assertEquals(0, rl.getReadLockCount());
         rl.readLock().lock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
-        assertEquals(1, rl.getReadLocks());
+        assertEquals(1, rl.getReadLockCount());
         rl.readLock().unlock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
-        assertEquals(0, rl.getReadLocks());
+        assertEquals(0, rl.getReadLockCount());
     }
 
     /**

@@ -606,4 +606,242 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * completed submit of callable returns result
+     */
+    public void testSubmitCallable() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            Future<String> future = e.submit(new StringTask());
+            String result = future.get();
+            assertSame(TEST_STRING, result);
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * completed submit of runnable returns successfully
+     */
+    public void testSubmitRunnable() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            Future<?> future = e.submit(new NoOpRunnable());
+            future.get();
+            assertTrue(future.isDone());
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * completed submit of (runnable, result) returns result
+     */
+    public void testSubmitRunnable2() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            Future<String> future = e.submit(new NoOpRunnable(), TEST_STRING);
+            String result = future.get();
+            assertSame(TEST_STRING, result);
+        }
+        catch (ExecutionException ex) {
+            unexpectedException();
+        }
+        catch (InterruptedException ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+
+
+
+
+    /**
+     * invokeAny(null) throws NPE
+     */
+    public void testInvokeAny1() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            e.invokeAny(null);
+        } catch (NullPointerException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAny(empty collection) throws IAE
+     */
+    public void testInvokeAny2() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            e.invokeAny(new ArrayList<Callable<String>>());
+        } catch (IllegalArgumentException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAny(c) throws NPE if c has null elements
+     */
+    public void testInvokeAny3() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            l.add(new StringTask());
+            l.add(null);
+            e.invokeAny(l);
+        } catch (NullPointerException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAny(c) throws ExecutionException if no task completes
+     */
+    public void testInvokeAny4() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            l.add(new NPETask());
+            e.invokeAny(l);
+        } catch (ExecutionException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAny(c) returns result of some task
+     */
+    public void testInvokeAny5() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            l.add(new StringTask());
+            l.add(new StringTask());
+            String result = e.invokeAny(l);
+            assertSame(TEST_STRING, result);
+        } catch (ExecutionException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAll(null) throws NPE
+     */
+    public void testInvokeAll1() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            e.invokeAll(null);
+        } catch (NullPointerException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAll(empty collection) returns empty collection
+     */
+    public void testInvokeAll2() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>());
+            assertTrue(r.isEmpty());
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAll(c) throws NPE if c has null elements
+     */
+    public void testInvokeAll3() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            l.add(new StringTask());
+            l.add(null);
+            e.invokeAll(l);
+        } catch (NullPointerException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * get of invokeAll(c) throws exception on failed task
+     */
+    public void testInvokeAll4() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            l.add(new NPETask());
+            List<Future<String>> result = e.invokeAll(l);
+            assertEquals(1, result.size());
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+                it.next().get();
+        } catch(ExecutionException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAll(c) returns results of all completed tasks
+     */
+    public void testInvokeAll5() {
+        ExecutorService e = new ScheduledThreadPoolExecutor(2);
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            l.add(new StringTask());
+            l.add(new StringTask());
+            List<Future<String>> result = e.invokeAll(l);
+            assertEquals(2, result.size());
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+                assertSame(TEST_STRING, it.next().get());
+        } catch (ExecutionException success) {
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
+
+
 }

@@ -25,7 +25,6 @@ public class FutureTaskTest extends JSR166TestCase {
         public PublicFutureTask(Callable r) { super(r); }
         public boolean reset() { return super.reset(); }
         public void setCancelled() { super.setCancelled(); }
-        public void setDone() { super.setDone(); }
         public void set(Object x) { super.set(x); }
         public void setException(Throwable t) { super.setException(t); }
     }
@@ -87,15 +86,6 @@ public class FutureTaskTest extends JSR166TestCase {
         assertFalse(task.reset());
     }
 
-    /**
-     * setDone of new task causes isDone to be true
-     */
-    public void testSetDone() {
-        PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
-	task.setDone();
-	assertTrue(task.isDone());
-	assertFalse(task.isCancelled());
-    }
 
     /**
      * setCancelled of a new task causes isCancelled to be true

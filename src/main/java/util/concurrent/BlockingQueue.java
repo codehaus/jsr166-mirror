@@ -91,7 +91,7 @@ import java.util.Queue;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/31 07:18:02 $
+ * @revised $Date: 2003/08/04 01:59:40 $
  * @editor $Author: dholmes $
  * @author Doug Lea
  */
@@ -99,19 +99,19 @@ public interface BlockingQueue<E> extends Queue<E> {
 
     /**
      * @throws IllegalStateException if this queue is full
-     * @throws NullPointerException if <tt>o<tt> is <tt>null</tt>.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     boolean add(E o);
 
     /**
      * @throws IllegalStateException if this queue is full
-     * @throws NullPointerException if any element of <tt>c<tt> 
+     * @throws NullPointerException if <tt>c</tt> or any element of <tt>c<tt> 
      * is <tt>null</tt>.
      */
     boolean addAll(Collection<? extends E> c);
 
     /**
-     * @throws NullPointerException if <tt>o<tt> is <tt>null</tt>.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o);
 
@@ -126,7 +126,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
      * the specified waiting time elapses before space is available.
      * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if <tt>o</tt> is <tt>null</tt>.
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException;

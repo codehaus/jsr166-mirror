@@ -23,7 +23,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/09 23:23:17 $
+ * @revised $Date: 2003/07/11 13:12:06 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -31,18 +31,52 @@ import java.util.concurrent.locks.*;
 public class FairSemaphore extends Semaphore {
 
     /*
-     * This differs from Semaphore only in that it uses a Fair
-     * ReentrantLock.  Because the Fair ReentrantLock guarantees FIFO
-     * queuing, we don't need to do anything fancy to prevent
-     * overtaking etc.  for the multiple-permit methods. The only
-     * minor downside is that multi-permit acquires will sometimes
-     * repeatedly wake up finding that they must re-wait. A custom
-     * solution could minimize this, at the expense of being slower
-     * and more complex for the typical case.
+     * Basic algorithm is a variant of the one described
+     * in CPJ book 2nd edition, section 3.7.3
      */
 
     /**
-     * Construct a <tt>FiFoSemaphore</tt> with the given number of
+     * Nodes of the wait queue. Opportunistically subclasses ReentrantLock.
+     */
+    private static class Node extends ReentrantLock {
+        /** The condition to wait on */
+        Condition done = newCondition();
+        /** True if interrupted before released */
+        boolean cancelled;
+        /** Number of permits remaining until can release */
+        long permitsNeeded;
+        /** Next node of queue */
+        Node next;
+
+        Node(long n) { permitsNeeded = n; }
+    }
+
+    /** Head of the wait queue */
+    private Node head;
+
+    /** Pointer to last node of the wait queue */
+    private Node last;
+
+    /** Add a new node to wait queue with given number of permits needed */
+    private Node enq(long n) { 
+        Node p = new Node(n);
+        if (last == null) 
+            last = head = p;
+        else 
+            last = last.next = p;
+        return p;
+    }
+
+    /** Remove first node from wait queue */
+    private void removeFirst() {
+        Node p = head;
+        assert p != null;
+        if (p != null && (head = p.next) == null) 
+            last = null;
+    }
+
+    /**
+     * Construct a <tt>FairSemaphore</tt> with the given number of
      * permits.
      * @param permits the initial number of permits available
      */
@@ -50,6 +84,145 @@ public class FairSemaphore extends Semaphore {
         super(permits, new ReentrantLock(true)); 
     }
 
+    /**
+     * Acquires a permit from this semaphore, blocking until one is
+     * available, or the thread is {@link Thread#interrupt interrupted}.
+     *
+     * <p>Acquires a permit, if one is available and returns immediately,
+     * reducing the number of available permits by one.
+     * <p>If no permit is available then the current thread becomes
+     * disabled for thread scheduling purposes and lies dormant until
+     * one of two things happens:
+     * <ul>
+     * <li>Some other thread invokes the {@link #release} method for this
+     * semaphore and the current thread happens to be chosen as the
+     * thread to receive the permit; or
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
+     * thread.
+     * </ul>
+     *
+     * <p>If the current thread:
+     * <ul>
+     * <li>has its interrupted status set on entry to this method; or
+     * <li>is {@link Thread#interrupt interrupted} while waiting
+     * for a permit,
+     * </ul>
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
+     *
+     * @throws InterruptedException if the current thread is interrupted
+     *
+     * @see Thread#interrupt
+     */
+    public void acquire() throws InterruptedException {
+        acquire(1L);
+    }
+
+    /**
+     * Acquires a permit from this semaphore, blocking until one is
+     * available.
+     *
+     * <p>Acquires a permit, if one is available and returns immediately,
+     * reducing the number of available permits by one.
+     * <p>If no permit is available then the current thread becomes
+     * disabled for thread scheduling purposes and lies dormant until
+     * some other thread invokes the {@link #release} method for this
+     * semaphore and the current thread happens to be chosen as the
+     * thread to receive the permit.
+     *
+     * <p>If the current thread
+     * is {@link Thread#interrupt interrupted} while waiting
+     * for a permit then it will continue to wait, but the time at which
+     * the thread is assigned a permit may change compared to the time it
+     * would have received the permit had no interruption occurred. When the
+     * thread does return from this method its interrupt status will be set.
+     *
+     */
+    public void acquireUninterruptibly() {
+        acquireUninterruptibly(1L);
+    }
+
+    /**
+     * Acquires a permit from this semaphore, only if one is available at the 
+     * time of invocation.
+     * <p>Acquires a permit, if one is available and returns immediately,
+     * with the value <tt>true</tt>,
+     * reducing the number of available permits by one.
+     *
+     * <p>If no permit is available then this method will return
+     * immediately with the value <tt>false</tt>.
+     *
+     * @return <tt>true</tt> if a permit was acquired and <tt>false</tt>
+     * otherwise.
+     */
+    public boolean tryAcquire() {
+        return tryAcquire(1L);
+    }
+
+    /**
+     * Acquires a permit from this semaphore, if one becomes available 
+     * within the given waiting time and the
+     * current thread has not been {@link Thread#interrupt interrupted}.
+     * <p>Acquires a permit, if one is available and returns immediately,
+     * with the value <tt>true</tt>,
+     * reducing the number of available permits by one.
+     * <p>If no permit is available then
+     * the current thread becomes disabled for thread scheduling
+     * purposes and lies dormant until one of three things happens:
+     * <ul>
+     * <li>Some other thread invokes the {@link #release} method for this
+     * semaphore and the current thread happens to be chosen as the
+     * thread to receive the permit; or
+     * <li>Some other thread {@link Thread#interrupt interrupts} the current
+     * thread; or
+     * <li>The specified waiting time elapses.
+     * </ul>
+     * <p>If a permit is acquired then the value <tt>true</tt> is returned.
+     * <p>If the current thread:
+     * <ul>
+     * <li>has its interrupted status set on entry to this method; or
+     * <li>is {@link Thread#interrupt interrupted} while waiting to acquire
+     * a permit,
+     * </ul>
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
+     * <p>If the specified waiting time elapses then the value <tt>false</tt>
+     * is returned.
+     * The given waiting time is a best-effort lower bound. If the time is
+     * less than or equal to zero, the method will not wait at all.
+     *
+     * @param timeout the maximum time to wait for a permit
+     * @param unit the time unit of the <tt>timeout</tt> argument.
+     * @return <tt>true</tt> if a permit was acquired and <tt>false</tt>
+     * if the waiting time elapsed before a permit was acquired.
+     *
+     * @throws InterruptedException if the current thread is interrupted
+     *
+     * @see Thread#interrupt
+     *
+     */
+    public boolean tryAcquire(long timeout, TimeUnit unit) 
+        throws InterruptedException {
+        return tryAcquire(1L, timeout, unit);
+    }
+
+    /**
+     * Releases a permit, returning it to the semaphore.
+     * <p>Releases a permit, increasing the number of available permits
+     * by one.
+     * If any threads are blocking trying to acquire a permit, then one
+     * is selected and given the permit that was just released.
+     * That thread is re-enabled for thread scheduling purposes.
+     * <p>There is no requirement that a thread that releases a permit must
+     * have acquired that permit by calling {@link #acquire}.
+     * Correct usage of a semaphore is established by programming convention
+     * in the application.
+     */
+    public void release() {
+        release(1L);
+    }
+
+       
     /**
      * Acquires the given number of permits from this semaphore, 
      * blocking until all are available, 
@@ -90,21 +263,39 @@ public class FairSemaphore extends Semaphore {
      */
     public void acquire(long permits) throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-
+        Node node = null;
         lock.lockInterruptibly();
         try {
-            while (count - permits < 0) 
-                available.await();
-            count -= permits;
-        }
-        catch (InterruptedException ie) {
-            available.signal();
-            throw ie;
+            long remaining = count - permits;
+            if (remaining >= 0) {
+                count = remaining;
+                return;
+            }
+            count = 0;
+            node = enq(-remaining);
         }
         finally {
             lock.unlock();
         }
-        
+
+        node.lock();
+        try {
+            while (node.permitsNeeded > 0) 
+                node.done.await();
+        }
+        catch(InterruptedException ie) {
+            if (node.permitsNeeded > 0) {
+                node.cancelled = true;
+                release(permits - node.permitsNeeded);
+                throw ie;
+            }
+            else { // ignore interrupt
+                Thread.currentThread().interrupt();
+            }
+        }
+        finally {
+            node.unlock();
+        }
     }
 
     /**
@@ -133,15 +324,28 @@ public class FairSemaphore extends Semaphore {
      */
     public void acquireUninterruptibly(long permits) {
         if (permits < 0) throw new IllegalArgumentException();
-
+        Node node = null;
         lock.lock();
         try {
-            while (count - permits < 0) 
-                available.awaitUninterruptibly();
-            count -= permits;
+            long remaining = count - permits;
+            if (remaining >= 0) {
+                count = remaining;
+                return;
+            }
+            count = 0;
+            node = enq(-remaining);
         }
         finally {
             lock.unlock();
+        }
+
+        node.lock();
+        try {
+            while (node.permitsNeeded > 0) 
+                node.done.awaitUninterruptibly();
+        }
+        finally {
+            node.unlock();
         }
     }
 
@@ -164,11 +368,11 @@ public class FairSemaphore extends Semaphore {
      */
     public boolean tryAcquire(long permits) {
         if (permits < 0) throw new IllegalArgumentException();
-
         lock.lock();
         try {
-            if (count - permits >= 0) {
-                count -= permits;
+            long remaining = count - permits;
+            if (remaining >= 0) {
+                count = remaining;
                 return true;
             }
             return false;
@@ -217,7 +421,7 @@ public class FairSemaphore extends Semaphore {
      *
      * @param permits the number of permits to acquire
      * @param timeout the maximum time to wait for the permits
-     * @param granularity the time unit of the <tt>timeout</tt> argument.
+     * @param unit the time unit of the <tt>timeout</tt> argument.
      * @return <tt>true</tt> if all permits were acquired and <tt>false</tt>
      * if the waiting time elapsed before all permits were acquired.
      *
@@ -227,32 +431,53 @@ public class FairSemaphore extends Semaphore {
      * @see Thread#interrupt
      *
      */
-    public boolean tryAcquire(long permits, long timeout, TimeUnit granularity)
+    public boolean tryAcquire(long permits, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
+        Node node = null;
+        long nanos = unit.toNanos(timeout);
         lock.lockInterruptibly();
-        long nanos = granularity.toNanos(timeout);
         try {
-            for (;;) {
-                if (count - permits >= 0) {
-                    count -= permits;
-                    return true;
-                }
-                if (nanos <= 0)
-                    return false;
-                nanos = available.awaitNanos(nanos);
+            long remaining = count - permits;
+            if (remaining >= 0) {
+                count = remaining;
+                return true;
             }
-        }
-        catch (InterruptedException ie) {
-            available.signal();
-            throw ie;
+            if (nanos <= 0)
+                return false;
+            count = 0;
+            node = enq(-remaining);
         }
         finally {
             lock.unlock();
         }
-
+        
+        node.lock();
+        try {
+            while (node.permitsNeeded > 0) {
+                nanos = node.done.awaitNanos(nanos);
+                if (nanos <= 0) {
+                    release(permits - node.permitsNeeded);
+                    return false;
+                }
+            }
+            return true;
+        }
+        catch(InterruptedException ie) {
+            if (node.permitsNeeded > 0) {
+                node.cancelled = true;
+                release(permits - node.permitsNeeded);
+                throw ie;
+            }
+            else { // ignore interrupt
+                Thread.currentThread().interrupt();
+                return true;
+            }
+        }
+        finally {
+            node.unlock();
+        }
     }
-
 
 
     /**
@@ -281,13 +506,40 @@ public class FairSemaphore extends Semaphore {
      */
     public void release(long permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        // Even if using fair locks, releases should try to barge in.
+        if (permits == 0)
+            return;
+        // Even when using fair locks, releases should try to barge in.
         if (!lock.tryLock())
             lock.lock();
         try {
-            count += permits;
-            for (int i = 0; i < permits; ++i)
-                available.signal();
+            long p = permits;
+            while (p > 0) {
+                Node node = head;
+                if (node == null) {
+                    count += p;
+                    p = 0;
+                }
+                else {
+                    node.lock();
+                    try {
+                        if (node.cancelled)
+                            removeFirst();
+                        else if (node.permitsNeeded > p) {
+                            node.permitsNeeded -= p;
+                            p = 0;
+                        }
+                        else {
+                            p -= node.permitsNeeded;
+                            node.permitsNeeded = 0;
+                            node.done.signal();
+                            removeFirst();
+                        }
+                    }
+                    finally {
+                        node.unlock();
+                    }
+                }
+            }
         }
         finally {
             lock.unlock();

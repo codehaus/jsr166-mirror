@@ -94,7 +94,7 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/09 23:23:17 $
+ * @revised $Date: 2003/07/11 13:12:06 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -314,10 +314,7 @@ public class Semaphore implements java.io.Serializable {
      * in the application.
      */
     public void release() {
-        // Even if using fair locks, releases should try to barge in.
-        if (!lock.tryLock())
-            lock.lock();
-
+        lock.lock();
         try {
             ++count;
             available.signal();

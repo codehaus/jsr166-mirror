@@ -166,9 +166,9 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/10 13:21:16 $
- * @editor $Author: dl $
- **/
+ * @revised $Date: 2003/01/21 00:01:07 $
+ * @editor $Author: dholmes $
+ */
 public interface Condition {
 
     /**
@@ -220,8 +220,8 @@ public interface Condition {
      *
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
-     **/
-    public void await() throws InterruptedException;
+     */
+    void await() throws InterruptedException;
 
     /**
      * Causes the current thread to wait until it is signalled.
@@ -256,8 +256,8 @@ public interface Condition {
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
      *
-     **/
-    public void awaitUninterruptibly();
+     */
+    void awaitUninterruptibly();
 
     /**
      * Causes the current thread to wait until it is signalled or interrupted,
@@ -282,7 +282,6 @@ public interface Condition {
      * re-acquire the lock associated with this condition. When the
      * thread returns it is <em>guaranteed</em> to hold this lock.
      *
-     *
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or 
@@ -294,17 +293,13 @@ public interface Condition {
      * case, whether or not the test for interruption occurs before the lock
      * is released.
      *
-     * <p>The circumstances under which the wait completes are mutually 
-     * exclusive. For example, if the thread is signalled then it will
-     * never return by throwing {@link InterruptedException}; conversely
-     * a thread that is interrupted and throws {@link InterruptedException}
-     * will never consume a {@link #signal}.
-     *
-     * <p>The method returns an estimate of the number of nanoseconds
+     * <p>If the specified time has elapsed then a value less than or
+     * equal to zero is returned. Otherwise this method returns an estimate 
+     * of the number of nanoseconds
      * remaining to wait given the supplied <tt>nanosTimeout</tt>
-     * value upon return, or a value less than or equal to zero if it
-     * timed out. This value can be used to determine whether and how
-     * long to re-wait in cases where the wait returns but an awaited
+     * value.
+     * This value can be used to determine whether and how
+     * long to re-wait in cases where the wait returns but the
      * condition still does not hold. Typical uses of this method take
      * the following form:
      *
@@ -318,8 +313,15 @@ public interface Condition {
      *        return false;
      *   }
      *   // ... 
+     *   return true;
      * }
      * </pre>
+     *
+     * <p>The circumstances under which the wait completes are mutually 
+     * exclusive. For example, if the thread is signalled then it will
+     * never return by throwing {@link InterruptedException}; conversely
+     * a thread that is interrupted and throws {@link InterruptedException}
+     * will never consume a {@link #signal}.
      *
      * <p> Design note: This method requires a nanosecond argument so
      * as to avoid truncation errors in reporting remaining times.
@@ -335,23 +337,23 @@ public interface Condition {
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
      *
-     *
      * @param nanosTimeout the maximum time to wait, in nanoseconds
-     * @return A value less than or equal to zero if the wait has
-     * timed out; otherwise an estimate, that
+     * @return an estimate, that
      * is strictly less than the <tt>nanosTimeout</tt> argument,
      * of the time still remaining when this method returned.
+     * If the specified time has elapsed
+     * then a value less than or equal to zero is returned.
      *
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
      */
-    public long awaitNanos(long nanosTimeout) throws InterruptedException;
+    long awaitNanos(long nanosTimeout) throws InterruptedException;
 
 
     
     /**
      * Causes the current thread to wait until it is signalled or interrupted,
-     * or the specified deadline elapses.
+     * or the specified absolute deadline passes.
      *
      * <p>The lock associated with this condition is atomically 
      * released and the current thread becomes disabled for thread scheduling 
@@ -364,7 +366,7 @@ public interface Condition {
      * <tt>Condition</tt>; or
      * <li> Some other thread {@link Thread#interrupt interrupts} the current
      * thread, and interruption of thread suspension is supported; or
-     * <li>The specified deadline elapses; or
+     * <li>The specified absolute deadline passes; or
      * <li>A &quot;<em>spurious wakeup</em>&quot; occurs.
      * </ul>
      *
@@ -384,14 +386,12 @@ public interface Condition {
      * case, whether or not the test for interruption occurs before the lock
      * is released.
      *
-     * <p>The circumstances under which the wait completes are mutually 
-     * exclusive. For example, if the thread is signalled then it will
-     * never return by throwing {@link InterruptedException}; conversely
-     * a thread that is interrupted and throws {@link InterruptedException}
-     * will never consume a {@link #signal}.
-     *
-     * <p>The return value idicates whether the deadline has elapsed,
-     * which can be used as follows:
+     * <p>If the specified deadline has passed then the value <tt>false</tt>
+     * is returned. This return value 
+     * This value can be used to determine whether
+     * to re-wait in cases where the wait returns but the
+     * condition still does not hold. Typical uses of this method take
+     * the following form:
      * <pre>
      * synchronized boolean aMethod(Date deadline) {
      *   boolean stillWaiting = true;
@@ -402,8 +402,15 @@ public interface Condition {
      *        return false;
      *   }
      *   // ... 
+     *   return true;
      * }
+     *
      * </pre>
+     * <p>The circumstances under which the wait completes are mutually 
+     * exclusive. For example, if the thread is signalled then it will
+     * never return by throwing {@link InterruptedException}; conversely
+     * a thread that is interrupted and throws {@link InterruptedException}
+     * will never consume a {@link #signal}.
      *
      * <p><b>Implementation Considerations</b>
      * <p>The current thread is assumed to hold the lock associated with this
@@ -415,13 +422,13 @@ public interface Condition {
      *
      *
      * @param deadline the absolute time to wait until
-     * @return <tt>false</tt> if the deadline has
-     * elapsed upon return, else <tt>true</tt>.
+     * @return <tt>false</tt> if the deadline passed, and
+     * <tt>true</tt> otherwise.
      *
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
      */
-    public boolean awaitUntil(Date deadline) throws InterruptedException;
+    boolean awaitUntil(Date deadline) throws InterruptedException;
 
     /**
      * Wakes up one waiting thread.
@@ -429,17 +436,17 @@ public interface Condition {
      * <p>If any threads are waiting on this condition then one
      * is selected for waking up. That thread must then re-acquire the
      * lock before returning from <tt>await</tt>.
-     **/
-    public void signal();
+     */
+    void signal();
 
     /**
-     * Wake up all waiting threads.
+     * Wakes up all waiting threads.
      *
      * <p>If any threads are waiting on this condition then they are
      * all woken up. Each thread must re-acquire the lock before it can
      * return from <tt>await</tt>.
-     **/
-    public void signalAll();
+     */
+    void signalAll();
 
 }
 

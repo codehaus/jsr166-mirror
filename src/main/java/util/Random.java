@@ -135,8 +135,8 @@ class Random implements java.io.Serializable {
     protected int next(int bits) {
         long oldseed, nextseed;
         do {
-          oldseed = seed.get();
-          nextseed = (oldseed * multiplier + addend) & mask;
+            oldseed = seed.get();
+            nextseed = (oldseed * multiplier + addend) & mask;
         } while (!seed.compareAndSet(oldseed, nextseed));
         return (int)(nextseed >>> (48 - bits));
     }

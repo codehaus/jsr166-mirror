@@ -110,7 +110,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Queue to hold waiting puts/takes; specialized to FiFo/Lifo below.
+     * Queue to hold waiting puts/takes; specialized to Fifo/Lifo below.
      * These queues have all transient fields, but are serializable
      * in order to recover fairness settings when deserialized.
      */

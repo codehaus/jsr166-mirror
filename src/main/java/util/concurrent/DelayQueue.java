@@ -10,14 +10,15 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded {@linkplain BlockingQueue blocking queue} of <tt>Delayed</tt>
- * elements, in which an element can only be taken when its delay has expired.
- * The <em>head</em> of the queue is that <tt>Delayed</tt> element whose delay
- * expired furthest in the past - if no delay has expired there is no head and
- * <tt>poll</tt> will return <tt>null</tt>.
- * This queue does not permit <tt>null</tt> elements.
- * <p>This class implements all of the <em>optional</em> methods
- * of the {@link Collection} and {@link Iterator} interfaces.
+ * An unbounded {@linkplain BlockingQueue blocking queue} of
+ * <tt>Delayed</tt> elements, in which an element can only be taken
+ * when its delay has expired.  The <em>head</em> of the queue is that
+ * <tt>Delayed</tt> element whose delay expired furthest in the
+ * past. If no delay has expired there is no head and <tt>poll</tt>
+ * will return <tt>null</tt>. Expiration occurs when an element's
+ * <tt>getDelay(TimeUnit.NANOSECONDS)</tt> method returns a value less
+ * than or equal to zero.  This queue does not permit <tt>null</tt>
+ * elements.
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -114,6 +115,12 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         return offer(o);
     }
 
+    /**
+     * Retrieves and removes the head of this queue, waiting
+     * if no elements with an unexpired delay are present on this queue.
+     * @return the head of this queue
+     * @throws InterruptedException if interrupted while waiting.
+     */
     public E take() throws InterruptedException {
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
@@ -141,10 +148,24 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
-    public E poll(long time, TimeUnit unit) throws InterruptedException {
+    /**
+     * Retrieves and removes the head of this queue, waiting
+     * if necessary up to the specified wait time if no elements with
+     * an unexpired delay are
+     * present on this queue.
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
+     * <tt>timeout</tt> parameter
+     * @return the head of this queue, or <tt>null</tt> if the
+     * specified waiting time elapses before an element with
+     * an unexpired dealy is present.
+     * @throws InterruptedException if interrupted while waiting.
+     */
+    public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
-        long nanos = unit.toNanos(time);
+        long nanos = unit.toNanos(timeout);
         try {
             for (;;) {
                 E first = q.peek();
@@ -175,6 +196,13 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
 
+    /**
+     * Retrieves and removes the head of this queue, or <tt>null</tt>
+     * if this queue has no elements with an unexpired delay.
+     *
+     * @return the head of this queue, or <tt>null</tt> if this
+     *         queue has no elements with an unexpired delay.
+     */
     public E poll() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -194,6 +222,14 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Retrieves, but does not remove, the head of this queue,
+     * returning <tt>null</tt> if this queue has no elements with an
+     * unexpired delay.
+     *
+     * @return the head of this queue, or <tt>null</tt> if this queue
+     * has no elements with an unexpired delay.
+     */
     public E peek() {
         final ReentrantLock lock = this.lock;
         lock.lock();

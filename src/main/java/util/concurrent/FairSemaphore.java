@@ -23,8 +23,8 @@ import java.util.concurrent.locks.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/25 19:27:58 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/25 22:35:45 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  *
  */
@@ -96,8 +96,7 @@ public class FairSemaphore extends Semaphore {
      * one of two things happens:
      * <ul>
      * <li>Some other thread invokes the {@link #release} method for this
-     * semaphore and the current thread happens to be chosen as the
-     * thread to receive the permit; or
+     * semaphore and the current thread is next to be assigned a permit; or
      * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread.
      * </ul>
@@ -128,8 +127,7 @@ public class FairSemaphore extends Semaphore {
      * <p>If no permit is available then the current thread becomes
      * disabled for thread scheduling purposes and lies dormant until
      * some other thread invokes the {@link #release} method for this
-     * semaphore and the current thread happens to be chosen as the
-     * thread to receive the permit.
+     * semaphore and the current thread is next to be assigned a permit.
      *
      * <p>If the current thread
      * is {@link Thread#interrupt interrupted} while waiting
@@ -172,8 +170,7 @@ public class FairSemaphore extends Semaphore {
      * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li>Some other thread invokes the {@link #release} method for this
-     * semaphore and the current thread happens to be chosen as the
-     * thread to receive the permit; or
+     * semaphore and the current thread is next to be assigned a permit; or
      * <li>Some other thread {@link Thread#interrupt interrupts} the current
      * thread; or
      * <li>The specified waiting time elapses.
@@ -252,7 +249,8 @@ public class FairSemaphore extends Semaphore {
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's
      * interrupted status is cleared. 
-     * Any available permits are assigned to the next waiting thread as if
+     * Any permits that were to be assigned to this thread, are instead 
+     * assigned to the next waiting thread(s), as if
      * they had been made available by a call to {@link #release()}.
      *
      * @param permits the number of permits to acquire
@@ -403,14 +401,16 @@ public class FairSemaphore extends Semaphore {
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's
      * interrupted status is cleared.
-     * Any available permits are assigned to the next waiting thread as if
+     * Any permits that were to be assigned to this thread, are instead 
+     * assigned to the next waiting thread(s), as if
      * they had been made available by a call to {@link #release()}.
      *
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
      * The given waiting time is a best-effort lower bound. If the time is
      * less than or equal to zero, the method will not wait at all.
-     * Any available permits are assigned to the next waiting thread as if
+     * Any permits that were to be assigned to this thread, are instead 
+     * assigned to the next waiting thread(s), as if
      * they had been made available by a call to {@link #release()}.
      *
      * @param permits the number of permits to acquire

@@ -17,7 +17,11 @@ package java.util.concurrent;
  * <p>If readers are active and a writer arrives then no subsequent readers
  * will be granted the read lock until after that writer has acquired and 
  * released the write lock.
- *
+ * <p><b>Note:</b> As all threads, readers and writers, must pass through an
+ * internal lock, it is possible for the read lock <tt>tryLock</tt> methods
+ * to return <tt>false</tt> even if the lock is logically available to the 
+ * thread.
+ * 
  * <li><b>Reentrancy</b>
  * <p>This lock allows both readers and writers to reacquire read or
  * write locks in the style of a {@link ReentrantLock}. Readers are not
@@ -96,14 +100,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/02/06 07:09:11 $
+ * @revised $Date: 2003/02/07 00:25:27 $
  * @editor $Author: dholmes $
- *
- * @fixme The following text has been omitted: <b>As a byproduct, the
- * <tt>attempt</tt> methods may return <tt>false</tt> even when the
- * lock might logically be available, but, due to contention, cannot
- * be accessed within the given time bound.</b> Is this behaviour
- * observable? If not, do we need to say anything? 
  *
  */
 public class ReentrantReadWriteLock implements ReadWriteLock {

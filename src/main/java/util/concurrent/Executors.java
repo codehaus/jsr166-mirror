@@ -6,6 +6,10 @@
 
 package java.util.concurrent;
 import java.util.*;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * Factory and utility methods for {@link Executor}, {@link
@@ -233,7 +237,99 @@ public class Executors {
         return ftask.get();
     }
 
+
+    /**
+     * Executes a privileged action under the current access control 
+     * context and returns a Future representing the pending result 
+     * object of that action.
+     *
+     * @param executor the Executor to which the task will be submitted
+     * @param action the action to submit
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    public static Future<Object> execute(Executor executor, PrivilegedAction action) {
+        return execute(executor, action, AccessController.getContext());
+    }
     
+    /**
+     * Executes a privileged action under the given access control 
+     * context and returns a Future representing the pending result 
+     * object of that action.
+     *
+     * @param executor the Executor to which the task will be submitted
+     * @param action the action to submit
+     * @param acc the access control context under which action should run
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    public static Future<Object> execute(Executor executor, PrivilegedAction action,
+                                         AccessControlContext acc) {
+        Callable<Object> task = new PrivilegedActionAdapter(action);
+        FutureTask<Object> future = new PrivilegedFutureTask<Object>(task, acc);
+        executor.execute(future);
+        return future;
+    }
+
+    /**
+     * Executes a privileged exception action under the current access control 
+     * context and returns a Future representing the pending result 
+     * object of that action.
+     *
+     * @param executor the Executor to which the task will be submitted
+     * @param action the action to submit
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    public static Future<Object> execute(Executor executor, PrivilegedExceptionAction action) {
+        return execute(executor, action, AccessController.getContext());
+    }
+    
+    /**
+     * Executes a privileged exception action under the given access control 
+     * context and returns a Future representing the pending result 
+     * object of that action.
+     *
+     * @param executor the Executor to which the task will be submitted
+     * @param action the action to submit
+     * @param acc the access control context under which action should run
+     * @return a Future representing pending completion of the action
+     * @throws RejectedExecutionException if action cannot be scheduled
+     * for execution
+     */
+    public static Future<Object> execute(Executor executor, PrivilegedExceptionAction action,
+                                         AccessControlContext acc) {
+        Callable<Object> task = new PrivilegedExceptionActionAdapter(action);
+        FutureTask<Object> future = new PrivilegedFutureTask<Object>(task, acc);
+        executor.execute(future);
+        return future;
+    }
+    
+
+    private static class PrivilegedActionAdapter implements Callable<Object> {
+        PrivilegedActionAdapter(PrivilegedAction action) {
+            this.action = action;
+        }
+        public Object call () {
+            return action.run();
+        }
+        private final PrivilegedAction action;
+    }
+    
+    private static class PrivilegedExceptionActionAdapter implements Callable<Object> {
+        PrivilegedExceptionActionAdapter(PrivilegedExceptionAction action) {
+            this.action = action;
+        }
+        public Object call () throws Exception {
+            return action.run();
+        }
+        private final PrivilegedExceptionAction action;
+    }
+        
+        
     /** Cannot instantiate. */
     private Executors() {}
 }

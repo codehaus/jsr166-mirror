@@ -227,6 +227,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     /**
      * Creates an instance of <tt>ReentrantLock</tt> with the
      * given fairness policy.
+     * @param fair true if this lock should be fair; else false
      */
     public ReentrantLock(boolean fair) { 
         sync = (fair)? new FairSync() : new NonfairSync();

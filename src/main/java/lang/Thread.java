@@ -772,8 +772,15 @@ class Thread implements Runnable {
      * @spec JSR-51
      */
     public void interrupt() {
-        if (this != Thread.currentThread()) // jsr166
-            checkAccess();
+	if (this != Thread.currentThread()) { // jsr166
+	    try {
+		checkAccess();
+	    } finally {
+		if (!isAlive())        // See bug 4254486
+		    return;            //  If died during check, just return
+	    }
+	}
+	
 	synchronized (blockerLock) {
 	    Interruptible b = blocker;
 	    if (b != null) {

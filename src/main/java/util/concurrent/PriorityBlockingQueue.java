@@ -107,6 +107,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Adds the specified element to this queue.
+     * @param o the element to add
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *

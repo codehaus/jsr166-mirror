@@ -65,7 +65,9 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
-     * Return the length of the array.
+     * Returns the length of the array.
+     *
+     * @return the length of the array
      */
     public final int length() {
         return array.length;

@@ -585,6 +585,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Constructs a new map with the same mappings as the given map.  The
      * map is created with a capacity of twice the number of mappings in
      * the given map or 11 (whichever is greater), and a default load factor.
+     * @param t the map
      */
     public ConcurrentHashMap(Map<? extends K, ? extends V> t) {
         this(Math.max((int) (t.size() / DEFAULT_LOAD_FACTOR) + 1,

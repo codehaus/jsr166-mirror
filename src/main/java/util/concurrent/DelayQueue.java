@@ -39,6 +39,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * Creates a <tt>DelayQueue</tt> initially containing the elements of the
      * given collection of {@link Delayed} instances.
      *
+     * @param c the collection
      * @throws NullPointerException if <tt>c</tt> or any element within it
      * is <tt>null</tt>
      *

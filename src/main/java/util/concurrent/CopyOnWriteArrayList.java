@@ -838,6 +838,7 @@ public class CopyOnWriteArrayList<E>
      * when the iterator was constructed. No synchronization is
      * needed while traversing the iterator. The iterator does
      * <em>NOT</em> support the <tt>remove</tt> method.
+     * @return the iterator
      */
     public Iterator<E> iterator() {
         return new COWIterator<E>(array(), 0);
@@ -850,6 +851,7 @@ public class CopyOnWriteArrayList<E>
      * needed while traversing the iterator. The iterator does
      * <em>NOT</em> support the <tt>remove</tt>, <tt>set</tt>,
      * or <tt>add</tt> methods.
+     * @return the iterator
      *
      */
     public ListIterator<E> listIterator() {
@@ -868,6 +870,7 @@ public class CopyOnWriteArrayList<E>
      *
      * @param index index of first element to be returned from the
      *                ListIterator (by a call to getNext).
+     * @return the iterator
      * @throws IndexOutOfBoundsException index is out of range
      *              (index &lt; 0 || index &gt; size()).
      */

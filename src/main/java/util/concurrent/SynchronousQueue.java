@@ -308,6 +308,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Retrieves and removes the head of this queue, waiting if necessary
      * for another thread to insert it.
+     * @throws InterruptedException if interrupted while waiting.
      * @return the head of this queue
      */
     public E take() throws InterruptedException {
@@ -570,6 +571,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Sets the zeroeth element of the specified array to <tt>null</tt>
      * (if the array has non-zero length) and returns it.
+     * @param a the array
      * @return the specified array
      */
     public <T> T[] toArray(T[] a) {

@@ -53,8 +53,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/09 02:32:05 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/10 00:04:53 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  * 
  **/
@@ -542,9 +542,10 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
     }
 
     /**
-     * Attempts to release this lock.  If the current thread is the
+     * Attempts to release this lock.  
+     * <p>If the current thread is the
      * holder of this lock then the hold count is decremented. If the
-     * hold count is now zero then the lock is released.   If the
+     * hold count is now zero then the lock is released.  If the
      * current thread is not the holder of this lock then {@link
      * IllegalMonitorStateException} is thrown.
      * @throws IllegalMonitorStateException if the current thread does not
@@ -563,14 +564,14 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
 
     /**
      * Acquire the lock. 
-     * <p>Acquires the lock if it is not held be another thread and returns 
+     * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately, setting the lock hold count to one.
      * <p>If the current thread
      * already holds the lock then the hold count is incremented by one and
      * the method returns immediately.
      * <p>If the lock is held by another thread then the
-     * the current thread thread becomes disabled for thread scheduling 
-     * purposes and lies dormant until the lock has been acquired
+     * current thread becomes disabled for thread scheduling 
+     * purposes and lies dormant until the lock has been acquired,
      * at which time the lock hold count is set to one. 
      */
     public void lock() {
@@ -588,7 +589,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * <p>If the current thread already holds this lock then the hold count 
      * is incremented by one and the method returns immediately.
      * <p>If the lock is held by another thread then the
-     * the current thread becomes disabled for thread scheduling 
+     * current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of two things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
@@ -608,8 +609,10 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * interruption point, preference is given to responding to the interrupt
      * over reentrant acquisition of the lock.
      *
-     *
      * @throws InterruptedException if the current thread is interrupted
+     *
+     * @fixme The interrupt semantics here are inconsistent with those in
+     * Lock
      */
     public void lockInterruptibly() throws InterruptedException { 
         Thread current = Thread.currentThread();
@@ -657,7 +660,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * already holds this lock then the hold count is incremented by one and
      * the method returns <tt>true</tt>.
      * <p>If the lock is held by another thread then the
-     * the current thread becomes disabled for thread scheduling 
+     * current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li> The lock is acquired by the current thread; or
@@ -689,6 +692,9 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * acquired.
      *
      * @throws InterruptedException if the current thread is interrupted
+     *
+     * @fixme The interrupt semantics here are inconsistent with those in
+     * Lock
      */
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
         if (unit == null)
@@ -771,7 +777,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
 
 
     /**
-     * Queries if this lock is held by any thread. THis method is
+     * Queries if this lock is held by any thread. This method is
      * designed for use in monitoring, not for synchronization control.
      * @return <tt>true</tt> if any thread holds this lock and 
      * <tt>false</tt> otherwise.

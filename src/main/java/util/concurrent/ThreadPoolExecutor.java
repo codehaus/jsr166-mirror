@@ -797,8 +797,11 @@ public class ThreadPoolExecutor implements ExecutorService {
      * @throws RejectedExecutionException at discretion of
      * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted
      * for execution
+     * @throws NullPointerException if command is null
      */
     public void execute(Runnable command) {
+        if (command == null)
+            throw new NullPointerException();
         for (;;) {
             if (runState != RUNNING) {
                 reject(command);

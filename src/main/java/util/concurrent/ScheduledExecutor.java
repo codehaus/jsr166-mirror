@@ -346,9 +346,12 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @return a handle that can be used to cancel the task.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
+     * @throws NullPointerException if command is null
      */
 
     public ScheduledCancellable schedule(Runnable command, long delay,  TimeUnit unit) {
+        if (command == null)
+            throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
         ScheduledCancellableTask t = new ScheduledCancellableTask(command, triggerTime);
         delayedExecute(t);
@@ -364,8 +367,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @return a ScheduledFuture that can be used to extract result or cancel.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
+     * @throws NullPointerException if callable is null
      */
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+        if (callable == null)
+            throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
         ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
         delayedExecute(t);
@@ -386,8 +392,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @return a handle that can be used to cancel the task.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
+     * @throws NullPointerException if command is null
      */
     public ScheduledCancellable scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
+        if (command == null)
+            throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
         ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,
@@ -411,8 +420,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @return a handle that can be used to cancel the task.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
+     * @throws NullPointerException if command is null
      */
     public ScheduledCancellable scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+        if (command == null)
+            throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
         ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,
@@ -434,8 +446,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException at discretion of
      * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted
      * for execution because the executor has been shut down.
+     * @throws NullPointerException if command is null
      */
     public void execute(Runnable command) {
+        if (command == null)
+            throw new NullPointerException();
         schedule(command, 0, TimeUnit.NANOSECONDS);
     }
 

@@ -1,6 +1,6 @@
 package java.util.concurrent;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * An Executor asynchronously executes commands; an ExecutorService
@@ -35,7 +35,7 @@ public interface ExecutorService extends Executor {
      * as ignoring them, or causing <tt>execute</tt> to throw an
      * (unchecked) <tt>IllegalStateException</tt>.
      **/
-    public void shutdown();
+    void shutdown();
 
     /**
      * Attempt to stop processing all actively executing tasks, never
@@ -53,12 +53,12 @@ public interface ExecutorService extends Executor {
      * respond to interrupts, they might never terminate.
      * @return a list of all tasks that never commenced execution.
      **/
-    public List shutdownNow();
+    List shutdownNow();
 
     /**
      * Return true if the Executor has been shut down.
      **/
-    public boolean isShutdown();
+    boolean isShutdown();
 
     /**
      * Interrupt the processing of all current tasks.  Depending on
@@ -94,6 +94,7 @@ public interface ExecutorService extends Executor {
      * monitoring.
      **/
     public interface Callbacks {
+
         /**
          * Method invoked prior to executing the given Runnable in given
          * thread.  This method may be used to re-initialize ThreadLocals,
@@ -102,7 +103,7 @@ public interface ExecutorService extends Executor {
          * @param r the task that will be executed.
          * @param e the Executor
          **/
-        public void beforeExecute(Thread t, Runnable r, ExecutorService e);
+        void beforeExecute(Thread t, Runnable r, ExecutorService e);
 
         /**
          * Method invoked upon completion of execution of the given
@@ -113,7 +114,7 @@ public interface ExecutorService extends Executor {
          * execution completed normally.
          * @param e the Executor
          **/
-        public void afterExecute(Runnable r, Throwable t, ExecutorService e);
+        void afterExecute(Runnable r, Throwable t, ExecutorService e);
 
         /**
          * Method invoked when <tt>execute</tt> cannot execute a
@@ -127,14 +128,14 @@ public interface ExecutorService extends Executor {
          * You may alternatively throw an unchecked exception, which
          * will be propagated to the caller of <tt>execute</tt>.
          **/
-        public boolean cannotExecute(Runnable r, ExecutorService e);
+        boolean cannotExecute(Runnable r, ExecutorService e);
 
         /**
          * Method invoked when the Executor has terminated.  Default
          * implementation does nothing.
          * @param e the Executor
          **/
-        public void terminated(ExecutorService e);
+        void terminated(ExecutorService e);
     }
 
 }

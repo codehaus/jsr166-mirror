@@ -396,7 +396,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Create and start a new thread running firstTask as its first
-     * task, only if less than corePoolSize threads are running.
+     * task, only if fewer than corePoolSize threads are running.
      * @param firstTask the task the new thread should run first (or
      * null if none)
      * @return true if successful.
@@ -418,7 +418,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Create and start a new thread only if less than maximumPoolSize
+     * Create and start a new thread only if fewer than maximumPoolSize
      * threads are running.  The new thread runs as its first task the
      * next task in queue, or if there is none, the given task.
      * @param firstTask the task the new thread should run first (or
@@ -487,9 +487,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 // Wait for one, re-checking state upon interruption
                 try {
                     return workQueue.take();
-                }
-                catch(InterruptedException ignore) {
-                }
+                } catch(InterruptedException ignore) {}
                 break;
             }
 
@@ -664,16 +662,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          */
         public void run() {
             try {
-                for (;;) {
-                    Runnable task;
-                    if (firstTask != null) {
-                        task = firstTask;
-                        firstTask = null;
-                    } else {
-                        task = getTask();
-                        if (task == null)
-                            break;
-                    }
+                Runnable task = firstTask;
+                firstTask = null;
+                while (task != null || (task = getTask()) != null) {
                     runTask(task);
                     task = null; // unnecessary but can help GC
                 }
@@ -749,7 +740,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                               TimeUnit unit,
                               BlockingQueue<Runnable> workQueue,
                               ThreadFactory threadFactory) {
-
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
              threadFactory, defaultHandler);
     }
@@ -885,9 +875,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         try {
             if (workers.size() > 0) {
-                // Check if caller can modify worker threads.
-                // This might not be true even if passed above check,
-                // if the SecurityManager treats some threads specially.
+                // Check if caller can modify worker threads.  This
+                // might not be true even if passed above check, if
+                // the SecurityManager treats some threads specially.
                 if (security != null) {
                     for (Worker w: workers)
                         security.checkAccess(w.thread);
@@ -901,11 +891,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     for (Worker w: workers)
                         w.interruptIfIdle();
                 } catch(SecurityException se) {
-                    // If SecurityManager allows above checks, but then
-                    // unexpectedly throws exception when interrupting
-                    // threads (which it ought not do), back out as
-                    // cleanly as we can. -Some threads may have been
-                    // killed but we remain in non-shutdown state.
+                    // If SecurityManager allows above checks, but
+                    // then unexpectedly throws exception when
+                    // interrupting threads (which it ought not do),
+                    // back out as cleanly as we can. Some threads may
+                    // have been killed but we remain in non-shutdown
+                    // state.
                     runState = state; 
                     throw se;
                 }
@@ -960,7 +951,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
         if (fullyTerminated)
             terminated();
-        
         return Arrays.asList(workQueue.toArray(EMPTY_RUNNABLE_ARRAY));
     }
 
@@ -988,10 +978,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     public boolean awaitTermination(long timeout, TimeUnit unit)
         throws InterruptedException {
+        long nanos = unit.toNanos(timeout);
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
-            long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (runState == TERMINATED) 
                     return true;
@@ -1102,7 +1092,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * However, this method may fail to remove tasks in
      * the presence of interference by other threads.
      */
-
     public void purge() {
         // Fail if we encounter interference during traversal
         try {
@@ -1405,7 +1394,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * is discarded.
      */
    public static class CallerRunsPolicy implements RejectedExecutionHandler {
-
         /**
          * Creates a <tt>CallerRunsPolicy</tt>.
          */
@@ -1429,7 +1417,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * <tt>RejectedExecutionException</tt>.
      */
     public static class AbortPolicy implements RejectedExecutionHandler {
-
         /**
          * Creates an <tt>AbortPolicy</tt>.
          */
@@ -1451,7 +1438,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * rejected task.
      */
     public static class DiscardPolicy implements RejectedExecutionHandler {
-
         /**
          * Creates <tt>DiscardPolicy</tt>.
          */

@@ -1418,6 +1418,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * unless the CAS failed (which is unlikely), it will be
          * there, so we hardly ever traverse much.
          */
+        return findNodeFromTail(node);
+    } 
+
+    /**
+     * Return true if node is on sync queue by searching backwared from tail.
+     * @return true if present
+     */
+    final boolean findNodeFromTail(Node node) {
         Node t = tail; 
         for (;;) {
             if (t == node)
@@ -1426,7 +1434,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 return false;
             t = t.prev;
         }
-    } 
+    }
 
     /**
      * Transfer a node from a condition queue onto sync queue. 
@@ -1478,7 +1486,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             Thread.yield();
         return false;
     }
-
 
     /**
      * Invoke release with current state value; return saved state.
@@ -1736,12 +1743,10 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          */
         private void reportInterruptAfterWait(int interruptMode) 
             throws InterruptedException {
-            if (interruptMode != 0) {
-                if (interruptMode == THROW_IE)
-                    throw new InterruptedException();
-                else 
-                    Thread.currentThread().interrupt();
-            }
+            if (interruptMode == THROW_IE)
+                throw new InterruptedException();
+            else if (interruptMode == REINTERRUPT)
+                Thread.currentThread().interrupt();
         }
 
         /**
@@ -1771,7 +1776,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            reportInterruptAfterWait(interruptMode);
+            if (interruptMode != 0)
+                reportInterruptAfterWait(interruptMode);
         }
 
         /**
@@ -1809,7 +1815,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            reportInterruptAfterWait(interruptMode);
+            if (interruptMode != 0)
+                reportInterruptAfterWait(interruptMode);
             return nanosTimeout - (System.nanoTime() - lastTime);
         }
 
@@ -1849,7 +1856,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            reportInterruptAfterWait(interruptMode);
+            if (interruptMode != 0)
+                reportInterruptAfterWait(interruptMode);
             return !timedout;
         }
         
@@ -1893,7 +1901,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            reportInterruptAfterWait(interruptMode);
+            if (interruptMode != 0)
+                reportInterruptAfterWait(interruptMode);
             return !timedout;
         }
 

@@ -129,7 +129,7 @@ public class Executors {
      */
     public static ExecutorService newCachedThreadPool() {
         return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                      60, TimeUnit.SECONDS,
+                                      60L, TimeUnit.SECONDS,
                                       new SynchronousQueue<Runnable>());
     }
 
@@ -143,7 +143,7 @@ public class Executors {
      */
     public static ExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
         return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                      60, TimeUnit.SECONDS,
+                                      60L, TimeUnit.SECONDS,
                                       new SynchronousQueue<Runnable>(),
                                       threadFactory);
     }
@@ -298,7 +298,6 @@ public class Executors {
     public static ThreadFactory privilegedThreadFactory() {
         return new PrivilegedThreadFactory();
     }
-
 
     /**
      * Returns a {@link Callable} object that, when

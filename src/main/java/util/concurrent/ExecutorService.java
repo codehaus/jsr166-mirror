@@ -12,7 +12,7 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 
 /**
- * An {@link Executor} that provides methods to manage termination and
+ * An {@link Executor} that provides methods to manage termination, and
  * methods that can produce a {@link Future} for tracking progress of
  * one or more asynchronous tasks.  <p>
  *

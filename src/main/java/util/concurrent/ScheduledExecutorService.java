@@ -47,7 +47,7 @@ import java.util.*;
  * import static java.util.concurrent.TimeUnit;
  * class BeeperControl {
  *    private final ScheduledExecutorService scheduler = 
- *       Executors.newSingleThreadScheduledExecutor();
+ *       Executors.newScheduledThreadPool(1);
  *
  *    public void beepForAnHour() {
  *        final Runnable beeper = new Runnable() {

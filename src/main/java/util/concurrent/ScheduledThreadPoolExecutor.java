@@ -96,7 +96,6 @@ public class ScheduledThreadPoolExecutor
             this.sequenceNumber = sequencer.getAndIncrement();
         }
 
-
         public long getDelay(TimeUnit unit) {
             long d =  unit.convert(time - System.nanoTime(), 
                                    TimeUnit.NANOSECONDS);
@@ -136,136 +135,33 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
+         * RUn a periodic task
+         */
+        private void runPeriodic() {
+            boolean ok = ScheduledFutureTask.super.runAndReset();
+            boolean down = isShutdown();
+            // Reschedule if not cancelled and not shutdown or policy allows
+            if (ok && (!down ||
+                       (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
+                        !isTerminating()))) {
+                time = period + (rateBased ? time : System.nanoTime());
+                ScheduledThreadPoolExecutor.super.getQueue().add(this);
+            }
+            // This might have been the final executed delayed
+            // task.  Wake up threads to check.
+            else if (down) 
+                interruptIdleWorkers();
+        }
+
+        /**
          * Overrides FutureTask version so as to reset/requeue if periodic.
          */ 
         public void run() {
-            if (!isPeriodic())
+            if (isPeriodic())
+                runPeriodic();
+            else 
                 ScheduledFutureTask.super.run();
-            else {
-                boolean ok = (ScheduledFutureTask.super.runAndReset());
-                boolean down = isShutdown();
-                if (ok && (!down ||
-                    (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
-                     !isTerminating()))) {
-                    time = period + (rateBased ? time : System.nanoTime());
-                    ScheduledThreadPoolExecutor.super.getQueue().add(this);
-                }
-                // This might have been the final executed delayed
-                // task.  Wake up threads to check.
-                else if (down) 
-                    interruptIdleWorkers();
-            }
         }
-    }
-
-    /**
-     * An annoying wrapper class to convince generics compiler to
-     * use a DelayQueue<ScheduledFutureTask> as a BlockingQueue<Runnable>
-     */ 
-    private static class DelayedWorkQueue 
-            extends AbstractCollection<Runnable> implements BlockingQueue<Runnable> {
-        
-        private final DelayQueue<ScheduledFutureTask> dq = new DelayQueue<ScheduledFutureTask>();
-        public Runnable poll() { return dq.poll(); }
-        public Runnable peek() { return dq.peek(); }
-        public Runnable take() throws InterruptedException { return dq.take(); }
-        public Runnable poll(long timeout, TimeUnit unit) throws InterruptedException {
-            return dq.poll(timeout, unit);
-        }
-
-        public boolean add(Runnable x) { return dq.add((ScheduledFutureTask)x); }
-        public boolean offer(Runnable x) { return dq.offer((ScheduledFutureTask)x); }
-        public void put(Runnable x)  {
-            dq.put((ScheduledFutureTask)x); 
-        }
-        public boolean offer(Runnable x, long timeout, TimeUnit unit) {
-            return dq.offer((ScheduledFutureTask)x, timeout, unit);
-        }
-
-        public Runnable remove() { return dq.remove(); }
-        public Runnable element() { return dq.element(); }
-        public void clear() { dq.clear(); }
-        public int drainTo(Collection<? super Runnable> c) { return dq.drainTo(c); }
-        public int drainTo(Collection<? super Runnable> c, int maxElements) { 
-            return dq.drainTo(c, maxElements); 
-        }
-
-        public int remainingCapacity() { return dq.remainingCapacity(); }
-        public boolean remove(Object x) { return dq.remove(x); }
-        public boolean contains(Object x) { return dq.contains(x); }
-        public int size() { return dq.size(); }
-        public boolean isEmpty() { return dq.isEmpty(); }
-        public Object[] toArray() { return dq.toArray(); }
-        public <T> T[] toArray(T[] array) { return dq.toArray(array); }
-        public Iterator<Runnable> iterator() { 
-            return new Iterator<Runnable>() {
-                private Iterator<ScheduledFutureTask> it = dq.iterator();
-                public boolean hasNext() { return it.hasNext(); }
-                public Runnable next() { return it.next(); }
-                public void remove() {  it.remove(); }
-            };
-        }
-    }
-
-    /**
-     * Creates a new ScheduledThreadPoolExecutor with the given core pool size.
-     * 
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
-     * @throws IllegalArgumentException if corePoolSize less than or
-     * equal to zero
-     */
-    public ScheduledThreadPoolExecutor(int corePoolSize) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
-              new DelayedWorkQueue());
-    }
-
-    /**
-     * Creates a new ScheduledThreadPoolExecutor with the given initial parameters.
-     * 
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
-     * @param threadFactory the factory to use when the executor
-     * creates a new thread. 
-     * @throws NullPointerException if threadFactory is null
-     */
-    public ScheduledThreadPoolExecutor(int corePoolSize,
-                             ThreadFactory threadFactory) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
-              new DelayedWorkQueue(), threadFactory);
-    }
-
-    /**
-     * Creates a new ScheduledThreadPoolExecutor with the given initial parameters.
-     * 
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
-     * @param handler the handler to use when execution is blocked
-     * because the thread bounds and queue capacities are reached.
-     * @throws NullPointerException if handler is null
-     */
-    public ScheduledThreadPoolExecutor(int corePoolSize,
-                              RejectedExecutionHandler handler) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
-              new DelayedWorkQueue(), handler);
-    }
-
-    /**
-     * Creates a new ScheduledThreadPoolExecutor with the given initial parameters.
-     * 
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
-     * @param threadFactory the factory to use when the executor
-     * creates a new thread. 
-     * @param handler the handler to use when execution is blocked
-     * because the thread bounds and queue capacities are reached.
-     * @throws NullPointerException if threadFactory or handler is null
-     */
-    public ScheduledThreadPoolExecutor(int corePoolSize,
-                              ThreadFactory threadFactory,
-                              RejectedExecutionHandler handler) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
-              new DelayedWorkQueue(), threadFactory, handler);
     }
 
     /**
@@ -285,51 +181,153 @@ public class ScheduledThreadPoolExecutor
         super.getQueue().add(command);
     }
 
-    public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit) {
+    /**
+     * Cancel and clear the queue of all tasks that should not be run
+     * due to shutdown policy.
+     */
+    private void cancelUnwantedTasks() {
+        boolean keepDelayed = getExecuteExistingDelayedTasksAfterShutdownPolicy();
+        boolean keepPeriodic = getContinueExistingPeriodicTasksAfterShutdownPolicy();
+        if (!keepDelayed && !keepPeriodic) 
+            super.getQueue().clear();
+        else if (keepDelayed || keepPeriodic) {
+            Object[] entries = super.getQueue().toArray();
+            for (int i = 0; i < entries.length; ++i) {
+                Object e = entries[i];
+                if (e instanceof ScheduledFutureTask) {
+                    ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)e;
+                    if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
+                        t.cancel(false);
+                }
+            }
+            entries = null;
+            purge();
+        }
+    }
+
+    /**
+     * Creates a new ScheduledThreadPoolExecutor with the given core
+     * pool size.
+     * 
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
+     * @throws IllegalArgumentException if corePoolSize less than or
+     * equal to zero
+     */
+    public ScheduledThreadPoolExecutor(int corePoolSize) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+              new DelayedWorkQueue());
+    }
+
+    /**
+     * Creates a new ScheduledThreadPoolExecutor with the given
+     * initial parameters.
+     * 
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
+     * @param threadFactory the factory to use when the executor
+     * creates a new thread. 
+     * @throws NullPointerException if threadFactory is null
+     */
+    public ScheduledThreadPoolExecutor(int corePoolSize,
+                             ThreadFactory threadFactory) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+              new DelayedWorkQueue(), threadFactory);
+    }
+
+    /**
+     * Creates a new ScheduledThreadPoolExecutor with the given
+     * initial parameters.
+     * 
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
+     * @param handler the handler to use when execution is blocked
+     * because the thread bounds and queue capacities are reached.
+     * @throws NullPointerException if handler is null
+     */
+    public ScheduledThreadPoolExecutor(int corePoolSize,
+                              RejectedExecutionHandler handler) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+              new DelayedWorkQueue(), handler);
+    }
+
+    /**
+     * Creates a new ScheduledThreadPoolExecutor with the given
+     * initial parameters.
+     * 
+     * @param corePoolSize the number of threads to keep in the pool,
+     * even if they are idle.
+     * @param threadFactory the factory to use when the executor
+     * creates a new thread. 
+     * @param handler the handler to use when execution is blocked
+     * because the thread bounds and queue capacities are reached.
+     * @throws NullPointerException if threadFactory or handler is null
+     */
+    public ScheduledThreadPoolExecutor(int corePoolSize,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+              new DelayedWorkQueue(), threadFactory, handler);
+    }
+
+    public ScheduledFuture<?> schedule(Runnable command, 
+                                       long delay, 
+                                       TimeUnit unit) {
         if (command == null || unit == null)
             throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
-        ScheduledFutureTask<?> t = new ScheduledFutureTask<Boolean>(command, null, triggerTime);
+        ScheduledFutureTask<?> t = 
+            new ScheduledFutureTask<Boolean>(command, null, triggerTime);
         delayedExecute(t);
         return t;
     }
 
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+    public <V> ScheduledFuture<V> schedule(Callable<V> callable, 
+                                           long delay, 
+                                           TimeUnit unit) {
         if (callable == null || unit == null)
             throw new NullPointerException();
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
-        ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
+        ScheduledFutureTask<V> t = 
+            new ScheduledFutureTask<V>(callable, triggerTime);
         delayedExecute(t);
         return t;
     }
 
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, 
+                                                  long initialDelay,  
+                                                  long period, 
+                                                  TimeUnit unit) {
         if (command == null || unit == null)
             throw new NullPointerException();
         if (period <= 0)
             throw new IllegalArgumentException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
-        ScheduledFutureTask<?> t = new ScheduledFutureTask<Object>
-            (command, null,
-             triggerTime,
-             unit.toNanos(period), 
-             true);
+        ScheduledFutureTask<?> t = 
+            new ScheduledFutureTask<Object>(command, 
+                                            null,
+                                            triggerTime,
+                                            unit.toNanos(period), 
+                                            true);
         delayedExecute(t);
         return t;
     }
     
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, 
+                                                     long initialDelay,  
+                                                     long delay, 
+                                                     TimeUnit unit) {
         if (command == null || unit == null)
             throw new NullPointerException();
         if (delay <= 0)
             throw new IllegalArgumentException();
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
-        ScheduledFutureTask<?> t = new ScheduledFutureTask<Boolean>
-            (command, 
-             null,
-             triggerTime,
-             unit.toNanos(delay), 
-             false);
+        ScheduledFutureTask<?> t = 
+            new ScheduledFutureTask<Boolean>(command, 
+                                             null,
+                                             triggerTime,
+                                             unit.toNanos(delay), 
+                                             false);
         delayedExecute(t);
         return t;
     }
@@ -354,12 +352,15 @@ public class ScheduledThreadPoolExecutor
         schedule(command, 0, TimeUnit.NANOSECONDS);
     }
 
+    // Override AbstractExecutorService methods
+
     public Future<?> submit(Runnable task) {
         return schedule(task, 0, TimeUnit.NANOSECONDS);
     }
 
     public <T> Future<T> submit(Runnable task, T result) {
-        return schedule(Executors.callable(task, result), 0, TimeUnit.NANOSECONDS);
+        return schedule(Executors.callable(task, result), 
+                        0, TimeUnit.NANOSECONDS);
     }
 
     public <T> Future<T> submit(Callable<T> task) {
@@ -422,29 +423,6 @@ public class ScheduledThreadPoolExecutor
         return executeExistingDelayedTasksAfterShutdown;
     }
 
-    /**
-     * Cancel and clear the queue of all tasks that should not be run
-     * due to shutdown policy.
-     */
-    private void cancelUnwantedTasks() {
-        boolean keepDelayed = getExecuteExistingDelayedTasksAfterShutdownPolicy();
-        boolean keepPeriodic = getContinueExistingPeriodicTasksAfterShutdownPolicy();
-        if (!keepDelayed && !keepPeriodic) 
-            super.getQueue().clear();
-        else if (keepDelayed || keepPeriodic) {
-            Object[] entries = super.getQueue().toArray();
-            for (int i = 0; i < entries.length; ++i) {
-                Object e = entries[i];
-                if (e instanceof ScheduledFutureTask) {
-                    ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)e;
-                    if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
-                        t.cancel(false);
-                }
-            }
-            entries = null;
-            purge();
-        }
-    }
 
     /**
      * Initiates an orderly shutdown in which previously submitted
@@ -481,7 +459,6 @@ public class ScheduledThreadPoolExecutor
         return super.shutdownNow();
     }
 
-
     /**
      * Returns the task queue used by this executor.  Each element of
      * this queue is a {@link ScheduledFuture}, including those
@@ -497,4 +474,53 @@ public class ScheduledThreadPoolExecutor
         return super.getQueue();
     }
 
+    /**
+     * An annoying wrapper class to convince generics compiler to
+     * use a DelayQueue<ScheduledFutureTask> as a BlockingQueue<Runnable>
+     */ 
+    private static class DelayedWorkQueue 
+        extends AbstractCollection<Runnable> 
+        implements BlockingQueue<Runnable> {
+        
+        private final DelayQueue<ScheduledFutureTask> dq = new DelayQueue<ScheduledFutureTask>();
+        public Runnable poll() { return dq.poll(); }
+        public Runnable peek() { return dq.peek(); }
+        public Runnable take() throws InterruptedException { return dq.take(); }
+        public Runnable poll(long timeout, TimeUnit unit) throws InterruptedException {
+            return dq.poll(timeout, unit);
+        }
+
+        public boolean add(Runnable x) { return dq.add((ScheduledFutureTask)x); }
+        public boolean offer(Runnable x) { return dq.offer((ScheduledFutureTask)x); }
+        public void put(Runnable x)  {
+            dq.put((ScheduledFutureTask)x); 
+        }
+        public boolean offer(Runnable x, long timeout, TimeUnit unit) {
+            return dq.offer((ScheduledFutureTask)x, timeout, unit);
+        }
+
+        public Runnable remove() { return dq.remove(); }
+        public Runnable element() { return dq.element(); }
+        public void clear() { dq.clear(); }
+        public int drainTo(Collection<? super Runnable> c) { return dq.drainTo(c); }
+        public int drainTo(Collection<? super Runnable> c, int maxElements) { 
+            return dq.drainTo(c, maxElements); 
+        }
+
+        public int remainingCapacity() { return dq.remainingCapacity(); }
+        public boolean remove(Object x) { return dq.remove(x); }
+        public boolean contains(Object x) { return dq.contains(x); }
+        public int size() { return dq.size(); }
+        public boolean isEmpty() { return dq.isEmpty(); }
+        public Object[] toArray() { return dq.toArray(); }
+        public <T> T[] toArray(T[] array) { return dq.toArray(array); }
+        public Iterator<Runnable> iterator() { 
+            return new Iterator<Runnable>() {
+                private Iterator<ScheduledFutureTask> it = dq.iterator();
+                public boolean hasNext() { return it.hasNext(); }
+                public Runnable next() { return it.next(); }
+                public void remove() {  it.remove(); }
+            };
+        }
+    }
 }

@@ -21,10 +21,11 @@ package java.util.concurrent;
  * precision. If you use these frequently, consider statically
  * importing this class.
  *
- * <p>A <tt>TimeUnit</tt> is mainly used to inform blocking methods which
- * can timeout, how the timeout parameter should be interpreted. For example,
- * the following code will timeout in 50 milliseconds if the {@link java.util.concurrent.locks.Lock lock}
- * is not available:
+ * <p>A <tt>TimeUnit</tt> is mainly used to inform blocking timeout
+ * methods how the timeout parameter should be interpreted. For
+ * example, the following code will timeout in 50 milliseconds if the
+ * {@link java.util.concurrent.locks.Lock lock} is not available:
+ *
  * <pre>  Lock lock = ...;
  *  if ( lock.tryLock(50L, TimeUnit.MILLISECONDS) ) ...
  * </pre>
@@ -183,16 +184,20 @@ public final class TimeUnit implements java.io.Serializable {
 
     /**
      * Perform a timed <tt>Object.wait</tt> using this time unit.
-     * This is a convenience method that converts timeout arguments into the
-     * form required by the <tt>Object.wait</tt> method. 
-     * <p>For example, you could implement a blocking <tt>poll</tt> method (see
-     * {@link BlockingQueue#poll BlockingQueue.poll} using:
+     * This is a convenience method that converts timeout arguments
+     * into the form required by the <tt>Object.wait</tt> method.
+     *
+     * <p>For example, you could implement a blocking <tt>poll</tt>
+     * method (see {@link BlockingQueue#poll BlockingQueue.poll}
+     * using:
+     *
      * <pre>  public synchronized  Object poll(long timeout, TimeUnit unit) throws InterruptedException {
      *    while (empty) {
      *      unit.timedWait(this, timeout);
      *      ...
      *    }
      *  }</pre>
+     *
      * @param obj the object to wait on
      * @param timeout the maximum time to wait. 
      * @throws InterruptedException if interrupted while waiting.

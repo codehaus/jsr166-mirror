@@ -19,15 +19,15 @@ package java.util.concurrent.atomic;
  */
 public class AtomicStampedReference<V>  {
 
-    private class ReferenceIntegerPair {
-        private final V reference;
+    private static class ReferenceIntegerPair<T> {
+        private final T reference;
         private final int integer;
-        ReferenceIntegerPair(V r, int i) {
+        ReferenceIntegerPair(T r, int i) {
             reference = r; integer = i;
         }
     }
 
-    private final AtomicReference<ReferenceIntegerPair>  atomicRef;
+    private final AtomicReference<ReferenceIntegerPair<V>>  atomicRef;
 
     /**
      * Creates a new <tt>AtomicStampedReference</tt> with the given
@@ -37,8 +37,8 @@ public class AtomicStampedReference<V>  {
      * @param initialStamp the initial stamp
      */
     public AtomicStampedReference(V initialRef, int initialStamp) {
-        atomicRef = new AtomicReference<ReferenceIntegerPair>
-            (new ReferenceIntegerPair(initialRef, initialStamp));
+        atomicRef = new AtomicReference<ReferenceIntegerPair<V>>
+            (new ReferenceIntegerPair<V>(initialRef, initialStamp));
     }
 
     /**
@@ -68,7 +68,7 @@ public class AtomicStampedReference<V>  {
      * @return the current value of the reference
      */
     public V get(int[] stampHolder) {
-        ReferenceIntegerPair p = atomicRef.get();
+        ReferenceIntegerPair<V> p = atomicRef.get();
         stampHolder[0] = p.integer;
         return p.reference;
     }
@@ -99,7 +99,7 @@ public class AtomicStampedReference<V>  {
             ((newReference == current.reference &&
               newStamp == current.integer) ||
              atomicRef.weakCompareAndSet(current,
-                                     new ReferenceIntegerPair(newReference,
+                                     new ReferenceIntegerPair<V>(newReference,
                                                               newStamp)));
     }
 
@@ -125,7 +125,7 @@ public class AtomicStampedReference<V>  {
             ((newReference == current.reference &&
               newStamp == current.integer) ||
              atomicRef.compareAndSet(current,
-                                     new ReferenceIntegerPair(newReference,
+                                     new ReferenceIntegerPair<V>(newReference,
                                                               newStamp)));
     }
 
@@ -139,7 +139,7 @@ public class AtomicStampedReference<V>  {
     public void set(V newReference, int newStamp) {
         ReferenceIntegerPair current = atomicRef.get();
         if (newReference != current.reference || newStamp != current.integer)
-            atomicRef.set(new ReferenceIntegerPair(newReference, newStamp));
+            atomicRef.set(new ReferenceIntegerPair<V>(newReference, newStamp));
     }
 
     /**
@@ -160,7 +160,7 @@ public class AtomicStampedReference<V>  {
         return  expectedReference == current.reference &&
             (newStamp == current.integer ||
              atomicRef.compareAndSet(current,
-                                     new ReferenceIntegerPair(expectedReference,
+                                     new ReferenceIntegerPair<V>(expectedReference,
                                                               newStamp)));
     }
 }

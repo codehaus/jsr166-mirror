@@ -64,8 +64,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/09 23:23:22 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/07/11 00:55:15 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  * 
  **/
@@ -275,6 +275,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Creates an instance of <tt>ReentrantLock</tt>.
+     * This is equivalent to using <tt>ReentrantLock(false)</tt>.
      */
     public ReentrantLock() { 
         fair = false;

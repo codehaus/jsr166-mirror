@@ -5,17 +5,16 @@
  * Jeffrey Hayes, Pat Fischer, Mike Judd.
  */
 
+
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
 public class ArrayBlockingQueueTest extends JSR166TestCase {
-
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
-
     public static Test suite() {
 	return new TestSuite(ArrayBlockingQueueTest.class);
     }
@@ -35,59 +34,80 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         return q;
     }
  
-    public void testConstructor1(){
+    /**
+     *
+     */
+    public void testConstructor1() {
         assertEquals(SIZE, new ArrayBlockingQueue(SIZE).remainingCapacity());
     }
 
-    public void testConstructor2(){
+    /**
+     *
+     */
+    public void testConstructor2() {
         try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(0);
-            fail("Cannot make zero-sized");
+            shouldThrow();
         }
         catch (IllegalArgumentException success) {}
     }
 
-    public void testConstructor3(){
+    /**
+     *
+     */
+    public void testConstructor3() {
 
         try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(1, true, null);
-            fail("Cannot make from null collection");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
 
-    public void testConstructor4(){
+    /**
+     *
+     */
+    public void testConstructor4() {
         try {
             Integer[] ints = new Integer[SIZE];
             ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, false, Arrays.asList(ints));
-            fail("Cannot make with null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
 
-    public void testConstructor5(){
+    /**
+     *
+     */
+    public void testConstructor5() {
         try {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, false, Arrays.asList(ints));
-            fail("Cannot make with null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
 
-    public void testConstructor6(){
+    /**
+     *
+     */
+    public void testConstructor6() {
         try {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             ArrayBlockingQueue q = new ArrayBlockingQueue(1, false, Arrays.asList(ints));
-            fail("Cannot make with insufficient capacity");
+            shouldThrow();
         }
         catch (IllegalArgumentException success) {}
     }
 
-    public void testConstructor7(){
+    /**
+     *
+     */
+    public void testConstructor7() {
         try {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE; ++i)
@@ -99,19 +119,25 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         finally {}
     }
 
+    /**
+     *
+     */
     public void testEmptyFull() {
         ArrayBlockingQueue q = new ArrayBlockingQueue(2);
         assertTrue(q.isEmpty());
-        assertEquals("should have room for 2", 2, q.remainingCapacity());
+        assertEquals(2, q.remainingCapacity());
         q.add(one);
         assertFalse(q.isEmpty());
         q.add(two);
         assertFalse(q.isEmpty());
-        assertEquals("queue should be full", 0, q.remainingCapacity());
-        assertFalse("offer should be rejected", q.offer(three));
+        assertEquals(0, q.remainingCapacity());
+        assertFalse(q.offer(three));
     }
 
-    public void testRemainingCapacity(){
+    /**
+     *
+     */
+    public void testRemainingCapacity() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.remainingCapacity());
@@ -125,21 +151,30 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testOfferNull(){
+    /**
+     *
+     */
+    public void testOfferNull() {
 	try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(1);
             q.offer(null);
-            fail("should throw NPE");
+            shouldThrow();
         } catch (NullPointerException success) { }   
     }
 
-    public void testOffer(){
+    /**
+     *
+     */
+    public void testOffer() {
         ArrayBlockingQueue q = new ArrayBlockingQueue(1);
         assertTrue(q.offer(zero));
         assertFalse(q.offer(one));
     }
 
-    public void testAdd(){
+    /**
+     *
+     */
+    public void testAdd() {
 	try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
             for (int i = 0; i < SIZE; ++i) {
@@ -151,46 +186,61 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	}   
     }
 
-    public void testAddAll1(){
+    /**
+     *
+     */
+    public void testAddAll1() {
         try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(1);
             q.addAll(null);
-            fail("Cannot add null collection");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
-    public void testAddAll2(){
+    /**
+     *
+     */
+    public void testAddAll2() {
         try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
-            fail("Cannot add null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
-    public void testAddAll3(){
+    /**
+     *
+     */
+    public void testAddAll3() {
         try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
-            fail("Cannot add null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
-    public void testAddAll4(){
+    /**
+     *
+     */
+    public void testAddAll4() {
         try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(1);
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
-            fail("Cannot add with insufficient capacity");
+            shouldThrow();
         }
         catch (IllegalStateException success) {}
     }
-    public void testAddAll5(){
+    /**
+     *
+     */
+    public void testAddAll5() {
         try {
             Integer[] empty = new Integer[0];
             Integer[] ints = new Integer[SIZE];
@@ -205,19 +255,25 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         finally {}
     }
 
+    /**
+     *
+     */
      public void testPutNull() {
 	try {
             ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
             q.put(null);
-            fail("put should throw NPE");
+            shouldThrow();
         } 
         catch (NullPointerException success){
 	}   
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
      }
 
+    /**
+     *
+     */
      public void testPut() {
          try {
              ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
@@ -229,11 +285,14 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
              assertEquals(0, q.remainingCapacity());
          }
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
     }
 
-    public void testBlockingPut(){
+    /**
+     *
+     */
+    public void testBlockingPut() {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     int added = 0;
@@ -244,7 +303,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                             ++added;
                         }
                         q.put(new Integer(SIZE));
-                        threadFail("put should block");
+                        threadShouldThrow();
                     } catch (InterruptedException ie){
                         threadAssertEquals(added, SIZE);
                     }   
@@ -256,14 +315,17 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
            t.join();
         }
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testPutWithTake() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     int added = 0;
                     try {
                         q.put(new Object());
@@ -274,7 +336,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                         ++added;
                         q.put(new Object());
                         ++added;
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException e){
                         threadAssertTrue(added >= 2);
                     }
@@ -287,20 +349,23 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testTimedOffer() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         q.put(new Object());
                         q.put(new Object());
                         threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, TimeUnit.MILLISECONDS));
                         q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException success){}
                 }
             });
@@ -311,28 +376,34 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testTake(){
+    /**
+     *
+     */
+    public void testTake() {
 	try {
             ArrayBlockingQueue q = populatedQueue(SIZE);
             for (int i = 0; i < SIZE; ++i) {
                 assertEquals(i, ((Integer)q.take()).intValue());
             }
         } catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}   
     }
 
+    /**
+     *
+     */
     public void testTakeFromEmpty() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         q.take();
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException success){ }                
                 }
             });
@@ -342,11 +413,14 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testBlockingTake(){
+    /**
+     *
+     */
+    public void testBlockingTake() {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -355,7 +429,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                             threadAssertEquals(i, ((Integer)q.take()).intValue());
                         }
                         q.take();
-                        threadFail("take should block");
+                        threadShouldThrow();
                     } catch (InterruptedException success){
                     }   
                 }});
@@ -366,12 +440,15 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             t.join();
         }
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
     }
 
 
-    public void testPoll(){
+    /**
+     *
+     */
+    public void testPoll() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
@@ -379,6 +456,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	assertNull(q.poll());
     }
 
+    /**
+     *
+     */
     public void testTimedPoll0() {
         try {
             ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -387,10 +467,13 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             }
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}   
     }
 
+    /**
+     *
+     */
     public void testTimedPoll() {
         try {
             ArrayBlockingQueue q = populatedQueue(SIZE);
@@ -399,11 +482,14 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             }
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}   
     }
 
-    public void testInterruptedTimedPoll(){
+    /**
+     *
+     */
+    public void testInterruptedTimedPoll() {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -422,19 +508,22 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             t.join();
         }
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
     }
 
-    public void testTimedPollWithOffer(){
+    /**
+     *
+     */
+    public void testTimedPollWithOffer() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException success) { }                
                 }
             });
@@ -445,12 +534,15 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }  
 
 
-    public void testPeek(){
+    /**
+     *
+     */
+    public void testPeek() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.peek()).intValue());
@@ -461,7 +553,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	assertNull(q.peek());
     }
 
-    public void testElement(){
+    /**
+     *
+     */
+    public void testElement() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.element()).intValue());
@@ -469,24 +564,30 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
         try {
             q.element();
-            fail("no such element");
+            shouldThrow();
         }
         catch (NoSuchElementException success) {}
     }
 
-    public void testRemove(){
+    /**
+     *
+     */
+    public void testRemove() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.remove()).intValue());
         }
         try {
             q.remove();
-            fail("remove should throw");
+            shouldThrow();
         } catch (NoSuchElementException success){
 	}   
     }
 
-    public void testRemoveElement(){
+    /**
+     *
+     */
+    public void testRemoveElement() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 1; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
@@ -498,7 +599,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         assertTrue(q.isEmpty());
     }
 	
-    public void testContains(){
+    /**
+     *
+     */
+    public void testContains() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
@@ -507,7 +611,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testClear(){
+    /**
+     *
+     */
+    public void testClear() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
@@ -519,7 +626,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         assertTrue(q.isEmpty());
     }
 
-    public void testContainsAll(){
+    /**
+     *
+     */
+    public void testContainsAll() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         ArrayBlockingQueue p = new ArrayBlockingQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
@@ -530,7 +640,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         assertTrue(p.containsAll(q));
     }
 
-    public void testRetainAll(){
+    /**
+     *
+     */
+    public void testRetainAll() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         ArrayBlockingQueue p = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
@@ -546,7 +659,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testRemoveAll(){
+    /**
+     *
+     */
+    public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {
             ArrayBlockingQueue q = populatedQueue(SIZE);
             ArrayBlockingQueue p = populatedQueue(i);
@@ -560,18 +676,24 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
 
-    public void testToArray(){
+    /**
+     *
+     */
+    public void testToArray() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
 	try {
 	for(int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.take());
 	} catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}    
     }
 
-    public void testToArray2(){
+    /**
+     *
+     */
+    public void testToArray2() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
@@ -579,11 +701,14 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	    for(int i = 0; i < ints.length; i++)
 		assertEquals(ints[i], q.take());
 	} catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}    
     }
     
-    public void testIterator(){
+    /**
+     *
+     */
+    public void testIterator() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
 	Iterator it = q.iterator();
 	try {
@@ -591,14 +716,15 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 		assertEquals(it.next(), q.take());
 	    }
 	} catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}    
     }
 
+    /**
+     *
+     */
     public void testIteratorOrdering() {
-
         final ArrayBlockingQueue q = new ArrayBlockingQueue(3);
-
         q.add(one);
         q.add(two);
         q.add(three);
@@ -608,20 +734,19 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
             int i = ((Integer)(it.next())).intValue();
-            assertEquals("items should come out in order", ++k, i);
+            assertEquals(++k, i);
         }
-
-        assertEquals("should go through 3 elements", 3, k);
+        assertEquals(3, k);
     }
 
+    /**
+     *
+     */
     public void testWeaklyConsistentIteration () {
-
         final ArrayBlockingQueue q = new ArrayBlockingQueue(3);
-
         q.add(one);
         q.add(two);
         q.add(three);
-
         try {
             for (Iterator it = q.iterator(); it.hasNext();) {
                 q.remove();
@@ -629,14 +754,17 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             }
         }
         catch (ConcurrentModificationException e) {
-            fail("weakly consistent iterator; should not get CME");
+            unexpectedException();
         }
 
-        assertEquals("queue should be empty again", 0, q.size());
+        assertEquals(0, q.size());
     }
 
 
-    public void testToString(){
+    /**
+     *
+     */
+    public void testToString() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
@@ -645,6 +773,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }        
 
 
+    /**
+     *
+     */
     public void testOfferInExecutor() {
 
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
@@ -662,7 +793,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     threadAssertEquals(0, q.remainingCapacity());
                 }
                 catch (InterruptedException e) {
-                    threadFail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -674,7 +805,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     threadAssertEquals(one, q.take());
                 }
                 catch (InterruptedException e) {
-                    threadFail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -683,6 +814,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     }
 
+    /**
+     *
+     */
     public void testPollInExecutor() {
 
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
@@ -697,7 +831,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     threadAssertTrue(q.isEmpty());
                 }
                 catch (InterruptedException e) {
-                    threadFail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -709,7 +843,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     q.put(one);
                 }
                 catch (InterruptedException e) {
-                    threadFail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -718,6 +852,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
 
@@ -734,7 +871,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             while (!q.isEmpty()) 
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

@@ -20,6 +20,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
 	return new TestSuite(SynchronousQueueTest.class);
     }
 
+    /**
+     *
+     */
     public void testEmptyFull() {
         SynchronousQueue q = new SynchronousQueue();
         assertTrue(q.isEmpty());
@@ -28,20 +31,29 @@ public class SynchronousQueueTest extends JSR166TestCase {
         assertFalse(q.offer(new Integer(3)));
     }
 
-    public void testOfferNull(){
+    /**
+     *
+     */
+    public void testOfferNull() {
 	try {
             SynchronousQueue q = new SynchronousQueue();
             q.offer(null);
-            fail("should throw NPE");
+            shouldThrow();
         } catch (NullPointerException success) { }   
     }
 
-    public void testOffer(){
+    /**
+     *
+     */
+    public void testOffer() {
         SynchronousQueue q = new SynchronousQueue();
         assertFalse(q.offer(new Integer(1)));
     }
 
-    public void testAdd(){
+    /**
+     *
+     */
+    public void testAdd() {
 	try {
             SynchronousQueue q = new SynchronousQueue();
             assertEquals(0, q.remainingCapacity());
@@ -50,55 +62,70 @@ public class SynchronousQueueTest extends JSR166TestCase {
 	}   
     }
 
-    public void testAddAll1(){
+    /**
+     *
+     */
+    public void testAddAll1() {
         try {
             SynchronousQueue q = new SynchronousQueue();
             q.addAll(null);
-            fail("Cannot add null collection");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
-    public void testAddAll2(){
+    /**
+     *
+     */
+    public void testAddAll2() {
         try {
             SynchronousQueue q = new SynchronousQueue();
             Integer[] ints = new Integer[1];
             q.addAll(Arrays.asList(ints));
-            fail("Cannot add null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
-    public void testAddAll4(){
+    /**
+     *
+     */
+    public void testAddAll4() {
         try {
             SynchronousQueue q = new SynchronousQueue();
             Integer[] ints = new Integer[1];
             for (int i = 0; i < 1; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
-            fail("Cannot add with insufficient capacity");
+            shouldThrow();
         }
         catch (IllegalStateException success) {}
     }
 
+    /**
+     *
+     */
     public void testPutNull() {
 	try {
             SynchronousQueue q = new SynchronousQueue();
             q.put(null);
-            fail("put should throw NPE");
+            shouldThrow();
         } 
         catch (NullPointerException success){
 	}   
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
      }
 
-    public void testBlockingPut(){
+    /**
+     *
+     */
+    public void testBlockingPut() {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
                         SynchronousQueue q = new SynchronousQueue();
                         q.put(new Integer(0));
-                        threadFail("put should block");
+                        threadShouldThrow();
                     } catch (InterruptedException ie){
                     }   
                 }});
@@ -109,14 +136,17 @@ public class SynchronousQueueTest extends JSR166TestCase {
            t.join();
         }
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testPutWithTake() {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     int added = 0;
                     try {
                         q.put(new Object());
@@ -127,7 +157,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         ++added;
                         q.put(new Object());
                         ++added;
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException e){
                         assertTrue(added >= 1);
                     }
@@ -141,19 +171,22 @@ public class SynchronousQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testTimedOffer() {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
 
                         threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException success){}
                 }
             });
@@ -164,18 +197,21 @@ public class SynchronousQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
 
 
+    /**
+     *
+     */
     public void testTakeFromEmpty() {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         q.take();
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException success){ }                
                 }
             });
@@ -185,34 +221,46 @@ public class SynchronousQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testPoll(){
+    /**
+     *
+     */
+    public void testPoll() {
         SynchronousQueue q = new SynchronousQueue();
 	assertNull(q.poll());
     }
 
+    /**
+     *
+     */
     public void testTimedPoll0() {
         try {
             SynchronousQueue q = new SynchronousQueue();
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}   
     }
 
+    /**
+     *
+     */
     public void testTimedPoll() {
         try {
             SynchronousQueue q = new SynchronousQueue();
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
-	    fail("Unexpected exception");
+	    unexpectedException();
 	}   
     }
 
-    public void testInterruptedTimedPoll(){
+    /**
+     *
+     */
+    public void testInterruptedTimedPoll() {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -228,19 +276,22 @@ public class SynchronousQueueTest extends JSR166TestCase {
            t.join();
         }
         catch (InterruptedException ie) {
-	    fail("Unexpected exception");
+	    unexpectedException();
         }
     }
 
-    public void testTimedPollWithOffer(){
+    /**
+     *
+     */
+    public void testTimedPollWithOffer() {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-			threadFail("Should block");
+			threadShouldThrow();
                     } catch (InterruptedException success) { }                
                 }
             });
@@ -251,118 +302,160 @@ public class SynchronousQueueTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (Exception e){
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }  
 
 
-    public void testPeek(){
+    /**
+     *
+     */
+    public void testPeek() {
         SynchronousQueue q = new SynchronousQueue();
 	assertNull(q.peek());
     }
 
-    public void testElement(){
+    /**
+     *
+     */
+    public void testElement() {
         SynchronousQueue q = new SynchronousQueue();
         try {
             q.element();
-            fail("no such element");
+            shouldThrow();
         }
         catch (NoSuchElementException success) {}
     }
 
-    public void testRemove(){
+    /**
+     *
+     */
+    public void testRemove() {
         SynchronousQueue q = new SynchronousQueue();
         try {
             q.remove();
-            fail("remove should throw");
+            shouldThrow();
         } catch (NoSuchElementException success){
 	}   
     }
 
-    public void testRemoveElement(){
+    /**
+     *
+     */
+    public void testRemoveElement() {
         SynchronousQueue q = new SynchronousQueue();
         assertFalse(q.remove(new Integer(0)));
         assertTrue(q.isEmpty());
     }
 	
-    public void testContains(){
+    /**
+     *
+     */
+    public void testContains() {
         SynchronousQueue q = new SynchronousQueue();
         assertFalse(q.contains(new Integer(0)));
     }
 
-    public void testClear(){
+    /**
+     *
+     */
+    public void testClear() {
         SynchronousQueue q = new SynchronousQueue();
         q.clear();
         assertTrue(q.isEmpty());
     }
 
-    public void testContainsAll(){
+    /**
+     *
+     */
+    public void testContainsAll() {
         SynchronousQueue q = new SynchronousQueue();
         Integer[] empty = new Integer[0];
         Integer[] ints = new Integer[1]; ints[0] = new Integer(0);
-        //        assertTrue(q.containsAll(Arrays.asList(empty)));
         assertFalse(q.containsAll(Arrays.asList(ints)));
     }
 
-    public void testRetainAll(){
+    /**
+     *
+     */
+    public void testRetainAll() {
         SynchronousQueue q = new SynchronousQueue();
         Integer[] empty = new Integer[0];
         Integer[] ints = new Integer[1]; ints[0] = new Integer(0);
         q.retainAll(Arrays.asList(ints));
-        //        assertTrue(q.containsAll(Arrays.asList(empty)));
         assertFalse(q.containsAll(Arrays.asList(ints)));
     }
 
-    public void testRemoveAll(){
+    /**
+     *
+     */
+    public void testRemoveAll() {
         SynchronousQueue q = new SynchronousQueue();
         Integer[] empty = new Integer[0];
         Integer[] ints = new Integer[1]; ints[0] = new Integer(0);
         q.removeAll(Arrays.asList(ints));
-        //        assertTrue(q.containsAll(Arrays.asList(empty)));
         assertFalse(q.containsAll(Arrays.asList(ints)));
     }
 
 
-    public void testToArray(){
+    /**
+     *
+     */
+    public void testToArray() {
         SynchronousQueue q = new SynchronousQueue();
 	Object[] o = q.toArray();
         assertEquals(o.length, 0);
     }
 
-    public void testToArray2(){
+    /**
+     *
+     */
+    public void testToArray2() {
         SynchronousQueue q = new SynchronousQueue();
 	Integer[] ints = new Integer[1];
         assertNull(ints[0]);
     }
     
-    public void testIterator(){
+    /**
+     *
+     */
+    public void testIterator() {
         SynchronousQueue q = new SynchronousQueue();
 	Iterator it = q.iterator();
         assertFalse(it.hasNext());
         try {
             Object x = it.next();
-            fail("should throw");
+            shouldThrow();
         }
         catch (NoSuchElementException success) {}
     }
 
-    public void testIteratorRemove(){
+    /**
+     *
+     */
+    public void testIteratorRemove() {
         SynchronousQueue q = new SynchronousQueue();
 	Iterator it = q.iterator();
         try {
             it.remove();
-            fail("should throw");
+            shouldThrow();
         }
         catch (IllegalStateException success) {}
     }
 
-    public void testToString(){
+    /**
+     *
+     */
+    public void testToString() {
         SynchronousQueue q = new SynchronousQueue();
         String s = q.toString();
         assertTrue(s != null);
     }        
 
 
+    /**
+     *
+     */
     public void testOfferInExecutor() {
         final SynchronousQueue q = new SynchronousQueue();
         ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -376,7 +469,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     threadAssertEquals(0, q.remainingCapacity());
                 }
                 catch (InterruptedException e) {
-                    threadFail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -388,7 +481,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     threadAssertEquals(one, q.take());
                 }
                 catch (InterruptedException e) {
-                    fail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -397,6 +490,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     }
 
+    /**
+     *
+     */
     public void testPollInExecutor() {
 
         final SynchronousQueue q = new SynchronousQueue();
@@ -411,7 +507,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     threadAssertTrue(q.isEmpty());
                 }
                 catch (InterruptedException e) {
-                    threadFail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -423,7 +519,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     q.put(new Integer(1));
                 }
                 catch (InterruptedException e) {
-                    threadFail("should not be interrupted");
+                    threadUnexpectedException();
                 }
             }
         });
@@ -432,6 +528,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         SynchronousQueue q = new SynchronousQueue();
         try {
@@ -447,7 +546,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             while (!q.isEmpty()) 
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

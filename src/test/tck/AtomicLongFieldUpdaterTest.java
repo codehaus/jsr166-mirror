@@ -23,39 +23,49 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
         return new TestSuite(AtomicLongFieldUpdaterTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor(){
         try{
             AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
                 a = AtomicLongFieldUpdater.newUpdater
                 (getClass(), "y");
-            fail("Exception not thrown");
+            shouldThrow();
         }
-
         catch (RuntimeException rt) {}
     }
 
+    /**
+     *
+     */
     public void testConstructor2(){
         try{
             AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
                 a = AtomicLongFieldUpdater.newUpdater
                 (getClass(), "z");
-            fail("Exception not thrown");
+            shouldThrow();
         }
-
         catch (RuntimeException rt) {}
     }
 
+    /**
+     *
+     */
     public void testConstructor3(){
         try{
             AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
                 a = AtomicLongFieldUpdater.newUpdater
                 (getClass(), "w");
-            fail("Exception not thrown");
+            shouldThrow();
         }
 
         catch (RuntimeException rt) {}
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -66,6 +76,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-3,a.get(this));
 	
     }
+    /**
+     *
+     */
     public void testCompareAndSet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -78,6 +91,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(7,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -88,6 +104,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(7,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testGetAndSet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -96,6 +115,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-10,a.getAndSet(this,1));
     }
 
+    /**
+     *
+     */
     public void testGetAndAdd(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -105,6 +127,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-1,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testGetAndDecrement(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -113,6 +138,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-1,a.getAndDecrement(this));
     }
 
+    /**
+     *
+     */
     public void testGetAndIncrement(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -125,6 +153,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(1,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testAddAndGet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -134,6 +165,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-1,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testDecrementAndGet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
@@ -143,6 +177,9 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-2,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testIncrementAndGet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a = AtomicLongFieldUpdater.newUpdater(getClass(), "x");
         x = 1;

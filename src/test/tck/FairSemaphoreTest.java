@@ -20,16 +20,25 @@ public class FairSemaphoreTest extends JSR166TestCase{
 	return new TestSuite(FairSemaphoreTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor1() {
         FairSemaphore s = new FairSemaphore(0);
         assertEquals(0, s.availablePermits());
     }
 
+    /**
+     *
+     */
     public void testConstructor2() {
         FairSemaphore s = new FairSemaphore(-1);
         assertEquals(-1, s.availablePermits());
     }
 
+    /**
+     *
+     */
     public void testTryAcquireInSameThread() {
         FairSemaphore s = new FairSemaphore(2);
         assertEquals(2, s.availablePermits());
@@ -39,6 +48,9 @@ public class FairSemaphoreTest extends JSR166TestCase{
         assertFalse(s.tryAcquire());
     }
 
+    /**
+     *
+     */
     public void testTryAcquireNInSameThread() {
         FairSemaphore s = new FairSemaphore(2);
         assertEquals(2, s.availablePermits());
@@ -47,7 +59,10 @@ public class FairSemaphoreTest extends JSR166TestCase{
         assertFalse(s.tryAcquire());
     }
 
-    public void testAcquireReleaseInSameThread(){
+    /**
+     *
+     */
+    public void testAcquireReleaseInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
         try {
             s.acquire();
@@ -62,11 +77,14 @@ public class FairSemaphoreTest extends JSR166TestCase{
             s.release();
             assertEquals(1, s.availablePermits());
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testAcquireReleaseNInSameThread(){
+    /**
+     *
+     */
+    public void testAcquireReleaseNInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
         try {
             s.release(1);
@@ -81,11 +99,14 @@ public class FairSemaphoreTest extends JSR166TestCase{
             s.acquire(5);
             assertEquals(1, s.availablePermits());
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testAcquireUninterruptiblyReleaseNInSameThread(){
+    /**
+     *
+     */
+    public void testAcquireUninterruptiblyReleaseNInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
         try {
             s.release(1);
@@ -103,18 +124,21 @@ public class FairSemaphoreTest extends JSR166TestCase{
         }
     }
 
+    /**
+     *
+     */
     public void testAcquireReleaseInDifferentThreads() {
         final FairSemaphore s = new FairSemaphore(1);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.acquire();
                         s.acquire();
                         s.acquire();
                         s.acquire();
                         s.acquire();
-		    }catch(InterruptedException ie){
-                        threadFail("unexpected exception");
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -128,21 +152,24 @@ public class FairSemaphoreTest extends JSR166TestCase{
             t.join();
             assertEquals(1, s.availablePermits());
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testAcquireReleaseNInDifferentThreads() {
         final FairSemaphore s = new FairSemaphore(2);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
                         s.release(2);
                         s.release(2);
                         s.acquire(2);
                         s.acquire(2);
-		    }catch(InterruptedException ie){
-                        threadFail("unexpected exception");
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -154,11 +181,14 @@ public class FairSemaphoreTest extends JSR166TestCase{
             s.release(2);
             t.join();
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testTimedAcquireReleaseInSameThread(){
+    /**
+     *
+     */
+    public void testTimedAcquireReleaseInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
         try {
             assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -173,11 +203,14 @@ public class FairSemaphoreTest extends JSR166TestCase{
             s.release();
             assertEquals(1, s.availablePermits());
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testTimedAcquireReleaseNInSameThread(){
+    /**
+     *
+     */
+    public void testTimedAcquireReleaseNInSameThread() {
         FairSemaphore s = new FairSemaphore(1);
         try {
             s.release(1);
@@ -192,23 +225,26 @@ public class FairSemaphoreTest extends JSR166TestCase{
             assertTrue(s.tryAcquire(5, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             assertEquals(1, s.availablePermits());
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testTimedAcquireReleaseInDifferentThreads() {
         final FairSemaphore s = new FairSemaphore(1);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
                         threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
 
-		    }catch(InterruptedException ie){
-                        threadFail("unexpected exception");
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -221,21 +257,24 @@ public class FairSemaphoreTest extends JSR166TestCase{
             s.release();
             t.join();
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testTimedAcquireReleaseNInDifferentThreads() {
         final FairSemaphore s = new FairSemaphore(2);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
                         threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         s.release(2);
                         threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         s.release(2);
-		    }catch(InterruptedException ie){
-                        threadFail("unexpected exception");
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -247,92 +286,107 @@ public class FairSemaphoreTest extends JSR166TestCase{
             assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             t.join();
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testAcquire_InterruptedException(){
+    /**
+     *
+     */
+    public void testAcquire_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(0);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.acquire();
-			threadFail("should throw");
-		    }catch(InterruptedException success){}
+			threadShouldThrow();
+		    } catch(InterruptedException success){}
 		}
 	    });
 	t.start();
-	try{
+	try {
 	    Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testAcquireN_InterruptedException(){
+    /**
+     *
+     */
+    public void testAcquireN_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(2);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.acquire(3);
-			threadFail("should throw");
-		    }catch(InterruptedException success){}
+			threadShouldThrow();
+		    } catch(InterruptedException success){}
 		}
 	    });
 	t.start();
-	try{
+	try {
 	    Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
     
-    public void testTryAcquire_InterruptedException(){
+    /**
+     *
+     */
+    public void testTryAcquire_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(0);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.tryAcquire(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-			threadFail("should throw");
-		    }catch(InterruptedException success){
+			threadShouldThrow();
+		    } catch(InterruptedException success){
                     }
 		}
 	    });
 	t.start();
-	try{
+	try {
 	    Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testTryAcquireN_InterruptedException(){
+    /**
+     *
+     */
+    public void testTryAcquireN_InterruptedException() {
 	final FairSemaphore s = new FairSemaphore(1);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.tryAcquire(4, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-			threadFail("should throw");
-		    }catch(InterruptedException success){
+			threadShouldThrow();
+		    } catch(InterruptedException success){
                     }
 		}
 	    });
 	t.start();
-	try{
+	try {
 	    Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         FairSemaphore l = new FairSemaphore(3);
 
@@ -351,8 +405,7 @@ public class FairSemaphoreTest extends JSR166TestCase{
             r.acquire();
             r.release();
         } catch(Exception e){
-            e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

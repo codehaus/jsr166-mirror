@@ -24,6 +24,9 @@ public class ThreadLocalTest extends JSR166TestCase {
         };
 
     
+    /**
+     * remove causes next access to return initial value
+     */
     public void testRemove() {
         Integer one = new Integer(1);
         Integer two = new Integer(2);

@@ -23,40 +23,49 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
         return new TestSuite(AtomicReferenceFieldUpdaterTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor(){
         try{
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (getClass(), Integer.class, "y");
-            fail("Exception not thrown");
+            shouldThrow();
         }
-
         catch (RuntimeException rt) {}
     }
 
 
+    /**
+     *
+     */
     public void testConstructor2(){
         try{
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (getClass(), Integer.class, "z");
-            fail("Exception not thrown");
+            shouldThrow();
         }
-
         catch (RuntimeException rt) {}
     }
 
+    /**
+     *
+     */
     public void testConstructor3(){
         try{
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (getClass(), Integer.class, "w");
-            fail("Exception not thrown");
+            shouldThrow();
         }
-
         catch (RuntimeException rt) {}
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
         x = one;
@@ -67,6 +76,9 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 	assertEquals(-3,a.get(this));
 	
     }
+    /**
+     *
+     */
     public void testCompareAndSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
         x = one;
@@ -79,6 +91,9 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 	assertEquals(seven,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
         x = one;
@@ -89,6 +104,9 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 	assertEquals(seven,a.get(this));
     }
 
+    /**
+     *
+     */
     public void testGetAndSet(){
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a = AtomicReferenceFieldUpdater.newUpdater(getClass(), Integer.class, "x");
         x = one;

@@ -36,7 +36,7 @@ public class SystemTest extends JSR166TestCase {
             assertTrue(nanos <= millis * 1000000);
         }
         catch(InterruptedException ie) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
@@ -60,7 +60,7 @@ public class SystemTest extends JSR166TestCase {
             assertTrue(millis * 1000000 <= nanos);
         }
         catch(InterruptedException ie) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

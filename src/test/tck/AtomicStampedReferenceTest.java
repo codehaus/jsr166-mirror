@@ -16,11 +16,9 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
         return new TestSuite(AtomicStampedReferenceTest.class);
     }
     
-    static final Integer zero = new Integer(0);
-    static final Integer one = new Integer(1);
-    static final Integer two = new Integer(2);
-    static final Integer m3  = new Integer(-3);
-
+    /**
+     *
+     */
     public void testConstructor(){
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
 	assertEquals(one,ai.getReference());
@@ -31,6 +29,9 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
 
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
@@ -50,6 +51,9 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
         assertEquals(1,mark[0]);
     }
 
+    /**
+     *
+     */
     public void testAttemptStamp(){
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
@@ -60,6 +64,9 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
         assertEquals(1, mark[0]);
     }
 
+    /**
+     *
+     */
     public void testCompareAndSet(){
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
@@ -80,6 +87,9 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
 	assertEquals(1, mark[0]);
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);

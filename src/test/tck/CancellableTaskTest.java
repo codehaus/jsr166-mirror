@@ -30,15 +30,21 @@ public class CancellableTaskTest extends JSR166TestCase {
         public void setDone() { super.setDone(); }
     }
 
+    /**
+     *
+     */
     public void testConstructor(){
         try {
             CancellableTask task = new CancellableTask(null);
-            fail("should throw");
+            shouldThrow();
         }
         catch(NullPointerException success) {
         }
     }
     
+    /**
+     *
+     */
     public void testIsDone(){
         CancellableTask task = new CancellableTask(new NoOpRunnable());
 	task.run();
@@ -46,6 +52,9 @@ public class CancellableTaskTest extends JSR166TestCase {
 	assertFalse(task.isCancelled());
     }
 
+    /**
+     *
+     */
     public void testReset(){
         MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
 	task.run();
@@ -53,6 +62,9 @@ public class CancellableTaskTest extends JSR166TestCase {
 	assertTrue(task.reset());
     }
 
+    /**
+     *
+     */
     public void testCancelBeforeRun() {
         CancellableTask task = new CancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(false));
@@ -61,6 +73,9 @@ public class CancellableTaskTest extends JSR166TestCase {
 	assertTrue(task.isCancelled());
     }
 
+    /**
+     *
+     */
     public void testResetAfterCancel() {
         MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(false));
@@ -70,6 +85,9 @@ public class CancellableTaskTest extends JSR166TestCase {
         assertFalse(task.reset());
     }
 
+    /**
+     *
+     */
     public void testSetRunnable() {
         MyCancellableTask task = new MyCancellableTask();
         assertNull(task.getRunnable());
@@ -83,6 +101,9 @@ public class CancellableTaskTest extends JSR166TestCase {
         assertFalse(task.reset());
     }
 
+    /**
+     *
+     */
     public void testSetDone() {
         MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
 	task.setDone();
@@ -90,6 +111,9 @@ public class CancellableTaskTest extends JSR166TestCase {
 	assertFalse(task.isCancelled());
     }
 
+    /**
+     *
+     */
     public void testSetCancelled() {
         MyCancellableTask task = new MyCancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(false));
@@ -98,6 +122,9 @@ public class CancellableTaskTest extends JSR166TestCase {
 	assertTrue(task.isCancelled());
     }
 
+    /**
+     *
+     */
     public void testCancelBeforeRun2() {
         CancellableTask task = new CancellableTask(new NoOpRunnable());
         assertTrue(task.cancel(true));
@@ -106,6 +133,9 @@ public class CancellableTaskTest extends JSR166TestCase {
 	assertTrue(task.isCancelled());
     }
 
+    /**
+     *
+     */
     public void testCancelAfterRun() {
         CancellableTask task = new CancellableTask(new NoOpRunnable());
 	task.run();
@@ -114,6 +144,9 @@ public class CancellableTaskTest extends JSR166TestCase {
 	assertFalse(task.isCancelled());
     }
 
+    /**
+     *
+     */
     public void testCancelInterrupt(){
         CancellableTask task = new CancellableTask(new SmallInterruptedRunnable());
         Thread t = new  Thread(task);
@@ -126,11 +159,14 @@ public class CancellableTaskTest extends JSR166TestCase {
             assertTrue(task.isDone());
             assertTrue(task.isCancelled());
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
 
+    /**
+     *
+     */
     public void testCancelNoInterrupt(){
         CancellableTask task = new CancellableTask(new SmallRunnable());
         Thread t = new  Thread(task);
@@ -142,7 +178,7 @@ public class CancellableTaskTest extends JSR166TestCase {
             assertTrue(task.isDone());
             assertTrue(task.isCancelled());
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

@@ -22,6 +22,9 @@ public class ThreadTest extends JSR166TestCase {
         }
     }
     
+    /**
+     *
+     */
     public void testGetAndSetUncaughtExceptionHandler() {
         // these must be done all at once to avoid state
         // dependencies across tests
@@ -35,6 +38,9 @@ public class ThreadTest extends JSR166TestCase {
 	assertEquals(tg, current.getUncaughtExceptionHandler());
     }
 
+    /**
+     *
+     */
     public void testGetAndSetDefaultUncaughtExceptionHandler() {
         assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
         // failure due to securityException is OK.

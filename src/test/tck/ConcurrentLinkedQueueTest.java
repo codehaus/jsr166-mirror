@@ -34,39 +34,54 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         return q;
     }
  
-    public void testConstructor1(){
+    /**
+     *
+     */
+    public void testConstructor1() {
         assertEquals(0, new ConcurrentLinkedQueue().size());
     }
 
+    /**
+     *
+     */
     public void testConstructor3() {
         try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue((Collection)null);
-            fail("Cannot make from null collection");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
 
-    public void testConstructor4(){
+    /**
+     *
+     */
+    public void testConstructor4() {
         try {
             Integer[] ints = new Integer[SIZE];
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue(Arrays.asList(ints));
-            fail("Cannot make with null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
 
-    public void testConstructor5(){
+    /**
+     *
+     */
+    public void testConstructor5() {
         try {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue(Arrays.asList(ints));
-            fail("Cannot make with null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
 
-    public void testConstructor6(){
+    /**
+     *
+     */
+    public void testConstructor6() {
         try {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE; ++i)
@@ -78,6 +93,9 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         finally {}
     }
 
+    /**
+     *
+     */
     public void testEmpty() {
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         assertTrue(q.isEmpty());
@@ -89,6 +107,9 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         assertTrue(q.isEmpty());
     }
 
+    /**
+     *
+     */
     public void testSize() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
@@ -101,21 +122,30 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testOfferNull(){
+    /**
+     *
+     */
+    public void testOfferNull() {
 	try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             q.offer(null);
-            fail("should throw NPE");
+            shouldThrow();
         } catch (NullPointerException success) { }   
     }
 
+    /**
+     *
+     */
     public void testOffer() {
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         assertTrue(q.offer(zero));
         assertTrue(q.offer(one));
     }
 
-    public void testAdd(){
+    /**
+     *
+     */
+    public void testAdd() {
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.size());
@@ -123,36 +153,48 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testAddAll1(){
+    /**
+     *
+     */
+    public void testAddAll1() {
         try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             q.addAll(null);
-            fail("Cannot add null collection");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
-    public void testAddAll2(){
+    /**
+     *
+     */
+    public void testAddAll2() {
         try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
-            fail("Cannot add null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
-    public void testAddAll3(){
+    /**
+     *
+     */
+    public void testAddAll3() {
         try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
-            fail("Cannot add null elements");
+            shouldThrow();
         }
         catch (NullPointerException success) {}
     }
 
-    public void testAddAll5(){
+    /**
+     *
+     */
+    public void testAddAll5() {
         try {
             Integer[] empty = new Integer[0];
             Integer[] ints = new Integer[SIZE];
@@ -167,7 +209,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         finally {}
     }
 
-    public void testPoll(){
+    /**
+     *
+     */
+    public void testPoll() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
@@ -175,7 +220,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 	assertNull(q.poll());
     }
 
-    public void testPeek(){
+    /**
+     *
+     */
+    public void testPeek() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.peek()).intValue());
@@ -186,7 +234,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 	assertNull(q.peek());
     }
 
-    public void testElement(){
+    /**
+     *
+     */
+    public void testElement() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.element()).intValue());
@@ -194,24 +245,30 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
         try {
             q.element();
-            fail("no such element");
+            shouldThrow();
         }
         catch (NoSuchElementException success) {}
     }
 
-    public void testRemove(){
+    /**
+     *
+     */
+    public void testRemove() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.remove()).intValue());
         }
         try {
             q.remove();
-            fail("remove should throw");
+            shouldThrow();
         } catch (NoSuchElementException success){
 	}   
     }
 
-    public void testRemoveElement(){
+    /**
+     *
+     */
+    public void testRemoveElement() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 1; i < SIZE; i+=2) {
             assertTrue(q.remove(new Integer(i)));
@@ -223,7 +280,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         assertTrue(q.isEmpty());
     }
 	
-    public void testContains(){
+    /**
+     *
+     */
+    public void testContains() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
@@ -232,7 +292,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testClear(){
+    /**
+     *
+     */
+    public void testClear() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         q.clear();
         assertTrue(q.isEmpty());
@@ -243,7 +306,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         assertTrue(q.isEmpty());
     }
 
-    public void testContainsAll(){
+    /**
+     *
+     */
+    public void testContainsAll() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         ConcurrentLinkedQueue p = new ConcurrentLinkedQueue();
         for (int i = 0; i < SIZE; ++i) {
@@ -254,7 +320,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         assertTrue(p.containsAll(q));
     }
 
-    public void testRetainAll(){
+    /**
+     *
+     */
+    public void testRetainAll() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         ConcurrentLinkedQueue p = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
@@ -270,7 +339,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testRemoveAll(){
+    /**
+     *
+     */
+    public void testRemoveAll() {
         for (int i = 1; i < SIZE; ++i) {
             ConcurrentLinkedQueue q = populatedQueue(SIZE);
             ConcurrentLinkedQueue p = populatedQueue(i);
@@ -283,7 +355,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
     }
 
-    public void testToArray(){
+    /**
+     *
+     */
+    public void testToArray() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
@@ -291,7 +366,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 	    assertEquals(o[i], q.poll());
     }
 
-    public void testToArray2(){
+    /**
+     *
+     */
+    public void testToArray2() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
@@ -300,7 +378,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             assertEquals(ints[i], q.poll());
     }
     
-    public void testIterator(){
+    /**
+     *
+     */
+    public void testIterator() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
@@ -311,6 +392,9 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         assertEquals(i, SIZE);
     }
 
+    /**
+     *
+     */
     public void testIteratorOrdering() {
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         q.add(one);
@@ -320,12 +404,15 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
             int i = ((Integer)(it.next())).intValue();
-            assertEquals("items should come out in order", ++k, i);
+            assertEquals(++k, i);
         }
 
-        assertEquals("should go through 3 elements", 3, k);
+        assertEquals(3, k);
     }
 
+    /**
+     *
+     */
     public void testWeaklyConsistentIteration () {
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         q.add(one);
@@ -339,12 +426,15 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             }
         }
         catch (ConcurrentModificationException e) {
-            fail("weakly consistent iterator; should not get CME");
+            shouldThrow();
         }
 
         assertEquals("queue should be empty again", 0, q.size());
     }
 
+    /**
+     *
+     */
     public void testIteratorRemove () {
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         q.add(one);
@@ -360,7 +450,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     }
 
 
-    public void testToString(){
+    /**
+     *
+     */
+    public void testToString() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
@@ -368,6 +461,9 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
     }        
 
+    /**
+     *
+     */
     public void testSerialization() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         try {
@@ -383,8 +479,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             while (!q.isEmpty()) 
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
-            e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

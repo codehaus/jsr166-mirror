@@ -19,6 +19,9 @@ public class TimeUnitTest extends JSR166TestCase {
 	return new TestSuite(TimeUnitTest.class);
     }
 
+    /**
+     *
+     */
     public void testConvert() {
         for (long t = 0; t < 10; ++t) {
             assertEquals(t, 
@@ -72,6 +75,9 @@ public class TimeUnitTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testToNanos() {
         for (long t = 0; t < 10; ++t) {
             assertEquals(1000000000 * t, 
@@ -86,6 +92,9 @@ public class TimeUnitTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testToMicros() {
         for (long t = 0; t < 10; ++t) {
             assertEquals(1000000 * t, 
@@ -100,6 +109,9 @@ public class TimeUnitTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testToMillis() {
         for (long t = 0; t < 10; ++t) {
             assertEquals(1000 * t, 
@@ -114,6 +126,9 @@ public class TimeUnitTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testToSeconds() {
         for (long t = 0; t < 10; ++t) {
             assertEquals(t, 
@@ -129,6 +144,9 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
 
+    /**
+     *
+     */
     public void testConvertSaturate() {
         assertEquals(Long.MAX_VALUE,
                      TimeUnit.NANOSECONDS.convert(Long.MAX_VALUE / 2,
@@ -139,6 +157,9 @@ public class TimeUnitTest extends JSR166TestCase {
 
     }
 
+    /**
+     *
+     */
     public void testToNanosSaturate() {
             assertEquals(Long.MAX_VALUE,
                          TimeUnit.MILLISECONDS.toNanos(Long.MAX_VALUE / 2));
@@ -148,6 +169,9 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
 
+    /**
+     *
+     */
     public void testToString() {
         String s = TimeUnit.SECONDS.toString();
         assertTrue(s.indexOf("econd") >= 0);
@@ -158,6 +182,9 @@ public class TimeUnitTest extends JSR166TestCase {
      *  Timed wait without holding lock throws
      *  IllegalMonitorStateException
      */
+    /**
+     *
+     */
     public void testTimedWait_IllegalMonitorException() {
 	//created a new thread with anonymous runnable
 
@@ -167,10 +194,10 @@ public class TimeUnitTest extends JSR166TestCase {
                     TimeUnit tu = TimeUnit.MILLISECONDS;
                     try {
                         tu.timedWait(o,LONG_DELAY_MS);
-                        fail("should throw");
+                        threadShouldThrow();
                     }
                     catch (InterruptedException ie) {
-                        fail("should not throw IE here");
+                        threadUnexpectedException();
                     } 
                     catch(IllegalMonitorStateException success) {
                     }
@@ -183,7 +210,7 @@ public class TimeUnitTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch(Exception e) {
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
     
@@ -192,6 +219,9 @@ public class TimeUnitTest extends JSR166TestCase {
      *  Thread t waits on timedWait while the main thread interrupts it.
      *  Note:  This does not throw IllegalMonitorException since timeWait
      *         is synchronized on o
+     */
+    /**
+     *
      */
     public void testTimedWait() {
 	Thread t = new Thread(new Runnable() {
@@ -203,11 +233,11 @@ public class TimeUnitTest extends JSR166TestCase {
 			synchronized(o) {
 			    tu.timedWait(o,MEDIUM_DELAY_MS);
 			}
-                        fail("should throw");
+                        threadShouldThrow();
 		    }
 		    catch(InterruptedException success) {} 
 		    catch(IllegalMonitorStateException failure) {
-			fail("should not throw");
+			threadUnexpectedException();
 		    }
 		}
 	    });
@@ -217,7 +247,7 @@ public class TimeUnitTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch(Exception e) {
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
     
@@ -226,6 +256,9 @@ public class TimeUnitTest extends JSR166TestCase {
      *   timedJoin will throw InterruptedException.
      *  Thread t waits on timedJoin while the main thread interrupts it.
      */
+    /**
+     *
+     */
     public void testTimedJoin() {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
@@ -233,14 +266,14 @@ public class TimeUnitTest extends JSR166TestCase {
 		    try {
 			Thread s = new Thread(new Runnable() {
                                 public void run() {
-                                    try{
+                                    try {
                                         Thread.sleep(MEDIUM_DELAY_MS);
-                                    }catch(InterruptedException success){}
+                                    } catch(InterruptedException success){}
                                 }
                             });
 			s.start();
 			tu.timedJoin(s,MEDIUM_DELAY_MS);
-                        fail("should throw");
+                        threadShouldThrow();
 		    }
 		    catch(Exception e) {}
 		}
@@ -251,13 +284,16 @@ public class TimeUnitTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch(Exception e) {
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
     
     /**
      *   timedSleep will throw InterruptedException.
      *  Thread t waits on timedSleep while the main thread interrupts it.
+     */
+    /**
+     *
      */
     public void testTimedSleep() {
 	//created a new thread with anonymous runnable
@@ -267,7 +303,7 @@ public class TimeUnitTest extends JSR166TestCase {
 		    TimeUnit tu = TimeUnit.MILLISECONDS;
 		    try {
 			tu.sleep(MEDIUM_DELAY_MS);
-                        fail("should throw");
+                        threadShouldThrow();
 		    }
 		    catch(InterruptedException success) {} 
 		}
@@ -278,10 +314,13 @@ public class TimeUnitTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch(Exception e) {
-            fail("Unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         TimeUnit q = TimeUnit.MILLISECONDS;
 
@@ -298,7 +337,7 @@ public class TimeUnitTest extends JSR166TestCase {
             assertEquals(q.toString(), r.toString());
         } catch(Exception e){
             e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

@@ -21,6 +21,9 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     static final Integer two = new Integer(2);
     static final Integer m3  = new Integer(-3);
 
+    /**
+     *
+     */
     public void testConstructor(){
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
 	assertEquals(one,ai.getReference());
@@ -31,6 +34,9 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
 
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
@@ -50,6 +56,9 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
         assertTrue(mark[0]);
     }
 
+    /**
+     *
+     */
     public void testAttemptMark(){
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
@@ -60,6 +69,9 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
         assertTrue(mark[0]);
     }
 
+    /**
+     *
+     */
     public void testCompareAndSet(){
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
@@ -80,6 +92,9 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
 	assertTrue(mark[0]);
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);

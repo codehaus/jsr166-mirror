@@ -19,8 +19,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
     static class MyRunnable implements Runnable {
         volatile boolean done = false;
-        public void run(){
-            try{
+        public void run() {
+            try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
             } catch(Exception e){
@@ -30,89 +30,96 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
     static class MyCallable implements Callable {
         volatile boolean done = false;
-        public Object call(){
-            try{
+        public Object call() {
+            try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
-            }catch(Exception e){}
+            } catch(Exception e){
+            }
             return Boolean.TRUE;
         }
     }
 
-    public void testExecute(){
-	try{
+    /**
+     *
+     */
+    public void testExecute() {
+	try {
             MyRunnable runnable =new MyRunnable();
-            ScheduledExecutor one = new ScheduledExecutor(1);
-	    one.execute(runnable);
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+	    p1.execute(runnable);
 	    assertFalse(runnable.done);
 	    Thread.sleep(SHORT_DELAY_MS);
-	    one.shutdown();
-	    try{
+	    p1.shutdown();
+	    try {
                 Thread.sleep(MEDIUM_DELAY_MS);
             } catch(InterruptedException e){
-                fail("unexpected exception");
+                unexpectedException();
             }
 	    assertTrue(runnable.done);
-            one.shutdown();
-            joinPool(one);
+            p1.shutdown();
+            joinPool(p1);
         }
 	catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
         
     }
 
-    public void testSchedule1(){
-	try{
+    /**
+     *
+     */
+    public void testSchedule1() {
+	try {
             MyCallable callable = new MyCallable();
-            ScheduledExecutor one = new ScheduledExecutor(1);
-	    Future f = one.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+	    Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(callable.done);
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
-            one.shutdown();
-            joinPool(one);
-	}catch(RejectedExecutionException e){}
+            p1.shutdown();
+            joinPool(p1);
+	} catch(RejectedExecutionException e){}
 	catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
     /**
-     *  Another version of schedule, only using Runnable instead of Callable
+     *  
      */
-    public void testSchedule3(){
-	try{
+    public void testSchedule3() {
+	try {
             MyRunnable runnable = new MyRunnable();
-            ScheduledExecutor one = new ScheduledExecutor(1);
-	    one.schedule(runnable, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+	    p1.schedule(runnable, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
 	    Thread.sleep(SHORT_DELAY_MS);
 	    assertFalse(runnable.done);
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(runnable.done);
-            one.shutdown();
-            joinPool(one);
+            p1.shutdown();
+            joinPool(p1);
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
     
     /**
-     *  The final version of schedule, using both long, TimeUnit and Runnable
+     *
      */
-    public void testSchedule4(){
-	try{
+    public void testSchedule4() {
+	try {
             MyRunnable runnable = new MyRunnable();
-            ScheduledExecutor one = new ScheduledExecutor(1);
-	    one.schedule(runnable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+	    p1.schedule(runnable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    assertFalse(runnable.done);
 	    Thread.sleep(MEDIUM_DELAY_MS);
 	    assertTrue(runnable.done);
-            one.shutdown();
-            joinPool(one);
+            p1.shutdown();
+            joinPool(p1);
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
     
@@ -123,13 +130,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *   schedule(Runnable, long) throws RejectedExecutionException
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-    public void testSchedule1_RejectedExecutionException(){
+    public void testSchedule1_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
-        try{
+        try {
             se.shutdown();
             se.schedule(new NoOpRunnable(),
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            fail("shoud throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         }
         joinPool(se);
@@ -140,13 +147,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *   schedule(Callable, long, TimeUnit) throws RejectedExecutionException
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-    public void testSchedule2_RejectedExecutionException(){
+    public void testSchedule2_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
-        try{
+        try {
             se.shutdown();
             se.schedule(new NoOpCallable(),
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            fail("should throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         }
         joinPool(se);
@@ -156,13 +163,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *   schedule(Callable, long) throws RejectedExecutionException
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-     public void testSchedule3_RejectedExecutionException(){
+     public void testSchedule3_RejectedExecutionException() {
          ScheduledExecutor se = new ScheduledExecutor(1);
-         try{
+         try {
             se.shutdown();
             se.schedule(new NoOpCallable(),
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            fail("should throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         } 
          joinPool(se);
@@ -173,13 +180,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *  RejectedExecutionException.
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-    public void testScheduleAtFixedRate1_RejectedExecutionException(){
+    public void testScheduleAtFixedRate1_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
-        try{
+        try {
             se.shutdown();
             se.scheduleAtFixedRate(new NoOpRunnable(),
                                    MEDIUM_DELAY_MS, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            fail("should throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         } 
         joinPool(se);
@@ -190,13 +197,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *  RejectedExecutionException.
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-    public void testScheduleAtFixedRate2_RejectedExecutionException(){
+    public void testScheduleAtFixedRate2_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
-        try{
+        try {
             se.shutdown();
             se.scheduleAtFixedRate(new NoOpRunnable(),
                                    1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            fail("should throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         } 
         joinPool(se);
@@ -207,13 +214,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *  RejectedExecutionException.
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-    public void testScheduleWithFixedDelay1_RejectedExecutionException(){
+    public void testScheduleWithFixedDelay1_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
-        try{
+        try {
             se.shutdown();
             se.scheduleWithFixedDelay(new NoOpRunnable(),
                                       MEDIUM_DELAY_MS, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            fail("should throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         } 
         joinPool(se);
@@ -224,13 +231,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *  RejectedExecutionException.
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-     public void testScheduleWithFixedDelay2_RejectedExecutionException(){
+     public void testScheduleWithFixedDelay2_RejectedExecutionException() {
          ScheduledExecutor se = new ScheduledExecutor(1);
-        try{
+        try {
             se.shutdown();
             se.scheduleWithFixedDelay(new NoOpRunnable(),
                                       1, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            fail("should throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         } 
         joinPool(se);
@@ -240,12 +247,12 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *   execute throws RejectedExecutionException
      *  This occurs on an attempt to schedule a task on a shutdown executor
      */
-    public void testExecute_RejectedExecutionException(){
+    public void testExecute_RejectedExecutionException() {
         ScheduledExecutor se = new ScheduledExecutor(1);
-        try{
+        try {
             se.shutdown();
             se.execute(new NoOpRunnable());
-            fail("should throw");
+            shouldThrow();
         } catch(RejectedExecutionException success){
         } 
         joinPool(se);
@@ -254,122 +261,141 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     /**
      *   getActiveCount gives correct values
      */
-    public void testGetActiveCount(){
-        ScheduledExecutor two = new ScheduledExecutor(2);
-        assertEquals(0, two.getActiveCount());
-        two.execute(new SmallRunnable());
-        try{
+    public void testGetActiveCount() {
+        ScheduledExecutor p2 = new ScheduledExecutor(2);
+        assertEquals(0, p2.getActiveCount());
+        p2.execute(new SmallRunnable());
+        try {
             Thread.sleep(SHORT_DELAY_MS);
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
-        assertEquals(1, two.getActiveCount());
-        joinPool(two);
+        assertEquals(1, p2.getActiveCount());
+        joinPool(p2);
     }
     
     /**
      *   getCompleteTaskCount gives correct values
      */
-    public void testGetCompletedTaskCount(){
-        ScheduledExecutor two = new ScheduledExecutor(2);
-        assertEquals(0, two.getCompletedTaskCount());
-        two.execute(new SmallRunnable());
-        try{
+    public void testGetCompletedTaskCount() {
+        ScheduledExecutor p2 = new ScheduledExecutor(2);
+        assertEquals(0, p2.getCompletedTaskCount());
+        p2.execute(new SmallRunnable());
+        try {
             Thread.sleep(MEDIUM_DELAY_MS);
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
-        assertEquals(1, two.getCompletedTaskCount());
-        joinPool(two);
+        assertEquals(1, p2.getCompletedTaskCount());
+        joinPool(p2);
     }
     
     /**
      *   getCorePoolSize gives correct values
      */
-    public void testGetCorePoolSize(){
-        ScheduledExecutor one = new ScheduledExecutor(1);
-        assertEquals(1, one.getCorePoolSize());
-        joinPool(one);
+    public void testGetCorePoolSize() {
+        ScheduledExecutor p1 = new ScheduledExecutor(1);
+        assertEquals(1, p1.getCorePoolSize());
+        joinPool(p1);
     }
     
     /**
      *   getLargestPoolSize gives correct values
      */
-    public void testGetLargestPoolSize(){
-        ScheduledExecutor two = new ScheduledExecutor(2);
-        assertEquals(0, two.getLargestPoolSize());
-        two.execute(new SmallRunnable());
-        two.execute(new SmallRunnable());
-        try{
+    public void testGetLargestPoolSize() {
+        ScheduledExecutor p2 = new ScheduledExecutor(2);
+        assertEquals(0, p2.getLargestPoolSize());
+        p2.execute(new SmallRunnable());
+        p2.execute(new SmallRunnable());
+        try {
             Thread.sleep(SHORT_DELAY_MS);
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
-        assertEquals(2, two.getLargestPoolSize());
-        joinPool(two);
+        assertEquals(2, p2.getLargestPoolSize());
+        joinPool(p2);
     }
     
     /**
      *   getPoolSize gives correct values
      */
-    public void testGetPoolSize(){
-        ScheduledExecutor one = new ScheduledExecutor(1);
-        assertEquals(0, one.getPoolSize());
-        one.execute(new SmallRunnable());
-        assertEquals(1, one.getPoolSize());
-        joinPool(one);
+    public void testGetPoolSize() {
+        ScheduledExecutor p1 = new ScheduledExecutor(1);
+        assertEquals(0, p1.getPoolSize());
+        p1.execute(new SmallRunnable());
+        assertEquals(1, p1.getPoolSize());
+        joinPool(p1);
     }
     
     /**
      *   getTaskCount gives correct values
      */
-    public void testGetTaskCount(){
-        ScheduledExecutor one = new ScheduledExecutor(1);
-        assertEquals(0, one.getTaskCount());
+    public void testGetTaskCount() {
+        ScheduledExecutor p1 = new ScheduledExecutor(1);
+        assertEquals(0, p1.getTaskCount());
         for(int i = 0; i < 5; i++)
-            one.execute(new SmallRunnable());
-        try{
+            p1.execute(new SmallRunnable());
+        try {
             Thread.sleep(SHORT_DELAY_MS);
         } catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
         }
-        assertEquals(5, one.getTaskCount());
-        joinPool(one);
+        assertEquals(5, p1.getTaskCount());
+        joinPool(p1);
     }
     
     /**
      *   isShutDown gives correct values
      */
-    public void testIsShutdown(){
+    public void testIsShutdown() {
         
-	ScheduledExecutor one = new ScheduledExecutor(1);
+	ScheduledExecutor p1 = new ScheduledExecutor(1);
         try {
-            assertFalse(one.isShutdown());
+            assertFalse(p1.isShutdown());
         }
         finally {
-            one.shutdown();
+            p1.shutdown();
         }
-	assertTrue(one.isShutdown());
+	assertTrue(p1.isShutdown());
     }
 
         
     /**
-     *   isTerminated gives correct values
-     *  Makes sure termination does not take an innapropriate
-     *  amount of time
+     *  isTerminated gives correct values
      */
-    public void testIsTerminated(){
-	ScheduledExecutor one = new ScheduledExecutor(1);
+    public void testIsTerminated() {
+	ScheduledExecutor p1 = new ScheduledExecutor(1);
         try {
-            one.execute(new SmallRunnable());
+            p1.execute(new SmallRunnable());
         } finally {
-            one.shutdown();
+            p1.shutdown();
         }
         try {
-	    assertTrue(one.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
-            assertTrue(one.isTerminated());
+	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertTrue(p1.isTerminated());
 	} catch(Exception e){
-            fail("unexpected exception");
+            unexpectedException();
+        }	
+    }
+
+    /**
+     *  isTerminating gives correct values
+     */
+    public void testIsTerminating() {
+	ScheduledExecutor p1 = new ScheduledExecutor(1);
+        assertFalse(p1.isTerminating());
+        try {
+            p1.execute(new SmallRunnable());
+            assertFalse(p1.isTerminating());
+        } finally {
+            p1.shutdown();
+        }
+        try {
+	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertTrue(p1.isTerminated());
+            assertFalse(p1.isTerminating());
+	} catch(Exception e){
+            unexpectedException();
         }	
     }
 
@@ -377,51 +403,54 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      *   that purge correctly removes cancelled tasks
      *  from the queue
      */
-    public void testPurge(){
-        ScheduledExecutor one = new ScheduledExecutor(1);
+    public void testPurge() {
+        ScheduledExecutor p1 = new ScheduledExecutor(1);
         ScheduledCancellable[] tasks = new ScheduledCancellable[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = one.schedule(new SmallRunnable(), 1, TimeUnit.MILLISECONDS);
+            tasks[i] = p1.schedule(new SmallRunnable(), 1, TimeUnit.MILLISECONDS);
         }
         int max = 5;
         if (tasks[4].cancel(true)) --max;
         if (tasks[3].cancel(true)) --max;
-        one.purge();
-        long count = one.getTaskCount();
+        p1.purge();
+        long count = p1.getTaskCount();
         assertTrue(count > 0 && count <= max);
-        joinPool(one);
+        joinPool(p1);
     }
 
     /**
      *   shutDownNow returns a list
      *  containing the correct number of elements
      */
-    public void testShutDownNow(){
-	ScheduledExecutor one = new ScheduledExecutor(1);
+    public void testShutDownNow() {
+	ScheduledExecutor p1 = new ScheduledExecutor(1);
         for(int i = 0; i < 5; i++)
-            one.schedule(new SmallRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-        List l = one.shutdownNow();
-	assertTrue(one.isShutdown());
+            p1.schedule(new SmallRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+        List l = p1.shutdownNow();
+	assertTrue(p1.isShutdown());
 	assertTrue(l.size() > 0 && l.size() <= 5);
-        joinPool(one);
+        joinPool(p1);
     }
 
-    public void testShutDown1(){
+    /**
+     *
+     */
+    public void testShutDown1() {
         try {
-            ScheduledExecutor one = new ScheduledExecutor(1);
-            assertTrue(one.getExecuteExistingDelayedTasksAfterShutdownPolicy());
-            assertFalse(one.getContinueExistingPeriodicTasksAfterShutdownPolicy());
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+            assertTrue(p1.getExecuteExistingDelayedTasksAfterShutdownPolicy());
+            assertFalse(p1.getContinueExistingPeriodicTasksAfterShutdownPolicy());
 
             ScheduledCancellable[] tasks = new ScheduledCancellable[5];
             for(int i = 0; i < 5; i++)
-                tasks[i] = one.schedule(new NoOpRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-            one.shutdown();
-            BlockingQueue q = one.getQueue();
+                tasks[i] = p1.schedule(new NoOpRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            p1.shutdown();
+            BlockingQueue q = p1.getQueue();
             for (Iterator it = q.iterator(); it.hasNext();) {
                 ScheduledCancellable t = (ScheduledCancellable)it.next();
                 assertFalse(t.isCancelled());
             }
-            assertTrue(one.isShutdown());
+            assertTrue(p1.isShutdown());
             Thread.sleep(SMALL_DELAY_MS);
             for (int i = 0; i < 5; ++i) {
                 assertTrue(tasks[i].isDone());
@@ -430,72 +459,81 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             
         }
         catch(Exception ex) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
 
-    public void testShutDown2(){
+    /**
+     *
+     */
+    public void testShutDown2() {
         try {
-            ScheduledExecutor one = new ScheduledExecutor(1);
-            one.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+            p1.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
             ScheduledCancellable[] tasks = new ScheduledCancellable[5];
             for(int i = 0; i < 5; i++)
-                tasks[i] = one.schedule(new NoOpRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-            one.shutdown();
-            assertTrue(one.isShutdown());
-            BlockingQueue q = one.getQueue();
+                tasks[i] = p1.schedule(new NoOpRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            p1.shutdown();
+            assertTrue(p1.isShutdown());
+            BlockingQueue q = p1.getQueue();
             assertTrue(q.isEmpty());
             Thread.sleep(SMALL_DELAY_MS);
-            assertTrue(one.isTerminated());
+            assertTrue(p1.isTerminated());
         }
         catch(Exception ex) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
 
-    public void testShutDown3(){
+    /**
+     *
+     */
+    public void testShutDown3() {
         try {
-            ScheduledExecutor one = new ScheduledExecutor(1);
-            one.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+            ScheduledExecutor p1 = new ScheduledExecutor(1);
+            p1.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
             ScheduledCancellable task =
-                one.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, TimeUnit.MILLISECONDS);
-            one.shutdown();
-            assertTrue(one.isShutdown());
-            BlockingQueue q = one.getQueue();
+                p1.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, TimeUnit.MILLISECONDS);
+            p1.shutdown();
+            assertTrue(p1.isShutdown());
+            BlockingQueue q = p1.getQueue();
             assertTrue(q.isEmpty());
             Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(one.isTerminated());
+            assertTrue(p1.isTerminated());
         }
         catch(Exception ex) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testShutDown4(){
-        ScheduledExecutor one = new ScheduledExecutor(1);
+    /**
+     *
+     */
+    public void testShutDown4() {
+        ScheduledExecutor p1 = new ScheduledExecutor(1);
         try {
-            one.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
+            p1.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
             ScheduledCancellable task =
-                one.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, TimeUnit.MILLISECONDS);
+                p1.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, TimeUnit.MILLISECONDS);
             assertFalse(task.isCancelled());
-            one.shutdown();
+            p1.shutdown();
             assertFalse(task.isCancelled());
-            assertFalse(one.isTerminated());
-            assertTrue(one.isShutdown());
+            assertFalse(p1.isTerminated());
+            assertTrue(p1.isShutdown());
             Thread.sleep(SHORT_DELAY_MS);
             assertFalse(task.isCancelled());
             task.cancel(true);
             assertTrue(task.isCancelled());
             Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(one.isTerminated());
+            assertTrue(p1.isTerminated());
         }
         catch(Exception ex) {
-            fail("unexpected exception");
+            unexpectedException();
         }
         finally {
-            one.shutdownNow();
+            p1.shutdownNow();
         }
     }
 

@@ -11,25 +11,32 @@ import java.util.concurrent.*;
 import java.io.*;
 
 public class SemaphoreTest extends JSR166TestCase {
-
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());	
     }
-    
     public static Test suite() {
 	return new TestSuite(SemaphoreTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor1() {
         Semaphore s = new Semaphore(0);
         assertEquals(0, s.availablePermits());
     }
 
+    /**
+     *
+     */
     public void testConstructor2() {
         Semaphore s = new Semaphore(-1);
         assertEquals(-1, s.availablePermits());
     }
 
+    /**
+     *
+     */
     public void testTryAcquireInSameThread() {
         Semaphore s = new Semaphore(2);
         assertEquals(2, s.availablePermits());
@@ -39,7 +46,10 @@ public class SemaphoreTest extends JSR166TestCase {
         assertFalse(s.tryAcquire());
     }
 
-    public void testAcquireReleaseInSameThread(){
+    /**
+     *
+     */
+    public void testAcquireReleaseInSameThread() {
         Semaphore s = new Semaphore(1);
         try {
             s.acquire();
@@ -54,11 +64,14 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release();
             assertEquals(1, s.availablePermits());
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testAcquireUninterruptiblyReleaseInSameThread(){
+    /**
+     *
+     */
+    public void testAcquireUninterruptiblyReleaseInSameThread() {
         Semaphore s = new Semaphore(1);
         try {
             s.acquireUninterruptibly();
@@ -77,17 +90,20 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
 
+    /**
+     *
+     */
     public void testAcquireReleaseInDifferentThreads() {
         final Semaphore s = new Semaphore(1);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.acquire();
                         s.release();
                         s.release();
                         s.acquire();
-		    }catch(InterruptedException ie){
-                        threadFail("unexpected exception");
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -99,11 +115,14 @@ public class SemaphoreTest extends JSR166TestCase {
             s.acquire();
             t.join();
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testTimedAcquireReleaseInSameThread(){
+    /**
+     *
+     */
+    public void testTimedAcquireReleaseInSameThread() {
         Semaphore s = new Semaphore(1);
         try {
             assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
@@ -118,22 +137,25 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release();
             assertEquals(1, s.availablePermits());
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testTimedAcquireReleaseInDifferentThreads() {
         final Semaphore s = new Semaphore(1);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
                         s.release();
                         threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         s.release();
                         threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
 
-		    }catch(InterruptedException ie){
-                        threadFail("unexpected exception");
+		    } catch(InterruptedException ie){
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -145,51 +167,60 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release();
             t.join();
 	} catch( InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testAcquire_InterruptedException(){
+    /**
+     *
+     */
+    public void testAcquire_InterruptedException() {
 	final Semaphore s = new Semaphore(0);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.acquire();
-			threadFail("should throw");
-		    }catch(InterruptedException success){}
+			threadShouldThrow();
+		    } catch(InterruptedException success){}
 		}
 	    });
 	t.start();
-	try{
+	try {
 	    Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
     
-    public void testTryAcquire_InterruptedException(){
+    /**
+     *
+     */
+    public void testTryAcquire_InterruptedException() {
 	final Semaphore s = new Semaphore(0);
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			s.tryAcquire(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-			threadFail("should throw");
-		    }catch(InterruptedException success){
+			threadShouldThrow();
+		    } catch(InterruptedException success){
                     }
 		}
 	    });
 	t.start();
-	try{
+	try {
 	    Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         } catch(InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         Semaphore l = new Semaphore(3);
         try {
@@ -207,8 +238,7 @@ public class SemaphoreTest extends JSR166TestCase {
             r.acquire();
             r.release();
         } catch(Exception e){
-            e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

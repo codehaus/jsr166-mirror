@@ -134,6 +134,17 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    public void threadShouldThrow() {
+        threadFailed = true;
+        fail("should throw exception");
+    }
+
+    public void threadUnexpectedException() {
+        threadFailed = true;
+        fail("Unexpected exception");
+    }
+
+
     /**
      * Wait out termination of a thread pool or fail doing so
      */
@@ -142,10 +153,18 @@ public class JSR166TestCase extends TestCase {
             exec.shutdown();
             assertTrue(exec.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch(InterruptedException ie) {
-            fail("unexpected exception");
+            fail("Unexpected exception");
         }
     }
 
+    
+    public void shouldThrow() {
+        fail("Should throw exception");
+    }
+
+    public void unexpectedException() {
+        fail("Unexpected exception");
+    }
 
 
     /**
@@ -189,7 +208,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SHORT_DELAY_MS);
             }
             catch(Exception e) {
-                threadFail("unexpectedException");
+                threadUnexpectedException();
             }
         }
     }
@@ -198,7 +217,7 @@ public class JSR166TestCase extends TestCase {
         public void run() {
             try {
                 Thread.sleep(SHORT_DELAY_MS);
-                threadFail("should throw IE");
+                threadShouldThrow();
             }
             catch(InterruptedException success) {
             }
@@ -211,7 +230,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SMALL_DELAY_MS);
             }
             catch(Exception e) {
-                threadFail("unexpectedException");
+                threadUnexpectedException();
             }
         }
     }
@@ -222,7 +241,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SMALL_DELAY_MS);
             }
             catch(Exception e) {
-                threadFail("unexpectedException");
+                threadUnexpectedException();
             }
             return Boolean.TRUE;
         }
@@ -232,7 +251,7 @@ public class JSR166TestCase extends TestCase {
         public void run() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
-                threadFail("should throw IE");
+                threadShouldThrow();
             }
             catch(InterruptedException success) {
             }
@@ -246,7 +265,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(MEDIUM_DELAY_MS);
             }
             catch(Exception e) {
-                threadFail("unexpectedException");
+                threadUnexpectedException();
             }
         }
     }
@@ -255,7 +274,7 @@ public class JSR166TestCase extends TestCase {
         public void run() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
-                threadFail("should throw IE");
+                threadShouldThrow();
             }
             catch(InterruptedException success) {
             }

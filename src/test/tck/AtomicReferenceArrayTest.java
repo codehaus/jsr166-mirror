@@ -18,6 +18,9 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         return new TestSuite(AtomicReferenceArrayTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor(){
         AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(SIZE);
         for (int i = 0; i < SIZE; ++i) {
@@ -25,6 +28,9 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         }
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -37,6 +43,9 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         }
     }
 
+    /**
+     *
+     */
     public void testCompareAndSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -51,6 +60,9 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         }
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -63,6 +75,9 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         }
     }
 
+    /**
+     *
+     */
     public void testGetAndSet(){
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -73,6 +88,9 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         }
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         AtomicReferenceArray l = new AtomicReferenceArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -93,8 +111,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
                 assertEquals(r.get(i), l.get(i));
             }
         } catch(Exception e){
-            e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

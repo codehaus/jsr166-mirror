@@ -18,6 +18,9 @@ public class ExchangerTest extends JSR166TestCase {
 	return new TestSuite(ExchangerTest.class);
     }
 
+    /**
+     *
+     */
     public void testExchange() {
         final Exchanger e = new Exchanger();
 	Thread t1 = new Thread(new Runnable(){
@@ -28,7 +31,7 @@ public class ExchangerTest extends JSR166TestCase {
                         Object w = e.exchange(v);
                         threadAssertEquals(w, one);
 		    } catch(InterruptedException e){
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -40,7 +43,7 @@ public class ExchangerTest extends JSR166TestCase {
                         Object w = e.exchange(v);
                         threadAssertEquals(w, two);
 		    } catch(InterruptedException e){
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -50,10 +53,13 @@ public class ExchangerTest extends JSR166TestCase {
             t1.join();
             t2.join();
         } catch(InterruptedException ex) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testTimedExchange() {
         final Exchanger e = new Exchanger();
 	Thread t1 = new Thread(new Runnable(){
@@ -64,9 +70,9 @@ public class ExchangerTest extends JSR166TestCase {
                         Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(w, one);
 		    } catch(InterruptedException e){
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     } catch(TimeoutException toe) {
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -78,9 +84,9 @@ public class ExchangerTest extends JSR166TestCase {
                         Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(w, two);
 		    } catch(InterruptedException e){
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     } catch(TimeoutException toe) {
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -90,17 +96,20 @@ public class ExchangerTest extends JSR166TestCase {
             t1.join();
             t2.join();
         } catch(InterruptedException ex) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testExchange_InterruptedException(){
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new Runnable() {
                 public void run(){
                     try {
                         e.exchange(one);
-                        threadFail("should throw");
+                        threadShouldThrow();
                     } catch(InterruptedException success){
                     }
                 }
@@ -111,17 +120,20 @@ public class ExchangerTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch(InterruptedException ex) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testTimedExchange_InterruptedException(){
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new Runnable() {
                 public void run(){
                     try {
                         e.exchange(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadFail("should throw");
+                        threadShouldThrow();
                     } catch(InterruptedException success){
                     } catch(Exception e2){
                         threadFail("should throw IE");
@@ -133,17 +145,20 @@ public class ExchangerTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch(InterruptedException ex){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testExchange_TimeOutException(){
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new Runnable() {
                 public void run(){
                     try {
                         e.exchange(null, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadFail("should throw");
+                        threadShouldThrow();
                     } catch(TimeoutException success){
                     } catch(InterruptedException e2){
                         threadFail("should throw TOE");
@@ -154,7 +169,7 @@ public class ExchangerTest extends JSR166TestCase {
             t.start();
             t.join();
         } catch(InterruptedException ex){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 }

@@ -19,13 +19,19 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
 
-    public void testConstructor(){
+    /**
+     *
+     */
+    public void testConstructor() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) 
             assertEquals(0,ai.get(i));
     }
 
-    public void testGetSet(){
+    /**
+     *
+     */
+    public void testGetSet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -37,7 +43,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    public void testCompareAndSet(){
+    /**
+     *
+     */
+    public void testCompareAndSet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -51,7 +60,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    public void testWeakCompareAndSet(){
+    /**
+     *
+     */
+    public void testWeakCompareAndSet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -63,7 +75,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    public void testGetAndSet(){
+    /**
+     *
+     */
+    public void testGetAndSet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -73,7 +88,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    public void testGetAndAdd(){
+    /**
+     *
+     */
+    public void testGetAndAdd() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -84,7 +102,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    public void testGetAndDecrement(){
+    /**
+     *
+     */
+    public void testGetAndDecrement() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -94,7 +115,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    public void testGetAndIncrement(){
+    /**
+     *
+     */
+    public void testGetAndIncrement() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -108,6 +132,9 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testAddAndGet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -119,7 +146,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    public void testDecrementAndGet(){
+    /**
+     *
+     */
+    public void testDecrementAndGet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -130,6 +160,9 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testIncrementAndGet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -168,6 +201,9 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testCountingInMultipleThreads() {
         try {
             final AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
@@ -184,11 +220,14 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
         }
         catch(InterruptedException ie) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
 
+    /**
+     *
+     */
     public void testSerialization() {
         AtomicIntegerArray l = new AtomicIntegerArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) 
@@ -208,7 +247,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             }
         } catch(Exception e){
             e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

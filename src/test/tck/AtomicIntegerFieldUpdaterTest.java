@@ -22,27 +22,36 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         return new TestSuite(AtomicIntegerFieldUpdaterTest.class);
     }
 
-    public void testConstructor(){
+    /**
+     *
+     */
+    public void testConstructor() {
         try{
             AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (getClass(), "y");
-            fail("Exception not thrown");
+            shouldThrow();
         }
         catch (RuntimeException rt) {}
     }
 
-    public void testConstructor2(){
+    /**
+     *
+     */
+    public void testConstructor2() {
         try{
             AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (getClass(), "z");
-            fail("Exception not thrown");
+            shouldThrow();
         }
         catch (RuntimeException rt) {}
     }
 
-    public void testGetSet(){
+    /**
+     *
+     */
+    public void testGetSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(1,a.get(this));
@@ -52,7 +61,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-3,a.get(this));
 	
     }
-    public void testCompareAndSet(){
+    /**
+     *
+     */
+    public void testCompareAndSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertTrue(a.compareAndSet(this,1,2));
@@ -64,7 +76,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(7,a.get(this));
     }
 
-    public void testWeakCompareAndSet(){
+    /**
+     *
+     */
+    public void testWeakCompareAndSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	while(!a.weakCompareAndSet(this,1,2));
@@ -74,7 +89,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(7,a.get(this));
     }
 
-    public void testGetAndSet(){
+    /**
+     *
+     */
+    public void testGetAndSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(1,a.getAndSet(this, 0));
@@ -82,7 +100,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-10,a.getAndSet(this,1));
     }
 
-    public void testGetAndAdd(){
+    /**
+     *
+     */
+    public void testGetAndAdd() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(1,a.getAndAdd(this,2));
@@ -91,7 +112,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-1,a.get(this));
     }
 
-    public void testGetAndDecrement(){
+    /**
+     *
+     */
+    public void testGetAndDecrement() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(1,a.getAndDecrement(this));
@@ -99,7 +123,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-1,a.getAndDecrement(this));
     }
 
-    public void testGetAndIncrement(){
+    /**
+     *
+     */
+    public void testGetAndIncrement() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(1,a.getAndIncrement(this));
@@ -111,7 +138,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(1,a.get(this));
     }
 
-    public void testAddAndGet(){
+    /**
+     *
+     */
+    public void testAddAndGet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(3,a.addAndGet(this,2));
@@ -120,7 +150,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-1,a.get(this));
     }
 
-    public void testDecrementAndGet(){
+    /**
+     *
+     */
+    public void testDecrementAndGet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(0,a.decrementAndGet(this));
@@ -129,7 +162,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-2,a.get(this));
     }
 
-    public void testIncrementAndGet(){
+    /**
+     *
+     */
+    public void testIncrementAndGet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a = AtomicIntegerFieldUpdater.newUpdater(getClass(), "x");
         x = 1;
 	assertEquals(2,a.incrementAndGet(this));

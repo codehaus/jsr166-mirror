@@ -18,63 +18,72 @@ public class LockSupportTest extends JSR166TestCase{
 	return new TestSuite(LockSupportTest.class);
     }
 
+    /**
+     *
+     */
     public void testUnpark() { 
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			LockSupport.park();
-		    }catch(Exception e){
-                        threadFail("unexpected exception");
+		    } catch(Exception e){
+                        threadUnexpectedException();
                     }
 		}
 	    });
 	t.start();
-	try{
+	try {
             LockSupport.unpark(t);
             t.join();
 	}
 	catch(Exception e) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testParkNanos() { 
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
 			LockSupport.parkNanos(1000);
-		    }catch(Exception e){
-                        threadFail("unexpected exception");
+		    } catch(Exception e){
+                        threadUnexpectedException();
                     }
 		}
 	    });
-	try{
+	try {
             t.start();
             t.join();
 	}
 	catch(Exception e) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
 
+    /**
+     *
+     */
     public void testParkUntil() { 
-	Thread t = new Thread(new Runnable(){
-		public void run(){
-		    try{
+	Thread t = new Thread(new Runnable() {
+		public void run() {
+		    try {
                         long d = new Date().getTime() + 100;
 			LockSupport.parkUntil(d);
-		    }catch(Exception e){
-                        threadFail("unexpected exception");
+		    } catch(Exception e){
+                        threadUnexpectedException();
                     }
 		}
 	    });
-	try{
+	try {
             t.start();
             t.join();
 	}
 	catch(Exception e) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 }

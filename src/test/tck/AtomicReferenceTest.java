@@ -17,16 +17,25 @@ public class AtomicReferenceTest extends JSR166TestCase {
         return new TestSuite(AtomicReferenceTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor(){
         AtomicReference ai = new AtomicReference(one);
 	assertEquals(one,ai.get());
     }
 
+    /**
+     *
+     */
     public void testConstructor2(){
         AtomicReference ai = new AtomicReference();
 	assertNull(ai.get());
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         AtomicReference ai = new AtomicReference(one);
 	assertEquals(one,ai.get());
@@ -36,6 +45,9 @@ public class AtomicReferenceTest extends JSR166TestCase {
 	assertEquals(m3,ai.get());
 	
     }
+    /**
+     *
+     */
     public void testCompareAndSet(){
         AtomicReference ai = new AtomicReference(one);
 	assertTrue(ai.compareAndSet(one,two));
@@ -47,6 +59,9 @@ public class AtomicReferenceTest extends JSR166TestCase {
 	assertEquals(seven,ai.get());
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         AtomicReference ai = new AtomicReference(one);
 	while(!ai.weakCompareAndSet(one,two));
@@ -56,6 +71,9 @@ public class AtomicReferenceTest extends JSR166TestCase {
 	assertEquals(seven,ai.get());
     }
 
+    /**
+     *
+     */
     public void testGetAndSet(){
         AtomicReference ai = new AtomicReference(one);
 	assertEquals(one,ai.getAndSet(zero));
@@ -63,6 +81,9 @@ public class AtomicReferenceTest extends JSR166TestCase {
 	assertEquals(m10,ai.getAndSet(one));
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         AtomicReference l = new AtomicReference();
 
@@ -78,8 +99,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
             AtomicReference r = (AtomicReference) in.readObject();
             assertEquals(l.get(), r.get());
         } catch(Exception e){
-            e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

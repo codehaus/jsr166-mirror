@@ -17,17 +17,26 @@ public class AtomicBooleanTest extends JSR166TestCase {
         return new TestSuite(AtomicBooleanTest.class);
     }
 
-    public void testConstructor(){
+    /**
+     *
+     */
+    public void testConstructor() {
         AtomicBoolean ai = new AtomicBoolean(true);
 	assertEquals(true,ai.get());
     }
 
-    public void testConstructor2(){
+    /**
+     *
+     */
+    public void testConstructor2() {
         AtomicBoolean ai = new AtomicBoolean();
 	assertEquals(false,ai.get());
     }
 
-    public void testGetSet(){
+    /**
+     *
+     */
+    public void testGetSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
 	assertEquals(true,ai.get());
 	ai.set(false);
@@ -36,7 +45,10 @@ public class AtomicBooleanTest extends JSR166TestCase {
 	assertEquals(true,ai.get());
 	
     }
-    public void testCompareAndSet(){
+    /**
+     *
+     */
+    public void testCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
 	assertTrue(ai.compareAndSet(true,false));
 	assertEquals(false,ai.get());
@@ -48,7 +60,10 @@ public class AtomicBooleanTest extends JSR166TestCase {
 	assertEquals(true,ai.get());
     }
 
-    public void testWeakCompareAndSet(){
+    /**
+     *
+     */
+    public void testWeakCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
 	while(!ai.weakCompareAndSet(true,false));
 	assertEquals(false,ai.get());
@@ -58,7 +73,10 @@ public class AtomicBooleanTest extends JSR166TestCase {
 	assertEquals(true,ai.get());
     }
 
-    public void testGetAndSet(){
+    /**
+     *
+     */
+    public void testGetAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
 	assertEquals(true,ai.getAndSet(false));
 	assertEquals(false,ai.getAndSet(false));
@@ -66,6 +84,9 @@ public class AtomicBooleanTest extends JSR166TestCase {
 	assertEquals(true,ai.get());
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         AtomicBoolean l = new AtomicBoolean();
 
@@ -82,7 +103,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
             assertEquals(l.get(), r.get());
         } catch(Exception e){
             e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

@@ -17,12 +17,18 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         return new TestSuite(AtomicLongArrayTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor(){
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) 
             assertEquals(0,ai.get(i));
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -35,6 +41,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testCompareAndSet(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -49,6 +58,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -61,6 +73,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testGetAndSet(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -71,6 +86,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testGetAndAdd(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -82,6 +100,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testGetAndDecrement(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -92,6 +113,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testGetAndIncrement(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -106,6 +130,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testAddAndGet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -117,6 +144,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testDecrementAndGet(){
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -128,6 +158,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testIncrementAndGet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) {
@@ -166,6 +199,9 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         }
     }
 
+    /**
+     *
+     */
     public void testCountingInMultipleThreads() {
         try {
             final AtomicLongArray ai = new AtomicLongArray(SIZE); 
@@ -182,10 +218,13 @@ public class AtomicLongArrayTest extends JSR166TestCase {
             assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
         }
         catch(InterruptedException ie) {
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         AtomicLongArray l = new AtomicLongArray(SIZE); 
         for (int i = 0; i < SIZE; ++i) 
@@ -204,8 +243,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
                 assertEquals(l.get(i), r.get(i));
             }
         } catch(Exception e){
-            e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

@@ -17,29 +17,38 @@ public class CountDownLatchTest extends JSR166TestCase {
 	return new TestSuite(CountDownLatchTest.class);
     }
 
-    public void testConstructor(){
+    /**
+     *
+     */
+    public void testConstructor() {
         try {
             new CountDownLatch(-1);
-            fail("should throw IllegalArgumentException");
+            shouldThrow();
         } catch(IllegalArgumentException success){}
     }
 
-    public void testGetCount(){
+    /**
+     *
+     */
+    public void testGetCount() {
 	final CountDownLatch l = new CountDownLatch(2);
 	assertEquals(2, l.getCount());
 	l.countDown();
 	assertEquals(1, l.getCount());
     }
 
-    public void testAwait(){
+    /**
+     *
+     */
+    public void testAwait() {
 	final CountDownLatch l = new CountDownLatch(2);
 
-	Thread t = new Thread(new Runnable(){
-		public void run(){
+	Thread t = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			l.await();
 		    } catch(InterruptedException e){
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -53,20 +62,23 @@ public class CountDownLatchTest extends JSR166TestCase {
             assertEquals(l.getCount(), 0);
             t.join();
         } catch (InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
     
 
-    public void testTimedAwait(){
+    /**
+     *
+     */
+    public void testTimedAwait() {
 	final CountDownLatch l = new CountDownLatch(2);
 
-	Thread t = new Thread(new Runnable(){
-		public void run(){
+	Thread t = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			threadAssertTrue(l.await(SMALL_DELAY_MS, TimeUnit.MILLISECONDS));
 		    } catch(InterruptedException e){
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     }
 		}
 	    });
@@ -80,20 +92,23 @@ public class CountDownLatchTest extends JSR166TestCase {
             assertEquals(l.getCount(), 0);
             t.join();
         } catch (InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
     
 
 
 
-    public void testAwait_InterruptedException(){
+    /**
+     *
+     */
+    public void testAwait_InterruptedException() {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new Runnable(){
-                public void run(){
+        Thread t = new Thread(new Runnable() {
+                public void run() {
                     try {
                         l.await();
-                        threadFail("should throw");
+                        threadShouldThrow();
                     } catch(InterruptedException success){}
                 }
             });
@@ -103,17 +118,20 @@ public class CountDownLatchTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testTimedAwait_InterruptedException(){
+    /**
+     *
+     */
+    public void testTimedAwait_InterruptedException() {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new Runnable(){
-                public void run(){
+        Thread t = new Thread(new Runnable() {
+                public void run() {
                     try {
                         l.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadFail("should throw");                        
+                        threadShouldThrow();                        
                     } catch(InterruptedException success){}
                 }
             });
@@ -124,18 +142,21 @@ public class CountDownLatchTest extends JSR166TestCase {
             t.interrupt();
             t.join();
         } catch (InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 
-    public void testAwaitTimeout(){
+    /**
+     *
+     */
+    public void testAwaitTimeout() {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new Runnable(){
-                public void run(){
+        Thread t = new Thread(new Runnable() {
+                public void run() {
                     try {
                         threadAssertFalse(l.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch(InterruptedException ie){
-                        threadFail("unexpected exception");
+                        threadUnexpectedException();
                     }
                 }
             });
@@ -144,7 +165,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             assertEquals(l.getCount(), 1);
             t.join();
         } catch (InterruptedException e){
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

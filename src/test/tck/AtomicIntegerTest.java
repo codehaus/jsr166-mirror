@@ -17,16 +17,25 @@ public class AtomicIntegerTest extends JSR166TestCase {
         return new TestSuite(AtomicIntegerTest.class);
     }
 
+    /**
+     *
+     */
     public void testConstructor(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(1,ai.get());
     }
 
+    /**
+     *
+     */
     public void testConstructor2(){
         AtomicInteger ai = new AtomicInteger();
 	assertEquals(0,ai.get());
     }
 
+    /**
+     *
+     */
     public void testGetSet(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(1,ai.get());
@@ -36,6 +45,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(-3,ai.get());
 	
     }
+    /**
+     *
+     */
     public void testCompareAndSet(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertTrue(ai.compareAndSet(1,2));
@@ -47,6 +59,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(7,ai.get());
     }
 
+    /**
+     *
+     */
     public void testWeakCompareAndSet(){
         AtomicInteger ai = new AtomicInteger(1);
 	while(!ai.weakCompareAndSet(1,2));
@@ -56,6 +71,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(7,ai.get());
     }
 
+    /**
+     *
+     */
     public void testGetAndSet(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(1,ai.getAndSet(0));
@@ -63,6 +81,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(-10,ai.getAndSet(1));
     }
 
+    /**
+     *
+     */
     public void testGetAndAdd(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(1,ai.getAndAdd(2));
@@ -71,6 +92,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(-1,ai.get());
     }
 
+    /**
+     *
+     */
     public void testGetAndDecrement(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(1,ai.getAndDecrement());
@@ -78,6 +102,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(-1,ai.getAndDecrement());
     }
 
+    /**
+     *
+     */
     public void testGetAndIncrement(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(1,ai.getAndIncrement());
@@ -89,6 +116,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(1,ai.get());
     }
 
+    /**
+     *
+     */
     public void testAddAndGet(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(3,ai.addAndGet(2));
@@ -97,6 +127,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(-1,ai.get());
     }
 
+    /**
+     *
+     */
     public void testDecrementAndGet(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(0,ai.decrementAndGet());
@@ -105,6 +138,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(-2,ai.get());
     }
 
+    /**
+     *
+     */
     public void testIncrementAndGet(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(2,ai.incrementAndGet());
@@ -116,6 +152,9 @@ public class AtomicIntegerTest extends JSR166TestCase {
 	assertEquals(1,ai.get());
     }
 
+    /**
+     *
+     */
     public void testSerialization() {
         AtomicInteger l = new AtomicInteger();
 
@@ -131,8 +170,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
             AtomicInteger r = (AtomicInteger) in.readObject();
             assertEquals(l.get(), r.get());
         } catch(Exception e){
-            e.printStackTrace();
-            fail("unexpected exception");
+            unexpectedException();
         }
     }
 

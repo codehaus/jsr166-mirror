@@ -28,8 +28,8 @@ import java.util.Queue;
  *
  * <p> While <tt>BlockingQueue</tt> is designed to be used primarily
  * for producer-consumer queues, it additionally supports the
- * <tt>Collection</tt> interface.  So, for example, it is possible to
- * remove an arbitrary element from within a queue using
+ * {@link java.util.Collection} interface.  So, for example, it is possible to
+ * remove an arbitrary element from a queue using
  * <tt>remove(x)</tt>. However, such operations are in general
  * <em>NOT</em> performed very efficiently, and are intended for only
  * occasional use, such as when a queued message is cancelled.  Also,
@@ -88,9 +88,6 @@ import java.util.Queue;
  *
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/08 20:05:07 $
- * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface BlockingQueue<E> extends Queue<E> {

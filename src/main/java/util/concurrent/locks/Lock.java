@@ -8,17 +8,19 @@ package java.util.concurrent.locks;
 import java.util.concurrent.TimeUnit;
 
 /**
- * <tt>Lock</tt> implementations provide more flexible locking operations than
- * can be obtained using <tt>synchronized</tt> methods and statements.
- * They allow more flexible structuring, may have quite different properties
- * and may support multiple associated {@link Condition} objects.
+ * <tt>Lock</tt> implementations provide more extensive locking
+ * operations than can be obtained using <tt>synchronized</tt> methods
+ * and statements.  They allow more flexible structuring, may have
+ * quite different properties, and may support multiple associated
+ * {@link Condition} objects.
  *
- * <p>A lock is a tool for controlling access to a shared
- * resource by multiple threads. Commonly, a lock provides exclusive access
- * to a shared resource: only one thread at a time can acquire the
- * lock and all access to the shared resource requires that the lock be
- * acquired first. However, some locks may allow concurrent access to a shared
- * resource, such as the read lock of a {@link ReadWriteLock}.
+ * <p>A lock is a tool for controlling access to a shared resource by
+ * multiple threads. Commonly, a lock provides exclusive access to a
+ * shared resource: only one thread at a time can acquire the lock and
+ * all access to the shared resource requires that the lock be
+ * acquired first. However, some locks may allow concurrent access to
+ * a shared resource, such as the read lock of a {@link
+ * ReadWriteLock}.
  *
  * <p>The use of <tt>synchronized</tt> methods or statements provides 
  * access to the implicit monitor lock associated with every object, but
@@ -27,24 +29,26 @@ import java.util.concurrent.TimeUnit;
  * order, and all locks must be released in the same lexical scope in which
  * they were acquired.
  *
- * <p>While the scoping mechanism for <tt>synchronized</tt> methods and 
- * statements makes it much easier to program with monitor locks,
- * and helps avoid many common programming errors involving locks, there are
- * rare occasions where you need to work with locks in a more flexible way. For
- * example, some advanced algorithms for traversing concurrently accessed data
- * structures require the use of what is called &quot;hand-over-hand&quot; or 
- * &quot;chain locking&quot;: you acquire the lock of node A, then node B, 
- * then release A and acquire C, then release B and acquire D and so on. 
- * Implementations of the <tt>Lock</tt> interface facilitate the use of such 
- * advanced algorithms by allowing a lock to be acquired and released in 
- * different scopes, and allowing multiple locks to be acquired and released 
- * in any order. 
+ * <p>While the scoping mechanism for <tt>synchronized</tt> methods
+ * and statements makes it much easier to program with monitor locks,
+ * and helps avoid many common programming errors involving locks,
+ * there are occasions where you need to work with locks in a more
+ * flexible way. For example, some algorithms for traversing
+ * concurrently accessed data structures require the use of
+ * &quot;hand-over-hand&quot; or &quot;chain locking&quot;: you
+ * acquire the lock of node A, then node B, then release A and acquire
+ * C, then release B and acquire D and so on.  Implementations of the
+ * <tt>Lock</tt> interface enable the use of such techniques by
+ * allowing a lock to be acquired and released in different scopes,
+ * and allowing multiple locks to be acquired and released in any
+ * order.
  *
- * <p>With this increased flexibilty comes
- * additional responsibility as the absence of block-structured locking
- * removes the automatic release of locks that occurs with 
- * <tt>synchronized</tt> methods and statements. For the simplest usage
- * the following idiom should be used:
+ * <p>With this increased flexibilty comes additional
+ * responsibility. The absence of block-structured locking removes the
+ * automatic release of locks that occurs with <tt>synchronized</tt>
+ * methods and statements. In most cases, the following idiom
+ * should be used:
+ *
  * <pre><tt>     Lock l = ...; 
  *     l.lock();
  *     try {
@@ -53,23 +57,24 @@ import java.util.concurrent.TimeUnit;
  *         l.unlock();
  *     }
  * </tt></pre>
- * When locking and unlocking occur in different scopes, care must be taken
- * to ensure that all code that is executed while the lock is held, is 
- * protected by try-finally, or try-catch, to ensure that the lock is released
- * when necessary.
- * <p><tt>Lock</tt> implementations provide additional functionality over the 
- * use
- * of <tt>synchronized</tt> methods and statements by providing a non-blocking
- * attempt to acquire a lock ({@link #tryLock()}), an attempt to acquire the
- * lock that can be interrupted ({@link #lockInterruptibly}, and an attempt
- * to acquire the lock that can timeout ({@link #tryLock(long, TimeUnit)}).
  *
- * <p>A <tt>Lock</tt> class can also provide behavior and semantics that is 
- * quite different from that of the implicit monitor lock, such as guaranteed 
- * ordering,
- * non-reentrant usage, or deadlock detection. If an implementation provides
- * such specialised semantics then the implementation must document those
- * semantics.
+ * When locking and unlocking occur in different scopes, care must be
+ * taken to ensure that all code that is executed while the lock is
+ * held is protected by try-finally or try-catch to ensure that the
+ * lock is released when necessary.
+ *
+ * <p><tt>Lock</tt> implementations provide additional functionality
+ * over the use of <tt>synchronized</tt> methods and statements by
+ * providing a non-blocking attempt to acquire a lock ({@link
+ * #tryLock()}), an attempt to acquire the lock that can be
+ * interrupted ({@link #lockInterruptibly}, and an attempt to acquire
+ * the lock that can timeout ({@link #tryLock(long, TimeUnit)}).
+ *
+ * <p>A <tt>Lock</tt> class can also provide behavior and semantics
+ * that is quite different from that of the implicit monitor lock,
+ * such as guaranteed ordering, non-reentrant usage, or deadlock
+ * detection. If an implementation provides such specialised semantics
+ * then the implementation must document those semantics.
  *
  * <p>Note that <tt>Lock</tt> instances are just normal objects and can 
  * themselves be used as the target in a <tt>synchronized</tt> statement.
@@ -79,8 +84,9 @@ import java.util.concurrent.TimeUnit;
  * It is recommended that to avoid confusion you never use <tt>Lock</tt>
  * instances in this way, except within their own implementation.
  *
- * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
- * will result in a {@link NullPointerException} being thrown.
+ * <p>Except where noted, passing a <tt>null</tt> value for any
+ * parameter will result in a {@link NullPointerException} being
+ * thrown.
  *
  * <h3>Memory Synchronization</h3>
  * <p>All <tt>Lock</tt> implementations <em>must</em> enforce the same
@@ -91,27 +97,28 @@ import java.util.concurrent.TimeUnit;
  * <li>A successful <tt>unlock</tt> operation acts like a successful
  * <tt>monitorExit</tt> action
  * </ul>
- * Note that unsuccessful locking and unlocking operations, and reentrant
- * locking/unlocking operations, do not require any memory synchronization
- * effects.
+ *
+ * Unsuccessful locking and unlocking operations, and reentrant
+ * locking/unlocking operations, do not require any memory
+ * synchronization effects.
  *
  * <h3>Implementation Considerations</h3>
- * <p>It is recognised that the three forms of lock acquisition (interruptible,
- * non-interruptible, and timed) may differ in their ease of implementation
- * on some platforms and in their performance characteristics.
- * In particular, it may be difficult to provide these features and maintain 
- * specific semantics such as ordering guarantees. 
- * Further, the ability to interrupt the acquisition of a lock may not always
- * be feasible to implement on all platforms.
- * <p>Consequently, an implementation is not required to define exactly the 
- * same 
- * guarantees or semantics for all three forms of lock acquistion, nor is it 
- * required to support interruption of the actual lock acquisition.
- * An implementation is required to clearly
- * document the semantics and guarantees provided by each of the locking 
- * methods. It must also obey the interruption semantics as defined in this
- * interface, to the extent that interruption of lock acquisition is 
- * supported: which is either totally, or only on method entry.
+ *
+ * <p> The three forms of lock acquisition (interruptible,
+ * non-interruptible, and timed) may differ in their performance
+ * characteristics, ordering guarantees, or other implementation
+ * qualities.  Further, the ability to interrupt the <em>ongoing</em>
+ * acquisition of a lock may not be available in a given <tt>Lock</tt>
+ * class.  Consequently, an implementation is not required to define
+ * exactly the same guarantees or semantics for all three forms of
+ * lock acquistion, nor is it required to support interruption of an
+ * ongoing lock acquisition.  An implementation is required to clearly
+ * document the semantics and guarantees provided by each of the
+ * locking methods. It must also obey the interruption semantics as
+ * defined in this interface, to the extent that interruption of lock
+ * acquisition is supported: which is either totally, or only on
+ * method entry.
+ *
  * <p>As interruption generally implies cancellation, and checks for 
  * interruption are often infrequent, an implementation can favor responding
  * to an interrupt over normal method return. This is true even if it can be
@@ -124,17 +131,13 @@ import java.util.concurrent.TimeUnit;
  * @see ReadWriteLock
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/26 00:09:19 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  *
  **/
 public interface Lock {
 
     /**
-     * Acquires the lock. 
-     * <p>Acquires the lock if it is available and returns immediately.
+     * Acquires the lock.
      * <p>If the lock is not available then
      * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until the lock has been acquired.
@@ -170,18 +173,21 @@ public interface Lock {
      * interrupted status is cleared. 
      *
      * <p><b>Implementation Considerations</b>
-     * <p>The ability to interrupt a lock acquisition in some implementations
-     * may not be possible, and if possible could reasonably be foreseen to 
-     * be an expensive operation. 
-     * The programmer should be aware that this may be the case. An
-     * implementation should document when this is the case.
-     * <p>An implementation can favor responding to an interrupt over 
+     *
+     * <p>The ability to interrupt a lock acquisition in some
+     * implementations may not be possible, and if possible may be an
+     * expensive operation.  The programmer should be aware that this
+     * may be the case. An implementation should document when this is
+     * the case.
+     *
+     * <p>An implementation can favor responding to an interrupt over
      * normal method return.
-     * <p>A <tt>Lock</tt> implementation may be able to detect 
-     * erroneous use of the lock, such as an invocation that would cause 
-     * deadlock, and may throw an (unchecked) exception in such circumstances. 
-     * The circumstances and the exception type must be documented by that
-     * <tt>Lock</tt> implementation.
+     *
+     * <p>A <tt>Lock</tt> implementation may be able to detect
+     * erroneous use of the lock, such as an invocation that would
+     * cause deadlock, and may throw an (unchecked) exception in such
+     * circumstances.  The circumstances and the exception type must
+     * be documented by that <tt>Lock</tt> implementation.
      *
      * @throws InterruptedException if the current thread is interrupted
      * while acquiring the lock (and interruption of lock acquisition is 
@@ -197,7 +203,7 @@ public interface Lock {
      * Acquires the lock only if it is free at the time of invocation.
      * <p>Acquires the lock if it is available and returns immediately
      * with the value <tt>true</tt>.
-     * <p>If the lock is not available then this method will return 
+     * If the lock is not available then this method will return 
      * immediately with the value <tt>false</tt>.
      * <p>A typical usage idiom for this method would be:
      * <pre>
@@ -223,9 +229,10 @@ public interface Lock {
     /**
      * Acquires the lock if it is free within the given waiting time and the
      * current thread has not been {@link Thread#interrupt interrupted}.
-     * <p>Acquires the lock if it is available and returns immediately
+     *
+     * <p>If the lock is available this method returns immediately
      * with the value <tt>true</tt>.
-     * <p>If the lock is not available then
+     * If the lock is not available then
      * the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until one of three things happens:
      * <ul>
@@ -250,7 +257,7 @@ public interface Lock {
      *
      * <p><b>Implementation Considerations</b>
      * <p>The ability to interrupt a lock acquisition in some implementations
-     * may not be possible, and if possible could reasonably be foreseen to 
+     * may not be possible, and if possible may 
      * be an expensive operation. 
      * The programmer should be aware that this may be the case. An
      * implementation should document when this is the case.

@@ -15,9 +15,6 @@ package java.util.concurrent.atomic;
  * [reference, boolean] pairs.
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/24 23:32:57 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public class AtomicMarkableReference<V>  {
@@ -63,7 +60,7 @@ public class AtomicMarkableReference<V>  {
 
     /**
      * Returns the current values of both the reference and the mark.
-     * Typical usage is <code>boolean[1] holder; ref = v.get(holder); </code>.
+     * Typical usage is <tt>boolean[1] holder; ref = v.get(holder); </tt>.
      *
      * @param markHolder an array of size of at least one. On return,
      * <tt>markholder[0]</tt> will hold the value of the mark.
@@ -78,10 +75,10 @@ public class AtomicMarkableReference<V>  {
     /**
      * Atomically sets the value of both the reference and mark
      * to the given update values if the
-     * current reference is <code>==</code> to the expected reference
+     * current reference is <tt>==</tt> to the expected reference
      * and the current mark is equal to the expected mark.  Any given
      * invocation of this operation may fail (return
-     * <code>false</code>) spuriously, but repeated invocation when
+     * <tt>false</tt>) spuriously, but repeated invocation when
      * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
      *
@@ -107,7 +104,7 @@ public class AtomicMarkableReference<V>  {
     /**
      * Atomically sets the value of both the reference and mark
      * to the given update values if the
-     * current reference is <code>==</code> to the expected reference
+     * current reference is <tt>==</tt> to the expected reference
      * and the current mark is equal to the expected mark.  
      *
      * @param expectedReference the expected value of the reference
@@ -143,9 +140,9 @@ public class AtomicMarkableReference<V>  {
 
     /**
      * Atomically sets the value of the mark to the given update value
-     * if the current reference is <code>==</code> to the expected
+     * if the current reference is <tt>==</tt> to the expected
      * reference.  Any given invocation of this operation may fail
-     * (return <code>false</code>) spuriously, but repeated invocation
+     * (return <tt>false</tt>) spuriously, but repeated invocation
      * when the current value holds the expected value and no other
      * thread is also attempting to set the value will eventually
      * succeed.

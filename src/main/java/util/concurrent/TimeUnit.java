@@ -15,11 +15,11 @@ package java.util.concurrent;
  * use time representations that may be maintained separately across
  * various contexts.
  *
- * <p>The <tt>TimeUnit</tt> class cannot be directly instantiated.
- * Use the {@link #SECONDS}, {@link #MILLISECONDS}, {@link #MICROSECONDS},
- * and {@link #NANOSECONDS} static instances that provide predefined
- * units of precision. If you use these frequently, consider
- * statically importing this class.
+ * <p>This class cannot be directly instantiated.  Use the {@link
+ * #SECONDS}, {@link #MILLISECONDS}, {@link #MICROSECONDS}, and {@link
+ * #NANOSECONDS} static instances that provide predefined units of
+ * precision. If you use these frequently, consider statically
+ * importing this class.
  *
  * <p>A <tt>TimeUnit</tt> is mainly used to inform blocking methods which
  * can timeout, how the timeout parameter should be interpreted. For example,
@@ -38,9 +38,6 @@ package java.util.concurrent;
  * as the given <tt>TimeUnit</tt>.
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/30 14:59:27 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public final class TimeUnit implements java.io.Serializable {
@@ -60,22 +57,20 @@ public final class TimeUnit implements java.io.Serializable {
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      */
     public long convert(long duration, TimeUnit unit) {
-        if (unit == this)
+        int i = unit.index - index;
+        if (i == 0)
             return duration;
-        else if (index > unit.index) 
-            return duration / multipliers[index - unit.index];
-        else {
-            int i = unit.index - index;
-            if (duration > overflows[i])
-                return Long.MAX_VALUE;
-            if (duration < -overflows[i])
-                return Long.MIN_VALUE;
-            return duration * multipliers[i];
-        }
+        if (i < 0) 
+            return duration / multipliers[-i];
+        if (duration > overflows[i])
+            return Long.MAX_VALUE;
+        if (duration < -overflows[i])
+            return Long.MIN_VALUE;
+        return duration * multipliers[i];
     }
 
     /**
-     * Equivalent to <code>NANOSECONDS.convert(duration, this)</code>.
+     * Equivalent to <tt>NANOSECONDS.convert(duration, this)</tt>.
      * @param duration the duration
      * @return the converted duration.
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively

@@ -9,11 +9,11 @@ import java.util.concurrent.atomic.*;
 import java.util.*;
 
 /**
- * An <tt>Executor</tt> that can schedule commands to run after a given
+ * An {@link Executor} that can schedule commands to run after a given
  * delay, or to execute periodically. This class is preferable to
- * <tt>java.util.Timer</tt> when multiple worker threads are needed,
+ * {@link java.util.Timer} when multiple worker threads are needed,
  * or when the additional flexibility or capabilities of
- * <tt>ThreadPoolExecutor</tt> (which this class extends) are
+ * {@link ThreadPoolExecutor} (which this class extends) are
  * required.
  *
  * <p> The <tt>schedule</tt> methods create tasks with various delays
@@ -32,7 +32,7 @@ import java.util.*;
  * <p>All <t>schedule</tt> methods accept <em>relative</em> delays and
  * periods as arguments, not absolute times or dates. It is a simple
  * matter to transform an absolute time represented as a
- * <tt>java.util.Date</tt>, to the required form. For example, to
+ * {@link java.util.Date}, to the required form. For example, to
  * schedule at a certain future <tt>date</tt>, you can use:
  * <tt>schedule(task, date.getTime() - System.currentTimeMillis(),
  * TimeUnit.MILLISECONDS)</tt>. Beware however that expiration of a
@@ -48,9 +48,6 @@ import java.util.*;
  * useful effect.
  *
  * @since 1.5
- * @see Executors
- *
- * @spec JSR-166
  * @author Doug Lea
  */
 public class ScheduledExecutor extends ThreadPoolExecutor {
@@ -396,7 +393,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * equivalent to <tt>schedule(command, 0, anyUnit)</tt>.  Note
      * that inspections of the queue and of the list returned by
      * <tt>shutdownNow</tt> will access the zero-delayed
-     * <tt>ScheduledCancellable</tt>, not the <tt>command</tt> itself.
+     * {@link ScheduledCancellable}, not the <tt>command</tt> itself.
      *
      * @param command the task to execute
      * @throws RejectedExecutionException at discretion of
@@ -511,9 +508,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * fail to respond to interrupts, they may never terminate.
      *
      * @return list of tasks that never commenced execution.  Each
-     * element of this list is a <tt>ScheduledCancellable</tt>, including those
-     * tasks submitted using <tt>execute</tt> which are for scheduling
-     * purposes used as the basis of a zero-delay <tt>ScheduledCancellable</tt>.
+     * element of this list is a {@link ScheduledCancellable},
+     * including those tasks submitted using <tt>execute</tt> which
+     * are for scheduling purposes used as the basis of a zero-delay
+     * <tt>ScheduledCancellable</tt>.
      */
     public List shutdownNow() {
         return super.shutdownNow();
@@ -552,7 +550,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
      * Returns the task queue used by this executor.  Each element of
-     * this queue is a <tt>ScheduledCancellable</tt>, including those
+     * this queue is a {@link ScheduledCancellable}, including those
      * tasks submitted using <tt>execute</tt> which are for scheduling
      * purposes used as the basis of a zero-delay
      * <tt>ScheduledCancellable</tt>. Iteration over this queue is

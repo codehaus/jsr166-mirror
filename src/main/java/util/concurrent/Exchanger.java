@@ -21,13 +21,13 @@ import java.util.concurrent.locks.*;
  * the thread emptying the buffer.
  * <pre>
  * class FillAndEmpty {
- *   Exchanger&lt;Buffer&gt; exchanger = new Exchanger();
- *   Buffer initialEmptyBuffer = ... a made-up type
- *   Buffer initialFullBuffer = ...
+ *   Exchanger&lt;DataBuffer&gt; exchanger = new Exchanger();
+ *   DataBuffer initialEmptyBuffer = ... a made-up type
+ *   DataBuffer initialFullBuffer = ...
  *
  *   class FillingLoop implements Runnable {
  *     public void run() {
- *       Buffer currentBuffer = initialEmptyBuffer;
+ *       DataBuffer currentBuffer = initialEmptyBuffer;
  *       try {
  *         while (currentBuffer != null) {
  *           addToBuffer(currentBuffer);
@@ -40,7 +40,7 @@ import java.util.concurrent.locks.*;
  *
  *   class EmptyingLoop implements Runnable {
  *     public void run() {
- *       Buffer currentBuffer = initialFullBuffer;
+ *       DataBuffer currentBuffer = initialFullBuffer;
  *       try {
  *         while (currentBuffer != null) {
  *           takeFromBuffer(currentBuffer);
@@ -58,12 +58,7 @@ import java.util.concurrent.locks.*;
  * }
  * </pre>
  *
- * @fixme change example to use a bounded queue?
- *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/26 00:09:18 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public class Exchanger<V> {

@@ -8,17 +8,11 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * Factory and utility methods for the <tt>Executor</tt> classes
- * defined in <tt>java.util.concurrent</tt>.
+ * Factory and utility methods for {@link Executor} and {@link
+ * ExecutorService}, {@link Future}, and {@link Cancellable} classes
+ * defined in this package.
  *
  * @since 1.5
- * @see Executor
- * @see ExecutorService
- * @see Future
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/24 23:32:25 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public class Executors {

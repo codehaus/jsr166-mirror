@@ -9,22 +9,17 @@ package java.util.concurrent;
 import java.util.List;
 
 /**
- * An executor that provides methods to manage termination.  An
- * <tt>ExecutorService</tt> can be shut down, which will cause it to
- * stop accepting new tasks.  After being shut down, the executor will
- * eventually terminate, at which point no tasks are actively
+ * An <tt>Executor</tt> that provides methods to manage termination.
+ * An <tt>ExecutorService</tt> can be shut down, which will cause it
+ * to stop accepting new tasks.  After being shut down, the executor
+ * will eventually terminate, at which point no tasks are actively
  * executing, no tasks are awaiting execution, and no new tasks can be
  * submitted.
  *
- * <p>The <tt>Executors</tt> class provides factory methods for the
- * executor services provided in <tt>java.util.concurrent</tt>.
+ * <p>The {@link Executors} class provides factory methods for the
+ * executor services provided in this package.
  *
  * @since 1.5
- * @see Executors
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/24 14:47:31 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public interface ExecutorService extends Executor {

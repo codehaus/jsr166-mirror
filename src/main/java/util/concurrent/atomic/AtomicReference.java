@@ -8,7 +8,9 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * An AtomicReference maintains an object reference that is updated atomically.
+ * An AtomicReference maintains an object reference that is updated
+ * atomically. See the package specification for
+ * description of the properties of atomic variables.
  * @since 1.5
  * @author Doug Lea
 */

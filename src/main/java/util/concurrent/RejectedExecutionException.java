@@ -7,15 +7,11 @@
 package java.util.concurrent;
 
 /**
- * Thrown by an <tt>Executor</tt> when a task cannot be accepted for execution.
+ * Exception thrown by an {@link Executor} when a task cannot be
+ * accepted for execution.
  * 
  * @since 1.5
- * @see Executor#execute
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/25 19:27:58 $
- * @editor $Author: dl $
-
+ * @author Doug Lea
  */
 public class RejectedExecutionException extends RuntimeException {
     private static final long serialVersionUID = -375805702767069545L;

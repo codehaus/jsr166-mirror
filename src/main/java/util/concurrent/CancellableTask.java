@@ -9,10 +9,11 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
 
 /**
- * Base class for cancellable actions running in the Executor
- * framework. In addition to serving as a standalone class, this
- * provides <tt>protected</tt> functionality that may be useful when
- * creating customized task classes.
+ * Base class for {@link Cancellable} {@link java.lang.Runnable} 
+ * actions within the {@link Executor} framework. In addition to
+ * serving as a standalone class, this provides <tt>protected</tt>
+ * functionality that may be useful when creating customized task
+ * classes.
  * @since 1.5
  * @author Doug Lea
  */
@@ -61,7 +62,7 @@ public class CancellableTask implements Cancellable, Runnable {
      * Creates a new CancellableTask without a runnable action, which
      * must be set using <tt>setRunnable</tt> before use.  This is
      * intended for use in subclasses that must complete superclass
-     * construction beofre establishing the runnable action.
+     * construction before establishing the runnable action.
      */
     protected CancellableTask() {
     }
@@ -259,7 +260,7 @@ V&gt; {
          * result.
          *
          * @param timeout the maximum time to wait
-         * @param granularity the time unit of the timeout argument
+         * @param unit the time unit of the timeout argument
          * @return computed result
          * @throws ExecutionException if underlying computation threw an
          * exception

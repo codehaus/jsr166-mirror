@@ -86,9 +86,9 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Replace the held array with a copy of the <code>n</code>
+     * Replace the held array with a copy of the <tt>n</tt>
      * elements of the provided array, starting at position
-     * <code>first</code>.  To copy an entire array, call with
+     * <tt>first</tt>.  To copy an entire array, call with
      * arguments (array, 0, array.length).
      * @param toCopyIn the array. A copy of the indicated elements of
      * this  array is used as the
@@ -115,8 +115,8 @@ public class CopyOnWriteArrayList<E>
     /**
      * Tests if this list has no components.
      *
-     * @return  <code>true</code> if this list has no components;
-     *          <code>false</code> otherwise.
+     * @return  <tt>true</tt> if this list has no components;
+     *          <tt>false</tt> otherwise.
      */
     public boolean isEmpty() {
         return size() == 0;
@@ -135,11 +135,11 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Searches for the first occurence of the given argument, testing
-     * for equality using the <code>equals</code> method.
+     * for equality using the <tt>equals</tt> method.
      *
      * @param   elem   an object.
      * @return  the index of the first occurrence of the argument in this
-     *          list; returns <code>-1</code> if the object is not found.
+     *          list; returns <tt>-1</tt> if the object is not found.
      * @see     Object#equals(Object)
      */
     public int indexOf(Object elem) {
@@ -168,14 +168,14 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Searches for the first occurence of the given argument, beginning
-     * the search at <code>index</code>, and testing for equality using
-     * the <code>equals</code> method.
+     * the search at <tt>index</tt>, and testing for equality using
+     * the <tt>equals</tt> method.
      *
      * @param   elem    an object.
      * @param   index   the index to start searching from.
      * @return  the index of the first occurrence of the object argument in
-     *          this List at position <code>index</code> or later in the
-     *          List; returns <code>-1</code> if the object is not found.
+     *          this List at position <tt>index</tt> or later in the
+     *          List; returns <tt>-1</tt> if the object is not found.
      * @see     Object#equals(Object)
      */
     public int indexOf(E elem, int index) {
@@ -417,8 +417,8 @@ public class CopyOnWriteArrayList<E>
     /**
      * Removes a single instance of the specified element from this Collection,
      * if it is present (optional operation).  More formally, removes an
-     * element <code>e</code> such that <code>(o==null ? e==null :
-     * o.equals(e))</code>, if the Collection contains one or more such
+     * element <tt>e</tt> such that <tt>(o==null ? e==null :
+     * o.equals(e))</tt>, if the Collection contains one or more such
      * elements.  Returns true if the Collection contained the specified
      * element (or equivalently, if the Collection changed as a result of the
      * call).
@@ -774,8 +774,8 @@ public class CopyOnWriteArrayList<E>
      * Compares the specified Object with this List for equality.  Returns true
      * if and only if the specified Object is also a List, both Lists have the
      * same size, and all corresponding pairs of elements in the two Lists are
-     * <em>equal</em>.  (Two elements <code>e1</code> and <code>e2</code> are
-     * <em>equal</em> if <code>(e1==null ? e2==null : e1.equals(e2))</code>.)
+     * <em>equal</em>.  (Two elements <tt>e1</tt> and <tt>e2</tt> are
+     * <em>equal</em> if <tt>(e1==null ? e2==null : e1.equals(e2))</tt>.)
      * In other words, two Lists are defined to be equal if they contain the
      * same elements in the same order.
      * <p>
@@ -833,7 +833,7 @@ public class CopyOnWriteArrayList<E>
      * The iterator provides a snapshot of the state of the list
      * when the iterator was constructed. No synchronization is
      * needed while traversing the iterator. The iterator does
-     * <em>NOT</em> support the <code>remove</code> method.
+     * <em>NOT</em> support the <tt>remove</tt> method.
      */
     public Iterator<E> iterator() {
         return new COWIterator<E>(array(), 0);
@@ -844,8 +844,8 @@ public class CopyOnWriteArrayList<E>
      * The iterator provides a snapshot of the state of the list
      * when the iterator was constructed. No synchronization is
      * needed while traversing the iterator. The iterator does
-     * <em>NOT</em> support the <code>remove</code>, <code>set</code>,
-     * or <code>add</code> methods.
+     * <em>NOT</em> support the <tt>remove</tt>, <tt>set</tt>,
+     * or <tt>add</tt> methods.
      *
      */
     public ListIterator<E> listIterator() {

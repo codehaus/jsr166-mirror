@@ -9,6 +9,8 @@ import sun.misc.Unsafe;
 
 /**
  * An AtomicLong maintains a <tt>long</tt> value that is updated atomically.
+ * See the package specification for
+ * description of the properties of atomic variables. 
  * @since 1.5
  * @author Doug Lea
  */

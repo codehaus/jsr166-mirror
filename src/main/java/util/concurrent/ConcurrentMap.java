@@ -8,7 +8,7 @@ package java.util.concurrent;
 import java.util.Map;
 
 /**
- * A {@link java.util.Map} providing an additional atomic
+ * A {@link java.util.Map} providing additional atomic
  * <tt>putIfAbsent</tt> and <tt>remove</tt> methods.
  * @since 1.5
  * @author Doug Lea

@@ -89,9 +89,6 @@ import java.util.concurrent.locks.*;
  * they too were interrupted at about the same time).
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/27 01:45:28 $
- * @editor $Author: dholmes $
  * @see CountDownLatch
  *
  * @author Doug Lea
@@ -222,9 +219,8 @@ public class CyclicBarrier {
 
     /**
      * Create a new <tt>CyclicBarrier</tt> that will trip when the
-     * given number of parties (threads) are waiting upon it.
-     *
-     * <p>This is equivalent to <tt>CyclicBarrier(parties, null)</tt>.
+     * given number of parties (threads) are waiting upon it, and
+     * does not perform a predefined action upon each barrier.
      *
      * @param parties the number of threads that must invoke {@link #await}
      * before the barrier is tripped.

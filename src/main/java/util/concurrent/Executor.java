@@ -10,9 +10,8 @@ package java.util.concurrent;
  * An object that executes submitted tasks. This interface provides a
  * way of decoupling task submission from the mechanics of how each
  * task will be run, including details of thread use, scheduling, etc.
- *
- * <p>In the simplest case, an executor can run the submitted task immediately
- * in the caller's thread:
+ * In the simplest case, an executor can run the submitted task
+ * immediately in the caller's thread:
  *
  * <pre>
  * class DirectExecutor implements Executor {
@@ -32,9 +31,10 @@ package java.util.concurrent;
  *     }
  * }</pre>
  *
- * Most <tt>Executor</tt> implementations will impose some sort of limitation
- * on how and when tasks are scheduled.  The executor below serializes the
- * submission of tasks to a second executor, illustrating a composite executor.
+ * Most <tt>Executor</tt> implementations will impose some sort of
+ * limitation on how and when tasks are scheduled.  The executor below
+ * serializes the submission of tasks to a second executor,
+ * illustrating a composite executor.
  *
  * <pre>
  * class SerialExecutor implements Executor {
@@ -68,20 +68,13 @@ package java.util.concurrent;
  *     }
  * }</pre>
  *
- * The <tt>Executor</tt> implementations provided in
- * <tt>java.util.concurrent</tt> implement {@link ExecutorService},
- * which is a more extensive interface.  For more advanced users, the
- * {@link ThreadPoolExecutor} class provides a powerful, extensible
- * thread pool implementation. The {@link Executors} class provides
- * convenient factory methods for these executors.
+ * The <tt>Executor</tt> implementations provided in this package
+ * implement {@link ExecutorService}, which is a more extensive
+ * interface.  The {@link ThreadPoolExecutor} class provides an
+ * extensible thread pool implementation. The {@link Executors} class
+ * provides convenient factory methods for these Executors.
  *
  * @since 1.5
- * @see Executors
- * @see FutureTask
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/06 18:22:09 $
- * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface Executor {
@@ -92,8 +85,8 @@ public interface Executor {
      * thread, at the discretion of the <tt>Executor</tt> implementation.
      *
      * @param command the runnable task
-     * @throws RejectedExecutionException if task cannot be submitted for
-     * execution
+     * @throws RejectedExecutionException if this task cannot be
+     * accepted for execution.
      */
     void execute(Runnable command);
 }

@@ -7,17 +7,11 @@
 package java.util.concurrent;
 
 /**
- * Indicates that the result of a value-producing task, such as a
- * {@link FutureTask}, cannot be retrieved because the task was cancelled.
+ * Exception indicating that the result of a value-producing {@link
+ * Cancellable} task, such as a {@link FutureTask}, cannot be
+ * retrieved because the task was cancelled.
  *
  * @since 1.5
- * @see Cancellable
- * @see FutureTask#get
- * @see FutureTask#get(long, TimeUnit)
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/25 19:27:58 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public class CancellationException extends IllegalStateException {

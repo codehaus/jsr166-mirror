@@ -7,34 +7,21 @@
 package java.util.concurrent;
 
 /**
- * A cancellable asynchronous computation.
- *
- * <p><tt>FutureTask</tt> provides methods to start and cancel the
- * computation, query to see if the computation is complete, and
+ * A cancellable asynchronous computation.  This class provides a base
+ * implementation of {@link Future}, with methods to start and cancel
+ * a computation, query to see if the computation is complete, and
  * retrieve the result of the computation.  The result can only be
  * retrieved when the computation has completed; the <tt>get</tt>
  * method will block if the computation has not yet completed.  Once
- * the computation is completed, the result cannot be changed, nor can
- * the computation be restarted or cancelled.
+ * the computation has completed, the computation cannot be restarted
+ * or cancelled.
  *
- * <p>Because <tt>FutureTask</tt> implements <tt>Runnable</tt>, a
- * <tt>FutureTask</tt> can be submitted to an {@link Executor} for
- * current or deferred execution.
- *
- * <p>A <tt>FutureTask</tt> can be used to wrap a <tt>Callable</tt> or
- * <tt>Runnable</tt> object so that it can be scheduled for execution in a
- * thread or an <tt>Executor</tt>, cancel
- * computation before the computation completes, and wait for or
- * retrieve the results.  If the computation threw an exception, the
- * exception is propagated to any thread that attempts to retrieve the
- * result.
- *
- * @see Executor
+ * <p>A <tt>FutureTask</tt> can be used to wrap a {@link Callable} or
+ * {@link java.lang.Runnable} object.  Because <tt>FutureTask</tt>
+ * implements <tt>Runnable</tt>, a <tt>FutureTask</tt> can be
+ * submitted to an {@link Executor} for execution.
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/06 16:08:49 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public class FutureTask<V> extends CancellableTask implements Future<V> {

@@ -7,17 +7,14 @@
 package java.util.concurrent;
 
 /**
- * Exception thrown when a blocking operation times out.
- * <p>
- * Blocking operations for which a timeout is specified need a means to
- * indicate that the timeout has occurred. For many such operations it is
- * possible to return a value that indicates timeout; when that is not
- * possible then <tt>TimeoutException</tt> should be declared and thrown.
+ * Exception thrown when a blocking operation times out.  Blocking
+ * operations for which a timeout is specified need a means to
+ * indicate that the timeout has occurred. For many such operations it
+ * is possible to return a value that indicates timeout; when that is
+ * not possible or desirable then <tt>TimeoutException</tt> should be
+ * declared and thrown.
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/25 19:27:58 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public class TimeoutException extends Exception {

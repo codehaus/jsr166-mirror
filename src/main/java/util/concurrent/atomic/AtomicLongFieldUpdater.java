@@ -21,8 +21,6 @@ import java.lang.reflect.*;
  * semantics only with respect to other invocations of
  * <tt>compareAndSet</tt> and <tt>set</tt>.
  *
- * <p> <em>Development note: This class is currently missing
- * some planned methods </em>
  * @since 1.5
  * @author Doug Lea
  */

@@ -92,9 +92,6 @@ import java.util.concurrent.locks.*;
  *
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/26 00:09:18 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  *
  */

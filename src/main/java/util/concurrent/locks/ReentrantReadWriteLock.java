@@ -110,14 +110,8 @@ import java.util.Date;
  * good practice, it is possible to acquire a read lock in one thread, and 
  * release it in another. This can occasionally be useful.
  * </ul>
- * @see ReentrantLock
- * @see Condition
- * @see ReadWriteLock
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/25 22:59:31 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  *
  */

@@ -21,16 +21,16 @@ import sun.misc.*;
  * <p> The constructor for this class accepts an optional
  * <em>fairness</em> parameter.  When set <tt>true</tt>, under
  * contention, locks favor granting access to the longest-waiting
- * thread.  Otherwise a policy is used that does not guarantee any
- * particular access order.  Programs using fair locks may display
- * lower overall throughput (i.e., are slower; often much slower) than
- * those using default locks, but have but smaller variances in times
- * to obtain locks and guarantee lack of starvation. Note however,
- * that fairness of locks does not in any way guarantee fairness of
- * thread scheduling. Thus, it is very possible that one of many
- * threads using a lock will obtain it multiple times in succession
- * while other active threads are not running and not currently
- * holding the lock.
+ * thread.  Otherwise this lock does not guarantee any particular
+ * access order.  Programs using fair locks accessed by many threads
+ * may display lower overall throughput (i.e., are slower; often much
+ * slower) than those using default locks, but have but smaller
+ * variances in times to obtain locks and guarantee lack of
+ * starvation. Note however, that fairness of locks does not in any
+ * way guarantee fairness of thread scheduling. Thus, it is very
+ * possible that one of many threads using a fair lock will obtain it
+ * multiple times in succession while other active threads are not
+ * running and not currently holding the lock.
  *
  * <p>A <tt>ReentrantLock</tt> may be used in a non-reentrant way by
  * checking that the lock is not already held by the current thread 
@@ -41,7 +41,7 @@ import sun.misc.*;
  *
  * <pre>
  * class X {
- *   ReentrantLock lock;
+ *   private final ReentrantLock lock = new ReentrantLock();
  *   // ...
  *
  *   public void m() { 
@@ -70,9 +70,6 @@ import sun.misc.*;
  *
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/27 01:14:15 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  * 
  **/

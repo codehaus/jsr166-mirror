@@ -18,16 +18,14 @@ import java.util.*;
  * and they provide a means of bounding and managing the resources,
  * including threads, consumed when executing a collection of tasks.
  *
- * <p>This class is designed to ge highly tunable. 
- *
  * <p>To be useful across a wide range of contexts, this class
  * provides many adjustable parameters and extensibility hooks.  For
  * example, it can be configured to create a new thread for each task,
  * or even to execute tasks sequentially in a single thread, in
  * addition to its most common configuration, which reuses a pool of
  * threads.  However, programmers are urged to use the more convenient
- * factory methods <tt>newCachedThreadPool</tt> (unbounded thread
- * pool, with automatic thread reclamation),
+ * {@link Executors} factory methods <tt>newCachedThreadPool</tt>
+ * (unbounded thread pool, with automatic thread reclamation),
  * <tt>newFixedThreadPool</tt> (fixed size thread pool),
  * <tt>newSingleThreadPoolExecutor</tt> (single background thread for
  * execution of tasks), and <tt>newThreadPerTaskExeceutor</tt>
@@ -43,17 +41,17 @@ import java.util.*;
  *
  * <dt>Core and maximum pool size</dt>
  *
- * <dd>A ThreadPoolExecutor will automatically adjust the pool size
- * according to the bounds set by corePoolSize and maximumPoolSize.
- * When a new task is submitted, and fewer than corePoolSize threads
- * are running, a new thread is created to handle the request, even if
- * other worker threads are idle.  If there are more than the
- * corePoolSize but less than maximumPoolSize threads running, a new
- * thread will be created only if the queue is full.  By setting
- * corePoolSize and maximumPoolSize the same, you create a fixed-size
- * thread pool. By default, even core threads are only created and
- * started when needed by new tasks, but this can be overridden
- * dynamically using method <tt>prestartCoreThread</tt>.
+ * <dd>A <tt>ThreadPoolExecutor</tt> will automatically adjust the
+ * pool size according to the bounds set by corePoolSize and
+ * maximumPoolSize.  When a new task is submitted, and fewer than
+ * corePoolSize threads are running, a new thread is created to handle
+ * the request, even if other worker threads are idle.  If there are
+ * more than the corePoolSize but less than maximumPoolSize threads
+ * running, a new thread will be created only if the queue is full.
+ * By setting corePoolSize and maximumPoolSize the same, you create a
+ * fixed-size thread pool. By default, even core threads are only
+ * created and started when needed by new tasks, but this can be
+ * overridden dynamically using method <tt>prestartCoreThread</tt>.
  * </dd>
  *
  * <dt>Keep-alive</dt>
@@ -65,21 +63,21 @@ import java.util.*;
  *
  * <dt>Queueing</dt>
  *
- * <dd>You are free to specify the queuing mechanism used to handle
- * submitted tasks.  A good default is to use a zero-capacity
- * <tt>SynchronousQueue</tt> to to hand off work to threads.  This is
- * a safe, conservative policy that avoids lockups when handling sets
- * of requests that might have internal dependencies.  Using an
- * unbounded queue (for example a <tt>LinkedBlockingQueue</tt>) will
- * cause new tasks to be queued in cases where all corePoolSize
- * threads are busy, so no more than corePoolSize threads will be
- * craated.  This may be appropriate when each task is completely
- * independent of others, so tasks cannot affect each others
- * execution. For example, in a web page server.  When given a choice,
- * this pool always prefers adding a new thread rather than queueing
- * if there are currently fewer than the current getCorePoolSize
- * threads running, but otherwise always prefers queuing a request
- * rather than adding a new thread.
+ * <dd>Any {@link BlockingQueue} may be used to transfer and hold
+ * submitted tasks.  A good default is a {@link SynchronousQueue} that
+ * hands off tasks to threads without otherwise holding them.  This
+ * policy avoids lockups when handling sets of requests that might
+ * have internal dependencies.  Using an unbounded queue (for example
+ * a {@link LinkedBlockingQueue}) will cause new tasks to be queued in
+ * cases where all corePoolSize threads are busy, so no more than
+ * corePoolSize threads will be craated.  This may be appropriate when
+ * each task is completely independent of others, so tasks cannot
+ * affect each others execution; for example, in a web page server.
+ * When given a choice, a <tt>ThreadPoolExecutor</tt> always prefers
+ * adding a new thread rather than queueing if there are currently
+ * fewer than the current getCorePoolSize threads running, but
+ * otherwise always prefers queuing a request rather than adding a new
+ * thread.
  *
  * <p>While queuing can be useful in smoothing out transient bursts of
  * requests, especially in socket-based services, it is not very well
@@ -97,18 +95,18 @@ import java.util.*;
  *
  * <dt>Creating new threads</dt>
  *
- * <dd>New threads are created using a ThreadFactory.  By default,
- * threads are created simply with the new Thread(Runnable)
- * constructor, but by supplying a different ThreadFactory, you can
- * alter the thread's name, thread group, priority, daemon status,
- * etc.  </dd>
+ * <dd>New threads are created using a {@link ThreadFactory}.  By
+ * default, threads are created simply with the <tt>new
+ * Thread(Runnable)</tt> constructor, but by supplying a different
+ * ThreadFactory, you can alter the thread's name, thread group,
+ * priority, daemon status, etc.  </dd>
  *
  * <dt>Before and after intercepts</dt>
  *
- * <dd>This class has overridable methods that which are called before
- * and after execution of each task.  These can be used to manipulate
- * the execution environment (for example, reinitializing
- * ThreadLocals), gather statistics, or perform logging.  </dd>
+ * <dd>This class has overridable methods that are called before and
+ * after execution of each task.  These can be used to manipulate the
+ * execution environment, for example, reinitializing ThreadLocals,
+ * gathering statistics, or adding log entries.  </dd>
  *
  * <dt>Rejected tasks</dt>
  *
@@ -117,29 +115,14 @@ import java.util.*;
  * and the queuing mechanism used.  If the executor determines that a
  * task cannot be executed because it has been refused by the queue
  * and no threads are available, or because the executor has been shut
- * down, the RejectedExecutionHandler's rejectedExecution method is
- * invoked. The default (<tt>AbortPolicy</tt>) handler throws a runtime
- * {@link RejectedExecutionException} upon rejection.  </dd>
- *
- * <dt>Termination</dt>
- *
- * <dd>ThreadPoolExecutor supports two shutdown options, immediate and
- * graceful.  In an immediate shutdown, any threads currently
- * executing are interrupted, and any tasks not yet begun are returned
- * from the shutdownNow call.  In a graceful shutdown, all queued
- * tasks are allowed to run, but new tasks may not be submitted.
- * </dd>
+ * down, the {@link RejectedExecutionHandler}
+ * <tt>rejectedExecution</tt> method is invoked. The default
+ * (<tt>AbortPolicy</tt>) handler throws a runtime {@link
+ * RejectedExecutionException} upon rejection.  </dd>
  *
  * </dl>
  *
  * @since 1.5
- * @see RejectedExecutionHandler
- * @see Executors
- * @see ThreadFactory
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/25 01:58:50 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public class ThreadPoolExecutor implements ExecutorService {

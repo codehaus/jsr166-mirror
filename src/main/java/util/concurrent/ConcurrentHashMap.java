@@ -15,7 +15,7 @@ import java.io.ObjectOutputStream;
 /**
  * A hash table supporting full concurrency of retrievals and
  * adjustable expected concurrency for updates. This class obeys the
- * same functional specification as <tt>java.util.Hashtable</tt>, and
+ * same functional specification as {@link java.util.Hashtable}, and
  * includes versions of methods corresponding to each method of
  * <tt>Hashtable</tt> . However, even though all operations are
  * thread-safe, retrieval operations do <em>not</em> entail locking,
@@ -33,7 +33,7 @@ import java.io.ObjectOutputStream;
  * removal of only some entries.  Similarly, Iterators and
  * Enumerations return elements reflecting the state of the hash table
  * at some point at or since the creation of the iterator/enumeration.
- * They do <em>not</em> throw ConcurrentModificationException.
+ * They do <em>not</em> throw <tt>ConcurrentModificationException</tt>.
  * However, Iterators are designed to be used by only one thread at a
  * time.
  *
@@ -50,8 +50,9 @@ import java.io.ObjectOutputStream;
  * overestimates and underestimates within an order of magnitude do
  * not usually have much noticeable impact.
  *
- * <p> Like Hashtable but unlike java.util.HashMap, this class does
- * NOT allow <tt>null</tt> to be used as a key or value.
+ * <p> Like {@link java.util.Hashtable} but unlike {@link
+ * java.util.HashMap}, this class does NOT allow <tt>null</tt> to be
+ * used as a key or value.
  *
  * @since 1.5
  * @author Doug Lea

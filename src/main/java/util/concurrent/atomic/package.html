@@ -7,30 +7,29 @@
 
 A small toolkit of classes that support lock-free thread-safe
 programming on single variables. In essence, the classes in this
-package extend the notion of <tt>volatile</tt> variables to those that
-also provide an atomic conditional update operation of the form:
+package extend the notion of <tt>volatile</tt> values, fields, and
+array elements to those that also provide an atomic conditional update
+operation of the form:
 
 <pre>
   boolean compareAndSet(expectedValue, updateValue);
 </pre>
 
 <p> This method (which varies in argument types across different
-classes) is used to atomically set a variable to the
-<tt>updateValue</tt> if it currently holds the
-<tt>expectedValue</tt>, reporting <tt>true</tt> on success.
-
-<p> The classes additionally support a weaker version of this
+classes) atomically sets a variable to the <tt>updateValue</tt> if it
+currently holds the <tt>expectedValue</tt>, reporting <tt>true</tt> on
+success.  The classes additionally support a weaker version of this
 operation:
 
 <pre>
   boolean weakCompareAndSet(expectedValue, updateValue);
 </pre>
 
-This method may be more efficient in the normal case, but differs in
-that any given invocation of <tt>weakCompareAndSet</tt> method may
+The weak version may be more efficient in the normal case, but differs
+in that any given invocation of <tt>weakCompareAndSet</tt> method may
 fail, even spuriously (that is, for no apparent reason). A
-<tt>false</tt> return means only that the operation may be retried
-if desired, relying on the guarantee that repeated invocation when the
+<tt>false</tt> return means only that the operation may be retried if
+desired, relying on the guarantee that repeated invocation when the
 variable holds <tt>expectedValue</tt> and no other thread is also
 attempting to set the variable will eventually succeed.
 
@@ -64,19 +63,18 @@ class Sequencer {
 </pre>
 
 <p>In addition to classes representing single values, this package
-also contains <em>Updater</em> classes that can be used to obtain
+contains <em>Updater</em> classes that can be used to obtain
 <tt>compareAndSet</tt> operations on any selected <tt>volatile</tt>
-field of any selected class.
-<tt>AtomicReferenceFieldUpdater</tt>,
+field of any selected class.  <tt>AtomicReferenceFieldUpdater</tt>,
 <tt>AtomicIntegerFieldUpdater</tt>, and
-<tt>AtomicLongFieldUpdater</tt> are reflection-based utilities
-that provide access to the associated field types. These are mainly of
-use in atomic data structures in which several <tt>volatile</tt>
-reference fields of the same node (for example, the links of a tree
-node) are independently subject to atomic updates. These classes
-enable greater flexibility in how and when to use atomic updates, at
-the expense of more awkward reflection-based setup, less convenient
-usage, and weaker guarantees.
+<tt>AtomicLongFieldUpdater</tt> are reflection-based utilities that
+provide access to the associated field types. These are mainly of use
+in atomic data structures in which several <tt>volatile</tt> fields of
+the same node (for example, the links of a tree node) are
+independently subject to atomic updates. These classes enable greater
+flexibility in how and when to use atomic updates, at the expense of
+more awkward reflection-based setup, less convenient usage, and weaker
+guarantees.
 
 <p>The <tt>AtomicIntegerArray</tt>, <tt>AtomicLongArray</tt>, and
 <tt>AtomicReferenceArray</tt> classes further extend atomic operation
@@ -84,12 +82,10 @@ support to arrays of these types. These classes are also notable in
 providing <tt>volatile</tt> access semantics for their array elements,
 which is not otherwise supported for ordinary Java arrays.
 
-<p>Atomic references find use in constructions that require additional
-utility classes, not utility methods.  The
-<tt>AtomicMarkableReference</tt> class associates a single boolean
-with a reference. For example, this bit might be used inside a data
-structure to mean that the object being referenced has logically been
-deleted. The <tt>AtomicStampedReference</tt> class associates an
+<p> The <tt>AtomicMarkableReference</tt> class associates a single
+boolean with a reference. For example, this bit might be used inside a
+data structure to mean that the object being referenced has logically
+been deleted. The <tt>AtomicStampedReference</tt> class associates an
 integer value with a reference. This may be used for example, to
 represent version numbers corresponding to series of updates.
 
@@ -99,17 +95,16 @@ non-blocking data structures and related infrastructure classes.  The
 <tt>compareAndSet</tt> method is not a general replacement for
 locking. It applies only when critical updates for an object are
 confined to a <em>single</em> variable.  And atomic classes are not
-general purpose replacements for <tt>java.lang.Integer</tt>,
-<tt>java.lang.Boolean</tt> and related classes. They do
-<em>NOT</em> define methods such as <tt>hashCode</tt> and
-<tt>compareTo</tt>. (Because atomic variables are expected to be
-mutated, they are poor choices for hash table keys.)  Additionally,
-classes are provided only for those types that are commonly useful as
-atomics. For example, there is no atomic class for representing
-<tt>byte</tt>. In those infrequent cases where you would like to
-do so, you can use an <tt>AtomicInteger</tt> to hold
-<tt>byte</tt> values, and cast appropriately. Similarly, you can
-hold floating point types using <tt>Float.floatToIntBits</tt> and
+general purpose replacements for <tt>java.lang.Integer</tt> and
+related classes. They do <em>NOT</em> define methods such as
+<tt>hashCode</tt> and <tt>compareTo</tt>. (Because atomic variables
+are expected to be mutated, they are poor choices for hash table
+keys.)  Additionally, classes are provided only for those types that
+are commonly useful as atomics. For example, there is no atomic class
+for representing <tt>byte</tt>. In those infrequent cases where you
+would like to do so, you can use an <tt>AtomicInteger</tt> to hold
+<tt>byte</tt> values, and cast appropriately. Similarly, you can hold
+floating point types using <tt>Float.floatToIntBits</tt> and
 <tt>Float.intBitstoFloat</tt> conversions.
 
 </body> </html>

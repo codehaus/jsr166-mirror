@@ -10,12 +10,9 @@ import sun.misc.Unsafe;
 /**
  * An <tt>AtomicBoolean</tt> maintains a <tt>boolean</tt> value that
  * is updated atomically. See the package specification for
- * description of the general properties it shares with other atomics.
+ * description of the properties of atomic variables.
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/25 19:28:02 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public class AtomicBoolean implements java.io.Serializable {
@@ -61,7 +58,7 @@ public class AtomicBoolean implements java.io.Serializable {
      * Atomically sets the value to the given update value if the
      * current value is equal to the expected value.  Any given
      * invocation of this operation may fail (return
-     * <code>false</code>) spuriously, but repeated invocation when
+     * <tt>false</tt>) spuriously, but repeated invocation when
      * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
      *

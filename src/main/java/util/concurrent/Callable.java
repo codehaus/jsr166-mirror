@@ -11,20 +11,15 @@ package java.util.concurrent;
  * Implementors define a single method with no arguments called
  * <tt>call</tt>.
  *
- * <p>The <tt>Callable</tt> interface is similar to {@link Runnable},
- * in that both are designed for classes whose instances are
- * potentially executed by another thread.  A <tt>Runnable</tt>,
- * however, does not return a result and cannot throw a checked
- * exception.
+ * <p>The <tt>Callable</tt> interface is similar to {@link
+ * java.lang.Runnable}, in that both are designed for classes whose
+ * instances are potentially executed by another thread.  A
+ * <tt>Runnable</tt>, however, does not return a result and cannot
+ * throw a checked exception.
  *
-
- * @since 1.5
  * @see Executor
  * @see FutureTask
- *
- * @spec JSR-166
- * @revised $Date: 2003/06/24 14:34:47 $
- * @editor $Author: dl $
+ * @since 1.5
  * @author Doug Lea
  */
 public interface Callable<V> {

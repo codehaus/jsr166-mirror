@@ -18,16 +18,15 @@ import java.util.Date;
  * and statements, a <tt>Condition</tt> replaces the use of the Object
  * monitor methods.
  *
- * <p>Conditions (also known as <em>condition queues</em> or 
- * <em>condition variables</em>) provide
- * a means for one thread to suspend execution (to &quot;wait&quot;) until
- * notified by another thread that some state condition may now be true.
- * Because access to this shared state information
- * occurs in different threads, it must be protected, and invariably
- * a lock of some form is associated with the condition. The key
- * property that waiting for a condition provides is that it
- * <em>atomically</em> releases the associated lock and suspends the current
- * thread, just like <tt>Object.wait</tt>.
+ * <p>Conditions (also known as <em>condition queues</em> or
+ * <em>condition variables</em>) provide a means for one thread to
+ * suspend execution (to &quot;wait&quot;) until notified by another
+ * thread that some state condition may now be true.  Because access
+ * to this shared state information occurs in different threads, it
+ * must be protected, so a lock of some form is associated with the
+ * condition. The key property that waiting for a condition provides
+ * is that it <em>atomically</em> releases the associated lock and
+ * suspends the current thread, just like <tt>Object.wait</tt>.
  *
  * <p>A <tt>Condition</tt> instance is intrinsically bound to a lock.
  * To obtain a <tt>Condition</tt> instance for a particular {@link Lock} 
@@ -43,7 +42,7 @@ import java.util.Date;
  * only notifying a single thread at a time when items or spaces become
  * available in the buffer. This can be achieved using two 
  * {@link Condition} instances.
- * <pre><code>
+ * <pre>
  * class BoundedBuffer {
  *   <b>Lock lock = new ReentrantLock();</b>
  *   final Condition notFull  = <b>lock.newCondition(); </b>
@@ -81,7 +80,11 @@ import java.util.Date;
  *     }</b>
  *   } 
  * }
- * </code></pre>
+ * </pre>
+ *
+ * (The {@link java.util.concurrent.ArrayBlockingQueue} class provides
+ * this functionality, so there is no reason to implement this
+ * sample usage class.)
  *
  * <p>A <tt>Condition</tt> implementation can provide behavior and semantics 
  * that is 
@@ -140,9 +143,6 @@ import java.util.Date;
  *
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/25 22:37:13 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  */
 public interface Condition {

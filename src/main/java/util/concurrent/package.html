@@ -30,14 +30,15 @@ analog of Runnable.
 complete framework for executing Runnables.  An ExecutorService
 manages queueing and scheduling of tasks, and allows controlled
 shutdown.  The two primary implementations of ExecutorService are
-{@link java.util.concurrent.ThreadPoolExecutor}, a highly tunable and
+{@link java.util.concurrent.ThreadPoolExecutor}, a tunable and
 flexible thread pool and {@link
 java.util.concurrent.ScheduledExecutor}, which adds support for
 delayed and periodic task execution.  These, and other Executors can
-be used in conjunction with a {@link java.util.concurrent.FutureTask} 
-to asynchronously
-start a potentially long-running computation and query the FutureTask
-to determine if its execution has completed, or cancel it.
+be used in conjunction with a {@link
+java.util.concurrent.CancellableTask} or {@link
+java.util.concurrent.FutureTask} to asynchronously start a potentially
+long-running computation and query the FutureTask to determine if its
+execution has completed, or cancel it.
 
 <p> The {@link java.util.concurrent.Executors} class provides factory
 methods for the most common kinds and configurations of Executors, as
@@ -120,10 +121,4 @@ weakly consistent iterator is thread-safe, but does not necessarily
 freeze the collection while iterating, so it may (or may not) reflect
 any updates since the iterator was created.
 
-
-
-
-<hr>
-<address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>
-<!-- hhmts start --> Last modified: Wed Aug  6 07:18:31 EDT 2003 <!-- hhmts end -->
 </body> </html>

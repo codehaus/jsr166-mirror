@@ -78,9 +78,6 @@ package java.util.concurrent.locks;
  * @see ReentrantLock
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/06 18:42:49 $
- * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface ReadWriteLock {

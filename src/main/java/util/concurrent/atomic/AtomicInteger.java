@@ -9,7 +9,8 @@ import sun.misc.Unsafe;
 
 /**
  * An AtomicInteger maintains an <tt>int</tt> value that is updated
- * atomically.
+ * atomically. See the package specification for
+ * description of the properties of atomic variables.
  * @since 1.5
  * @author Doug Lea
 */

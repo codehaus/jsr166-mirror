@@ -19,12 +19,9 @@ import java.util.concurrent.locks.*;
  *
  * <p>Because permits are allocated in-order, this class also provides
  * convenience methods to {@link #acquire(long) acquire} and {@link
- * #release(long) release} multiple permits at a time. 
+ * #release(long) release} multiple permits at a time.
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/26 00:09:18 $
- * @editor $Author: dholmes $
  * @author Doug Lea
  *
  */

@@ -1,17 +1,19 @@
 /*
- * @(#)Future.java
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain. Use, modify, and
+ * redistribute this code in any way without acknowledgement.
  */
 
 package java.util.concurrent;
 
 /**
- * A <tt>Future</tt> represents the result of an asynchronous computation.
- * Methods are provided to check if the computation is complete,
- * to wait for its completion, and to retrieve the result of the
- * computation.  The result can only be retrieved when the computation
- * has completed.  The <tt>get</tt> method will block until the computation
- * has completed.  Once the computation has completed, the result cannot
- * be changed, nor can the computation be restarted or cancelled.
+ * A <tt>Future</tt> represents the result of an asynchronous
+ * computation.  Methods are provided to check if the computation is
+ * complete, to wait for its completion, and to retrieve the result of
+ * the computation.  The result can only be retrieved using method
+ * <tt>get</tt> when the computation has completed, blocking if
+ * necessary until it is ready.  Once the computation has completed,
+ * the computation cannot be restarted or cancelled.
  *
  * <p>
  * <b>Sample Usage</b> (Note that the following classes are all
@@ -46,13 +48,9 @@ package java.util.concurrent;
  *         return searcher.search(target);
  *    }});
  * </pre>
- * @since 1.5
  * @see FutureTask
  * @see Executor
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/29 14:09:52 $
- * @editor $Author: dl $
+ * @since 1.5
  * @author Doug Lea
  */
 public interface Future<V> extends Cancellable {

@@ -482,7 +482,7 @@ public class LinkedList<E>
     /**
      * Adds the specified element as the tail (last element) of this list.
      *
-     * @param o the element to add.
+     * @param x the element to add.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Queue.offer</tt>)
      */

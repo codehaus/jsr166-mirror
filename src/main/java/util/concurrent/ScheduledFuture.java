@@ -12,11 +12,6 @@ package java.util.concurrent;
  * a task with a {@link ScheduledExecutor}.
  *
  * @since 1.5
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/19 15:04:57 $
- * @editor $Author: tim $
- * @see ScheduledExecutor
  * @author Doug Lea
  */
 public interface ScheduledFuture<V> extends Delayed, Future<V> {

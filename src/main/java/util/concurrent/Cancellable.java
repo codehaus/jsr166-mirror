@@ -12,13 +12,9 @@ package java.util.concurrent;
  * provided to determine if the task completed normally or was
  * cancelled.
  *
- * @since 1.5
- *
- * @spec JSR-166
- * @revised $Date: 2003/08/06 00:20:00 $
- * @editor $Author: dl $
  * @see FutureTask
  * @see Executor
+ * @since 1.5
  * @author Doug Lea
  */
 public interface Cancellable {
@@ -28,7 +24,7 @@ public interface Cancellable {
      * fail if the task has already completed, already been cancelled,
      * or could not be cancelled for some other reason. If successful,
      * and this task has not started when <tt>cancel</tt> is called,
-     * this task will never run.  If the task has already started,
+     * this task should never run.  If the task has already started,
      * then the <tt>interruptIfRunning</tt> parameter determines
      * whether the thread executing this task should be interrupted in
      * an attempt to stop the task.

@@ -15,9 +15,6 @@ package java.util.concurrent.atomic;
  * [reference, integer] pairs.
  *
  * @since 1.5
- * @spec JSR-166
- * @revised $Date: 2003/08/24 23:32:57 $
- * @editor $Author: dl $
  * @author Doug Lea
  */
 public class AtomicStampedReference<V>  {
@@ -64,7 +61,7 @@ public class AtomicStampedReference<V>  {
 
     /**
      * Returns the current values of both the reference and the stamp.
-     * Typical usage is <code>int[1] holder; ref = v.get(holder); </code>.
+     * Typical usage is <tt>int[1] holder; ref = v.get(holder); </tt>.
      *
      * @param stampHolder an array of size of at least one.  On return,
      * <tt>stampholder[0]</tt> will hold the value of the stamp.
@@ -79,10 +76,10 @@ public class AtomicStampedReference<V>  {
     /**
      * Atomically sets the value of both the reference and stamp
      * to the given update values if the
-     * current reference is <code>==</code> to the expected reference
+     * current reference is <tt>==</tt> to the expected reference
      * and the current stamp is equal to the expected stamp.  Any given
      * invocation of this operation may fail (return
-     * <code>false</code>) spuriously, but repeated invocation when
+     * <tt>false</tt>) spuriously, but repeated invocation when
      * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
      *
@@ -109,7 +106,7 @@ public class AtomicStampedReference<V>  {
     /**
      * Atomically sets the value of both the reference and stamp
      * to the given update values if the
-     * current reference is <code>==</code> to the expected reference
+     * current reference is <tt>==</tt> to the expected reference
      * and the current stamp is equal to the expected stamp. 
      *
      * @param expectedReference the expected value of the reference
@@ -147,9 +144,9 @@ public class AtomicStampedReference<V>  {
 
     /**
      * Atomically sets the value of the stamp to the given update value
-     * if the current reference is <code>==</code> to the expected
+     * if the current reference is <tt>==</tt> to the expected
      * reference.  Any given invocation of this operation may fail
-     * (return <code>false</code>) spuriously, but repeated invocation
+     * (return <tt>false</tt>) spuriously, but repeated invocation
      * when the current value holds the expected value and no other
      * thread is also attempting to set the value will eventually
      * succeed.

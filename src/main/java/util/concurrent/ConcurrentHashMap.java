@@ -1126,6 +1126,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         public boolean equals(Object o) {
+            // If not acting as entry, just use default.
+            if (lastReturned == null)
+                return super.equals(o);
             if (!(o instanceof Map.Entry))
                 return false;
             Map.Entry e = (Map.Entry)o;
@@ -1133,6 +1136,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         public int hashCode() {
+            // If not acting as entry, just use default.
+            if (lastReturned == null)
+                return super.hashCode();
+
             Object k = getKey();
             Object v = getValue();
             return ((k == null) ? 0 : k.hashCode()) ^
@@ -1140,7 +1147,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         public String toString() {
-            // If not acting as entry, just use default toString.
+            // If not acting as entry, just use default.
             if (lastReturned == null)
                 return super.toString();
             else

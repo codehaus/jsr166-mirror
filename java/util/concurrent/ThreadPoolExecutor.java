@@ -1,7 +1,10 @@
 package java.util.concurrent;
 
-public class ThreadPoolExecutor extends ThreadExecutor implements Executor, ExecutorService {
+/** JAVADOC?? */
+public class ThreadPoolExecutor extends ThreadExecutor
+    implements Executor, ExecutorService {
 
+    /** JAVADOC?? */
     public ThreadPoolExecutor(int minThreads,
                               int maxThreads,
                               long keepAliveTime,

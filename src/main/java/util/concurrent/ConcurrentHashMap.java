@@ -39,7 +39,7 @@ import java.io.ObjectOutputStream;
  *
  * <p> The allowed concurrency among update operations is guided by
  * the optional <tt>concurrencyLevel</tt> constructor argument
- * (default {@value #DEFAULT_CONCURRENCY_LEVEL}), which is used as a hint for internal sizing.  The
+ * (default <tt>16</tt>), which is used as a hint for internal sizing.  The
  * table is internally partitioned to try to permit the indicated
  * number of concurrent updates without contention. Because placement
  * in hash tables is essentially random, the actual concurrency will
@@ -87,19 +87,19 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * The default initial capacity for this table,
      * used when not otherwise specified in a constructor.
      */
-    public static final int DEFAULT_INITIAL_CAPACITY = 16;
+    static final int DEFAULT_INITIAL_CAPACITY = 16;
 
     /**
      * The default load factor for this table, used when not
      * otherwise specified in a constructor.
      */
-    public static final float DEFAULT_LOAD_FACTOR = 0.75f;
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
     /**
      * The default concurrency level for this table, used when not
      * otherwise specified in a constructor.
      **/
-    public static final int DEFAULT_CONCURRENCY_LEVEL = 16;
+    static final int DEFAULT_CONCURRENCY_LEVEL = 16;
 
     /**
      * The maximum capacity, used if a higher value is implicitly
@@ -606,8 +606,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with the specified initial capacity
-     * and load factor and with the default concurrencyLevel ({@value
-     * #DEFAULT_CONCURRENCY_LEVEL}).
+     * and load factor and with the default concurrencyLevel 
+     * (<tt>16</tt>).
      *
      * @param initialCapacity The implementation performs internal
      * sizing to accommodate this many elements.
@@ -621,8 +621,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with the specified initial capacity,
-     * and with default load factor ({@value #DEFAULT_LOAD_FACTOR})
-     * and concurrencyLevel ({@value #DEFAULT_CONCURRENCY_LEVEL}).
+     * and with default load factor (<tt>0.75f</tt>)
+     * and concurrencyLevel (<tt>16</tt>).
      *
      * @param initialCapacity The implementation performs internal
      * sizing to accommodate this many elements.
@@ -635,9 +635,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with a default initial capacity
-     * ({@value #DEFAULT_INITIAL_CAPACITY}), load factor ({@value
-     * #DEFAULT_LOAD_FACTOR}), and concurrencyLevel ({@value
-     * #DEFAULT_CONCURRENCY_LEVEL}).
+     * (<tt>16</tt>), load factor 
+     * (<tt>0.75f</tt>), and concurrencyLevel 
+     * (<tt>16</tt>).
      */
     public ConcurrentHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
@@ -646,10 +646,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Creates a new map with the same mappings as the given map.  The
      * map is created with a capacity of 1.5 times the number of
-     * mappings in the given map or {@value #DEFAULT_INITIAL_CAPACITY}
-     * (whichever is greater), and a default load factor ({@value
-     * #DEFAULT_LOAD_FACTOR}) and concurrencyLevel({@value
-     * #DEFAULT_CONCURRENCY_LEVEL}).
+     * mappings in the given map or <tt>16</tt>
+     * (whichever is greater), and a default load factor 
+     * (<tt>0.75f</tt>) and concurrencyLevel
+     * (<tt>16</tt>).
      * @param t the map
      */
     public ConcurrentHashMap(Map<? extends K, ? extends V> t) {

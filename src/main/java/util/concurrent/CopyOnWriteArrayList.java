@@ -303,7 +303,7 @@ public class CopyOnWriteArrayList<E>
      *            be stored, if it is big enough; otherwise, a new array of the
      *            same runtime type is allocated for this purpose.
      * @return an array containing the elements of the list.
-     * @throws ArrayStoreException the runtime type of a is not a supertype
+     * @throws ArrayStoreException if the runtime type of a is not a supertype
      * of the runtime type of every element in this list.
      */
     public <T> T[] toArray(T a[]) {
@@ -476,7 +476,7 @@ public class CopyOnWriteArrayList<E>
      *
      * @param fromIndex index of first element to be removed.
      * @param toIndex index after last element to be removed.
-     * @throws IndexOutOfBoundsException fromIndex or toIndex out of
+     * @throws IndexOutOfBoundsException if fromIndex or toIndex out of
      *              range (fromIndex &lt; 0 || fromIndex &gt;= size() || toIndex
      *              &gt; size() || toIndex &lt; fromIndex).
      */
@@ -683,7 +683,7 @@ public class CopyOnWriteArrayList<E>
      * @param index index at which to insert first element
      *                from the specified collection.
      * @param c elements to be inserted into this list.
-     * @throws IndexOutOfBoundsException index out of range (index
+     * @throws IndexOutOfBoundsException if index out of range (index
      *              &lt; 0 || index &gt; size()).
      * @return true if any elements are added
      */
@@ -877,7 +877,7 @@ public class CopyOnWriteArrayList<E>
      * @param index index of first element to be returned from the
      *                ListIterator (by a call to getNext).
      * @return the iterator
-     * @throws IndexOutOfBoundsException index is out of range
+     * @throws IndexOutOfBoundsException if index is out of range
      *              (index &lt; 0 || index &gt; size()).
      */
     public ListIterator<E> listIterator(final int index) {
@@ -938,7 +938,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException remove is not supported
+         * @throws UnsupportedOperationException always; remove is not supported
          *            by this Iterator.
          */
 
@@ -948,7 +948,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException set is not supported
+         * @throws UnsupportedOperationException always; set is not supported
          *            by this Iterator.
          */
         public void set(E o) {
@@ -957,7 +957,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException add is not supported
+         * @throws UnsupportedOperationException always; add is not supported
          *            by this Iterator.
          */
         public void add(E o) {
@@ -982,7 +982,7 @@ public class CopyOnWriteArrayList<E>
      * @param fromIndex low endpoint (inclusive) of the subList.
      * @param toIndex high endpoint (exclusive) of the subList.
      * @return a view of the specified range within this List.
-     * @throws IndexOutOfBoundsException Illegal endpoint index value
+     * @throws IndexOutOfBoundsException if 
      *     (fromIndex &lt; 0 || toIndex &gt; size || fromIndex &gt; toIndex).
      */
     public synchronized List<E> subList(int fromIndex, int toIndex) {

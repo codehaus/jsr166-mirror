@@ -27,8 +27,7 @@ package java.util.concurrent;
  * lock of the given object - they will not perform a {@link Lock#lock}
  * invocation.
  *
- * <p>Except where noted, passing a <tt>null</tt> value for any parameter,
- * or array element,  
+ * <p>Except where noted, passing a <tt>null</tt> value for any parameter
  * will result in a {@link NullPointerException} being thrown.
  *
  * <h3>Memory Synchronization</h3>
@@ -49,7 +48,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/12 23:53:23 $
+ * @revised $Date: 2002/12/16 01:12:33 $
  * @editor $Author: dholmes $
  *
  * @fixme add implementation notes for any performance issues related to
@@ -60,7 +59,7 @@ public class Locks {
     private Locks() {} // uninstantiable.
 
     /**
-     * Perform the given action holding the monitor lock of
+     * Performs the given action holding the monitor lock of
      * the given object only if that lock is currently free.
      *
      * <p>If the monitor lock of the given object is immediately available
@@ -83,7 +82,7 @@ public class Locks {
     }
 
     /**
-     * Perform the given action holding the monitor lock of
+     * Performs the given action holding the monitor lock of
      * the given object if it is free within the given waiting time and the
      * current thread has not been {@link Thread#interrupt interrupted}.
      *
@@ -149,7 +148,7 @@ public class Locks {
     }
 
     /**
-     * Perform the given action holding the monitor locks of
+     * Performs the given action holding the monitor locks of
      * the given objects only if those locks are currently free.
      *
      * <p>If the monitor locks of each object in the array are immediately 
@@ -168,34 +167,36 @@ public class Locks {
      * @return <tt>true</tt> if the action was executed, and <tt>false</tt>
      * otherwise.
      *
-     * @fixme if an array entry is null do we ignore it or throw NPE?
+     * @throws NullPointerException if an attempt is made to acquire the
+     * monitor lock of a <tt>null</tt> element in the <tt>locks</tt> array.
      **/
     public static boolean attempt(Object[] locks, Runnable action) {
         return false; // for now;
     }
 
     /**
-     * Perform the given action holding the given {@link Lock Locks}, only
-     * if those {@link Lock Locks} are currently free.
+     * Performs the given action holding the given {@link Lock} instances, only
+     * if those {@link Lock} instances are currently free.
      *
-     * <p>If each of the {@link Lock Locks} in the array are immediately 
+     * <p>If each of the locks in the array are immediately 
      * available to the current thread then they are acquired. 
-     * The action is then executed and finally the {@link Lock Locks} are 
+     * The action is then executed and finally the locks are 
      * released and the method returns with the value <tt>true</tt>.
-     * <p>If any of the {@link Lock Locks} is not available then 
-     * all previously acquired {@link Lock Locks} are released and the 
+     * <p>If any of the locks are not available then 
+     * all previously acquired locks are released and the 
      * method returns immediately with the value <tt>false</tt>.
      * <p>If the action completes abruptly due to an {@link Error} or
      * {@link RuntimeException}, then the method completes abruptly
-     * for the same reason, after all the {@link Lock Locks} have been 
+     * for the same reason, after all the locks have been 
      * released.
      *
-     * @param locks the {@link Lock Locks} that must be acquired
-     * @param action the code to run while holding the given {@link Lock Locks}
+     * @param locks the {@link Lock} instances that must be acquired
+     * @param action the code to run while holding the given locks
      * @return <tt>true</tt> if the action was executed, and <tt>false</tt>
      * otherwise.
      *
-     * @fixme if an array entry is null do we ignore it or throw NPE?
+     * @throws NullPointerException if an attempt is made to acquire the
+     * lock of a <tt>null</tt> element in the <tt>locks</tt> array.
      **/
     public static boolean attempt(Lock[] locks, Runnable action) {
         return false; // for now;
@@ -203,9 +204,9 @@ public class Locks {
 
 
     /**
-     * Return a {@link Condition} for use with the given object.
-     * <p>The returned {@link Condition} has analagous behaviour to the use
-     * of the monitor methods on the given object. Given
+     * Returns a {@link Condition} instance for use with the given object.
+     * <p>The returned {@link Condition} instance has analagous behavior 
+     * to the use of the monitor methods on the given object. Given
      * <pre>    Condition c = Locks.newConditionFor(o);
      * </pre>
      * then:
@@ -233,7 +234,8 @@ public class Locks {
      * <li>The order in which threads returning from await, and threads trying
      * to acquire the monitor lock, are granted the lock, is not specified.
      * </ul>
-     * <p>A {@link Condition} obtained in this way can be used to create the
+     * <p>A {@link Condition} instance obtained in this way can be used to 
+     * create the
      * affect of having additional monitor wait-sets for the given object.
      * For example, suppose we have a bounded buffer which supports methods
      * to <tt>put</tt> and <tt>take</tt> items in/from the buffer. If a 
@@ -244,8 +246,9 @@ public class Locks {
      * threads in separate wait-sets so that we can use the optimisation of
      * only notifying a single thread at a time when items, or spaces, become
      * available in the buffer. This can be achieved using either two 
-     * {@link Condition} objects, or one {@link Condition} and the actual
-     * monitor wait-set. For clarity we'll use two {@link Condition} objects.
+     * {@link Condition} instances, or one {@link Condition} instance and the 
+     * actual
+     * monitor wait-set. For clarity we'll use two {@link Condition} instances.
      * <pre><code>
      * class BoundedBuffer {
      *   <b>final Condition notFull  = Locks.newConditionFor(this); 
@@ -277,11 +280,15 @@ public class Locks {
      * </code></pre>
      *
      * @param lock the object that will be used for its monitor lock and to
-     * which this <tt>Condition</tt> should be bound.
-     * @return a <tt>Condition</tt> bound to the given object
+     * which the returned condition should be bound.
+     * @return a {@link Condition} instance bound to the given object
      **/
     public static Condition newConditionFor(Object lock) {
         return null; // for now;
     }
 
 }
+
+
+
+

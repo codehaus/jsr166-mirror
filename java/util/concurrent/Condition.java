@@ -19,12 +19,13 @@ package java.util.concurrent;
  * <em>atomically</em> releases the associated lock and suspends the current
  * thread. 
  *
- * <p>A <tt>Condition</tt> is intrinsically bound to a lock: either a
+ * <p>A <tt>Condition</tt> instance is intrinsically bound to a lock: either
  * the in-built monitor lock of an object, or a {@link Lock} instance.
- * To obtain a <tt>Condition</tt> for a particular object's monitor lock
+ * To obtain a <tt>Condition</tt> instance for a particular object's monitor 
+ * lock
  * use the {@link Locks#newConditionFor(Object)} method.
- * To obtain a <tt>Condition</tt> for a particular {@link Lock} use its
- * {@link Lock#newCondition} method.
+ * To obtain a <tt>Condition</tt> instance for a particular {@link Lock} 
+ * instance use its {@link Lock#newCondition} method.
  *
  * <p>As an example, suppose we have a bounded buffer which supports methods
  * to <tt>put</tt> and <tt>take</tt> items in/from the buffer. If a 
@@ -35,8 +36,9 @@ package java.util.concurrent;
  * threads in separate wait-sets so that we can use the optimisation of
  * only notifying a single thread at a time when items, or spaces, become
  * available in the buffer. This can be achieved using either two 
- * {@link Condition} objects, or one {@link Condition} and the actual
- * monitor wait-set. For clarity we'll use two {@link Condition} objects.
+ * {@link Condition} instances, or one {@link Condition} instance and the 
+ * actual
+ * monitor wait-set. For clarity we'll use two {@link Condition} instances.
  * <pre><code>
  * class BoundedBuffer {
  *   <b>final Condition notFull  = Locks.newConditionFor(this); 
@@ -87,8 +89,7 @@ package java.util.concurrent;
  *       if (++putptr == items.length) putptr = 0;
  *       ++count;
  *       <b>notEmpty.signal();</b>
- *     <b>}
- *     finally {
+ *     <b>} finally {
  *       lock.unlock();
  *     }</b>
  *   }
@@ -103,16 +104,16 @@ package java.util.concurrent;
  *       --count;
  *       <b>notFull.signal();</b>
  *       return x;
- *     <b>}
- *     finally {
+ *     <b>} finally {
  *       lock.unlock();
  *     }</b>
  *   } 
  * }
  * </code></pre>
  *
- * <p>A <tt>Condition</tt> can provide behaviour and semantics that is 
- * different to that of the <tt>Object</tt> monitor methods, such as 
+ * <p>A <tt>Condition</tt> implementation can provide behavior and semantics 
+ * that is 
+ * different from that of the <tt>Object</tt> monitor methods, such as 
  * guaranteed ordering for notifications, or not requiring a lock to be held 
  * when performing notifications.
  * If an implementation provides such specialised semantics then the 
@@ -134,7 +135,7 @@ package java.util.concurrent;
  *
  * <h3>Implementation Considerations</h3>
  *
- * <p>When waiting upon a <tt>Condition</tt> a &quot;<em>spurious 
+ * <p>When waiting upon a <tt>Condition</tt> instance a &quot;<em>spurious 
  * wakeup</em>&quot; is permitted to occur, in 
  * general, as a concession to the underlying platform semantics.
  * This has little practical impact on most application programs as a
@@ -163,7 +164,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/12 07:01:35 $
+ * @revised $Date: 2002/12/16 01:12:33 $
  * @editor $Author: dholmes $
  **/
 public interface Condition {
@@ -187,7 +188,7 @@ public interface Condition {
      * </ul>
      *
      * <p>In all cases, before this method can return the current thread must
-     * re-acquire the lock associated with this <tt>Condition</tt>. When the
+     * re-acquire the lock associated with this condition. When the
      * thread returns it is <em>guaranteed</em> to hold this lock.
      *
      * <p>If the current thread:
@@ -201,7 +202,7 @@ public interface Condition {
      * case, whether or not the test for interruption occurs before the lock
      * is released.
      * 
-     * <p>The conditions under which the wait completes are mutually 
+     * <p>The circumstances under which the wait completes are mutually 
      * exclusive. For example, if the thread is signalled then it will
      * never return by throwing {@link InterruptedException}; conversely
      * a thread that is interrupted and throws {@link InterruptedException}
@@ -209,11 +210,11 @@ public interface Condition {
      *
      * <p><b>Implementation Considerations</b>
      * <p>The current thread is assumed to hold the lock associated with this
-     * condition when this method is called.
+     * <tt>Condition</tt> when this method is called.
      * It is up to the implementation to determine if this is
      * the case and if not, how to respond. Typically, an exception will be 
      * thrown (such as {@link IllegalMonitorStateException}) and the
-     * implementation document that fact.
+     * implementation must document that fact.
      *
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).
@@ -223,7 +224,7 @@ public interface Condition {
     /**
      * Causes the current thread to wait until it is signalled.
      *
-     * <p>The lock associated with this <tt>Condition</tt> is atomically 
+     * <p>The lock associated with this condition is atomically 
      * released and the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until <em>one</em> of three things happens:
      * <ul>
@@ -236,7 +237,7 @@ public interface Condition {
      * </ul>
      *
      * <p>In all cases, before this method can return the current thread must
-     * re-acquire the lock associated with this <tt>Condition</tt>. When the
+     * re-acquire the lock associated with this condition. When the
      * thread returns it is <em>guaranteed</em> to hold this lock.
      *
      * <p>If the current thread's interrupt status is set when it enters
@@ -247,11 +248,11 @@ public interface Condition {
      * 
      * <p><b>Implementation Considerations</b>
      * <p>The current thread is assumed to hold the lock associated with this
-     * condition when this method is called.
+     * <tt>Condition</tt> when this method is called.
      * It is up to the implementation to determine if this is
      * the case and if not, how to respond. Typically, an exception will be 
      * thrown (such as {@link IllegalMonitorStateException}) and the
-     * implementation document that fact.
+     * implementation must document that fact.
      *
      **/
     public void awaitUninterruptibly();
@@ -260,7 +261,7 @@ public interface Condition {
      * Causes the current thread to wait until it is signalled or interrupted,
      * or the specified waiting time elapses.
      *
-     * <p>The lock associated with this <tt>Condition</tt> is atomically 
+     * <p>The lock associated with this condition is atomically 
      * released and the current thread becomes disabled for thread scheduling 
      * purposes and lies dormant until <em>one</em> of five things happens:
      * <ul>
@@ -276,7 +277,7 @@ public interface Condition {
      * </ul>
      *
      * <p>In all cases, before this method can return the current thread must
-     * re-acquire the lock associated with this <tt>Condition</tt>. When the
+     * re-acquire the lock associated with this condition. When the
      * thread returns it is <em>guaranteed</em> to hold this lock.
      *
      * <p>If the thread is signalled while waiting, or experiences a
@@ -296,7 +297,7 @@ public interface Condition {
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
      * 
-     * <p>The conditions under which the wait completes are mutually 
+     * <p>The circumstances under which the wait completes are mutually 
      * exclusive. For example, if the thread is signalled then it will
      * never return by throwing {@link InterruptedException}; conversely
      * a thread that is interrupted and throws {@link InterruptedException}
@@ -304,11 +305,11 @@ public interface Condition {
      *
      * <p><b>Implementation Considerations</b>
      * <p>The current thread is assumed to hold the lock associated with this
-     * condition when this method is called.
+     * <tt>Condition</tt> when this method is called.
      * It is up to the implementation to determine if this is
      * the case and if not, how to respond. Typically, an exception will be 
      * thrown (such as {@link IllegalMonitorStateException}) and the
-     * implementation document that fact.
+     * implementation must document that fact.
      *
      *
      * @param time the maximum time to wait
@@ -325,7 +326,7 @@ public interface Condition {
     /**
      * Wakes up one waiting thread.
      *
-     * <p>If any threads are waiting on this <tt>Condition</tt> then one
+     * <p>If any threads are waiting on this condition then one
      * is selected for waking up. That thread must then re-acquire the
      * lock before returning from <tt>await</tt>.
      **/
@@ -334,7 +335,7 @@ public interface Condition {
     /**
      * Wake up all waiting threads.
      *
-     * <p>If any threads are waiting on this <tt>Condition</tt> then they are
+     * <p>If any threads are waiting on this condition then they are
      * all woken up. Each thread must re-acquire the lock before it can
      * return from <tt>await</tt>.
      **/

@@ -3,13 +3,14 @@ package java.util.concurrent;
 /**
  * A reentrant mutual exclusion lock.  
  * <p><tt>ReentrantLock</tt> defines a stand-alone {@link Lock} class with 
- * the same basic behaviour and semantics as the implicit
+ * the same basic behavior and semantics as the implicit
  * monitor lock accessed by the use of <tt>synchronized</tt> methods and
  * statements, but without the forced block-structured locking and unlocking
  * that occurs with <tt>synchronized</tt> methods and
  * statements. 
- * In a good implementation the performance characteristics of using 
- * <tt>ReentrantLock</tt> should be about the same as using monitors directly.
+ * In a good implementation the performance characteristics of using a
+ * <tt>ReentrantLock</tt> instance should be about the same as using 
+ * monitors directly.
  *
  * <p><em>Only</em> use this class when you want normal locking semantics but
  * need to use the lock in a non-nested fashion.
@@ -23,8 +24,8 @@ package java.util.concurrent;
  * See {@link #getHoldCount} for a way to check this.
  *
  *
- * <p><code>ReentrantLocks</code> are intended to be used primarily in 
- * before/after constructions such as:
+ * <p><code>ReentrantLock</code> instances are intended to be used primarily 
+ * in before/after constructions such as:
  *
  * <pre>
  * class X {
@@ -35,8 +36,7 @@ package java.util.concurrent;
  *     lock.lock();  // block until condition holds
  *     try {
  *       // ... method body
- *     }
- *     finally {
+ *     } finally {
  *       lock.unlock()
  *     }
  *   }
@@ -44,8 +44,8 @@ package java.util.concurrent;
  * </pre>
  *
  * <p>This class supports the interruption of lock acquisition and provides a 
- * {@link #newCondition Condition} that supports the interruption of thread 
- * suspension.
+ * {@link #newCondition Condition} implemenatation that supports the 
+ * interruption of thread suspension.
  *
  * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
  * will result in a {@link NullPointerException} being thrown.
@@ -56,7 +56,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/12 07:01:35 $
+ * @revised $Date: 2002/12/16 01:12:33 $
  * @editor $Author: dholmes $
  * 
  * @fixme (1) We need a non-nested example to motivate this
@@ -70,7 +70,7 @@ public class ReentrantLock implements Lock {
     public ReentrantLock() {}
 
     /**
-     * Acquire the lock. 
+     * Acquirea the lock. 
      * <p>Acquires the lock if it is not held be another thread and returns 
      * immediately, setting the lock hold count to one.
      * <p>If the current thread
@@ -84,7 +84,7 @@ public class ReentrantLock implements Lock {
     public void lock() {}
 
     /**
-     * Acquire the lock unless the current thread is 
+     * Acquires the lock unless the current thread is 
      * {@link Thread#interrupt interrupted}.
      * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately, setting the lock hold count to one.
@@ -119,7 +119,7 @@ public class ReentrantLock implements Lock {
     public void lockInterruptibly() throws InterruptedException { }
 
     /**
-     * Acquire the lock only if it is not held by another thread at the time
+     * Acquires the lock only if it is not held by another thread at the time
      * of invocation.
      * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately with the value <tt>true</tt>, setting the lock hold count 
@@ -140,7 +140,7 @@ public class ReentrantLock implements Lock {
 
     /**
      *
-     * Acquire the lock if it is not held by another thread  within the given 
+     * Acquires the lock if it is not held by another thread  within the given 
      * waiting time and the current thread has not been interrupted. 
      * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately with the value <tt>true</tt>, setting the lock hold count 
@@ -217,8 +217,7 @@ public class ReentrantLock implements Lock {
      *     lock.lock();
      *     try {
      *       // ... method body
-     *     }
-     *     finally {
+     *     } finally {
      *       lock.unlock()
      *     }
      *   }
@@ -258,9 +257,11 @@ public class ReentrantLock implements Lock {
     }
 
     /**
-     * Return a {@link Condition} for use with this {@link Lock} instance.
+     * Returns a {@link Condition} instance for use with this 
+     * {@link Lock} instance.
      *
-     * <p>The returned {@link Condition} has the same behaviour and usage
+     * <p>The returned {@link Condition} instance has the same behavior and 
+     * usage
      * restrictions with this lock as the {@link Object} monitor methods
      * ({@link Object#wait() wait}, {@link Object#notify notify}, and
      * {@link Object#notifyAll notifyAll}) have with the built-in monitor

@@ -325,6 +325,10 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return offer(o);
     }
 
+    /**
+     * Removes a single instance of the specified element from this
+     * collection, if it is present.
+     */
     public boolean remove(Object o) {
         if (o == null)
             return false;
@@ -456,7 +460,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Remove all elements from the priority queue.
+     * Removes all elements from the priority queue.
+     * The queue will be empty after this call returns.
      */
     public void clear() {
         modCount++;

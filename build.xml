@@ -449,7 +449,7 @@
   <target name="configure-compiler">
 
     <property name="gjc.version"
-             value="1.3"/>
+             value="2.0"/>
 
     <condition property="build.novariance" value="-novariance">
       <and>
@@ -479,6 +479,16 @@
     </condition>
 
     <property name="build.warnunchecked" value=""/>
+
+    <condition property="prepare.src.dir" value="${build.dir}/prepare-src">
+      <or>
+        <and>
+          <not><isset property="build.nothreads"/></not>
+          <equals arg1="${gjc.version}" arg2="2.0"/>
+        </and>
+        <istrue value="${build.nothreads}"/>
+      </or>
+    </condition>
 
 
     <!--
@@ -518,16 +528,8 @@
   </target>
 
 
-  <target name="configure-src">
-
-    <condition property="prepare.src.dir" value="${build.dir}/prepare-src">
-      <istrue value="${build.nothreads}"/>
-    </condition>
-
-  </target>
-
   <target name="prepare-src"
-          depends="configure-src"
+          depends="configure-compiler"
           if="prepare.src.dir">
 
     <mkdir dir="${prepare.src.dir}"/>

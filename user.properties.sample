@@ -3,12 +3,12 @@
 #
 # Modify this file to taste and save as user.properties
 #
-# $Id: user.properties.sample,v 1.5 2003/05/29 12:54:10 tim Exp $
+# $Id: user.properties.sample,v 1.6 2003/05/29 14:56:37 tim Exp $
 # ---------------------------------------------------------------------------
 
 
-# ----- Which gj compiler: 1.3 or 2.0? (default 1.3) -----
-gjc.version = 1.3
+# ----- Which gj compiler: 1.3 or 2.0? (default 2.0) -----
+gjc.version = 2.0
 
 
 # ----- Turn on -novariance? (default true, ignored in version 1.3) -----
@@ -19,8 +19,8 @@ gjc.novariance = true
 gjc.warnunchecked = false
 
 
-# ----- Skip the java.lang.Thread* classes? (default false) -----
-build.nothreads = false
+# ----- Skip java.lang.Thread* classes? (default true for 2.0, false o/w) -----
+build.nothreads = true
 
 
 # ----- Use emulation classes? (default true for Windows, false otherwise) -----

@@ -225,6 +225,11 @@ import java.util.*;
  */
 public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
+     * Only used to force toArray() to produce a Runnable[].
+     */
+    private static final Runnable[] EMPTY_RUNNABLE_ARRAY = new Runnable[0];
+
+    /**
      * Queue used for holding tasks and handing off to worker threads.
      */
     private final BlockingQueue<Runnable> workQueue;
@@ -308,7 +313,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * worker threads.
      */
     private long completedTaskCount;
-
+    
     /**
      * The default rejected execution handler
      */
@@ -862,7 +867,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         if (fullyTerminated)
             terminated();
         
-        return Arrays.asList(workQueue.toArray(new Runnable[0]));
+        return Arrays.asList(workQueue.toArray(EMPTY_RUNNABLE_ARRAY));
     }
 
     public boolean isShutdown() {

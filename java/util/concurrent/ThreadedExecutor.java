@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * An executor that executes submitted tasks on one or more dedicated threads.
  *
- * @fixme ThreadFactory, CannotExecuteHandler, Queue
+ * @fixme Document ThreadFactory, CannotExecuteHandler, Queue
  *
  * <p>A <tt>ThreadedExecutor</tt> can be shut down, which will cause it to stop
  * accepting new tasks.  After being shut down, the executor will 
@@ -30,7 +30,7 @@ import java.util.List;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/02/26 10:48:09 $
+ * @revised $Date: 2003/02/26 10:53:21 $
  * @editor $Author: jozart $
  */
 public interface ThreadedExecutor extends Executor {

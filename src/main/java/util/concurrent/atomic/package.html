@@ -53,7 +53,7 @@ class Sequencer {
 }
 </pre>
 
-<p>The memory effects for accesses and updates of atomics follow the
+<p>The memory effects for accesses and updates of atomics generally follow the
 rules for volatiles:
 
 <ul>
@@ -64,11 +64,15 @@ rules for volatiles:
   <li> <tt>set</tt> has the memory effects of writing (assigning) a
 <tt>volatile</tt> variable.
 
-  <li> <tt>compareAndSet</tt>, <tt>weakCompareAndSet</tt>,
-and other read-and-update operations 
-have the memory effects of both reading and
-writing <tt>volatile</tt> variables.
+  <li><tt>weakCompareAndSet</tt> atomically reads and conditionally
+  writes a variable, is ordered with respect to other
+  <tt>weakCompareAndSet</tt> operations, but otherwise acts as an
+  ordinary non-volatile memory operation.
 
+  <li> <tt>compareAndSet</tt>
+  and all other read-and-update operations 
+  have the memory effects of both reading and
+  writing <tt>volatile</tt> variables.
 </ul> 
 
 <p>In addition to classes representing single values, this package

@@ -344,6 +344,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         static final int SIGNAL    = -1;
         /** waitStatus value to indicate thread is waiting on condition */
         static final int CONDITION = -2;
+        /** Marker to indicate a node is waiting in shared mode */
+        private static final Node SHARED = new Node();
 
         /**
          * Status field, taking on only the values:
@@ -401,11 +403,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         volatile Node next;
 
         /** 
-         * Link to next node waiting on condition.  Because condition
-         * queues are accessed only when holding in exclusive mode, we
-         * just need a simple linked queue to hold nodes while they
-         * are waiting on conditions. They are then transferred to the
-         * queue to re-acquire.
+         * Link to next node waiting on condition, or the special
+         * value SHARED.  Because condition queues are accessed only
+         * when holding in exclusive mode, we just need a simple
+         * linked queue to hold nodes while they are waiting on
+         * conditions. They are then transferred to the queue to
+         * re-acquire. And because conditions can only be exclusive,
+         * we save a field by using special value to indicate shared
+         * mode.
          */
         Node nextWaiter;
 
@@ -419,19 +424,23 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         Thread thread;
 
         /**
-         * True if waiting in shared mode.  If so, successful acquires
-         * cascade to wake up subsequent nodes.
+         * Returns true if node is waiting in shared mode
          */
-        final boolean shared;
+        private boolean isShared() {
+            return nextWaiter == SHARED;
+        }
+
+        Node() { 
+        }
 
         Node(Thread thread, boolean shared) { 
             this.thread = thread; 
-            this.shared = shared;
+            this.nextWaiter = (shared)? SHARED : null;
         }
 
         Node(Thread thread, boolean shared, int waitStatus) { 
             this.thread = thread; 
-            this.shared = shared;
+            this.nextWaiter = (shared)? SHARED : null;
             this.waitStatus = waitStatus;
         }
     }
@@ -830,7 +839,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
         }
         return false;
     }
+
     // Queuing utilities
+
 
     /**
      * Insert node into queue.
@@ -840,8 +851,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     private Node enq(Node node) {
         for (;;) {
             Node t = tail;
-            if (t == null) {                    // Try to initialize
-                Node h = new Node(null, false); // Dummy header
+            if (t == null) {         // Try to initialize
+                Node h = new Node(); // Dummy header
                 h.next = node;
                 node.prev = h;
                 if (compareAndSetHead(this, null, h)) {
@@ -1047,7 +1058,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             setHead(pred, node);
             if (a > 0 && node.waitStatus < 0) {
                 Node s = node.next; 
-                if (s == null || s.shared)
+                if (s == null || s.isShared())
                     unparkSuccessor(node);
             }
             return true;
@@ -1292,7 +1303,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     public final Collection<Thread> getQueuedThreads(boolean shared) {
         ArrayList<Thread> list = new ArrayList<Thread>();
         for (Node p = tail; p != null; p = p.prev) {
-            if (p.shared == shared) {
+            if (p.isShared() == shared) {
                 Thread t = p.thread;
                 if (t != null)
                     list.add(t);

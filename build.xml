@@ -136,7 +136,7 @@
 
 
   <target name="jar"
-          depends="native-jar, emulation-jar"
+          depends="check-emulation, init-jar, native-jar, emulation-jar"
           description="Builds library jar from compiled sources"/>
 
 
@@ -303,8 +303,8 @@
 
 
   <target name="native-jar"
-          depends="compile, init-jar"
-          unless="build.emulation">
+          depends="compile"
+          unless="build.emulation.true">
 
     <jar destfile="${product.jar}">
       <fileset dir="${build.classes.dir}"/>
@@ -313,15 +313,9 @@
   </target>
 
 
-  <target name="base-jar"
-          depends="compile, init-jar">
-
-  </target>
-
-
   <target name="compile-emulation"
           depends="init"
-          if="build.emulation">
+          if="build.emulation.true">
 
     <mkdir dir="${build.emulation.dir}"/>
 
@@ -342,8 +336,8 @@
 
 
   <target name="emulation-jar"
-          depends="init-jar, compile-emulation"
-          if="build.emulation">
+          depends="compile-emulation"
+          if="build.emulation.true">
 
 
     <jar destfile="${product.jar}" duplicate="add">
@@ -509,6 +503,16 @@
     <fail message="Need JUnit 3.8.1 in ${ant.home}${file.separator}lib to run tests"
           unless="junit.available"/>
 
+  </target>
+
+
+  <target name="check-emulation">
+    <condition property="build.emulation.true">
+      <or>
+        <isset property="build.emulation"/>
+        <os family="windows"/>
+      </or>
+    </condition>
   </target>
 
 

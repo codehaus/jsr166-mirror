@@ -38,7 +38,7 @@
  * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-    implements Queue<E>, Sorted, java.io.Serializable {
+    implements Queue<E>, java.io.Serializable {
 
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 

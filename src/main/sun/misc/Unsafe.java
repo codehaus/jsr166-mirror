@@ -695,13 +695,90 @@ public final class Unsafe {
                                                    long expected,
                                                    long x);
 
-    /** Insert a store-store barrier (aka release barrier) */
-    public final native void storeStoreBarrier();
+    /**
+     * Fetches a reference value from a given Java variable, with volatile 
+     * load semantics. Otherwise identical to {@link #getObject(Object, long)}
+     */
+    public native Object getObjectVolatile(Object o, long offset);
 
-    /** Insert a store-load barrier (aka volatile barrier) */
-    public final native void storeLoadBarrier();
+    /**
+     * Stores a reference value into a given Java variable, with 
+     * volatile store semantics. Otherwise identical to {@link #putObject(Object, long, Object)}
+     */
+    public native void    putObjectVolatile(Object o, long offset, Object x);
 
-    /** Insert a load-load barrier (aka aquire barrier) */
-    public final native void loadLoadBarrier();
-    
+    /** Volatile version of {@link #getInt(Object, long)}  */
+    public native int     getIntVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putInt(Object, long, int)}  */
+    public native void    putIntVolatile(Object o, long offset, int x);
+
+    /** Volatile version of {@link #getBoolean(Object, long)}  */
+    public native boolean getBooleanVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putBoolean(Object, long, boolean)}  */
+    public native void    putBooleanVolatile(Object o, long offset, boolean x);
+
+    /** Volatile version of {@link #getByte(Object, long)}  */
+    public native byte    getByteVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putByte(Object, long, byte)}  */
+    public native void    putByteVolatile(Object o, long offset, byte x);
+
+    /** Volatile version of {@link #getShort(Object, long)}  */
+    public native short   getShortVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putShort(Object, long, short)}  */
+    public native void    putShortVolatile(Object o, long offset, short x);
+
+    /** Volatile version of {@link #getChar(Object, long)}  */
+    public native char    getCharVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putChar(Object, long, char)}  */
+    public native void    putCharVolatile(Object o, long offset, char x);
+
+    /** Volatile version of {@link #getLong(Object, long)}  */
+    public native long    getLongVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putLong(Object, long, long)}  */
+    public native void    putLongVolatile(Object o, long offset, long x);
+
+    /** Volatile version of {@link #getFloat(Object, long)}  */
+    public native float   getFloatVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putFloat(Object, long, float)}  */
+    public native void    putFloatVolatile(Object o, long offset, float x);
+
+    /** Volatile version of {@link #getDouble(Object, long)}  */
+    public native double  getDoubleVolatile(Object o, long offset);
+
+    /** Volatile version of {@link #putDouble(Object, long, double)}  */
+    public native void    putDoubleVolatile(Object o, long offset, double x);
+
+    /**
+     * Unblock the given thread blocked on <tt>park</tt>, or, if it is
+     * not blocked, cause the subsequent call to <tt>park</tt> not to
+     * block.  Note: this operation is "unsafe" solely because the
+     * caller must somehow ensure that the thread has not been
+     * destroyed. Nothing special is usually required to ensure this
+     * when called from Java (in which there will ordinarily be a live
+     * reference to the thread) but this is not nearly-automatically
+     * so when calling from native code.
+     * @param thread the thread to unpark.
+     * 
+     */
+    public native void unpark(Object thread);
+
+    /**
+     * Block current thread, returning when a balancing
+     * <tt>unpark</tt> occurs, or a balancing <tt>unpark</tt> has
+     * already occurred, or the thread is interrupted, or, if not
+     * absolute and time is not zero, the given time nanoseconds have
+     * elapsed, or if absolute, the given deadline in milliseconds
+     * since Epoch has passed, or spuriously (i.e., returning for no
+     * "reason"). Note: This operation is in the Unsafe class only
+     * because <tt>unpark</tt> is, so it would be strange to place it
+     * elsewhere.
+     */
+    public native void park(boolean isAbsolute, long time);
 }

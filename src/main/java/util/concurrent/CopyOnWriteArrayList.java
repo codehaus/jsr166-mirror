@@ -1,6 +1,6 @@
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group.  Adapted and released under explicit permission
+ * Expert Group.  Adapted and released, under explicit permission,
  * from JDK ArrayList.java which carries the following copyright:
  *
  * Copyright 1997 by Sun Microsystems, Inc.,

@@ -195,6 +195,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * in code comments.
          */
 
+        private static final long serialVersionUID = 2249069246763182397L;
+
         /**
          * The number of elements in this segment's region.
          **/

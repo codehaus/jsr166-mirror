@@ -497,7 +497,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
         }
         try {
             Thread.sleep(SHORT_DELAY_MS);

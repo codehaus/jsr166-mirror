@@ -31,7 +31,7 @@
  * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-                              implements Queue<E>, 
+                              implements Queue<E>,
                                          java.io.Serializable {
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 
@@ -97,7 +97,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     public PriorityQueue(int initialCapacity, Comparator<E> comparator) {
         if (initialCapacity < 1)
             initialCapacity = 1;
-        queue = new E[initialCapacity + 1];
+        queue = (E[]) new Object[initialCapacity + 1];
         this.comparator = comparator;
     }
 
@@ -126,7 +126,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                                             Integer.MAX_VALUE - 1);
         if (initialCapacity < 1)
             initialCapacity = 1;
-        queue = new E[initialCapacity + 1];
+        queue = (E[]) new Object[initialCapacity + 1];
 
 
         if (initialElements instanceof Sorted) {
@@ -217,7 +217,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * elements of the priority queue will be returned by this iterator in the
      * order specified by the queue, which is to say the order they would be
      * returned by repeated calls to <tt>poll</tt>.
-     * 
+     *
      * @return an <tt>Iterator</tt> over the elements in this priority queue.
      */
     public Iterator<E> iterator() {
@@ -278,7 +278,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Returns the number of elements in this priority queue.
-     * 
+     *
      * @return the number of elements in this priority queue.
      */
     public int size() {
@@ -303,7 +303,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         // Grow backing store if necessary
         while (size >= queue.length) {
-            E[] newQueue = new E[2 * queue.length];
+            E[] newQueue = (E[]) new Object[2 * queue.length];
             System.arraycopy(queue, 0, newQueue, 0, queue.length);
             queue = newQueue;
         }
@@ -451,7 +451,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         // Read in array length and allocate array
         int arrayLength = s.readInt();
-        queue = new E[arrayLength];
+        queue = (E[]) new Object[arrayLength];
 
         // Read in all elements in the proper order.
         for (int i=0; i<size; i++)

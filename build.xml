@@ -206,7 +206,7 @@
           depends="dist"
           description="Puts entire CVS tree, plus distribution productions, in a jar">
 
-<!--  
+<!--
     #keep build dir? - dl
     <delete dir="${build.dir}"/>
 -->
@@ -526,7 +526,7 @@
   <target name="configure-compiler">
 
     <property name="gjc.version"
-             value="2.0"/>
+             value="2.2"/>
 
     <condition property="novariance.arg" value="-novariance">
       <and>

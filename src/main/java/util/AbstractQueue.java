@@ -15,7 +15,7 @@ package java.util;
  * @since 1.5
  * @author Doug Lea
  */
- 
+
 public abstract class AbstractQueue<E> extends AbstractCollection<E> implements Queue<E> {
 
     public boolean add(E x) {
@@ -46,4 +46,5 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements 
             ;
     }
 
+    public abstract Iterator<E> iterator();
 }

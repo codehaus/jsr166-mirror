@@ -22,7 +22,7 @@ import java.io.ObjectOutputStream;
  * entire table in a way that prevents all access.  This class is
  * fully interoperable with Hashtable in programs that rely on its
  * thread safety but not on its synchronization details.
- *  
+ *
  * <p> Retrieval operations (including <tt>get</tt>) ordinarily
  * overlap with update operations (including <tt>put</tt> and
  * <tt>remove</tt>). Retrievals reflect the results of the most
@@ -62,12 +62,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
 
     /* ---------------- Constants -------------- */
-    
+
     /**
      * The default initial number of table slots for this table (32).
      * Used when not otherwise specified in constructor.
      */
-    private static int DEFAULT_INITIAL_CAPACITY = 16; 
+    private static int DEFAULT_INITIAL_CAPACITY = 16;
 
     /**
      * The maximum capacity, used if a higher value is implicitly
@@ -75,12 +75,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * be a power of two <= 1<<30.
      */
     static final int MAXIMUM_CAPACITY = 1 << 30;
-  
+
     /**
      * The default load factor for this table.  Used when not
      * otherwise specified in constructor.
      */
-    static final float DEFAULT_LOAD_FACTOR = 0.75f; 
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
     /**
      * The default number of concurrency control segments.
@@ -103,7 +103,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * The segments, each of which is a specialized hash table
      */
-    private final Segment<K,V>[] segments;
+    private final Segment[] segments;
 
     private transient Set<K> keySet;
     private transient Set/*<Map.Entry<K,V>>*/ entrySet;
@@ -112,7 +112,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Small Utilities -------------- */
 
     /**
-     * Return a hash code for non-null Object x.  
+     * Return a hash code for non-null Object x.
      * Uses the same hash code spreader as most other j.u hash tables.
      * @param x the object serving as a key
      * @return the hash code
@@ -170,7 +170,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          *   - All unsynchronized read operations must first read the
          *     "count" field, and should not look at table entries if
          *     it is 0.
-         *     
+         *
          *   - All synchronized write operations should write to
          *     the "count" field after updating. The operations must not
          *     take any action that could even momentarily cause
@@ -184,7 +184,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * As a guide, all critical volatile reads and writes are marked
          * in code comments.
          */
-        
+
         /**
          * The number of elements in this segment's region.
          **/
@@ -200,7 +200,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         /**
          * The per-segment table
          */
-        transient HashEntry<K,V>[] table;
+        transient HashEntry[] table;
 
         /**
          * The load factor for the hash table.  Even though this value
@@ -212,28 +212,28 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         Segment(int initialCapacity, float lf) {
             loadFactor = lf;
-            setTable(new HashEntry<K,V>[initialCapacity]);
+            setTable(new HashEntry[initialCapacity]);
         }
 
         /**
-         * Set table to new HashEntry array. 
+         * Set table to new HashEntry array.
          * Call only while holding lock or in constructor.
          **/
-        private void setTable(HashEntry<K,V>[] newTable) {
+        private void setTable(HashEntry[] newTable) {
             table = newTable;
             threshold = (int)(newTable.length * loadFactor);
             count = count; // write-volatile
-        }    
+        }
 
         /* Specialized implementations of map methods */
-        
-        V get(K key, int hash) { 
+
+        V get(K key, int hash) {
             if (count != 0) { // read-volatile
-                HashEntry<K,V>[] tab = table;
+                HashEntry[] tab = table;
                 int index = hash & (tab.length - 1);
-                HashEntry<K,V> e = tab[index]; 
+                HashEntry<K,V> e = (HashEntry<K,V>) tab[index];
                 while (e != null) {
-                    if (e.hash == hash && key.equals(e.key)) 
+                    if (e.hash == hash && key.equals(e.key))
                         return e.value;
                     e = e.next;
                 }
@@ -243,52 +243,52 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         boolean containsKey(Object key, int hash) {
             if (count != 0) { // read-volatile
-                HashEntry<K,V>[] tab = table;
+                HashEntry[] tab = table;
                 int index = hash & (tab.length - 1);
-                HashEntry<K,V> e = tab[index]; 
+                HashEntry<K,V> e = (HashEntry<K,V>) tab[index];
                 while (e != null) {
-                    if (e.hash == hash && key.equals(e.key)) 
+                    if (e.hash == hash && key.equals(e.key))
                         return true;
                     e = e.next;
                 }
             }
             return false;
         }
-        
+
         boolean containsValue(Object value) {
             if (count != 0) { // read-volatile
-                HashEntry<K,V> tab[] = table;
+                HashEntry[] tab = table;
                 int len = tab.length;
-                for (int i = 0 ; i < len; i++) 
-                    for (HashEntry<K,V> e = tab[i] ; e != null ; e = e.next) 
+                for (int i = 0 ; i < len; i++)
+                    for (HashEntry<K,V> e = tab[i] ; e != null ; e = e.next)
                         if (value.equals(e.value))
                             return true;
             }
             return false;
         }
 
-        V put(K key, int hash, V value, boolean onlyIfAbsent) { 
+        V put(K key, int hash, V value, boolean onlyIfAbsent) {
             lock();
             try {
                 int c = count;
-                HashEntry<K,V>[] tab = table;
+                HashEntry[] tab = table;
                 int index = hash & (tab.length - 1);
-                HashEntry<K,V> first = tab[index];
-                
-                for (HashEntry<K,V> e = first; e != null; e = e.next) {
+                HashEntry<K,V> first = (HashEntry<K,V>) tab[index];
+
+                for (HashEntry<K,V> e = first; e != null; e = (HashEntry<K,V>) e.next) {
                     if (e.hash == hash && key.equals(e.key)) {
-                        V oldValue = e.value; 
+                        V oldValue = e.value;
                         if (!onlyIfAbsent)
                             e.value = value;
                         count = c; // write-volatile
                         return oldValue;
                     }
                 }
-                
+
                 tab[index] = new HashEntry<K,V>(hash, key, value, first);
                 ++c;
                 count = c; // write-volatile
-                if (c > threshold) 
+                if (c > threshold)
                     setTable(rehash(tab));
                 return null;
             }
@@ -297,7 +297,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             }
         }
 
-        private HashEntry<K,V>[] rehash(HashEntry<K,V>[] oldTable) { 
+        private HashEntry[] rehash(HashEntry[] oldTable) {
             int oldCapacity = oldTable.length;
             if (oldCapacity >= MAXIMUM_CAPACITY)
                 return oldTable;
@@ -315,28 +315,28 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
              * reader thread that may be in the midst of traversing table
              * right now.
              */
-            
-            HashEntry<K,V>[] newTable = new HashEntry<K,V>[oldCapacity << 1];
+
+            HashEntry[] newTable = new HashEntry[oldCapacity << 1];
             int sizeMask = newTable.length - 1;
             for (int i = 0; i < oldCapacity ; i++) {
                 // We need to guarantee that any existing reads of old Map can
-                //  proceed. So we cannot yet null out each bin.  
+                //  proceed. So we cannot yet null out each bin.
                 HashEntry<K,V> e = oldTable[i];
-                
+
                 if (e != null) {
                     HashEntry<K,V> next = e.next;
                     int idx = e.hash & sizeMask;
-                    
+
                     //  Single node on list
-                    if (next == null) 
+                    if (next == null)
                         newTable[idx] = e;
-                    
-                    else {    
+
+                    else {
                         // Reuse trailing consecutive sequence at same slot
                         HashEntry<K,V> lastRun = e;
                         int lastIdx = idx;
-                        for (HashEntry<K,V> last = next; 
-                             last != null; 
+                        for (HashEntry<K,V> last = next;
+                             last != null;
                              last = last.next) {
                             int k = last.hash & sizeMask;
                             if (k != lastIdx) {
@@ -345,14 +345,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                             }
                         }
                         newTable[lastIdx] = lastRun;
-                        
+
                         // Clone all remaining nodes
                         for (HashEntry<K,V> p = e; p != lastRun; p = p.next) {
                             int k = p.hash & sizeMask;
-                            newTable[k] = new HashEntry<K,V>(p.hash, 
-                                                             p.key, 
-                                                             p.value, 
-                                                             newTable[k]);
+                            newTable[k] = new HashEntry<K,V>(p.hash,
+                                                             p.key,
+                                                             p.value,
+                                                             (HashEntry<K,V>) newTable[k]);
                         }
                     }
                 }
@@ -364,13 +364,13 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * Remove; match on key only if value null, else match both.
          */
         V remove(Object key, int hash, Object value) {
-            lock(); 
+            lock();
             try {
                 int c = count;
                 HashEntry[] tab = table;
                 int index = hash & (tab.length - 1);
                 HashEntry<K,V> first = tab[index];
-                
+
                 HashEntry<K,V> e = first;
                 for (;;) {
                     if (e == null)
@@ -385,10 +385,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     return null;
 
                 // All entries following removed node can stay in list, but
-                // all preceeding ones need to be cloned.  
+                // all preceeding ones need to be cloned.
                 HashEntry<K,V> newFirst = e.next;
-                for (HashEntry<K,V> p = first; p != e; p = p.next) 
-                    newFirst = new HashEntry<K,V>(p.hash, p.key, 
+                for (HashEntry<K,V> p = first; p != e; p = p.next)
+                    newFirst = new HashEntry<K,V>(p.hash, p.key,
                                                   p.value, newFirst);
                 tab[index] = newFirst;
                 count = c-1; // write-volatile
@@ -402,8 +402,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         void clear() {
             lock();
             try {
-                HashEntry<K,V> tab[] = table;
-                for (int i = 0; i < tab.length ; i++) 
+                HashEntry[] tab = table;
+                for (int i = 0; i < tab.length ; i++)
                     tab[i] = null;
                 count = 0; // write-volatile
             }
@@ -434,7 +434,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         public V getValue() {
-            return value; 
+            return value;
         }
 
         public V setValue(V newValue) {
@@ -453,7 +453,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             Entry<K,V> e = (Entry)o;
             return (key.equals(e.getKey()) && value.equals(e.getValue()));
         }
-    
+
         public int hashCode() {
             return  key.hashCode() ^ value.hashCode();
         }
@@ -463,7 +463,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    
+
     /* ---------------- Public operations -------------- */
 
     /**
@@ -479,7 +479,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * negative or the load factor or number of segments are
      * nonpositive.
      */
-    public ConcurrentHashMap(int initialCapacity, 
+    public ConcurrentHashMap(int initialCapacity,
                              float loadFactor, int segments) {
         if (!(loadFactor > 0) || initialCapacity < 0 || segments <= 0)
             throw new IllegalArgumentException();
@@ -493,12 +493,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         segmentShift = 32 - sshift;
         segmentMask = ssize - 1;
-        this.segments = new Segment<K,V>[ssize];
+        this.segments = new Segment[ssize];
 
         if (initialCapacity > MAXIMUM_CAPACITY)
             initialCapacity = MAXIMUM_CAPACITY;
         int c = initialCapacity / ssize;
-        if (c * ssize < initialCapacity) 
+        if (c * ssize < initialCapacity)
             ++c;
         int cap = 1;
         while (cap < c)
@@ -568,17 +568,17 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *               <code>null</code>.
      * @see     #put(Object, Object)
      */
-    public V get(K key) { 
+    public V get(Object key) {
         int hash = hash(key); // throws NullPointerException if key null
-        return segmentFor(hash).get(key, hash);
+        return segmentFor(hash).get((K) key, hash);
     }
 
     /**
      * Tests if the specified object is a key in this table.
-     * 
+     *
      * @param   key   possible key.
-     * @return  <code>true</code> if and only if the specified object 
-     *          is a key in this table, as determined by the 
+     * @return  <code>true</code> if and only if the specified object
+     *          is a key in this table, as determined by the
      *          <tt>equals</tt> method; <code>false</code> otherwise.
      * @throws  NullPointerException  if the key is
      *               <code>null</code>.
@@ -597,11 +597,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * @param value value whose presence in this map is to be tested.
      * @return <tt>true</tt> if this map maps one or more keys to the
-     * specified value.  
+     * specified value.
      * @throws  NullPointerException  if the value is <code>null</code>.
      */
     public boolean containsValue(Object value) {
-        if (value == null) 
+        if (value == null)
             throw new NullPointerException();
 
         for (int i = 0; i < segments.length; ++i) {
@@ -617,10 +617,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * Note that this method is identical in functionality to containsValue,
      * (which is part of the Map interface in the collections framework).
-     * 
+     *
      * @param      value   a value to search for.
      * @return     <code>true</code> if and only if some key maps to the
-     *             <code>value</code> argument in this table as 
+     *             <code>value</code> argument in this table as
      *             determined by the <tt>equals</tt> method;
      *             <code>false</code> otherwise.
      * @throws  NullPointerException  if the value is <code>null</code>.
@@ -633,12 +633,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Maps the specified <code>key</code> to the specified 
-     * <code>value</code> in this table. Neither the key nor the 
+     * Maps the specified <code>key</code> to the specified
+     * <code>value</code> in this table. Neither the key nor the
      * value can be <code>null</code>. <p>
      *
-     * The value can be retrieved by calling the <code>get</code> method 
-     * with a key that is equal to the original key. 
+     * The value can be retrieved by calling the <code>get</code> method
+     * with a key that is equal to the original key.
      *
      * @param      key     the table key.
      * @param      value   the value.
@@ -649,10 +649,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @see     Object#equals(Object)
      * @see     #get(Object)
      */
-    public V put(K key, V value) { 
-        if (value == null) 
+    public V put(K key, V value) {
+        if (value == null)
             throw new NullPointerException();
-        int hash = hash(key); 
+        int hash = hash(key);
         return segmentFor(hash).put(key, hash, value, false);
     }
 
@@ -678,10 +678,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *            <tt>null</tt>.
      *
      **/
-    public V putIfAbsent(K key, V value) { 
-        if (value == null) 
+    public V putIfAbsent(K key, V value) {
+        if (value == null)
             throw new NullPointerException();
-        int hash = hash(key); 
+        int hash = hash(key);
         return segmentFor(hash).put(key, hash, value, true);
     }
 
@@ -694,16 +694,16 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * @param t Mappings to be stored in this map.
      */
-    public <K1 extends K, V1 extends V> void putAll(Map<K1,V1> t) {
-        Iterator<Map.Entry<K1,V1>> it = t.entrySet().iterator();
+    public void putAll(Map<? extends K, ? extends V> t) {
+        Iterator it = t.entrySet().iterator();
         while (it.hasNext()) {
-            Entry<K,V> e = (Entry) it.next();
+            Entry<K,V> e = (Entry<K, V>) it.next();
             put(e.getKey(), e.getValue());
         }
     }
 
     /**
-     * Removes the key (and its corresponding value) from this 
+     * Removes the key (and its corresponding value) from this
      * table. This method does nothing if the key is not in the table.
      *
      * @param   key   the key that needs to be removed.
@@ -720,7 +720,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Removes the (key, value) pair from this
      * table. This method does nothing if the key is not in the table,
-     * or if the key is associated with a different value. 
+     * or if the key is associated with a different value.
      *
      * @param   key   the key that needs to be removed.
      * @param   value   the associated value. If the value is null,
@@ -739,7 +739,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Removes all mappings from this map.
      */
     public void clear() {
-        for (int i = 0; i < segments.length; ++i) 
+        for (int i = 0; i < segments.length; ++i)
             segments[i].clear();
     }
 
@@ -845,11 +845,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /* ---------------- Iterator Support -------------- */
-    
+
     private abstract class HashIterator {
         private int nextSegmentIndex;
         private int nextTableIndex;
-        private HashEntry<K, V>[] currentTable;
+        private HashEntry[] currentTable;
         private HashEntry<K, V> nextEntry;
         private HashEntry<K, V> lastReturned;
 
@@ -864,12 +864,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         private void advance() {
             if (nextEntry != null && (nextEntry = nextEntry.next) != null)
                 return;
-                
+
             while (nextTableIndex >= 0) {
                 if ( (nextEntry = currentTable[nextTableIndex--]) != null)
                     return;
             }
-                
+
             while (nextSegmentIndex >= 0) {
                 Segment<K,V> seg = segments[nextSegmentIndex--];
                 if (seg.count != 0) {
@@ -993,7 +993,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             Segment<K,V> seg = segments[k];
             seg.lock();
             try {
-                HashEntry<K,V>[] tab = seg.table;
+                HashEntry[] tab = seg.table;
                 for (int i = 0; i < tab.length; ++i) {
                     for (HashEntry<K,V> e = tab[i]; e != null; e = e.next) {
                         s.writeObject(e.key);
@@ -1021,7 +1021,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         // Initialize each segment to be minimally sized, and let grow.
         for (int i = 0; i < segments.length; ++i) {
-            segments[i].setTable(new HashEntry<K,V>[1]);
+            segments[i].setTable(new HashEntry[1]);
         }
 
         // Read the keys and values, and put the mappings in the table
@@ -1034,4 +1034,4 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 }
-        
+

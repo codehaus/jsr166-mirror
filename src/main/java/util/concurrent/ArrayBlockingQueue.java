@@ -15,7 +15,7 @@ import java.util.*;
  * created, the capacity can not be increased.  Attempts to offer an
  * element to a full queue will result in the offer operation
  * blocking; attempts to retrieve an element from an empty queue will
- * similarly block.  
+ * similarly block.
  *
  * <p> This class supports an optional fairness policy for ordering
  * threads blocked on an insertion or removal.  By default, this
@@ -32,21 +32,21 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
     /** The queued items */
-    private transient final E[] items; 
+    private transient final E[] items;
     /** items index for next take, poll or remove */
-    private transient int takeIndex; 
+    private transient int takeIndex;
     /** items index for next put, offer, or add. */
-    private transient int putIndex; 
+    private transient int putIndex;
     /** Number of items in the queue */
     private int count;
-    
+
     /**
      * An array used only during deserialization, to hold
      * items read back in from the stream, and then used
      * as "items" by readResolve via the private constructor.
      */
     private transient E[] deserializedItems;
-    
+
     /*
      * Concurrency control via the classic two-condition algorithm
      * found in any textbook.
@@ -78,7 +78,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         ++count;
         notEmpty.signal();
     }
-    
+
     /**
      * Extract element at current take position, advance, and signal.
      * Call only when holding lock.
@@ -93,7 +93,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Utility for remove and iterator.remove: Delete item at position i. 
+     * Utility for remove and iterator.remove: Delete item at position i.
      * Call only when holding lock.
      */
     void removeAt(int i) {
@@ -122,18 +122,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Internal constructor also used by readResolve. 
+     * Internal constructor also used by readResolve.
      * Sets all final fields, plus count.
-     * @param cap the maximumSize 
+     * @param cap the maximumSize
      * @param array the array to use or null if should create new one
      * @param count the number of items in the array, where indices 0
      * to count-1 hold items.
      */
     private ArrayBlockingQueue(int cap, E[] array, int count, ReentrantLock lk) {
-        if (cap <= 0) 
+        if (cap <= 0)
             throw new IllegalArgumentException();
         if (array == null)
-            this.items = new E[cap];
+            this.items = (E[]) new Object[cap];
         else
             this.items = array;
         this.putIndex = count;
@@ -142,7 +142,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         notEmpty = lock.newCondition();
         notFull =  lock.newCondition();
     }
-    
+
     /**
      * Creates a new ArrayBlockingQueue with the given (fixed) capacity
      * and default access policy.
@@ -207,7 +207,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /** Remove and return the first element from the queue, blocking
-     * if the queue is empty. 
+     * if the queue is empty.
      */
     public E take() throws InterruptedException {
         lock.lockInterruptibly();
@@ -237,7 +237,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (x == null) throw new NullPointerException();
         lock.lock();
         try {
-            if (count == items.length) 
+            if (count == items.length)
                 return false;
             else {
                 insert(x);
@@ -245,7 +245,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             }
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -263,7 +263,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             return x;
         }
         finally {
-            lock.unlock(); 
+            lock.unlock();
         }
     }
 
@@ -376,7 +376,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 }
                 i = inc(i);
             }
-            
+
         }
         finally {
             lock.unlock();
@@ -404,7 +404,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public Object[] toArray() {
         lock.lock();
         try {
-            E[] a = new E[count];
+            E[] a = (E[]) new Object[count];
             int k = 0;
             int i = takeIndex;
             while (k < count) {
@@ -423,7 +423,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             if (a.length < count)
                 a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), count);
-            
+
             int k = 0;
             int i = takeIndex;
             while (k < count) {
@@ -448,7 +448,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-    
+
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      *
@@ -474,7 +474,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          */
         private int nextIndex;
 
-        /** 
+        /**
          * nextItem holds on to item fields because once we claim
          * that an element exists in hasNext(), we must return it in
          * the following next() call even if it was in the process of
@@ -487,17 +487,17 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * Reset to -1 if this element is deleted by a call to remove.
          */
         private int lastRet;
-        
+
         Itr() {
             lastRet = -1;
-            if (count == 0) 
+            if (count == 0)
                 nextIndex = -1;
             else {
                 nextIndex = takeIndex;
                 nextItem = items[takeIndex];
             }
         }
-        
+
         public boolean hasNext() {
             /*
              * No sync. We can return true by mistake here
@@ -522,7 +522,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     nextIndex = -1;
             }
         }
-        
+
         public E next() {
             lock.lock();
             try {
@@ -535,10 +535,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 return x;
             }
             finally {
-                lock.unlock(); 
+                lock.unlock();
             }
         }
-        
+
         public void remove() {
             lock.lock();
             try {
@@ -546,11 +546,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 if (i == -1)
                     throw new IllegalStateException();
                 lastRet = -1;
-                
+
                 int ti = takeIndex;
                 removeAt(i);
                 // back up cursor (reset to front if was first element)
-                nextIndex = (i == ti) ? takeIndex : i;   
+                nextIndex = (i == ti) ? takeIndex : i;
                 checkNext();
             }
             finally {
@@ -558,7 +558,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             }
         }
     }
-    
+
     /**
      * Save the state to a stream (that is, serialize it).
      *
@@ -568,12 +568,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
-        
+
         // Write out element count, and any hidden stuff
         s.defaultWriteObject();
         // Write out maximumSize == items length
         s.writeInt(items.length);
-        
+
         // Write out all elements in the proper order.
         int i = takeIndex;
         int k = 0;
@@ -582,7 +582,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             i = inc(i);
         }
     }
-    
+
     /**
      * Reconstitute the Queue instance from a stream (that is,
      * deserialize it).
@@ -593,18 +593,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // Read in size, and any hidden stuff
         s.defaultReadObject();
         int size = count;
-        
+
         // Read in array length and allocate array
         int arrayLength = s.readInt();
-        
+
         // We use deserializedItems here because "items" is final
-        deserializedItems = new E[arrayLength];
-        
+        deserializedItems = (E[]) new Object[arrayLength];
+
         // Read in all elements in the proper order into deserializedItems
         for (int i = 0; i < size; i++)
             deserializedItems[i] = (E)s.readObject();
     }
-    
+
     /**
      * Throw away the object created with readObject, and replace it
      * with a usable ArrayBlockingQueue.

@@ -31,7 +31,7 @@ import java.util.*;
  * of copy-on-write sets are classes that maintain
  * sets of Handler objects
  * that must be multicasted to upon an update command. This
- * is a classic case where you do not want to be holding a 
+ * is a classic case where you do not want to be holding a
  * lock while sending a message, and where traversals normally
  * vastly overwhelm additions.
  * <pre>
@@ -87,9 +87,9 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     public Iterator<E>  iterator()            { return al.iterator(); }
     public boolean  remove(Object o)          { return al.remove(o); }
     public boolean  add(E o)                  { return al.addIfAbsent(o); }
-    public <T> boolean  containsAll(Collection<T> c)      { return al.containsAll(c); }
-    public <T extends E> boolean  addAll(Collection<T> c) { return al.addAllAbsent(c) > 0; }
-    public <T> boolean  removeAll(Collection<T> c)        { return al.removeAll(c); }
-    public <T> boolean  retainAll(Collection<T> c)        { return al.retainAll(c); }
+    public boolean  containsAll(Collection<?> c)      { return al.containsAll(c); }
+    public boolean  addAll(Collection<? extends E> c) { return al.addAllAbsent(c) > 0; }
+    public boolean  removeAll(Collection<?> c)        { return al.removeAll(c); }
+    public boolean  retainAll(Collection<?> c)        { return al.retainAll(c); }
 
 }

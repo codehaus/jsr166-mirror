@@ -85,7 +85,7 @@ public class SyntaxTest extends TestCase {
         assertEquals("should get total of 10", 10, total);
     }
 
-
+/*
     public void testVarargs () {
 
         int count = argCount(1, 2, 3, 4);
@@ -117,7 +117,7 @@ public class SyntaxTest extends TestCase {
         }
         return total;
     }
-
+*/
 
     public void testColor () {
         Color2 c = Color2.red;

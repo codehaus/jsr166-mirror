@@ -24,7 +24,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /*
       This implementation divides actions into two cases for puts:
 
-      * An arriving putter that does not already have a waiting taker 
+      * An arriving putter that does not already have a waiting taker
       creates a node holding item, and then waits for a taker to take it.
       * An arriving putter that does already have a waiting taker fills
       the slot node created by the taker, and notifies it to continue.
@@ -37,14 +37,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
       item from the node created by the putter, and notifies it to continue.
 
       This requires keeping two simple queues: waitingPuts and waitingTakes.
-   
+
       When a put or take waiting for the actions of its counterpart
       aborts due to interruption or timeout, it marks the node
       it created as "CANCELLED", which causes its counterpart to retry
       the entire put or take sequence.
     */
 
-    /** 
+    /**
      * Special marker used in queue nodes to indicate that
      * the thread waiting for a change in the node has timed out
      * or been interrupted.
@@ -214,18 +214,18 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         Node head;
         Node last;
 
-        Node enq(Object x) { 
+        Node enq(Object x) {
             Node p = new Node(x);
-            if (last == null) 
+            if (last == null)
                 last = head = p;
-            else 
+            else
                 last = last.next = p;
             return p;
         }
 
         Node deq() {
             Node p = head;
-            if (p != null && (head = p.next) == null) 
+            if (p != null && (head = p.next) == null)
                 last = null;
             return p;
         }
@@ -233,13 +233,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Main put algorithm, used by put, timed offer
-     */ 
+     */
     private boolean doPut(E x, boolean timed, long nanos) throws InterruptedException {
         if (x == null) throw new NullPointerException();
-        for (;;) { 
+        for (;;) {
             Node node;
             boolean mustWait;
-            
+
             qlock.lockInterruptibly();
             try {
                 node = waitingTakes.deq();
@@ -262,7 +262,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Main take algorithm, used by take, timed poll
-     */ 
+     */
     private E doTake(boolean timed, long nanos) throws InterruptedException {
         for (;;) {
             Node node;
@@ -315,8 +315,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     public boolean offer(E x) {
         if (x == null) throw new NullPointerException();
-        
-        for (;;) { 
+
+        for (;;) {
             qlock.lock();
             Node node;
             try {
@@ -327,7 +327,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
             if (node == null)
                 return false;
-            
+
             else if (node.set(x))
                 return true;
             // else retry
@@ -414,7 +414,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Returns an empty array.
      */
     public Object[] toArray() {
-        return new E[0];
+        return (E[]) new Object[0];
     }
 
     public <T> T[] toArray(T[] a) {

@@ -22,7 +22,6 @@ package java.util.concurrent;
  * the lock is not held by the current thread prior to locking.
  * See {@link #getHoldCount} for a way to check this.
  *
- * @fixme We need a non-nested example to motivate this
  *
  * <p><code>ReentrantLocks</code> are intended to be used primarily in 
  * before/after constructions such as:
@@ -44,11 +43,15 @@ package java.util.concurrent;
  * }
  * </pre>
  *
+ * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
+ * will result in a {@link NullPointerException} being thrown.
+ *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/06 07:27:55 $
+ * @revised $Date: 2002/12/09 06:36:23 $
  * @editor $Author: dholmes $
  * 
+ * @fixme We need a non-nested example to motivate this
  **/
 public class ReentrantLock implements Lock {
 

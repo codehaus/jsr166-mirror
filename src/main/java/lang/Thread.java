@@ -1557,4 +1557,3 @@ class Thread implements Runnable {
     private native void resume0();
     private native void interrupt0();
 }
-

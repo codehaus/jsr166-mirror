@@ -978,4 +978,3 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 	return getClass().getName() + "[name=" + getName() + ",maxpri=" + maxPriority + "]";
     }
 }
-

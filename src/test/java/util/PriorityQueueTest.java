@@ -1,6 +1,4 @@
-import java.util.*;
-import java.util.Queue;
-import java.util.PriorityQueue;
+package java.util;
 
 import junit.framework.TestCase;
 

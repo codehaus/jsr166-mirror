@@ -1,7 +1,7 @@
+package java.util.concurrent;
 
 import java.util.Date;
 import java.util.TimerTask;
-import java.util.concurrent.*;
 import junit.framework.TestCase;
 
 /**

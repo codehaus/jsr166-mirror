@@ -1,4 +1,5 @@
-import java.util.concurrent.ArrayBlockingQueue;
+package java.util.concurrent;
+
 import junit.framework.TestCase;
 
 /**

@@ -1,4 +1,5 @@
-import java.util.concurrent.atomic.AtomicInteger;
+package java.util.concurrent.atomic;
+
 import junit.framework.TestCase;
 
 /**

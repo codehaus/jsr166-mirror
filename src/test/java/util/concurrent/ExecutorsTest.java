@@ -1,4 +1,5 @@
-import java.util.concurrent.*;
+package java.util.concurrent;
+
 import junit.framework.TestCase;
 
 /**

@@ -24,15 +24,15 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/04 11:34:19 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/04 15:28:04 $
+ * @editor $Author: tim $
  */
 public class Executors {
 
     /**
      * A wrapper class that exposes only the ExecutorService methods
      * of an implementation.
-     */ 
+     */
     static private class DelegatedExecutorService implements ExecutorService {
         private final ExecutorService e;
         DelegatedExecutorService(ExecutorService executor) { e = executor; }
@@ -91,7 +91,7 @@ public class Executors {
      */
     public static ExecutorService newSingleThreadExecutor() {
         return new DelegatedExecutorService
-            (new ThreadPoolExecutor(1, 1, 
+            (new ThreadPoolExecutor(1, 1,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>()));
     }
@@ -107,7 +107,7 @@ public class Executors {
      */
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
         return new DelegatedExecutorService
-            (new ThreadPoolExecutor(1, 1, 
+            (new ThreadPoolExecutor(1, 1,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>(),
                                     threadFactory, null));
@@ -137,7 +137,7 @@ public class Executors {
     /**
      * Creates a thread pool that creates new threads as needed, but
      * will reuse previously constructed threads when they are
-     * available, and uses the provided 
+     * available, and uses the provided
      * ThreadFactory to create new threads when needed.
      * @param threadfactory the factory to use when creating new threads
      * @return the newly created thread pool
@@ -163,7 +163,13 @@ public class Executors {
      * for execution
      */
     public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
-        FutureTask<T> ftask = new FutureTask<T>(task, value);
+        FutureTask<T> ftask;
+        if (executor instanceof ThreadPoolExecutor) {
+            ftask = new ThreadPoolFutureTask<T>(
+                (ThreadPoolExecutor) executor, task, value);
+        } else {
+            ftask = new FutureTask<T>(task, value);
+        }
         executor.execute(ftask);
         return ftask;
     }
@@ -178,7 +184,13 @@ public class Executors {
      * @throws CannotExecuteException if task cannot be scheduled for execution
      */
     public static <T> FutureTask<T> execute(Executor executor, Callable<T> task) {
-        FutureTask<T> ftask = new FutureTask<T>(task);
+        FutureTask<T> ftask;
+        if (executor instanceof ThreadPoolExecutor) {
+            ftask = new ThreadPoolFutureTask<T>(
+                (ThreadPoolExecutor) executor, task);
+        } else {
+            ftask = new FutureTask<T>(task);
+        }
         executor.execute(ftask);
         return ftask;
     }
@@ -212,5 +224,25 @@ public class Executors {
         FutureTask<T> ftask = new FutureTask<T>(task);
         executor.execute(ftask);
         return ftask.get();
+    }
+
+    private static class ThreadPoolFutureTask<V> extends FutureTask<V> {
+
+        ThreadPoolFutureTask(ThreadPoolExecutor tpe, Callable<V> callable) {
+            super(callable);
+            this.tpe = tpe;
+        }
+
+        ThreadPoolFutureTask(ThreadPoolExecutor tpe, Runnable runnable, V result) {
+            super(runnable, result);
+            this.tpe = tpe;
+        }
+
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            tpe.remove(this); // ignore success/failure
+            return super.cancel(mayInterruptIfRunning);
+        }
+
+        private final ThreadPoolExecutor tpe;
     }
 }

@@ -422,7 +422,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * If constructing the node triggered GC (or just some slow
          * construction path), enough time will have passed to make
          * fastpath likely if lock is only briefly held. Since we
-         * can't tell, check anyway if barging allowed.
+         * can't know any of this, check anyway if barging allowed.
          */
         if (!fair && owner == null && ownerUpdater.acquire(this, current))
             return null;

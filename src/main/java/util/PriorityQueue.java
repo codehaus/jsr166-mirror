@@ -32,8 +32,10 @@ package java.util;
  * grows automatically.  The details of the growth policy are not
  * specified.
  *
- * <p>This class implements all of the <em>optional</em> methods of
- * the {@link Collection} and {@link Iterator} interfaces.  The
+ * <p>This class and its iterator implement all of the
+ * <em>optional</em> methods of the {@link Collection} and {@link
+ * Iterator} interfaces. 
+ * The
  * Iterator provided in method {@link #iterator()} is <em>not</em>
  * guaranteed to traverse the elements of the PriorityQueue in any
  * particular order. If you need ordered traversal, consider using
@@ -327,7 +329,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Removes a single instance of the specified element from this
-     * collection, if it is present.
+     * queue, if it is present.
      */
     public boolean remove(Object o) {
         if (o == null)

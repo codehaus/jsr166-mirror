@@ -33,6 +33,17 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
+     * A fair SynchronousQueue is both empty and full
+     */
+    public void testFairEmptyFull() {
+        SynchronousQueue q = new SynchronousQueue(true);
+        assertTrue(q.isEmpty());
+	assertEquals(0, q.size());
+        assertEquals(0, q.remainingCapacity());
+        assertFalse(q.offer(zero));
+    }
+
+    /**
      * offer(null) throws NPE
      */
     public void testOfferNull() {
@@ -251,6 +262,116 @@ public class SynchronousQueueTest extends JSR166TestCase {
         }
     }
 
+
+    /**
+     * put blocks interruptibly if no active taker
+     */
+    public void testFairBlockingPut() {
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        SynchronousQueue q = new SynchronousQueue(true);
+                        q.put(zero);
+                        threadShouldThrow();
+                    } catch (InterruptedException ie){
+                    }   
+                }});
+        t.start();
+        try { 
+           Thread.sleep(SHORT_DELAY_MS); 
+           t.interrupt();
+           t.join();
+        }
+        catch (InterruptedException ie) {
+	    unexpectedException();
+        }
+    }
+
+    /**
+     * put blocks waiting for take 
+     */
+    public void testFairPutWithTake() {
+        final SynchronousQueue q = new SynchronousQueue(true);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    int added = 0;
+                    try {
+                        q.put(new Object());
+                        ++added;
+                        q.put(new Object());
+                        ++added;
+                        q.put(new Object());
+                        ++added;
+                        q.put(new Object());
+                        ++added;
+			threadShouldThrow();
+                    } catch (InterruptedException e){
+                        assertTrue(added >= 1);
+                    }
+                }
+            });
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            q.take();
+            Thread.sleep(SHORT_DELAY_MS);
+            t.interrupt();
+            t.join();
+        } catch (Exception e){
+            unexpectedException();
+        }
+    }
+
+    /**
+     * timed offer times out if elements not taken
+     */
+    public void testFairTimedOffer() {
+        final SynchronousQueue q = new SynchronousQueue(true);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
+
+                        threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+			threadShouldThrow();
+                    } catch (InterruptedException success){}
+                }
+            });
+        
+        try {
+            t.start();
+            Thread.sleep(SMALL_DELAY_MS);
+            t.interrupt();
+            t.join();
+        } catch (Exception e){
+            unexpectedException();
+        }
+    }
+
+
+    /**
+     * take blocks interruptibly when empty
+     */
+    public void testFairTakeFromEmpty() {
+        final SynchronousQueue q = new SynchronousQueue(true);
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        q.take();
+			threadShouldThrow();
+                    } catch (InterruptedException success){ }                
+                }
+            });
+        try {
+            t.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            t.interrupt();
+            t.join();
+        } catch (Exception e){
+            unexpectedException();
+        }
+    }
+
     /**
      * poll fails unless active taker
      */
@@ -313,6 +434,57 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testTimedPollWithOffer() {
         final SynchronousQueue q = new SynchronousQueue();
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+			threadShouldThrow();
+                    } catch (InterruptedException success) { }                
+                }
+            });
+        try {
+            t.start();
+            Thread.sleep(SMALL_DELAY_MS);
+            assertTrue(q.offer(zero, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            t.interrupt();
+            t.join();
+        } catch (Exception e){
+            unexpectedException();
+        }
+    }  
+
+    /**
+     * Interrupted timed poll throws InterruptedException instead of
+     * returning timeout status
+     */
+    public void testFairInterruptedTimedPoll() {
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        SynchronousQueue q = new SynchronousQueue(true);
+                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                    } catch (InterruptedException success){
+                    }   
+                }});
+        t.start();
+        try { 
+           Thread.sleep(SHORT_DELAY_MS); 
+           t.interrupt();
+           t.join();
+        }
+        catch (InterruptedException ie) {
+	    unexpectedException();
+        }
+    }
+
+    /**
+     *  timed poll before a delayed offer fails; after offer succeeds;
+     *  on interruption throws
+     */
+    public void testFairTimedPollWithOffer() {
+        final SynchronousQueue q = new SynchronousQueue(true);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {

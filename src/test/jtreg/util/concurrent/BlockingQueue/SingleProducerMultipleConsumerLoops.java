@@ -60,6 +60,10 @@ public class SingleProducerMultipleConsumerLoops {
         oneRun(new SynchronousQueue<Integer>(), consumers, iters);
 
         if (print)
+            System.out.print("SynchronousQueue(fair)  ");
+        oneRun(new SynchronousQueue<Integer>(true), consumers, iters);
+
+        if (print)
             System.out.print("ArrayBlockingQueue(fair)");
         oneRun(new ArrayBlockingQueue<Integer>(CAPACITY, true), consumers, iters);
     }

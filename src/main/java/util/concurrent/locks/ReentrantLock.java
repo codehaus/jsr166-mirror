@@ -81,7 +81,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Base of synchronization control for this lock. Subclassed
-     * into fair and nonfair versions below.
+     * into fair and nonfair versions below. Uses AQS state to
+     * represent the number of holds on the lock.
      */
     static abstract class Sync  extends AbstractQueuedSynchronizer {
         /** Current owner thread */
@@ -95,7 +96,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         /** 
          * Perform non-fair tryLock.  tryAcquireExclusive is
-         * implemented in subclasses, but both versions need nonfair
+         * implemented in subclasses, but both need nonfair
          * try for trylock method
          */
         final boolean nonfairTryAcquireExclusive(int acquires) { 
@@ -196,7 +197,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         /**
          * Fair version of tryAcquire.  Don't grant access unless
-         * recursive call or is first.
+         * recursive call or no waiters or is first.
          */
         protected final boolean tryAcquireExclusive(int acquires) { 
             final Thread current = Thread.currentThread();
@@ -409,7 +410,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *
      */
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-        return sync.acquireExclusiveTimed(1, unit.toNanos(timeout));
+        return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
     }
 
     /**

@@ -64,15 +64,15 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     public boolean isCancelled() {
-        return sync.doIsCancelled();
+        return sync.innerIsCancelled();
     }
     
     public boolean isDone() {
-        return sync.doIsDone();
+        return sync.innerIsDone();
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return sync.doCancel(mayInterruptIfRunning);
+        return sync.innerCancel(mayInterruptIfRunning);
     }
     
     /**
@@ -88,7 +88,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * while waiting
      */
     public V get() throws InterruptedException, ExecutionException {
-        return sync.doGet();
+        return sync.innerGet();
     }
 
     /**
@@ -108,7 +108,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        return sync.doGet(unit.toNanos(timeout));
+        return sync.innerGet(unit.toNanos(timeout));
     }
 
     /**
@@ -128,7 +128,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @param v the value
      */ 
     protected void set(V v) {
-        sync.doSet(v);
+        sync.innerSet(v);
     }
 
     /**
@@ -138,7 +138,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @param t the cause of failure.
      */ 
     protected void setException(Throwable t) {
-        sync.doSetException(t);
+        sync.innerSetException(t);
     }
     
     /**
@@ -146,7 +146,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * it has been cancelled.
      */
     public void run() {
-        sync.doRun();
+        sync.innerRun();
     }
 
     /**
@@ -158,14 +158,14 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        return sync.doRunAndReset();
+        return sync.innerRunAndReset();
     }
 
     /**
      * Synchronization control for FutureTask. Note that this must be
      * a non-static inner class in order to invoke protected
      * <tt>done</tt> method. For clarity, all inner class support
-     * methods are same as outer, prefixed with "do".
+     * methods are same as outer, prefixed with "inner".
      *
      * Uses AQS sync state to represent run status
      */
@@ -203,7 +203,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
          * Implements AQS base acquire to succeed if ran or cancelled
          */
         protected int tryAcquireShared(int ignore) {
-            return doIsDone()? 1 : -1;
+            return innerIsDone()? 1 : -1;
         }
 
         /**
@@ -215,15 +215,15 @@ public class FutureTask<V> implements Future<V>, Runnable {
             return true; 
         }
 
-        boolean doIsCancelled() {
+        boolean innerIsCancelled() {
             return getState() == CANCELLED;
         }
         
-        boolean doIsDone() {
+        boolean innerIsDone() {
             return ranOrCancelled(getState()) && runner == null;
         }
 
-        V doGet() throws InterruptedException, ExecutionException {
+        V innerGet() throws InterruptedException, ExecutionException {
             acquireSharedInterruptibly(0);
             if (getState() == CANCELLED)
                 throw new CancellationException();
@@ -232,8 +232,8 @@ public class FutureTask<V> implements Future<V>, Runnable {
             return result;
         }
 
-        V doGet(long nanosTimeout) throws InterruptedException, ExecutionException, TimeoutException {
-            if (!acquireSharedTimed(0, nanosTimeout))
+        V innerGet(long nanosTimeout) throws InterruptedException, ExecutionException, TimeoutException {
+            if (!acquireSharedNanos(0, nanosTimeout))
                 throw new TimeoutException();                
             if (getState() == CANCELLED)
                 throw new CancellationException();
@@ -242,7 +242,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
             return result;
         }
 
-        void doSet(V v) {
+        void innerSet(V v) {
             int s = getState();
             if (ranOrCancelled(s) || !compareAndSetState(s, RAN))
                 return;
@@ -251,7 +251,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
             done();
         }
 
-        void doSetException(Throwable t) {
+        void innerSetException(Throwable t) {
             int s = getState();
             if (ranOrCancelled(s) || !compareAndSetState(s, RAN)) 
                 return;
@@ -261,7 +261,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
             done();
         }
 
-        boolean doCancel(boolean mayInterruptIfRunning) {
+        boolean innerCancel(boolean mayInterruptIfRunning) {
             int s = getState();
             if (ranOrCancelled(s) || !compareAndSetState(s, CANCELLED)) 
                 return false;
@@ -275,18 +275,18 @@ public class FutureTask<V> implements Future<V>, Runnable {
             return true;
         }
 
-        void doRun() {
+        void innerRun() {
             if (!compareAndSetState(0, RUNNING)) 
                 return;
             try {
                 runner = Thread.currentThread();
-                doSet(callable.call());
+                innerSet(callable.call());
             } catch(Throwable ex) {
-                doSetException(ex);
+                innerSetException(ex);
             } 
         }
 
-        boolean doRunAndReset() {
+        boolean innerRunAndReset() {
             if (!compareAndSetState(0, RUNNING)) 
                 return false;
             try {
@@ -295,7 +295,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
                 runner = null;
                 return compareAndSetState(RUNNING, 0);
             } catch(Throwable ex) {
-                doSetException(ex);
+                innerSetException(ex);
                 return false;
             } 
         }

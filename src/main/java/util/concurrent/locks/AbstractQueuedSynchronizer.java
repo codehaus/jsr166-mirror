@@ -203,7 +203,7 @@ import sun.misc.Unsafe;
  *       return sync.tryAcquireExclusive(1); 
  *    }
  *    public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
- *       return sync.acquireExclusiveTimed(1, unit.toNanos(timeout));
+ *       return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
  *    }
  *    public void unlock() { sync.releaseExclusive(1); }
  *    public Condition newCondition() { return sync.newCondition(); }
@@ -797,7 +797,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param nanosTimeout max wait time
      * @return true if acquired
      */
-    private boolean doAcquireExclusiveTimed(int arg, long nanosTimeout) 
+    private boolean doAcquireExclusiveNanos(int arg, long nanosTimeout) 
         throws InterruptedException {
         long lastTime = System.nanoTime();
         final Thread current = Thread.currentThread();
@@ -919,7 +919,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param nanosTimeout max wait time
      * @return true if acquired
      */
-    private boolean doAcquireSharedTimed(int arg, long nanosTimeout) 
+    private boolean doAcquireSharedNanos(int arg, long nanosTimeout) 
         throws InterruptedException {
 
         long lastTime = System.nanoTime();
@@ -1145,12 +1145,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public final boolean acquireExclusiveTimed(int arg, long nanosTimeout) throws InterruptedException {
+   public final boolean acquireExclusiveNanos(int arg, long nanosTimeout) throws InterruptedException {
        if (Thread.interrupted())
            throw new InterruptedException();
        if (tryAcquireExclusive(arg))
            return true;
-       return doAcquireExclusiveTimed(arg, nanosTimeout);
+       return doAcquireExclusiveNanos(arg, nanosTimeout);
    }
 
     /**
@@ -1228,12 +1228,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public final boolean acquireSharedTimed(int arg, long nanosTimeout) throws InterruptedException {
+   public final boolean acquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
        if (Thread.interrupted())
            throw new InterruptedException();
        if (tryAcquireShared(arg) >= 0)
            return true;
-       return doAcquireSharedTimed(arg, nanosTimeout);
+       return doAcquireSharedNanos(arg, nanosTimeout);
    }
 
     /**
@@ -1749,7 +1749,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * <li> Reacquire by invoking specialized version of
          *      {@link #acquireExclusiveUninterruptibly} with
          *      saved state as argument.
-         * <li> If interrupted while blocked, throw exception
+         * <li> If interrupted while blocked in step 5, throw exception
          * </ol>
          */
         public final void await() throws InterruptedException {
@@ -1797,7 +1797,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * <li> Reacquire by invoking specialized version of
          *      {@link #acquireExclusiveUninterruptibly} with
          *      saved state as argument.
-         * <li> If interrupted while blocked, throw InterruptedException
+         * <li> If interrupted while blocked in step 5, throw InterruptedException
          * </ol>
          */
         public final long awaitNanos(long nanosTimeout) throws InterruptedException {
@@ -1855,7 +1855,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          *      {@link #acquireExclusiveUninterruptibly} with
          *      saved state as argument.
          * <li> If interrupted while blocked, throw InterruptedException
-         * <li> If timed out while blocked, return false, else true
+         * <li> If timed out while blocked in step 5, return false, else true
          * </ol>
          */
         public final boolean awaitUntil(Date deadline) throws InterruptedException {
@@ -1913,7 +1913,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          *      {@link #acquireExclusiveUninterruptibly} with
          *      saved state as argument.
          * <li> If interrupted while blocked, throw InterruptedException
-         * <li> If timed out while blocked, return false, else true
+         * <li> If timed out while blocked in step 5, return false, else true
          * </ol>
          */
         public final boolean await(long time, TimeUnit unit) throws InterruptedException {

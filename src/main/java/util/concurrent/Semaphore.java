@@ -88,19 +88,20 @@ import java.util.concurrent.atomic.*;
  * ownership).  This can be useful in some specialized contexts, such
  * as deadlock recovery.
  *
- * <p> The constructor for this class accepts a <em>fairness</em>
- * parameter. When set false, this class makes no guarantees about the
- * order in which threads acquire permits. In particular, <em>barging</em> is
- * permitted, that is, a thread invoking {@link #acquire} can be
- * allocated a permit ahead of a thread that has been waiting.  When
- * fairness is set true, the semaphore guarantees that threads
- * invoking any of the {@link #acquire() acquire} methods are
- * allocated permits in the order in which their invocation of those
- * methods was processed (first-in-first-out; FIFO). Note that FIFO
- * ordering necessarily applies to specific internal points of
- * execution within these methods.  So, it is possible for one thread
- * to invoke <tt>acquire</tt> before another, but reach the ordering
- * point after the other, and similarly upon return from the method.
+ * <p> The constructor for this class optionally accepts a
+ * <em>fairness</em> parameter. When set false, this class makes no
+ * guarantees about the order in which threads acquire permits. In
+ * particular, <em>barging</em> is permitted, that is, a thread
+ * invoking {@link #acquire} can be allocated a permit ahead of a
+ * thread that has been waiting.  When fairness is set true, the
+ * semaphore guarantees that threads invoking any of the {@link
+ * #acquire() acquire} methods are allocated permits in the order in
+ * which their invocation of those methods was processed
+ * (first-in-first-out; FIFO). Note that FIFO ordering necessarily
+ * applies to specific internal points of execution within these
+ * methods.  So, it is possible for one thread to invoke
+ * <tt>acquire</tt> before another, but reach the ordering point after
+ * the other, and similarly upon return from the method.
  *
  * <p>Generally, semaphores used to control resource access should be
  * initialized as fair, to ensure that no thread is starved out from
@@ -207,6 +208,17 @@ public class Semaphore implements java.io.Serializable {
                     return remaining;
             }
         }
+    }
+
+    /**
+     * Construct a <tt>Semaphore</tt> with the given number of
+     * permits and nonfair fairness setting.
+     * @param permits the initial number of permits available. This
+     * value may be negative, in which case releases must
+     * occur before any acquires will be granted.
+     */
+    public Semaphore(int permits) { 
+        sync = new NonfairSync(permits);
     }
 
     /**
@@ -348,7 +360,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(long timeout, TimeUnit unit) 
         throws InterruptedException {
-        return sync.acquireSharedTimed(1, unit.toNanos(timeout));
+        return sync.acquireSharedNanos(1, unit.toNanos(timeout));
     }
 
     /**
@@ -526,7 +538,7 @@ public class Semaphore implements java.io.Serializable {
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.acquireSharedTimed(permits, unit.toNanos(timeout));
+        return sync.acquireSharedNanos(permits, unit.toNanos(timeout));
     }
 
     /**

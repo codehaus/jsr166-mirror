@@ -171,7 +171,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         boolean waitForTake(long nanos) throws InterruptedException {
             try {
-                if (!acquireExclusiveTimed(0, nanos) &&
+                if (!acquireExclusiveNanos(0, nanos) &&
                     releaseExclusive(CANCEL))
                     return false;
             } catch (InterruptedException ie) {
@@ -185,7 +185,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         Object waitForPut(long nanos) throws InterruptedException {
             try {
-                if (!acquireExclusiveTimed(0, nanos) &&
+                if (!acquireExclusiveNanos(0, nanos) &&
                     releaseExclusive(CANCEL))
                     return null;
             } catch (InterruptedException ie) {

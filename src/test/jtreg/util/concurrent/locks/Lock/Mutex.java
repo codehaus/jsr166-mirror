@@ -49,7 +49,7 @@ public class Mutex implements Lock, java.io.Serializable {
         sync.acquireExclusiveInterruptibly(1);
     }
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-        return sync.acquireExclusiveTimed(1, unit.toNanos(timeout));
+        return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
     }
     public void unlock() { sync.releaseExclusive(1); }
     public Condition newCondition() { return sync.newCondition(); }

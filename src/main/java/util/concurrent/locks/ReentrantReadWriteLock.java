@@ -188,10 +188,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         transient Thread owner;
 
         /* 
-         * Shared vs write count extraction constants and functions.  Lock
-         * state is logically divided into two shorts: The lower one
-         * representing the exclusive (writer) lock hold count, and the
-         * upper the shared (reader) hold count.
+         * Read vs write count extraction constants and functions.
+         * Lock state is logically divided into two shorts: The lower
+         * one representing the exclusive (writer) lock hold count,
+         * and the upper the shared (reader) hold count.
          */
 
         static final int SHARED_SHIFT   = 16;
@@ -214,6 +214,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * try for trylock method
          */
         final boolean nonfairTryAcquireExclusive(int acquires) {
+            // mask out readlocks if called from condition methods
+            acquires = exclusiveCount(acquires);
             Thread current = Thread.currentThread();
             int c = getState();
             int w = exclusiveCount(c);
@@ -250,12 +252,13 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             int c = getState();
             if (owner != current)
                 throw new IllegalMonitorStateException();
+            int nextc = c - releases;
             boolean free = false;
             if (exclusiveCount(c) == releases) {
                 free = true;
                 owner = null;
             }
-            setState(c - releases);
+            setState(nextc);
             return free;
         }
 
@@ -339,21 +342,24 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     final static class FairSync extends Sync {
         protected final boolean tryAcquireExclusive(int acquires) { 
+            // mask out readlocks if called from condition methods
+            acquires = exclusiveCount(acquires);
             Thread current = Thread.currentThread();
+            Thread first;
             int c = getState();
             int w = exclusiveCount(c);
             if (w + acquires >= SHARED_UNIT)
                 throw new Error("Maximum lock count exceeded");
-            Thread first = getFirstQueuedThread();
             if ((w == 0 || current != owner) &&
-                (c != 0 || (first != null && first != current)))
+                (c != 0 || 
+                 ((first = getFirstQueuedThread()) != null && 
+                  first != current)))
                 return false;
             if (!compareAndSetState(c, c + acquires)) 
                 return false;
             owner = current;
             return true;
         }
-
 
         protected final int tryAcquireShared(int acquires) {
             Thread current = Thread.currentThread();
@@ -374,7 +380,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
         }
 
-        final void wlock() {
+        final void wlock() { // no fast path
             acquireExclusiveUninterruptibly(1);
         }
     }
@@ -542,7 +548,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          *
          */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            return sync.acquireSharedTimed(1, unit.toNanos(timeout));
+            return sync.acquireSharedNanos(1, unit.toNanos(timeout));
         }
 
         /**
@@ -757,7 +763,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          *
          */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
-            return sync.acquireExclusiveTimed(1, unit.toNanos(timeout));
+            return sync.acquireExclusiveNanos(1, unit.toNanos(timeout));
         }
         
         /**

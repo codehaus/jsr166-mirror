@@ -135,25 +135,13 @@ public class ScheduledThreadPoolExecutor extends ThreadPoolExecutor implements S
         }
 
         /**
-         * Overrides FutureTask version so as to not setDone if
-         * periodic.
+         * Overrides FutureTask version so as to reset if periodic.
          */ 
         public void run() {
-            if (setRunning()) {
-                try {
-                    try {
-                        if (runnable != null)
-                            runnable.run();
-                        else if (callable != null)
-                            set(callable.call());
-                    } catch(Throwable ex) {
-                        setException(ex);
-                    }
-                } finally {
-                    if (!isPeriodic())
-                        setDone();
-                }
-            }
+            if (isPeriodic())
+                runAndReset();
+            else
+                super.run();
         }
 
         /**
@@ -561,7 +549,7 @@ public class ScheduledThreadPoolExecutor extends ThreadPoolExecutor implements S
         Object[] entries = super.getQueue().toArray();
         for (int i = 0; i < entries.length; ++i) {
             ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)entries[i];
-            Runnable r = t.runnable;
+            Object r = t.getTask();
             if (task.equals(r)) {
                 wrap = t;
                 break;

@@ -57,10 +57,10 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * will be null.
      */
 
-    /** The runnable, if non-null, then callable is null */
-    final Runnable runnable;
-    /** The callable, if non-null, then runnable is null */
-    final Callable<V> callable;
+    /** The runnable; if non-null, then callable is null */
+    private final Runnable runnable;
+    /** The callable; if non-null, then runnable is null */
+    private final Callable<V> callable;
 
     /** The result to return from get() */
     private V result;
@@ -95,7 +95,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
      * <tt>Boolean.TRUE</tt>.
      * @throws NullPointerException if runnable is null
      */
-    public FutureTask(final Runnable runnable, final V result) {
+    public FutureTask(Runnable runnable, V result) {
         if (runnable == null)
             throw new NullPointerException();
         this.runnable = runnable;
@@ -297,6 +297,28 @@ public class FutureTask<V> implements Future<V>, Runnable {
     }
 
     /**
+     * Sets this Future to the results of computation and then resets
+     * to initial state. This may be useful for tasks that must
+     * execute more than once.
+     */
+    protected void runAndReset() {
+        if (setRunning()) {
+            try {
+                try {
+                    if (runnable != null)
+                        runnable.run();
+                    else if (callable != null)
+                        set(callable.call());
+                } catch(Throwable ex) {
+                    setException(ex);
+                }
+            } finally {
+                reset();
+            }
+        }
+    }
+
+    /**
      * Protected method invoked when this task transitions to state
      * <tt>isDone</tt> (whether normally or via cancellation). The
      * default implementation does nothing.  Subclasses may override
@@ -325,14 +347,18 @@ public class FutureTask<V> implements Future<V>, Runnable {
             lock.unlock();
         }
     }
+
+    /**
+     * Return the <tt>Runnable</tt> or <tt>Callable</tt> used
+     * in the constructor for this <tt>Future</tt>.
+     * @return the task
+     */ 
+    protected Object getTask() {
+        if (runnable != null)
+            return runnable;
+        else
+            return callable;
+    }
+
 }
-
-
-
-
-
-
-
-
-
 

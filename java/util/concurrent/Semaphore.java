@@ -64,7 +64,7 @@ package java.util.concurrent;
  * acquire that item.
  * Note that no synchronization lock is held when {@link #acquire} is
  * called as that would prevent an item from being returned to the pool.
- * A semaphore encapsulates the synchronization needed to restrict access to
+ * The semaphore encapsulates the synchronization needed to restrict access to
  * the pool, separately from any synchronization needed to maintain the
  * consistency of the pool itself.
  *
@@ -78,15 +78,16 @@ package java.util.concurrent;
  * a thread other than the owner (as semaphores have no notion of ownership).
  * This can be useful in some specialised contexts, such as deadlock recovery.
  *
- * <p>This class makes no guarantees about the order in which waiting threads
- * acquire permits. If you need deterministic guarantees, consider
+ * <p>This class makes no guarantees about the order in which threads
+ * acquire permits. In particular, barging is permitted, that is, a thread
+ * invoking {@link #acquire} can be allocated a permit ahead of a thread
+ * that has been waiting. If you need more deterministic guarantees, consider
  * using {@link FifoSemaphore}.
  *
- * @fixme Barging needs to be discussed. Need to see implementation.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/22 01:01:43 $
+ * @revised $Date: 2003/01/28 01:25:02 $
  * @editor $Author: dholmes $
  *
  */

@@ -497,7 +497,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
+            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
         }
         try {
             Thread.sleep(SHORT_DELAY_MS);
@@ -525,15 +525,28 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
         for(int i = 0; i < 5; i++){
-            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
+            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
         }
-        int max = 5;
-        if (tasks[4].cancel(true)) --max;
-        if (tasks[3].cancel(true)) --max;
-        p1.purge();
-        long count = p1.getTaskCount();
-        assertTrue(count > 0 && count <= max);
-        joinPool(p1);
+        try {
+            int max = 5;
+            if (tasks[4].cancel(true)) --max;
+            if (tasks[3].cancel(true)) --max;
+            // There must eventually be an interference-free point at
+            // which purge will not fail. (At worst, when queue is empty.)
+            int k;
+            for (k = 0; k < SMALL_DELAY_MS; ++k) {
+                p1.purge();
+                long count = p1.getTaskCount();
+                if (count >= 0 && count <= max)
+                    break;
+                Thread.sleep(1);
+            }
+            assertTrue(k < SMALL_DELAY_MS);
+        } catch(Exception e) {
+            unexpectedException();
+        } finally {
+            joinPool(p1);
+        }
     }
 
     /**

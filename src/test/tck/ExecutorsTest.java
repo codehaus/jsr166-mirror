@@ -488,29 +488,42 @@ public class ExecutorsTest extends JSR166TestCase{
         }
     }
 
+    class CallCCL implements Runnable {
+        final Callable task;
+        CallCCL(Callable t) { task = t; }
+        public void run() {
+            try {
+                task.call();
+                threadShouldThrow();
+            } catch(AccessControlException success) {
+            } catch(Exception ex) {
+                threadUnexpectedException();
+            } 
+        }
+    }
+
     /**
      * Without permissions, calling privilegedCallable throws ACE
      */
     public void testprivilegedCallableWithNoPrivs() {
-	Policy savedPolicy = null;
+        Thread t1;
         try {
-            savedPolicy = Policy.getPolicy();
+            Policy savedPolicy = Policy.getPolicy();
             AdjustablePolicy policy = new AdjustablePolicy();
             Policy.setPolicy(policy);
+            Callable task = Executors.privilegedCallable(new CheckCCL());
+            t1 = new Thread(new CallCCL(task));
+            Policy.setPolicy(savedPolicy);
         } catch (AccessControlException ok) {
             return;
         }
 
-        Callable task = Executors.privilegedCallable(new CheckCCL());
-        Policy.setPolicy(savedPolicy);
         try {
-            task.call();
-            shouldThrow();
-        } catch(AccessControlException success) {
+            t1.start();
+            t1.join();
         } catch(Exception ex) {
             unexpectedException();
-        } finally {
-        }
+        } 
     }
 
     /**

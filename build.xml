@@ -27,6 +27,8 @@ ant [target], where target is one of:
     </echo>
   </target>
 
+  <property file="user.properties"/>
+  <property name="testcase" value="*"/>
 
   <!-- Compilation options -->
   <property name="build.sourcelevel"    value="1.5"/>
@@ -341,7 +343,7 @@ ant [target], where target is one of:
 
       <batchtest todir="${build.reports.dir}">
         <fileset dir="${test.src.dir}">
-          <include name="**/*Test.java"/>
+          <include name="**/${testcase}Test.java"/>
         </fileset>
       </batchtest>
 

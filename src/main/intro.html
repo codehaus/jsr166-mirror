@@ -71,10 +71,12 @@ a few utilities methods for using them.
 A basic (nonblocking) {@link java.util.Queue} interface extending
 java.util.Collection is introduced into java.util. Existing class
 java.util.LinkedList is adapted to support Queue, and a new
-non-thread-safe {@link java.util.PriorityQueue}
-is added.  The java.util.concurrent {@link
-java.util.concurrent.LinkedQueue} class supplies an efficient
-thread-safe non-blocking queue.
+non-thread-safe {@link java.util.PriorityQueue} is added.  The
+java.util.concurrent {@link
+java.util.concurrent.ConcurrentLinkedQueue} class supplies an
+efficient sclable thread-safe non-blocking FIFO queue, and {@link
+java.util.concurrent.ConcurrentLinkedStack} provides a similar
+non-blocking LIFO stack.
 
 <p> Five implementations in java.util.concurrent support the extended
 {@link java.util.concurrent.BlockingQueue} interface, that defines
@@ -141,14 +143,30 @@ threads to exchange objects at a rendezvous point.
 
 <h2>Concurrent Collections</h2>
 
-This package supplies a few Collection implementations designed for
-use in multithreaded contexts: {@link
+Besides Queues, this package supplies a few Collection implementations
+designed for use in multithreaded contexts: {@link
 java.util.concurrent.ConcurrentHashMap}, {@link
 java.util.concurrent.CopyOnWriteArrayList}, and {@link
 java.util.concurrent.CopyOnWriteArraySet}.
 
+<p>The "Concurrent" prefix for classes is a shorthand
+indicating several differences from similar "synchronized"
+classes. For example <tt>java.util.Hashtable</tt> and
+<tt>Collections.synchronizedMap(new HashMap())</tt> are
+synchronized. But {@link
+java.util.concurrent.ConcurrentHashMap} is "concurrent".
+A concurrent collection (among other kinds of classes) is
+thread-safe, but not governed by a single exclusion lock. So, in the
+particular case of ConcurrentHashMap, it safely permits any number of
+concurrent reads as well as a tunable number of concurrent writes.
+There may still be a role for "synchronized" classes in some
+multithreaded programs -- they can sometimes be useful when you need
+to prevent ALL access to a collection via a single lock, at the
+expense of much poor scalability. In all other cases, "concurrent"
+versions are normally preferable.
+
 <p> Most concurrent Collection implementations (including most Queues)
-differ from the usual java.util conventions in that their Iterators
+also differ from the usual java.util conventions in that their Iterators
 provide <em>weakly consistent</em> rather than fast-fail traversal. A
 weakly consistent iterator is thread-safe, but does not necessarily
 freeze the collection while iterating, so it may (or may not) reflect

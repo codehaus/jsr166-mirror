@@ -298,7 +298,7 @@ public final class System {
      */
     public static final long nanoTime() {
         // temporary implementation
-        return java.util.concurrent.JSR166Support.currentTimeNanos();
+        return 1000000 * currentTimeMillis();
     }
 
     /** 

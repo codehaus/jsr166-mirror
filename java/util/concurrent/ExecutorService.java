@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @see Executor
  * @see Executors
- **/
+ */
 public interface ExecutorService extends Executor {
 
     /**
@@ -34,7 +34,7 @@ public interface ExecutorService extends Executor {
      * interface. Implementations may provide different options, such
      * as ignoring them, or causing <tt>execute</tt> to throw an
      * (unchecked) <tt>IllegalStateException</tt>.
-     **/
+     */
     void shutdown();
 
     /**
@@ -52,12 +52,12 @@ public interface ExecutorService extends Executor {
      * <tt>Thread.interrupt</tt>, so if any tasks mask or fail to
      * respond to interrupts, they might never terminate.
      * @return a list of all tasks that never commenced execution.
-     **/
+     */
     List shutdownNow();
 
     /**
      * Return true if the Executor has been shut down.
-     **/
+     */
     boolean isShutdown();
 
     /**
@@ -66,14 +66,14 @@ public interface ExecutorService extends Executor {
      * may not speed the completion of queued tasks, and may cause
      * improperly written tasks to fail.  The Executor remains enabled
      * for future executions.
-     **/
+     */
     void interrupt();
 
     /**
      * Return true if all tasks have completed following shut down.
      * Note that isTerminated is never true unless <tt>shutdown</tt>
      * or <tt>shutdownNow</tt> have been invoked.
-     **/
+     */
     boolean isTerminated();
 
     /**
@@ -85,14 +85,14 @@ public interface ExecutorService extends Executor {
      * @param granularity the time unit of the timeout argument.
      * @throws java.lang.InterruptedException if interrupted while waiting.
      * @throws java.lang.IllegalStateException if not shut down.
-     **/
+     */
     void awaitTermination(long timeout, TimeUnit granularity) throws InterruptedException;
 
     /**
      * Interface containing methods that are invoked during various points of
      * execution of a thread-based, allowing fine-grained control and
      * monitoring.
-     **/
+     */
     public interface Callbacks {
 
         /**
@@ -102,7 +102,7 @@ public interface ExecutorService extends Executor {
          * @param t the thread that will run task r.
          * @param r the task that will be executed.
          * @param e the Executor
-         **/
+         */
         void beforeExecute(Thread t, Runnable r, ExecutorService e);
 
         /**
@@ -113,7 +113,7 @@ public interface ExecutorService extends Executor {
          * @param t the exception that cause termination, or null if
          * execution completed normally.
          * @param e the Executor
-         **/
+         */
         void afterExecute(Runnable r, Throwable t, ExecutorService e);
 
         /**
@@ -127,15 +127,14 @@ public interface ExecutorService extends Executor {
          * @return false if <tt>execute</tt> should be retried, else true.
          * You may alternatively throw an unchecked exception, which
          * will be propagated to the caller of <tt>execute</tt>.
-         **/
+         */
         boolean cannotExecute(Runnable r, ExecutorService e);
 
         /**
          * Method invoked when the Executor has terminated.  Default
          * implementation does nothing.
          * @param e the Executor
-         **/
+         */
         void terminated(ExecutorService e);
     }
-
 }

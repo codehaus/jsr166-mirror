@@ -376,6 +376,106 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         }
     } 
 
+    /**
+     * Read trylock succeeds if write locked by current thread
+     */
+    public void testReadHoldingWriteLock() { 
+	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	lock.writeLock().lock();
+        assertTrue(lock.readLock().tryLock());
+        lock.readLock().unlock();
+        lock.writeLock().unlock();
+    } 
+
+    /**
+     * Read lock succeeds if write locked by current thread even if
+     * other threads are waiting
+     */
+    public void testReadHoldingWriteLock2() { 
+	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	lock.writeLock().lock();
+	Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    lock.readLock().lock();
+                    lock.readLock().unlock();
+		}
+	    });
+	Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    lock.readLock().lock();
+                    lock.readLock().unlock();
+		}
+	    });
+
+        try {
+            t1.start();
+            t2.start();
+            lock.readLock().lock();
+            lock.readLock().unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            lock.readLock().lock();
+            lock.readLock().unlock();
+            lock.writeLock().unlock();
+            t1.join(MEDIUM_DELAY_MS);
+            t2.join(MEDIUM_DELAY_MS);
+            assertTrue(!t1.isAlive());
+            assertTrue(!t2.isAlive());
+           
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
+    /**
+     * Fair Read trylock succeeds if write locked by current thread
+     */
+    public void testReadHoldingWriteLockFair() { 
+	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	lock.writeLock().lock();
+        assertTrue(lock.readLock().tryLock());
+        lock.readLock().unlock();
+        lock.writeLock().unlock();
+    } 
+
+    /**
+     * Fair Read lock succeeds if write locked by current thread even if
+     * other threads are waiting
+     */
+    public void testReadHoldingWriteLockFair2() { 
+	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	lock.writeLock().lock();
+	Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    lock.readLock().lock();
+                    lock.readLock().unlock();
+		}
+	    });
+	Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    lock.readLock().lock();
+                    lock.readLock().unlock();
+		}
+	    });
+
+        try {
+            t1.start();
+            t2.start();
+            lock.readLock().lock();
+            lock.readLock().unlock();
+            Thread.sleep(SHORT_DELAY_MS);
+            lock.readLock().lock();
+            lock.readLock().unlock();
+            lock.writeLock().unlock();
+            t1.join(MEDIUM_DELAY_MS);
+            t2.join(MEDIUM_DELAY_MS);
+            assertTrue(!t1.isAlive());
+            assertTrue(!t2.isAlive());
+           
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
 
     /**
      * Read tryLock succeeds if readlocked but not writelocked

@@ -50,7 +50,17 @@ public class ScheduledThreadPoolExecutor
      * guarantee FIFO order among tied entries.
      */
     private static final AtomicLong sequencer = new AtomicLong(0);
-    
+
+    /** Base of nanosecond timings, to avoid wrapping */
+    private static final long NANO_ORIGIN = System.nanoTime();
+
+    /**
+     * Return nanosecond time offset by origin
+     */
+    private long now() {
+	return System.nanoTime() - NANO_ORIGIN;
+    }
+
     private class ScheduledFutureTask<V> 
             extends FutureTask<V> implements ScheduledFuture<V> {
         
@@ -97,8 +107,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         public long getDelay(TimeUnit unit) {
-            long d =  unit.convert(time - System.nanoTime(), 
-                                   TimeUnit.NANOSECONDS);
+            long d = unit.convert(time - now(), TimeUnit.NANOSECONDS);
             return d;
         }
 
@@ -135,7 +144,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * RUn a periodic task
+         * Run a periodic task
          */
         private void runPeriodic() {
             boolean ok = ScheduledFutureTask.super.runAndReset();
@@ -144,7 +153,7 @@ public class ScheduledThreadPoolExecutor
             if (ok && (!down ||
                        (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 
                         !isTerminating()))) {
-                time = period + (rateBased ? time : System.nanoTime());
+                time = period + (rateBased ? time : now());
                 ScheduledThreadPoolExecutor.super.getQueue().add(this);
             }
             // This might have been the final executed delayed
@@ -275,7 +284,7 @@ public class ScheduledThreadPoolExecutor
                                        TimeUnit unit) {
         if (command == null || unit == null)
             throw new NullPointerException();
-        long triggerTime = System.nanoTime() + unit.toNanos(delay);
+        long triggerTime = now() + unit.toNanos(delay);
         ScheduledFutureTask<?> t = 
             new ScheduledFutureTask<Boolean>(command, null, triggerTime);
         delayedExecute(t);
@@ -287,7 +296,7 @@ public class ScheduledThreadPoolExecutor
                                            TimeUnit unit) {
         if (callable == null || unit == null)
             throw new NullPointerException();
-        long triggerTime = System.nanoTime() + unit.toNanos(delay);
+        long triggerTime = now() + unit.toNanos(delay);
         ScheduledFutureTask<V> t = 
             new ScheduledFutureTask<V>(callable, triggerTime);
         delayedExecute(t);
@@ -302,7 +311,7 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (period <= 0)
             throw new IllegalArgumentException();
-        long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
+        long triggerTime = now() + unit.toNanos(initialDelay);
         ScheduledFutureTask<?> t = 
             new ScheduledFutureTask<Object>(command, 
                                             null,
@@ -321,7 +330,7 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (delay <= 0)
             throw new IllegalArgumentException();
-        long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
+        long triggerTime = now() + unit.toNanos(initialDelay);
         ScheduledFutureTask<?> t = 
             new ScheduledFutureTask<Boolean>(command, 
                                              null,

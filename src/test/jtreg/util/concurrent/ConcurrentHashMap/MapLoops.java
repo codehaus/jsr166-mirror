@@ -22,10 +22,10 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class MapLoops {
-    static final int NKEYS = 100000; 
+    static int nkeys       = 10000; 
     static int pinsert     = 60;
     static int premove     = 2;
-    static int maxThreads  = 5;
+    static int maxThreads  = 100;
     static int nops        = 1000000;
     static int removesPerMaxRandom;
     static int insertsPerMaxRandom;
@@ -49,7 +49,7 @@ public class MapLoops {
             maxThreads = Integer.parseInt(args[1]);
 
         if (args.length > 2) 
-            nops = Integer.parseInt(args[2]);
+            nkeys = Integer.parseInt(args[2]);
 
         if (args.length > 3) 
             pinsert = Integer.parseInt(args[3]);
@@ -57,45 +57,79 @@ public class MapLoops {
         if (args.length > 4) 
             premove = Integer.parseInt(args[4]);
 
+        if (args.length > 5) 
+            nops = Integer.parseInt(args[5]);
+
         // normalize probabilities wrt random number generator
         removesPerMaxRandom = (int)(((double)premove/100.0 * 0x7FFFFFFFL));
         insertsPerMaxRandom = (int)(((double)pinsert/100.0 * 0x7FFFFFFFL));
         
-        System.out.println("Using " + mapClass.getName());
+        System.out.print("Class: " + mapClass.getName());
+        System.out.print(" threads: " + maxThreads);
+        System.out.print(" size: " + nkeys);
+        System.out.print(" ins: " + pinsert);
+        System.out.print(" rem: " + premove);
+        System.out.print(" ops: " + nops);
+        System.out.println();
 
-        Random rng = new Random(315312);
-        Integer[] key = new Integer[NKEYS];
-        for (int i = 0; i < key.length; ++i) 
-            key[i] = new Integer(rng.nextInt());
-
-        // warmup
-        System.out.println("Warmup...");
-        for (int k = 0; k < 2; ++k) {
-            Map<Integer, Integer> map = (Map<Integer,Integer>)mapClass.newInstance();
-            LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
-            CyclicBarrier barrier = new CyclicBarrier(1, timer);
-            new Runner(map, key, barrier).run();
-            map.clear();
+        int k = 1;
+        int warmups = 2;
+        for (int i = 1; i <= maxThreads;) {
             Thread.sleep(100);
-        }
-
-        for (int i = 1; i <= maxThreads; i += (i+1) >>> 1) {
-            System.out.print("Threads: " + i + "\t:");
-            Map<Integer, Integer> map = (Map<Integer,Integer>)mapClass.newInstance();
-            LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
-            CyclicBarrier barrier = new CyclicBarrier(i+1, timer);
-            for (int k = 0; k < i; ++k) 
-                pool.execute(new Runner(map, key, barrier));
-            barrier.await();
-            barrier.await();
-            long time = timer.getTime();
-            long tpo = time / (i * (long)nops);
-            System.out.print(LoopHelpers.rightJustify(tpo) + " ns per op");
-            double secs = (double)(time) / 1000000000.0;
-            System.out.println("\t " + secs + "s run time");
-            map.clear();
+            test(i, nkeys, mapClass);
+            if (warmups > 0)
+                --warmups;
+            else if (i == k) {
+                k = i << 1;
+                i = i + (i >>> 1);
+            } 
+            else if (i == 1 && k == 2) {
+                i = k;
+                warmups = 1;
+            }
+            else 
+                i = k;
         }
         pool.shutdown();
+    }
+
+    static Integer[] makeKeys(int n) {
+        LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
+        Integer[] key = new Integer[n];
+        for (int i = 0; i < key.length; ++i) 
+            key[i] = new Integer(rng.next());
+        return key;
+    }
+
+    static void shuffleKeys(Integer[] key) {
+        Random rng = new Random();
+        for (int i = key.length; i > 1; --i) {
+            int j = rng.nextInt(i);
+            Integer tmp = key[j];
+            key[j] = key[i-1];
+            key[i-1] = tmp;
+        }
+    }
+
+    static void test(int i, int nkeys, Class mapClass) throws Exception {
+        System.out.print("Threads: " + i + "\t:");
+        Map<Integer, Integer> map = (Map<Integer,Integer>)mapClass.newInstance();
+        Integer[] key = makeKeys(nkeys);
+        // Uncomment to start with a non-empty table
+        //        for (int j = 0; j < nkeys; j += 4) // start 1/4 occupied
+        //            map.put(key[j], key[j]);
+        LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
+        CyclicBarrier barrier = new CyclicBarrier(i+1, timer);
+        for (int t = 0; t < i; ++t) 
+            pool.execute(new Runner(map, key, barrier));
+        barrier.await();
+        barrier.await();
+        long time = timer.getTime();
+        long tpo = time / (i * (long)nops);
+        System.out.print(LoopHelpers.rightJustify(tpo) + " ns per op");
+        double secs = (double)(time) / 1000000000.0;
+        System.out.println("\t " + secs + "s run time");
+        map.clear();
     }
 
     static class Runner implements Runnable {
@@ -128,20 +162,21 @@ public class MapLoops {
                     throw new Error("bad mapping: " + x + " to " + k);
 
                 if (r < removesPerMaxRandom) {
-                    // get awy from this position
-                    position = r % key.length;
-                    map.remove(k);
-                    return 2;
-                }
-                else
-                    total += LoopHelpers.compute2(LoopHelpers.compute1(x.intValue()));
-            }
-            else {
-                if (r < insertsPerMaxRandom) {
-                    map.put(k, k);
-                    return 2;
+                    if (map.remove(k) != null) {
+                        position = total % key.length; // move from position
+                        return 2;
+                    }
                 }
             }
+            else if (r < insertsPerMaxRandom) {
+                ++position;
+                map.put(k, k);
+                return 2;
+            } 
+
+            // Uncomment to add a little computation between accesses
+            //            total += LoopHelpers.compute1(k.intValue());
+            total += r;
             return 1;
         }
 

@@ -9,7 +9,15 @@ import java.util.concurrent.atomic.*;
 import java.util.*;
 
 /**
- * An unbounded queue based on linked nodes.
+ * An optionally-bounded blocking queue based on linked nodes.  Linked
+ * queues typically have higher throughput than array-based queues but
+ * less predicatble performance in most concurrent applications.
+ * 
+ * <p> The optional capacity bound constructor argument serves as a
+ * way to prevent unlmited queue expansion.  Linked nodes are
+ * dynamically created upon each insertion unless this would bring the
+ * queue above capacity.
+ * 
  **/
 public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {

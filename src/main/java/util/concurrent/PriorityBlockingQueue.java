@@ -8,11 +8,10 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A blocking priority queue.  Ordering follows the
- * java.util.Collection conventions: Either the elements must be
- * Comparable, or a Comparator must be supplied. Elements with tied
- * priorities are returned in arbitrary order. Comparison failures
- * throw ClassCastExceptions during insertions and extractions.
+ * A blocking queue based on a {@link PriorityQueue}, obeying its
+ * ordering rules and implementation characteristics.  The queue is
+ * essentially unbounded; it blocks only on attempts to insert more
+ * than <tt>Integer.MAX_VALUE</tt> untaken elements.
  **/
 public class PriorityBlockingQueue<E> extends AbstractBlockingQueueFromQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {

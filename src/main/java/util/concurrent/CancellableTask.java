@@ -128,7 +128,7 @@ public class CancellableTask implements Cancellable, Runnable {
     /**
      * Attempt to set the state of this task to Running, succeeding
      * only if the state is currently NOT Done, Running, or Cancelled.
-     * @rrturn true if successful
+     * @return true if successful
      */ 
     protected boolean setRunning() {
         return runnerUpdater.compareAndSet(this, null, Thread.currentThread());

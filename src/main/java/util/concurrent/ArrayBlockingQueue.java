@@ -8,7 +8,12 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A bounded blocking queue based on a fixed-sized array.
+ * A bounded blocking queue based on an array.  The implementation is
+ * a classic "bounded buffer", in which a fixed-sized array holds
+ * elements inserted by propducers and extracted by
+ * consumers. Array-based queues typically have more predictable
+ * performance than linked queues but lower throughput in most
+ * concurrent applications.
  **/
 public class ArrayBlockingQueue<E> extends AbstractBlockingQueueFromQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {

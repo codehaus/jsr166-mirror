@@ -5,7 +5,7 @@ package java.util.concurrent.atomic;
  * atomically. See the package specification for description of the
  * general properties it shares with other atomics.
  **/
-public class AtomicBoolean implements java.io.Serializable { 
+public class AtomicBoolean implements java.io.Serializable {
 
     /**
      * Create a new AtomicBoolean with the given initial value.
@@ -20,9 +20,9 @@ public class AtomicBoolean implements java.io.Serializable {
      * @return the current value.
      **/
     public final boolean get() {
-        return 0; // for now
+        return false; // for now
     }
-  
+
     /**
      * Atomically set the value to the given update value if the
      * current value is equal to the expected value.  Any given
@@ -52,7 +52,7 @@ public class AtomicBoolean implements java.io.Serializable {
      * @return the previous value
      **/
     public final boolean getAndSet(boolean newValue) {
-        return 0; // for now
+        return false; // for now
     }
 
 }

@@ -120,21 +120,23 @@ import java.util.concurrent.atomic.*;
 
 public class Semaphore implements java.io.Serializable {
     private static final long serialVersionUID = -3222578661600680210L;
-    /** Sync mechanics via AbstractQueuedSynchronizer subclass */
+    /** All mechanics via AbstractQueuedSynchronizer subclass */
     private final Sync sync;
 
-
+    /**
+     * Synchronization implementation for semaphore
+     */
     private final static class Sync extends AbstractQueuedSynchronizer {
         final boolean fair;
         Sync(int permits, boolean fair) {
             this.fair = fair;
-            getState().set(permits);
+            state().set(permits);
         }
         
         public final int acquireSharedState(boolean isQueued, int acquires, 
                                             Thread current) {
-            final AtomicInteger perms = getState();
-            if (!isQueued && fair && hasWaiters())
+            final AtomicInteger perms = state();
+            if (!isQueued && fair && hasQueuedThreads())
                 return -1;
             for (;;) {
                 int available = perms.get();
@@ -146,7 +148,7 @@ public class Semaphore implements java.io.Serializable {
         }
         
         public final boolean releaseSharedState(int releases) {
-            final AtomicInteger perms = getState();
+            final AtomicInteger perms = state();
             for (;;) {
                 int p = perms.get();
                 if (perms.compareAndSet(p, p + releases)) 
@@ -167,7 +169,6 @@ public class Semaphore implements java.io.Serializable {
         public final void checkConditionAccess(Thread thread, boolean waiting) {
             throw new UnsupportedOperationException();
         }
-
     }
 
     /**
@@ -506,7 +507,7 @@ public class Semaphore implements java.io.Serializable {
      * @return the number of permits available in this semaphore.
      */
     public int availablePermits() {
-        return sync.getState().get();
+        return sync.state().get();
     }
 
     /**
@@ -521,7 +522,7 @@ public class Semaphore implements java.io.Serializable {
      */
     protected void reducePermits(int reduction) {
 	if (reduction < 0) throw new IllegalArgumentException();
-        sync.getState().getAndAdd(-reduction);
+        sync.state().getAndAdd(-reduction);
     }
 
     /**
@@ -543,8 +544,8 @@ public class Semaphore implements java.io.Serializable {
      * @return true if there may be other threads waiting to acquire
      * the lock.
      */
-    public final boolean hasWaiters() { 
-        return sync.hasWaiters();
+    public final boolean hasQueuedThreads() { 
+        return sync.hasQueuedThreads();
     }
 
 

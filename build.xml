@@ -72,6 +72,8 @@
     <exclude name="java/util/concurrent/atomic/AtomicInteger*"/>
     <exclude name="java/util/concurrent/atomic/AtomicLong*"/>
     <exclude name="java/util/concurrent/atomic/AtomicReference*"/>
+    <exclude name="java/util/concurrent/locks/LockSupport*"/>
+    <exclude name="java/util/concurrent/locks/ReentrantLock*"/>
   </patternset>
 
 

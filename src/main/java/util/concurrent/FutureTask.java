@@ -23,6 +23,10 @@ import java.util.concurrent.locks.*;
  * implements <tt>Runnable</tt>, a <tt>FutureTask</tt> can be
  * submitted to an {@link Executor} for execution.
  *
+ * <p>In addition to serving as a standalone class, this class provides
+ * <tt>protected</tt> functionality that may be useful when creating
+ * customized task classes.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <V> The result type returned by this FutureTask's <tt>get</tt> method
@@ -45,14 +49,26 @@ public class FutureTask<V> implements Future<V>, Runnable {
      *   DONE              = completed normally,
      *   CANCELLED         = cancelled (may or may not have ever run).
      */
-
     private volatile Object runner;
+
+    /*
+     * For simplicity of use, we can use either a Runnable or a
+     * Callable as basis for run method. So one or the other of these
+     * will be null.
+     */
+
+    /** The runnable, if non-null, then callable is null */
     final Runnable runnable;
+    /** The callable, if non-null, then runnable is null */
     final Callable<V> callable;
+
+    /** The result to return from get() */
+    private V result;
+    /** The exception to throw from get() */
+    private Throwable exception;
+
     private final ReentrantLock lock = new ReentrantLock();
     private final ReentrantLock.ConditionObject accessible = lock.newCondition();
-    private V result;
-    private Throwable exception;
 
     /**
      * Constructs a <tt>FutureTask</tt> that will upon running, execute the
@@ -111,105 +127,6 @@ public class FutureTask<V> implements Future<V>, Runnable {
     public boolean isDone() {
         Object r = runner;
         return r == DONE || r == CANCELLED;
-    }
-
-    /**
-     * Sets the state of this task to Cancelled.
-     */
-    protected void setCancelled() {
-        lock.lock();
-        try {
-            runner = CANCELLED;
-        }
-        finally{
-            lock.unlock();
-        }
-    }
-    
-    /**
-     * Sets the state of this task to Done, unless already in a
-     * Cancelled state, in which case Cancelled status is preserved.
-     */
-    protected void setDone() {
-        lock.lock();
-        try {
-            Object r = runner;
-            if (r == DONE || r == CANCELLED) 
-                return;
-            runner = DONE;
-        }
-        finally{
-            lock.unlock();
-        }
-        done();
-    }
-
-    /**
-     * Attempts to set the state of this task to Running, succeeding
-     * only if the state is currently NOT Done, Running, or Cancelled.
-     * @return true if successful
-     */ 
-    protected boolean setRunning() {
-        lock.lock();
-        try {
-            if (runner != null)
-                return false;
-            runner = Thread.currentThread();
-            return true;
-        }
-        finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Sets this Future to the results of computation
-     */
-    public void run() {
-        if (setRunning()) {
-            try {
-                try {
-                    if (runnable != null)
-                        runnable.run();
-                    else if (callable != null)
-                        set(callable.call());
-                } catch(Throwable ex) {
-                    setException(ex);
-                }
-            } finally {
-                setDone();
-            }
-        }
-    }
-
-    /**
-     * Protected method invoked when this task transitions to state
-     * <tt>isDone</tt> (whether normally or via cancellation). The
-     * default implementation does nothing.  Subclasses may override
-     * this method to invoke completion callbacks or perform
-     * bookkeeping. Note that you can query status inside the
-     * implementation of this method to determine whether this task
-     * has been cancelled.
-     */
-    protected void done() { }
-
-    /**
-     * Resets the run state of this task to its initial state unless
-     * it has been cancelled. (Note that a cancelled task cannot be
-     * reset.)
-     * @return true if successful
-     */
-    protected boolean reset() {
-        lock.lock();
-        try {
-            if (runner == CANCELLED) 
-                return false;
-            runner = null;
-            return true;
-        }
-        finally {
-            lock.unlock();
-        }
     }
 
     /**
@@ -310,7 +227,104 @@ public class FutureTask<V> implements Future<V>, Runnable {
         }
     }
 
+    /**
+     * Sets the state of this task to Cancelled.
+     */
+    protected void setCancelled() {
+        lock.lock();
+        try {
+            runner = CANCELLED;
+        }
+        finally{
+            lock.unlock();
+        }
+    }
+    
+    /**
+     * Sets the state of this task to Done, unless already in a
+     * Cancelled state, in which case Cancelled status is preserved.
+     */
+    protected void setDone() {
+        lock.lock();
+        try {
+            Object r = runner;
+            if (r == DONE || r == CANCELLED) 
+                return;
+            runner = DONE;
+        }
+        finally{
+            lock.unlock();
+        }
+        done();
+    }
 
+    /**
+     * Attempts to set the state of this task to Running, succeeding
+     * only if the state is currently NOT Done, Running, or Cancelled.
+     * @return true if successful
+     */ 
+    protected boolean setRunning() {
+        lock.lock();
+        try {
+            if (runner != null)
+                return false;
+            runner = Thread.currentThread();
+            return true;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Sets this Future to the results of computation
+     */
+    public void run() {
+        if (setRunning()) {
+            try {
+                try {
+                    if (runnable != null)
+                        runnable.run();
+                    else if (callable != null)
+                        set(callable.call());
+                } catch(Throwable ex) {
+                    setException(ex);
+                }
+            } finally {
+                setDone();
+            }
+        }
+    }
+
+    /**
+     * Protected method invoked when this task transitions to state
+     * <tt>isDone</tt> (whether normally or via cancellation). The
+     * default implementation does nothing.  Subclasses may override
+     * this method to invoke completion callbacks or perform
+     * bookkeeping. Note that you can query status inside the
+     * implementation of this method to determine whether this task
+     * has been cancelled.
+     */
+    protected void done() { }
+
+    /**
+     * Resets the run state of this task to its initial state unless
+     * it has been cancelled. (Note that a cancelled task cannot be
+     * reset.)
+     * @return true if successful
+     */
+    protected boolean reset() {
+        lock.lock();
+        try {
+            if (runner == CANCELLED) 
+                return false;
+            runner = null;
+            return true;
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 }
 
 

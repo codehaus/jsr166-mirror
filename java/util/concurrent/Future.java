@@ -31,7 +31,7 @@ package java.util.concurrent;
  * }
  * </pre>
  **/
-public interface Future  {
+public interface Future<V> {
 
     /**
      * Return true if the underlying task has completed.
@@ -44,7 +44,7 @@ public interface Future  {
      * @throws ExecutionException if the underlying computation
      * threw an exception.
      **/
-    public Object get() throws InterruptedException, ExecutionException;
+    public V get() throws InterruptedException, ExecutionException;
 
     /**
      * Wait if necessary for at most the given time for object to exist,
@@ -56,7 +56,7 @@ public interface Future  {
      * @throws ExecutionException if the underlying computation
      * threw an exception.
      **/
-    public Object get(long time, Clock granularity)
+    public V get(long time, Clock granularity)
         throws InterruptedException, ExecutionException;
 
 }

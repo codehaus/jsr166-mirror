@@ -4,59 +4,59 @@ package java.util.concurrent.atomic;
  * integer "stamp", that can be updated atomically.
  **/
 
-public class AtomicStampedReference {
+public class AtomicStampedReference<V> {
   private class ReferenceIntegerPair {
-    private final Object reference;
+    private final V reference;
     private final int integer;
-    ReferenceIntegerPair(Object r, int i) { 
+    ReferenceIntegerPair(V r, int i) {
       reference = r; integer = i;
     }
-  } 
+  }
 
   private final AtomicReference atomicRef;
 
-  public AtomicStampedReference(Object r, int i) {
+  public AtomicStampedReference(V r, int i) {
     atomicRef = new AtomicReference(new ReferenceIntegerPair(r, i));
   }
 
-  public Object getReference() {
+  public V getReference() {
     return ((ReferenceIntegerPair)(atomicRef.get())).reference;
   }
   public int getStamp() {
     return ((ReferenceIntegerPair)(atomicRef.get())).integer;
   }
 
-  public Object get(int[] stampHolder) {
+  public V get(int[] stampHolder) {
     ReferenceIntegerPair p = (ReferenceIntegerPair)(atomicRef.get());
     stampHolder[0] = p.integer;
     return p.reference;
   }
 
-  public boolean attemptUpdate(Object expectedReference, 
-                               Object newReference,
-                               int    expectedStamp, 
+  public boolean attemptUpdate(V      expectedReference,
+                               V      newReference,
+                               int    expectedStamp,
                                int    newStamp) {
     ReferenceIntegerPair current = (ReferenceIntegerPair)(atomicRef.get());
-    return  expectedReference == current.reference && 
+    return  expectedReference == current.reference &&
       expectedStamp == current.integer &&
       ((newReference == current.reference && newStamp == current.integer) ||
-       atomicRef.attemptUpdate(current, 
-                               new ReferenceIntegerPair(newReference, 
+       atomicRef.attemptUpdate(current,
+                               new ReferenceIntegerPair(newReference,
                                                         newStamp)));
   }
 
-  public void set(Object r, int stamp) {
+  public void set(V r, int stamp) {
     ReferenceIntegerPair current = (ReferenceIntegerPair)(atomicRef.get());
     if (r != current.reference || stamp != current.integer)
       atomicRef.set(new ReferenceIntegerPair(r, stamp));
   }
 
-  public boolean attemptStamp(Object expectedReference, int newStamp) {
+  public boolean attemptStamp(V expectedReference, int newStamp) {
     ReferenceIntegerPair current = (ReferenceIntegerPair)(atomicRef.get());
-    return  expectedReference == current.reference && 
+    return  expectedReference == current.reference &&
       (newStamp == current.integer ||
-       atomicRef.attemptUpdate(current, 
-                               new ReferenceIntegerPair(expectedReference, 
+       atomicRef.attemptUpdate(current,
+                               new ReferenceIntegerPair(expectedReference,
                                                         newStamp)));
   }
 

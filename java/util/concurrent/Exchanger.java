@@ -25,7 +25,7 @@ package java.util.concurrent;
  *       try {
  *         while (currentBuffer != null) {
  *           addToBuffer(currentBuffer);
- *           if (currentBuffer.full()) 
+ *           if (currentBuffer.full())
  *             currentBuffer = (Buffer)(exchanger.exchange(currentBuffer));
  *         }
  *       }
@@ -39,7 +39,7 @@ package java.util.concurrent;
  *       try {
  *         while (currentBuffer != null) {
  *           takeFromBuffer(currentBuffer);
- *           if (currentBuffer.empty()) 
+ *           if (currentBuffer.empty())
  *             currentBuffer = (Buffer)(exchanger.exchange(currentBuffer));
  *         }
  *       }
@@ -53,9 +53,9 @@ package java.util.concurrent;
  *   }
  * }
  * </pre>
- * 
+ *
  **/
-public class Exchanger {
+public class Exchanger<V> {
 
     /**
      * Create a new Exchanger
@@ -70,7 +70,7 @@ public class Exchanger {
      * @return the value provided by the other thread.
      * @throws InterruptedException if current thread was interrupted while waiting
      **/
-    public Object exchange(Object x) throws InterruptedException {
+    public V exchange(V x) throws InterruptedException {
         return null; // for now
     }
 
@@ -85,7 +85,7 @@ public class Exchanger {
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws TimeoutException if timed out while waiting.
      **/
-    public Object exchange(Object x, long time, Clock granularity) throws InterruptedException {
+    public V exchange(V x, long time, Clock granularity) throws InterruptedException {
         return null; // for now
     }
 

@@ -3,20 +3,20 @@ package java.util.concurrent;
 /**
  * A FutureTask is a runnable, cancellable Future.
  **/
-public class FutureTask implements Runnable, Cancellable, Future {
+public class FutureTask<V> implements Runnable, Cancellable, Future {
 
-    private Object result;
+    private V result;
     private Throwable exception;
     private boolean ready;
     private Thread runner;
-    private final Callable callable;
+    private final Callable<V> callable;
     private boolean cancelled;
 
     /**
      * Construct a FutureTask that will upon running, execute
      * the given function.
      **/
-    public FutureTask(Callable callable) {
+    public FutureTask(Callable<V> callable) {
         this.callable = callable;
     }
 
@@ -30,9 +30,9 @@ public class FutureTask implements Runnable, Cancellable, Future {
      * you don't need a particular result, consider just using
      * <tt>Boolean.TRUE</tt>.
      **/
-    public FutureTask(final Runnable runnable, final Object result) {
-        callable = new Callable() {
-            public Object call() {
+    public FutureTask(final Runnable runnable, final V result) {
+        callable = new Callable<V>() {
+            public V call() {
                 runnable.run();
                 return result;
             }
@@ -54,7 +54,7 @@ public class FutureTask implements Runnable, Cancellable, Future {
      * @throws ExecutionException if the underlying computation
      * threw an exception.
      **/
-    public synchronized Object get() throws InterruptedException, ExecutionException {
+    public synchronized V get() throws InterruptedException, ExecutionException {
         while (!ready)
             wait();
         if (exception != null)
@@ -74,7 +74,7 @@ public class FutureTask implements Runnable, Cancellable, Future {
      * @throws ExecutionException if the underlying computation
      * threw an exception.
      **/
-    public synchronized Object get(long time, Clock granularity)
+    public synchronized V get(long time, Clock granularity)
         throws InterruptedException, ExecutionException {
 
         if (!ready) {
@@ -126,7 +126,7 @@ public class FutureTask implements Runnable, Cancellable, Future {
     /**
      * Set the value of this Future to the given value.
      **/
-    protected synchronized void set(Object v) {
+    protected synchronized void set(V v) {
         ready = true;
         result = v;
         runner = null;

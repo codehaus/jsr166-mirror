@@ -100,7 +100,7 @@ import java.util.Date;
  * {@link Object#notify notification} methods invoked.
  * Acquiring the monitor lock of a <tt>Condition</tt> instance, or using its
  * monitor methods, has no specified relationship with acquiring the
- * {@link Lock} associated with that <tt>Condition</tt> or the use of it's
+ * {@link Lock} associated with that <tt>Condition</tt> or the use of its
  * {@link #await waiting} and {@link #signal signalling} methods.
  * It is recommended that to avoid confusion you never use <tt>Condition</tt>
  * instances in this way, except perhaps within their own implementation.
@@ -220,7 +220,7 @@ public interface Condition {
      * <p>If the current thread's interrupt status is set when it enters
      * this method, or it is {@link Thread#interrupt interrupted} 
      * while waiting, it will continue to wait until signalled. When it finally
-     * returns from this method it's <em>interrupted status</em> will still
+     * returns from this method its <em>interrupted status</em> will still
      * be set.
      * 
      * <p><b>Implementation Considerations</b>

@@ -87,12 +87,12 @@ public class ThreadLocal<T> {
     }
 
     /**
-     * Returns the current thread's initial value for this thread-local
-     * variable.  This method will be invoked at most once per accessing
-     * thread for each thread-local, the first time the thread accesses the
-     * variable with the {@link #get} method.  The <tt>initialValue</tt>
-     * method will not be invoked in a thread if the thread invokes the {@link
-     * #set} method prior to the <tt>get</tt> method.
+     * Returns the current thread's initial value for this
+     * thread-local variable.  This method will be invoked the first
+     * time the thread accesses the variable with the {@link #get}
+     * method.  The <tt>initialValue</tt> method will not be invoked
+     * in a thread if the thread invokes the {@link #set} method prior
+     * to the <tt>get</tt> method.
      *
      * <p>This implementation simply returns <tt>null</tt>; if the programmer
      * desires thread-local variables to be initialized to some value other
@@ -155,7 +155,7 @@ public class ThreadLocal<T> {
     /**
      * Removes the current thread's value for this thread-local variable.
      * If this thread-local variable is subsequently read by the current
-     * thread, its initial value will be computed by invoking its
+     * thread, its default value will be computed by invoking its
      * {@link #initialValue} method again unless its value is set by
      * the current thread in the interim.
      * 

@@ -39,7 +39,6 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @throws NullPointerException if <tt>c</tt> or any element within it
      * is <tt>null</tt>
      *
-     * @fixme Should the body be wrapped with try-lock-finally-unlock?
      */
     public DelayQueue(Collection<? extends E> c) {
         this.addAll(c);

@@ -5,8 +5,10 @@
 
 <body>
 
-This package contains classes that support lock-free thread-safe
-programming on single variables. All provide an operation of the form:
+A small toolkit of classes that support lock-free thread-safe
+programming on single variables. In essence, the classes in this
+package extend the notion of <tt>volatile</tt> variables to those that
+also provide an atomic update operation of the form:
 
 <pre>
   boolean compareAndSet(expectedValue, updateValue);
@@ -62,18 +64,23 @@ class Sequencer {
 </pre>
 
 <p>In addition to classes representing single values, this package
-also contains Updater classes that can be used to obtain
-compareAndSwap operations on any selected volatile field of any
-selected class.  <code>AtomicReferenceFieldUpdater</code>,
+also contains <em>Updater</em> classes that can be used to obtain
+<tt>compareAndSet</tt> operations on any selected volatile field of
+any selected class.  <code>AtomicReferenceFieldUpdater</code>,
 <code>AtomicIntegerFieldUpdater</code>, and
 <code>AtomicLongFieldUpdater</code> are reflection-based utilities
-that perform atomic updates to designated reference fields of
-designated classes. They are mainly of use in atomic data structures
-in which several reference fields of the same node (for example, the
-links of a tree node) are independently subject to atomic
-updates. These classes enable greater flexibility in how and when to
-use atomic updates, at the expense of more awkward reflection-based
-setup, less convenient usage, and weaker guarantees.
+that provide access to the associated field types. These are mainly of
+use in atomic data structures in which several reference fields of the
+same node (for example, the links of a tree node) are independently
+subject to atomic updates. These classes enable greater flexibility in
+how and when to use atomic updates, at the expense of more awkward
+reflection-based setup, less convenient usage, and weaker guarantees.
+
+<p>The <tt>AtomicIntegerArray</tt>, <tt>AtomicLongArray</tt>, and
+<tt>AtomicReferenceArray</tt> classes further extend atomic operation
+support to arrays of these types. These classes are also notable in
+providing <tt>volatile</tt> access semantics for their array elements,
+which is not otherwise supported for ordinary Java arrays.
 
 <p>Atomic references find use in constructions that require additional
 utility classes, not utility methods.  The

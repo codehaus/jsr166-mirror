@@ -33,8 +33,8 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/31 19:49:42 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/06 16:08:49 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public class FutureTask<V> extends CancellableTask implements Future<V> {
@@ -109,13 +109,15 @@ public class FutureTask<V> extends CancellableTask implements Future<V> {
     }
 
     /**
-     * Sets the value of this task to the given value.  This method
-     * should only be called once; once it is called, the computation
-     * is assumed to have completed.
+     * Sets the value of this task to the given value.  After this
+     * method is called, the computation is assumed to be completed --
+     * threads already waiting for the result via <tt>get</tt> are
+     * unblocked, and future attempts to retrieve the result will not
+     * block. While not explicity disallowed, it is rarely a good idea
+     * to invoke <tt>set</tt> more than once.
      *
      * @param v the value
      *
-     * @fixme Need to clarify "should" in "should only be called once".
      */
     protected void set(V v) {
         ((InnerCancellableFuture<V>)getRunnable()).set(v);

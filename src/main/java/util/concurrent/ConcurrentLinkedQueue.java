@@ -229,7 +229,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * <p>Beware that, unlike in most collections, this method is
      * <em>NOT</em> a constant-time operation. Because of the

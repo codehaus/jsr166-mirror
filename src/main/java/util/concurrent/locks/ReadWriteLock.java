@@ -8,7 +8,7 @@ package java.util.concurrent.locks;
 
 /**
  * A <tt>ReadWriteLock</tt> maintains a pair of associated {@link
- * Locks locks}, one for read-only operations and one for writing.
+ * Lock locks}, one for read-only operations and one for writing.
  * The {@link #readLock read lock} may be held simultaneously by
  * multiple reader threads, so long as there are no writers.  The
  * {@link #writeLock write lock} is exclusive.
@@ -79,8 +79,8 @@ package java.util.concurrent.locks;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:42 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/06 18:42:49 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface ReadWriteLock {

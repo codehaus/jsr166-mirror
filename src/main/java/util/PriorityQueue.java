@@ -159,7 +159,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * specified collection.  The priority queue has an initial
      * capacity of 110% of the size of the specified collection or 1
      * if the collection is empty.  If the specified collection is an
-     * instance of a {@link SortedSet} or is another
+     * instance of a {@link java.util.SortedSet} or is another
      * <tt>PriorityQueue</tt>, the priority queue will be sorted
      * according to the same comparator, or according to its elements'
      * natural order if the collection is sorted according to its

@@ -58,8 +58,6 @@ import java.util.concurrent.TimeUnit;
  * attempt to acquire a lock ({@link #tryLock()}), an attempt to acquire the
  * lock that can be interrupted ({@link #lockInterruptibly}, and an attempt
  * to acquire the lock that can timeout ({@link #tryLock(long, TimeUnit)}).
- * This additional functionality is also extended to built-in monitor
- * locks through the methods of the {@link Locks} utility class.
  *
  * <p>A <tt>Lock</tt> class can also provide behavior and semantics that is 
  * quite different from that of the implicit monitor lock, such as guaranteed 
@@ -123,8 +121,8 @@ import java.util.concurrent.TimeUnit;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:42 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/06 18:42:49 $
+ * @editor $Author: tim $
  * @author Doug Lea
  *
  **/
@@ -290,8 +288,8 @@ public interface Lock {
      * Returns a {@link Condition} instance that is bound to this <tt>Lock</tt>
      * instance.
      * <p>Conditions are primarily used with the built-in locking provided by
-     * <tt>synchronized</tt> methods and statements 
-     * (see {@link Locks#newConditionFor}), but in some rare circumstances it 
+     * <tt>synchronized</tt> methods and statements, 
+     * but in some rare circumstances it 
      * can be useful to wait for a condition when working with a data 
      * structure that is accessed using a stand-alone <tt>Lock</tt> instance 
      * (see {@link ReentrantLock}). 

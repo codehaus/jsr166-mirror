@@ -110,12 +110,11 @@ import java.util.concurrent.*;
  * @see ReentrantLock
  * @see Condition
  * @see ReadWriteLock
- * @see Locks
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/14 00:06:26 $
- * @editor $Author: dholmes $
+ * @revised $Date: 2003/08/06 18:42:49 $
+ * @editor $Author: tim $
  * @author Doug Lea
  *
  */

@@ -29,9 +29,6 @@ import java.util.Date;
  *
  * <p>A <tt>Condition</tt> instance is intrinsically bound to a lock, either
  * the built-in monitor lock of an object, or a {@link Lock} instance.
- * To obtain a <tt>Condition</tt> instance for a particular object's monitor 
- * lock
- * use the {@link Locks#newConditionFor(Object)} method.
  * To obtain a <tt>Condition</tt> instance for a particular {@link Lock} 
  * instance use its {@link Lock#newCondition} method.
  *
@@ -41,44 +38,10 @@ import java.util.Date;
  * until an item becomes available; if a <tt>put</tt> is attempted on a
  * full buffer, then the thread will block until a space becomes available.
  * We would like to keep waiting <tt>put</tt> threads and <tt>take</tt>
- * threads in separate wait-sets so that we can use the optimisation of
+ * threads in separate wait-sets so that we can use the optimization of
  * only notifying a single thread at a time when items or spaces become
- * available in the buffer. This can be achieved using either two 
- * {@link Condition} instances, or one {@link Condition} instance and the 
- * actual
- * monitor wait-set. For clarity we'll use two {@link Condition} instances.
- * <pre><code>
- * class BoundedBuffer {
- *   <b>final Condition notFull  = Locks.newConditionFor(this); 
- *   final Condition notEmpty = Locks.newConditionFor(this); </b>
- *
- *   Object[] items = new Object[100];
- *   int putptr, takeptr, count;
- *
- *   public <b>synchronized</b> void put(Object x) 
- *                              throws InterruptedException {
- *     while (count == items.length) 
- *       <b>notFull.await();</b>
- *     items[putptr] = x; 
- *     if (++putptr == items.length) putptr = 0;
- *     ++count;
- *     <b>notEmpty.signal();</b>
- *   }
- *
- *   public <b>synchronized</b> Object take() throws InterruptedException {
- *     while (count == 0) 
- *       <b>notEmpty.await();</b>
- *     Object x = items[takeptr]; 
- *     if (++takeptr == items.length) takeptr = 0;
- *     --count;
- *     <b>notFull.signal();</b>
- *     return x;
- *   } 
- * }
- * </code></pre>
- *
- * <p>If we were to use a standalone {@link Lock} object, such as a 
- * {@link ReentrantLock} then we would write the example as so:
+ * available in the buffer. This can be achieved using two 
+ * {@link Condition} instances.
  * <pre><code>
  * class BoundedBuffer {
  *   <b>Lock lock = new ReentrantLock();</b>
@@ -177,8 +140,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/08 00:46:41 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/06 18:42:49 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public interface Condition {

@@ -61,31 +61,34 @@ public class Executors {
      * shutdown, a new one will take its place if needed to execute
      * subsequent tasks.)  Tasks are guaranteed to execute
      * sequentially, and no more than one task will be active at any
-     * given time. This method is equivalent in effect to
-     *<tt>new FixedThreadPool(1)</tt>.
+     * given time. The returned executor cannot be reconfigured
+     * to use additional threads.
      *
      * @return the newly-created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor() {
-        return new ThreadPoolExecutor(1, 1,
-                                      0L, TimeUnit.MILLISECONDS,
-                                      new LinkedBlockingQueue<Runnable>());
+        return unconfigurableExecutorService
+            (new ThreadPoolExecutor(1, 1,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue<Runnable>()));
     }
 
     /**
      * Creates an Executor that uses a single worker thread operating
      * off an unbounded queue, and uses the provided ThreadFactory to
-     * create new threads when needed.
+     * create a new thread when needed. The returned executor cannot be
+     * reconfigured to use additional threads.
      * @param threadFactory the factory to use when creating new
      * threads
      *
      * @return the newly-created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-        return new ThreadPoolExecutor(1, 1,
-                                      0L, TimeUnit.MILLISECONDS,
-                                      new LinkedBlockingQueue<Runnable>(),
-                                      threadFactory);
+        return unconfigurableExecutorService
+            (new ThreadPoolExecutor(1, 1,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue<Runnable>(),
+                                    threadFactory));
     }
 
     /**
@@ -157,6 +160,39 @@ public class Executors {
     public static ScheduledExecutorService newScheduledThreadPool(
             int corePoolSize, ThreadFactory threadFactory) {
         return new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
+    }
+
+
+    /**
+     * Creates and returns an object that delegates all defined {@link
+     * ExecutorService} methods to the given executor, but not any
+     * other methods that might otherwise be accessible using
+     * casts. This provides a way to safely "freeze" configuration and
+     * disallow tuning of a given concrete implementation.
+     * @param executor the underlying implementation
+     * @return an <tt>ExecutorService</tt> instance
+     * @throws NullPointerException if executor null
+     */
+    public static ExecutorService unconfigurableExecutorService(ExecutorService executor) {
+        if (executor == null)
+            throw new NullPointerException();
+        return new DelegatedExecutorService(executor);
+    }
+
+    /**
+     * Creates and returns an object that delegates all defined {@link
+     * ScheduledExecutorService} methods to the given executor, but
+     * not any other methods that might otherwise be accessible using
+     * casts. This provides a way to safely "freeze" configuration and
+     * disallow tuning of a given concrete implementation.
+     * @param executor the underlying implementation
+     * @return a <tt>ScheduledExecutorService</tt> instance
+     * @throws NullPointerException if executor null
+     */
+    public static ScheduledExecutorService unconfigurableScheduledExecutorService(ScheduledExecutorService executor) {
+        if (executor == null)
+            throw new NullPointerException();
+        return new DelegatedScheduledExecutorService(executor);
     }
         
     /**
@@ -267,6 +303,106 @@ public class Executors {
             });
         }
         
+    }
+
+
+   /**
+     * A wrapper class that exposes only the ExecutorService methods
+     * of an implementation.
+     */
+    private static class DelegatedExecutorService extends AbstractExecutorService {
+        private final ExecutorService e;
+        DelegatedExecutorService(ExecutorService executor) { e = executor; }
+        public void execute(Runnable command) { e.execute(command); }
+        public void shutdown() { e.shutdown(); }
+        public List<Runnable> shutdownNow() { return e.shutdownNow(); }
+        public boolean isShutdown() { return e.isShutdown(); }
+        public boolean isTerminated() { return e.isTerminated(); }
+        public boolean awaitTermination(long timeout, TimeUnit unit)
+            throws InterruptedException {
+            return e.awaitTermination(timeout, unit);
+        }
+        public <T> Future<T> submit(Runnable task, T result) {
+            return e.submit(task, result);
+        }
+        public <T> Future<T> submit(Callable<T> task) {
+            return e.submit(task);
+        }
+
+        public void invoke(Runnable task) throws ExecutionException, InterruptedException {
+            e.invoke(task);
+        }
+        public <T> T invoke(Callable<T> task) throws ExecutionException, InterruptedException {
+            return e.invoke(task);
+        }
+        public Future<Object> submit(PrivilegedAction action) {
+            return e.submit(action);
+        }
+        public Future<Object> submit(PrivilegedExceptionAction action) {
+            return e.submit(action);
+        }
+        public  <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result)
+            throws InterruptedException {
+            return e.invokeAll(tasks, result);
+        }
+        public <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result,
+                                             long timeout, TimeUnit unit) 
+            throws InterruptedException {
+            return e.invokeAll(tasks, result, timeout, unit);
+        }
+        public     <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
+            throws InterruptedException {
+            return e.invokeAll(tasks);
+        }
+        public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks, 
+                                             long timeout, TimeUnit unit) 
+            throws InterruptedException {
+            return e.invokeAll(tasks, timeout, unit);
+        }
+        public <T> T invokeAny(Collection<Callable<T>> tasks)
+            throws InterruptedException, ExecutionException {
+            return e.invokeAny(tasks);
+        }
+        public <T> T invokeAny(Collection<Callable<T>> tasks, 
+                               long timeout, TimeUnit unit) 
+            throws InterruptedException, ExecutionException, TimeoutException {
+            return e.invokeAny(tasks, timeout, unit);
+        }
+        public <T> T invokeAny(Collection<Runnable> tasks, T result)
+            throws InterruptedException, ExecutionException {
+            return e.invokeAny(tasks, result);
+        }
+        public <T> T invokeAny(Collection<Runnable> tasks, T result,
+                               long timeout, TimeUnit unit) 
+            throws InterruptedException, ExecutionException, TimeoutException {
+            return e.invokeAny(tasks, result, timeout, unit);
+        }
+    }
+    
+    /**
+     * A wrapper class that exposes only the ExecutorService and 
+     * ScheduleExecutor methods of a ScheduledThreadPoolExecutor.
+     */
+    private static class DelegatedScheduledExecutorService
+            extends DelegatedExecutorService 
+            implements ScheduledExecutorService {
+        private final ScheduledExecutorService e;
+        DelegatedScheduledExecutorService(ScheduledExecutorService executor) {
+            super(executor);
+            e = executor;
+        }
+        public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit) {
+            return e.schedule(command, delay, unit);
+        }
+        public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+            return e.schedule(callable, delay, unit);
+        }
+        public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
+            return e.scheduleAtFixedRate(command, initialDelay, period, unit);
+        }
+        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+            return e.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+        }
     }
 
         

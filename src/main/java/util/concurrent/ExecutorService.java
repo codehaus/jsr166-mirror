@@ -113,9 +113,9 @@ public interface ExecutorService extends Executor {
      * tasks are executed, but no new tasks will be
      * accepted. Invocation has no additional effect if already shut
      * down.
-     * @throws SecurityException if shutting down this ExecutorService
-     * requires a permission not held by caller.  (Any such
-     * implementation must define and document this permission.)
+     * @throws SecurityException if a security manager exists and
+     * shutting down this ExecutorService manipulates threads
+     * that the caller is not permitted to access.
      */
     void shutdown();
 
@@ -130,9 +130,9 @@ public interface ExecutorService extends Executor {
      * tasks mask or fail to respond to interrupts, they may never terminate.
      *
      * @return list of tasks that never commenced execution
-     * @throws SecurityException if shutting down this ExecutorService
-     * requires a permission not held by caller.  (Any such
-     * implementation must define and document this permission.)
+     * @throws SecurityException if a security manager exists and
+     * shutting down this ExecutorService manipulates threads
+     * that the caller is not permitted to access.
      */
     List<Runnable> shutdownNow();
 
@@ -177,7 +177,7 @@ public interface ExecutorService extends Executor {
      * @param result value for each task to return upon completion.
      * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
      * @return A list of Futures representing the tasks, in the same
-     * sequential order as the given task list, each of which has
+     * sequential order as as produced by the iterator for the given task list, each of which has
      * completed.
      * @throws InterruptedException if interrupted while waiting, in
      * which case unfinished tasks are cancelled.
@@ -185,7 +185,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result)
+    <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result)
         throws InterruptedException;
 
     /**
@@ -200,7 +200,7 @@ public interface ExecutorService extends Executor {
      * If you do not need a particular result, consider using <tt>Boolean.TRUE</tt>.
      * @param timeout the maximum time to wait
      * @return A list of Futures representing the tasks, in the same
-     * sequential order as the given task list. If the operation did
+     * sequential order as as produced by the iterator for the given task list. If the operation did
      * not time out, each task will have completed. If it did time
      * out, some of these tasks will not have completed.
      * @param unit the time unit of the timeout argument
@@ -210,7 +210,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result,
+    <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result,
                                long timeout, TimeUnit unit) 
         throws InterruptedException;
 
@@ -222,7 +222,7 @@ public interface ExecutorService extends Executor {
      * terminated either normally or by throwing an exception.
      * @param tasks the collection of tasks
      * @return A list of Futures representing the tasks, in the same
-     * sequential order as the given task list, each of which has
+     * sequential order as produced by the iterator for the given task list, each of which has
      * completed.
      * @throws InterruptedException if interrupted while waiting, in
      * which case unfinished tasks are cancelled.
@@ -231,7 +231,7 @@ public interface ExecutorService extends Executor {
      * for execution
      */
 
-    <T> List<Future<T>> invokeAll(List<Callable<T>> tasks)
+    <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
         throws InterruptedException;
 
     /**
@@ -244,7 +244,7 @@ public interface ExecutorService extends Executor {
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
      * @return A list of Futures representing the tasks, in the same
-     * sequential order as the given task list. If the operation did
+     * sequential order as as produced by the iterator for the given task list. If the operation did
      * not time out, each task will have completed. If it did time
      * out, some of thiese tasks will not have completed.
      * @throws InterruptedException if interrupted while waiting, in
@@ -254,7 +254,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    <T> List<Future<T>> invokeAll(List<Callable<T>> tasks, 
+    <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks, 
                                 long timeout, TimeUnit unit) 
         throws InterruptedException;
 

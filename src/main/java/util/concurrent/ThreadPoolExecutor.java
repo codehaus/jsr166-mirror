@@ -824,6 +824,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     public void shutdown() {
+	SecurityManager security = System.getSecurityManager();
+	if (security != null) 
+	    security.checkAccess(Thread.currentThread());
+
         boolean fullyTerminated = false;
         mainLock.lock();
         try {
@@ -847,6 +851,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
 
     public List<Runnable> shutdownNow() {
+	SecurityManager security = System.getSecurityManager();
+	if (security != null) 
+	    security.checkAccess(Thread.currentThread());
         boolean fullyTerminated = false;
         mainLock.lock();
         try {

@@ -252,7 +252,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
     }
 
 
-    public <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result)
+    public <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result)
         throws InterruptedException {
         if (tasks == null)
             throw new NullPointerException();
@@ -282,7 +282,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
     }
 
-    public <T> List<Future<T>> invokeAll(List<Runnable> tasks, T result,
+    public <T> List<Future<T>> invokeAll(Collection<Runnable> tasks, T result,
                                          long timeout, TimeUnit unit) 
         throws InterruptedException {
         if (tasks == null || unit == null)
@@ -322,7 +322,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
     }
 
-    public <T> List<Future<T>> invokeAll(List<Callable<T>> tasks)
+    public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
         throws InterruptedException {
         if (tasks == null)
             throw new NullPointerException();
@@ -352,7 +352,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
     }
 
-    public <T> List<Future<T>> invokeAll(List<Callable<T>> tasks, 
+    public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks, 
                                          long timeout, TimeUnit unit) 
         throws InterruptedException {
         if (tasks == null || unit == null)

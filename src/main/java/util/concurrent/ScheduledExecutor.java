@@ -48,7 +48,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * A delayed or periodic action.
      */
-    public class DelayedTask extends CancellableTask implements Delayed {
+    public static class DelayedTask extends CancellableTask implements Delayed {
         private final long sequenceNumber;
         private final long time;
         private final long period;
@@ -97,12 +97,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
                 return 1;
         }
 
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (!isDone()) 
-                ScheduledExecutor.this.remove(this);
-            return super.cancel(mayInterruptIfRunning);
-        }
-
         /**
          * Return true if this is a periodic (not a one-shot) action.
          */
@@ -134,7 +128,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * A delayed result-bearing action.
      */
-    public class DelayedFutureTask<V> extends DelayedTask implements Future<V> {
+    public static class DelayedFutureTask<V> extends DelayedTask implements Future<V> {
         /**
          * Creates a Future that may trigger after the given delay.
          */

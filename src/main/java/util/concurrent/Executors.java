@@ -17,8 +17,8 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/07 16:18:29 $
- * @editor $Author: jozart $
+ * @revised $Date: 2003/06/11 13:17:20 $
+ * @editor $Author: dl $
  */
 public class Executors {
 
@@ -156,13 +156,7 @@ public class Executors {
      * for execution
      */
     public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
-        FutureTask<T> ftask;
-        if (executor instanceof ThreadPoolExecutor) {
-            ftask = new ThreadPoolFutureTask<T>(
-                (ThreadPoolExecutor) executor, task, value);
-        } else {
-            ftask = new FutureTask<T>(task, value);
-        }
+        FutureTask<T> ftask = new FutureTask<T>(task, value);
         executor.execute(ftask);
         return ftask;
     }
@@ -178,13 +172,7 @@ public class Executors {
      * for execution
      */
     public static <T> FutureTask<T> execute(Executor executor, Callable<T> task) {
-        FutureTask<T> ftask;
-        if (executor instanceof ThreadPoolExecutor) {
-            ftask = new ThreadPoolFutureTask<T>(
-                (ThreadPoolExecutor) executor, task);
-        } else {
-            ftask = new FutureTask<T>(task);
-        }
+        FutureTask<T> ftask = new FutureTask<T>(task);
         executor.execute(ftask);
         return ftask;
     }
@@ -222,23 +210,4 @@ public class Executors {
         return ftask.get();
     }
 
-    private static class ThreadPoolFutureTask<V> extends FutureTask<V> {
-
-        ThreadPoolFutureTask(ThreadPoolExecutor tpe, Callable<V> callable) {
-            super(callable);
-            this.tpe = tpe;
-        }
-
-        ThreadPoolFutureTask(ThreadPoolExecutor tpe, Runnable runnable, V result) {
-            super(runnable, result);
-            this.tpe = tpe;
-        }
-
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            tpe.remove(this); // ignore success/failure
-            return super.cancel(mayInterruptIfRunning);
-        }
-
-        private final ThreadPoolExecutor tpe;
-    }
 }

@@ -137,7 +137,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/06 18:42:18 $
+ * @revised $Date: 2003/06/11 13:17:21 $
  * @editor $Author: dl $
  *
  */
@@ -774,6 +774,28 @@ public class ThreadPoolExecutor implements ExecutorService {
         return getQueue().remove(task);
     }
 
+
+    /**
+     * Removes from the work queue all {@ link Cancellable} tasks
+     * that have been cancelled. This method can be useful as a
+     * storage reclamation operation, that has no other impact
+     * on functionality. Cancelled tasks are never executed, but
+     * may accumulate in work queues until worker threads can
+     * actively remove them. Invoking this method ensures that they
+     * are instead removed now.
+     */
+
+    public void purge() {
+        Iterator<Runnable> it = getQueue().iterator();
+        while (it.hasNext()) {
+            Runnable r = it.next();
+            if (r instanceof Cancellable) {
+                Cancellable c = (Cancellable)r;
+                if (c.isCancelled()) 
+                    it.remove();
+            }
+        }
+    }
 
     /**
      * Sets the core number of threads.  This overrides any value set

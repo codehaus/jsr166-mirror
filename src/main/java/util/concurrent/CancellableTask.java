@@ -153,6 +153,13 @@ public class CancellableTask implements Cancellable, Runnable {
     }
 
     /**
+     * Reset the run state of this task to its initial state.
+     */
+    protected void reset() {
+        runnerUpdater.set(this, null);
+    }
+
+    /**
      * Implementation of Future methods under the control of a current
      * <tt>CancellableTask</tt>, which it relies on for methods
      * <tt>isDone</tt>, <tt>isCancelled</tt> and <tt>cancel</tt>. This

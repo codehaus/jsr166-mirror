@@ -73,11 +73,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             extends CancellableTask implements ScheduledCancellable {
         
         /** Sequence number to break ties FIFO */
-        private final long sequenceNumber;
+        private long sequenceNumber;
         /** The time the task is enabled to execute in nanoTime units */
-        private final long time;
+        private long time;
         /** The delay forllowing next time, or <= 0 if non-periodic */
-        private final long period;
+        private long period;
         /** true if at fixed rate; false if fixed delay */
         private final boolean rateBased; 
 
@@ -153,7 +153,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             if (period <= 0 || isCancelled())
                 return null;
             long nextTime = period + (rateBased ? time : System.nanoTime());
-            return new ScheduledCancellableTask(getRunnable(), nextTime, period, rateBased);
+            this.time = nextTime;
+            this.sequenceNumber = sequencer.getAndIncrement();
+            reset();
+            return this;
         }
     }
     

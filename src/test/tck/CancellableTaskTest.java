@@ -21,6 +21,15 @@ public class CancellableTaskTest extends TestCase{
     private static long MEDIUM_DELAY_MS = 1000;
     private static long LONG_DELAY_MS = 10000; 
 
+
+    public void testConstructor(){
+        try {
+            CancellableTask task = new CancellableTask(null);
+            fail("should throw");
+        }
+        catch(NullPointerException success) {
+        }
+    }
     
     public void testIsDone(){
         CancellableTask task = new CancellableTask(new Runnable() {

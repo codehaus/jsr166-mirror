@@ -21,6 +21,24 @@ public class FutureTaskTest extends TestCase {
     private static long MEDIUM_DELAY_MS = 1000;
     private static long LONG_DELAY_MS = 10000; 
 
+    public void testConstructor(){
+        try {
+            FutureTask task = new FutureTask(null);
+            fail("should throw");
+        }
+        catch(NullPointerException success) {
+        }
+    }
+
+    public void testConstructor2(){
+        try {
+            FutureTask task = new FutureTask(null, Boolean.TRUE);
+            fail("should throw");
+        }
+        catch(NullPointerException success) {
+        }
+    }
+
     public void testIsDone(){
         FutureTask task = new FutureTask( new Callable() {
                 public Object call() { return Boolean.TRUE; } });

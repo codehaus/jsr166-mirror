@@ -1,6 +1,8 @@
-package java.util;
+package jsr166.test;
 
 import static java.lang.Math.*;
+import java.nio.*;
+import java.util.*;
 
 import junit.framework.TestCase;
 
@@ -37,6 +39,8 @@ public class SyntaxTest extends TestCase {
         for (Integer i : ints) total += i.intValue();
         assertEquals("expecting total of 10", 10, total);
     }
+
+    private static final int[] IARRAY = new int[] { 1, 2, 3, 4 };
 
 
     public void testEnumerations () {
@@ -115,5 +119,68 @@ public class SyntaxTest extends TestCase {
     }
 
 
-    private static final int[] IARRAY = new int[] { 1, 2, 3, 4 };
+    public void testColor () {
+        Color2 c = Color2.red;
+        assertEquals("color name", "red", c.toString());
+    }
+
+    enum Color2 { red, green, blue;
+        static Map<String,Color2> colorMap;
+        private static Map<String, Color2> colorMap() {
+            synchronized (Color2.class) {
+                return (colorMap == null) ? (colorMap = new HashMap<String,Color2>()) : colorMap;
+            }
+        }
+        Color2() {
+            colorMap().put(toString(), this);
+        }
+    }
+
+
+    public void testIterable () {
+        ByteBuffer buf = ByteBuffer.wrap(new byte[] { 0x12, 0x13, 0x14 });
+        for (Byte b : Iterables.asIterable(buf)) printByte(b);
+
+        for (Character c : Iterables.asIterable("klmnopq")) printChar(c);
+    }
+
+    private static void printByte (byte b) {
+        System.out.println("buf.get() returns " + b);
+    }
+
+    private static void printChar (char c) {
+        System.out.println("charAt returns " + c);
+    }
+
+    public static class Iterables {
+        public static Iterable<Byte> asIterable(final ByteBuffer buf) {
+            return new Iterable<Byte>() {
+                public SimpleIterator<Byte> iterator() {
+                    return new SimpleIterator<Byte>() {
+                        public boolean hasNext() {
+                            return buf.hasRemaining();
+                        }
+                        public Byte next() {
+                            return Byte.valueOf(buf.get());
+                        }
+                    };
+                }
+            };
+        }
+        public static Iterable<Character> asIterable(final CharSequence s) {
+            return new Iterable<Character>() {
+                public SimpleIterator<Character> iterator() {
+                    return new SimpleIterator<Character>() {
+                        public boolean hasNext() {
+                            return index < s.length();
+                        }
+                        public Character next() {
+                            return Character.valueOf(s.charAt(index++));
+                        }
+                        private int index = 0;
+                    };
+                }
+            };
+        }
+    }
 }

@@ -106,6 +106,53 @@ public final class AtomicLongArray implements java.io.Serializable {
     }
 
     /**
+     * Atomically increment by one the element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @return the previous value;
+     */
+    public long getAndincrement(int i) {
+        while (true) {
+            long current = get(i);
+            long next = current + 1;
+            if (compareAndSet(i, current, next))
+                return current;
+        }
+    }
+  
+    /**
+     * Atomically decrement by one the element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @return the previous value;
+     */
+    public long getAndDecrement(int i) {
+        while (true) {
+            long current = get(i);
+            long next = current - 1;
+            if (compareAndSet(i, current, next))
+                return current;
+        }
+    }
+  
+    /**
+     * Atomically add the given value to element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @param delta the value to add
+     * @return the previous value;
+     */
+    public long getAndAdd(int i, long delta) {
+        while (true) {
+            long current = get(i);
+            long next = current + delta;
+            if (compareAndSet(i, current, next))
+                return current;
+        }
+    }
+  
+
+    /**
      * Atomically increment the element at index <tt>i</tt>.
      *
      * @param i the index

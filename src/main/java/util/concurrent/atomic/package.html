@@ -8,7 +8,7 @@
 A small toolkit of classes that support lock-free thread-safe
 programming on single variables. In essence, the classes in this
 package extend the notion of <tt>volatile</tt> variables to those that
-also provide an atomic update operation of the form:
+also provide an atomic conditional update operation of the form:
 
 <pre>
   boolean compareAndSet(expectedValue, updateValue);
@@ -16,8 +16,8 @@ also provide an atomic update operation of the form:
 
 <p> This method (which varies in argument types across different
 classes) is used to atomically set a variable to the
-<code>updateValue</code> if it currently holds the
-<code>expectedValue</code>, reporting <code>true</code> on success.
+<tt>updateValue</tt> if it currently holds the
+<tt>expectedValue</tt>, reporting <tt>true</tt> on success.
 
 <p> The classes additionally support a weaker version of this
 operation:
@@ -27,11 +27,11 @@ operation:
 </pre>
 
 This method may be more efficient in the normal case, but differs in
-that any given invocation of <code>weakCompareAndSet</code> method may
+that any given invocation of <tt>weakCompareAndSet</tt> method may
 fail, even spuriously (that is, for no apparent reason). A
-<code>false</code> return means only that the operation may be retried
+<tt>false</tt> return means only that the operation may be retried
 if desired, relying on the guarantee that repeated invocation when the
-variable holds <code>expectedValue</code> and no other thread is also
+variable holds <tt>expectedValue</tt> and no other thread is also
 attempting to set the variable will eventually succeed.
 
 <p>The specifications of these methods enable implementations to
@@ -40,20 +40,20 @@ on contemporary processors. However on some platforms, support may
 entail some form of internal locking. Thus the methods are not
 strictly guaranteed to be non-blocking.
 
-<p> Method <code>compareAndSet</code>, along with method
-<code>get</code> that returns current value, minimally suffice for
+<p> Method <tt>compareAndSet</tt>, along with method
+<tt>get</tt> that returns the current value, minimally suffice for
 programming with atomic operations. The classes and methods in this
 package provide a few related operations to form a small toolkit of
 common constructions using atomics.
 
-<p>Instances of classes <code>AtomicBoolean</code>,
-<code>AtomicInteger</code>, <code>AtomicLong</code>, and
-<code>AtomicReference</code> each provide access and updates to a
+<p>Instances of classes <tt>AtomicBoolean</tt>,
+<tt>AtomicInteger</tt>, <tt>AtomicLong</tt>, and
+<tt>AtomicReference</tt> each provide access and updates to a
 single variable of the corresponding type.  The memory effects for
 accesses and updates are exactly the same as those of
-<code>volatile</code> fields.  Each class also provides appropriate
-utility methods for that type.  For example, <code>AtomicLong</code>
-and <code>AtomicInt</code> provide an atomic increment method.  One
+<tt>volatile</tt> fields.  Each class also provides appropriate
+utility methods for that type.  For example, <tt>AtomicLong</tt>
+and <tt>AtomicInt</tt> provide atomic increment methods.  One
 application is to generate sequence numbers, as in:
 
 <pre>
@@ -65,16 +65,18 @@ class Sequencer {
 
 <p>In addition to classes representing single values, this package
 also contains <em>Updater</em> classes that can be used to obtain
-<tt>compareAndSet</tt> operations on any selected volatile field of
-any selected class.  <code>AtomicReferenceFieldUpdater</code>,
-<code>AtomicIntegerFieldUpdater</code>, and
-<code>AtomicLongFieldUpdater</code> are reflection-based utilities
+<tt>compareAndSet</tt> operations on any selected <tt>volatile</tt>
+field of any selected class.
+<tt>AtomicReferenceFieldUpdater</tt>,
+<tt>AtomicIntegerFieldUpdater</tt>, and
+<tt>AtomicLongFieldUpdater</tt> are reflection-based utilities
 that provide access to the associated field types. These are mainly of
-use in atomic data structures in which several reference fields of the
-same node (for example, the links of a tree node) are independently
-subject to atomic updates. These classes enable greater flexibility in
-how and when to use atomic updates, at the expense of more awkward
-reflection-based setup, less convenient usage, and weaker guarantees.
+use in atomic data structures in which several <tt>volatile</tt>
+reference fields of the same node (for example, the links of a tree
+node) are independently subject to atomic updates. These classes
+enable greater flexibility in how and when to use atomic updates, at
+the expense of more awkward reflection-based setup, less convenient
+usage, and weaker guarantees.
 
 <p>The <tt>AtomicIntegerArray</tt>, <tt>AtomicLongArray</tt>, and
 <tt>AtomicReferenceArray</tt> classes further extend atomic operation
@@ -84,31 +86,30 @@ which is not otherwise supported for ordinary Java arrays.
 
 <p>Atomic references find use in constructions that require additional
 utility classes, not utility methods.  The
-<code>AtomicMarkableReference</code> class associates a single boolean
+<tt>AtomicMarkableReference</tt> class associates a single boolean
 with a reference. For example, this bit might be used inside a data
 structure to mean that the object being referenced has logically been
-deleted. The <code>AtomicStampedReference</code> class associates an
+deleted. The <tt>AtomicStampedReference</tt> class associates an
 integer value with a reference. This may be used for example, to
 represent version numbers corresponding to series of updates.
-Finally,
 
 <p> Atomics are not used very often in application-level classes.
 They are designed primarily as building blocks for implementing
 non-blocking data structures and related infrastructure classes.  The
-<code>compareAndSet</code> method is not a general replacement for
+<tt>compareAndSet</tt> method is not a general replacement for
 locking. It applies only when critical updates for an object are
 confined to a <em>single</em> variable.  And atomic classes are not
-general purpose replacements for <code>java.lang.Integer</code>,
-<code>java.lang.Boolean</code> and related classes. They do
-<em>NOT</em> define methods such as <code>hashCode</code> and
-<code>compareTo</code>. (Because atomic variables are expected to be
+general purpose replacements for <tt>java.lang.Integer</tt>,
+<tt>java.lang.Boolean</tt> and related classes. They do
+<em>NOT</em> define methods such as <tt>hashCode</tt> and
+<tt>compareTo</tt>. (Because atomic variables are expected to be
 mutated, they are poor choices for hash table keys.)  Additionally,
 classes are provided only for those types that are commonly useful as
 atomics. For example, there is no atomic class for representing
-<code>byte</code>. In those infrequent cases where you would like to
-do so, you can use an <code>AtomicInteger</code> to hold
-<code>byte</code> values, and cast appropriately. Similarly, you can
-hold floating point types using <code>Float.floatToIntBits</code> and
-<code>Float.intBitstoFloat</code> conversions.
+<tt>byte</tt>. In those infrequent cases where you would like to
+do so, you can use an <tt>AtomicInteger</tt> to hold
+<tt>byte</tt> values, and cast appropriately. Similarly, you can
+hold floating point types using <tt>Float.floatToIntBits</tt> and
+<tt>Float.intBitstoFloat</tt> conversions.
 
 </body> </html>

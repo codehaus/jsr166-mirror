@@ -116,7 +116,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     }
 
     /**
-     * Atomically increment the current value.
+     * Atomically increment by one the current value.
      * @param obj An object whose field to get and set
      * @return the previous value;
      */
@@ -131,7 +131,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 
 
     /**
-     * Atomically decrement the current value.
+     * Atomically decrement by one the current value.
      * @param obj An object whose field to get and set
      * @return the previous value;
      */
@@ -161,7 +161,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     }
 
     /**
-     * Atomically increment the current value.
+     * Atomically increment by one the current value.
      * @param obj An object whose field to get and set
      * @return the updated value;
      */
@@ -176,7 +176,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 
 
     /**
-     * Atomically decrement the current value.
+     * Atomically decrement by one the current value.
      * @param obj An object whose field to get and set
      * @return the updated value;
      */

@@ -109,7 +109,54 @@ public final class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically increment the element at index <tt>i</tt>.
+     * Atomically increment by one the element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @return the previous value;
+     */
+    public int getAndincrement(int i) {
+        while (true) {
+            int current = get(i);
+            int next = current + 1;
+            if (compareAndSet(i, current, next))
+                return current;
+        }
+    }
+  
+    /**
+     * Atomically decrement by one the element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @return the previous value;
+     */
+    public int getAndDecrement(int i) {
+        while (true) {
+            int current = get(i);
+            int next = current - 1;
+            if (compareAndSet(i, current, next))
+                return current;
+        }
+    }
+  
+    /**
+     * Atomically add the given value to element at index <tt>i</tt>.
+     *
+     * @param i the index
+     * @param delta the value to add
+     * @return the previous value;
+     */
+    public int getAndAdd(int i, int delta) {
+        while (true) {
+            int current = get(i);
+            int next = current + delta;
+            if (compareAndSet(i, current, next))
+                return current;
+        }
+    }
+  
+
+    /**
+     * Atomically increment by one the element at index <tt>i</tt>.
      *
      * @param i the index
      * @return the updated value;
@@ -124,7 +171,7 @@ public final class AtomicIntegerArray implements java.io.Serializable {
     }
   
     /**
-     * Atomically decrement the element at index <tt>i</tt>.
+     * Atomically decrement by one the element at index <tt>i</tt>.
      *
      * @param i the index
      * @return the updated value;
@@ -154,5 +201,6 @@ public final class AtomicIntegerArray implements java.io.Serializable {
         }
     }
   
+
 
 }

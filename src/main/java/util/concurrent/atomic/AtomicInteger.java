@@ -37,6 +37,12 @@ public final class AtomicInteger implements java.io.Serializable {
     }
 
     /**
+     * Create a new AtomicInteger with initial value <tt>0</tt>.
+     */
+    public AtomicInteger() {
+    }
+
+    /**
      * Get the current value.
      *
      * @return the current value
@@ -95,8 +101,8 @@ public final class AtomicInteger implements java.io.Serializable {
 
 
     /**
-     * Atomically increment the current value.
-     * @return the previous value;
+     * Atomically increment by one the current value.
+     * @return the previous value
      */
     public int getAndIncrement() {
         for (;;) {
@@ -109,8 +115,8 @@ public final class AtomicInteger implements java.io.Serializable {
   
   
     /**
-     * Atomically decrement the current value.
-     * @return the previous value;
+     * Atomically decrement by one the current value.
+     * @return the previous value
      */
     public int getAndDecrement() {
         for (;;) {
@@ -125,7 +131,7 @@ public final class AtomicInteger implements java.io.Serializable {
     /**
      * Atomically add the given value to current value.
      * @param delta the value to add
-     * @return the previous value;
+     * @return the previous value
      */
     public int getAndAdd(int delta) {
         for (;;) {
@@ -137,8 +143,8 @@ public final class AtomicInteger implements java.io.Serializable {
     }
 
     /**
-     * Atomically increment the current value.
-     * @return the updated value;
+     * Atomically increment by one the current value.
+     * @return the updated value
      */
     public int incrementAndGet() {
         for (;;) {
@@ -150,8 +156,8 @@ public final class AtomicInteger implements java.io.Serializable {
     }
     
     /**
-     * Atomically decrement the current value.
-     * @return the updated value;
+     * Atomically decrement by one the current value.
+     * @return the updated value
      */
     public int decrementAndGet() {
         for (;;) {
@@ -166,7 +172,7 @@ public final class AtomicInteger implements java.io.Serializable {
     /**
      * Atomically add the given value to current value.
      * @param delta the value to add
-     * @return the updated value;
+     * @return the updated value
      */
     public int addAndGet(int delta) {
         for (;;) {

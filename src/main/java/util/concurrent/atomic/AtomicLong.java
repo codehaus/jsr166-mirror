@@ -34,6 +34,12 @@ public final class AtomicLong implements java.io.Serializable {
     public AtomicLong(long initialValue) {
         value = initialValue;
     }
+
+    /**
+     * Create a new AtomicLong with initial value <tt>0</tt>.
+     */
+    public AtomicLong() {
+    }
   
     /**
      * Get the current value.
@@ -50,11 +56,7 @@ public final class AtomicLong implements java.io.Serializable {
      * @param newValue the new value
      */
     public void set(long newValue) {
-        // We must use CAS here for longs in case we are
-        // dealing with machine without native wide CAS, in which case
-        // it is simulated, but cannot deal with unsynchronized stores.
-        while (!compareAndSet(get(), newValue)) 
-            ;
+        value = newValue;
     }
   
     /**
@@ -70,8 +72,6 @@ public final class AtomicLong implements java.io.Serializable {
                 return current;
         }
     }
-  
-  
   
     /**
      * Atomically set the value to the given updated value
@@ -98,8 +98,8 @@ public final class AtomicLong implements java.io.Serializable {
     }
   
     /**
-     * Atomically increment the current value.
-     * @return the previous value;
+     * Atomically increment by one the current value.
+     * @return the previous value
      */
     public long getAndIncrement() {
         while (true) {
@@ -112,8 +112,8 @@ public final class AtomicLong implements java.io.Serializable {
   
   
     /**
-     * Atomically decrement the current value.
-     * @return the previous value;
+     * Atomically decrement by one the current value.
+     * @return the previous value
      */
     public long getAndDecrement() {
         while (true) {
@@ -128,7 +128,7 @@ public final class AtomicLong implements java.io.Serializable {
     /**
      * Atomically add the given value to current value.
      * @param delta the value to add
-     * @return the previous value;
+     * @return the previous value
      */
     public long getAndAdd(long delta) {
         while (true) {
@@ -140,8 +140,8 @@ public final class AtomicLong implements java.io.Serializable {
     }
   
     /**
-     * Atomically increment the current value.
-     * @return the updated value;
+     * Atomically increment by one the current value.
+     * @return the updated value
      */
     public long incrementAndGet() {
         for (;;) {
@@ -153,8 +153,8 @@ public final class AtomicLong implements java.io.Serializable {
     }
     
     /**
-     * Atomically decrement the current value.
-     * @return the updated value;
+     * Atomically decrement by one the current value.
+     * @return the updated value
      */
     public long decrementAndGet() {
         for (;;) {
@@ -169,7 +169,7 @@ public final class AtomicLong implements java.io.Serializable {
     /**
      * Atomically add the given value to current value.
      * @param delta the value to add
-     * @return the updated value;
+     * @return the updated value
      */
     public long addAndGet(long delta) {
         for (;;) {

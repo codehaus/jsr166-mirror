@@ -10,13 +10,14 @@ package java.util.concurrent.atomic;
  * An <tt>AtomicMarkableReference</tt> maintains an object reference
  * along with a mark bit, that can be updated atomically.
  * <p>
- * Implementation note. This implementation maintains marked references
- * by internally "boxing" [reference, boolean] pairs.
+ * <p> Implementation note. This implementation maintains markable
+ * references by creating internal objects representing "boxed"
+ * [reference, boolean] pairs.
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/31 16:26:57 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/24 23:32:57 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public class AtomicMarkableReference<V>  {
@@ -35,8 +36,8 @@ public class AtomicMarkableReference<V>  {
      * Creates a new <tt>AtomicMarkableReference</tt> with the given
      * initial values.
      *
-     * @param initialRef the intial reference
-     * @param initialMark the intial mark
+     * @param initialRef the initial reference
+     * @param initialMark the initial mark
      */
     public AtomicMarkableReference(V initialRef, boolean initialMark) {
         atomicRef = new AtomicReference<ReferenceBooleanPair> (new ReferenceBooleanPair(initialRef, initialMark));
@@ -83,6 +84,31 @@ public class AtomicMarkableReference<V>  {
      * <code>false</code>) spuriously, but repeated invocation when
      * the current value holds the expected value and no other thread
      * is also attempting to set the value will eventually succeed.
+     *
+     * @param expectedReference the expected value of the reference
+     * @param newReference the new value for the reference
+     * @param expectedMark the expected value of the mark
+     * @param newMark the new value for the mark
+     * @return true if successful
+     */
+    public boolean weakCompareAndSet(V       expectedReference,
+                                     V       newReference,
+                                     boolean expectedMark,
+                                     boolean newMark) {
+        ReferenceBooleanPair current = atomicRef.get();
+        return  expectedReference == current.reference &&
+            expectedMark == current.bit &&
+            ((newReference == current.reference && newMark == current.bit) ||
+             atomicRef.weakCompareAndSet(current,
+                                     new ReferenceBooleanPair(newReference,
+                                                              newMark)));
+    }
+
+    /**
+     * Atomically sets the value of both the reference and mark
+     * to the given update values if the
+     * current reference is <code>==</code> to the expected reference
+     * and the current mark is equal to the expected mark.  
      *
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference

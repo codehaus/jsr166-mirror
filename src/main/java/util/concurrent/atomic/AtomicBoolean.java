@@ -14,8 +14,8 @@ import sun.misc.Unsafe;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/08 20:05:07 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/24 23:32:57 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public class AtomicBoolean implements java.io.Serializable {
@@ -39,6 +39,12 @@ public class AtomicBoolean implements java.io.Serializable {
      */
     public AtomicBoolean(boolean initialValue) {
         value = initialValue ? 1 : 0;
+    }
+
+    /**
+     * Creates a new <tt>AtomicBoolean</tt> with initial value <tt>false</tt>.
+     */
+    public AtomicBoolean() {
     }
 
     /**

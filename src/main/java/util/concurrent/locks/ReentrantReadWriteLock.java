@@ -112,7 +112,7 @@ import java.util.concurrent.*;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/07/09 23:23:22 $
+ * @revised $Date: 2003/07/11 13:12:45 $
  * @editor $Author: dl $
  * @author Doug Lea
  *
@@ -128,11 +128,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Main lock.  Writers acquire on entry, and hold until release.
      * Reentrant acquires on write lock are allowed.  Readers acquire
      * and release only during entry, but are blocked from doing so if
-     * there is an active writer. RRWLock is a simple ReentrantLock
-     * subclass defined below that surrounds WriteLock condition waits
-     * with bookeeping to save and restore writer state.
+     * there is an active writer. 
      **/
-    private final RRWLock entryLock;
+    private final ReentrantLock entryLock;
 
     /** 
      * Number of threads that have entered read lock.  This is never
@@ -154,11 +152,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     private transient int exreaders;
 
     /**
-     * Flag set while writing. Needed by ReaderLock.tryLock to
-     * distinguish contention from unavailability. Accessed
-     * in ways that do not require being volatile.
+     * Boolean set to true when a writer is waiting to enter.
+     * Needed only by ReaderLock.tryLock 
      */
-    private transient boolean writing;
+    private transient volatile boolean waitingWriter;
 
     /**
      * Lock used by exiting readers and entering writers
@@ -202,13 +199,15 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     private void writerEnter() throws InterruptedException {
         writeCheckLock.lock();
         try {
-            while (exreaders != readers) 
+            while (exreaders != readers) {
+                waitingWriter = true;
                 writeEnabled.await();
+                waitingWriter = false;
+            }
         }
         finally {
             writeCheckLock.unlock();
         }
-
     }
 
     /**
@@ -239,7 +238,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             while (exreaders != readers) {
                 if (nanos <= 0) 
                     return false;
+                waitingWriter = true;
                 nanos = writeEnabled.awaitNanos(nanos);
+                waitingWriter = false;
             }
             return true;
         }
@@ -253,9 +254,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * default ordering properties.
      */
     public ReentrantReadWriteLock() {
-        entryLock = new RRWLock();
+        entryLock = new ReentrantLock();
     }
-
 
     /**
      * Creates a new <tt>ReentrantReadWriteLock</tt> with
@@ -263,7 +263,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * @param fair true if this lock should use a fair ordering policy
      */
     public ReentrantReadWriteLock(boolean fair) {
-        entryLock = new RRWLock(fair);
+        entryLock = new ReentrantLock(fair);
     }
 
     /** Inner class providing readlock */
@@ -303,7 +303,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         public  boolean tryLock() {
             // if we fail entry lock just due to contention, try again.
             while (!entryLock.tryLock()) {
-                if (writing)
+                // fail if a writer present
+                if (exreaders == readers || waitingWriter)
                     return false;
                 else
                     Thread.yield();
@@ -344,10 +345,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     private class WriterLock implements Lock  {
         public void lock() {
             entryLock.lock();
-            writing = true;
-            if (entryLock.getHoldCount() > 1)  // skip if held reentrantly
-                return;
-
             boolean wasInterrupted = false;
             for (;;) {
                 try {
@@ -365,15 +362,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         public void lockInterruptibly() throws InterruptedException {
             entryLock.lockInterruptibly();
-            writing = true;
-            if (entryLock.getHoldCount() > 1) // skip if held reentrantly
-                return;
-            
             try {
                 writerEnter();
             }
             catch (InterruptedException ie) {
-                writing = false;
                 entryLock.unlock();
                 throw ie;
             }
@@ -382,13 +374,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         public boolean tryLock( ) {
             if (!entryLock.tryLock())
                 return false;
-            writing = true;
             if (entryLock.getHoldCount() > 1) 
                 return true;
 
             if (!tryWriterEnter()) {
                 entryLock.unlock();
-                writing = false;
                 return false;
             }
             return true;
@@ -399,7 +389,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             long nanos = unit.toNanos(time);
             if (!entryLock.tryLock(nanos, TimeUnit.NANOSECONDS)) 
                 return false;
-            writing = true;
             if (entryLock.getHoldCount() > 1) 
                 return true;
             
@@ -407,12 +396,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             try {
                 if (!tryWriterEnter(nanos)) {
                     entryLock.unlock();
-                    writing = false;
                     return false;
                 }
             }
             catch (InterruptedException ie) {
-                writing = false;
                 entryLock.unlock();
                 
                 throw ie;
@@ -421,10 +408,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
         
         public void unlock() {
-            // must perform owner check before clearing "writing"
-            if (!entryLock.isHeldByCurrentThread())
-                throw new IllegalMonitorStateException();
-            writing = false;
             entryLock.unlock();
         }
 
@@ -432,37 +415,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return entryLock.newCondition();
         }
         
-    }
-
-    /**
-     * Subclass of ReentrantLock to adjust fields on entry and exit to
-     * condition waits.
-     */
-    private class RRWLock extends ReentrantLock {
-        RRWLock() {}
-        RRWLock(boolean fair) { super(fair); }
-        
-        void beforeWait() {
-            writing = false;
-        }
-
-        void afterWait() {
-            writing = true;
-            // same as lock, except never bypass writerEnter.
-            boolean wasInterrupted = false;
-            for (;;) {
-                try {
-                    writerEnter();
-                    break;
-                }
-                catch (InterruptedException ie) {
-                    wasInterrupted = true;
-                }
-            }
-            if (wasInterrupted) {
-                Thread.currentThread().interrupt();
-            }
-        }
     }
 
 }

@@ -809,6 +809,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     }
 
     /**
+     * Return true if this lock has fairness set true.
+     * @return true if this lock has fairness set true.
+     */
+    public boolean isFair() {
+        return fair;
+    }
+
+    /**
      * Queries the number of holds on this lock by the current thread.
      * <p>A thread has a hold on a lock for each lock action that is not 
      * matched by an unlock action.
@@ -978,7 +986,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                                LockNode node, 
                                int recs,
                                int interrupts) {
-        waitForLock(current, node, 0);
+        waitForLock(current, node, interrupts);
         recursions = recs;
     }
 
@@ -1657,14 +1665,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             }
             return list;
         }
-    }
-
-    /**
-     * Return true if this lock has fairness set true.
-     * @return true if this lock has fairness set true.
-     */
-    public boolean isFair() {
-        return fair;
     }
 
     /**

@@ -207,7 +207,7 @@ public class Timer {
 
     /**
      * Creates a new timer whose associated thread may be specified to 
-     * run as a daemon.  A deamon thread is called for if the timer will
+     * run as a daemon.  A daemon thread is called for if the timer will
      * be used to schedule repeating "maintenance activities", which must
      * be performed as long as the application is running, but should not
      * prolong the lifetime of the application.
@@ -464,7 +464,7 @@ public class Timer {
     }
 
     /**
-     * Schedule the specifed timer task for execution at the specified
+     * Schedule the specified timer task for execution at the specified
      * time with the specified period, in milliseconds.  If period is
      * positive, the task is scheduled for repeated execution; if period is
      * zero, the task is scheduled for one-time execution. Time is specified
@@ -587,7 +587,7 @@ class TimerThread extends Thread {
         try {
             mainLoop();
         } finally {
-            // Somone killed this Thread, behave as if Timer cancelled
+            // Someone killed this Thread, behave as if Timer cancelled
             synchronized(queue) {
                 newTasksMayBeScheduled = false;
                 queue.clear();  // Eliminate obsolete references

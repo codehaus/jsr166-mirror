@@ -7,11 +7,11 @@
 package java.util.concurrent;
 
 /**
- * An asynchronous task that returns a result and may throw an exception.
- * Implementors define a single method of no arguments called <tt>call</tt>.
+ * An inteface for describing an asynchronous task that returns a result and may throw an exception.
+ * Implementors define a single method with no arguments called <tt>call</tt>.
  *
  * <p>The <tt>Callable</tt> interface is similar to {@link Runnable}, in that
- * both are designed for classes whose instances are executed by a thread.
+ * both are designed for classes whose instances are potentially executed by another thread.
  * A <tt>Runnable</tt>, however, does not return a result and cannot throw a
  * checked exception.
  *
@@ -22,8 +22,8 @@ package java.util.concurrent;
  * @see FutureTask
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:39 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/23 02:26:16 $
+ * @editor $Author: brian $
  */
 public interface Callable<V> {
     /**

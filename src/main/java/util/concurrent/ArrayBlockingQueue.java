@@ -8,12 +8,18 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A bounded blocking queue based on an array.  The implementation is
+ * A bounded blocking queue backed by an array.  The implementation is
  * a classic "bounded buffer", in which a fixed-sized array holds
- * elements inserted by propducers and extracted by
- * consumers. Array-based queues typically have more predictable
+ * elements inserted by producers and extracted by
+ * consumers.  Once created, the capacity can not be increased.
+ * Array-based queues typically have more predictable
  * performance than linked queues but lower throughput in most
  * concurrent applications.
+ *
+ * Attempts to offer an element to a full queue will result
+ * in the offer operation blocking; attempts to retrieve an element from
+ * an empty queue will similarly block.  Threads blocked on an insertion or
+ * removal will be services in FIFO order.
  **/
 public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
@@ -134,6 +140,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         putIndex = count = n;
     }
 
+    /** Return the number of elements currently in the queue */
     public int size() {
         lock.lock();
         try {
@@ -144,6 +151,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /** Return the remaining capacity of the queue, which is the
+     * number of elements that can be inserted before the queue is
+     * full. */
     public int remainingCapacity() {
         lock.lock();
         try {
@@ -153,8 +163,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-        
 
+
+    /** Insert a new element into the queue, blocking if the queue is full. */
     public void put(E x) throws InterruptedException {
         if (x == null) throw new IllegalArgumentException();
         lock.lockInterruptibly();
@@ -175,6 +186,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /** Remove and return the first element from the queue, blocking
+     * is the queue is empty. */
     public E take() throws InterruptedException {
         lock.lockInterruptibly();
         try {
@@ -195,6 +208,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+   /** Attempt to insert a new element into the queue, but return
+    * immediately without inserting the element if the queue is full.
+    * @return <tt>true</tt> if the element was inserted successfully, <tt>false</tt> otherwise
+    */
     public boolean offer(E x) {
         if (x == null) throw new IllegalArgumentException();
         lock.lock();
@@ -212,6 +229,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /** Attempt to retrieve the first insert element from the queue,
+     * but return immediately if the queue is empty.
+     * @return The first element of the queue if the queue is not empty, or <tt>null</tt> otherwise.
+     */
     public E poll() {
         lock.lock();
         try {
@@ -226,6 +247,17 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /** Attempt to insert a new element into the queue.  If the queue
+     * is full, wait up to the specified amount of time before giving
+     * up.
+     * @param x the element to be inserted
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a TimeUnit determining how to interpret the timeout
+     * parameter
+     * @return <tt>true</tt> if the element was inserted successfully,
+     * <tt>false</tt> otherwise
+     */
     public boolean offer(E x, long timeout, TimeUnit unit) throws InterruptedException {
         if (x == null) throw new IllegalArgumentException();
         lock.lockInterruptibly();
@@ -253,6 +285,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Attempt to retrieve the first insert element from the queue.
+     * If the queue is empty, wait up to the specified amount of time
+     * before giving up.
+     * @param timeout how long to wait before giving up, in units of
+     * <tt>unit</tt>
+     * @param unit a TimeUnit determining how to interpret the timeout
+     * parameter
+     * @return The first element of the queue if an item was
+     * successfully retrieved, or <tt>null</tt> otherwise.
+     *
+     */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         lock.lockInterruptibly();
         long nanos = unit.toNanos(timeout);
@@ -280,7 +324,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-        
+    /** Return, but do not remove, the first element from the queue,
+     * if the queue is not empty.  This will return the same result as
+     * <tt>poll</tt>, but will not remove it from the queue.
+     * @return The first element of the queue if the queue is not
+     * empty, or <tt>null</tt> otherwise.
+     */
     public E peek() {
         lock.lock();
         try {
@@ -290,8 +339,24 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-    
-    
+
+
+    /**
+     * Removes one occurrence in this list of the specified element.
+     * If this list does not contain the element, it is
+     * unchanged.  More formally, removes an element
+     * such that <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt> (if
+     * such an element exists).
+     *
+     * @param o element to be removed from this list, if present.
+     * @return <tt>true</tt> if this list contained the specified element.
+     * @throws ClassCastException if the type of the specified element
+     * 	          is incompatible with this list (optional).
+     * @throws NullPointerException if the specified element is null and this
+     *            list does not support null elements (optional).
+     * @throws UnsupportedOperationException if the <tt>remove</tt> method is
+     *		  not supported by this list.
+     */
     public boolean remove(Object x) {
         lock.lock();
         try {
@@ -312,8 +377,21 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-    
-    
+
+
+    /**
+     * Returns <tt>true</tt> if this list contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this list contains
+     * at least one element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     *
+     * @param o element whose presence in this list is to be tested.
+     * @return <tt>true</tt> if this list contains the specified element.
+     * @throws ClassCastException if the type of the specified element
+     * 	       is incompatible with this list (optional).
+     * @throws NullPointerException if the specified element is null and this
+     *         list does not support null elements (optional).
+     */
     public boolean contains(Object x) {
         lock.lock();
         try {
@@ -330,7 +408,16 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-    
+
+    /**
+     * Returns an array containing all of the elements in the queue in proper
+     * sequence.  Obeys the general contract of the
+     * <tt>Collection.toArray</tt> method.
+     *
+     * @return an array containing all of the elements in this list in proper
+     *	       sequence.
+     * @see Arrays#asList(Object[])
+     */
     public Object[] toArray() {
         lock.lock();
         try {
@@ -347,7 +434,23 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-    
+
+    /**
+     * Returns an array containing all of the elements in this queue in proper
+     * sequence; the runtime type of the returned array is that of the
+     * specified array.  Obeys the general contract of the
+     * <tt>Collection.toArray(Object[])</tt> method.
+     *
+     * @param a the array into which the elements of this list are to
+     *		be stored, if it is big enough; otherwise, a new array of the
+     * 		same runtime type is allocated for this purpose.
+     * @return  an array containing the elements of this list.
+     *
+     * @throws ArrayStoreException if the runtime type of the specified array
+     * 		  is not a supertype of the runtime type of every element in
+     * 		  this list.
+     * @throws NullPointerException if the specified array is <tt>null</tt>.
+     */
     public <T> T[] toArray(T[] a) {
         lock.lock();
         try {
@@ -379,6 +482,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
     
+    /**
+     * Returns an iterator over the elements in this queue in proper sequence.
+     *
+     * @return an iterator over the elements in this queue in proper sequence.
+     */
     public Iterator<E> iterator() {
         lock.lock();
         try {

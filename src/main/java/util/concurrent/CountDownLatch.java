@@ -7,9 +7,8 @@
 package java.util.concurrent;
 
 /**
- * A synchronization aid that allows a set of threads to wait until
- * the actions of another set of threads allow the first set to
- * proceed.
+ * A synchronization aid that allows one or more threads to wait until
+ * a set of operations being performed in other threads completes.
  *
  * <p>A <tt>CountDownLatch</tt> is initialized with a given
  * <em>count</em>.  The {@link #await} methods block until the current
@@ -22,13 +21,15 @@ package java.util.concurrent;
  *
  * <p>A <tt>CountDownLatch</tt> is a versatile synchronization tool
  * and can be used for a number of purposes. 
- * A <tt>CountDownLatch</tt> initialized to one serves as a simple on/off 
+ * A <tt>CountDownLatch</tt> initialized with a count of one serves as a simple on/off
  * latch, or gate: all threads invoking {@link #await} wait at the gate until
  * it is opened by a thread invoking {@link #countDown}.
  * A <tt>CountDownLatch</tt> initialized to <em>N</em> can be used to make 
- * one thread wait until <em>N</em> threads have completed some action.
- * A useful property of a <tt>CountDownLatch</tt> is that it doesn't
- * require that all threads wait before any can proceed, it simply
+ * one thread wait until <em>N</em> threads have completed some action, or some
+ * action has been completed N times.
+ * <p>A useful property of a <tt>CountDownLatch</tt> is that it doesn't
+ * require that threads calling <tt>countDown</tt> wait for the count to reach zero
+ * before proceeding, it simply
  * prevents any thread from proceeding past the {@link #await wait} until
  * all threads could pass.
  *
@@ -78,10 +79,48 @@ package java.util.concurrent;
  *
  * </pre>
  *
+ * <p>Another typical usage would be to divide a problem into N parts, describe each part
+ * with a Runnable that executes that portion and counts down on the latch, and queue all
+ * the Runnables to an Executor.  When all sub-parts are complete, the coordinating thread
+ * will be able to pass through await.
+ *
+ * <pre>
+ * class Driver2 { // ...
+ *   void main() throws InterruptedException {
+ *     CountDownLatch doneSignal = new CountDownLatch(N);
+ *     Executor e = ...
+ *
+ *     for (int i = 0; i < N; ++i) // create and start threads
+ *       e.execute(new WorkerRunnable(doneSignal, i));
+ *
+ *     doneSignal.await();           // wait for all to finish
+ *   }
+ * }
+ *
+ * class WorkerRunnable implements Runnable {
+ *   private final CountDownLatch doneSignal;
+ *   private final int i;
+ *   Worker(CountDownLatch doneSignal, int i) {
+ *      this.doneSignal = doneSignal;
+ *      this.i = i;
+ *   }
+ *   public void run() {
+ *      try {
+ *        doWork(i);
+ *        doneSignal.countDown();
+ *      }
+ *      catch (InterruptedException ex) {} // return;
+ *   }
+ *
+ *   void doWork() { ... }
+ * }
+ *
+ * </pre>
+ *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/07 18:20:20 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/23 02:26:16 $
+ * @editor $Author: brian $
  */
 public class CountDownLatch {
     private final ReentrantLock lock = new ReentrantLock();

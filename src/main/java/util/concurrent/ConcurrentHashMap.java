@@ -38,7 +38,7 @@ import java.io.ObjectOutputStream;
  *
  * <p> The allowed concurrency among update operations is controlled
  * by the optional <tt>segments</tt> constructor argument (default
- * 16). The table is divided into this many independent parts; each of
+ * 16). The table is divided into this many independent parts, each of
  * which can be updated concurrently. Because placement in hash tables
  * is essentially random, the actual concurrency will vary. As a rough
  * rule of thumb, you should choose at least as many segments as you

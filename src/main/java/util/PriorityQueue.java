@@ -2,26 +2,26 @@
 
 /**
  * An unbounded priority queue based on a priority heap.  This queue orders
- * elements according to the order specified at creation time.  This order is
- * specified as for {@link TreeSet} and {@link TreeMap}: Elements are ordered
+ * elements according to an order specified at construction time, which is
+ * specified in the same manner as {@link TreeSet} and {@link TreeMap}: elements are ordered
  * either according to their <i>natural order</i> (see {@link Comparable}), or
  * according to a {@link Comparator}, depending on which constructor is used.
  * The {@link #peek}, {@link #poll}, and {@link #remove} methods return the
  * minimal element with respect to the specified ordering.  If multiple
- * these elements are tied for least value, no guarantees are made as to
- * which of elements is returned.
+ * elements are tied for least value, no guarantees are made as to
+ * which of these elements is returned.
  *
- * <p>Each priority queue has a <i>capacity</i>.  The capacity is the size of
- * the array used to store the elements on the queue.  It is always at least
- * as large as the queue size.  As elements are added to a priority list,
+ * <p>A priority queue has a <i>capacity</i>.  The capacity is the size of
+ * the array used internally to store the elements on the queue.  It is always at least
+ * as large as the queue size.  As elements are added to a priority queue,
  * its capacity grows automatically.  The details of the growth policy are not
  * specified.
  *
  *<p>Implementation note: this implementation provides O(log(n)) time for
- * the <tt>offer</tt>, <tt>poll</tt>, <tt>remove()</tt> and <tt>add</tt>
+ * the insertion methods (<tt>offer</tt>, <tt>poll</tt>, <tt>remove()</tt> and <tt>add</tt>)
  * methods; linear time for the <tt>remove(Object)</tt> and
- * <tt>contains</tt> methods; and constant time for the <tt>peek</tt>,
- * <tt>element</tt>, and <tt>size</tt> methods.
+ * <tt>contains(Object)</tt> methods; and constant time for the retrieval methods (<tt>peek</tt>,
+ * <tt>element</tt>, and <tt>size</tt>).
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -36,12 +36,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * Priority queue represented as a balanced binary heap: the two children
      * of queue[n] are queue[2*n] and queue[2*n + 1].  The priority queue is
      * ordered by comparator, or by the elements' natural ordering, if
-     * comparator is null:  For each node n in the heap, and each descendant
-     * of n, d, n <= d.
+     * comparator is null:  For each node n in the heap and each descendant d
+     * of n, n <= d.
      *
-     * The element with the lowest value is in queue[1] (assuming the queue is
-     * nonempty). A one-based array is used in preference to the traditional
-     * zero-based array to simplify parent and child calculations.
+     * The element with the lowest value is in queue[1], assuming the queue is
+     * nonempty.  (A one-based array is used in preference to the traditional
+     * zero-based array to simplify parent and child calculations.)
      *
      * queue.length must be >= 2, even if size == 0.
      */
@@ -66,7 +66,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Create a new priority queue with the default initial capacity (11)
-     * that orders its elements according to their natural ordering.
+     * that orders its elements according to their natural ordering (using <tt>Comparable</tt>.)
      */
     public PriorityQueue() {
         this(DEFAULT_INITIAL_CAPACITY);
@@ -74,7 +74,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Create a new priority queue with the specified initial capacity
-     * that orders its elements according to their natural ordering.
+     * that orders its elements according to their natural ordering (using <tt>Comparable</tt>.)
      *
      * @param initialCapacity the initial capacity for this priority queue.
      */
@@ -103,8 +103,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * implements the {@link Sorted} interface, the priority queue will be
      * sorted according to the same comparator, or according to its elements'
      * natural order if the collection is sorted according to its elements'
-     * natural order.  If the specified collection does not implement the
-     * <tt>Sorted</tt> interface, the priority queue is ordered according to
+     * natural order.  If the specified collection does not implement
+     * <tt>Sorted</tt>, the priority queue is ordered according to
      * its elements' natural order.
      *
      * @param initialElements the collection whose elements are to be placed
@@ -142,7 +142,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Remove and return the minimal element from this priority queue if
-     * it contains one or more elements, otherwise <tt>null</tt>.  The term
+     * it contains one or more elements, otherwise return <tt>null</tt>.  The term
      * <i>minimal</i> is defined according to this priority queue's order.
      *
      * @return the minimal element from this priority queue if it contains
@@ -156,7 +156,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Return, but do not remove, the minimal element from the priority queue,
-     * or <tt>null</tt> if the queue is empty.  The term <i>minimal</i> is
+     * or return <tt>null</tt> if the queue is empty.  The term <i>minimal</i> is
      * defined according to this priority queue's order.  This method returns
      * the same object reference that would be returned by by the
      * <tt>poll</tt> method.  The two methods differ in that this method 
@@ -177,7 +177,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * specified element (or equivalently, if this collection changed as a
      * result of the call).
      *
-     * @param o element to be removed from this collection, if present.
+     * @param element the element to be removed from this collection, if present.
      * @return <tt>true</tt> if this collection changed as a result of the
      *         call
      * @throws ClassCastException if the specified element cannot be compared
@@ -209,8 +209,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Returns an iterator over the elements in this priority queue.  The
-     * first element returned by this iterator is the same element that 
-     * would be returned by a call to <tt>peek</tt>.
+     * elements of the priority queue will be returned by this iterator in the
+     * order specified by the queue, which is to say the order they would be
+     * returned by repeated calls to <tt>poll</tt>.
      * 
      * @return an <tt>Iterator</tt> over the elements in this priority queue.
      */

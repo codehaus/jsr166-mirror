@@ -8,9 +8,9 @@ package java.util.concurrent;
 
 /**
  * A synchronization aid that allows a set threads to all wait for
- * each other to reach a common barrier point.  CyckicBarriers are
+ * each other to reach a common barrier point.  CyclicBarriers are
  * useful in programs involving a fixed sized party of threads that
- * must occasionally wait for each other. The barrier is
+ * must occasionally wait for each other. The barrier is called
  * <em>cyclic</em> because it can be re-used after the waiting threads
  * are released.
  *
@@ -20,7 +20,7 @@ package java.util.concurrent;
  * This <em>barrier action</em> is useful
  * for updating shared-state before any of the parties continue.
  * 
- * <p><b>Sample usage:</b> Here is a code sketch of 
+ * <p><b>Sample usage:</b> Here is an example of
  *  using a barrier in a parallel decomposition design:
  * <pre>
  * class Solver {
@@ -97,8 +97,9 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/07 18:20:20 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/23 02:26:16 $
+ * @editor $Author: brian $
+ * @see CountDownLatch
  *
  * @fixme Is the above property actually true in this implementation?
  * @fixme Should we have a timeout version of await()?

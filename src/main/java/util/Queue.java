@@ -10,7 +10,7 @@ package java.util;
  * A Collection designed for holding elements prior to processing.
  * Besides basic {@link Collection} operations, queues provide
  * additional insertion, extraction, and inspection operations.
- *
+0 *
  * <p>Queues typically, but do not necessarily, order elements in a
  * FIFO (first-in-first-out) manner.  Among the exceptions are
  * priority queues, which order elements according to a supplied
@@ -30,7 +30,7 @@ package java.util;
  * Exactly which element is removed from the queue is a function
  * of the queue's ordering policy, which differs from implementation
  * to implementation.  Possible orderings include (but are not limited
- * to) first-in-first-out (FIFO), element priority, and arbitrary.
+ * to) first-in-first-out (FIFO), last-in-first-out (LIFO), element priority, and arbitrary.
  * The <tt>remove()</tt> and <tt>poll()</tt> methods differ only in their
  * behavior when the queue is empty: the <tt>remove()</tt> method throws an
  * exception, while the <tt>poll()</tt> method returns <tt>null</tt>.
@@ -46,8 +46,10 @@ package java.util;
  * extends this interface.
  *
  * <p><tt>Queue</tt> implementations generally do not allow insertion of
- * <tt>null</tt> elements.  Even in the few implementations that permit it,
- * it is a bad idea, as <tt>null</tt> is also used as a special return value
+ * <tt>null</tt> elements, although some implementations, such as
+ * {@link LinkedList}, do not prohibit insertion of <tt>null</tt>.
+ * Even in the implementations that permit it, <tt>null</tt> should not be inserted into
+ * a <tt>Queue</tt>, as <tt>null</tt> is also used as a special return value
  * by the <tt>poll</tt> method to indicate that the queue contains no
  * elements.
  *
@@ -58,7 +60,7 @@ package java.util;
  * @see Collection
  * @see LinkedList
  * @see PriorityQueue
- * @see LinkedQueue
+ * @see java.util.concurrent.LinkedQueue
  * @see java.util.concurrent.BlockingQueue
  * @see java.util.concurrent.ArrayBlockingQueue
  * @see java.util.concurrent.LinkedBlockingQueue

@@ -10,38 +10,37 @@ import java.util.Date;
 /**
  * <tt>Conditions</tt> abstract out the <tt>Object</tt> monitor 
  * methods ({@link Object#wait() wait}, {@link Object#notify notify} and
- * {@link Object#notifyAll notifyAll}) into distinct objects that can be bound 
- * to other objects to give the effect of having multiple wait-sets per
+ * {@link Object#notifyAll notifyAll}) into distinct objects to give the effect of having multiple wait-sets per
  * object monitor. They also generalise the monitor methods to allow them to 
  * be used with arbitrary {@link Lock} implementations when needed.
  *
  * <p>Conditions (also known as condition queues or condition variables) 
  * provide
  * a means for one thread to suspend execution (to &quot;wait&quot;) until
- * notified by another thread that some state-condition the first thread is 
- * waiting for may now be true. Because access to this shared state information
- * occurs in different threads, it must be protected and invariably
- * a lock, of some form, is always associated with the condition. The key
- * property that waiting for a condition provides is that it 
+ * notified by another thread that some state condition may now be true.
+ * Because access to this shared state information
+ * occurs in different threads, it must be protected, and invariably
+ * a lock of some form is associated with the condition. The key
+ * property is that waiting for a condition provides is that it
  * <em>atomically</em> releases the associated lock and suspends the current
- * thread. 
+ * thread, just like <tt>Object.wait</tt>.
  *
- * <p>A <tt>Condition</tt> instance is intrinsically bound to a lock: either
- * the in-built monitor lock of an object, or a {@link Lock} instance.
+ * <p>A <tt>Condition</tt> instance is intrinsically bound to a lock, either
+ * the built-in monitor lock of an object, or a {@link Lock} instance.
  * To obtain a <tt>Condition</tt> instance for a particular object's monitor 
  * lock
  * use the {@link Locks#newConditionFor(Object)} method.
  * To obtain a <tt>Condition</tt> instance for a particular {@link Lock} 
  * instance use its {@link Lock#newCondition} method.
  *
- * <p>As an example, suppose we have a bounded buffer which supports methods
- * to <tt>put</tt> and <tt>take</tt> items in/from the buffer. If a 
- * <tt>take</tt> is attempted on an empty buffer then the thread will block
+ * <p>As an example, suppose we have a bounded buffer which supports
+ * <tt>put</tt> and <tt>take</tt> methods.  If a
+ * <tt>take</tt> is attempted on an empty buffer, then the thread will block
  * until an item becomes available; if a <tt>put</tt> is attempted on a
  * full buffer, then the thread will block until a space becomes available.
  * We would like to keep waiting <tt>put</tt> threads and <tt>take</tt>
  * threads in separate wait-sets so that we can use the optimisation of
- * only notifying a single thread at a time when items, or spaces, become
+ * only notifying a single thread at a time when items or spaces become
  * available in the buffer. This can be achieved using either two 
  * {@link Condition} instances, or one {@link Condition} instance and the 
  * actual
@@ -131,7 +130,7 @@ import java.util.Date;
  * and can have their own monitor {@link Object#wait wait} and
  * {@link Object#notify notification} methods invoked.
  * Acquiring the monitor lock of a <tt>Condition</tt> instance, or using its
- * monitor methods has no specified relationship with acquiring the 
+ * monitor methods, has no specified relationship with acquiring the
  * {@link Lock} associated with that <tt>Condition</tt> or the use of it's
  * {@link #await waiting} and {@link #signal signalling} methods.
  * It is recommended that to avoid confusion you never use <tt>Condition</tt>
@@ -142,12 +141,12 @@ import java.util.Date;
  *
  * <h3>Implementation Considerations</h3>
  *
- * <p>When waiting upon a <tt>Condition</tt> instance a &quot;<em>spurious 
+ * <p>When waiting upon a <tt>Condition</tt>, a &quot;<em>spurious
  * wakeup</em>&quot; is permitted to occur, in 
  * general, as a concession to the underlying platform semantics.
  * This has little practical impact on most application programs as a
  * <tt>Condition</tt> should always be waited upon in a loop, testing
- * the state predicate that is being waited for. An implementation is
+ * the state predicate that is being waited for.  An implementation is
  * free to remove the possibility of spurious wakeups but it is 
  * recommended that applications programmers always assume that they can
  * occur and so always wait in a loop.
@@ -171,8 +170,8 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/05/27 18:14:39 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/23 02:26:16 $
+ * @editor $Author: brian $
  **/
 public interface Condition {
 

@@ -23,13 +23,14 @@ import java.util.*;
  * copy of the underlying array.  <p>
  *
  * This is ordinarily too costly, but it becomes attractive when
- * traversal operations vastly overwhelm mutations, and, especially
+ * traversal operations vastly outnumber mutations, and, especially
  * when you cannot or don't want to synchronize traversals, yet need
  * to preclude interference among concurrent threads.  The iterator
  * method uses a reference to the state of the array at the point that
  * the iterator was created. This array never changes during the
- * lifetime of the iterator, so interference is impossible.  The
- * iterator will not traverse elements added or changed since the
+ * lifetime of the iterator, so interference is impossible and the iterator
+ * is guaranteed not to throw <tt>ConcurrentModificationException</tt>.  The
+ * iterator will not reflect additions, removals, or changes to the List since the
  * iterator was created.
  * <p>
  *

@@ -11,7 +11,7 @@ package java.util;
  * element based on offer, poll, and peek, respectively but that throw
  * exceptions instead of indicating failure via false or null returns.
  * The provided implementations all assume that the base implementation
- * does <em>not</em> allow null elements.
+ * does <em>not</em> allow <tt>null</tt> elements.
  */
  
 public abstract class AbstractQueue<E> extends AbstractCollection<E> implements Queue<E> {

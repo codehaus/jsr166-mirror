@@ -44,8 +44,8 @@ public class CancellableTask implements Cancellable, Runnable {
     private volatile Runnable runnable;
 
     /**
-     * Creates a new CancellableTask invoking the given
-     * runnable when executed.
+     * Creates a new CancellableTask which invokes the given
+     * <tt>Runnable</tt> when executed.
      */
     public CancellableTask(Runnable r) {
         this.runnable = r;

@@ -7,7 +7,7 @@
 package java.util.concurrent;
 
 /**
- * Something (usually a task) that can be cancelled.  Cancellation is
+ * Something, usually a task, that can be cancelled.  Cancellation is
  * performed by the <tt>cancel</tt> method.  Additional methods are
  * provided to determine if the task completed normally or was
  * cancelled.
@@ -15,14 +15,16 @@ package java.util.concurrent;
  * @since 1.5
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/21 12:23:28 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/23 02:26:16 $
+ * @editor $Author: brian $
+ * @see FutureTask
+ * @see Executor
  */
 public interface Cancellable {
 
     /**
-     * Attempts to cancel execution of this task.  This attempt will
-     * fail if the task has already completed or could not be
+     * Attempt to cancel execution of this task.  This attempt will
+     * fail if the task has already completed, already been cancelled, or could not be
      * cancelled for some other reason. If successful, and this task
      * has not started when <tt>cancel</tt> is called, this task will
      * never run.  If the task has already started, then the

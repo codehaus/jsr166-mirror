@@ -64,7 +64,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/08/13 14:13:49 $
+ * @revised $Date: 2003/08/16 00:17:00 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -970,17 +970,20 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 
     /**
-     * Re-acquire lock after a cancelled wait.
+     * Re-acquire lock after a cancelled wait. Return true if thread
+     * was signalled before cancelling.
      */
-    final void relockAfterCancelledWait(Thread current, 
-                                        ReentrantLockQueueNode node, 
-                                        int recs) {
+    final boolean relockAfterCancelledWait(Thread current, 
+                                           ReentrantLockQueueNode node, 
+                                           int recs) {
+        boolean signalled = false;
         /*
          * Try to place node on lock queue.  
          */
         if (releaseStatusUpdater.compareAndSet(node, ON_CONDITION_QUEUE, 0)) 
             enq(node);
         else {
+            signalled = true;
             /*
              * If we lost race to a signal(), then we can't proceed
              * until it finishes placing us on lock queue.  This is
@@ -991,6 +994,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
         waitForLock(current, node, false, 0);
         recursions = recs;
+        return signalled;
     }
 
     private class ReentrantLockConditionObject implements Condition, java.io.Serializable {
@@ -1085,14 +1089,16 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    relockAfterCancelledWait(current, w, recs);
-                    signalAll(); // to conform to likely JSR-133 spec
+                    if (relockAfterCancelledWait(current, w, recs))
+                        signalAll(); // to conform to likely JSR-133 spec
                     throw new InterruptedException();
                 }
                 if (isOnLockQueue(w)) {
                     relockAfterWait(current, w, recs);
-                    if (Thread.interrupted())
+                    if (Thread.interrupted()) {
+                        signalAll(); // to conform to likely JSR-133 spec
                         throw new InterruptedException();
+                    }
                     return;
                 }
                 LockSupport.park();
@@ -1119,29 +1125,36 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 
         public final long awaitNanos(long nanos) throws InterruptedException {
+            if (nanos <= 0) { // don't wait at all.
+                if (Thread.interrupted())
+                    throw new InterruptedException();
+                else
+                    return nanos;
+            }
+
             Thread current = Thread.currentThread();
             ReentrantLockQueueNode w = addWaiter(current);
             int recs = unlockForWait();
-
-            if (nanos <= 0) nanos = 1; // park arg must be positive
             long timeLeft = nanos;
             long startTime = System.nanoTime();
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    relockAfterCancelledWait(current, w, recs);
-                    signalAll(); // to conform to likely JSR-133 spec
+                    if (relockAfterCancelledWait(current, w, recs))
+                        signalAll(); // to conform to likely JSR-133 spec
                     throw new InterruptedException();
                 }
                 if ((timeLeft = nanos - (System.nanoTime()-startTime)) <= 0) {
-                    relockAfterCancelledWait(current, w, recs);
-                    signalAll(); // to conform to likely JSR-133 spec
+                    if (relockAfterCancelledWait(current, w, recs))
+                        signalAll(); // to conform to likely JSR-133 spec
                     return timeLeft;
                 }
                 if (isOnLockQueue(w)) {
                     relockAfterWait(current, w, recs);
-                    if (Thread.interrupted())
+                    if (Thread.interrupted()) {
+                        signalAll(); // to conform to likely JSR-133 spec
                         throw new InterruptedException();
+                    }
                     return nanos - (System.nanoTime() - startTime);
                 }
                 LockSupport.parkNanos(timeLeft);
@@ -1156,19 +1169,21 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
             for (;;) {
                 if (Thread.interrupted()) {
-                    relockAfterCancelledWait(current, w, recs);
-                    signalAll(); // to conform to likely JSR-133 spec
+                    if (relockAfterCancelledWait(current, w, recs))
+                        signalAll(); // to conform to likely JSR-133 spec
                     throw new InterruptedException();
                 }
                 if (System.currentTimeMillis() > abstime) {
-                    relockAfterCancelledWait(current, w, recs);
-                    signalAll(); // to conform to likely JSR-133 spec
+                    if (relockAfterCancelledWait(current, w, recs))
+                        signalAll(); // to conform to likely JSR-133 spec
                     return false;
                 }
                 if (isOnLockQueue(w)) {
                     relockAfterWait(current, w, recs);
-                    if (Thread.interrupted())
+                    if (Thread.interrupted()) {
+                        signalAll(); // to conform to likely JSR-133 spec
                         throw new InterruptedException();
+                    }
                     return true;
                 }
                 LockSupport.parkUntil(abstime);

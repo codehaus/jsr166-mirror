@@ -55,7 +55,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/07 16:06:02 $
+ * @revised $Date: 2003/06/07 17:10:36 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -308,9 +308,9 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
     /**
      * Main locking code, parameterized across different policies.
      * @param current current thread
-     * @param node its wait-node, it is alread exists; else null in
+     * @param node its wait-node, if it already exists; else null in
      * which case it is created,
-     * @param interruptible - true if acan abort for interrupt or timeout
+     * @param interruptible - true if can abort for interrupt or timeout
      * @param nanos time to wait, or zero if untimed
      * @return true if lock acquired (can be false only if interruptible)
      */
@@ -318,9 +318,6 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
                          ReentrantLockQueueNode node, 
                          boolean interruptible,
                          long nanos) {
-
-        boolean interrupted = false;
-
         /*
          * Bypass queueing if a recursive lock
          */
@@ -329,7 +326,8 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
             return true;
         }
 
-        long lastTime = 0; // for adjusting timeouts, below
+        long lastTime = 0;           // for adjusting timeouts, below
+        boolean interrupted = false; // for restoring interrupt status on exit
 
         /*
          * p is our predecessor node, that holds releaseStatus giving
@@ -583,6 +581,7 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
         Thread current = Thread.currentThread();
         if (!canBarge() || !acquireOwner(current))
             doLock(current, null, false, 0);
+
     }
 
     /**
@@ -618,12 +617,10 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      */
     public void lockInterruptibly() throws InterruptedException { 
         Thread current = Thread.currentThread();
-        if (!Thread.interrupted()) {
-            if ((canBarge() && acquireOwner(current)) || 
-                doLock(current, null, true, 0))
-                return;
-        }
-        throw new InterruptedException();
+        if (Thread.interrupted() ||
+            (!canBarge() || !acquireOwner(current)) &&
+            !doLock(current, null, true, 0))
+            throw new InterruptedException();
     }
 
     /**

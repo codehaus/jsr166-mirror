@@ -737,10 +737,12 @@ class Thread implements Runnable {
     /**
      * Interrupts this thread.
      * 
-     * <p> First the {@link #checkAccess() checkAccess} method of this thread
-     * is invoked, which may cause a {@link SecurityException} to be thrown
-     * unless the current thread is interrupting itself, which is always 
-     * permitted.
+     * <p> Unless the current thread is interrupting itself, which is
+     * always permitted, or this thread is not {@link #isAlive alive},
+     * in which case this operation need not have any observable
+     * effect, the {@link #checkAccess() checkAccess} method of this
+     * thread is invoked, which may cause a {@link SecurityException}
+     * to be thrown.
      *
      * <p> If this thread is blocked in an invocation of the {@link
      * Object#wait() wait()}, {@link Object#wait(long) wait(long)}, or {@link
@@ -772,8 +774,14 @@ class Thread implements Runnable {
      * @spec JSR-51
      */
     public void interrupt() {
-	if (this != Thread.currentThread())  // jsr166
-            checkAccess();
+	if (this != Thread.currentThread() && isAlive()) { // jsr166
+            try {
+                checkAccess();
+            } catch (SecurityException ex) {
+                if (isAlive())
+                    throw ex;
+            }
+        }
 	
 	synchronized (blockerLock) {
 	    Interruptible b = blocker;

@@ -26,6 +26,7 @@
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
+  <property name="build.novariance.arg" value=""/>
 
   <!-- Build locations -->
   <property name="build.dir"            location="build"/>
@@ -77,11 +78,12 @@
   </path>
 
   <!-- Flatten bootclasspath prefix into a platform-appropriate string -->
-  <property name="javac.bootclasspath.prefix" refid="javac.bootclasspath.prefix"/>
+  <property name="javac.bootclasspath.prefix"
+           refid="javac.bootclasspath.prefix"/>
 
   <!-- Turn the flattened bootclasspath prefix into a javac argument -->
-  <property name="javac.args" value='-J-Xbootclasspath/p:${javac.bootclasspath.prefix}'/>
-
+  <property name="build.bootclasspath.arg"
+           value='-J-Xbootclasspath/p:${javac.bootclasspath.prefix}'/>
 
 
   <!--
@@ -99,7 +101,8 @@
   <property name="test.classpath" refid="test.classpath"/>
 
   <!-- Turn the flattened test classpath into a javac argument -->
-  <property name="test.javac.args" value='-Xbootclasspath/p:${test.classpath}'/>
+  <property name="test.bootclasspath.arg"
+           value='-Xbootclasspath/p:${test.classpath}'/>
 
 
 
@@ -128,7 +131,7 @@
              fork="true">
 
       <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${javac.args} ${build.warnings.option}"/>
+      <compilerarg line="${build.javac.args}"/>
 
     </javac>
 
@@ -200,16 +203,17 @@
   </target>
 
 
-  <!--
-   # javac -s doesn't reliably generate compilable code. It generates
-   # bridge methods (marked as "synthetic") that can have identical
-   # signatures to existing methods except for the return value.
-   -->
   <target name="strip"
-          depends="init">
+          depends="init"
+          description="Strip generics from java source (not working yet)">
 
     <mkdir dir="${build.stripped.dir}"/>
 
+    <!--
+     # javac -s doesn't reliably generate compilable code. It generates
+     # bridge methods (marked as "synthetic") that can have identical
+     # signatures to existing methods except for the return value.
+     -->
     <javac srcdir="${src.dir}"
           destdir="${build.stripped.dir}"
             debug="${build.debug}"
@@ -219,7 +223,7 @@
              fork="true">
 
       <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${javac.args} ${build.warnings.option} -s"/>
+      <compilerarg line="${build.javac.args} -s"/>
 
     </javac>
 
@@ -273,14 +277,14 @@
 
   <target name="set-warnings-if" if="build.warnings">
 
-    <property name="build.warnings.option" value="-warnunchecked"/>
+    <property name="build.warnings.arg" value="-warnunchecked"/>
 
   </target>
 
 
   <target name="set-warnings-unless" unless="build.warnings">
 
-    <property name="build.warnings.option" value=""/>
+    <property name="build.warnings.arg" value=""/>
 
   </target>
 
@@ -291,6 +295,10 @@
     <!-- Version is kept in a separate file -->
     <loadfile property="version" srcFile="version.properties"/>
     <echo>Building JSR-166 version ${version}</echo>
+
+    <!-- Common options in javac invocations -->
+    <property name="build.javac.args"
+             value="${build.bootclasspath.arg} ${build.warnings.arg} ${build.novariance.arg}"/>
 
   </target>
 
@@ -328,7 +336,7 @@
              fork="true">
 
       <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${javac.args} ${build.warnings.option}"/>
+      <compilerarg line="${build.javac.args}"/>
 
     </javac>
 
@@ -378,6 +386,13 @@
 
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
+        <include name="**/*.html"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${build.filter.src.dir}">
+      <fileset dir="${src.dir}">
+        <exclude name="**/*.html"/>
         <patternset refid="emulation.excludes"/>
       </fileset>
       <filterchain>
@@ -429,9 +444,9 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${javac.args} ${build.warnings.option}"/>
       <classpath refid="test.classpath"/>
+      <bootclasspath refid="javac.bootclasspath"/>
+      <compilerarg line="${build.javac.args}"/>
 
     </javac>
 
@@ -453,7 +468,7 @@
                     dir="${build.reports.dir}"
                    fork="true">
 
-      <jvmarg value="${test.javac.args}"/>
+      <jvmarg value="${test.bootclasspath.arg}"/>
 
       <formatter type="xml"/>
 

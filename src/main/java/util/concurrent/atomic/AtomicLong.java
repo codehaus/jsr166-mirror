@@ -27,6 +27,21 @@ public class AtomicLong extends Number implements java.io.Serializable {
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
     private static final long valueOffset;
 
+    /**
+     * Record whether the underlying JVM supports lockless
+     * CompareAndSet for longs. While the unsafe.CompareAndSetLong
+     * method works in either case, some constructions should be
+     * handled at Java level to avoid locking user-visible locks.
+     */
+    static final boolean VM_SUPPORTS_LONG_CAS = VMSupportsCS8();
+
+    /**
+     * Returns whether underlying JVM supports lockless CompareAndSet
+     * for longs. Called only once and cached in VM_SUPPORTS_LONG_CAS.
+     */
+    private static boolean VMSupportsCS8() { return true; } // temporarily
+    //    private static native boolean VMSupportsCS8();
+
     static {
       try {
         valueOffset = unsafe.objectFieldOffset

@@ -40,7 +40,10 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U> AtomicLongFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
-        return new AtomicLongFieldUpdaterImpl<U>(tclass, fieldName);
+        if (AtomicLong.VM_SUPPORTS_LONG_CAS)
+            return new CASUpdater<U>(tclass, fieldName);
+        else
+            return new LockedUpdater<U>(tclass, fieldName);
     }
 
     /**
@@ -204,12 +207,12 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 
-    private static class AtomicLongFieldUpdaterImpl<T> extends AtomicLongFieldUpdater<T> {
+    private static class CASUpdater<T> extends AtomicLongFieldUpdater<T> {
         private static final Unsafe unsafe =  Unsafe.getUnsafe();
         private final long offset;
         private final Class<T> tclass;
 
-        AtomicLongFieldUpdaterImpl(Class<T> tclass, String fieldName) {
+        CASUpdater(Class<T> tclass, String fieldName) {
             Field field = null;
             try {
                 field = tclass.getDeclaredField(fieldName);
@@ -250,6 +253,64 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             if (!tclass.isInstance(obj))
                 throw new ClassCastException();
             return unsafe.getLongVolatile(obj, offset);
+        }
+    }
+
+
+    private static class LockedUpdater<T> extends AtomicLongFieldUpdater<T> {
+        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private final long offset;
+        private final Class<T> tclass;
+
+        LockedUpdater(Class<T> tclass, String fieldName) {
+            Field field = null;
+            try {
+                field = tclass.getDeclaredField(fieldName);
+            } catch(Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            
+            Class fieldt = field.getType();
+            if (fieldt != long.class)
+                throw new IllegalArgumentException("Must be long type");
+            
+            if (!Modifier.isVolatile(field.getModifiers()))
+                throw new IllegalArgumentException("Must be volatile type");
+            
+            this.tclass = tclass;
+            offset = unsafe.objectFieldOffset(field);
+        }
+
+        public boolean compareAndSet(T obj, long expect, long update) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            synchronized(this) {
+                long v = unsafe.getLong(obj, offset);
+                if (v != expect) 
+                    return false;
+                unsafe.putLong(obj, offset, update);
+                return true;
+            }
+        }
+
+        public boolean weakCompareAndSet(T obj, long expect, long update) {
+            return compareAndSet(obj, expect, update);
+        }
+
+        public void set(T obj, long newValue) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            synchronized(this) {
+                unsafe.putLong(obj, offset, newValue);
+            }
+        }
+
+        public long get(T obj) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            synchronized(this) {
+                return unsafe.getLong(obj, offset);
+            }
         }
     }
 }

@@ -240,7 +240,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      * executor is saturated.
      */
     public void testExecute1() {
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1));
         try {
 
             for(int i = 0; i < 5; ++i){
@@ -256,7 +256,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      * if executor is saturated.
      */
     public void testExecute2() {
-         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
+         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1));
         try {
             for(int i = 0; i < 5; ++i) {
                 p.submit(new SmallCallable());
@@ -272,7 +272,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      *  caller interrupted.
      */
     public void testInterruptedSubmit() {
-        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10));
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -308,7 +308,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      *  interrupted
      */
     public void testSubmitIE() {
-        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10));
 
         final Callable c = new Callable() {
                 public Object call() {
@@ -348,7 +348,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      *  throws exception
      */
     public void testSubmitEE() {
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,SHORT_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10));
 
         try {
             Callable c = new Callable() {
@@ -764,7 +764,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             l.add(new StringTask());
             l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(3, result.size());
             Iterator<Future<String>> it = result.iterator(); 
             Future<String> f1 = it.next();

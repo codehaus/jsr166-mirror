@@ -40,6 +40,9 @@ public final class CancelledFutureLoops {
             catch(BrokenBarrierException bb) {
                 // OK; ignore
             }
+            catch(ExecutionException ee) {
+                // OK; ignore
+            }
             Thread.sleep(TIMEOUT);
         }
         pool.shutdown();

@@ -546,7 +546,7 @@ public class ConcurrentLinkedDeque<E>
      * @return the first element in this deque.
      * @throws    NoSuchElementException if this deque is empty.
      */
-    public E firstElement() {
+    public E getFirst() {
         return screenNullResult(peekFirst());
     }
 
@@ -556,7 +556,7 @@ public class ConcurrentLinkedDeque<E>
      * @return the last element in this deque.
      * @throws    NoSuchElementException if this deque is empty.
      */
-    public E lastElement()  {
+    public E getLast()  {
         return screenNullResult(peekLast());
     }
 
@@ -616,7 +616,7 @@ public class ConcurrentLinkedDeque<E>
     public E poll()           { return pollFirst(); }
     public E remove()         { return removeFirst(); }
     public E peek()           { return peekFirst(); }
-    public E element()        { return firstElement(); }
+    public E element()        { return getFirst(); }
     public void push(E e)     { addFirst(e);  }
     public E pop()            { return removeFirst(); }
 

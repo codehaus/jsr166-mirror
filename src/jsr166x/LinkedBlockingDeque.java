@@ -288,13 +288,13 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public E firstElement() {
+    public E getFirst() {
         E x = peekFirst();
         if (x == null) throw new NoSuchElementException();
         return x;
     }
 
-    public E lastElement() {
+    public E getLast() {
         E x = peekLast();
         if (x == null) throw new NoSuchElementException();
         return x;
@@ -429,7 +429,7 @@ public class LinkedBlockingDeque<E>
     public E remove()               { return removeFirst(); }
     public E pop()                  { return removeFirst(); }
     public E peek()                 { return peekFirst(); }
-    public E element()              { return firstElement(); }
+    public E element()              { return getFirst(); }
     public boolean remove(Object o) { return removeFirstOccurrence(o); }
 
     // BlockingQueue methods

@@ -332,7 +332,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return the first element of this deque
      * @throws NoSuchElementException if this deque is empty
      */
-    public E firstElement() {
+    public E getFirst() {
         E x = elements[head];
         if (x == null)
             throw new NoSuchElementException();
@@ -347,7 +347,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return the last element of this deque
      * @throws NoSuchElementException if this deque is empty
      */
-    public E lastElement() {
+    public E getLast() {
         E x = elements[(tail - 1) & (elements.length - 1)];
         if (x == null)
             throw new NoSuchElementException();
@@ -478,13 +478,13 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * this deque.  This method differs from the <tt>peek</tt> method only in
      * that it throws an exception if this deque is empty.
      *
-     * <p>This method is equivalent to {@link #firstElement}
+     * <p>This method is equivalent to {@link #getFirst}
      *
      * @return the head of the queue represented by this deque
      * @throws NoSuchElementException if this deque is empty
      */
     public E element() {
-        return firstElement();
+        return getFirst();
     }
 
     // *** Stack methods ***

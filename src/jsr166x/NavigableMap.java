@@ -9,23 +9,22 @@ package jsr166x;
 import java.util.*;
 
 /**
- * A {@link SortedMap} extended with navigation methods returning
- * key-value pairs holding the closest matches for given search
- * targets. Methods <tt>lowerEntry</tt>, <tt>floorEntry</tt>,
- * <tt>ceilingEntry</tt>, and <tt>higherEntry</tt> return
- * <tt>Map.Entry</tt> objects associated with keys respectively less
- * than, less than or equal, greater than or equal, and greater than a
- * given key, returning <tt>null</tt> if there is no such key.
- * Similarly, methods <tt>lowerKey</tt>, <tt>floorKey</tt>,
- * <tt>ceilingKey</tt>, and <tt>higherKey</tt> return only the
- * associated keys. All of these methods are designed for locating,
- * not traversing entries.
+ * A {@link SortedMap} extended with navigation methods returning the
+ * closest matches for given search targets. Methods
+ * <tt>lowerEntry</tt>, <tt>floorEntry</tt>, <tt>ceilingEntry</tt>,
+ * and <tt>higherEntry</tt> return <tt>Map.Entry</tt> objects
+ * associated with keys respectively less than, less than or equal,
+ * greater than or equal, and greater than a given key, returning
+ * <tt>null</tt> if there is no such key.  Similarly, methods
+ * <tt>lowerKey</tt>, <tt>floorKey</tt>, <tt>ceilingKey</tt>, and
+ * <tt>higherKey</tt> return only the associated keys. All of these
+ * methods are designed for locating, not traversing entries.
  *
  * <p>A <tt>NavigableMap</tt> may be viewed and traversed in either
  * ascending or descending key order.  The <tt>Map</tt> methods
- * <tt>keySet</tt> and <tt>entrySet</tt>) return ascending views, and
+ * <tt>keySet</tt> and <tt>entrySet</tt> return ascending views, and
  * the additional methods <tt>descendingKeySet</tt> and
- * <tt>descendingEntrySet</tt>) return descending views. The
+ * <tt>descendingEntrySet</tt> return descending views. The
  * performance of ascending traversals is likely to be faster than
  * descending traversals.  Notice that it is possible to perform
  * subrannge traversals in either direction using <tt>SubMap</tt>.
@@ -220,7 +219,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a set view of the mappings contained in this map, in
      * descending key order.  Each element in the returned set is a
-     * {@link Map.Entry}.  The set is backed by the map, so changes to
+     * <tt>Map.Entry</tt>.  The set is backed by the map, so changes to
      * the map are reflected in the set, and vice-versa.  If the map
      * is modified while an iteration over the set is in progress
      * (except through the iterator's own <tt>remove</tt> operation,

@@ -56,9 +56,9 @@ import java.util.*;    // XXX This import goes away        XXX
  *  </tr>
  *  <tr>
  *    <td><b>Examine</b></td>
- *    <td>{@link #firstElement firstElement()}</td>
+ *    <td>{@link #getFirst getFirst()}</td>
  *    <td>{@link #peekFirst peekFirst()}</td>
- *    <td>{@link #lastElement lastElement()}</td>
+ *    <td>{@link #getLast getLast()}</td>
  *    <td>{@link #peekLast peekLast()}</td>
  *  </tr>
  * </table>
@@ -97,7 +97,7 @@ import java.util.*;    // XXX This import goes away        XXX
  *   </tr>
  *   <tr>
  *    <td>{@link java.util.Queue#element element()}</td>
- *    <td>{@link #firstElement firstElement()}</td>
+ *    <td>{@link #getFirst getFirst()}</td>
  *   </tr>
  * </table>
  *
@@ -275,7 +275,7 @@ public interface Deque<E> extends Queue<E> {
      * @return the first element of this deque
      * @throws NoSuchElementException if this deque is empty
      */
-    E firstElement();
+    E getFirst();
 
     /**
      * Retrieves, but does not remove, the last element of this
@@ -285,7 +285,7 @@ public interface Deque<E> extends Queue<E> {
      * @return the last element of this deque
      * @throws NoSuchElementException if this deque is empty
      */
-    E lastElement();
+    E getLast();
 
     /**
      * Removes the first occurrence of the specified element in this
@@ -391,7 +391,7 @@ public interface Deque<E> extends Queue<E> {
      * this deque.  This method differs from the <tt>peek</tt> method only in
      * that it throws an exception if this deque is empty.
      *
-     * <p>This method is equivalent to {@link #firstElement()}
+     * <p>This method is equivalent to {@link #getFirst()}
      *
      * @return the head of the queue represented by this deque
      * @throws NoSuchElementException if this deque is empty

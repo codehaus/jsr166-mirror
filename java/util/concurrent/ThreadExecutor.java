@@ -1,6 +1,6 @@
 package java.util.concurrent;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * A ThreadExecutor asynchronously executes many tasks without
@@ -121,9 +121,10 @@ import java.util.*;
  *
  * </dl>
  * @see Callbacks
- **/
+ */
 public class ThreadExecutor implements Executor, ExecutorService {
 
+    /** JAVADOC?? */
     private ThreadFactory threadFactory;
 
     /**
@@ -149,7 +150,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * maxThreads.  
      * @throws NullPointerException if workQueue or
      * handler are null.
-     **/
+     */
     public ThreadExecutor(int minThreads,
         int maxThreads,
         long keepAliveTime,
@@ -157,7 +158,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
         BlockingQueue workQueue,
         Callbacks handler) {}
 
-
+    /** JAVADOC?? */
     public static class DefaultCallbacks implements Callbacks {
         public void beforeExecute(Thread t, Runnable r, ExecutorService e) {
         }
@@ -167,6 +168,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
 
         public boolean cannotExecute(Runnable r, ExecutorService e) {
             if (!e.isShutdown()) {
+                /* CATCH RUNTIME EXCEPTIONS AND REPORT IN AFTER_EXECUTE! */
                 r.run();
             }
             return true;
@@ -190,7 +192,6 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * @param maxThreads the new maximum
      * @throws IllegalArgumentException if maxThreads less than zero or
      * less than getMinimumPoolSize.
-     *
      */
     protected void setMaximumPoolSize(int maxThreads) {}
 
@@ -204,7 +205,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * excess threads to terminate immediately after executing tasks.
      * @param granularity  the time unit of the time argument
      * @throws IllegalArgumentException if msecs less than zero
-     * */
+     */
     protected void setKeepAliveTime(long time, TimeUnit granularity) {}
 
     /**
@@ -291,7 +292,8 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * invoked only when the executor is known to be in a quiescent
      * state.
      *
-     * @param handler the new Intercept handler */
+     * @param handler the new Intercept handler
+     */
     protected void setCallbacks(Callbacks handler) {
     }
 
@@ -305,12 +307,11 @@ public class ThreadExecutor implements Executor, ExecutorService {
         this.threadFactory = threadFactory;
     }
 
-
     /**
      * Return the task queue used by the ThreadExecutor.  Note that
      * this queue may be in active use.  Retrieveing the task queue
      * does not prevent queued tasks from executing.
-     **/
+     */
     protected BlockingQueue getQueue() {
         return null;
     }
@@ -321,7 +322,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * Execute the given command sometime in the future.  The command
      * may execute in the calling thread, in a new thread, or in a
      * pool thread, at the discretion of the Executor implementation.
-     **/
+     */
     public void execute(Runnable command) {}
 
     // ExecutorService methods
@@ -332,14 +333,14 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * may not speed the completion of queued tasks, and may cause
      * improperly written tasks to fail.  The Executor remains enabled
      * for future executions.
-     **/
+     */
     public void interrupt() {}
 
     /**
      * Return true if all tasks have completed following shut down.
      * Note that isTerminated is never true unless <tt>shutdown</tt>
      * or <tt>shutdownNow</tt> have been invoked.
-     **/
+     */
     public boolean isTerminated() {
         return false;
     }
@@ -353,7 +354,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * @param granularity the time unit of the timeout argument.
      * @throws java.lang.InterruptedException if interrupted while waiting.
      * @throws java.lang.IllegalStateException if not shut down.
-     **/
+     */
     public void awaitTermination(long timeout, TimeUnit granularity) throws InterruptedException {}
 
     /**
@@ -366,7 +367,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * interface. Implementations may provide different options, such
      * as ignoring them, or causing <tt>execute</tt> to throw an
      * (unchecked) <tt>IllegalStateException</tt>.
-     **/
+     */
     public void shutdown() {}
 
     /**
@@ -384,14 +385,14 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * <tt>Thread.interrupt</tt>, so if any tasks mask or fail to
      * respond to interrupts, they might never terminate.
      * @return a list of all tasks that never commenced execution.
-     **/
+     */
     public List shutdownNow() {
         return null;
     }
 
     /**
      * Return true if the Executor has been shut down.
-     **/
+     */
     public boolean isShutdown() {
         return false;
     }

@@ -664,7 +664,7 @@ public class TreeMap<K,V>
      */
     public Map.Entry<K,V> firstEntry() {
         Entry<K,V> e = getFirstEntry();
-        return (e == null)? null : new SnapshotEntry(e);
+        return (e == null)? null : new AbstractMap.SimpleImmutableEntry(e);
     }
 
     /**
@@ -678,7 +678,7 @@ public class TreeMap<K,V>
      */
     public Map.Entry<K,V> lastEntry() {
         Entry<K,V> e = getLastEntry();
-        return (e == null)? null : new SnapshotEntry(e);
+        return (e == null)? null : new AbstractMap.SimpleImmutableEntry(e);
     }
 
     /**
@@ -692,7 +692,7 @@ public class TreeMap<K,V>
         Entry<K,V> p = getFirstEntry();
         if (p == null) 
             return null;
-        Map.Entry result = new SnapshotEntry(p);
+        Map.Entry result = new AbstractMap.SimpleImmutableEntry(p);
         deleteEntry(p);
         return result;
     }
@@ -708,7 +708,7 @@ public class TreeMap<K,V>
         Entry<K,V> p = getLastEntry();
         if (p == null) 
             return null;
-        Map.Entry result = new SnapshotEntry(p);
+        Map.Entry result = new AbstractMap.SimpleImmutableEntry(p);
         deleteEntry(p);
         return result;
     }
@@ -729,7 +729,7 @@ public class TreeMap<K,V>
      */
     public Map.Entry<K,V> ceilingEntry(K key) {
         Entry<K,V> e = getCeilingEntry(key);
-        return (e == null)? null : new SnapshotEntry(e);
+        return (e == null)? null : new AbstractMap.SimpleImmutableEntry(e);
     }
 
 
@@ -769,7 +769,7 @@ public class TreeMap<K,V>
      */
     public Map.Entry<K,V> floorEntry(K key) {
         Entry<K,V> e = getFloorEntry(key);
-        return (e == null)? null : new SnapshotEntry(e);
+        return (e == null)? null : new AbstractMap.SimpleImmutableEntry(e);
     }
 
     /**
@@ -807,7 +807,7 @@ public class TreeMap<K,V>
      */
     public Map.Entry<K,V> higherEntry(K key) {
         Entry<K,V> e = getHigherEntry(key);
-        return (e == null)? null : new SnapshotEntry(e);
+        return (e == null)? null : new AbstractMap.SimpleImmutableEntry(e);
     }
 
     /**
@@ -844,7 +844,7 @@ public class TreeMap<K,V>
      */
     public Map.Entry<K,V> lowerEntry(K key) {
         Entry<K,V> e =  getLowerEntry(key);
-        return (e == null)? null : new SnapshotEntry(e);
+        return (e == null)? null : new AbstractMap.SimpleImmutableEntry(e);
     }
 
     /**
@@ -1308,7 +1308,7 @@ public class TreeMap<K,V>
                 getFirstEntry() : getCeilingEntry(fromKey);
             if (e == null || (!fromStart && compare(e.key, fromKey) < 0))
                 return null;
-            Map.Entry result = new SnapshotEntry(e);
+            Map.Entry result = new AbstractMap.SimpleImmutableEntry(e);
             deleteEntry(e);
             return result;
         }
@@ -1318,7 +1318,7 @@ public class TreeMap<K,V>
                 getLastEntry() : getLowerEntry(toKey);
             if (e == null || (!toEnd && compare(e.key, toKey) >= 0))
                 return null;
-            Map.Entry result = new SnapshotEntry(e);
+            Map.Entry result = new AbstractMap.SimpleImmutableEntry(e);
             deleteEntry(e);
             return result;
         }
@@ -1333,7 +1333,7 @@ public class TreeMap<K,V>
 
         public Map.Entry<K,V> ceilingEntry(K key) {
             TreeMap.Entry<K,V> e = subceiling(key);
-            return e == null? null : new SnapshotEntry(e);
+            return e == null? null : new AbstractMap.SimpleImmutableEntry(e);
         }
 
         public K ceilingKey(K key) {
@@ -1352,7 +1352,7 @@ public class TreeMap<K,V>
 
         public Map.Entry<K,V> higherEntry(K key) {
             TreeMap.Entry<K,V> e = subhigher(key);
-            return e == null? null : new SnapshotEntry(e);
+            return e == null? null : new AbstractMap.SimpleImmutableEntry(e);
         }
 
         public K higherKey(K key) {
@@ -1370,7 +1370,7 @@ public class TreeMap<K,V>
 
         public Map.Entry<K,V> floorEntry(K key) {
             TreeMap.Entry<K,V> e = subfloor(key);
-            return e == null? null : new SnapshotEntry(e);
+            return e == null? null : new AbstractMap.SimpleImmutableEntry(e);
         }
 
         public K floorKey(K key) {
@@ -1388,7 +1388,7 @@ public class TreeMap<K,V>
 
         public Map.Entry<K,V> lowerEntry(K key) {
             TreeMap.Entry<K,V> e = sublower(key);
-            return e == null? null : new SnapshotEntry(e);
+            return e == null? null : new AbstractMap.SimpleImmutableEntry(e);
         }
 
         public K lowerKey(K key) {
@@ -2258,56 +2258,6 @@ public class TreeMap<K,V>
         for (int m = sz - 1; m >= 0; m = m / 2 - 1)
             level++;
         return level;
-    }
-
-
-    /**
-     * Entry holding a snapshot of a key-value pair
-     */
-    static class SnapshotEntry<K,V> implements Map.Entry<K,V> {
-	final K key;
-	final V value;
-
-	public SnapshotEntry(Entry<K,V> e) {
-	    this.key   = e.getKey();
-            this.value = e.getValue();
-	}
-
-	public K getKey() {
-	    return key;
-	}
-
-	public V getValue() {
-	    return value;
-	}
-
-    	/**
-	 * Always fails, throwing <tt>UnsupportedOperationException</tt>.
-	 * @throws UnsupportedOperationException always.
-         */
-        public V setValue(V value) {
-            throw new UnsupportedOperationException();
-        }
-
-	public boolean equals(Object o) {
-	    if (!(o instanceof Map.Entry))
-		return false;
-	    Map.Entry e = (Map.Entry)o;
-	    return eq(key, e.getKey()) && eq(value, e.getValue());
-	}
-
-	public int hashCode() {
-	    return ((key   == null)   ? 0 :   key.hashCode()) ^
-		   ((value == null)   ? 0 : value.hashCode());
-	}
-
-	public String toString() {
-	    return key + "=" + value;
-	}
-
-        private static boolean eq(Object o1, Object o2) {
-            return (o1 == null ? o2 == null : o1.equals(o2));
-        }
     }
 
 }

@@ -861,8 +861,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
         if (fullyTerminated)
             terminated();
-            
-        return Arrays.asList((Runnable[])workQueue.toArray());
+        
+        return Arrays.asList(workQueue.toArray(new Runnable[0]));
     }
 
     public boolean isShutdown() {

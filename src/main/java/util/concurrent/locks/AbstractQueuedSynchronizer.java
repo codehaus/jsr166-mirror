@@ -871,8 +871,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     return;
                 }
             }
-            // Initialization races can have unbounded spins, so yield
-            Thread.yield();
+            else // Initialization races can have unbounded spins, so yield
+                Thread.yield();
         }
     }
 

@@ -263,7 +263,8 @@ public enum TimeUnit {
      *  }</pre>
      *
      * @param obj the object to wait on
-     * @param timeout the maximum time to wait.
+     * @param timeout the maximum time to wait. If less than
+     * or equal to zero, do not wait at all.
      * @throws InterruptedException if interrupted while waiting.
      * @see Object#wait(long, int)
      */
@@ -281,7 +282,8 @@ public enum TimeUnit {
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.join</tt> method.
      * @param thread the thread to wait for
-     * @param timeout the maximum time to wait
+     * @param timeout the maximum time to wait. If less than
+     * or equal to zero, do not wait at all.
      * @throws InterruptedException if interrupted while waiting.
      * @see Thread#join(long, int)
      */
@@ -298,7 +300,8 @@ public enum TimeUnit {
      * Perform a <tt>Thread.sleep</tt> using this unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.sleep</tt> method.
-     * @param timeout the minimum time to sleep
+     * @param timeout the minimum time to sleep. If less than
+     * or equal to zero, do not sleep at all.
      * @throws InterruptedException if interrupted while sleeping.
      * @see Thread#sleep
      */

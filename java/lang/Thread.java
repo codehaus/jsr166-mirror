@@ -16,7 +16,7 @@ import sun.nio.ch.Interruptible;
 
 
 /**
- * <b>JSR166: Added UncaughtExceptionHandlers, removeAllThreadLocals</b>.<p>
+ * <b>JSR166: Added UncaughtExceptionHandlers</b>.<p>
  * A <i>thread</i> is a thread of execution in a program. The Java 
  * Virtual Machine allows an application to have multiple threads of 
  * execution running concurrently. 
@@ -164,23 +164,7 @@ class Thread implements Runnable {
         uncaughtExceptionHandler = eh;
     }
 
-    /**
-     * Remove all values associated with ThreadLocals and
-     * InheritableThreadLocals for this thread. This method is
-     * designed to be used only in Thread Pools and related contexts
-     * in which a thread is reused to perform several unrelated tasks.
-     * @exception  SecurityException  if the current thread is not allowed to
-     *               modify current thread.
-     */
-    public static void removeAllThreadLocals() { // jsr166
-        Thread t = currentThread();
-        t.checkAccess();
-        t.threadLocals = null;
-        t.inheritableThreadLocals = null;
-    }
-
-
-    
+  
     /* Make sure registerNatives is the first thing <clinit> does. */
     private static native void registerNatives();
     static {

@@ -105,6 +105,7 @@ public class JSR166TestCase extends TestCase {
         TestSuite suite = new TestSuite("JSR166 Unit Tests");
         
         suite.addTest(new TestSuite(AbstractExecutorServiceTest.class));
+        suite.addTest(new TestSuite(AbstractQueueTest.class));
         suite.addTest(new TestSuite(AbstractQueuedSynchronizerTest.class));
         suite.addTest(new TestSuite(ArrayBlockingQueueTest.class));
         suite.addTest(new TestSuite(AtomicBooleanTest.class)); 

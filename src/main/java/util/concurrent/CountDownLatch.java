@@ -267,7 +267,7 @@ public class CountDownLatch {
     }
 
     /**
-     * Returns a string identifying this latch, as well its state.
+     * Returns a string identifying this latch, as well as its state.
      * The state, in brackets, includes the String 
      * &quot;Count =&quot; followed by the current count.
      * @return a string identifying this latch, as well as its

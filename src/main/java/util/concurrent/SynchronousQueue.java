@@ -29,6 +29,14 @@ import java.util.*;
  * object running in one thread must sync up with an object running
  * in another thread in order to hand it some information, event, or
  * task.
+ *
+ * <p> This class supports an optional fairness policy for ordering
+ * waiting producer and consumer threads.  By default, this ordering
+ * is not guaranteed. However, a queue constructed with fairness set
+ * to <tt>true</tt> grants threads access in FIFO order. Fairness
+ * generally decreases throughput but reduces variability and avoids
+ * starvation.
+ *
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Collection} and {@link Iterator} interfaces.
  *
@@ -47,35 +55,119 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /*
       This implementation divides actions into two cases for puts:
 
-      * An arriving putter that does not already have a waiting taker
-      creates a node holding item, and then waits for a taker to take it.
-      * An arriving putter that does already have a waiting taker fills
-      the slot node created by the taker, and notifies it to continue.
+      * An arriving producer that does not already have a waiting consumer
+      creates a node holding item, and then waits for a consumer to take it.
+      * An arriving producer that does already have a waiting consumer fills
+      the slot node created by the consumer, and notifies it to continue.
 
       And symmetrically, two for takes:
 
-      * An arriving taker that does not already have a waiting putter
-      creates an empty slot node, and then waits for a putter to fill it.
-      * An arriving taker that does already have a waiting putter takes
-      item from the node created by the putter, and notifies it to continue.
-
-      This requires keeping two simple queues: waitingPuts and waitingTakes.
+      * An arriving consumer that does not already have a waiting producer
+      creates an empty slot node, and then waits for a producer to fill it.
+      * An arriving consumer that does already have a waiting producer takes
+      item from the node created by the producer, and notifies it to continue.
 
       When a put or take waiting for the actions of its counterpart
       aborts due to interruption or timeout, it marks the node
       it created as "CANCELLED", which causes its counterpart to retry
       the entire put or take sequence.
+
+      This requires keeping two simple queues, waitingProducers and
+      waitingConsumers. Each of these can be FIFO (preserves fairness)
+      or LIFO (improves throughput).
     */
 
+    /** Lock protecting both wait queues */
+    private final ReentrantLock qlock;
+    /** Queue holding waiting puts */
+    private final WaitQueue waitingProducers;
+    /** Queue holding waiting takes */
+    private final WaitQueue waitingConsumers;
 
-    /*
-     * Note that all fields are transient final, so there is
-     * no explicit serialization code.
+    /**
+     * Creates a <tt>SynchronousQueue</tt> with nonfair access policy.
      */
+    public SynchronousQueue() {
+        qlock = new ReentrantLock();
+        waitingProducers = new LifoWaitQueue();
+        waitingConsumers = new LifoWaitQueue();
+    }
 
-    private transient final WaitQueue waitingPuts = new WaitQueue();
-    private transient final WaitQueue waitingTakes = new WaitQueue();
-    private transient final ReentrantLock qlock = new ReentrantLock();
+    /**
+     * Creates a <tt>SynchronousQueue</tt> with specified fairness policy.
+     * @param fair if true, threads contend in FIFO order for access.
+     */
+    public SynchronousQueue(boolean fair) {
+        if (fair) {
+            qlock = new ReentrantLock(true);
+            waitingProducers = new FifoWaitQueue();
+            waitingConsumers = new FifoWaitQueue();
+        }
+        else {
+            qlock = new ReentrantLock();
+            waitingProducers = new LifoWaitQueue();
+            waitingConsumers = new LifoWaitQueue();
+        }
+    }
+
+    /**
+     * Queue to hold waiting puts/takes; specialized to FiFo/Lifo below.
+     * These queues have all transient fields, but are serializable
+     * in order to retain fairness settings when deserialized.
+     */
+    static abstract class WaitQueue implements java.io.Serializable {
+        /** Create, add, and return node for x */
+        abstract Node enq(Object x);
+        /** Remove and return node, or null if empty */
+        abstract Node deq();
+    }
+
+    /**
+     * FIFO queue to hold waiting puts/takes.
+     */
+    static final class FifoWaitQueue extends WaitQueue implements java.io.Serializable {
+        private static final long serialVersionUID = -3623113410248163686L;
+        private transient Node head;
+        private transient Node last;
+
+        Node enq(Object x) {
+            Node p = new Node(x);
+            if (last == null)
+                last = head = p;
+            else
+                last = last.next = p;
+            return p;
+        }
+
+        Node deq() {
+            Node p = head;
+            if (p != null) {
+                if ((head = p.next) == null)
+                    last = null;
+                p.next = null;
+            }
+            return p;
+        }
+    }
+
+    /**
+     * LIFO queue to hold waiting puts/takes.
+     */
+    static final class LifoWaitQueue extends WaitQueue implements java.io.Serializable {
+        private static final long serialVersionUID = -3633113410248163686L;
+        private transient Node head;
+
+        Node enq(Object x) {
+            return head = new Node(x, head);
+        }
+
+        Node deq() {
+            Node p = head;
+            if (p != null)
+                head = p.next;
+            return p;
+        }
+    }
 
     /**
      * Nodes each maintain an item and handle waits and signals for
@@ -96,6 +188,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
         /** Create node with initial item */
         Node(Object x) { item = x; }
+
+        /** Create node with initial item and next */
+        Node(Object x, Node n) { item = x; next = n; }
 
         /**
          * Implements AQS base acquire to succeed if not in WAITING state
@@ -132,7 +227,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Fill in the slot created by the taker and signal taker to
+         * Fill in the slot created by the consumer and signal consumer to
          * continue.
          */
         boolean setItem(Object x) {
@@ -141,7 +236,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Remove item from slot created by putter and signal putter
+         * Remove item from slot created by producer and signal producer
          * to continue.
          */
         Object getItem() {
@@ -149,7 +244,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a taker to take item placed by putter.
+         * Wait for a consumer to take item placed by producer.
          */
         void waitForTake() throws InterruptedException {
             try {
@@ -160,7 +255,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a putter to put item placed by taker.
+         * Wait for a producer to put item placed by consumer.
          */
         Object waitForPut() throws InterruptedException {
             try {
@@ -172,7 +267,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a taker to take item placed by putter or time out.
+         * Wait for a consumer to take item placed by producer or time out.
          */
         boolean waitForTake(long nanos) throws InterruptedException {
             try {
@@ -186,7 +281,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Wait for a putter to put item placed by taker, or time out.
+         * Wait for a producer to put item placed by consumer, or time out.
          */
         Object waitForPut(long nanos) throws InterruptedException {
             try {
@@ -198,40 +293,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
             return extract();
         }
-
     }
 
-    /**
-     * Simple FIFO queue class to hold waiting puts/takes.
-     **/
-    static final class WaitQueue<E> {
-        Node head;
-        Node last;
-
-        Node enq(Object x) {
-            Node p = new Node(x);
-            if (last == null)
-                last = head = p;
-            else
-                last = last.next = p;
-            return p;
-        }
-
-        Node deq() {
-            Node p = head;
-            if (p != null) {
-                if ((head = p.next) == null)
-                    last = null;
-                p.next = null;
-            }
-            return p;
-        }
-    }
-
-    /**
-     * Creates a <tt>SynchronousQueue</tt>.
-     */
-    public SynchronousQueue() {}
 
 
     /**
@@ -248,11 +311,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         for (;;) {
             Node node;
             boolean mustWait;
-            qlock.lockInterruptibly();
+            if (Thread.interrupted()) throw new InterruptedException();
+            qlock.lock();
             try {
-                node = waitingTakes.deq();
+                node = waitingConsumers.deq();
                 if ( (mustWait = (node == null)) )
-                    node = waitingPuts.enq(o);
+                    node = waitingProducers.enq(o);
             } finally {
                 qlock.unlock();
             }
@@ -265,7 +329,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             else if (node.setItem(o))
                 return;
 
-            // else taker cancelled, so retry
+            // else consumer cancelled, so retry
         }
     }
 
@@ -278,7 +342,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
      * <tt>timeout</tt> parameter
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
-     * the specified waiting time elapses before a taker appears.
+     * the specified waiting time elapses before a consumer appears.
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
@@ -289,11 +353,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         for (;;) {
             Node node;
             boolean mustWait;
-            qlock.lockInterruptibly();
+            if (Thread.interrupted()) throw new InterruptedException();
+            qlock.lock();
             try {
-                node = waitingTakes.deq();
+                node = waitingConsumers.deq();
                 if ( (mustWait = (node == null)) )
-                    node = waitingPuts.enq(o);
+                    node = waitingProducers.enq(o);
             } finally {
                 qlock.unlock();
             }
@@ -304,11 +369,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             else if (node.setItem(o))
                 return true;
 
-            // else taker cancelled, so retry
+            // else consumer cancelled, so retry
         }
-
     }
-
 
     /**
      * Retrieves and removes the head of this queue, waiting if necessary
@@ -322,11 +385,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             Node node;
             boolean mustWait;
 
-            qlock.lockInterruptibly();
+            if (Thread.interrupted()) throw new InterruptedException();
+            qlock.lock();
             try {
-                node = waitingPuts.deq();
+                node = waitingProducers.deq();
                 if ( (mustWait = (node == null)) )
-                    node = waitingTakes.enq(null);
+                    node = waitingConsumers.enq(null);
             } finally {
                 qlock.unlock();
             }
@@ -364,11 +428,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             Node node;
             boolean mustWait;
 
-            qlock.lockInterruptibly();
+            if (Thread.interrupted()) throw new InterruptedException();
+            qlock.lock();
             try {
-                node = waitingPuts.deq();
+                node = waitingProducers.deq();
                 if ( (mustWait = (node == null)) )
-                    node = waitingTakes.enq(null);
+                    node = waitingConsumers.enq(null);
             } finally {
                 qlock.unlock();
             }
@@ -405,7 +470,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             Node node;
             qlock.lock();
             try {
-                node = waitingTakes.deq();
+                node = waitingConsumers.deq();
             } finally {
                 qlock.unlock();
             }
@@ -431,7 +496,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             Node node;
             qlock.lock();
             try {
-                node = waitingPuts.deq();
+                node = waitingProducers.deq();
             } finally {
                 qlock.unlock();
             }

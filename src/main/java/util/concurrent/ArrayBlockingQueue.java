@@ -25,11 +25,11 @@ import java.util.*;
  * element from an empty queue will similarly block.
  *
  * <p> This class supports an optional fairness policy for ordering
- * threads blocked on an insertion or removal.  By default, this
- * ordering is not guaranteed. However, an <tt>ArrayBlockingQueue</tt>
- * constructed with fairness set to <tt>true</tt> grants blocked
- * threads access in FIFO order. Fairness generally decreases
- * throughput but reduces variability and avoids starvation.
+ * waiting producer and consumer threads.  By default, this ordering
+ * is not guaranteed. However, a queue constructed with fairness set
+ * to <tt>true</tt> grants threads access in FIFO order. Fairness
+ * generally decreases throughput but reduces variability and avoids
+ * starvation.
  *
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Collection} and {@link Iterator} interfaces.
@@ -46,9 +46,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
 
     /**
-     * Serialization ID. This class relies on default serialization even
-     * for the items array is default-serialized, even if it is
-     * empty. Otherwise it could not be declared final, which is
+     * Serialization ID. This class relies on default serialization
+     * even for the items array, which is default-serialized, even if
+     * it is empty. Otherwise it could not be declared final, which is
      * necessary here.
      */
     private static final long serialVersionUID = -817911632652898426L;

@@ -34,7 +34,7 @@ package java.util.concurrent;
  *     }
  * }</pre>
  *
- * More typically, tasks are typically executed in a different thread
+ * More typically, tasks are typically executed in some thread other
  * than the caller's thread.  The executor below spawns a new thread
  * for each task.
  *

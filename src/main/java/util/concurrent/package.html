@@ -30,20 +30,20 @@ ExecutorServices provide methods arranging asynchronous execution of
 any function expressed as {@link java.util.concurrent.Callable}, the
 result-bearing analog of {@link java.lang.Runnable}.  A {@link
 java.util.concurrent.Future} returns the results of a function, allows
-determination if execution has completed, and provides a means to
+determination of whether execution has completed, and provides a means to
 cancel execution.
 
 <p>
 
-<b>Implementations.</b> The two primary Executor implementations are
-tunable, flexible thread pool classes {@link
+<b>Implementations.</b> Classes {@link
 java.util.concurrent.ThreadPoolExecutor} and {@link
-java.util.concurrent.ScheduledThreadPoolExecutor}. The {@link
-java.util.concurrent.Executors} class provides factory methods for the
-most common kinds and configurations of Executors, as well as a few
-utility methods for using them. Other utilities based on Executors
-include the concrete class {@link java.util.concurrent.FutureTask}
-providing a common extensible implementation of Futures, and {@link
+java.util.concurrent.ScheduledThreadPoolExecutor} provide tunable,
+flexible thread pools. The {@link java.util.concurrent.Executors}
+class provides factory methods for the most common kinds and
+configurations of Executors, as well as a few utility methods for
+using them. Other utilities based on Executors include the concrete
+class {@link java.util.concurrent.FutureTask} providing a common
+extensible implementation of Futures, and {@link
 java.util.concurrent.ExecutorCompletionService}, that assists in
 coordinating the processing of groups of asynchronous tasks.
 
@@ -81,7 +81,7 @@ thread actually executing again after that time-out.
 
 Four classes aid common special-purpose synchronization idioms.
 {@link java.util.concurrent.Semaphore} is a classic concurrency tool.
-{@link java.util.concurrent.CountDownLatch} is very simple yet very
+{@link java.util.concurrent.CountDownLatch} is a very simple yet very
 common utility for blocking until a given number of signals, events,
 or conditions hold.  A {@link java.util.concurrent.CyclicBarrier} is a
 resettable multiway synchronization point useful in some styles of

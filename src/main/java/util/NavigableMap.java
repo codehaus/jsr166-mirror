@@ -57,7 +57,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public Map.Entry<K,V> ceilingEntry(K key);
+    Map.Entry<K,V> ceilingEntry(K key);
 
     /**
      * Returns least key greater than or equal to the given key, or
@@ -71,7 +71,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public K ceilingKey(K key);
+    K ceilingKey(K key);
 
     /**
      * Returns a key-value mapping associated with the greatest
@@ -86,7 +86,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public Map.Entry<K,V> lowerEntry(K key);
+    Map.Entry<K,V> lowerEntry(K key);
 
     /**
      * Returns the greatest key strictly less than the given key, or
@@ -100,7 +100,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public K lowerKey(K key);
+    K lowerKey(K key);
 
     /**
      * Returns a key-value mapping associated with the greatest key
@@ -115,7 +115,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public Map.Entry<K,V> floorEntry(K key);
+    Map.Entry<K,V> floorEntry(K key);
 
     /**
      * Returns the greatest key
@@ -130,7 +130,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public K floorKey(K key);
+    K floorKey(K key);
 
     /**
      * Returns a key-value mapping associated with the least key
@@ -145,7 +145,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public Map.Entry<K,V> higherEntry(K key);
+    Map.Entry<K,V> higherEntry(K key);
 
     /**
      * Returns the least key strictly greater than the given key, or
@@ -159,7 +159,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if key is <tt>null</tt> and this map
      * does not support <tt>null</tt> keys.
      */
-    public K higherKey(K key);
+    K higherKey(K key);
 
     /**
      * Returns a key-value mapping associated with the least
@@ -168,7 +168,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @return an Entry with least key, or <tt>null</tt> 
      * if the map is empty.
      */
-    public Map.Entry<K,V> firstEntry();
+    Map.Entry<K,V> firstEntry();
 
     /**
      * Returns a key-value mapping associated with the greatest
@@ -177,7 +177,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @return an Entry with greatest key, or <tt>null</tt>
      * if the map is empty.
      */
-    public Map.Entry<K,V> lastEntry();
+    Map.Entry<K,V> lastEntry();
 
     /**
      * Removes and returns a key-value mapping associated with
@@ -186,7 +186,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @return the removed first entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
-    public Map.Entry<K,V> pollFirstEntry();
+    Map.Entry<K,V> pollFirstEntry();
 
     /**
      * Removes and returns a key-value mapping associated with
@@ -195,7 +195,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @return the removed last entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
-    public Map.Entry<K,V> pollLastEntry();
+    Map.Entry<K,V> pollLastEntry();
 
     /**
      * Returns a set view of the keys contained in this map, in
@@ -237,10 +237,14 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a view of the portion of this map whose keys range from
      * <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>, exclusive.  (If
-     * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned sorted map
-     * is empty.)  The returned sorted map is backed by this map, so changes
-     * in the returned sorted map are reflected in this map, and vice-versa.
-
+     * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned
+     * navigable map is empty.)  The returned navigable map is backed
+     * by this map, so changes in the returned navigable map are
+     * reflected in this map, and vice-versa. Note: This
+     * method differs from <tt>SortedMap.subMap</tt> only
+     * in that the returned map is guaranteed to support the
+     * <tt>NavigableMap</tt> interface.
+     *
      * @param fromKey low endpoint (inclusive) of the subMap.
      * @param toKey high endpoint (exclusive) of the subMap.
      *
@@ -257,12 +261,12 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * <tt>toKey</tt> is <tt>null</tt> and this map does not support
      * <tt>null</tt> keys.
      */
-    public NavigableMap<K,V> subMap(K fromKey, K toKey);
+    NavigableMap<K,V> navigableSubMap(K fromKey, K toKey);
 
     /**
      * Returns a view of the portion of this map whose keys are strictly less
-     * than <tt>toKey</tt>.  The returned sorted map is backed by this map, so
-     * changes in the returned sorted map are reflected in this map, and
+     * than <tt>toKey</tt>.  The returned navigable map is backed by this map, so
+     * changes in the returned navigable map are reflected in this map, and
      * vice-versa.  
      * @param toKey high endpoint (exclusive) of the headMap.
      * @return a view of the portion of this map whose keys are strictly
@@ -274,12 +278,12 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if <tt>toKey</tt> is <tt>null</tt>
      * and this map does not support <tt>null</tt> keys.
      */
-    public NavigableMap<K,V> headMap(K toKey);
+    NavigableMap<K,V> navigableHeadMap(K toKey);
 
     /**
      * Returns a view of the portion of this map whose keys are
-     * greater than or equal to <tt>fromKey</tt>.  The returned sorted
-     * map is backed by this map, so changes in the returned sorted
+     * greater than or equal to <tt>fromKey</tt>.  The returned navigable
+     * map is backed by this map, so changes in the returned navigable
      * map are reflected in this map, and vice-versa.
      * @param fromKey low endpoint (inclusive) of the tailMap.
      * @return a view of the portion of this map whose keys are greater
@@ -290,5 +294,5 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>
      * and this map does not support <tt>null</tt> keys.
      */
-    public NavigableMap<K,V>  tailMap(K fromKey);
+    NavigableMap<K,V>  navigableTailMap(K fromKey);
 }

@@ -41,7 +41,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
 	    assertTrue(q.add(new Integer(i)));
         assertTrue(q.add(new Integer(-n)));
         assertTrue(q.add(new Integer(n)));
-        NavigableSet s = q.subSet(new Integer(0), new Integer(n));
+        NavigableSet s = q.navigableSubSet(new Integer(0), new Integer(n));
         assertFalse(s.isEmpty());
 	assertEquals(n, s.size());
         return s;
@@ -60,7 +60,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         q.add(five);
         q.add(zero);
         q.add(seven);
-        NavigableSet s = q.subSet(one, seven);
+        NavigableSet s = q.navigableSubSet(one, seven);
 	assertEquals(5, s.size());
         return s;
     }
@@ -68,7 +68,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     private static NavigableSet set0() {   
 	ConcurrentSkipListSet set = new ConcurrentSkipListSet();
         assertTrue(set.isEmpty());
-        return set.tailSet(m1);
+        return set.navigableTailSet(m1);
     }
  
     /**

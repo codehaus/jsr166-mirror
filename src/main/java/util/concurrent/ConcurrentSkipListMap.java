@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 /**
  * A scalable {@link ConcurrentNavigableMap} implementation.  This
  * class maintains a map in ascending key order, sorted according to
- * the <i>natural order</i> for the key's class (see {@link
+ * the <i>natural order</i> for the keys' class (see {@link
  * Comparable}), or by the {@link Comparator} provided at creation
  * time, depending on which constructor is used.
  *
@@ -1801,7 +1801,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Returns the number of elements in this map.  If this map
+     * Returns the number of key-value mappings in this map.  If this map
      * contains more than <tt>Integer.MAX_VALUE</tt> elements, it
      * returns <tt>Integer.MAX_VALUE</tt>.
      *
@@ -2186,9 +2186,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Returns a view of the portion of this map whose keys range from
      * <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>, exclusive.  (If
-     * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned sorted map
-     * is empty.)  The returned sorted map is backed by this map, so changes
-     * in the returned sorted map are reflected in this map, and vice-versa.
+     * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned navigable map
+     * is empty.)  The returned navigable map is backed by this map, so changes
+     * in the returned navigable map are reflected in this map, and vice-versa.
 
      * @param fromKey low endpoint (inclusive) of the subMap.
      * @param toKey high endpoint (exclusive) of the subMap.
@@ -2204,7 +2204,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is
      *               <tt>null</tt>.
      */
-    public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey) {
+    public ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, K toKey) {
         if (fromKey == null || toKey == null)
             throw new NullPointerException();
         return new ConcurrentSkipListSubMap(this, fromKey, toKey);
@@ -2212,8 +2212,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Returns a view of the portion of this map whose keys are
-     * strictly less than <tt>toKey</tt>.  The returned sorted map is
-     * backed by this map, so changes in the returned sorted map are
+     * strictly less than <tt>toKey</tt>.  The returned navigable map is
+     * backed by this map, so changes in the returned navigable map are
      * reflected in this map, and vice-versa.
      * @param toKey high endpoint (exclusive) of the headMap.
      * @return a view of the portion of this map whose keys are
@@ -2224,7 +2224,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * if <tt>toKey</tt> does not implement <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>toKey</tt> is <tt>null</tt>.
      */
-    public ConcurrentNavigableMap<K,V> headMap(K toKey) {
+    public ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey) {
         if (toKey == null)
             throw new NullPointerException();
         return new ConcurrentSkipListSubMap(this, null, toKey);
@@ -2232,8 +2232,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Returns a view of the portion of this map whose keys are
-     * greater than or equal to <tt>fromKey</tt>.  The returned sorted
-     * map is backed by this map, so changes in the returned sorted
+     * greater than or equal to <tt>fromKey</tt>.  The returned navigable
+     * map is backed by this map, so changes in the returned navigable
      * map are reflected in this map, and vice-versa.
      * @param fromKey low endpoint (inclusive) of the tailMap.
      * @return a view of the portion of this map whose keys are
@@ -2244,7 +2244,67 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>.
      */
-    public ConcurrentNavigableMap<K,V>  tailMap(K fromKey) {
+    public ConcurrentNavigableMap<K,V>  navigableTailMap(K fromKey) {
+        if (fromKey == null)
+            throw new NullPointerException();
+        return new ConcurrentSkipListSubMap(this, fromKey, null);
+    }
+
+
+    /**
+     * Equivalent to <tt>navigableSubMap</tt> but with a return
+     * type conforming to the <tt>SortedMap</tt> interface.
+     * @param fromKey low endpoint (inclusive) of the subMap.
+     * @param toKey high endpoint (exclusive) of the subMap.
+     *
+     * @return a view of the portion of this map whose keys range from
+     * <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>, exclusive.
+     *
+     * @throws ClassCastException if <tt>fromKey</tt> and <tt>toKey</tt>
+     *         cannot be compared to one another using this map's comparator
+     *         (or, if the map has no comparator, using natural ordering).
+     * @throws IllegalArgumentException if <tt>fromKey</tt> is greater than
+     *         <tt>toKey</tt>.
+     * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is
+     *               <tt>null</tt>.
+     */
+    public SortedMap<K,V> subMap(K fromKey, K toKey) {
+        if (fromKey == null || toKey == null)
+            throw new NullPointerException();
+        return new ConcurrentSkipListSubMap(this, fromKey, toKey);
+    }
+
+    /**
+     * Equivalent to <tt>navigableHeadMap</tt> but with a return
+     * type conforming to the <tt>SortedMap</tt> interface.
+     * @param toKey high endpoint (exclusive) of the headMap.
+     * @return a view of the portion of this map whose keys are
+     * strictly less than <tt>toKey</tt>.
+     *
+     * @throws ClassCastException if <tt>toKey</tt> is not compatible
+     * with this map's comparator (or, if the map has no comparator,
+     * if <tt>toKey</tt> does not implement <tt>Comparable</tt>).
+     * @throws NullPointerException if <tt>toKey</tt> is <tt>null</tt>.
+     */
+    public SortedMap<K,V> headMap(K toKey) {
+        if (toKey == null)
+            throw new NullPointerException();
+        return new ConcurrentSkipListSubMap(this, null, toKey);
+    }
+
+    /**
+     * Equivalent to <tt>navigableTailMap</tt> but with a return
+     * type conforming to the <tt>SortedMap</tt> interface.
+     * @param fromKey low endpoint (inclusive) of the tailMap.
+     * @return a view of the portion of this map whose keys are
+     * greater than or equal to <tt>fromKey</tt>.
+     * @throws ClassCastException if <tt>fromKey</tt> is not
+     * compatible with this map's comparator (or, if the map has no
+     * comparator, if <tt>fromKey</tt> does not implement
+     * <tt>Comparable</tt>).
+     * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>.
+     */
+    public SortedMap<K,V>  tailMap(K fromKey) {
         if (fromKey == null)
             throw new NullPointerException();
         return new ConcurrentSkipListSubMap(this, fromKey, null);
@@ -3163,7 +3223,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             throw new NoSuchElementException();
         }
 
-        public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey) {
+        public ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, K toKey) {
             if (fromKey == null || toKey == null)
                 throw new NullPointerException();
             if (!inOpenRange(fromKey) || !inOpenRange(toKey))
@@ -3171,7 +3231,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new ConcurrentSkipListSubMap(m, fromKey, toKey);
         }
 
-        public ConcurrentNavigableMap<K,V> headMap(K toKey) {
+        public ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey) {
             if (toKey == null)
                 throw new NullPointerException();
             if (!inOpenRange(toKey))
@@ -3179,12 +3239,24 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new ConcurrentSkipListSubMap(m, least, toKey);
         }
 
-        public  ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
+        public  ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey) {
             if (fromKey == null)
                 throw new NullPointerException();
             if (!inOpenRange(fromKey))
                 throw new IllegalArgumentException("key out of range");
             return new ConcurrentSkipListSubMap(m, fromKey, fence);
+        }
+
+        public SortedMap<K,V> subMap(K fromKey, K toKey) {
+            return navigableSubMap(fromKey, toKey);
+        }
+
+        public SortedMap<K,V> headMap(K toKey) {
+            return navigableHeadMap(toKey);
+        }
+
+        public  SortedMap<K,V> tailMap(K fromKey) {
+            return navigableTailMap(fromKey);
         }
 
         /* ----------------  Relational methods -------------- */

@@ -1078,12 +1078,13 @@ public class TreeMap<K,V>
     /**
      * Returns a view of the portion of this map whose keys range from
      * <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>, exclusive.  (If
-     * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned sorted map
-     * is empty.)  The returned sorted map is backed by this map, so changes
-     * in the returned sorted map are reflected in this map, and vice-versa.
-     * The returned sorted map supports all optional map operations.<p>
+     * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned
+     * navigable map is empty.)  The returned navigable map is backed
+     * by this map, so changes in the returned navigable map are
+     * reflected in this map, and vice-versa.  The returned navigable
+     * map supports all optional map operations.<p>
      *
-     * The sorted map returned by this method will throw an
+     * The navigable map returned by this method will throw an
      * <tt>IllegalArgumentException</tt> if the user attempts to insert a key
      * less than <tt>fromKey</tt> or greater than or equal to
      * <tt>toKey</tt>.<p>
@@ -1091,18 +1092,18 @@ public class TreeMap<K,V>
      * Note: this method always returns a <i>half-open range</i> (which
      * includes its low endpoint but not its high endpoint).  If you need a
      * <i>closed range</i> (which includes both endpoints), and the key type
-     * allows for calculation of the successor a given key, merely request the
+     * allows for calculation of the successor of a given key, merely request the
      * subrange from <tt>lowEndpoint</tt> to <tt>successor(highEndpoint)</tt>.
-     * For example, suppose that <tt>m</tt> is a sorted map whose keys are
+     * For example, suppose that <tt>m</tt> is a navigable map whose keys are
      * strings.  The following idiom obtains a view containing all of the
      * key-value mappings in <tt>m</tt> whose keys are between <tt>low</tt>
      * and <tt>high</tt>, inclusive:
-     *             <pre>    NavigableMap sub = m.submap(low, high+"\0");</pre>
+     * <pre>  NavigableMap sub = m.navigableSubMap(low, high+"\0");</pre>
      * A similar technique can be used to generate an <i>open range</i> (which
      * contains neither endpoint).  The following idiom obtains a view
      * containing all of the key-value mappings in <tt>m</tt> whose keys are
      * between <tt>low</tt> and <tt>high</tt>, exclusive:
-     *             <pre>    NavigableMap sub = m.subMap(low+"\0", high);</pre>
+     * <pre>  NavigableMap sub = m.navigableSubMap(low+"\0", high);</pre>
      *
      * @param fromKey low endpoint (inclusive) of the subMap.
      * @param toKey high endpoint (exclusive) of the subMap.
@@ -1119,26 +1120,27 @@ public class TreeMap<K,V>
      *               <tt>null</tt> and this map uses natural order, or its
      *               comparator does not tolerate <tt>null</tt> keys.
      */
-    public NavigableMap<K,V> subMap(K fromKey, K toKey) {
+    public NavigableMap<K,V> navigableSubMap(K fromKey, K toKey) {
         return new SubMap(fromKey, toKey);
     }
 
+
     /**
      * Returns a view of the portion of this map whose keys are strictly less
-     * than <tt>toKey</tt>.  The returned sorted map is backed by this map, so
-     * changes in the returned sorted map are reflected in this map, and
-     * vice-versa.  The returned sorted map supports all optional map
+     * than <tt>toKey</tt>.  The returned navigable map is backed by this map, so
+     * changes in the returned navigable map are reflected in this map, and
+     * vice-versa.  The returned navigable map supports all optional map
      * operations.<p>
      *
-     * The sorted map returned by this method will throw an
+     * The navigable map returned by this method will throw an
      * <tt>IllegalArgumentException</tt> if the user attempts to insert a key
      * greater than or equal to <tt>toKey</tt>.<p>
      *
      * Note: this method always returns a view that does not contain its
      * (high) endpoint.  If you need a view that does contain this endpoint,
-     * and the key type allows for calculation of the successor a given key,
+     * and the key type allows for calculation of the successor of a given key,
      * merely request a headMap bounded by <tt>successor(highEndpoint)</tt>.
-     * For example, suppose that suppose that <tt>m</tt> is a sorted map whose
+     * For example, suppose that suppose that <tt>m</tt> is a navigable map whose
      * keys are strings.  The following idiom obtains a view containing all of
      * the key-value mappings in <tt>m</tt> whose keys are less than or equal
      * to <tt>high</tt>:
@@ -1160,26 +1162,26 @@ public class TreeMap<K,V>
      *               this map uses natural order, or its comparator does not
      *               tolerate <tt>null</tt> keys.
      */
-    public NavigableMap<K,V> headMap(K toKey) {
+    public NavigableMap<K,V> navigableHeadMap(K toKey) {
         return new SubMap(toKey, true);
     }
 
     /**
      * Returns a view of the portion of this map whose keys are greater than
-     * or equal to <tt>fromKey</tt>.  The returned sorted map is backed by
-     * this map, so changes in the returned sorted map are reflected in this
-     * map, and vice-versa.  The returned sorted map supports all optional map
+     * or equal to <tt>fromKey</tt>.  The returned navigable map is backed by
+     * this map, so changes in the returned navigable map are reflected in this
+     * map, and vice-versa.  The returned navigable map supports all optional map
      * operations.<p>
      *
-     * The sorted map returned by this method will throw an
+     * The navigable map returned by this method will throw an
      * <tt>IllegalArgumentException</tt> if the user attempts to insert a key
      * less than <tt>fromKey</tt>.<p>
      *
      * Note: this method always returns a view that contains its (low)
      * endpoint.  If you need a view that does not contain this endpoint, and
-     * the element type allows for calculation of the successor a given value,
+     * the element type allows for calculation of the successor of a given value,
      * merely request a tailMap bounded by <tt>successor(lowEndpoint)</tt>.
-     * For example, suppose that <tt>m</tt> is a sorted map whose keys
+     * For example, suppose that <tt>m</tt> is a navigable map whose keys
      * are strings.  The following idiom obtains a view containing
      * all of the key-value mappings in <tt>m</tt> whose keys are strictly
      * greater than <tt>low</tt>: <pre>
@@ -1199,7 +1201,73 @@ public class TreeMap<K,V>
      *               this map uses natural order, or its comparator does not
      *               tolerate <tt>null</tt> keys.
      */
-    public NavigableMap<K,V> tailMap(K fromKey) {
+    public NavigableMap<K,V> navigableTailMap(K fromKey) {
+        return new SubMap(fromKey, false);
+    }
+
+    /**
+     * Equivalent to <tt>navigableSubMap</tt> but with a return
+     * type conforming to the <tt>SortedMap</tt> interface.
+     * @param fromKey low endpoint (inclusive) of the subMap.
+     * @param toKey high endpoint (exclusive) of the subMap.
+     *
+     * @return a view of the portion of this map whose keys range from
+     *                <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>, exclusive.
+     *
+     * @throws ClassCastException if <tt>fromKey</tt> and <tt>toKey</tt>
+     *         cannot be compared to one another using this map's comparator
+     *         (or, if the map has no comparator, using natural ordering).
+     * @throws IllegalArgumentException if <tt>fromKey</tt> is greater than
+     *         <tt>toKey</tt>.
+     * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is
+     *               <tt>null</tt> and this map uses natural order, or its
+     *               comparator does not tolerate <tt>null</tt> keys.
+     */
+    public SortedMap<K,V> subMap(K fromKey, K toKey) {
+        return new SubMap(fromKey, toKey);
+    }
+
+
+    /**
+     * Equivalent to <tt>navigableHeadMap</tt> but with a return
+     * type conforming to the <tt>SortedMap</tt> interface.
+     *
+     * @param toKey high endpoint (exclusive) of the headMap.
+     * @return a view of the portion of this map whose keys are strictly
+     *                less than <tt>toKey</tt>.
+     *
+     * @throws ClassCastException if <tt>toKey</tt> is not compatible
+     *         with this map's comparator (or, if the map has no comparator,
+     *         if <tt>toKey</tt> does not implement <tt>Comparable</tt>).
+     * @throws IllegalArgumentException if this map is itself a subMap,
+     *         headMap, or tailMap, and <tt>toKey</tt> is not within the
+     *         specified range of the subMap, headMap, or tailMap.
+     * @throws NullPointerException if <tt>toKey</tt> is <tt>null</tt> and
+     *               this map uses natural order, or its comparator does not
+     *               tolerate <tt>null</tt> keys.
+     */
+    public SortedMap<K,V> headMap(K toKey) {
+        return new SubMap(toKey, true);
+    }
+
+    /**
+     * Equivalent to <tt>navigableTailMap</tt> but with a return
+     * type conforming to the <tt>SortedMap</tt> interface.
+     *
+     * @param fromKey low endpoint (inclusive) of the tailMap.
+     * @return a view of the portion of this map whose keys are greater
+     *                than or equal to <tt>fromKey</tt>.
+     * @throws ClassCastException if <tt>fromKey</tt> is not compatible
+     *         with this map's comparator (or, if the map has no comparator,
+     *         if <tt>fromKey</tt> does not implement <tt>Comparable</tt>).
+     * @throws IllegalArgumentException if this map is itself a subMap,
+     *         headMap, or tailMap, and <tt>fromKey</tt> is not within the
+     *         specified range of the subMap, headMap, or tailMap.
+     * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt> and
+     *               this map uses natural order, or its comparator does not
+     *               tolerate <tt>null</tt> keys.
+     */
+    public SortedMap<K,V> tailMap(K fromKey) {
         return new SubMap(fromKey, false);
     }
 
@@ -1497,7 +1565,7 @@ public class TreeMap<K,V>
         }
 
 
-        public NavigableMap<K,V> subMap(K fromKey, K toKey) {
+        public NavigableMap<K,V> navigableSubMap(K fromKey, K toKey) {
             if (!inRange2(fromKey))
                 throw new IllegalArgumentException("fromKey out of range");
             if (!inRange2(toKey))
@@ -1505,16 +1573,29 @@ public class TreeMap<K,V>
             return new SubMap(fromKey, toKey);
         }
 
-        public NavigableMap<K,V> headMap(K toKey) {
+        public NavigableMap<K,V> navigableHeadMap(K toKey) {
             if (!inRange2(toKey))
                 throw new IllegalArgumentException("toKey out of range");
             return new SubMap(fromStart, fromKey, false, toKey);
         }
 
-        public NavigableMap<K,V> tailMap(K fromKey) {
+        public NavigableMap<K,V> navigableTailMap(K fromKey) {
             if (!inRange2(fromKey))
                 throw new IllegalArgumentException("fromKey out of range");
             return new SubMap(false, fromKey, toEnd, toKey);
+        }
+
+
+        public SortedMap<K,V> subMap(K fromKey, K toKey) {
+            return navigableSubMap(fromKey, toKey);
+        }
+
+        public SortedMap<K,V> headMap(K toKey) {
+            return navigableHeadMap(toKey);
+        }
+
+        public SortedMap<K,V> tailMap(K fromKey) {
+            return navigableTailMap(fromKey);
         }
 
         private boolean inRange(K key) {

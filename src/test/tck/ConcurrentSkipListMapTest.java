@@ -735,7 +735,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      */
     public void testSubMapContents() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.subMap(two, four);
+        NavigableMap sm = map.navigableSubMap(two, four);
         assertEquals(two, sm.firstKey());
         assertEquals(three, sm.lastKey());
         assertEquals(2, sm.size());
@@ -773,7 +773,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
 
     public void testSubMapContents2() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.subMap(two, three);
+        NavigableMap sm = map.navigableSubMap(two, three);
         assertEquals(1, sm.size());
         assertEquals(two, sm.firstKey());
         assertEquals(two, sm.lastKey());
@@ -808,7 +808,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      */
     public void testHeadMapContents() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.headMap(four);
+        NavigableMap sm = map.navigableHeadMap(four);
         assertTrue(sm.containsKey(one));
         assertTrue(sm.containsKey(two));
         assertTrue(sm.containsKey(three));
@@ -834,7 +834,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      */
     public void testTailMapContents() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.tailMap(two);
+        NavigableMap sm = map.navigableTailMap(two);
         assertFalse(sm.containsKey(one));
         assertTrue(sm.containsKey(two));
         assertTrue(sm.containsKey(three));
@@ -878,7 +878,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         assertEquals("E", e.getValue());
         assertFalse(i.hasNext());
 
-        NavigableMap ssm = sm.tailMap(four);
+        NavigableMap ssm = sm.navigableTailMap(four);
         assertEquals(four, ssm.firstKey());
         assertEquals(five, ssm.lastKey());
         assertTrue(ssm.remove(four) != null);

@@ -11,7 +11,7 @@ import java.util.*;
  * A scalable concurrent {@link NavigableSet} implementation based on
  * a {@link ConcurrentSkipListMap}.  This class maintains a set in
  * ascending order, sorted according to the <i>natural order</i> for
- * the element's class (see {@link Comparable}), or by the comparator
+ * the elements' class (see {@link Comparable}), or by the comparator
  * provided at creation time, depending on which constructor is
  * used.<p>
  *
@@ -30,7 +30,7 @@ import java.util.*;
  * asynchronous nature of these sets, determining the current number
  * of elements requires a traversal of the elements. Additionally, the
  * bulk operations <tt>addAll</tt>, <tt>removeAll</tt>,
- * <<tt>retainAll</tt>, and tt>containsAll</tt> are <em>not</em>
+ * <tt>retainAll</tt>, and <tt>containsAll</tt> are <em>not</em>
  * guaranteed to be performed atomically. For example, an iterator
  * operating concurrently with an <tt>addAll</tt> operation might view
  * only some of the added elements.
@@ -397,14 +397,12 @@ public class ConcurrentSkipListSet<E>
         return m.lastKey();
     }
 
-
-
     /**
      * Returns a view of the portion of this set whose elements range from
      * <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>, exclusive.  (If
      * <tt>fromElement</tt> and <tt>toElement</tt> are equal, the returned
-     * sorted set is empty.)  The returned sorted set is backed by this set,
-     * so changes in the returned sorted set are reflected in this set, and
+     * navigable set is empty.)  The returned navigable set is backed by this set,
+     * so changes in the returned navigable set are reflected in this set, and
      * vice-versa. 
      * @param fromElement low endpoint (inclusive) of the subSet.
      * @param toElement high endpoint (exclusive) of the subSet.
@@ -420,14 +418,14 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if <tt>fromElement</tt> or
      *	       <tt>toElement</tt> is <tt>null</tt>.
      */
-    public NavigableSet<E> subSet(E fromElement, E toElement) {
+    public NavigableSet<E> navigableSubSet(E fromElement, E toElement) {
 	return new ConcurrentSkipListSubSet<E>(m, fromElement, toElement);
     }
 
     /**
      * Returns a view of the portion of this set whose elements are strictly
-     * less than <tt>toElement</tt>.  The returned sorted set is backed by
-     * this set, so changes in the returned sorted set are reflected in this
+     * less than <tt>toElement</tt>.  The returned navigable set is backed by
+     * this set, so changes in the returned navigable set are reflected in this
      * set, and vice-versa.  
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
@@ -437,7 +435,7 @@ public class ConcurrentSkipListSet<E>
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>.
      */
-    public NavigableSet<E> headSet(E toElement) {
+    public NavigableSet<E> navigableHeadSet(E toElement) {
 	return new ConcurrentSkipListSubSet<E>(m, null, toElement);
     }
 
@@ -445,8 +443,8 @@ public class ConcurrentSkipListSet<E>
     /**
      * Returns a view of the portion of this set whose elements are
      * greater than or equal to <tt>fromElement</tt>.  The returned
-     * sorted set is backed by this set, so changes in the returned
-     * sorted set are reflected in this set, and vice-versa.
+     * navigable set is backed by this set, so changes in the returned
+     * navigable set are reflected in this set, and vice-versa.
      * @param fromElement low endpoint (inclusive) of the tailSet.
      * @return a view of the portion of this set whose elements are
      * greater than or equal to <tt>fromElement</tt>.
@@ -456,7 +454,61 @@ public class ConcurrentSkipListSet<E>
      * <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>.
      */
-    public NavigableSet<E> tailSet(E fromElement) {
+    public NavigableSet<E> navigableTailSet(E fromElement) {
+	return new ConcurrentSkipListSubSet<E>(m, fromElement, null);
+    }
+
+
+    /**
+     * Equivalent to <tt>navigableSubSet</tt> but with a return
+     * type conforming to the <tt>SortedSet</tt> interface.
+     * @param fromElement low endpoint (inclusive) of the subSet.
+     * @param toElement high endpoint (exclusive) of the subSet.
+     * @return a view of the portion of this set whose elements range from
+     * 	       <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
+     * 	       exclusive.
+     * @throws ClassCastException if <tt>fromElement</tt> and
+     *         <tt>toElement</tt> cannot be compared to one another using
+     *         this set's comparator (or, if the set has no comparator,
+     *         using natural ordering).
+     * @throws IllegalArgumentException if <tt>fromElement</tt> is
+     * greater than <tt>toElement</tt>.
+     * @throws NullPointerException if <tt>fromElement</tt> or
+     *	       <tt>toElement</tt> is <tt>null</tt>.
+     */
+    public SortedSet<E> subSet(E fromElement, E toElement) {
+	return new ConcurrentSkipListSubSet<E>(m, fromElement, toElement);
+    }
+
+    /**
+     * Equivalent to <tt>navigableHeadSet</tt> but with a return
+     * type conforming to the <tt>SortedSet</tt> interface.
+     * @param toElement high endpoint (exclusive) of the headSet.
+     * @return a view of the portion of this set whose elements are strictly
+     * 	       less than toElement.
+     * @throws ClassCastException if <tt>toElement</tt> is not compatible
+     *         with this set's comparator (or, if the set has no comparator,
+     *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
+     * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>.
+     */
+    public SortedSet<E> headSet(E toElement) {
+	return new ConcurrentSkipListSubSet<E>(m, null, toElement);
+    }
+
+
+    /**
+     * Equivalent to <tt>navigableTailSet</tt> but with a return
+     * type conforming to the <tt>SortedSet</tt> interface.
+     * @param fromElement low endpoint (inclusive) of the tailSet.
+     * @return a view of the portion of this set whose elements are
+     * greater than or equal to <tt>fromElement</tt>.
+     * @throws ClassCastException if <tt>fromElement</tt> is not
+     * compatible with this set's comparator (or, if the set has no
+     * comparator, if <tt>fromElement</tt> does not implement
+     * <tt>Comparable</tt>).
+     * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>.
+     */
+    public SortedSet<E> tailSet(E fromElement) {
 	return new ConcurrentSkipListSubSet<E>(m, fromElement, null);
     }
 
@@ -495,14 +547,14 @@ public class ConcurrentSkipListSet<E>
 
         // subsubset construction
 
-        public NavigableSet<E> subSet(E fromElement, E toElement) {
+        public NavigableSet<E> navigableSubSet(E fromElement, E toElement) {
             if (!s.inOpenRange(fromElement) || !s.inOpenRange(toElement))
                 throw new IllegalArgumentException("element out of range");
             return new ConcurrentSkipListSubSet<E>(s.getMap(), 
                                                    fromElement, toElement);
         }
 
-        public NavigableSet<E> headSet(E toElement) {
+        public NavigableSet<E> navigableHeadSet(E toElement) {
             E least = s.getLeast();
             if (!s.inOpenRange(toElement))
                 throw new IllegalArgumentException("element out of range");
@@ -510,12 +562,24 @@ public class ConcurrentSkipListSet<E>
                                                    least, toElement);
         }
         
-        public NavigableSet<E> tailSet(E fromElement) {
+        public NavigableSet<E> navigableTailSet(E fromElement) {
             E fence = s.getFence();
             if (!s.inOpenRange(fromElement))
                 throw new IllegalArgumentException("element out of range");
             return new ConcurrentSkipListSubSet<E>(s.getMap(), 
                                                    fromElement, fence);
+        }
+
+        public SortedSet<E> subSet(E fromElement, E toElement) {
+            return  navigableSubSet(fromElement, toElement);
+        }
+
+        public SortedSet<E> headSet(E toElement) {
+            return navigableHeadSet(toElement);
+        }
+        
+        public SortedSet<E> tailSet(E fromElement) {
+            return navigableTailSet(fromElement);
         }
 
         // relays to submap methods

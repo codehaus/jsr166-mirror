@@ -278,35 +278,35 @@ public class TreeSet<E>
     }
 
     /**
-     * Returns a view of the portion of this set whose elements range from
-     * <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>, exclusive.  (If
-     * <tt>fromElement</tt> and <tt>toElement</tt> are equal, the returned
-     * sorted set is empty.)  The returned sorted set is backed by this set,
-     * so changes in the returned sorted set are reflected in this set, and
-     * vice-versa.  The returned sorted set supports all optional Set
-     * operations.<p>
+     * Returns a view of the portion of this set whose elements range
+     * from <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
+     * exclusive.  (If <tt>fromElement</tt> and <tt>toElement</tt> are
+     * equal, the returned navigable set is empty.)  The returned
+     * navigable set is backed by this set, so changes in the returned
+     * navigable set are reflected in this set, and vice-versa.  The
+     * returned navigable set supports all optional Set operations.<p>
      *
-     * The sorted set returned by this method will throw an
+     * The navigable set returned by this method will throw an
      * <tt>IllegalArgumentException</tt> if the user attempts to insert an
      * element outside the specified range.<p>
      *
-     * Note: this method always returns a <i>half-open range</i> (which
-     * includes its low endpoint but not its high endpoint).  If you need a
-     * <i>closed range</i> (which includes both endpoints), and the element
-     * type allows for calculation of the successor of a specified value,
-     * merely request the subrange from <tt>lowEndpoint</tt> to
-     * <tt>successor(highEndpoint)</tt>.  For example, suppose that <tt>s</tt>
-     * is a sorted set of strings.  The following idiom obtains a view
-     * containing all of the strings in <tt>s</tt> from <tt>low</tt> to
-     * <tt>high</tt>, inclusive: <pre>
-     *     NavigableSet sub = s.subSet(low, high+"\0");
+     * Note: this method always returns a <i>half-open range</i>
+     * (which includes its low endpoint but not its high endpoint).
+     * If you need a <i>closed range</i> (which includes both
+     * endpoints), and the element type allows for calculation of the
+     * successor of a specified value, merely request the subrange
+     * from <tt>lowEndpoint</tt> to <tt>successor(highEndpoint)</tt>.
+     * For example, suppose that <tt>s</tt> is a navigable set of
+     * strings.  The following idiom obtains a view containing all of
+     * the strings in <tt>s</tt> from <tt>low</tt> to <tt>high</tt>,
+     * inclusive: <pre> NavigableSet sub = s.subSet(low, high+"\0");
      * </pre>
      *
      * A similar technique can be used to generate an <i>open range</i> (which
      * contains neither endpoint).  The following idiom obtains a view
      * containing all of the strings in <tt>s</tt> from <tt>low</tt> to
      * <tt>high</tt>, exclusive: <pre>
-     *     NavigableSet sub = s.subSet(low+"\0", high);
+     *     NavigableSet sub = s.navigableSubSet(low+"\0", high);
      * </pre>
      *
      * @param fromElement low endpoint (inclusive) of the subSet.
@@ -325,29 +325,31 @@ public class TreeSet<E>
      *	       order, or its comparator does not tolerate <tt>null</tt>
      *         elements.
      */
-    public NavigableSet<E> subSet(E fromElement, E toElement) {
-	return new TreeSet<E>(m.subMap(fromElement, toElement));
+    public NavigableSet<E> navigableSubSet(E fromElement, E toElement) {
+	return new TreeSet<E>(m.navigableSubMap(fromElement, toElement));
     }
 
     /**
-     * Returns a view of the portion of this set whose elements are strictly
-     * less than <tt>toElement</tt>.  The returned sorted set is backed by
-     * this set, so changes in the returned sorted set are reflected in this
-     * set, and vice-versa.  The returned sorted set supports all optional set
-     * operations.<p>
+     * Returns a view of the portion of this set whose elements are
+     * strictly less than <tt>toElement</tt>.  The returned navigable
+     * set is backed by this set, so changes in the returned navigable
+     * set are reflected in this set, and vice-versa.  The returned
+     * navigable set supports all optional set operations.<p>
      *
-     * The sorted set returned by this method will throw an
-     * <tt>IllegalArgumentException</tt> if the user attempts to insert an
-     * element greater than or equal to <tt>toElement</tt>.<p>
+     * The navigable set returned by this method will throw an
+     * <tt>IllegalArgumentException</tt> if the user attempts to
+     * insert an element greater than or equal to
+     * <tt>toElement</tt>.<p>
      *
-     * Note: this method always returns a view that does not contain its
-     * (high) endpoint.  If you need a view that does contain this endpoint,
-     * and the element type allows for calculation of the successor of a
-     * specified value, merely request a headSet bounded by
-     * <tt>successor(highEndpoint)</tt>.  For example, suppose that <tt>s</tt>
-     * is a sorted set of strings.  The following idiom obtains a view
-     * containing all of the strings in <tt>s</tt> that are less than or equal
-     * to <tt>high</tt>: <pre> NavigableSet head = s.headSet(high+"\0");</pre>
+     * Note: this method always returns a view that does not contain
+     * its (high) endpoint.  If you need a view that does contain this
+     * endpoint, and the element type allows for calculation of the
+     * successor of a specified value, merely request a headSet
+     * bounded by <tt>successor(highEndpoint)</tt>.  For example,
+     * suppose that <tt>s</tt> is a navigable set of strings.  The
+     * following idiom obtains a view containing all of the strings in
+     * <tt>s</tt> that are less than or equal to <tt>high</tt>: 
+     * <pre> NavigableSet head = s.navigableHeadSet(high+"\0");</pre>
      *
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
@@ -362,30 +364,30 @@ public class TreeSet<E>
      *	       this set uses natural ordering, or its comparator does
      *         not tolerate <tt>null</tt> elements.
      */
-    public NavigableSet<E> headSet(E toElement) {
-	return new TreeSet<E>(m.headMap(toElement));
+    public NavigableSet<E> navigableHeadSet(E toElement) {
+	return new TreeSet<E>(m.navigableHeadMap(toElement));
     }
 
     /**
      * Returns a view of the portion of this set whose elements are
-     * greater than or equal to <tt>fromElement</tt>.  The returned sorted set
-     * is backed by this set, so changes in the returned sorted set are
-     * reflected in this set, and vice-versa.  The returned sorted set
-     * supports all optional set operations.<p>
+     * greater than or equal to <tt>fromElement</tt>.  The returned
+     * navigable set is backed by this set, so changes in the returned
+     * navigable set are reflected in this set, and vice-versa.  The
+     * returned navigable set supports all optional set operations.<p>
      *
-     * The sorted set returned by this method will throw an
+     * The navigable set returned by this method will throw an
      * <tt>IllegalArgumentException</tt> if the user attempts to insert an
      * element less than <tt>fromElement</tt>.
      *
      * Note: this method always returns a view that contains its (low)
-     * endpoint.  If you need a view that does not contain this endpoint, and
-     * the element type allows for calculation of the successor of a specified
-     * value, merely request a tailSet bounded by
-     * <tt>successor(lowEndpoint)</tt>.  For example, suppose that <tt>s</tt>
-     * is a sorted set of strings.  The following idiom obtains a view
-     * containing all of the strings in <tt>s</tt> that are strictly greater
-     * than <tt>low</tt>: <pre>
-     *     NavigableSet tail = s.tailSet(low+"\0");
+     * endpoint.  If you need a view that does not contain this
+     * endpoint, and the element type allows for calculation of the
+     * successor of a specified value, merely request a tailSet
+     * bounded by <tt>successor(lowEndpoint)</tt>.  For example,
+     * suppose that <tt>s</tt> is a navigable set of strings.  The
+     * following idiom obtains a view containing all of the strings in
+     * <tt>s</tt> that are strictly greater than <tt>low</tt>:
+     * <pre>  NavigableSet tail = s.navigableTailSet(low+"\0");
      * </pre>
      *
      * @param fromElement low endpoint (inclusive) of the tailSet.
@@ -401,8 +403,73 @@ public class TreeSet<E>
      *	       and this set uses natural ordering, or its comparator does
      *         not tolerate <tt>null</tt> elements.
      */
-    public NavigableSet<E> tailSet(E fromElement) {
-	return new TreeSet<E>(m.tailMap(fromElement));
+    public NavigableSet<E> navigableTailSet(E fromElement) {
+	return new TreeSet<E>(m.navigableTailMap(fromElement));
+    }
+
+
+    /**
+     * Equivalent to <tt>navigableSubSet</tt> but with a return
+     * type conforming to the <tt>SortedSet</tt> interface.
+     * @param fromElement low endpoint (inclusive) of the subSet.
+     * @param toElement high endpoint (exclusive) of the subSet.
+     * @return a view of the portion of this set whose elements range from
+     * 	       <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
+     * 	       exclusive.
+     * @throws ClassCastException if <tt>fromElement</tt> and
+     *         <tt>toElement</tt> cannot be compared to one another using
+     *         this set's comparator (or, if the set has no comparator,
+     *         using natural ordering).
+     * @throws IllegalArgumentException if <tt>fromElement</tt> is greater than
+     *         <tt>toElement</tt>.
+     * @throws NullPointerException if <tt>fromElement</tt> or
+     *	       <tt>toElement</tt> is <tt>null</tt> and this set uses natural
+     *	       order, or its comparator does not tolerate <tt>null</tt>
+     *         elements.
+     */
+    public SortedSet<E> subSet(E fromElement, E toElement) {
+	return new TreeSet<E>(m.navigableSubMap(fromElement, toElement));
+    }
+
+    /**
+     * Equivalent to <tt>navigableHeadSet</tt> but with a return
+     * type conforming to the <tt>SortedSet</tt> interface.
+     *
+     * @param toElement high endpoint (exclusive) of the headSet.
+     * @return a view of the portion of this set whose elements are strictly
+     * 	       less than toElement.
+     * @throws ClassCastException if <tt>toElement</tt> is not compatible
+     *         with this set's comparator (or, if the set has no comparator,
+     *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
+     * @throws IllegalArgumentException if this set is itself a subSet,
+     *         headSet, or tailSet, and <tt>toElement</tt> is not within the
+     *         specified range of the subSet, headSet, or tailSet.
+     * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt> and
+     *	       this set uses natural ordering, or its comparator does
+     *         not tolerate <tt>null</tt> elements.
+     */
+    public SortedSet<E> headSet(E toElement) {
+	return new TreeSet<E>(m.navigableHeadMap(toElement));
+    }
+
+    /**
+     * Equivalent to <tt>navigableTailSet</tt> but with a return
+     * type conforming to the <tt>SortedSet</tt> interface.
+     * @param fromElement low endpoint (inclusive) of the tailSet.
+     * @return a view of the portion of this set whose elements are
+     * 	       greater than or equal to <tt>fromElement</tt>.
+     * @throws ClassCastException if <tt>fromElement</tt> is not compatible
+     *         with this set's comparator (or, if the set has no comparator,
+     *         if <tt>fromElement</tt> does not implement <tt>Comparable</tt>).
+     * @throws IllegalArgumentException if this set is itself a subSet,
+     *         headSet, or tailSet, and <tt>fromElement</tt> is not within the
+     *         specified range of the subSet, headSet, or tailSet.
+     * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
+     *	       and this set uses natural ordering, or its comparator does
+     *         not tolerate <tt>null</tt> elements.
+     */
+    public SortedSet<E> tailSet(E fromElement) {
+	return new TreeSet<E>(m.navigableTailMap(fromElement));
     }
 
     /**

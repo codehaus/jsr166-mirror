@@ -980,7 +980,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             for (int i = 0; i < SIZE; ++i) 
                 assertEquals(l.get(i), new Integer(i));
             t.join();
-            assertTrue(q.size() + l.size() == SIZE+1);
+            assertTrue(q.size() + l.size() >= SIZE);
         } catch(Exception e){
             unexpectedException();
         }

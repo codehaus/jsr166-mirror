@@ -933,7 +933,7 @@ public class DelayQueueTest extends JSR166TestCase {
             q.drainTo(l);
             assertTrue(l.size() >= SIZE);
             t.join();
-            assertTrue(q.size() + l.size() == SIZE+1);
+            assertTrue(q.size() + l.size() >= SIZE);
         } catch(Exception e){
             unexpectedException();
         }

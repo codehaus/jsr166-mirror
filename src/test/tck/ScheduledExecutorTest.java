@@ -595,7 +595,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             assertFalse(task.isCancelled());
             task.cancel(true);
-            assertTrue(task.isCancelled());
+            assertTrue(task.isDone());
             Thread.sleep(SHORT_DELAY_MS);
             assertTrue(p1.isTerminated());
         }

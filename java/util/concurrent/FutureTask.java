@@ -24,7 +24,7 @@ package java.util.concurrent;
  * @see Cancellable
  * @see Executor
  */
-public class FutureTask<V> implements Runnable, Cancellable, Future {
+public class FutureTask<V> implements Runnable, Cancellable, Future<V> {
 
     private V result;
     private Throwable exception;
@@ -35,7 +35,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
 
     /**
      * Construct a FutureTask that will upon running, execute the
-     * given Callable.  
+     * given Callable.
      */
     public FutureTask(Callable<V> callable) {
         this.callable = callable;
@@ -62,7 +62,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
 
     /**
      * Return true if the underlying task has completed, either
-     * normally or via cancellation.  
+     * normally or via cancellation.
      */
     public synchronized boolean isDone() {
         return ready;
@@ -70,7 +70,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
 
     /**
      * Wait if necessary for the computation to complete, and then retrieve
-     * its result.  
+     * its result.
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws CancellationException if task producing this value was cancelled before completion.
      * @throws ExecutionException if the underlying computation
@@ -122,15 +122,15 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
 
     /**
      * Cancel computation of this future if it has not already completed.
-     * If the computation has not started when cancel() is called, the 
-     * computation will be cancelled.  If it has already started, then 
+     * If the computation has not started when cancel() is called, the
+     * computation will be cancelled.  If it has already started, then
      * whether or not the computation is cancelled depends on the value of
-     * the interruptIfRunning argument.  
+     * the interruptIfRunning argument.
      * @param interruptIfRunning true if the execution of the run method
      * computing this value should be interrupted. Otherwise,
      * in-progress executions are allowed to complete.
      * @return true unless the task has already completed or already
-     * been cancelled.  
+     * been cancelled.
      */
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
         if (ready || cancelled)
@@ -152,7 +152,7 @@ public class FutureTask<V> implements Runnable, Cancellable, Future {
     /**
      * Set the value of this Future to the given value.  This method
      * should only be called once; once it is called, the computation
-     * is assumed to have completed.  
+     * is assumed to have completed.
      * @@@brian We should guard against changing the value by throwing
      * an exception if the value has already been set!
      */

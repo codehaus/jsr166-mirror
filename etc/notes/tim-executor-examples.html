@@ -17,7 +17,7 @@ service that blocks while waiting for a response. </p>
     public interface Response ...
 
     interface BlockingService {
-        Response serve (Request req) throws ServiceException;
+        Response serve(Request req) throws ServiceException;
     }
 </pre>
 
@@ -26,7 +26,7 @@ returns a <code>Future&lt;Response&gt;</code> without blocking. </p>
 
 <pre>
     interface NonBlockingService {
-        Future&lt;Response&gt; serve (Request req);
+        Future&lt;Response&gt; serve(Request req);
     }
 </pre>
 
@@ -42,11 +42,11 @@ proposal. </p>
 
     class NonBlockingServiceAdapter implements NonBlockingService {
 
-        public NonBlockingServiceAdapter (BlockingService svc) {
+        public NonBlockingServiceAdapter(BlockingService svc) {
             this(svc, null);
         }
 
-        public NonBlockingServiceAdapter (BlockingService svc, Executor executor) {
+        public NonBlockingServiceAdapter(BlockingService svc, Executor executor) {
             this.blockingService = svc;
             if (executor == null) {
                 this.executor = Executors.newFixedThreadPool(3);
@@ -56,15 +56,13 @@ proposal. </p>
             }
         }
 
-        public Future&lt;Response&gt; serve (final Request req) {
+        public Future&lt;Response&gt; serve(final Request req) {
             Callable&lt;Response&gt; task = new Callable&lt;Response&gt;() {
-                public Response call () {
+                public Response call() {
                     return blockingService.serve(req);
                 }
             };
-            FutureTask&lt;Response&gt; ftask = new FutureTask&lt;Response&gt;(task);
-            executor.execute(ftask);
-            return ftask;
+            return Executors.execute(executor, task);
         }
 
         private final BlockingService blockingService;
@@ -131,62 +129,44 @@ underlying <code>NativeImpl</code>. </p>
 <pre>
     class SingleThreadAdapter {
 
-        public SingleThreadAdapter (String library) {
+        public SingleThreadAdapter(String library) {
             this.executor = Executors.newSingleThreadExecutor();
             try {
-                FutureTask ftask = new FutureTask(new Runnable () {
-                    public void run () {
-                        System.loadLibrary(library);
-                    }
-                });
-                executor.execute(ftask);
-                ftask.get();
-            }
-            catch (ExecutionException e) {
-                if (e.getCause() == null) {
-                    throw new RuntimeException(e);
-                }
+                Executors.invoke(executor, new Runnable() {
+                    public void run () { System.loadLibrary(library); }
+                }, Boolean.TRUE);
+            } catch (ExecutionException e) {
+                // System.loadLibrary does not throw checked exceptions.
                 if (e.getCause() instanceof RuntimeException) {
                     throw (RuntimeException) e.getCause();
                 }
-                if (e.getCause() instanceof Error) {
-                    throw (Error) e.getCause();
-                }
-                throw new RuntimeException(e.getCause());
+                throw (Error) e.getCause();
             }
             // ... other invocation or interruption related catch clauses ...
         }
 
-        public Object newInstance (Callable creator) throws Exception {
+        public Object newInstance(Callable creator) throws Exception {
             try {
-                FutureTask createTask = new FutureTask(creator);
-                executor.execute(createTask);
-                Object instance = createTask.get();
+                Object instance = Executors.invoke(executor, creator);
                 return Proxy.newProxyInstance(
                     instance.getClass().getClassLoader(),
                     instance.getClass().getInterfaces(),
                     new Handler(instance));
-            }
-            catch (ExecutionException e) {
-                if (e.getCause() == null) {
-                    throw e;
-                }
+            } catch (ExecutionException e) {
                 if (e.getCause() instanceof Exception) {
-                    throw e.getCause();
+                    throw (Exception) e.getCause();
                 }
-                else {
-                    throw new RuntimeException(e.getCause());
-                }
+                throw (Error) e.getCause();
             }
             // ... other invocation or interruption related catch clauses ...
         }
 
         private class Handler implements InvocationHandler {
-            public Object invoke (Object proxy,
-                                  final Method method,
-                                  final Object[] args) throws Throwable {
+            public Object invoke(Object proxy,
+                                 final Method method,
+                                 final Object[] args) throws Throwable {
                 try {
-                    Callable task = new Callable () {
+                    Callable task = new Callable() {
                         public Object call () throws Exception {
                             try {
                                 return method.invoke(instance, args);
@@ -195,21 +175,18 @@ underlying <code>NativeImpl</code>. </p>
                                 throw e;
                             }
                             catch (Throwable e) {
-                                throw RuntimeException(e);
+                                throw (Error) e;
                             }
                         }
                     };
-                    FutureTask ftask = new FutureTask(task)
-                    executor.execute(ftask);
-                    return ftask.get();
-                }
-                catch (ExecutionException e) {
-                    throw e.getCause() == null ? e : e.getCause();
+                    return Executors.invoke(executor, task);
+                } catch (ExecutionException e) {
+                    throw e.getCause();
                 }
                 // ... other invocation or interruption related catch clauses ...
             }
 
-            Handler (Object instance) {
+            Handler(Object instance) {
                 this.instance = instance;
             }
 
@@ -226,8 +203,8 @@ underlying <code>NativeImpl</code>. </p>
     try {
         SingleThreadAdapter adapter = new SingleThreadAdapter("LegacyEngine.dll");
         NativeInterface ni = (NativeInterface)
-            adapter.newInstance(new Callable&lt;NativeInterface&gt; () {
-                public NativeInterface call () {
+            adapter.newInstance(new Callable&lt;NativeInterface&gt;() {
+                public NativeInterface call() {
                     return new NativeImpl(); // may use native calls
                 }
             });
@@ -241,8 +218,9 @@ underlying <code>NativeImpl</code>. </p>
 of Executor will be used in the implementation, there is no reason to
 expose this anywhere except in the SingleThreadAdapter constructor. </p>
 
-<p> The exception handling is delicate and long winded. I punted on
-most of it, and I'm not sure I got the rest right either. </p>
+<p> The exception handling is a bit tricky. Joe Bowbeer showed me
+how to do it right, but it took me a while to understand <em>why</em>
+it was right. I wonder if other users would be similarly confused. </p>
 
 </body>
 </html>

@@ -92,4 +92,45 @@ public class Executors {
                                                          ExecutorService.Callbacks handler) {
         return new ScheduledExecutor(minThreads, maxThreads, keepAliveTime, granularity, handler);
     }
+
+    /**
+     * Execute a task and return a future for the completion of that task.
+     */
+    public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
+        FutureTask<T> ftask = new FutureTask(task, value);
+        executor.execute(ftask);
+        return ftask;
+    }
+
+    /**
+     * Execute a value-returning task and return a future for the task's
+     * return value.
+     */
+    public static <T> Future<T> execute(Executor executor, Callable<T> task) {
+        FutureTask<T> ftask = new FutureTask(task);
+        executor.execute(ftask);
+        return ftask;
+    }
+
+    /**
+     * Execute a task and block until it completes normally or throws
+     * an exception.
+     */
+    public static <T> T invoke(Executor executor, Runnable task, T value)
+            throws ExecutionException, InterruptedException {
+        FutureTask<T> ftask = new FutureTask(task, value);
+        executor.execute(ftask);
+        return ftask.get();
+    }
+
+    /**
+     * Execute a value-returning task and block until it returns a value
+     * or throws an exception.
+     */
+    public static <T> T invoke(Executor executor, Callable<T> task)
+            throws ExecutionException, InterruptedException {
+        FutureTask<T> ftask = new FutureTask(task);
+        executor.execute(ftask);
+        return ftask.get();
+    }
 }

@@ -1,72 +1,101 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
  <head>
-   <title>JSR 166 Snapshot Introduction.</title>
+   <title>JSR 166 Community Review Draft Introduction.</title>
   </head>
 
   <body bgcolor="#ffffee" vlink="#0000aa" link="#cc0000">
-  <h1>JSR 166 Snapshot Introduction.</h1>
+  <h1>JJSR 166 Community Review Draft Introduction.</h1>
 
   by <a href="http://gee.cs.oswego.edu/dl">Doug Lea</a>
   <p>
 
-To join a mailing list discussing this JSR, go to:
-<A HREF="http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest"> http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest</A> .
-
+To chack for updates to this draft, access a preliminary prototype
+release of main functionality, or join a mailing list discussing this
+JSR, go to: <A
+HREF="http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest">
+http://altair.cs.oswego.edu/mailman/listinfo/concurrency-interest</A>
+.
 <p>
-<em>
- Disclaimer - This prototype is experimental code developed as part of
- JCP JSR166 and made available to the developer community for use
- as-is. It is not a supported product. Use it at your own risk. The
- specification, language and implementation are subject to change as a
- result of your feedback. Because these features have not yet been
- approved for addition to the Java language, there is no schedule for
- their inclusion in a product.
-</em>
 
-<p> JSR166 introduces package <tt>java.util.concurrent</tt> containing
-utility classes commonly useful in concurrent programming. Like
-package java.util, it includes a few small standardized extensible
-frameworks, as well as some classes that provide useful functionality
-and are otherwise tedious or difficult to implement. JSR-166 focusses
-on breadth, prviding critical functionality useful across a wide range
-of concurrent programming styles and applications, ranging from
-low-level atomic operations, to customizable locks and synchronization
-aids, to various concurrent data structures, to thread pools.
-Descriptions of the main components may be found in the associated
-package documentation.
+<em> <b>Disclaimer</b>. The prototype implementation is experimental
+code developed as part of JCP JSR-166 is made available to the
+developer community for use as-is. It is not a supported product. Use
+it at your own risk. The specification, language and implementation
+are subject to change as a result of your feedback. Because these
+features have not yet been approved for addition to the Java language,
+there is no schedule for their inclusion in a product.  </em>
 
-<p> JSR166 also includes a few changes and additions in packages
-outside of java.util.concurrent.  Here are brief descriptions.
+<p> <em> <b>Disclaimer</b>.  This draft specification was produced
+using JDK1.4 tools plus some preprocessing. The resulting javadocs do
+not yet correctly render other planned JDK1.5 constructs on which
+JSR-166 relies, most notably the use of generic types. We are
+releasing this version now (before the availability of JDK1.5-based
+tools) because, even though they are misformatted and sometimes lack
+proper cross-referencing, they otherwise convey the intended
+specifications.  </em>
+
+<p> JSR-166 introduces package <tt>java.util.concurrent</tt>
+containing utility classes commonly useful in concurrent
+programming. Like package <tt>java.util</tt>, it includes a few small
+standardized extensible frameworks, as well as some classes that
+provide useful functionality and are otherwise tedious or difficult to
+implement.
+
+<p>JSR-166 focusses on breadth, providing critical functionality
+useful across a wide range of concurrent programming styles and
+applications, ranging from low-level atomic operations, to
+customizable locks and synchronization aids, to various concurrent
+data structures, to high-level execution agents including thread
+pools. This diversity reflects the range of contexts in which
+developers of concurrent programs have been found to require or desire
+support not previously available in J2SE, which also keeping the
+resulting package small; providing only that minimial support for
+which it makes sense to standardize.
+
+<p>Descriptions and brief motivations for the main components may be
+found in the associated package documentation.  JSR-166 also includes
+a few changes and additions in packages outside of
+java.util.concurrent.  Here are brief descriptions.
 
 <h2>Queues</h2>
 
 A basic (nonblocking) {@link java.util.Queue} interface extending
-java.util.Collection is introduced into java.util. Existing class
-java.util.LinkedList is adapted to support Queue, and a new
-non-thread-safe {@link java.util.PriorityQueue} is added.
+{@link java.util.Collection} is introduced into
+<tt>java.util</tt>. Existing class {@link java.util.LinkedList} is
+adapted to support Queue, and a new non-thread-safe {@link
+java.util.PriorityQueue} is added.
 
-<h2>Uncaught Exception Handlers</h2>
+<h2>Threads</h2>
 
-The java.lang.Thread class is modified to allow per-thread
-installation of handlers for uncaught exceptions. Ths optionally
-disassociates these handlers from ThreadGroups, which has proven to be
-too inflexible in many multithreaded programs. (Note that the
-combination of features in JSR166 make ThreadGroups even less likely
-to be used in most programs. Perhaps they will eventually be
-deprecated.)
+Two minor changes are introduced to the {@link java.lang.Thread}
+class: It now allows per-thread installation of handlers for uncaught
+exceptions. Ths optionally disassociates handlers from ThreadGroups,
+which has proven to be too inflexible. (Note that the combination of
+features in JSR-166 make ThreadGroups even less likely to be used in
+most programs. Perhaps they will eventually be deprecated.) Secondly,
+access checks are no longer required when a Thread interrupts
+<em>itself</em>.  The <tt>interrupt</tt> method is the only way to
+re-assert a thread's interruption status (and in the case of
+self-interruption has no other effect than this).  The check here
+previously caused unjustifiable and uncontrollable failures when
+restricted code invoked library code that must reassert interruption
+to correctly propagate status when encountering some
+<tt>InterruptedExceptions</tt>.
 
-<h2>High precision timing</h2>
+<h2>Timing</h2>
 
-Method <tt>nanoTime</tt> is added to <tt>java.lang.System</tt>. It
-provides a high-precision timing facility that is distinct from
-and uncoordinated with <tt>System.currentTimeMillis</tt>.
+Method <tt>nanoTime</tt> is added to {@link java.lang.System}. It
+provides a high-precision timing facility that is distinct from and
+uncoordinated with <tt>System.currentTimeMillis</tt>.
 
 <h2>Removing ThreadLocals</h2>
 
-The java.lang.ThreadLocal class now supports a means to remove a
-ThreadLocal, which is needed in some thread-pool and worker-thread
+The {@link java.lang.ThreadLocal} class now supports a means to remove
+a ThreadLocal, which is needed in some thread-pool and worker-thread
 designs.
+
+
 
   <hr>
   <address><A HREF="http://gee.cs.oswego.edu/dl">Doug Lea</A></address>

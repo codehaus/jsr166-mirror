@@ -152,9 +152,9 @@ import java.util.*;
 public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializable  {
     private static final long serialVersionUID = -6992448646407690164L;
     /** Inner class providing readlock */
-    private final ReentrantReadWriteLock.ReadLock readerLock = new ReadLock();
+    private final ReentrantReadWriteLock.ReadLock readerLock;
     /** Inner class providing writelock */
-    private final ReentrantReadWriteLock.WriteLock writerLock = new WriteLock();
+    private final ReentrantReadWriteLock.WriteLock writerLock;
     /** Performs all synchronization mechanics */
     private final Sync sync;
 
@@ -164,6 +164,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     public ReentrantReadWriteLock() {
         sync = new NonfairSync();
+        readerLock = new ReadLock(this);
+        writerLock = new WriteLock(this);
     }
 
     /**
@@ -174,6 +176,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     public ReentrantReadWriteLock(boolean fair) {
         sync = (fair)? new FairSync() : new NonfairSync();
+        readerLock = new ReadLock(this);
+        writerLock = new WriteLock(this);
     }
 
     public ReentrantReadWriteLock.WriteLock writeLock() { return writerLock; }
@@ -389,11 +393,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * The lock returned by method {@link ReentrantReadWriteLock#readLock}.
      */
-    public class ReadLock implements Lock, java.io.Serializable  {
+    public static class ReadLock implements Lock, java.io.Serializable  {
         private static final long serialVersionUID = -5992448646407690164L;
-
-        /** Constructor for use by subclasses */
-        protected ReadLock() {}
+        private final Sync sync;
+        
+        /** 
+         * Constructor for use by subclasses 
+         * @param lock the outer lock object
+         * @throws NullPointerException if lock null
+         */
+        protected ReadLock(ReentrantReadWriteLock lock) {
+            sync = lock.sync;
+        }
 
         /**
          * Acquires the shared lock. 
@@ -589,11 +600,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * The lock returned by method {@link ReentrantReadWriteLock#writeLock}.
      */
-    public class WriteLock implements Lock, java.io.Serializable  {
+    public static class WriteLock implements Lock, java.io.Serializable  {
         private static final long serialVersionUID = -4992448646407690164L;
-
-        /** Constructor for use by subclasses */
-        protected WriteLock() {}
+        private final Sync sync;
+        
+        /** 
+         * Constructor for use by subclasses 
+         * @param lock the outer lock object
+         * @throws NullPointerException if lock null
+         */
+        protected WriteLock(ReentrantReadWriteLock lock) {
+            sync = lock.sync;
+        }
 
         /**
          * Acquire the lock. 
@@ -882,8 +900,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         return sync.getOwner();
     }
     
-    // Instrumentation methods
-
     /**
      * Queries the number of read locks held for this lock. This method is
      * designed for use in monitoring  system state, 

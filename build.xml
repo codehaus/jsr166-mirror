@@ -206,8 +206,10 @@
           depends="dist"
           description="Puts entire CVS tree, plus distribution productions, in a jar">
 
+<!--  
+    #keep build dir? - dl
     <delete dir="${build.dir}"/>
-
+-->
     <property name="release.jar" value="dist/jsr166-${version}-dist.jar"/>
 
     <jar basedir="${basedir}" destfile="${release.jar}">

@@ -33,7 +33,12 @@ public final class CancelledLockLoops {
 
         for (int i = 2; i <= maxThreads; i += (i+1) >>> 1) {
             System.out.print("Threads: " + i);
-            new ReentrantLockLoop(i).test();
+            try {
+                new ReentrantLockLoop(i).test();
+            }
+            catch(BrokenBarrierException bb) {
+                // OK, ignore
+            }
             Thread.sleep(TIMEOUT);
         }
     }

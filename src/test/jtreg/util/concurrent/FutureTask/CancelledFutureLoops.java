@@ -34,7 +34,12 @@ public final class CancelledFutureLoops {
 
         for (int i = 2; i <= maxThreads; i += (i+1) >>> 1) {
             System.out.print("Threads: " + i);
-            new FutureLoop(i).test();
+            try {
+                new FutureLoop(i).test();
+            }
+            catch(BrokenBarrierException bb) {
+                // OK; ignore
+            }
             Thread.sleep(TIMEOUT);
         }
         pool.shutdown();

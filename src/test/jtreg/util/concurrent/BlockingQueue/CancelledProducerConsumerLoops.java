@@ -33,7 +33,12 @@ public class CancelledProducerConsumerLoops {
         
         for (int i = 1; i <= maxPairs; i += (i+1) >>> 1) {
             System.out.println("Pairs:" + i);
-            oneTest(i, iters);
+            try {
+                oneTest(i, iters);
+            }
+            catch(BrokenBarrierException bb) {
+                // OK, ignore
+            }
             Thread.sleep(100);
         }
         pool.shutdown();

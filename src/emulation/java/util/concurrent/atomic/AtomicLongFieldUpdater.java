@@ -5,7 +5,6 @@
  */
 
 package java.util.concurrent.atomic;
-import sun.misc.Unsafe;
 import java.lang.reflect.*;
 
 /**
@@ -23,8 +22,7 @@ import java.lang.reflect.*;
  */
 
 public class  AtomicLongFieldUpdater<T> {
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private final long offset;
+    private final Field field;
 
     /**
      * Create an updater for objects with the given field.  The odd
@@ -40,10 +38,10 @@ public class  AtomicLongFieldUpdater<T> {
      * exception if the class does not hold field or is the wrong type.
      **/
     public AtomicLongFieldUpdater(T[] ta, String fieldName) {
-        Field field = null;
         try {
             Class tclass = ta.getClass().getComponentType();
             field = tclass.getDeclaredField(fieldName);
+            field.setAccessible(true);
         }
         catch(Exception ex) {
             throw new RuntimeException(ex);
@@ -56,7 +54,6 @@ public class  AtomicLongFieldUpdater<T> {
         if (!Modifier.isVolatile(field.getModifiers()))
             throw new IllegalArgumentException("Must be volatile type");
 
-        offset = unsafe.objectFieldOffset(field);
     }
 
     /**
@@ -72,13 +69,18 @@ public class  AtomicLongFieldUpdater<T> {
      **/
 
     public synchronized final boolean compareAndSet(T obj, long expect, long update) {
-        long value = unsafe.getLong(obj, offset);
-        if (value == expect) {
-            unsafe.putLong(obj, offset, update);
-            return true;
+        try {
+            long value = field.getLong(obj);
+            if (value == expect) {
+                field.setLong(obj, update);
+                return true;
+            }
+            else
+                return false;
         }
-        else
-            return false;
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 
     /**
@@ -102,15 +104,25 @@ public class  AtomicLongFieldUpdater<T> {
      * operation is guaranteed to act as a volatile store with respect
      * to subsequent invocations of <tt>compareAndSet</tt>.
      */
-    public final void set(T obj, long newValue) {
-        unsafe.putLong(obj, offset, newValue);
+    public final synchronized void set(T obj, long newValue) {
+        try {
+            field.setLong(obj, newValue);
+        }
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 
     /**
      * Get the current value held in the field by the given object.
      */
     public final long get(T obj) {
-        return unsafe.getLong(obj, offset);
+        try {
+            return field.getLong(obj);
+        }
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 
     /**

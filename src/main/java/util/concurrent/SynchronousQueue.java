@@ -129,29 +129,32 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 for (;;) {
                     if (item == null)
                         return true;
-                    if (done == null)
-                        done = this.newCondition();
                     if (timed) {
                         if (nanos <= 0) {
                             item = CANCELLED;
                             return false;
                         }
-                        nanos = done.awaitNanos(nanos);
                     }
-                    else
-                        done.await();
-                }
-            }
-            catch (InterruptedException ie) {
-                // If taken, return normally but set interrupt status
-                if (item == null) {
-                    Thread.currentThread().interrupt();
-                    return true;
-                }
-                else {
-                    item = CANCELLED;
-                    done.signal(); // propagate signal
-                    throw ie;
+                    try {
+                        if (done == null)
+                            done = this.newCondition();
+                        if (timed)
+                            nanos = done.awaitNanos(nanos);
+                        else
+                            done.await();
+                    }
+                    catch (InterruptedException ie) {
+                        // If taken, return normally but set interrupt status
+                        if (item == null) {
+                            Thread.currentThread().interrupt();
+                            return true;
+                        }
+                        else {
+                            item = CANCELLED;
+                            done.signal(); // propagate signal
+                            throw ie;
+                        }
+                    }
                 }
             }
             finally {
@@ -173,31 +176,34 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                         next = null;
                         return x;
                     }
-                    if (done == null)
-                        done = this.newCondition();
                     if (timed) {
                         if (nanos <= 0) {
                             item = CANCELLED;
                             return null;
                         }
-                        nanos = done.awaitNanos(nanos);
                     }
-                    else
-                        done.await();
-                }
-            }
-            catch(InterruptedException ie) {
-                Object x = item;
-                if (x != null) {
-                    item = null;
-                    next = null;
-                    Thread.currentThread().interrupt();
-                    return x;
-                }
-                else {
-                    item = CANCELLED;
-                    done.signal(); // propagate signal
-                    throw ie;
+                    try {
+                        if (done == null)
+                            done = this.newCondition();
+                        if (timed)
+                            nanos = done.awaitNanos(nanos);
+                        else
+                            done.await();
+                    }
+                    catch (InterruptedException ie) {
+                        x = item;
+                        if (x != null) {
+                            item = null;
+                            next = null;
+                            Thread.currentThread().interrupt();
+                            return x;
+                        }
+                        else {
+                            item = CANCELLED;
+                            done.signal(); // propagate signal
+                            throw ie;
+                        }
+                    }
                 }
             }
             finally {

@@ -1,5 +1,4 @@
 package java.util.concurrent.atomic;
-import sun.misc.Unsafe;
 import java.lang.reflect.*;
 
 /**
@@ -35,8 +34,7 @@ import java.lang.reflect.*;
  */
 
 public class  AtomicReferenceFieldUpdater<T, V> {
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private final long offset;
+    private final Field field;
 
     /**
      * Create an updater for objects with the given field.  The odd
@@ -53,7 +51,6 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * exception if the class does not hold field or is the wrong type.
      **/
     public AtomicReferenceFieldUpdater(T[] ta, V[] va, String fieldName) {
-        Field field = null;
         Class vclass = null;
         Class fieldClass = null;
         try {
@@ -61,6 +58,7 @@ public class  AtomicReferenceFieldUpdater<T, V> {
             field = tclass.getDeclaredField(fieldName);
             vclass = va.getClass().getComponentType();
             fieldClass = field.getType();
+            field.setAccessible(true);
         }
         catch(Exception ex) {
             throw new RuntimeException(ex);
@@ -72,7 +70,6 @@ public class  AtomicReferenceFieldUpdater<T, V> {
         if (!Modifier.isVolatile(field.getModifiers()))
             throw new IllegalArgumentException("Must be volatile type");
 
-        offset = unsafe.objectFieldOffset(field);
     }
 
     /**
@@ -86,13 +83,18 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      **/
 
     public synchronized final boolean compareAndSet(T obj, V expect, V update) {
-        V value = (V) unsafe.getObject(obj, offset);
-        if (value == expect) {
-            unsafe.putObject(obj, offset, update);
-            return true;
+        try {
+            V value = (V) field.get(obj);
+            if (value == expect) {
+                field.set(obj, update);
+                return true;
+            }
+            else
+                return false;
         }
-        else
-            return false;
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 
     /**
@@ -119,7 +121,12 @@ public class  AtomicReferenceFieldUpdater<T, V> {
      * to subsequent invocations of <tt>compareAndSet</tt>.
      */
     public synchronized final void set(T obj, V newValue) {
-        unsafe.putObject(obj, offset, newValue);
+        try {
+            field.set(obj, newValue);
+        }
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 }
 

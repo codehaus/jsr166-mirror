@@ -57,7 +57,7 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/26 23:05:13 $
+ * @revised $Date: 2003/06/28 15:33:31 $
  * @editor $Author: dl $
  * @author Doug Lea
  * 
@@ -416,7 +416,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
                 }
                 
                 if (nanos >= 0)
-                    JSR166Support.park(false, nanos);
+                    JSR166Support.parkNode(node, false, nanos);
                 
                 if (!interruptible) {
                     if (Thread.interrupted()) // consume interrupt for now 
@@ -514,7 +514,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
         Thread thr = s.thread;
         // don't bother signalling if has lock
         if (thr != null && thr != owner) 
-            JSR166Support.unpark(thr);
+            JSR166Support.unparkNode(s);
     }
 
 
@@ -1000,17 +1000,21 @@ public class ReentrantLock extends ReentrantLockQueueNode
             unlock();
             boolean wasInterrupted = false;
             
-            while (!isOffConditionQueue(w)) {
-                JSR166Support.park(false, 0);
-                if (Thread.interrupted()) {
-                    wasInterrupted = true;
-                    if (casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
-                        w.thread = null;
-                        w = null;
+            if (!isOffConditionQueue(w)) {
+                for (;;) {
+                    JSR166Support.parkNode(w, false, 0);
+                    if (isOffConditionQueue(w))
+                        break;
+                    if ( (wasInterrupted = Thread.interrupted()) ) {
+                        if (casReleaseStatus(w, ON_CONDITION_QUEUE, 
+                                             CANCELLED)) {
+                            w.thread = null;
+                            w = null;
+                        }
+                        break;
                     }
-                    break;
-                }
-            } 
+                } 
+            }
 
             /*
              * If we exited above loop due to cancellation, then w is
@@ -1038,7 +1042,7 @@ public class ReentrantLock extends ReentrantLockQueueNode
 
             boolean wasInterrupted = false;
             while (!isOffConditionQueue(w)) {
-                JSR166Support.park(false, 0);
+                JSR166Support.parkNode(w, false, 0);
                 if (Thread.interrupted()) 
                     wasInterrupted = true;
             }
@@ -1065,33 +1069,30 @@ public class ReentrantLock extends ReentrantLockQueueNode
             long timeLeft = nanos;
             long startTime = TimeUnit.nanoTime();
             boolean wasInterrupted = false;
-            boolean cancelled = false;
 
             if (!isOffConditionQueue(w)) {
                 for (;;) {
-                    JSR166Support.park(false, timeLeft);
-                    if (Thread.interrupted()) 
-                        wasInterrupted = true;
-                    else if (isOffConditionQueue(w)) 
+                    JSR166Support.parkNode(w, false, timeLeft);
+                    if (isOffConditionQueue(w)) 
                         break;
-                    else
-                        timeLeft = nanos - (TimeUnit.nanoTime() - startTime);
-
-                    if (wasInterrupted || timeLeft <= 0) {
-                        if (casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
+                    
+                    if ((wasInterrupted = Thread.interrupted()) ||
+                        (timeLeft = nanos - (TimeUnit.nanoTime() - startTime)) <= 0) {
+                        if (casReleaseStatus(w, ON_CONDITION_QUEUE, 
+                                             CANCELLED)) {
                             w.thread = null;
                             w = null;
                         }
                         break;
                     }
-                } 
+                }
             }
 
             doLock(current, w, false, 0);
             recursions = recs;
             afterWait();
 
-            if (wasInterrupted || Thread.interrupted())
+            if (wasInterrupted || Thread.interrupted()) 
                 throw new InterruptedException();
             else if (timeLeft <= 0)
                 return timeLeft;
@@ -1113,25 +1114,22 @@ public class ReentrantLock extends ReentrantLockQueueNode
             long abstime = deadline.getTime();
 
             if (!isOffConditionQueue(w)) {
-                for (;;)  {
-                    JSR166Support.park(true, abstime);
-                    
-                    boolean timedOut = false;
-                    if (Thread.interrupted()) 
-                        wasInterrupted = true;
-                    else if (isOffConditionQueue(w)) 
+                for (;;) {
+                    JSR166Support.parkNode(w, true, abstime);
+                    if (isOffConditionQueue(w)) 
                         break;
-                    else if (System.currentTimeMillis() <= abstime)
-                        timedOut = true;
                     
-                    if (wasInterrupted || timedOut) {
-                        if (casReleaseStatus(w, ON_CONDITION_QUEUE, CANCELLED)) {
+                    if ( (wasInterrupted = Thread.interrupted()) || 
+                         System.currentTimeMillis() <= abstime) {
+                        if (casReleaseStatus(w, ON_CONDITION_QUEUE, 
+                                             CANCELLED)) {
                             w.thread = null;
                             w = null;
+                            cancelled = true;
                         }
                         break;
-                    }
-                } 
+                    } 
+                }
             }
 
             doLock(current, w, false, 0);
@@ -1205,6 +1203,12 @@ class ReentrantLockQueueNode {
      * links.
      */
     transient Thread thread;
+
+    /**
+     * TEMPORARY field for use only by emulated version of park/unpark.
+     * Remove when emulation package is phased out.
+     */
+    transient int parkSemaphore;
 
     ReentrantLockQueueNode() { }
     ReentrantLockQueueNode(Thread t) { thread = t; }

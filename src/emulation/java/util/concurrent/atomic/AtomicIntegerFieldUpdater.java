@@ -5,7 +5,6 @@
  */
 
 package java.util.concurrent.atomic;
-import sun.misc.Unsafe;
 import java.lang.reflect.*;
 
 /**
@@ -23,8 +22,7 @@ import java.lang.reflect.*;
  */
 
 public class  AtomicIntegerFieldUpdater<T> {
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private final long offset;
+    private final Field field;
 
     /**
      * Create an updater for objects with the given field.  The odd
@@ -40,10 +38,10 @@ public class  AtomicIntegerFieldUpdater<T> {
      * exception if the class does not hold field or is the wrong type.
      **/
     public AtomicIntegerFieldUpdater(T[] ta, String fieldName) {
-        Field field = null;
         try {
             Class tclass = ta.getClass().getComponentType();
             field = tclass.getDeclaredField(fieldName);
+            field.setAccessible(true);
         }
         catch(Exception ex) {
             throw new RuntimeException(ex);
@@ -55,8 +53,6 @@ public class  AtomicIntegerFieldUpdater<T> {
 
         if (!Modifier.isVolatile(field.getModifiers()))
             throw new IllegalArgumentException("Must be volatile type");
-
-        offset = unsafe.objectFieldOffset(field);
     }
 
     /**
@@ -72,13 +68,18 @@ public class  AtomicIntegerFieldUpdater<T> {
      **/
 
     public synchronized final boolean compareAndSet(T obj, int expect, int update) {
-        int value = unsafe.getInt(obj, offset);
-        if (value == expect) {
-            unsafe.putInt(obj, offset, update);
-            return true;
+        try {
+            int value = field.getInt(obj);
+            if (value == expect) {
+                field.setInt(obj, update);
+                return true;
+            }
+            else
+                return false;
         }
-        else
-            return false;
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 
     /**
@@ -102,15 +103,25 @@ public class  AtomicIntegerFieldUpdater<T> {
      * operation is guaranteed to act as a volatile store with respect
      * to subsequent invocations of <tt>compareAndSet</tt>.
      */
-    public final void set(T obj, int newValue) {
-        unsafe.putInt(obj, offset, newValue);
+    public synchronized final void set(T obj, int newValue) {
+        try {
+            field.setInt(obj, newValue);
+        }
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 
     /**
      * Get the current value held in the field by the given object.
      */
     public final int get(T obj) {
-        return unsafe.getInt(obj, offset);
+        try {
+            return field.getInt(obj);
+        }
+        catch(Exception ex) {
+            throw new Error(ex);
+        }
     }
 
     /**

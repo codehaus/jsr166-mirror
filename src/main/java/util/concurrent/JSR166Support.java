@@ -82,6 +82,10 @@ final class JSR166Support {
      */
     static native void park(boolean isAbsolute, long time);
 
+    static void parkNode(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
+        park(isAbsolute, time);
+    }
+
     /**
      * Native implementation of thread-unblocking primitive used in
      * ReentrantLock (and possibly elsewhere). Unblock the given
@@ -90,6 +94,10 @@ final class JSR166Support {
      * @param thread the thread to unpark (no-op if null).
      */
     static native void unpark(Object thread);
+
+    static void unparkNode(ReentrantLockQueueNode node) {
+        unpark(node.thread);
+    }
 
     /**
      * Implementation of Locks.mightBeLocked.

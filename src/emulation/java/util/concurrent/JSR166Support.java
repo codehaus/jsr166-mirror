@@ -65,10 +65,6 @@ final class JSR166Support {
         return System.currentTimeMillis() * 1000000;
     }
     
-    private static ThreadLocal threadParker = new ThreadLocal() {
-            public Object initialValue() { return new Object(); }
-        };
-
     /**
      * implementation of thread-blocking primitive used in
      * ReentrantLock (and possibly elsewhere). Block current thread
@@ -81,22 +77,23 @@ final class JSR166Support {
      * @param time the deadline or timeout. If zero and isAbsolute is
      * false, means to wait forever.
      */
-    static void park(boolean isAbsolute, long time) {
-        Object mon = threadParker.get();
+    static void parkNode(ReentrantLockQueueNode node, boolean isAbsolute, long time) {
         try {
-            synchronized(mon) {
+            synchronized(node) {
+                if ( (node.parkSemaphore = (node.parkSemaphore > 0) ? 0 : -1) ==0)
+                    return;
                 if (time == 0) 
-                    mon.wait();
+                    node.wait();
                 else if (!isAbsolute) {
                     long t = time / 1000000;
                     if (t == 0) t = 1;
-                    mon.wait(t);
+                    node.wait(t);
                 }
                 else {
                     long t = time - System.currentTimeMillis();
                     if (t <= 0)
                         return;
-                    mon.wait(t);
+                    node.wait(t);
                 }
             }
         }
@@ -112,10 +109,13 @@ final class JSR166Support {
      * subsequent call to park not to block. 
      * @param thread the thread to unpark (no-op if null).
      */
-    static void unpark(Object thread) {
-        Object mon = threadParker.get();
-        synchronized(mon) {
-            mon.notifyAll();
+    static void unparkNode(ReentrantLockQueueNode node) {
+        if (node == null)
+            return;
+        synchronized(node) {
+            if ( (node.parkSemaphore = (node.parkSemaphore < 0)? 0 : 1) != 0)
+                return;
+            node.notifyAll();
         }
     }
 

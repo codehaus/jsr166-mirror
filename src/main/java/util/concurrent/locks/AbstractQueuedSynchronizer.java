@@ -513,7 +513,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * @param node the node to insert
      * @return node's predecessor
      */
-    private Node initializeAndEnq(final Node node) {
+    private Node enq(final Node node) {
         for (;;) {
             Node t = tail;
             if (t == null) { // Must initialize
@@ -536,23 +536,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Insert node into queue. Handles only fast case where queue is
-     * already initialized and there is no contention, otherwise
-     * relaying to initializeAndEnq.
-     * @param node the node to insert
-     * @return node's predecessor
-     */
-    private Node enq(final Node node) {
-        Node t = tail;
-        node.prev = t;     
-        if (t != null && compareAndSetTail(t, node)) {
-            t.next = node; 
-            return t; 
-        }
-        return initializeAndEnq(node);
-    }
-
-    /**
      * Create and enq node for given thread and mode
      * @param current the thread
      * @param mode Node.EXCLUSIVE for exclusive, Node.SHARED for shared
@@ -560,10 +543,16 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      */
     private Node addWaiter(Node mode) {
         Node node = new Node(Thread.currentThread(), mode);
-        Node pred = enq(node);
-        // Clear initial wait status to reduce useless retries
-        if (pred.waitStatus < 0) 
-            compareAndSetWaitStatus(pred, Node.SIGNAL, 0);
+        // Try the fast path of enq; backup to full enq on failure
+        Node pred = tail;
+        if (pred != null) {
+            node.prev = pred;     
+            if (compareAndSetTail(pred, node)) {
+                pred.next = node; 
+                return node;
+            }
+        }
+        enq(node);
         return node;
     }
 
@@ -1234,6 +1223,14 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * <tt>null</tt> if no threads are currently queued.
      */
     public final Thread getFirstQueuedThread() {
+        // handle only fast path, else relay
+        return (head == tail)? null : fullGetFirstQueuedThread();
+    }
+
+    /**
+     * Version of getFirstQueuedThread called when fastpath fails
+     */
+    private Thread fullGetFirstQueuedThread() {
         /*
          * This loops only when the queue changes while we read
          * certain sets of fields.  It never loops when invoked from
@@ -1422,10 +1419,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     } 
 
     /**
-     * Return true if node is on sync queue by searching backwared from tail.
+     * Return true if node is on sync queue by searching backwards from tail.
+     * Called only when needed by isOnSyncQueue.
      * @return true if present
      */
-    final boolean findNodeFromTail(Node node) {
+    private boolean findNodeFromTail(Node node) {
         Node t = tail; 
         for (;;) {
             if (t == node)

@@ -27,7 +27,8 @@ import java.util.concurrent.atomic.*;
  * elements reflecting the state of the map at some point at or since
  * the creation of the iterator.  They do <em>not</em> throw {@link
  * ConcurrentModificationException}, and may proceed concurrently with
- * other operations.
+ * other operations. Ascending key ordered views and their iterators
+ * are faster than descending ones.
  *
  * <p>All <tt>Map.Entry</tt> pairs returned by methods in this class
  * and its views represent snapshots of mappings at the time they were
@@ -265,8 +266,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * For explanation of algorithms sharing at least a couple of
      * features with this one, see Mikhail Fomitchev's thesis
      * (http://www.cs.yorku.ca/~mikhail/), Keir Fraser's thesis
-     * (http://www.cl.cam.ac.uk/users/kaf24/), and papers by
-     * Håkan Sundell (http://www.cs.chalmers.se/~phs/).
+     * (http://www.cl.cam.ac.uk/users/kaf24/), and Håkan Sundell's
+     * thesis (http://www.cs.chalmers.se/~phs/).
      *
      * Given the use of tree-like index nodes, you might wonder why
      * this doesn't use some kind of search tree instead, which would
@@ -318,6 +319,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     private transient EntrySet entrySet;
     /** Lazily initialized values collection */
     private transient Values values;
+    /** Lazily initialized descending key set */
+    private transient DescendingKeySet descendingKeySet;
+    /** Lazily initialized descending entry set */
+    private transient DescendingEntrySet descendingEntrySet;
 
     /**
      * Initialize or reset state. Needed by constructors, clone,
@@ -328,6 +333,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         keySet = null;
         entrySet = null;  
         values = null;
+        descendingEntrySet = null;
+        descendingKeySet = null;
         randomSeed = (int) System.nanoTime();
         head = new HeadIndex<K,V>(new Node<K,V>(null, BASE_HEADER, null),
                                   null, null, 1);
@@ -391,7 +398,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         static final AtomicReferenceFieldUpdater<Node, Object> 
             valueUpdater = AtomicReferenceFieldUpdater.newUpdater
             (Node.class, Object.class, "value");
-
 
         /**
          * compareAndSet value field
@@ -832,7 +838,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /** 
-     * Specialized variant of findNode to perform map.get. Does a weak
+     * Specialized variant of findNode to perform Map.get. Does a weak
      * traversal, not bothering to fix any deleted index nodes,
      * returning early if it happens to see key in index, and passing
      * over any deleted base nodes, falling back to getUsingFindNode
@@ -1098,7 +1104,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * deletion marker, unlinks predecessor, removes associated index
      * nodes, and possibly reduces head index level.
      *
-     * Index node are cleared out simply by calling findPredecessor.
+     * Index nodes are cleared out simply by calling findPredecessor.
      * which unlinks indexes to deleted nodes found along path to key,
      * which will include the indexes to this node.  This is done
      * unconditionally. We can't check beforehand whether there are
@@ -1189,6 +1195,12 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             casHead(d, h);   // try to backout
     }
 
+    /**
+     * Version of remove with boolean return. Needed by view classes
+     */
+    boolean removep(Object key) {
+        return doRemove(key, null) != null;
+    }
 
     /* ---------------- Finding and removing first element -------------- */
 
@@ -1256,6 +1268,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 }
             }
         }
+    }
+
+   /**
+     * Remove first entry; return key or null if empty. 
+     */
+    K pollFirstKey() {
+        return (K)doRemoveFirst(true);
     }
 
     /* ---------------- Finding and removing last element -------------- */
@@ -1384,14 +1403,21 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
     }
-    
+
+    /**
+     * Remove last entry; return key or null if empty. 
+     */
+    K pollLastKey() {
+        return (K)doRemoveLast(true);
+    }
+
     /* ---------------- Relational operations -------------- */
 
     // Control values OR'ed as arguments to findNear
 
     private static final int EQ = 1;
     private static final int LT = 2;
-    private static final int GT = 0; 
+    private static final int GT = 0; // Actually checked as !LT
 
     /**
      * Utility for ceiling, floor, lower, higher methods.
@@ -1443,6 +1469,93 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             SnapshotEntry<K,V> e = n.createSnapshot();
             if (e != null)
                 return e;
+        }
+    }
+
+    /**
+     * Return ceiling, or first node if key is <tt>null</tt>
+     */
+    Node<K,V> findCeiling(K key) {
+        return (key == null)? findFirst() : findNear(key, GT|EQ);
+    }
+
+    /**
+     * Return lower node, or last node if key is <tt>null</tt>
+     */
+    Node<K,V> findLower(K key) {
+        return (key == null)? findLast() : findNear(key, LT);
+    }
+
+    /**
+     * Return SnapshotEntry or key for results of findNear ofter screening
+     * to ensure result is in given range. Needed by submaps.
+     * @param kkey the key
+     * @param rel the relation -- OR'ed combination of EQ, LT, GT
+     * @param least minimum allowed key value
+     * @param fence key greater than maximum allowed key value
+     * @param keyOnly if true return key, else return SnapshotEntry
+     * @return Key or Entry fitting relation, or <tt>null</tt> if no such
+     */
+    Object getNear(K kkey, int rel, K least, K fence, boolean keyOnly) {
+        K key = kkey;
+        // Don't return keys less than least
+        if ((rel & LT) == 0) {
+            if (compare(key, least) < 0) {
+                key = least;
+                rel = rel | EQ;
+            }
+        }
+
+        for (;;) {
+            Node<K,V> n = findNear(key, rel);
+            if (n == null || !inHalfOpenRange(n.key, least, fence))
+                return null;
+            K k = n.key;
+            V v = n.getValidValue();
+            if (v != null) 
+                return keyOnly? k : new SnapshotEntry<K,V>(k, v);
+        }
+    }
+
+    /**
+     * Find and remove least element of subrange.
+     * @param least minimum allowed key value
+     * @param fence key greater than maximum allowed key value
+     * @param keyOnly if true return key, else return SnapshotEntry
+     * @return least Key or Entry, or <tt>null</tt> if no such
+     */
+    Object removeFirstEntryOfSubrange(K least, K fence, boolean keyOnly) {
+        for (;;) {
+            Node<K,V> n = findCeiling(least);
+            if (n == null)
+                return null;
+            K k = n.key;
+            if (fence != null && compare(k, fence) >= 0)
+                return null;
+            V v = doRemove(k, null);
+            if (v != null)
+                return (keyOnly)? k : new SnapshotEntry<K,V>(k, v);
+        }
+    }
+
+    /**
+     * Find and remove greatest element of subrange.
+     * @param least minimum allowed key value
+     * @param fence key greater than maximum allowed key value
+     * @param keyOnly if true return key, else return SnapshotEntry
+     * @return least Key or Entry, or <tt>null</tt> if no such
+     */
+    Object removeLastEntryOfSubrange(K least, K fence, boolean keyOnly) {
+        for (;;) {
+            Node<K,V> n = findLower(fence);
+            if (n == null)
+                return null;
+            K k = n.key;
+            if (least != null && compare(k, least) < 0)
+                return null;
+            V v = doRemove(k, null);
+            if (v != null)
+                return (keyOnly)? k : new SnapshotEntry<K,V>(k, v);
         }
     }
 
@@ -1819,6 +1932,37 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
+     * Returns a set view of the keys contained in this map in
+     * descending order.  The set is backed by the map, so changes to
+     * the map are reflected in the set, and vice-versa.  The set
+     * supports element removal, which removes the corresponding
+     * mapping from this map, via the <tt>Iterator.remove</tt>,
+     * <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt>,
+     * and <tt>clear</tt> operations.  It does not support the
+     * <tt>add</tt> or <tt>addAll</tt> operations.  The view's
+     * <tt>iterator</tt> is a "weakly consistent" iterator that will
+     * never throw {@link java.util.ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed
+     * to) reflect any modifications subsequent to construction.
+     *
+     * @return a set view of the keys contained in this map.
+     */
+    public Set<K> descendingKeySet() {
+        /*
+         * Note: Lazy intialization works here and for other views
+         * because view classes are stateless/immutable so it doesn't
+         * matter wrt correctness if more than one is created (which
+         * will only rarely happen).  Even so, the following idiom
+         * conservatively ensures that the method returns the one it
+         * created if it does so, not one created by another racing
+         * thread.
+         */
+        DescendingKeySet ks = descendingKeySet;
+        return (ks != null) ? ks : (descendingKeySet = new DescendingKeySet());
+    }
+
+    /**
      * Returns a collection view of the values contained in this map.
      * The collection is backed by the map, so changes to the map are
      * reflected in the collection, and vice-versa.  The collection
@@ -1866,6 +2010,33 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     public Set<Map.Entry<K,V>> entrySet() {
         EntrySet es = entrySet;
         return (es != null) ? es : (entrySet = new EntrySet());
+    }
+
+    /**
+     * Returns a collection view of the mappings contained in this
+     * map, in descending order.  Each element in the returned
+     * collection is a <tt>Map.Entry</tt>.  The collection is backed
+     * by the map, so changes to the map are reflected in the
+     * collection, and vice-versa.  The collection supports element
+     * removal, which removes the corresponding mapping from the map,
+     * via the <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
+     * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
+     * operations.  It does not support the <tt>add</tt> or
+     * <tt>addAll</tt> operations.  The view's <tt>iterator</tt> is a
+     * "weakly consistent" iterator that will never throw {@link
+     * java.util.ConcurrentModificationException}, and guarantees to
+     * traverse elements as they existed upon construction of the
+     * iterator, and may (but is not guaranteed to) reflect any
+     * modifications subsequent to construction. The
+     * <tt>Map.Entry</tt> elements returned by
+     * <tt>iterator.next()</tt> do <em>not</em> support the
+     * <tt>setValue</tt> operation.
+     *
+     * @return a collection view of the mappings contained in this map.
+     */
+    public Set<Map.Entry<K,V>> descendingEntrySet() {
+        DescendingEntrySet es = descendingEntrySet;
+        return (es != null) ? es : (descendingEntrySet = new DescendingEntrySet());
     }
 
     /* ---------------- AbstractMap Overrides -------------- */
@@ -2160,6 +2331,22 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
+     * Returns least key greater than or equal to the given key, or
+     * <tt>null</tt> if there is no such key.
+     * 
+     * @param key the key.
+     * @return the ceiling key, or <tt>null</tt>
+     * if there is no such key.
+     * @throws ClassCastException if key cannot be compared with the keys
+     *            currently in the map.
+     * @throws NullPointerException if key is <tt>null</tt>.
+     */
+    public K ceilingKey(K key) {
+        Node<K,V> n = findNear(key, GT|EQ);
+        return (n == null)? null : n.key;
+    }
+
+    /**
      * Returns a key-value mapping associated with the greatest
      * key strictly less than the given key, or <tt>null</tt> if there is no
      * such entry. The returned entry does <em>not</em> support
@@ -2174,6 +2361,22 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public Map.Entry<K,V> lowerEntry(K key) {
         return getNear(key, LT);
+    }
+
+    /**
+     * Returns the greatest key strictly less than the given key, or
+     * <tt>null</tt> if there is no such key.
+     * 
+     * @param key the key.
+     * @return the greatest key less than the given
+     * key, or <tt>null</tt> if there is no such key.
+     * @throws ClassCastException if key cannot be compared with the keys
+     *            currently in the map.
+     * @throws NullPointerException if key is <tt>null</tt>.
+     */
+    public K lowerKey(K key) {
+        Node<K,V> n = findNear(key, LT);
+        return (n == null)? null : n.key;
     }
 
     /**
@@ -2194,6 +2397,23 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
+     * Returns the greatest key
+     * less than or equal to the given key, or <tt>null</tt> if there
+     * is no such key.
+     * 
+     * @param key the key.
+     * @return the floor of given key, or <tt>null</tt> if there is no
+     * such key.
+     * @throws ClassCastException if key cannot be compared with the keys
+     *            currently in the map.
+     * @throws NullPointerException if key is <tt>null</tt>.
+     */
+    public K floorKey(K key) {
+        Node<K,V> n = findNear(key, LT|EQ);
+        return (n == null)? null : n.key;
+    }
+
+    /**
      * Returns a key-value mapping associated with the least key
      * strictly greater than the given key, or <tt>null</tt> if there
      * is no such entry. The returned entry does <em>not</em> support
@@ -2208,6 +2428,22 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public Map.Entry<K,V> higherEntry(K key) {
         return getNear(key, GT);
+    }
+
+    /**
+     * Returns the least key strictly greater than the given key, or
+     * <tt>null</tt> if there is no such key.
+     * 
+     * @param key the key.
+     * @return the least key greater than the given key, or
+     * <tt>null</tt> if there is no such key.
+     * @throws ClassCastException if key cannot be compared with the keys
+     *            currently in the map.
+     * @throws NullPointerException if key is <tt>null</tt>.
+     */
+    public K higherKey(K key) {
+        Node<K,V> n = findNear(key, GT);
+        return (n == null)? null : n.key;
     }
 
     /**
@@ -2276,13 +2512,15 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         return (SnapshotEntry<K,V>)doRemoveLast(false);
     }
 
+
     /* ---------------- Iterators -------------- */
 
     /**
-     * Base of iterator classes.
-     * (Six kinds: {key, value, entry} X {map, submap})
+     * Base of ten kinds of iterator classes:
+     *   ascending:  {map, submap} X {key, value, entry} 
+     *   descending: {map, submap} X {key, entry} 
      */
-    abstract class ConcurrentSkipListMapIterator {
+    abstract class Iter {
         /** the last node returned by next() */
         Node<K,V> last;
         /** the next node to return from next(); */
@@ -2290,8 +2528,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 	/** Cache of next value field to maintain weak consistency */
 	Object nextValue;
 
-        /** Create normal iterator for entire range  */
-        ConcurrentSkipListMapIterator() {
+        Iter() {}
+
+        public final boolean hasNext() { 
+            return next != null; 
+        }
+
+        /** initialize ascending iterator for entire range  */
+        final void initAscending() {
             for (;;) {
 		next = findFirst();
                 if (next == null)
@@ -2303,11 +2547,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /** 
-         * Create a submap iterator starting at given least key, or
-         * first node if least is <tt>null</tt>, but not greater or equal to
-         * fence, or end if fence is <tt>null</tt>.
+         * initialize ascending iterator starting at given least key,
+         * or first node if least is <tt>null</tt>, but not greater or
+         * equal to fence, or end if fence is <tt>null</tt>.
          */
-        ConcurrentSkipListMapIterator(K least, K fence) { 
+        final void initAscending(K least, K fence) { 
             for (;;) {
 		next = findCeiling(least);
                 if (next == null)
@@ -2322,12 +2566,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 }
             }
         }
-
-        public final boolean hasNext() { 
-            return next != null; 
-        }
-
-        final void advance() {
+        /** advance next to higher entry */
+        final void ascend() {
             if ((last = next) == null)
                 throw new NoSuchElementException();
             for (;;) {
@@ -2341,9 +2581,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Version of advance for submaps to stop at fence
+         * Version of ascend for submaps to stop at fence
          */
-        final void advance(K fence) {
+        final void ascend(K fence) {
             if ((last = next) == null)
                 throw new NoSuchElementException();
             for (;;) {
@@ -2353,6 +2593,77 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 nextValue = next.value;
                 if (nextValue != null && nextValue != next) {
                     if (fence != null && compare(fence, next.key) <= 0) {
+                        next = null;
+                        nextValue = null;
+                    }
+                    break;
+                }
+            }
+        }
+
+        /** initialize descending iterator for entire range  */
+        final void initDescending() {
+            for (;;) {
+		next = findLast();
+                if (next == null)
+                    break;
+                nextValue = next.value;
+                if (nextValue != null && nextValue != next)
+                    break;
+            }
+        }
+
+        /** 
+         * initialize descending iterator starting at key less
+         * than or equal to given fence key, or
+         * last node if fence is <tt>null</tt>, but not less than
+         * least, or beginning if lest is <tt>null</tt>.
+         */
+        final void initDescending(K least, K fence) { 
+            for (;;) {
+		next = findLower(fence);
+                if (next == null)
+                    break;
+                nextValue = next.value;
+                if (nextValue != null && nextValue != next) {
+                    if (least != null && compare(least, next.key) > 0) {
+                        next = null;
+                        nextValue = null;
+                    }
+                    break;
+                }
+            }
+        }
+
+        /** advance next to lower entry */
+        final void descend() {
+            if ((last = next) == null)
+                throw new NoSuchElementException();
+            K k = last.key;
+            for (;;) {
+		next = findNear(k, LT);
+                if (next == null)
+                    break;
+                nextValue = next.value;
+                if (nextValue != null && nextValue != next)
+                    break;
+            }
+        }
+
+        /**
+         * Version of descend for submaps to stop at least
+         */
+        final void descend(K least) {
+            if ((last = next) == null)
+                throw new NoSuchElementException();
+            K k = last.key;
+            for (;;) {
+		next = findNear(k, LT);
+                if (next == null)
+                    break;
+                nextValue = next.value;
+                if (nextValue != null && nextValue != next) {
+                    if (least != null && compare(least, next.key) > 0) {
                         next = null;
                         nextValue = null;
                     }
@@ -2369,22 +2680,80 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             // unlink from here. Using remove is fast enough.
             ConcurrentSkipListMap.this.remove(l.key);
         }
+
     }
 
-    final class ValueIterator extends ConcurrentSkipListMapIterator 
-        implements Iterator<V> {
+    final class ValueIterator extends Iter implements Iterator<V> {
+        ValueIterator() {
+            initAscending();
+        }
         public V next() { 
             Object v = nextValue;
-            advance();
+            ascend();
             return (V)v;
         }
     }
 
-    final class KeyIterator extends ConcurrentSkipListMapIterator 
-        implements Iterator<K> {
+    final class KeyIterator extends Iter implements Iterator<K> {
+        KeyIterator() {
+            initAscending();
+        }
         public K next() { 
             Node<K,V> n = next;
-            advance();
+            ascend();
+            return n.key;
+        }
+    }
+
+    class SubMapValueIterator extends Iter implements Iterator<V> {
+        final K fence;
+        SubMapValueIterator(K least, K fence) {
+            initAscending(least, fence);
+            this.fence = fence;
+        }
+
+        public V next() { 
+            Object v = nextValue;
+            ascend(fence);
+            return (V)v;
+        }
+    }
+
+    final class SubMapKeyIterator extends Iter implements Iterator<K> {
+        final K fence;
+        SubMapKeyIterator(K least, K fence) {
+            initAscending(least, fence);
+            this.fence = fence;
+        }
+
+        public K next() { 
+            Node<K,V> n = next;
+            ascend(fence);
+            return n.key;
+        }
+    }
+
+    final class DescendingKeyIterator extends Iter implements Iterator<K> {
+        DescendingKeyIterator() {
+            initDescending();
+        }
+        public K next() { 
+            Node<K,V> n = next;
+            descend();
+            return n.key;
+        }
+    }
+
+    final class DescendingSubMapKeyIterator extends Iter implements Iterator<K> {
+        final K least;
+        DescendingSubMapKeyIterator(K least, K fence) {
+            initDescending(least, fence);
+            this.least = least;
+        }
+
+        public K next() { 
+            Node<K,V> n = next;
+            descend(least);
             return n.key;
         }
     }
@@ -2394,23 +2763,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * elsewhere of using the iterator itself to represent entries,
      * thus avoiding having to create entry objects in next().
      */
-    class EntryIterator extends ConcurrentSkipListMapIterator 
-        implements Map.Entry<K,V>, Iterator<Map.Entry<K,V>>  {
+    abstract class EntryIter extends Iter implements Map.Entry<K,V> {
         /** Cache of last value returned */
         Object lastValue;
 
-        EntryIterator() { 
-            super(); 
-        }
-
-        EntryIterator(K least, K fence) { 
-            super(least, fence); 
-        }
-
-        public Map.Entry<K,V> next() { 
-            lastValue = nextValue;
-            advance();
-            return this;
+        EntryIter() { 
         }
 
         public K getKey() {
@@ -2457,56 +2814,60 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
-    /**
-     * Submap iterators start at given starting point at beginning of
-     * submap range, and advance until they are at end of range.
-     */
-    class SubMapEntryIterator extends EntryIterator {
+    final class EntryIterator extends EntryIter 
+        implements Iterator<Map.Entry<K,V>> {
+        EntryIterator() { 
+            initAscending(); 
+        }
+        public Map.Entry<K,V> next() { 
+            lastValue = nextValue;
+            ascend();
+            return this;
+        }
+    }
+
+    final class SubMapEntryIterator extends EntryIter 
+        implements Iterator<Map.Entry<K,V>> {
         final K fence;
         SubMapEntryIterator(K least, K fence) {
-            super(least, fence);
+            initAscending(least, fence);
             this.fence = fence;
         }
 
         public Map.Entry<K,V> next() { 
             lastValue = nextValue;
-            advance(fence);
+            ascend(fence);
             return this;
         }
     }
 
-    class SubMapValueIterator extends ConcurrentSkipListMapIterator 
-        implements Iterator<V> {
-        final K fence;
-        SubMapValueIterator(K least, K fence) {
-            super(least, fence);
-            this.fence = fence;
+    final class DescendingEntryIterator extends EntryIter 
+        implements Iterator<Map.Entry<K,V>>  {
+        DescendingEntryIterator() { 
+            initDescending(); 
         }
-
-        public V next() { 
-            Object v = nextValue;
-            advance(fence);
-            return (V)v;
+        public Map.Entry<K,V> next() { 
+            lastValue = nextValue;
+            descend();
+            return this;
         }
     }
 
-    class SubMapKeyIterator extends ConcurrentSkipListMapIterator 
-        implements Iterator<K> {
-        final K fence;
-        SubMapKeyIterator(K least, K fence) {
-            super(least, fence);
-            this.fence = fence;
+    final class DescendingSubMapEntryIterator extends EntryIter 
+        implements Iterator<Map.Entry<K,V>>  {
+        final K least;
+        DescendingSubMapEntryIterator(K least, K fence) {
+            initDescending(least, fence);
+            this.least = least;
         }
 
-        public K next() { 
-            Node<K,V> n = next;
-            advance(fence);
-            return n.key;
+        public Map.Entry<K,V> next() { 
+            lastValue = nextValue;
+            descend(least);
+            return this;
         }
     }
 
-    /* ---------------- Utilities for views, sets, submaps -------------- */
-    
     // Factory methods for iterators needed by submaps and/or
     // ConcurrentSkipListSet
 
@@ -2514,173 +2875,33 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         return new KeyIterator();
     }
 
+    Iterator<K> descendingKeyIterator() {
+        return new DescendingKeyIterator();
+    }
+
     SubMapEntryIterator subMapEntryIterator(K least, K fence) {
         return new SubMapEntryIterator(least, fence);
+    }
+
+    DescendingSubMapEntryIterator descendingSubMapEntryIterator(K least, K fence) {
+        return new DescendingSubMapEntryIterator(least, fence);
     }
 
     SubMapKeyIterator subMapKeyIterator(K least, K fence) {
         return new SubMapKeyIterator(least, fence);
     }
 
+    DescendingSubMapKeyIterator descendingSubMapKeyIterator(K least, K fence) {
+        return new DescendingSubMapKeyIterator(least, fence);
+    }
+
     SubMapValueIterator subMapValueIterator(K least, K fence) {
         return new SubMapValueIterator(least, fence);
     }
 
-
-    /**
-     * Version of remove with boolean return. Needed by 
-     * view classes and ConcurrentSkipListSet
-     */
-    boolean removep(Object key) {
-        return doRemove(key, null) != null;
-    }
-
-    /**
-     * Remove first entry; return key or null if empty. 
-     */
-    K removeFirstKey() {
-        return (K)doRemoveFirst(true);
-    }
-
-    /**
-     * Remove last entry; return key or null if empty. 
-     */
-    K removeLastKey() {
-        return (K)doRemoveLast(true);
-    }
-
-    /**
-     * Return SnapshotEntry for results of findNear ofter screening
-     * to ensure result is in given range. Needed by submaps.
-     * @param kkey the key
-     * @param rel the relation -- OR'ed combination of EQ, LT, GT
-     * @param least minimum allowed key value
-     * @param fence key greater than maximum allowed key value
-     * @return Entry fitting relation, or <tt>null</tt> if no such
-     */
-    SnapshotEntry<K,V> getNear(K kkey, int rel, K least, K fence) {
-        K key = kkey;
-        // Don't return keys less than least
-        if ((rel & LT) == 0) {
-            if (compare(key, least) < 0) {
-                key = least;
-                rel = rel | EQ;
-            }
-        }
-
-        for (;;) {
-            Node<K,V> n = findNear(key, rel);
-            if (n == null || !inHalfOpenRange(n.key, least, fence))
-                return null;
-            SnapshotEntry<K,V> e = n.createSnapshot();
-            if (e != null)
-                return e;
-        }
-    }
-
-    // Methods expanding out relational operations for submaps
-
-    /**
-     * Return ceiling, or first node if key is <tt>null</tt>
-     */
-    Node<K,V> findCeiling(K key) {
-        return (key == null)? findFirst() : findNear(key, GT|EQ);
-    }
-
-    /**
-     * Return lower node, or last node if key is <tt>null</tt>
-     */
-    Node<K,V> findLower(K key) {
-        return (key == null)? findLast() : findNear(key, LT);
-    }
-
-    /**
-     * Find and remove least element of subrange.
-     */
-    SnapshotEntry<K,V> removeFirstEntryOfSubrange(K least, K fence) {
-        for (;;) {
-            Node<K,V> n = findCeiling(least);
-            if (n == null)
-                return null;
-            K k = n.key;
-            if (fence != null && compare(k, fence) >= 0)
-                return null;
-            V v = doRemove(k, null);
-            if (v != null)
-                return new SnapshotEntry<K,V>(k,v);
-        }
-    }
-
-
-    /**
-     * Find and remove greatest element of subrange.
-     */
-    SnapshotEntry<K,V> removeLastEntryOfSubrange(K least, K fence) {
-        for (;;) {
-            Node<K,V> n = findLower(fence);
-            if (n == null)
-                return null;
-            K k = n.key;
-            if (least != null && compare(k, least) < 0)
-                return null;
-            V v = doRemove(k, null);
-            if (v != null)
-                return new SnapshotEntry<K,V>(k,v);
-        }
-    }
-
-
-    SnapshotEntry<K,V> getCeiling(K key, K least, K fence) {
-        return getNear(key, GT|EQ, least, fence);
-    }
-
-    SnapshotEntry<K,V> getLower(K key, K least, K fence) {
-        return getNear(key, LT, least, fence);
-    }
-
-    SnapshotEntry<K,V> getFloor(K key, K least, K fence) {
-        return getNear(key, LT|EQ, least, fence);
-    }
-
-    SnapshotEntry<K,V> getHigher(K key, K least, K fence) {
-        return getNear(key, GT, least, fence);
-    }
-
-    // Key-returning relational methods for ConcurrentSkipListSet
-
-    K ceilingKey(K key) {
-        Node<K,V> n = findNear(key, GT|EQ);
-        return (n == null)? null : n.key;
-    }
-
-    K lowerKey(K key) {
-        Node<K,V> n = findNear(key, LT);
-        return (n == null)? null : n.key;
-    }
-
-    K floorKey(K key) {
-        Node<K,V> n = findNear(key, LT|EQ);
-        return (n == null)? null : n.key;
-    }
-
-    K higherKey(K key) {
-        Node<K,V> n = findNear(key, GT);
-        return (n == null)? null : n.key;
-    }
-
-    K lowestKey() { 
-        Node<K,V> n = findFirst();
-        return (n == null)? null : n.key;
-    }
-
-    K highestKey() { 
-        Node<K,V> n = findLast();
-        return (n == null)? null : n.key;
-    }
-
     /* ---------------- Views -------------- */
 
-    final class KeySet extends AbstractSet<K> {
+    class KeySet extends AbstractSet<K> {
         public Iterator<K> iterator() {
             return new KeyIterator();
         }
@@ -2713,6 +2934,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
+    class DescendingKeySet extends KeySet {
+        public Iterator<K> iterator() {
+            return new DescendingKeyIterator();
+        }
+    }
 
     final class Values extends AbstractCollection<V> {
         public Iterator<V> iterator() {
@@ -2744,7 +2970,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
-    final class EntrySet extends AbstractSet<Map.Entry<K,V>> {
+    class EntrySet extends AbstractSet<Map.Entry<K,V>> {
         public Iterator<Map.Entry<K,V>> iterator() {
             return new EntryIterator();
         }
@@ -2774,21 +3000,21 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public Object[] toArray() {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-            for (Node<K,V> n = findFirst(); n != null; n = n.next) {
-                Map.Entry<K,V> e = n.createSnapshot();
-                if (e != null) 
-                    c.add(e);
-            }
+            for (Map.Entry e : this) 
+                c.add(new SnapshotEntry(e.getKey(), e.getValue()));
             return c.toArray();
         }
         public <T> T[] toArray(T[] a) {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-            for (Node<K,V> n = findFirst(); n != null; n = n.next) {
-                Map.Entry<K,V> e = n.createSnapshot();
-                if (e != null) 
-                    c.add(e);
-            }
+            for (Map.Entry e : this) 
+                c.add(new SnapshotEntry(e.getKey(), e.getValue()));
             return c.toArray(a);
+        }
+    }
+
+    class DescendingEntrySet extends EntrySet {
+        public Iterator<Map.Entry<K,V>> iterator() {
+            return new DescendingEntryIterator();
         }
     }
 
@@ -2817,6 +3043,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         private transient Set<K> keySetView;
         private transient Set<Map.Entry<K,V>> entrySetView;
         private transient Collection<V> valuesView;
+        private transient Set<K> descendingKeySetView;
+        private transient Set<Map.Entry<K,V>> descendingEntrySetView;
 
         /**
          * Creates a new submap. 
@@ -2890,120 +3118,29 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return fence;
         }
 
-        /**
-         * Non-exception throwing version of firstKey needed by
-         * ConcurrentSkipListSubSet
-         * @return first key, or <tt>null</tt> if empty
-         */
-        K lowestKey() {
-            ConcurrentSkipListMap.Node<K,V> n = firstNode();
-            if (isBeforeEnd(n))
-                return n.key;
-            else
-                return null;
-        }
-
-        /**
-         * Non-exception throwing version of highestKey needed by
-         * ConcurrentSkipListSubSet
-         * @return last key, or <tt>null</tt> if empty
-         */
-        K highestKey() {
-            ConcurrentSkipListMap.Node<K,V> n = lastNode();
-            if (isBeforeEnd(n))
-                return n.key;
-            else
-                return null;
-        }
 
         /* ----------------  Map API methods -------------- */
 
-        /**
-         * Returns <tt>true</tt> if this map contains a mapping for
-         * the specified key.
-         * @param key key whose presence in this map is to be tested.
-         * @return <tt>true</tt> if this map contains a mapping for
-         * the specified key.
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws NullPointerException if the key is <tt>null</tt>.
-         */
         public boolean containsKey(Object key) {
             K k = (K)key;
             return inHalfOpenRange(k) && m.containsKey(k);
         }
 
-        /**
-         * Returns the value to which this map maps the specified key.
-         * Returns <tt>null</tt> if the map contains no mapping for
-         * this key.
-         *
-         * @param key key whose associated value is to be returned.
-         * @return the value to which this map maps the specified key,
-         * or <tt>null</tt> if the map contains no mapping for the
-         * key.
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws NullPointerException if the key is <tt>null</tt>.
-         */
         public V get(Object key) {
             K k = (K)key;
             return ((!inHalfOpenRange(k)) ? null : m.get(k));
         }
 
-        /**
-         * Associates the specified value with the specified key in
-         * this map.  If the map previously contained a mapping for
-         * this key, the old value is replaced.
-         *
-         * @param key key with which the specified value is to be associated.
-         * @param value value to be associated with the specified key.
-         *
-         * @return previous value associated with specified key, or
-         * <tt>null</tt> if there was no mapping for key.
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws IllegalArgumentException if key outside range of
-         * this submap.
-         * @throws NullPointerException if the key or value are <tt>null</tt>.
-         */
         public V put(K key, V value) {
             checkKey(key);
             return m.put(key, value);
         }
 
-        /**
-         * Removes the mapping for this key from this Map if present.
-         *
-         * @param key key for which mapping should be removed
-         * @return previous value associated with specified key, or
-         * <tt>null</tt> if there was no mapping for key.
-         *
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws NullPointerException if the key is <tt>null</tt>.
-         */
         public V remove(Object key) {
             K k = (K)key;
             return (!inHalfOpenRange(k))? null : m.remove(k);
         }
 
-        /**
-         * Returns the number of elements in this map.  If this map
-         * contains more than <tt>Integer.MAX_VALUE</tt> elements, it
-         * returns <tt>Integer.MAX_VALUE</tt>.
-         *
-         * <p>Beware that, unlike in most collections, this method is
-         * <em>NOT</em> a constant-time operation. Because of the
-         * asynchronous nature of these maps, determining the current
-         * number of elements requires traversing them all to count them.
-         * Additionally, it is possible for the size to change during
-         * execution of this method, in which case the returned result
-         * will be inaccurate. Thus, this method is typically not very
-         * useful in concurrent applications.
-         *
-         * @return  the number of elements in this map.
-         */
         public int size() {
             long count = 0;
             for (ConcurrentSkipListMap.Node<K,V> n = firstNode(); 
@@ -3015,24 +3152,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return count >= Integer.MAX_VALUE? Integer.MAX_VALUE : (int)count;
         }
 
-        /**
-         * Returns <tt>true</tt> if this map contains no key-value mappings.
-         * @return <tt>true</tt> if this map contains no key-value mappings.
-         */
         public boolean isEmpty() {
             return !isBeforeEnd(firstNode());
         }
 
-        /**
-         * Returns <tt>true</tt> if this map maps one or more keys to the
-         * specified value.  This operation requires time linear in the
-         * Map size.
-         *
-         * @param value value whose presence in this Map is to be tested.
-         * @return  <tt>true</tt> if a mapping to <tt>value</tt> exists;
-         *		<tt>false</tt> otherwise.
-         * @throws  NullPointerException  if the value is <tt>null</tt>.
-         */    
         public boolean containsValue(Object value) {
             if (value == null) 
                 throw new NullPointerException();
@@ -3046,9 +3169,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return false;
         }
 
-        /**
-         * Removes all mappings from this map.
-         */
         public void clear() {
             for (ConcurrentSkipListMap.Node<K,V> n = firstNode(); 
                  isBeforeEnd(n); 
@@ -3060,103 +3180,21 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /* ----------------  ConcurrentMap API methods -------------- */
 
-        /**
-         * If the specified key is not already associated
-         * with a value, associate it with the given value.
-         * This is equivalent to
-         * <pre>
-         *   if (!map.containsKey(key)) 
-         *      return map.put(key, value);
-         *   else
-         *      return map.get(key);
-         * </pre>
-         * Except that the action is performed atomically.
-         * @param key key with which the specified value is to be associated.
-         * @param value value to be associated with the specified key.
-         * @return previous value associated with specified key, or
-         * <tt>null</tt> if there was no mapping for key.
-         *
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws IllegalArgumentException if key outside range of
-         * this submap.
-         * @throws NullPointerException if the key or value are <tt>null</tt>.
-         */
         public V putIfAbsent(K key, V value) {
             checkKey(key);
             return m.putIfAbsent(key, value);
         }
 
-        /**
-         * Remove entry for key only if currently mapped to given value.
-         * Acts as
-         * <pre> 
-         *  if ((map.containsKey(key) && map.get(key).equals(value)) {
-         *     map.remove(key);
-         *     return true;
-         * } else return false;
-         * </pre>
-         * except that the action is performed atomically.
-         * @param key key with which the specified value is associated.
-         * @param value value associated with the specified key.
-         * @return true if the value was removed, false otherwise
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws NullPointerException if the key or value are
-         * <tt>null</tt>.
-         */
         public boolean remove(Object key, Object value) {
             K k = (K)key;
             return inHalfOpenRange(k) && m.remove(k, value);
         }
 
-        /**
-         * Replace entry for key only if currently mapped to given value.
-         * Acts as
-         * <pre> 
-         *  if ((map.containsKey(key) && map.get(key).equals(oldValue)) {
-         *     map.put(key, newValue);
-         *     return true;
-         * } else return false;
-         * </pre>
-         * except that the action is performed atomically.
-         * @param key key with which the specified value is associated.
-         * @param oldValue value expected to be associated with the
-         * specified key.
-         * @param newValue value to be associated with the specified key.
-         * @return true if the value was replaced
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws IllegalArgumentException if key outside range of
-         * this submap.
-         * @throws NullPointerException if key, oldValue or newValue
-         * are <tt>null</tt>.
-         */
         public boolean replace(K key, V oldValue, V newValue) {
             checkKey(key);
             return m.replace(key, oldValue, newValue);
         }
 
-        /**
-         * Replace entry for key only if currently mapped to some value.
-         * Acts as
-         * <pre> 
-         *  if ((map.containsKey(key)) {
-         *     return map.put(key, value);
-         * } else return null;
-         * </pre>
-         * except that the action is performed atomically.
-         * @param key key with which the specified value is associated.
-         * @param value value to be associated with the specified key.
-         * @return previous value associated with specified key, or
-         * <tt>null</tt> if there was no mapping for key.
-         * @throws ClassCastException if the key cannot be compared
-         * with the keys currently in the map.
-         * @throws IllegalArgumentException if key outside range of
-         * this submap.
-         * @throws NullPointerException if the key or value are
-         * <tt>null</tt>.
-         */
         public V replace(K key, V value) {
             checkKey(key);
             return m.replace(key, value);
@@ -3164,23 +3202,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /* ----------------  SortedMap API methods -------------- */
 
-        /**
-         * Returns the comparator used to order this map, or <tt>null</tt>
-         * if this map uses its keys' natural order.
-         *
-         * @return the comparator associated with this map, or
-         * <tt>null</tt> if it uses its keys' natural sort method.
-         */
         public Comparator<? super K> comparator() {
             return m.comparator();
         }
 
-        /**
-         * Returns the first (lowest) key currently in this map.
-         *
-         * @return the first (lowest) key currently in this map.
-         * @throws    NoSuchElementException Map is empty.
-         */
         public K firstKey() {
             ConcurrentSkipListMap.Node<K,V> n = firstNode();
             if (isBeforeEnd(n))
@@ -3189,12 +3214,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 throw new NoSuchElementException();
         }
 
-        /**
-         * Returns the last (highest) key currently in this map.
-         *
-         * @return the last (highest) key currently in this map.
-         * @throws    NoSuchElementException Map is empty.
-         */
         public K lastKey() {
             ConcurrentSkipListMap.Node<K,V> n = lastNode();
             if (n != null) {
@@ -3205,32 +3224,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             throw new NoSuchElementException();
         }
 
-        /**
-         * Returns a view of the portion of this map whose keys range
-         * from <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>,
-         * exclusive.  (If <tt>fromKey</tt> and <tt>toKey</tt> are
-         * equal, the returned sorted map is empty.)  The returned
-         * sorted map is backed by this map, so changes in the
-         * returned sorted map are reflected in this map, and
-         * vice-versa.
-
-         * @param fromKey low endpoint (inclusive) of the subMap.
-         * @param toKey high endpoint (exclusive) of the subMap.
-         *
-         * @return a view of the portion of this map whose keys range
-         * from <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>,
-         * exclusive.
-         *
-         * @throws ClassCastException if <tt>fromKey</tt> and
-         * <tt>toKey</tt> cannot be compared to one another using this
-         * map's comparator (or, if the map has no comparator, using
-         * natural ordering).
-         * @throws IllegalArgumentException if <tt>fromKey</tt> is
-         * greater than <tt>toKey</tt> or either key is outside of 
-         * the range of this submap.
-         * @throws NullPointerException if <tt>fromKey</tt> or
-         * <tt>toKey</tt> is <tt>null</tt>.
-         */
         public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey) {
             if (fromKey == null || toKey == null)
                 throw new NullPointerException();
@@ -3239,24 +3232,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new ConcurrentSkipListSubMap(m, fromKey, toKey);
         }
 
-        /**
-         * Returns a view of the portion of this map whose keys are
-         * strictly less than <tt>toKey</tt>.  The returned sorted map
-         * is backed by this map, so changes in the returned sorted
-         * map are reflected in this map, and vice-versa.
-         * @param toKey high endpoint (exclusive) of the headMap.
-         * @return a view of the portion of this map whose keys are
-         * strictly less than <tt>toKey</tt>.
-         *
-         * @throws ClassCastException if <tt>toKey</tt> is not
-         * compatible with this map's comparator (or, if the map has
-         * no comparator, if <tt>toKey</tt> does not implement
-         * <tt>Comparable</tt>).
-         * @throws IllegalArgumentException if <tt>toKey</tt> is
-         * outside of the range of this submap.
-         * @throws NullPointerException if <tt>toKey</tt> is
-         * <tt>null</tt>.
-         */
         public ConcurrentNavigableMap<K,V> headMap(K toKey) {
             if (toKey == null)
                 throw new NullPointerException();
@@ -3265,23 +3240,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new ConcurrentSkipListSubMap(m, least, toKey);
         }
 
-        /**
-         * Returns a view of the portion of this map whose keys are
-         * greater than or equal to <tt>fromKey</tt>.  The returned sorted
-         * map is backed by this map, so changes in the returned sorted
-         * map are reflected in this map, and vice-versa.
-         * @param fromKey low endpoint (inclusive) of the tailMap.
-         * @return a view of the portion of this map whose keys are
-         * greater than or equal to <tt>fromKey</tt>.
-         * @throws ClassCastException if <tt>fromKey</tt> is not
-         * compatible with this map's comparator (or, if the map has
-         * no comparator, if <tt>fromKey</tt> does not implement
-         * <tt>Comparable</tt>).
-         * @throws IllegalArgumentException if <tt>fromKey</tt> is
-         * outside of the range of this submap.
-         * @throws NullPointerException if <tt>fromKey</tt> is
-         * <tt>null</tt>.
-         */
         public  ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
             if (fromKey == null)
                 throw new NullPointerException();
@@ -3292,83 +3250,47 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /* ----------------  Relational methods -------------- */
 
-        /**
-         * Returns a key-value mapping associated with the least key
-         * greater than or equal to the given key, or <tt>null</tt> if
-         * there is no such entry. The returned entry does
-         * <em>not</em> support the <tt>Entry.setValue</tt> method.
-         * 
-         * @param key the key.
-         * @return an Entry associated with ceiling of given key, or
-         * <tt>null</tt> if there is no such Entry.
-         * @throws ClassCastException if key cannot be compared with the keys
-         *            currently in the map.
-         * @throws NullPointerException if key is <tt>null</tt>.
-         */
         public Map.Entry<K,V> ceilingEntry(K key) {
-            return m.getCeiling(key, least, fence);
+            return (SnapshotEntry<K,V>)
+                m.getNear(key, m.GT|m.EQ, least, fence, false);
         }
 
-        /**
-         * Returns a key-value mapping associated with the greatest
-         * key strictly less than the given key, or <tt>null</tt> if
-         * there is no such entry. The returned entry does
-         * <em>not</em> support the <tt>Entry.setValue</tt> method.
-         * 
-         * @param key the key.
-         * @return an Entry with greatest key less than the given
-         * key, or <tt>null</tt> if there is no such Entry.
-         * @throws ClassCastException if key cannot be compared with
-         * the keys currently in the map.
-         * @throws NullPointerException if key is <tt>null</tt>.
-         */
+        public K ceilingKey(K key) {
+            return (K)
+                m.getNear(key, m.GT|m.EQ, least, fence, true);
+        }
+
         public Map.Entry<K,V> lowerEntry(K key) {
-            return m.getLower(key, least, fence);
+            return (SnapshotEntry<K,V>)
+                m.getNear(key, m.LT, least, fence, false);
         }
 
-        /**
-         * Returns a key-value mapping associated with the greatest
-         * key less than or equal to the given key, or <tt>null</tt>
-         * if there is no such entry. The returned entry does
-         * <em>not</em> support the <tt>Entry.setValue</tt> method.
-         * 
-         * @param key the key.
-         * @return an Entry associated with floor of given key, or
-         * <tt>null</tt> if there is no such Entry.
-         * @throws ClassCastException if key cannot be compared with
-         * the keys currently in the map.
-         * @throws NullPointerException if key is <tt>null</tt>.
-         */
+        public K lowerKey(K key) {
+            return (K)
+                m.getNear(key, m.LT, least, fence, true);
+        }
+
         public Map.Entry<K,V> floorEntry(K key) {
-            return m.getFloor(key, least, fence);
-        }
-        
-        /**
-         * Returns a key-value mapping associated with the least key
-         * strictly greater than the given key, or <tt>null</tt> if
-         * there is no such entry. The returned entry does
-         * <em>not</em> support the <tt>Entry.setValue</tt> method.
-         * 
-         * @param key the key.
-         * @return an Entry with least key greater than the given key, or
-         * <tt>null</tt> if there is no such Entry.
-         * @throws ClassCastException if key cannot be compared with
-         * the keys currently in the map.
-         * @throws NullPointerException if key is <tt>null</tt>.
-         */
-        public Map.Entry<K,V> higherEntry(K key) {
-            return m.getHigher(key, least, fence);
+            return (SnapshotEntry<K,V>)
+                m.getNear(key, m.LT|m.EQ, least, fence, false);
         }
 
-        /**
-         * Returns a key-value mapping associated with the least
-         * key in this map, or <tt>null</tt> if the map is empty.
-         * The returned entry does <em>not</em> support
-         * the <tt>Entry.setValue</tt> method.
-         * 
-         * @return an Entry with least key, or <tt>null</tt> 
-         * if the map is empty.
-         */
+        public K floorKey(K key) {
+            return (K)
+                m.getNear(key, m.LT|m.EQ, least, fence, true);
+        }
+
+        
+        public Map.Entry<K,V> higherEntry(K key) {
+            return (SnapshotEntry<K,V>)
+                m.getNear(key, m.GT, least, fence, false);
+        }
+
+        public K higherKey(K key) {
+            return (K)
+                m.getNear(key, m.GT, least, fence, true);
+        }
+
         public Map.Entry<K,V> firstEntry() {
             for (;;) {
                 ConcurrentSkipListMap.Node<K,V> n = firstNode();
@@ -3380,15 +3302,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        /**
-         * Returns a key-value mapping associated with the greatest
-         * key in this map, or <tt>null</tt> if the map is empty.
-         * The returned entry does <em>not</em> support
-         * the <tt>Entry.setValue</tt> method.
-         * 
-         * @return an Entry with greatest key, or <tt>null</tt>
-         * if the map is empty.
-         */
         public Map.Entry<K,V> lastEntry() {
             for (;;) {
                 ConcurrentSkipListMap.Node<K,V> n = lastNode();
@@ -3400,52 +3313,18 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        /**
-         * Removes and returns a key-value mapping associated with
-         * the least key in this map, or <tt>null</tt> if the map is empty.
-         * The returned entry does <em>not</em> support
-         * the <tt>Entry.setValue</tt> method.
-         * 
-         * @return the removed first entry of this map, or <tt>null</tt>
-         * if the map is empty.
-         */
         public Map.Entry<K,V> pollFirstEntry() {
-            return m.removeFirstEntryOfSubrange(least, fence);
+            return (SnapshotEntry<K,V>)
+                m.removeFirstEntryOfSubrange(least, fence, false);
         }
 
-        /**
-         * Removes and returns a key-value mapping associated with the
-         * greatest key in this map, or <tt>null</tt> if the map is
-         * empty.  The returned entry does <em>not</em> support the
-         * <tt>Entry.setValue</tt> method.
-         * 
-         * @return the removed last entry of this map, or <tt>null</tt>
-         * if the map is empty.
-         */
         public Map.Entry<K,V> pollLastEntry() {
-            return m.removeLastEntryOfSubrange(least, fence);
+            return (SnapshotEntry<K,V>)
+                m.removeLastEntryOfSubrange(least, fence, false);
         }
 
         /* ---------------- Submap Views -------------- */
 
-        /**
-         * Returns a set view of the keys contained in this map.  The
-         * set is backed by the map, so changes to the map are
-         * reflected in the set, and vice-versa.  The set supports
-         * element removal, which removes the corresponding mapping
-         * from this map, via the <tt>Iterator.remove</tt>,
-         * <tt>Set.remove</tt>, <tt>removeAll</tt>,
-         * <tt>retainAll</tt>, and <tt>clear</tt> operations.  It does
-         * not support the <tt>add</tt> or <tt>addAll</tt> operations.
-         * The view's <tt>iterator</tt> is a "weakly consistent"
-         * iterator that will never throw {@link
-         * java.util.ConcurrentModificationException}, and guarantees
-         * to traverse elements as they existed upon construction of
-         * the iterator, and may (but is not guaranteed to) reflect
-         * any modifications subsequent to construction.
-         *
-         * @return a set view of the keys contained in this map.
-         */
         public Set<K> keySet() {
             Set<K> ks = keySetView;
             return (ks != null) ? ks : (keySetView = new KeySetView());
@@ -3478,25 +3357,17 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        /**
-         * Returns a collection view of the values contained in this
-         * map.  The collection is backed by the map, so changes to
-         * the map are reflected in the collection, and vice-versa.
-         * The collection supports element removal, which removes the
-         * corresponding mapping from this map, via the
-         * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
-         * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
-         * operations.  It does not support the <tt>add</tt> or
-         * <tt>addAll</tt> operations.  The view's <tt>iterator</tt>
-         * is a "weakly consistent" iterator that will never throw
-         * {@link java.util.ConcurrentModificationException}, and
-         * guarantees to traverse elements as they existed upon
-         * construction of the iterator, and may (but is not
-         * guaranteed to) reflect any modifications subsequent to
-         * construction.
-         *
-         * @return a collection view of the values contained in this map.
-         */
+        public Set<K> descendingKeySet() {
+            Set<K> ks = descendingKeySetView;
+            return (ks != null) ? ks : (descendingKeySetView = new DescendingKeySetView());
+        }
+
+        class DescendingKeySetView extends KeySetView {
+            public Iterator<K> iterator() {
+                return m.descendingSubMapKeyIterator(least, fence);
+            }
+        }
+
         public Collection<V> values() {
             Collection<V> vs = valuesView;
             return (vs != null) ? vs : (valuesView = new ValuesView());
@@ -3529,28 +3400,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        /**
-         * Returns a collection view of the mappings contained in this
-         * map.  Each element in the returned collection is a
-         * <tt>Map.Entry</tt>.  The collection is backed by the map,
-         * so changes to the map are reflected in the collection, and
-         * vice-versa.  The collection supports element removal, which
-         * removes the corresponding mapping from the map, via the
-         * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
-         * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
-         * operations.  It does not support the <tt>add</tt> or
-         * <tt>addAll</tt> operations.  The view's <tt>iterator</tt>
-         * is a "weakly consistent" iterator that will never throw
-         * {@link java.util.ConcurrentModificationException}, and
-         * guarantees to traverse elements as they existed upon
-         * construction of the iterator, and may (but is not
-         * guaranteed to) reflect any modifications subsequent to
-         * construction. The <tt>Map.Entry</tt> elements returned by
-         * <tt>iterator.next()</tt> do <em>not</em> support the
-         * <tt>setValue</tt> operation.
-         *
-         * @return a collection view of the mappings contained in this map.
-         */
         public Set<Map.Entry<K,V>> entrySet() {
             Set<Map.Entry<K,V>> es = entrySetView;
             return (es != null) ? es : (entrySetView = new EntrySetView());
@@ -3587,25 +3436,26 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
             public Object[] toArray() {
                 Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-                for (ConcurrentSkipListMap.Node<K,V> n = firstNode(); 
-                     isBeforeEnd(n); 
-                     n = n.next) {
-                    Map.Entry<K,V> e = n.createSnapshot();
-                    if (e != null) 
-                        c.add(e);
-                }
+                for (Map.Entry e : this) 
+                    c.add(new SnapshotEntry(e.getKey(), e.getValue()));
                 return c.toArray();
             }
             public <T> T[] toArray(T[] a) {
                 Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-                for (ConcurrentSkipListMap.Node<K,V> n = firstNode(); 
-                     isBeforeEnd(n); 
-                     n = n.next) {
-                    Map.Entry<K,V> e = n.createSnapshot();
-                    if (e != null) 
-                        c.add(e);
-                }
+                for (Map.Entry e : this) 
+                    c.add(new SnapshotEntry(e.getKey(), e.getValue()));
                 return c.toArray(a);
+            }
+        }
+
+        public Set<Map.Entry<K,V>> descendingEntrySet() {
+            Set<Map.Entry<K,V>> es = descendingEntrySetView;
+            return (es != null) ? es : (descendingEntrySetView = new DescendingEntrySetView());
+        }
+
+        class DescendingEntrySetView extends EntrySetView {
+            public Iterator<Map.Entry<K,V>> iterator() {
+                return m.descendingSubMapEntryIterator(least, fence);
             }
         }
     }

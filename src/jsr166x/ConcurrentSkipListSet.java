@@ -220,6 +220,16 @@ public class ConcurrentSkipListSet<E>
 	return m.keyIterator();
     }
 
+    /**
+     * Returns an iterator over the elements in this set.  The elements
+     * are returned in descending order.
+     *
+     * @return an iterator over the elements in this set.
+     */
+    public Iterator<E> descendingIterator() {
+	return m.descendingKeyIterator();
+    }
+
     /* ---------------- AbstractSet Overrides -------------- */
 
     /**
@@ -342,7 +352,7 @@ public class ConcurrentSkipListSet<E>
      * @return the least element, or <tt>null</tt> if empty.
      */
     public E pollFirst() {
-        return m.removeFirstKey();
+        return m.pollFirstKey();
     }
 
     /**
@@ -351,7 +361,7 @@ public class ConcurrentSkipListSet<E>
      * @return the last element, or <tt>null</tt> if empty.
      */
     public E pollLast() {
-        return m.removeLastKey();
+        return m.pollLastKey();
     }
 
 
@@ -469,7 +479,7 @@ public class ConcurrentSkipListSet<E>
 
         private static final long serialVersionUID = -7647078645896651609L;
 
-        /** The underlying submap   */
+        /** The underlying submap  */
         private final ConcurrentSkipListMap.ConcurrentSkipListSubMap<E,Object> s;
         
         /**
@@ -481,288 +491,19 @@ public class ConcurrentSkipListSet<E>
          */
         ConcurrentSkipListSubSet(ConcurrentSkipListMap<E,Object> map, 
                                  E fromElement, E toElement) {
-            s = new ConcurrentSkipListMap.ConcurrentSkipListSubMap<E,Object>(map, fromElement, 
-                                                       toElement);
+            s = new ConcurrentSkipListMap.ConcurrentSkipListSubMap<E,Object>
+                (map, fromElement, toElement);
         }
 
-        /**
-         * Returns the number of elements in this set.  If this set
-         * contains more than <tt>Integer.MAX_VALUE</tt> elements, it
-         * returns <tt>Integer.MAX_VALUE</tt>.
-         *
-         * <p>Beware that, unlike in most collections, this method is
-         * <em>NOT</em> a constant-time operation. Because of the
-         * asynchronous nature of these sets, determining the current
-         * number of elements requires traversing them all to count them.
-         * Additionally, it is possible for the size to change during
-         * execution of this method, in which case the returned result
-         * will be inaccurate. Thus, this method is typically not very
-         * useful in concurrent applications.
-         *
-         * @return  the number of elements in this set.
-         */
-        public int size() {
-            return s.size();
-        }
-        
-        /**
-         * Returns <tt>true</tt> if this set contains no elements.
-         * @return <tt>true</tt> if this set contains no elements.
-         */
-        public boolean isEmpty() {
-            return s.isEmpty();
-        }
-                                           
-        /**
-         * Returns <tt>true</tt> if this set contains the specified
-         * element.
-         *
-         * @param o the object to be checked for containment in this
-         * set.
-         * @return <tt>true</tt> if this set contains the specified
-         * element.
-         *
-         * @throws ClassCastException if the specified object cannot
-         * be compared with the elements currently in the set.
-         * @throws NullPointerException if o is <tt>null</tt>.
-         */
-        public boolean contains(Object o) {
-            return s.containsKey(o);
-        }
+        // subsubset construction
 
-
-        /**
-         * Adds the specified element to this set if it is not already
-         * present.
-         *
-         * @param o element to be added to this set.
-         * @return <tt>true</tt> if the set did not already contain
-         * the specified element.
-         *
-         * @throws ClassCastException if the specified object cannot
-         * be compared with the elements currently in the set.
-         * @throws IllegalArgumentException if o is outside the range
-         * of this subset.
-         * @throws NullPointerException if o is <tt>null</tt>.
-         */
-        public boolean add(E o) {
-            return s.put(o, Boolean.TRUE) == null;
-        }
-
-        /**
-         * Removes the specified element from this set if it is
-         * present.
-         *
-         * @param o object to be removed from this set, if present.
-         * @return <tt>true</tt> if the set contained the specified element.
-         *
-         * @throws ClassCastException if the specified object cannot
-         * be compared with the elements currently in the set.
-         * @throws NullPointerException if o is <tt>null</tt>.
-         */
-        public boolean remove(Object o) {
-            return s.remove(o) != null;
-        }
-
-        /**
-         * Removes all of the elements from this set.
-         */
-        public void clear() {
-            s.clear();
-        }
-
-        /**
-         * Returns an iterator over the elements in this set.  The elements
-         * are returned in ascending order.
-         *
-         * @return an iterator over the elements in this set.
-         */
-        public Iterator<E> iterator() {
-            return s.keySet().iterator();
-        }
-
-        /**
-         * Returns an element greater than or equal to the given
-         * element, or <tt>null</tt> if there is no such element.
-         * 
-         * @param o the value to match
-         * @return an element greater than or equal to given element, or <tt>null</tt>
-         * if there is no such element.
-         * @throws ClassCastException if o cannot be compared with the
-         * elements currently in the set.
-         * @throws NullPointerException if o is <tt>null</tt>
-         */
-        public E ceiling(E o) {
-            E key = o;
-            E least = s.getLeast();
-            if (least != null && s.getMap().compare(o, least) < 0)
-                key = least;
-            E k = s.getMap().ceilingKey(key);
-            return (k != null && s.inHalfOpenRange(k))? k : null;
-        }
-
-        /**
-         * Returns an element strictly less than the given element, or <tt>null</tt> if
-         * there is no such element.
-         * 
-         * @param o the value to match
-         * @return the greatest element less than the given element, or
-         * <tt>null</tt> if there is no such element.
-         * @throws ClassCastException if o cannot be compared with the
-         * elements currently in the set.
-         * @throws NullPointerException if o is <tt>null</tt>.
-         */
-        public E lower(E o) {
-            E k = s.getMap().lowerKey(o);
-            return (k != null && s.inHalfOpenRange(k))? k : null;
-        }
-
-        /**
-         * Returns an element less than or equal to the given element, or <tt>null</tt>
-         * if there is no such element.
-         * 
-         * @param o the value to match
-         * @return the greatest element less than or equal to given
-         * element, or <tt>null</tt> if there is no such element.
-         * @throws ClassCastException if o cannot be compared with the
-         * elements currently in the set.
-         * @throws NullPointerException if o is <tt>null</tt>.
-         */
-        public E floor(E o) {
-            E k = s.getMap().floorKey(o);
-            return (k != null && s.inHalfOpenRange(k))? k : null;
-        }
-
-        /**
-         * Returns an element strictly greater than the given element, or <tt>null</tt>
-         * if there is no such element.
-         * 
-         * @param o the value to match
-         * @return the least element greater than the given element, or
-         * <tt>null</tt> if there is no such element.
-         * @throws ClassCastException if o cannot be compared with the
-         * elements currently in the set.
-         * @throws NullPointerException if o is <tt>null</tt>.
-         */
-        public E higher(E o) {
-            E k;
-            E least = s.getLeast();
-            if (least != null && s.getMap().compare(o, least) < 0)
-                k = s.getMap().ceilingKey(least);
-            else
-                k = s.getMap().higherKey(o);
-            return (k != null && s.inHalfOpenRange(k))? k : null;
-        }
-
-        /**
-         * Retrieves and removes the first (lowest) element.
-         *
-         * @return the first element, or <tt>null</tt> if empty.
-         */
-        public E pollFirst() {
-            for (;;) {
-                E k = s.lowestKey();
-                if (k == null)
-                    return null;
-                if (remove(k))
-                    return k;
-            }
-        }
-
-        /**
-         * Retrieves and removes the last (highest) element.
-         *
-         * @return the last element, or <tt>null</tt> if empty.
-         */
-        public E pollLast() {
-            for (;;) {
-                E k = s.highestKey();
-                if (k == null)
-                    return null;
-                if (remove(k))
-                    return k;
-            }
-        }
-
-        /**
-         * Returns the comparator used to order this set, or <tt>null</tt>
-         * if this set uses its elements natural ordering.
-         *
-         * @return the comparator used to order this set, or <tt>null</tt>
-         * if this set uses its elements natural ordering.
-         */
-        public Comparator<? super E> comparator() {
-            return s.comparator();
-        }
-
-        /**
-         * Returns the first (lowest) element currently in this set.
-         *
-         * @return the first (lowest) element currently in this set.
-         * @throws    NoSuchElementException sorted set is empty.
-         */
-        public E first() {
-            return s.firstKey();
-        }
-
-        /**
-         * Returns the last (highest) element currently in this set.
-         *
-         * @return the last (highest) element currently in this set.
-         * @throws    NoSuchElementException sorted set is empty.
-         */
-        public E last() {
-            return s.lastKey();
-        }
-
-        /**
-         * Returns a view of the portion of this set whose elements
-         * range from <tt>fromElement</tt>, inclusive, to
-         * <tt>toElement</tt>, exclusive.  (If <tt>fromElement</tt>
-         * and <tt>toElement</tt> are equal, the returned sorted set
-         * is empty.)  The returned sorted set is backed by this set,
-         * so changes in the returned sorted set are reflected in this
-         * set, and vice-versa.
-         * @param fromElement low endpoint (inclusive) of the subSet.
-         * @param toElement high endpoint (exclusive) of the subSet.
-         * @return a view of the portion of this set whose elements
-         * range from <tt>fromElement</tt>, inclusive, to
-         * <tt>toElement</tt>, exclusive.
-         * @throws ClassCastException if <tt>fromElement</tt> and
-         * <tt>toElement</tt> cannot be compared to one another using
-         * this set's comparator (or, if the set has no comparator,
-         * using natural ordering).
-         * @throws IllegalArgumentException if <tt>fromElement</tt> is
-         * greater than <tt>toElement</tt> or either key is outside
-         * the range of this set.
-         * @throws NullPointerException if <tt>fromElement</tt> or
-         *	       <tt>toElement</tt> is <tt>null</tt>.
-         */
-        public NavigableSet<E> subSet(E fromElement, 
-                                      E toElement) {
+        public NavigableSet<E> subSet(E fromElement, E toElement) {
             if (!s.inOpenRange(fromElement) || !s.inOpenRange(toElement))
                 throw new IllegalArgumentException("element out of range");
             return new ConcurrentSkipListSubSet<E>(s.getMap(), 
                                                    fromElement, toElement);
         }
 
-        /**
-         * Returns a view of the portion of this set whose elements are
-         * strictly less than <tt>toElement</tt>.  The returned sorted set
-         * is backed by this set, so changes in the returned sorted set
-         * are reflected in this set, and vice-versa.
-         * @param toElement high endpoint (exclusive) of the headSet.
-         * @return a view of the portion of this set whose elements
-         * are strictly less than toElement.
-         * @throws ClassCastException if <tt>toElement</tt> is not
-         * compatible with this set's comparator (or, if the set has
-         * no comparator, if <tt>toElement</tt> does not implement
-         * <tt>Comparable</tt>).
-         * @throws IllegalArgumentException if <tt>toElement</tt> is 
-         * outside the range of this set.
-         * @throws NullPointerException if <tt>toElement</tt> is
-         * <tt>null</tt>.
-         */
         public NavigableSet<E> headSet(E toElement) {
             E least = s.getLeast();
             if (!s.inOpenRange(toElement))
@@ -771,24 +512,6 @@ public class ConcurrentSkipListSet<E>
                                                    least, toElement);
         }
         
-        /**
-         * Returns a view of the portion of this set whose elements
-         * are greater than or equal to <tt>fromElement</tt>.  The
-         * returned sorted set is backed by this set, so changes in
-         * the returned sorted set are reflected in this set, and
-         * vice-versa.
-         * @param fromElement low endpoint (inclusive) of the tailSet.
-         * @return a view of the portion of this set whose elements
-         * are greater than or equal to <tt>fromElement</tt>.
-         * @throws ClassCastException if <tt>fromElement</tt> is not
-         * compatible with this set's comparator (or, if the set has
-         * no comparator, if <tt>fromElement</tt> does not implement
-         * <tt>Comparable</tt>).
-         * @throws IllegalArgumentException if <tt>fromElement</tt> is 
-         * outside the range of this set.
-         * @throws NullPointerException if <tt>fromElement</tt> is
-         * <tt>null</tt>.
-         */
         public NavigableSet<E> tailSet(E fromElement) {
             E fence = s.getFence();
             if (!s.inOpenRange(fromElement))
@@ -796,5 +519,34 @@ public class ConcurrentSkipListSet<E>
             return new ConcurrentSkipListSubSet<E>(s.getMap(), 
                                                    fromElement, fence);
         }
+
+        // relays to submap methods
+
+        public int size()                 { return s.size(); }
+        public boolean isEmpty()          { return s.isEmpty(); }
+        public boolean contains(Object o) { return s.containsKey(o); }
+        public void clear()               { s.clear(); }
+        public E first()                  { return s.firstKey(); }
+        public E last()                   { return s.lastKey(); }
+        public E ceiling(E o)             { return s.ceilingKey(o); }
+        public E lower(E o)               { return s.lowerKey(o); }
+        public E floor(E o)               { return s.floorKey(o); }
+        public E higher(E o)              { return s.higherKey(o); }
+        public boolean remove(Object o) { return s.remove(o)==Boolean.TRUE; }
+        public boolean add(E o)       { return s.put(o, Boolean.TRUE)==null; }
+        public Comparator<? super E> comparator() { return s.comparator(); }
+        public Iterator<E> iterator()     { return s.keySet().iterator(); }
+        public Iterator<E> descendingIterator() {
+            return s.descendingKeySet().iterator();
+        }
+        public E pollFirst() { 
+            Map.Entry<E,?> e = s.pollFirstEntry();
+            return (e == null)? null : e.getKey();
+        }
+        public E pollLast() {
+            Map.Entry<E,?> e = s.pollLastEntry();
+            return (e == null)? null : e.getKey();
+        }
+
     }
 }    

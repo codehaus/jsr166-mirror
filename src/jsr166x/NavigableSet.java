@@ -13,14 +13,17 @@ import java.util.*;
  * <tt>floor</tt>, <tt>ceiling</tt>, and <tt>higher</tt> return keys
  * respectively less than, less than or equal, greater than or equal,
  * and greater than a given key, returning <tt>null</tt> if there is
- * no such key.  These methods are designed for locating, not
- * traversing entries. To traverse, use view iterators and/or
- * <tt>subset</tt>. This interface additionally defines methods
- * <tt>pollFirst</tt> and <t>pollLast</tt> that return and remove the
- * lowest and highest key, if one exists, else returning
- * <tt>null</tt>.
+ * no such key.  A <tt>NavigableSet</tt> may be viewed and traversed
+ * in either ascending or descending order.  The <tt>Collection</tt>
+ * <tt>iterator</tt> method returns an ascending <tt>Iterator</tt> and
+ * the additional method <tt>descendingIterator</tt> returns
+ * descending iterator. The performance of ascending traversals is
+ * likely to be faster than descending traversals.  This interface
+ * additionally defines methods <tt>pollFirst</tt> and
+ * <t>pollLast</tt> that return and remove the lowest and highest key,
+ * if one exists, else returning <tt>null</tt>.
  *
- * <p> The return values of these methods may be ambiguous in
+ * <p> The return values of navigation methods may be ambiguous in
  * implementations that permit <tt>null</tt> elements. However, even
  * in this case the result can be disambiguated by checking
  * <tt>contains(null)</tt>. To avoid such issues, implementations of
@@ -101,6 +104,14 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @return the last element, or <tt>null</tt> if empty.
      */
     public E pollLast();
+
+    /**
+     * Returns an iterator over the elements in this collection, in
+     * descending order.  
+     * 
+     * @return an <tt>Iterator</tt> over the elements in this collection
+     */
+    Iterator<E> descendingIterator();
 
     /**
      * Returns a view of the portion of this set whose elements range from

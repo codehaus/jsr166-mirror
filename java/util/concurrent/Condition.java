@@ -52,6 +52,8 @@ package java.util.concurrent;
  * semantics for all three forms of waiting; but it is required to
  * clearly document the semantics and guarantees provided by each of them.
  *
+ * <p>Except where noted, passing a <tt>null</tt> value for any parameter 
+ * will result in a {@link NullPointerException} being thrown.
  *
  * @fixme Need to clarify interrupt semantics of wait and be careful of 
  * wording. Current semantics are that if you have interrupted state set on
@@ -69,7 +71,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2002/12/06 07:27:55 $
+ * @revised $Date: 2002/12/09 06:22:56 $
  * @editor $Author: dholmes $
  **/
 public interface Condition {
@@ -211,7 +213,6 @@ public interface Condition {
      * waiting, and <tt>false</tt> if the waiting time elapsed before
      * a signal occurred.
      *
-     * @fixme What if Clock is null?
      */
     public boolean await(long time, Clock granularity) throws InterruptedException;
 
@@ -227,7 +228,7 @@ public interface Condition {
     /**
      * Wake up all waiting threads.
      *
-     * <p>If any threads are waiting on this <tt>Condition</t> then they are
+     * <p>If any threads are waiting on this <tt>Condition</tt> then they are
      * all woken up. Each thread must re-acquire the lock before it can
      * return from <tt>await</tt>.
      **/

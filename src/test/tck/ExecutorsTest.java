@@ -337,17 +337,21 @@ public class ExecutorsTest extends JSR166TestCase{
         final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
         Runnable r = new Runnable() {
                 public void run() {
-                    Thread current = Thread.currentThread();
-                    threadAssertTrue(!current.isDaemon());
-                    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
-                    ThreadGroup g = current.getThreadGroup();
-                    SecurityManager s = System.getSecurityManager();
-                    if (s != null)
-                        threadAssertTrue(g == s.getThreadGroup());
-                    else
-                        threadAssertTrue(g == egroup);
-                    String name = current.getName();
-                    threadAssertTrue(name.endsWith("thread-1"));
+		    try {
+			Thread current = Thread.currentThread();
+			threadAssertTrue(!current.isDaemon());
+			threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
+			ThreadGroup g = current.getThreadGroup();
+			SecurityManager s = System.getSecurityManager();
+			if (s != null)
+			    threadAssertTrue(g == s.getThreadGroup());
+			else
+			    threadAssertTrue(g == egroup);
+			String name = current.getName();
+			threadAssertTrue(name.endsWith("thread-1"));
+		    } catch (SecurityException ok) {
+			// Also pass if not allowed to change setting
+		    }
                 }
             };
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
@@ -379,20 +383,23 @@ public class ExecutorsTest extends JSR166TestCase{
         final AccessControlContext thisacc = AccessController.getContext();
         Runnable r = new Runnable() {
                 public void run() {
-                    Thread current = Thread.currentThread();
-                    threadAssertTrue(!current.isDaemon());
-                    threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
-                    ThreadGroup g = current.getThreadGroup();
-                    SecurityManager s = System.getSecurityManager();
-                    if (s != null)
-                        threadAssertTrue(g == s.getThreadGroup());
-                    else
-                        threadAssertTrue(g == egroup);
-                    String name = current.getName();
-                    threadAssertTrue(name.endsWith("thread-1"));
-                    threadAssertTrue(thisccl == current.getContextClassLoader());
-                    threadAssertTrue(thisacc.equals(AccessController.getContext()));
-                }
+		    try {
+			Thread current = Thread.currentThread();
+			threadAssertTrue(!current.isDaemon());
+			threadAssertTrue(current.getPriority() == Thread.NORM_PRIORITY);
+			ThreadGroup g = current.getThreadGroup();
+			SecurityManager s = System.getSecurityManager();
+			if (s != null)
+			    threadAssertTrue(g == s.getThreadGroup());
+			else
+			    threadAssertTrue(g == egroup);
+			String name = current.getName();
+			threadAssertTrue(name.endsWith("thread-1"));
+			threadAssertTrue(thisccl == current.getContextClassLoader());
+			threadAssertTrue(thisacc.equals(AccessController.getContext()));
+		    } catch(SecurityException ok) {
+			// Also pass if not allowed to change settings
+		    }
             };
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
         

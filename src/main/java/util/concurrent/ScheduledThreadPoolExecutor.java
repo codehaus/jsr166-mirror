@@ -474,7 +474,7 @@ public class ScheduledThreadPoolExecutor
      * tasks submitted using <tt>execute</tt> which are for scheduling
      * purposes used as the basis of a zero-delay
      * <tt>ScheduledFuture</tt>. Iteration over this queue is
-     * </em>not</em> guaranteed to traverse tasks in the order in
+     * <em>not</em> guaranteed to traverse tasks in the order in
      * which they will execute.
      *
      * @return the task queue

@@ -45,7 +45,7 @@ import sun.misc.Unsafe;
  * <pre>
  * class FIFOMutex {
  *   private AtomicBoolean locked = new AtomicBoolean(false);
- *   private Queue<Thread> waiters = new ConcurrentLinkedQueue<Thread>();
+ *   private Queue&lt;Thread&gt; waiters = new ConcurrentLinkedQueue&lt;Thread&gt;();
  *
  *   public void lock() { 
  *     boolean wasInterrupted = false;

@@ -36,7 +36,7 @@ import java.util.*;
  * class Handler { void handle(); ... }
  *
  * class X {
- *    private final CopyOnWriteArraySet<Handler> handlers = new CopyOnWriteArraySet<Handler>();
+ *    private final CopyOnWriteArraySet&lt;Handler&gt; handlers = new CopyOnWriteArraySet&lt;Handler&gt;();
  *    public void addHandler(Handler h) { handlers.add(h); }
  *
  *    private long internalState;

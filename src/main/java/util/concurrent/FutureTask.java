@@ -124,7 +124,7 @@ public class FutureTask<V> implements Future<V>, Runnable {
 
     /**
      * Sets the result of this Future to the given value unless
-     * this future has already been set or has been cancelled
+     * this future has already been set or has been cancelled.
      * @param v the value
      */ 
     protected void set(V v) {

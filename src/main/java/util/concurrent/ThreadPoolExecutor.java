@@ -1423,7 +1423,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         public AbortPolicy() { }
 
         /**
-         * Always throws  RejectedExecutionException
+         * Always throws  RejectedExecutionException.
          * @param r the runnable task requested to be executed
          * @param e the executor attempting to execute this task
          * @throws RejectedExecutionException always.

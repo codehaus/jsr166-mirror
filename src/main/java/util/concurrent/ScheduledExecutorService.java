@@ -24,7 +24,7 @@ import java.util.*;
  * periods) are also allowed in <tt>schedule</tt> methods, and are
  * treated as requests for immediate execution.
  *
- * <p>All <t>schedule</tt> methods accept <em>relative</em> delays and
+ * <p>All <tt>schedule</tt> methods accept <em>relative</em> delays and
  * periods as arguments, not absolute times or dates. It is a simple
  * matter to transform an absolute time represented as a {@link
  * java.util.Date} to the required form. For example, to schedule at

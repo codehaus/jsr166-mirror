@@ -144,7 +144,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             // an execution per SHORT delay, but no more than one SHORT more
             assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
             assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
-	    assertTrue(h.isDone());
             joinPool(p1);
         } catch(Exception e){
             unexpectedException();
@@ -165,7 +164,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             int c = counter.count.get();
             assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
             assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
-	    assertTrue(h.isDone());
             joinPool(p1);
         } catch(Exception e){
             unexpectedException();

@@ -3,7 +3,7 @@ package java.util.concurrent;
 import junit.framework.TestCase;
 
 /**
- * Tests the AtomicBoolean implementation.
+ * Tests the Executors static methods.
  */
 public class ExecutorsTest extends TestCase {
 

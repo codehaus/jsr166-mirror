@@ -63,11 +63,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * guarantee FIFO order among tied entries.
      */
     private static final AtomicLong sequencer = new AtomicLong(0);
-
-    /**
-     * A delayed or periodic action.
-     */
-    public static class DelayedTask extends CancellableTask implements Delayed {
+    
+    private static class ScheduledCancellableTask 
+            extends CancellableTask implements ScheduledCancellable {
+        
         /** Sequence number to break ties FIFO */
         private final long sequenceNumber;
         /** The time the task is enabled to execute in nanoTime units */
@@ -80,7 +79,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         /**
          * Creates a one-shot action with given nanoTime-based trigger time
          */
-        DelayedTask(Runnable r, long ns) {
+        ScheduledCancellableTask(Runnable r, long ns) {
             super(r);
             this.time = ns;
             this.period = 0;
@@ -91,7 +90,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         /**
          * Creates a periodic action with given nano time and period
          */
-        DelayedTask(Runnable r, long ns,  long period, boolean rateBased) {
+        ScheduledCancellableTask(Runnable r, long ns,  long period, boolean rateBased) {
             super(r);
             if (period <= 0)
                 throw new IllegalArgumentException();
@@ -111,7 +110,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         public int compareTo(Object other) {
             if (other == this) // compare zero ONLY if same object
                 return 0;
-            DelayedTask x = (DelayedTask)other;
+            ScheduledCancellableTask x = (ScheduledCancellableTask)other;
             long diff = time - x.time;
             if (diff < 0)
                 return -1;
@@ -141,26 +140,25 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * Return a new DelayedTask that will trigger in the period
+         * Return a new ScheduledCancellable that will trigger in the period
          * subsequent to current task, or null if non-periodic
          * or canceled.
          */
-        DelayedTask nextTask() {
+        ScheduledCancellableTask nextTask() {
             if (period <= 0 || isCancelled())
                 return null;
             long nextTime = period + (rateBased ? time : System.nanoTime());
-            return new DelayedTask(getRunnable(), nextTime, period, rateBased);
+            return new ScheduledCancellableTask(getRunnable(), nextTime, period, rateBased);
         }
     }
-
-    /**
-     * A delayed result-bearing action.
-     */
-    public static class DelayedFutureTask<V> extends DelayedTask implements Future<V> {
+    
+    private static class ScheduledFutureTask<V> 
+            extends ScheduledCancellableTask implements ScheduledFuture<V> {
+                
         /**
-         * Creates a Future that may trigger after the given delay.
+         * Creates a ScheduledFuture that may trigger after the given delay.
          */
-        DelayedFutureTask(Callable<V> callable, long triggerTime) {
+        ScheduledFutureTask(Callable<V> callable, long triggerTime) {
             // must set after super ctor call to use inner class
             super(null, triggerTime);
             setRunnable(new InnerCancellableFuture<V>(callable));
@@ -187,10 +185,12 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
      * An annoying wrapper class to convince generics compiler to
-     * use a DelayQueue<DelayedTask> as a BlockingQueue<Runnable>
+     * use a DelayQueue<ScheduledCancellableTask> as a BlockingQueue<Runnable>
      */ 
-    private static class DelayedWorkQueue extends AbstractCollection<Runnable> implements BlockingQueue<Runnable> {
-        private final DelayQueue<DelayedTask> dq = new DelayQueue<DelayedTask>();
+    private static class DelayedWorkQueue 
+            extends AbstractCollection<Runnable> implements BlockingQueue<Runnable> {
+        
+        private final DelayQueue<ScheduledCancellableTask> dq = new DelayQueue<ScheduledCancellableTask>();
         public Runnable poll() { return dq.poll(); }
         public Runnable peek() { return dq.peek(); }
         public Runnable take() throws InterruptedException { return dq.take(); }
@@ -198,13 +198,13 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
             return dq.poll(timeout, unit);
         }
 
-        public boolean add(Runnable x) { return dq.add((DelayedTask)x); }
-        public boolean offer(Runnable x) { return dq.offer((DelayedTask)x); }
+        public boolean add(Runnable x) { return dq.add((ScheduledCancellableTask)x); }
+        public boolean offer(Runnable x) { return dq.offer((ScheduledCancellableTask)x); }
         public void put(Runnable x) throws InterruptedException {
-            dq.put((DelayedTask)x); 
+            dq.put((ScheduledCancellableTask)x); 
         }
         public boolean offer(Runnable x, long timeout, TimeUnit unit) throws InterruptedException {
-            return dq.offer((DelayedTask)x, timeout, unit);
+            return dq.offer((ScheduledCancellableTask)x, timeout, unit);
         }
 
         public Runnable remove() { return dq.remove(); }
@@ -218,7 +218,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         public boolean isEmpty() { return dq.isEmpty(); }
         public Iterator<Runnable> iterator() { 
             return new Iterator<Runnable>() {
-                private Iterator<DelayedTask> it = dq.iterator();
+                private Iterator<ScheduledCancellableTask> it = dq.iterator();
                 public boolean hasNext() { return it.hasNext(); }
                 public Runnable next() { return it.next(); }
                 public void remove() {  it.remove(); }
@@ -310,9 +310,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * for execution because the executor has been shut down.
      */
 
-    public DelayedTask schedule(Runnable command, long delay,  TimeUnit unit) {
+    public ScheduledCancellable schedule(Runnable command, long delay,  TimeUnit unit) {
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
-        DelayedTask t = new DelayedTask(command, triggerTime);
+        ScheduledCancellableTask t = new ScheduledCancellableTask(command, triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -326,11 +326,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public DelayedTask schedule(Runnable command, Date date) {
+    public ScheduledCancellable schedule(Runnable command, Date date) {
         long triggerTime = System.nanoTime() + 
             TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
                                           System.currentTimeMillis()); 
-        DelayedTask t = new DelayedTask(command, triggerTime);
+        ScheduledCancellableTask t = new ScheduledCancellableTask(command, triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -349,9 +349,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public DelayedTask scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
+    public ScheduledCancellable scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
-        DelayedTask t = new DelayedTask(command, 
+        ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,
                                         unit.toNanos(period), 
                                         true);
@@ -374,11 +374,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public DelayedTask scheduleAtFixedRate(Runnable command, Date initialDate, long period, TimeUnit unit) {
+    public ScheduledCancellable scheduleAtFixedRate(Runnable command, Date initialDate, long period, TimeUnit unit) {
         long triggerTime = System.nanoTime() + 
             TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
                                           System.currentTimeMillis()); 
-        DelayedTask t = new DelayedTask(command, 
+        ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,
                                         unit.toNanos(period), 
                                         true);
@@ -400,9 +400,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public DelayedTask scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+    public ScheduledCancellable scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
         long triggerTime = System.nanoTime() + unit.toNanos(initialDelay);
-        DelayedTask t = new DelayedTask(command, 
+        ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,
                                         unit.toNanos(delay), 
                                         false);
@@ -424,11 +424,11 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public DelayedTask scheduleWithFixedDelay(Runnable command, Date initialDate, long delay, TimeUnit unit) {
+    public ScheduledCancellable scheduleWithFixedDelay(Runnable command, Date initialDate, long delay, TimeUnit unit) {
         long triggerTime = System.nanoTime() + 
             TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
                                           System.currentTimeMillis()); 
-        DelayedTask t = new DelayedTask(command, 
+        ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
                                         triggerTime,
                                         unit.toNanos(delay), 
                                         false);
@@ -438,19 +438,18 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
 
     /**
-     * Creates and executes a Future that becomes enabled after the
+     * Creates and executes a ScheduledFuture that becomes enabled after the
      * given delay.
      * @param callable the function to execute.
      * @param delay the time from now to delay execution.
      * @param unit the time unit of the delay parameter.
-     * @return a Future that can be used to extract result or cancel.
+     * @return a ScheduledFuture that can be used to extract result or cancel.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public <V> DelayedFutureTask<V> schedule(Callable<V> callable, long delay,  TimeUnit unit) {
+    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
-        DelayedFutureTask<V> t = new DelayedFutureTask<V>(callable, 
-                                                          triggerTime);
+        ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -460,16 +459,15 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * the given date.
      * @param callable the function to execute.
      * @param date the time to commence excution.
-     * @return a Future that can be used to extract result or cancel.
+     * @return a ScheduledFuture that can be used to extract result or cancel.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      */
-    public <V> DelayedFutureTask<V> schedule(Callable<V> callable, Date date) {
+    public <V> ScheduledFuture<V> schedule(Callable<V> callable, Date date) {
         long triggerTime = System.nanoTime() + 
             TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
                                           System.currentTimeMillis()); 
-        DelayedFutureTask<V> t = new DelayedFutureTask<V>(callable, 
-                                                          triggerTime);
+        ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
         delayedExecute(t);
         return t;
     }
@@ -479,7 +477,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * equivalent to <tt>schedule(command, 0, anyUnit)</tt>.  Note
      * that inspections of the queue and of the list returned by
      * <tt>shutdownNow</tt> will access the zero-delayed
-     * <tt>DelayedTask</tt>, not the <tt>command</tt> itself.
+     * <tt>ScheduledCancellable</tt>, not the <tt>command</tt> itself.
      *
      * @param command the task to execute
      * @throws RejectedExecutionException at discretion of
@@ -559,7 +557,7 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         else if (keepDelayed || keepPeriodic) {
             Object[] entries = super.getQueue().toArray();
             for (int i = 0; i < entries.length; ++i) {
-                DelayedTask t = (DelayedTask)entries[i];
+                ScheduledCancellableTask t = (ScheduledCancellableTask)entries[i];
                 if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
                     t.cancel(false);
             }
@@ -594,9 +592,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * fail to respond to interrupts, they may never terminate.
      *
      * @return list of tasks that never commenced execution.  Each
-     * element of this list is a <tt>DelayedTask</tt>, including those
+     * element of this list is a <tt>ScheduledCancellable</tt>, including those
      * tasks submitted using <tt>execute</tt> which are for scheduling
-     * purposes used as the basis of a zero-delay <tt>DelayedTask</tt>.
+     * purposes used as the basis of a zero-delay <tt>ScheduledCancellable</tt>.
      */
     public List shutdownNow() {
         return super.shutdownNow();
@@ -611,17 +609,17 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @return true if the task was removed
      */
     public boolean remove(Runnable task) {
-        if (task instanceof DelayedTask && super.getQueue().remove(task))
+        if (task instanceof ScheduledCancellable && super.getQueue().remove(task))
             return true;
 
-        // The task might actually have been wrapped as a DelayedTask
+        // The task might actually have been wrapped as a ScheduledCancellable
         // in execute(), in which case we need to maually traverse
         // looking for it.
 
-        DelayedTask wrap = null;
+        ScheduledCancellable wrap = null;
         Object[] entries = super.getQueue().toArray();
         for (int i = 0; i < entries.length; ++i) {
-            DelayedTask t = (DelayedTask)entries[i];
+            ScheduledCancellableTask t = (ScheduledCancellableTask)entries[i];
             Runnable r = t.getRunnable();
             if (task.equals(r)) {
                 wrap = t;
@@ -635,10 +633,10 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
      * Returns the task queue used by this executor.  Each element
-     * of this queue is a <tt>DelayedTask</tt>, including those
+     * of this queue is a <tt>ScheduledCancellable</tt>, including those
      * tasks submitted using <tt>execute</tt> which are for
      * scheduling purposes used as the basis of a zero-delay
-     * <tt>DelayedTask</tt>.
+     * <tt>ScheduledCancellable</tt>.
      *
      * @return the task queue
      */
@@ -649,12 +647,12 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     /**
      * If executed task was periodic, cause the task for the next
      * period to execute.
-     * @param r the task (assumed to be a DelayedTask)
+     * @param r the task (assumed to be a ScheduledCancellable)
      * @param t the exception
      */
     protected void afterExecute(Runnable r, Throwable t) { 
         super.afterExecute(r, t);
-        DelayedTask next = ((DelayedTask)r).nextTask();
+        ScheduledCancellableTask next = ((ScheduledCancellableTask)r).nextTask();
         if (next != null &&
             (!isShutdown() ||
              (getContinueExistingPeriodicTasksAfterShutdownPolicy() && 

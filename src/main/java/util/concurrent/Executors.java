@@ -17,8 +17,8 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/01 22:40:05 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/08/19 15:04:57 $
+ * @editor $Author: tim $
  * @author Doug Lea
  */
 public class Executors {
@@ -145,6 +145,22 @@ public class Executors {
     }
 
     /**
+     * Executes a Runnable task and returns a Cancellable representing that
+     * task.
+     *
+     * @param executor the Executor to which the task will be submitted
+     * @param task the task to submit
+     * @return a Cancellable representing pending completion of the task
+     * @throws RejectedExecutionException if task cannot be scheduled
+     * for execution
+     */
+    public static Cancellable execute(Executor executor, Runnable task) {
+        FutureTask<Boolean> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
+        executor.execute(ftask);
+        return ftask;
+    }
+
+    /**
      * Executes a Runnable task and returns a Future representing that
      * task.
      *
@@ -172,7 +188,7 @@ public class Executors {
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      */
-    public static <T> FutureTask<T> execute(Executor executor, Callable<T> task) {
+    public static <T> Future<T> execute(Executor executor, Callable<T> task) {
         FutureTask<T> ftask = new FutureTask<T>(task);
         executor.execute(ftask);
         return ftask;
@@ -213,4 +229,7 @@ public class Executors {
         return ftask.get();
     }
 
+    
+    /** Cannot instantiate. */
+    private Executors() {}
 }

@@ -13,7 +13,7 @@ public class TimedCallable<T> implements Callable<T> {
     }
 
     public T call() throws Exception {
-        FutureTask<T> ftask = Executors.execute(exec, func);
+        Future<T> ftask = Executors.execute(exec, func);
         try {
             return ftask.get(msecs, TimeUnit.MILLISECONDS);
         //} catch (InterruptedException e) {

@@ -171,6 +171,15 @@ public class CancellableTask implements Cancellable, Runnable {
         protected InnerCancellableFuture(Callable<V> callable) {
             this.callable = callable;
         }
+        
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return CancellableTask.this.cancel(mayInterruptIfRunning);
+        }
+        
+        public boolean isCancelled() {
+            return CancellableTask.this.isCancelled();
+        }
+
 
         public boolean isDone() {
             return CancellableTask.this.isDone();

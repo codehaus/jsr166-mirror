@@ -1,6 +1,6 @@
 /*
  * @test %I% %E%
- * @bug 166
+ * @bug 4965960
  * @compile -source 1.5 ExecutorCompletionServiceLoops.java
  * @run main/timeout=3600 ExecutorCompletionServiceLoops
  * @summary  Exercise ExecutorCompletionServiceLoops

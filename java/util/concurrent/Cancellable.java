@@ -5,7 +5,7 @@ package java.util.concurrent;
  * of asynchronous tasks.
  **/
 public interface Cancellable {
-  /***
+  /**
    * Cancel execution of this task if it has not already completed.
    * @param mayInterruptIfRunning true if the execution of this task
    * may be interrupted if it is currently running.  Otherwise,

@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.*;
 /**
  * Provides a framework for implementing blocking locks and related
  * synchronization aids that rely on First-in-first-out wait queues.
- * This class is designed to be a suitable superclass for most kinds
- * of synchronizers that rely on a single atomic <tt>int</tt> value to
+ * This class is designed to be a useful basis for most kinds of
+ * synchronizers that rely on a single atomic <tt>int</tt> value to
  * represent status. Subclasses must define the methods that change
  * this status.  Given these, the other methods in this class carry
  * out all queuing and blocking mechanics using an internal
@@ -21,13 +21,14 @@ import java.util.concurrent.atomic.*;
  * fields, but only the {@link AtomicInteger} provided by method
  * {@link #state} is tracked with respect to synchronization.
  *
- * <p> Almost always, subclasses of this class should be defined as
- * non-public internal helper classes that are used to implement
- * synchronization needed inside other classes.  This class does not
- * implement any synchronization interface.  Instead it defines
- * methods such as {@link #acquireExclusiveUninterruptibly} that can be
- * invoked as appropriate by concrete locks and related synchronizers
- * to implement their public methods. (Note that this class does not
+ * <p> Almost always, subclasses should be defined as non-public
+ * internal helper classes that are used to implement synchronization
+ * needed by their enclosing class.
+ * <tt>AbstractQueuedSynchronizer</tt> does not implement any
+ * synchronization interface.  Instead it defines methods such as
+ * {@link #acquireExclusiveUninterruptibly} that can be invoked as
+ * appropriate by concrete locks and related synchronizers to
+ * implement their public methods. (Note that this class does not
  * directly provide untimed "trylock" forms, since the state acquire
  * methods can be used for these purposes.)
  *
@@ -47,10 +48,10 @@ import java.util.concurrent.atomic.*;
  * invoked with the current state value fully releases the lock, and
  * {@link #acquireExclusiveUninterruptibly}, given this saved state
  * value, eventually restores the lock to its previous lock state. No
- * method creates such a condition, so if this constraint cannot be
- * met, do not use it.  The detailed behavior of {@link
- * ConditionObject} depends of course on the semantics of this
- * synchronizer implementation.
+ * <tt>AbstractQueuedSynchronizer</tt> method otherwise creates such a
+ * condition, so if this constraint cannot be met, do not use it.  The
+ * detailed behavior of {@link ConditionObject} depends of course on
+ * the semantics of its synchronizer implementation.
  * 
  * <p> This class provides instrumentation and monitoring methods such
  * as {@link #hasQueuedThreads}, as well as similar methods for
@@ -87,7 +88,7 @@ import java.util.concurrent.atomic.*;
  *    private static class Sync extends AbstractQueuedSynchronizer {
  *       public int acquireExclusiveState(boolean isQueued, int acquires, Thread current) {
  *         assert acquires == 1; // Does not use multiple acquires
- *         return state().compareAndSet(0, 1)? 0 : -1
+ *         return state().compareAndSet(0, 1)? 0 : -1;
  *       }
  *
  *       public boolean releaseExclusiveState(int releases) {
@@ -104,7 +105,7 @@ import java.util.concurrent.atomic.*;
  *       }
  *
  *       public void checkConditionAccess(Thread thread, boolean waiting) {
- *         if (state().get() == 0) throw new IllegalMonitorException();
+ *         if (state().get() == 0) throw new IllegalMonitorStateException();
  *       }
  *
  *       Condition newCondition() { return new ConditionObject(); }
@@ -118,7 +119,7 @@ import java.util.concurrent.atomic.*;
  *    private final Sync sync = new Sync();
  *    public void lock() { sync.acquireExclusiveUninterruptibly(1);  }
  *    public boolean tryLock() { 
- *       return sync.acquireExclusiveState(false, 1, null) >= 0; 
+ *       return sync.acquireExclusiveState(false, 1, null) >= 0;
  *    }
  *    public void lockInterruptibly() throws InterruptedException { 
  *       sync.acquireExclusiveInterruptibly(1);
@@ -343,7 +344,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * node is at end of queue. However, if a next field appears
          * to be null, we can scan prev's from the tail to
          * double-check.
-         *
          */
         volatile Node next;
 
@@ -476,12 +476,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Try to set status for an attempt to acquire in exclusive mode.
-     * Failures are presumed to be due to unavailability of the
-     * synchronizer.
+     * Failures are presumed to be due to unavailability/contention.
      * @param isQueued true if the thread has been queued, possibly
      * blocking before this call. If this argument is false,
      * then the thread has not yet been queued. This can be used
-     * to help implement a fairness policy
+     * to help implement a fairness policy.
      * @param acquires the number of acquires requested. This value
      * is always the one given in an <tt>acquire</tt> method,
      * or is the value saved on entry to a condition wait.
@@ -516,12 +515,11 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Try to set status for an attempt to acquire in shared mode.
-     * Failures are presumed to be due to unavailability of the
-     * synchronizer.
+     * Failures are presumed to be due to unavailability/contention.
      * @param isQueued true if the thread has been queued, possibly
      * blocking before this call. If this argument is false,
      * then the thread has not yet been queued. This can be used
-     * to help implement a fairness policy
+     * to help implement a fairness policy.
      * @param acquires the number of acquires requested. This value
      * is always the one given in an <tt>acquire</tt> method.
      * @param current current thread
@@ -552,9 +550,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     public abstract boolean releaseSharedState(int releases);
 
     /**
-     * Throw IllegalMonitorStateException if given thread should not
-     * access a {@link Condition} method. This method is invoked upon
-     * each call to a {@link ConditionObject} method.
+     * Throws {@link IllegalMonitorStateException} if given thread
+     * should not access a {@link Condition} method. This method is
+     * invoked upon each call to a {@link ConditionObject} method.
      * @param thread the thread
      * @param waiting true if the access is for a condition-wait method,
      * and false if any other method (such as <tt>signal</tt>).
@@ -607,12 +605,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * this can be used to implement method {@link
      * Lock#lockInterruptibly}
      * @param acquires the number of times to acquire
-     * @param nanos the maximum number of nanoseconds to wait
+     * @param nanosTimeout the maximum number of nanoseconds to wait
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public boolean acquireExclusiveTimed(int acquires, long nanos) throws InterruptedException {
-       int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, nanos);
+   public boolean acquireExclusiveTimed(int acquires, long nanosTimeout) throws InterruptedException {
+       int s = doAcquire(false, acquires, INTERRUPT | TIMEOUT, nanosTimeout);
        if (s == UNINTERRUPTED)
            return true;
        if (s != INTERRUPT)
@@ -677,12 +675,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * or the timeout elapses.  With an argument of 1, this can be
      * used to implement method {@link Lock#lockInterruptibly}
      * @param acquires the number of times to acquire
-     * @param nanos the maximum number of nanoseconds to wait
+     * @param nanosTimeout the maximum number of nanoseconds to wait
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public boolean acquireSharedTimed(int acquires, long nanos) throws InterruptedException {
-       int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, nanos);
+   public boolean acquireSharedTimed(int acquires, long nanosTimeout) throws InterruptedException {
+       int s = doAcquire(true, acquires, INTERRUPT | TIMEOUT, nanosTimeout);
        if (s == UNINTERRUPTED)
            return true;
        if (s != INTERRUPT)
@@ -808,11 +806,12 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Main code for all varieties of acquire.
      * @param shared if acquiring in shared mode
      * @param mode mode representing interrupt/timeout control
-     * @param nanos timeout time
+     * @param nanosTimeout timeout time
      * @return UNINTERRUPTED on success, INTERRUPT on interrupt,
      * TIMEOUT on timeout
      */
-    private int doAcquire(boolean shared, int acquires, int mode, long nanos) {
+    private int doAcquire(boolean shared, int acquires, 
+                          int mode, long nanosTimeout) {
         final Thread current = Thread.currentThread();
 
         if ((mode & INTERRUPT) != 0 && Thread.interrupted())
@@ -826,7 +825,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         long lastTime = 0;
         if ((mode & TIMEOUT) != 0) {
-            if (nanos <= 0)
+            if (nanosTimeout <= 0)
                 return TIMEOUT;
             lastTime = System.nanoTime();
         }
@@ -883,17 +882,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                 node.prev = p.prev;
             else {
                 if ((mode & TIMEOUT) != 0) {
-                    if (nanos > 0) {
+                    if (nanosTimeout > 0) {
                         long now = System.nanoTime();
-                        nanos -= now - lastTime;
+                        nanosTimeout -= now - lastTime;
                         lastTime = now;
                     }
-                    if (nanos <= 0) {
+                    if (nanosTimeout <= 0) {
                         cancelAcquire(node);
                         return TIMEOUT;
                     }
                     else
-                        LockSupport.parkNanos(nanos);
+                        LockSupport.parkNanos(nanosTimeout);
                 }
                 else
                     LockSupport.park();
@@ -1132,18 +1131,18 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Queries whether any threads are waiting on the given
-     * condition. Note that because timeouts and interrupts may
-     * occur at any time, a <tt>true</tt> return does not
-     * guarantee that a future <tt>signal</tt> will awaken any
-     * threads.  This method is designed primarily for use in
+     * Queries whether any threads are waiting on the given condition
+     * associated with this synchronizer. Note that because timeouts
+     * and interrupts may occur at any time, a <tt>true</tt> return
+     * does not guarantee that a future <tt>signal</tt> will awaken
+     * any threads.  This method is designed primarily for use in
      * monitoring of the system state.
      * @param condition the condition
      * @return <tt>true</tt> if there are any waiting threads.
-     * @throws IllegalMonitorStateException if this lock 
+     * @throws IllegalMonitorStateException if exclusive synchronization 
      * is not held
      * @throws IllegalArgumentException if the given condition is
-     * not associated with this lock
+     * not associated with this synchronizer
      */ 
     public boolean hasWaiters(ConditionObject condition) {
         if (!owns(condition))
@@ -1152,18 +1151,18 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Returns an estimate of the number of threads waiting on
-     * the given condition. Note that because timeouts and interrupts
-     * may occur at any time, the estimate serves only as an upper
-     * bound on the actual number of waiters.  This method is
-     * designed for use in monitoring of the system state, not for
-     * synchronization control.
+     * Returns an estimate of the number of threads waiting on the
+     * given condition associated with this synchronizer. Note that
+     * because timeouts and interrupts may occur at any time, the
+     * estimate serves only as an upper bound on the actual number of
+     * waiters.  This method is designed for use in monitoring of the
+     * system state, not for synchronization control.
      * @param condition the condition
      * @return the estimated number of waiting threads.
-     * @throws IllegalMonitorStateException if this lock 
+     * @throws IllegalMonitorStateException if exclusive synchronization 
      * is not held
      * @throws IllegalArgumentException if the given condition is
-     * not associated with this lock
+     * not associated with this synchronizer
      */ 
     public int getWaitQueueLength(ConditionObject condition) {
         if (!owns(condition))
@@ -1173,19 +1172,17 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
     /**
      * Returns a collection containing those threads that may be
-     * waiting on the given Condition.  Because the actual set of
-     * threads may change dynamically while constructing this
-     * result, the returned collection is only a best-effort
-     * estimate. The elements of the returned collection are in no
-     * particular order.  This method is designed to facilitate
-     * construction of subclasses that provide more extensive
-     * condition monitoring facilities.
+     * waiting on the given condition associated with this
+     * synchronizer.  Because the actual set of threads may change
+     * dynamically while constructing this result, the returned
+     * collection is only a best-effort estimate. The elements of the
+     * returned collection are in no particular order.  
      * @param condition the condition
      * @return the collection of threads
-     * @throws IllegalMonitorStateException if this lock 
+     * @throws IllegalMonitorStateException if exclusive synchronization 
      * is not held
      * @throws IllegalArgumentException if the given condition is
-     * not associated with this lock
+     * not associated with this synchronizer
      */
     public Collection<Thread> getWaitingThreads(ConditionObject condition) {
         if (!owns(condition))
@@ -1219,15 +1216,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * Creates a new <tt>ConditionObject</tt> instance.
          */
         public ConditionObject() { }
-
-        /**
-         * Returns true if this condition was created by the given
-         * synchronization object
-         * @return true if owned
-         */
-        protected boolean isOwnedBy(AbstractQueuedSynchronizer sync) {
-            return sync == AbstractQueuedSynchronizer.this;
-        }
 
         // Internal methods
 
@@ -1553,18 +1541,25 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             return !timedout;
         }
 
+        // Protected support for instrumentation
+
         /**
-         * Queries whether any threads are waiting on this
-         * condition. Note that because timeouts and interrupts may
-         * occur at any time, a <tt>true</tt> return does not
-         * guarantee that a future <tt>signal</tt> will awaken any
-         * threads.  This method is designed primarily for use in
-         * monitoring of the system state.
+         * Returns true if this condition was created by the given
+         * synchronization object
+         * @return true if owned
+         */
+        protected boolean isOwnedBy(AbstractQueuedSynchronizer sync) {
+            return sync == AbstractQueuedSynchronizer.this;
+        }
+
+        /**
+         * Queries whether any threads are waiting on this condition.
+         * Implements {@link AbstractQueuedSynchronizer#hasWaiters}
          * @return <tt>true</tt> if there are any waiting threads.
          * @throws IllegalMonitorStateException if the lock associated
          * with this Condition is not held
          */ 
-        public boolean hasWaiters() {
+        protected boolean hasWaiters() {
             checkConditionAccess(Thread.currentThread(), false);
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.status == Node.CONDITION)
@@ -1575,16 +1570,13 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         /**
          * Returns an estimate of the number of threads waiting on
-         * this condition. Note that because timeouts and interrupts
-         * may occur at any time, the estimate serves only as an upper
-         * bound on the actual number of waiters.  This method is
-         * designed for use in monitoring of the system state, not for
-         * synchronization control.
+         * this condition. 
+         * Implements {@link AbstractQueuedSynchronizer#getWaitQueueLength}
          * @return the estimated number of waiting threads.
          * @throws IllegalMonitorStateException if the lock associated
          * with this Condition is not held
          */ 
-        public int getWaitQueueLength() {
+        protected int getWaitQueueLength() {
             checkConditionAccess(Thread.currentThread(), false);
             int n = 0;
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
@@ -1596,13 +1588,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
 
         /**
          * Returns a collection containing those threads that may be
-         * waiting on this Condition.  Because the actual set of
-         * threads may change dynamically while constructing this
-         * result, the returned collection is only a best-effort
-         * estimate. The elements of the returned collection are in no
-         * particular order.  This method is designed to facilitate
-         * construction of subclasses that provide more extensive
-         * condition monitoring facilities.
+         * waiting on this Condition.  
+         * Implements {@link AbstractQueuedSynchronizer#getWaitingThreads}
          * @return the collection of threads
          * @throws IllegalMonitorStateException if the lock associated
          * with this Condition is not held

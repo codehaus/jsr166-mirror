@@ -79,10 +79,6 @@ public class ExecutorsTest extends TestCase {
 
     private static final String TEST_STRING = "a test string";
 
-    private static class DirectExecutor implements Executor {
-        public void execute(Runnable r) { r.run(); }
-    }
-
     private static class Task implements Runnable {
         public void run() { completed = true; }
         public boolean isCompleted() { return completed; }

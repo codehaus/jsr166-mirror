@@ -3,7 +3,7 @@
   <description>
     Build file for JSR-166
 
-    JUnit 1.8 must be in ${ant.home}/lib for the test target to work.
+    JUnit 3.8 or better must be in ${ant.home}/lib for the test target to work.
   </description>
 
 
@@ -27,8 +27,12 @@ ant [target], where target is one of:
     </echo>
   </target>
 
+  <!-- User-specific settings -->
   <property file="user.properties"/>
-  <property name="testcase" value="*"/>
+
+  <!-- Set build.warnings in user.properties to turn on -warnunchecked -->
+  <!-- <property name="build.warnings" value=""/> -->
+
 
   <!-- Compilation options -->
   <property name="build.sourcelevel"    value="1.5"/>
@@ -36,13 +40,11 @@ ant [target], where target is one of:
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
-  <!--
-  <property name="build.warnings"       value="true"/>
-  -->
 
   <!-- Build locations -->
   <property name="build.dir"            location="build"/>
   <property name="build.classes.dir"    location="${build.dir}/classes"/>
+  <property name="build.emulation.dir"  location="${build.dir}/emulation"/>
   <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
@@ -54,6 +56,7 @@ ant [target], where target is one of:
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
+  <property name="emulation.src.dir"    location="${basedir}/src/emulation"/>
   <property name="test.src.dir"         location="${basedir}/src/test"/>
   <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
   <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
@@ -70,24 +73,55 @@ ant [target], where target is one of:
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
   <property name="rt.jar"               location="${java.home}/lib/rt.jar"/>
 
-  <property name="javac.args"           value='-J-Xbootclasspath/p:$[src.dir]:${javac.jar}'/>
+
+  <!--
+   ! Bootclasspath munging for source compilation.
+   -->
+
+  <path id="javac.bootclasspath.prepend">
+    <!-- <pathelement location="${src.dir}"/> -->
+    <pathelement location="${javac.jar}"/>
+  </path>
 
   <path id="javac.bootclasspath">
-    <pathelement location="${src.dir}"/>
+    <!-- <pathelement location="${src.dir}"/> -->
     <pathelement location="${collect.jar}"/>
     <pathelement location="${rt.jar}"/>
   </path>
 
+  <!-- Flatten bootclasspath prefix into a platform-appropriate string -->
+  <property name="javac.bootclasspath.prepend" refid="javac.bootclasspath.prepend"/>
+
+  <!-- Turn the flattened bootclasspath prefix into a javac argument -->
+  <property name="javac.args" value='-J-Xbootclasspath/p:${javac.bootclasspath.prepend}'/>
+
+
+  <!--
+   ! Bootclasspath munging for testing, so JUnit can test our local
+   ! modifications to java.*.
+   -->
+
   <path id="test.classpath">
     <pathelement location="${product.jar}"/>
+    <pathelement location="${build.testcases.dir}"/>
+    <pathelement location="${junit.jar}"/>
   </path>
+
+  <!-- Flatten test classpath into a platform-appropriate string -->
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <!-- Turn the flattened test classpath into a javac argument -->
+  <property name="test.javac.args" value='-Xbootclasspath/p:${test.classpath}'/>
+
 
 
   <!-- Main targets -->
 
   <target name="compile" depends="init"
-          description="Compiles all sources to build folder">
+          description="Compiles main sources to build folder">
+
     <mkdir dir="${build.classes.dir}"/>
+
     <javac srcdir="${src.dir}"
           destdir="${build.classes.dir}"
             debug="${build.debug}"
@@ -100,24 +134,21 @@ ant [target], where target is one of:
       <compilerarg line="${javac.args} ${build.warnings.option}"/>
 
     </javac>
+
   </target>
 
 
-  <target name="jar" depends="compile"
-          description="Builds library jar from compiled sources">
-    <mkdir dir="${build.lib.dir}"/>
-    <jar basedir="${build.classes.dir}"
-        destfile="${product.jar}"
-    />
-  </target>
+  <target name="jar" depends="native-jar, emulation-jar"/>
 
 
   <target name="test" depends="init, check-junit, report-tests"
-          description="Runs all tests (requires JUnit 1.8 in ${ant.home}/lib)"/>
+          description="Runs all tests (requires JUnit 3.8+ in ${ant.home}/lib)"
+  />
 
 
   <target name="checkstyle" depends="filter-src"
           description="Reports on style errors in Java source (verbose, mostly chaff)">
+
     <taskdef resource="checkstyletask.properties"
             classpath="${lib.dir}/checkstyle-all-2.4.jar"/>
 
@@ -125,25 +156,31 @@ ant [target], where target is one of:
       <formatter type="plain"/>  <!-- also available: type="xml" -->
       <fileset dir="${build.filter.src.dir}" includes="**/*.java"/>
     </checkstyle>
+
   </target>
 
 
   <target name="doccheck" depends="filter-src"
           description="Reports on javadoc style errors (not working yet)">
+
     <delete dir="${build.doccheck.dir}"/>
     <mkdir dir="${build.doccheck.dir}"/>
+
     <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
          docletpath="${lib.dir}/doccheck.jar"
             destdir="${build.doccheck.dir}">
       <packageset dir="${build.filter.src.dir}"/>
     </javadoc>
+
   </target>
 
 
   <target name="docs" depends="filter-src"
           description="Builds javadocs with custom tags to build folder">
+
     <delete dir="${build.javadocs.dir}"/>
     <mkdir dir="${build.javadocs.dir}"/>
+
     <javadoc destdir="${build.javadocs.dir}"
                 link="http://java.sun.com/j2se/1.4.1/docs/api"
             overview="${src.dir}/intro.html"
@@ -156,6 +193,7 @@ ant [target], where target is one of:
       <packageset dir="${build.filter.src.dir}"/>
 
     </javadoc>
+
   </target>
 
 
@@ -165,7 +203,9 @@ ant [target], where target is one of:
    # signatures to existing methods except for the return value.
    -->
   <target name="strip" depends="init">
+
     <mkdir dir="${build.stripped.dir}"/>
+
     <javac srcdir="${src.dir}"
           destdir="${build.stripped.dir}"
             debug="${build.debug}"
@@ -178,6 +218,7 @@ ant [target], where target is one of:
       <compilerarg line="${javac.args} ${build.warnings.option} -s"/>
 
     </javac>
+
   </target>
 
 
@@ -187,22 +228,26 @@ ant [target], where target is one of:
 
   <target name="clean"
           description="Removes all build products">
+
     <delete dir="${build.dir}"/>
     <delete dir="${build.classes.dir}"/>
     <delete dir="${build.lib.dir}"/>
+
   </target>
 
 
   <target name="dist-clean"
           description="Removes all build and distribution products">
+
     <delete dir="${dist.dir}"/>
+
   </target>
 
 
   <!-- Anthill targets -->
 
   <!-- Should really run the tests instead of just the jar target -->
-  <target name="anthill-build" depends="jar, docs, dist-docs"/>
+  <target name="anthill-build" depends="jar, test, docs, dist-docs"/>
 
   <target name="anthill-publish">
     <copy todir="${deployDir}/docs/private">
@@ -222,31 +267,85 @@ ant [target], where target is one of:
   <!-- Internal targets -->
 
   <target name="set-warnings-if" if="build.warnings">
+
     <property name="build.warnings.option" value="-warnunchecked"/>
+
   </target>
 
 
   <target name="set-warnings-unless" unless="build.warnings">
+
     <property name="build.warnings.option" value=""/>
+
   </target>
 
 
   <target name="init" depends="set-warnings-if, set-warnings-unless">
+
     <!-- Version is kept in a separate file -->
     <loadfile property="version" srcFile="version.properties"/>
     <echo>Building JSR-166 version ${version}</echo>
+
+  </target>
+
+
+  <target name="native-jar" depends="compile"
+          description="Builds library jar from compiled sources">
+
+    <mkdir dir="${build.lib.dir}"/>
+
+    <jar destfile="${product.jar}">
+      <fileset dir="${build.classes.dir}"/>
+    </jar>
+
+  </target>
+
+
+  <target name="compile-emulation" depends="init"
+          if="build.emulation"
+          description="Compiles emulation sources to build folder">
+
+    <mkdir dir="${build.emulation.dir}"/>
+
+    <javac srcdir="${emulation.src.dir}"
+          destdir="${build.emulation.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <bootclasspath refid="javac.bootclasspath"/>
+      <compilerarg line="${javac.args} ${build.warnings.option}"/>
+
+    </javac>
+
+  </target>
+
+
+  <target name="emulation-jar" depends="native-jar, compile-emulation"
+          if="build.emulation">
+
+    <jar destfile="${product.jar}" update="true" duplicate="add">
+      <fileset dir="${build.emulation.dir}"/>
+    </jar>
+
   </target>
 
 
   <target name="dist-jar" depends="clean, jar">
+
     <copy file="${product.jar}" todir="${dist.dir}"/>
+
   </target>
 
 
   <target name="dist-docs" depends="filter-src"
           description="Builds javadocs without custom tags to dist folder">
+
     <delete dir="${dist.javadocs.dir}"/>
     <mkdir dir="${dist.javadocs.dir}"/>
+
     <javadoc destdir="${dist.javadocs.dir}"
                 link="http://java.sun.com/j2se/1.4.1/docs/api"
             overview="${src.dir}/intro.html"
@@ -255,23 +354,31 @@ ant [target], where target is one of:
       <packageset dir="${build.filter.src.dir}"/>
 
     </javadoc>
+
   </target>
 
 
   <target name="compile-ant-filter" depends="init">
+
     <mkdir dir="${build.ant.dir}"/>
+
     <javac srcdir="${ant.src.dir}"
           destdir="${build.ant.dir}"
            source="1.4"
     />
+
   </target>
 
 
   <target name="filter-src" depends="compile-ant-filter">
+
     <mkdir dir="${build.filter.src.dir}"/>
+
     <copy todir="${build.filter.src.dir}">
       <fileset dir="${src.dir}">
         <include name="**/*.java"/>
+        <exclude name="**/Random.java"/>
+        <exclude name="**/Unsafe.java"/>
       </fileset>
       <filterchain>
         <filterreader classname="jsr166.ant.filters.ReplaceFilter"
@@ -305,11 +412,14 @@ ant [target], where target is one of:
         </filterreader>
       </filterchain>
     </copy>
+
   </target>
 
 
   <target name="compile-tests" depends="jar">
+
     <mkdir dir="${build.testcases.dir}"/>
+
     <javac srcdir="${test.src.dir}"
           destdir="${build.testcases.dir}"
             debug="${build.debug}"
@@ -323,11 +433,17 @@ ant [target], where target is one of:
       <classpath refid="test.classpath"/>
 
     </javac>
+
   </target>
 
 
   <target name="run-tests" depends="compile-tests">
+
+    <!-- May be overridden by user.properties -->
+    <property name="testcase" value="*"/>
+
     <mkdir dir="${build.reports.dir}"/>
+
     <junit printsummary="true"
              showoutput="true"
           errorProperty="junit.failed"
@@ -335,11 +451,7 @@ ant [target], where target is one of:
                     dir="${build.reports.dir}"
                    fork="true">
 
-      <!--
-       ! This nastiness is so JUnit can test classes we are inserting
-       ! into the java.* packages.
-       -->
-      <jvmarg value="-Xbootclasspath/p:${product.jar};${build.testcases.dir};${junit.jar}"/>
+      <jvmarg value="${test.javac.args}"/>
 
       <formatter type="xml"/>
 
@@ -350,6 +462,7 @@ ant [target], where target is one of:
       </batchtest>
 
     </junit>
+
   </target>
 
 

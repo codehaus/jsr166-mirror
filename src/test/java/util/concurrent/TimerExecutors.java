@@ -11,8 +11,8 @@ public class TimerExecutors {
         return new SimpleTimerExecutor(executor);
     }
 
-    public static TimerThreadedExecutor newTimerExecutor (ThreadedExecutor executor) {
-        return new SimpleTimerThreadedExecutor(executor);
+    public static TimerExecutorService newTimerExecutor (ExecutorService executor) {
+        return new SimpleTimerExecutorService(executor);
     }
 
 
@@ -53,59 +53,35 @@ public class TimerExecutors {
         protected final Executor executor;
     }
 
-    private static class SimpleTimerThreadedExecutor extends SimpleTimerExecutor
-                implements TimerThreadedExecutor {
+    private static class SimpleTimerExecutorService extends SimpleTimerExecutor
+                implements TimerExecutorService {
 
-        SimpleTimerThreadedExecutor (ThreadedExecutor executor) {
+        SimpleTimerExecutorService (ExecutorService executor) {
             super(executor);
-        }
-
-        public void setThreadFactory(ThreadFactory threadFactory) {
-            ((ThreadedExecutor) executor).setThreadFactory(threadFactory);
-        }
-
-        public ThreadFactory getThreadFactory() {
-            return ((ThreadedExecutor) executor).getThreadFactory();
-        }
-
-        public void setCannotExecuteHandler(CannotExecuteHandler handler) {
-            ((ThreadedExecutor) executor).setCannotExecuteHandler(handler);
-        }
-
-        public CannotExecuteHandler getCannotExecuteHandler() {
-            return ((ThreadedExecutor) executor).getCannotExecuteHandler();
-        }
-
-        public BlockingQueue getQueue() {
-            return ((ThreadedExecutor) executor).getQueue();
         }
 
         public void shutdown() {
             timer.cancel();
-            ((ThreadedExecutor) executor).shutdown();
+            ((ExecutorService) executor).shutdown();
         }
 
         public List shutdownNow() {
             timer.cancel();
-            return ((ThreadedExecutor) executor).shutdownNow();
+            return ((ExecutorService) executor).shutdownNow();
         }
 
         public boolean isShutdown() {
-            return ((ThreadedExecutor) executor).isShutdown();
-        }
-
-        public void interrupt() {
-            ((ThreadedExecutor) executor).interrupt();
+            return ((ExecutorService) executor).isShutdown();
         }
 
         public boolean isTerminated() {
-            return ((ThreadedExecutor) executor).isTerminated();
+            return ((ExecutorService) executor).isTerminated();
         }
 
         public boolean awaitTermination(long timeout, TimeUnit granularity)
                 throws InterruptedException {
             timer.cancel();
-            return ((ThreadedExecutor) executor).awaitTermination(timeout, granularity);
+            return ((ExecutorService) executor).awaitTermination(timeout, granularity);
         }
     }
 

@@ -27,17 +27,6 @@ public class TimerExecutorTest extends TestCase {
         assertTrue("flag should have been set", flag);
     }
 
-    public void testTimerThreadedExecutorConstruction () {
-        TimerThreadedExecutor tte = TimerExecutors.newTimerExecutor(new SingleThreadedExecutor());
-        flag = false;
-        tte.execute(new Runnable() {
-            public void run () {
-                flag = true;
-            }
-        });
-        //assertTrue("flag should have been set", flag);
-    }
-
     private static class DirectExecutor implements Executor {
         public void execute (Runnable r) {
             r.run();

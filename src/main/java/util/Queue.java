@@ -12,10 +12,10 @@ package java.util;
  * additional insertion, extraction, and inspection operations.
  *
  * <p>Queues typically, but do not necessarily, order elements in a
- * FIFO (first-in-first-out) manner.  Among the exceptions are priority
- * queues, which order elements according to a supplied comparators, or
- * the elements natural ordering.  Every Queue implementation must specify
- * its ordering guarantees.
+ * FIFO (first-in-first-out) manner.  Among the exceptions are
+ * priority queues, which order elements according to a supplied
+ * comparator, or the elements' natural ordering.  Every Queue
+ * implementation must specify its ordering guarantees.
  *
  * <p>The {@link #offer(E)} method adds an element if possible, otherwise
  * returning <tt>false</tt>.  This differs from the {@link

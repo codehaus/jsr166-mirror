@@ -8,10 +8,11 @@ package java.util.concurrent;
  * Thrown when attempting to retrieve the result of a task that aborted.
  * @fixme THROWN BY WHO??  MENTION THAT THIS IS WRAPPER FOR REAL CAUSE
  *
- * @see Future
  * @since 1.5
+ * @see Future
+ *
  * @spec JSR-166
- * @revised $Date: 2003/02/19 10:53:58 $
+ * @revised $Date: 2003/02/26 10:48:09 $
  * @editor $Author: jozart $
  */
 public class ExecutionException extends Exception {

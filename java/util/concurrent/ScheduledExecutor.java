@@ -13,11 +13,12 @@ package java.util.concurrent;
  * <tt>execute</tt> method are scheduled as if they had a requested
  * delay of zero. 
  *
- * @see Executors
  * @since 1.5
+ * @see Executors
+ *
  * @spec JSR-166
  */
-public class ScheduledExecutor extends ThreadExecutor {
+public class ScheduledExecutor extends ThreadPoolExecutor {
 
     /**
      * Creates a new ScheduledExecutor with the given initial parameters.

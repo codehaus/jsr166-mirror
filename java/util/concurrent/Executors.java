@@ -8,54 +8,50 @@ package java.util.concurrent;
  * A factory for the <tt>Executor</tt> classes defined in
  * <tt>java.util.concurrent</tt>.
  *
- * @see Executor
- * @see ThreadExecutor
  * @since 1.5
+ * @see Executor
+ * @see ThreadedExecutor
+ *
  * @spec JSR-166
- * @revised $Date: 2003/02/19 10:53:58 $
+ * @revised $Date: 2003/02/26 10:48:09 $
  * @editor $Author: jozart $
  */
 public class Executors {
 
     /**
-     * Constructs a thread pool using parameters that cause it to use
-     * fixed set of threads operating off a shared unbounded queue,
-     * and a default set of intercepts.  This factory method arranges
-     * the most common initial parameters for thread pools used in
-     * multithreaded servers.
+     * Creates a threaded executor that reuses a fixed set of threads
+     * operating off a shared unbounded queue.
      *
      * @param nThreads the number of threads in the pool
      * @return fixed thread executor
      */
-    public static ThreadPoolExecutor newFixedThreadPool(int nThreads) {
+    public static ThreadedExecutor newFixedThreadPool(int nThreads) {
         return new ThreadPoolExecutor(nThreads, nThreads,
                                       0L, TimeUnit.MILLISECONDS,
                                       new LinkedBlockingQueue());
     }
 
     /**
-     * Constructs a thread pool using parameters that cause it to act
-     * as cache-based pool.  These pools will typically improve the
-     * performance of programs that execute many short-lived
-     * asynchronous tasks.  Calls to <tt>execute</tt> reuse previously
-     * constructed threads, if available, to execute new Runnables.
-     * If no existing thread is available, a new thread will be
-     * created and added to the cache. Threads that have not been used
-     * for sixty seconds are terminated and removed from the cache.
-     * Thus, a pool that remains idle for long enough will not consume
-     * any resources.
+     * Creates a threaded executor that creates new threads as needed, but
+     * will reuse previously constructed threads when they are available.
+     * These pools will typically improve the performance of programs that
+     * execute many short-lived asynchronous tasks.  Calls to <tt>execute</tt>
+     * reuse previously constructed threads, if available. If no existing
+     * thread is available, a new thread will be created and added to the
+     * cache. Threads that have not been used for sixty seconds are terminated
+     * and removed from the cache. Thus, a pool that remains idle for long
+     * enough will not consume any resources.
      *
      * @return cached thread pool
      */
-    public static ThreadPoolExecutor newCachedThreadPool() {
+    public static ThreadedExecutor newCachedThreadPool() {
         return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                       60000, TimeUnit.MILLISECONDS,
                                       new SynchronousQueue());
     }
 
     /**
-     * Constructs a thread pool using parameters that cause it to act
-     * as cache-based pool.
+     * Creates a threaded executor that reuses a limited pool of cached threads.
      *
      * @param minThreads the minimum number of threads to keep in the
      * pool, even if they are idle.
@@ -75,7 +71,7 @@ public class Executors {
      * maxThreads.  
      * @throws NullPointerException if queue is null
      */
-    public static ThreadPoolExecutor newThreadPool(int minThreads,
+    public static ThreadedExecutor newThreadPool(int minThreads,
                                                    int maxThreads,
                                                    long keepAliveTime,
                                                    TimeUnit granularity,
@@ -86,14 +82,14 @@ public class Executors {
     }
 
     /**
-     * Constructs a thread executor using parameters that cause it to
-     * use a single thread operating off an unbounded queue, and a
-     * default set of intercepts. (Note however that if this single
-     * thread terminates due to a failure during execution prior to
-     * shutdown, a new one will take its place if needed to execute
-     * subsequent tasks.)  Tasks are guaranteed to execute
-     * sequentially, and no more than one task will be active at any
-     * given time.
+     * Creates a threaded executor that uses a single thread operating off an
+     * unbounded queue. (Note however that if this single thread terminates
+     * due to a failure during execution prior to shutdown, a new one will
+     * take its place if needed to execute subsequent tasks.)  Tasks are
+     * guaranteed to execute sequentially, and no more than one task will be
+     * active at any given time.
+     *
+     * @fixme return (ThreadedExecutor) newFixedThreadExecutor(1) ?
      *
      * @return single threaded executor
      */
@@ -105,19 +101,23 @@ public class Executors {
      * Constructs a thread pool using parameters that cause it to use a
      * new thread for each task.  This provides no efficiency savings
      * over manually creating new threads, but still offers the
-     * manageability benefits of ThreadExecutor for tracking active
-     * threads, shutdown, and so on.
+     * manageability benefits of <tt>ThreadedExecutor</tt> for tracking
+     * active threads, shutdown, and so on.
+     *
+     * @fixme move to javadoc example in ThreadPoolExecutor
      *
      * @return executor
      */
-    public static ThreadPerTaskExecutor newThreadPerTaskExecutor() {
-        return new ThreadPerTaskExecutor();
+    public static ThreadedExecutor newThreadPerTaskExecutor() {
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      0, TimeUnit.MILLISECONDS,
+                                      new SynchronousQueue());
     }
 
     /**
      * Constructs a ScheduledExecutor.  A ScheduledExecutor is an Executor
-     * which can schedule tasks to run at a given future time,
-     * or execute periodically.
+     * which can schedule tasks to run at a given future time, or to execute
+     * periodically.
      *
      * @return scheduled executor
      */

@@ -4,49 +4,90 @@
 
 package java.util.concurrent;
 
+import java.util.List;
+
 /**
- * An <tt>Executor</tt> that runs tasks on a single background thread.
+ * A {@link ThreadedExecutor} that runs tasks on a single background thread.
  * Tasks are executed sequentially in the order they were submitted, with
  * no more than one task executing at a time.  Generally, the tasks will
  * all execute in the same background thread, but if this single thread
  * terminates due to a failure during execution, a new thread will take
  * its place if needed to execute subsequent tasks.
  *
- * @fixme public getQueue?
- *
  * @since 1.5
+ *
  * @spec JSR-166
- * @revised $Date: 2003/02/19 10:53:58 $
+ * @revised $Date: 2003/02/26 10:48:09 $
  * @editor $Author: jozart $
  */
-public class SingleThreadedExecutor extends ThreadExecutor {
+public class SingleThreadedExecutor implements ThreadedExecutor {
+
+    private final ThreadedExecutor executor;
 
     /**
-     * Constructs a thread executor using parameters that cause it to
-     * use a single thread operating off an unbounded queue, and a
-     * default set of intercepts. (Note however that if this single
-     * thread terminates due to a failure during execution prior to
-     * shutdown, a new one will take its place if needed to execute
-     * subsequent tasks.)  Tasks are guaranteed to execute sequentially,
-     * and no more than one task will be active at any given time.
+     * Creates a threaded executor that uses a single thread operating off an
+     * unbounded queue. (Note however that if this single thread terminates
+     * due to a failure during execution prior to shutdown, a new one will
+     * take its place if needed to execute subsequent tasks.)  Tasks are
+     * guaranteed to execute sequentially, and no more than one task will be
+     * active at any given time.
      */
     public SingleThreadedExecutor() {
-        super(1, 1, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue());
+        executor = new ThreadPoolExecutor(1, 1,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue());
     }
 
-    public int getQueueCount() {
-        return super.getQueueCount();
+    /* Executor implementation. Inherit javadoc from ThreadedExecutor. */
+
+    public void execute(Runnable command) {
+        executor.execute(command);
     }
 
-    public int getMaximumQueueCount() {
-        return super.getMaximumQueueCount();
+    /* ThreadedExecutor implementation.  Inherit javadoc. */
+
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        executor.setThreadFactory(threadFactory);
     }
 
-    public int getCumulativeTaskCount() {
-        return super.getCumulativeTaskCount();
+    public ThreadFactory getThreadFactory() {
+        return executor.getThreadFactory();
     }
 
-    public int getCumulativeCompletedTaskCount() {
-        return super.getCumulativeCompletedTaskCount();
+    public void setCannotExecuteHandler(CannotExecuteHandler handler) {
+        executor.setCannotExecuteHandler(handler);
+    }
+
+    public CannotExecuteHandler getCannotExecuteHandler() {
+        return executor.getCannotExecuteHandler();
+    }
+
+    public BlockingQueue getQueue() {
+        return executor.getQueue();
+    }
+
+    public void shutdown() {
+        executor.shutdown();
+    }
+
+    public List shutdownNow() {
+        return executor.shutdownNow();
+    }
+
+    public boolean isShutdown() {
+        return executor.isShutdown();
+    }
+
+    public void interrupt() {
+        executor.interrupt();
+    }
+
+    public boolean isTerminated() {
+        return executor.isTerminated();
+    }
+
+    public boolean awaitTermination(long timeout, TimeUnit granularity)
+    throws InterruptedException {
+        return executor.awaitTermination(timeout, granularity);
     }
 }

@@ -6,7 +6,8 @@ package java.util.concurrent;
 
 /**
  * A cancellable asynchronous computation.
- * Provides methods to start and cancel the computation, query to see if
+ *
+ * <p>Provides methods to start and cancel the computation, query to see if
  * the computation is complete, and retrieve the result of the computation.
  * The result can only be retrieved when the computation has completed;
  * the <tt>get</tt> method will block if the computation has not yet completed.
@@ -17,17 +18,18 @@ package java.util.concurrent;
  * <tt>FutureTask</tt> can be submitted to an Executor for current or deferred
  * execution.
  *
- * <p>FutureTask can be used to wrap a Callable or Runnable so that it
- * can scheduled for execution in a thread or an Executor, cancel
+ * <p>FutureTask can be used to wrap a <tt>Callable</tt> or <tt>Runnable</tt>
+ * so that it can scheduled for execution in a thread or an Executor, cancel
  * computation before the computation completes, and wait for or
  * retrieve the results.  If the computation threw an exception, the
  * exception is propagated to any thread that attempts to retrieve the
  * result.
  *
- * @see Executor
  * @since 1.5
+ * @see Executor
+ *
  * @spec JSR-166
- * @revised $Date: 2003/02/19 10:53:58 $
+ * @revised $Date: 2003/02/26 10:48:09 $
  * @editor $Author: jozart $
  */
 public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
@@ -160,8 +162,8 @@ public class FutureTask<V> implements Cancellable, Future<V>, Runnable {
      * is assumed to have completed.
      * @@@brian We should guard against changing the value by throwing
      * an exception if the value has already been set!
-     * @@joe We should allow set after task has been cancelled.  I think it's
-     * OK to allow multiple sets by default.
+     * @@joe We should allow set after task has been cancelled.  I also think
+     * it's OK to allow multiple sets by default.
      *
      * @param v the value
      */

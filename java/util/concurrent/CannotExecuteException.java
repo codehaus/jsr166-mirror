@@ -5,12 +5,13 @@
 package java.util.concurrent;
 
 /**
- * Thrown by an <tt>Executor</tt> when a task cannot be scheduled for execution.
+ * Thrown by an <tt>Executor</tt> when a task cannot be accepted for execution.
  * 
- * @see Executor#execute
  * @since 1.5
+ * @see Executor#execute
+ *
  * @spec JSR-166
- * @revised $Date: 2003/02/19 10:53:58 $
+ * @revised $Date: 2003/02/26 10:48:09 $
  * @editor $Author: jozart $
  */
 public class CannotExecuteException extends RuntimeException {

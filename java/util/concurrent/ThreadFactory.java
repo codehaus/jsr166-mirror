@@ -10,8 +10,9 @@ package java.util.concurrent;
  * enabling applications to use special thread subclasses, priorities, etc.
  *
  * @since 1.5
+ *
  * @spec JSR-166
- * @revised $Date: 2003/02/19 10:53:58 $
+ * @revised $Date: 2003/02/26 10:48:09 $
  * @editor $Author: jozart $
  */
 public interface ThreadFactory { 

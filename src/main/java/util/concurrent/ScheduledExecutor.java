@@ -45,14 +45,14 @@ public interface ScheduledExecutor extends Executor {
      * @param delay the time from now to delay execution.
      * @param unit the time unit of the delay parameter.
      * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return <tt>Boolean.TRUE</tt>
+     * and whose <tt>get()</tt> method will return an arbitrary value
      * upon completion.
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution because the executor has been shut down.
      * @throws NullPointerException if command is null
      */
 
-    public ScheduledFuture<Boolean> schedule(Runnable command, long delay,  TimeUnit unit);
+    public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit);
 
     /**
      * Creates and executes a ScheduledFuture that becomes enabled after the
@@ -86,7 +86,7 @@ public interface ScheduledExecutor extends Executor {
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if period less than or equal to zero.
      */
-    public ScheduledFuture<Boolean> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit);
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit);
     /**
      * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and subsequently with the
@@ -106,7 +106,7 @@ public interface ScheduledExecutor extends Executor {
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if delay less than or equal to zero.
      */
-    public ScheduledFuture<Boolean> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit);
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit);
 
     /**
      * Execute command with zero required delay. This has effect

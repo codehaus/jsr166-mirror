@@ -52,16 +52,16 @@ public class Executors {
             super(executor);
             e = executor;
         }
-        public ScheduledFuture<Boolean> schedule(Runnable command, long delay,  TimeUnit unit) {
+        public ScheduledFuture<?> schedule(Runnable command, long delay,  TimeUnit unit) {
             return e.schedule(command, delay, unit);
         }
         public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
             return e.schedule(callable, delay, unit);
         }
-        public ScheduledFuture<Boolean> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
+        public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit) {
             return e.scheduleAtFixedRate(command, initialDelay, period, unit);
         }
-        public ScheduledFuture<Boolean> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
+        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit) {
             return e.scheduleWithFixedDelay(command, initialDelay, delay, unit);
         }
     }
@@ -218,13 +218,13 @@ public class Executors {
      * @param executor the Executor to which the task will be submitted
      * @param task the task to submit
      * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return <tt>Boolean.TRUE</tt>
+     * and whose <tt>get()</tt> method will return an arbitrary value 
      * upon completion
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
      */
-    public static Future<Boolean> execute(Executor executor, Runnable task) {
-        FutureTask<Boolean> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
+    public static Future<?> execute(Executor executor, Runnable task) {
+        FutureTask<?> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
         executor.execute(ftask);
         return ftask;
     }
@@ -276,7 +276,7 @@ public class Executors {
      */
     public static void invoke(Executor executor, Runnable task)
             throws ExecutionException, InterruptedException {
-        FutureTask<Boolean> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
+        FutureTask<?> ftask = new FutureTask<Boolean>(task, Boolean.TRUE);
         executor.execute(ftask);
         ftask.get();
     }

@@ -605,9 +605,10 @@ public class SemaphoreTest extends JSR166TestCase {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
-                        s.acquire(2);
-                        s.acquire(2);
-                        s.release(4);
+			s.acquire();
+                        s.release();
+                        s.release();
+                        s.acquire();
 		    } catch(InterruptedException ie){
                         threadUnexpectedException();
                     }
@@ -616,10 +617,11 @@ public class SemaphoreTest extends JSR166TestCase {
         try {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
-            s.release(6);
-            s.acquire(2);
-            s.acquire(2);
-            s.release(2);
+            s.release();
+            s.release();
+            s.acquire();
+            s.acquire();
+            s.release();
             t.join();
 	} catch( InterruptedException e){
             unexpectedException();

@@ -527,7 +527,7 @@ public class ScheduledThreadPoolExecutor
      * are for scheduling purposes used as the basis of a zero-delay
      * <tt>ScheduledFuture</tt>.
      */
-    public List shutdownNow() {
+    public List<Runnable> shutdownNow() {
         return super.shutdownNow();
     }
             

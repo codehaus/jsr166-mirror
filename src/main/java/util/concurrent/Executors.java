@@ -31,7 +31,7 @@ public class Executors {
         DelegatedExecutorService(ExecutorService executor) { e = executor; }
         public void execute(Runnable command) { e.execute(command); }
         public void shutdown() { e.shutdown(); }
-        public List shutdownNow() { return e.shutdownNow(); }
+        public List<Runnable> shutdownNow() { return e.shutdownNow(); }
         public boolean isShutdown() { return e.isShutdown(); }
         public boolean isTerminated() { return e.isTerminated(); }
         public boolean awaitTermination(long timeout, TimeUnit unit)

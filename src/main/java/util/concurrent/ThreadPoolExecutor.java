@@ -455,8 +455,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     void interruptIdleWorkers() {
         mainLock.lock();
         try {
-            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
-                it.next().interruptIfIdle();
+            for (Worker w : workers)
+                w.interruptIfIdle();
         } finally {
             mainLock.unlock();
         }
@@ -825,8 +825,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             if (workers.size() > 0) {
                 if (runState == RUNNING) // don't override shutdownNow
                     runState = SHUTDOWN;
-                for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
-                    it.next().interruptIfIdle();
+                for (Worker w: workers)
+                    w.interruptIfIdle();
             }
             else { // If no workers, trigger full termination now
                 fullyTerminated = true;
@@ -841,15 +841,15 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
 
-    public List shutdownNow() {
+    public List<Runnable> shutdownNow() {
         boolean fullyTerminated = false;
         mainLock.lock();
         try {
             if (workers.size() > 0) {
                 if (runState != TERMINATED)
                     runState = STOP;
-                for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
-                    it.next().interruptNow();
+                for (Worker w : workers)
+                    w.interruptNow();
             }
             else { // If no workers, trigger full termination now
                 fullyTerminated = true;
@@ -861,7 +861,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
         if (fullyTerminated)
             terminated();
-        return Arrays.asList(workQueue.toArray());
+            
+        return Arrays.asList((Runnable[])workQueue.toArray());
     }
 
     public boolean isShutdown() {
@@ -1177,8 +1178,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         try {
             int n = 0;
-            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); ) {
-                if (it.next().isActive())
+            for (Worker w : workers) {
+                if (w.isActive())
                     ++n;
             }
             return n;
@@ -1215,8 +1216,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         try {
             long n = completedTaskCount;
-            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); ) {
-                Worker w = it.next();
+            for (Worker w : workers) {
                 n += w.completedTasks;
                 if (w.isActive())
                     ++n;
@@ -1240,8 +1240,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         try {
             long n = completedTaskCount;
-            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
-                n += it.next().completedTasks;
+            for (Worker w : workers)
+                n += w.completedTasks;
             return n;
         } finally {
             mainLock.unlock();

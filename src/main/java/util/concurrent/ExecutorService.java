@@ -124,7 +124,7 @@ public interface ExecutorService extends Executor {
      *
      * @return list of tasks that never commenced execution
      */
-    List shutdownNow();
+    List<Runnable> shutdownNow();
 
     /**
      * Returns <tt>true</tt> if this executor has been shut down.

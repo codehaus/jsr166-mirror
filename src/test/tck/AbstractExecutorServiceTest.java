@@ -27,7 +27,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     static class DirectExecutorService extends AbstractExecutorService {
         public void execute(Runnable r) { r.run(); }
         public void shutdown() { shutdown = true; }
-        public List shutdownNow() { shutdown = true; return Collections.EMPTY_LIST; }
+        public List<Runnable> shutdownNow() { shutdown = true; return Collections.EMPTY_LIST; }
         public boolean isShutdown() { return shutdown; }
         public boolean isTerminated() { return isShutdown(); }
         public boolean awaitTermination(long timeout, TimeUnit unit) { return isShutdown(); }

@@ -53,12 +53,13 @@ import java.util.Date;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/11 13:17:20 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/11 23:06:34 $
+ * @editor $Author: dholmes $
  * @author Doug Lea
  * 
  **/
-public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.io.Serializable {
+public class ReentrantLock extends ReentrantLockQueueNode 
+    implements Lock, java.io.Serializable {
     /*
       The basic fastpath/slowpath algorithm looks like this, ignoring 
       reentrance, cancellation, timeouts, error checking etc:
@@ -601,16 +602,16 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} while waiting to acquire 
+     * <li>is {@link Thread#interrupt interrupted} while acquiring 
      * the lock,
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. As this method is an explicit
-     * interruption point, preference is given to responding to the interrupt
-     * over reentrant acquisition of the lock.
+     * interrupted status is cleared. 
+     * <p>As this method is an explicit interruption point, preference is 
+     * given to responding to the interrupt over normal or reentrant 
+     * acquisition of the lock.
      *
      * @throws InterruptedException if the current thread is interrupted
-     *
      */
     public void lockInterruptibly() throws InterruptedException { 
         Thread current = Thread.currentThread();
@@ -652,8 +653,9 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
 
     /**
      *
-     * Acquires the lock if it is not held by another thread  within the given 
-     * waiting time and the current thread has not been interrupted. 
+     * Acquires the lock if it is not held by another thread within the given 
+     * waiting time and the current thread has not been 
+     * {@link Thread#interrupt interrupted}.
      * <p>Acquires the lock if it is not held by another thread and returns 
      * immediately with the value <tt>true</tt>, setting the lock hold count 
      * to one.
@@ -674,16 +676,18 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} before acquiring
+     * <li>is {@link Thread#interrupt interrupted} while acquiring
      * the lock,
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. As this method is an explicit
-     * interruption point, preference is given to responding to the interrupt
-     * over reentrant acquisition of the lock.
+     * interrupted status is cleared. 
+     * <p>As this method is an explicit interruption point, preference is 
+     * given to responding to the interrupt over normal or reentrant 
+     * acquisition of the lock, and over reporting the elapse of the waiting
+     * time.
      * <p>If the specified waiting time elapses then the value <tt>false</tt>
      * is returned.
-     * <p>The given waiting time is a best-effort lower bound. If the time is 
+     * The given waiting time is a best-effort lower bound. If the time is 
      * less than or equal to zero, the method will not wait at all.
      *
      *
@@ -742,8 +746,8 @@ public class ReentrantLock extends ReentrantLockQueueNode implements Lock, java.
      * }
      * </pre>
      *
-     * @return the number of holds on this lock by current thread,
-     * or zero if this lock is not held by current thread.
+     * @return the number of holds on this lock by the current thread,
+     * or zero if this lock is not held by the current thread.
      **/
     public int getHoldCount() {
         return (owner == Thread.currentThread()) ?  recursions + 1 :  0;

@@ -108,6 +108,11 @@ package java.util.concurrent;
  * methods. It must also obey the interruption semantics as defined in this
  * interface, to the extent that interruption of lock acquisition is 
  * supported: which is either totally, or only on method entry.
+ * <p>As interruption generally implies cancellation, and checks for 
+ * interruption are often infrequent, an implementation can favor responding
+ * to an interrupt over normal method return. This is true even if it can be
+ * shown that the interrupt occurred after another action may have unblocked
+ * the thread. An implementation should document this behaviour. 
  *
  *
  * @see ReentrantLock
@@ -117,7 +122,7 @@ package java.util.concurrent;
  *
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/06/09 23:51:33 $
+ * @revised $Date: 2003/06/11 23:03:06 $
  * @editor $Author: dholmes $
  *
  **/
@@ -154,7 +159,7 @@ public interface Lock {
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} while waiting to acquire 
+     * <li>is {@link Thread#interrupt interrupted} while acquiring 
      * the lock, and interruption of lock acquisition is supported, 
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's 
@@ -166,7 +171,8 @@ public interface Lock {
      * be an expensive operation. 
      * The programmer should be aware that this may be the case. An
      * implementation should document when this is the case.
-     *
+     * <p>An implementation can favor responding to an interrupt over 
+     * normal method return.
      * <p>A <tt>Lock</tt> implementation may be able to detect 
      * erroneous use of the lock, such as an invocation that would cause 
      * deadlock, and may throw an (unchecked) exception in such circumstances. 
@@ -174,7 +180,8 @@ public interface Lock {
      * <tt>Lock</tt> implementation.
      *
      * @throws InterruptedException if the current thread is interrupted
-     * (and interruption of lock acquisition is supported).
+     * while acquiring the lock (and interruption of lock acquisition is 
+     * supported).
      *
      * @see Thread#interrupt
      *
@@ -227,7 +234,7 @@ public interface Lock {
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} while waiting to acquire 
+     * <li>is {@link Thread#interrupt interrupted} while acquiring 
      * the lock, and interruption of lock acquisition is supported, 
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's 
@@ -243,7 +250,8 @@ public interface Lock {
      * be an expensive operation. 
      * The programmer should be aware that this may be the case. An
      * implementation should document when this is the case.
-     *
+     * <p>An implementation can favor responding to an interrupt over normal 
+     * method return, or reporting a timeout.
      * <p>A <tt>Lock</tt> implementation may be able to detect 
      * erroneous use of the lock, such as an invocation that would cause 
      * deadlock, and may throw an (unchecked) exception in such circumstances. 
@@ -256,8 +264,8 @@ public interface Lock {
      * if the waiting time elapsed before the lock was acquired.
      *
      * @throws InterruptedException if the current thread is interrupted
-     * while trying to acquire the lock (and interruption of lock
-     * acquisition is supported).
+     * while acquiring the lock (and interruption of lock acquisition is 
+     * supported).
      *
      * @see Thread#interrupt
      *

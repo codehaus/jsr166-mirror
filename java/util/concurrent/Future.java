@@ -1,14 +1,17 @@
+/*
+ * @(#)Future.java
+ */
+
 package java.util.concurrent;
 
 /**
- * A Future represents the results of an asynchronous computation,
- * providing methods to query the computation to see if it is
- * complete, wait for its completion, and retrieve the result of the
+ * A <tt>Future</tt> represents the result of an asynchronous computation.
+ * Methods are provided to check if the computation is complete,
+ * to wait for its completion, and to retrieve the result of the
  * computation.  The result can only be retrieved when the computation
- * has completed; the <tt>get</tt> method will block if the computation has
- * not yet completed.  Once the computation is completed, the result
- * cannot be changed, nor can the computation be restarted or
- * cancelled.
+ * has completed.  The <tt>get</tt> method will block until the computation
+ * has completed.  Once the computation has completed, the result cannot
+ * be changed, nor can the computation be restarted or cancelled.
  *
  * <p>
  * <b>Sample Usage</b> <p>
@@ -34,34 +37,44 @@ package java.util.concurrent;
  *   }
  * }
  * </pre>
+ *
  * @see FutureTask
  * @see Executor
+ * @since 1.5
+ * @spec JSR-166
  */
 public interface Future<V> {
 
     /**
-     * Return true if the underlying task has completed.
+     * Returns <tt>true</tt> if the underlying task has completed.
+     * @fixme relation to isDone in Cancellable?
+     *
+     * @return <tt>true</tt> if underlying task has completed
      */
     boolean isDone();
 
     /**
-     * Wait if necessary for computation to complete, and then
-     * retrieve its result.
+     * Waits if necessary for computation to complete, and then
+     * retrieves its result.
+     *
+     * @return computed result
+     * @throws CancellationException here???
+     * @throws ExecutionException if underlying computation threw an exception
      * @throws InterruptedException if current thread was interrupted while waiting
-     * @throws ExecutionException if the underlying computation
-     * threw an exception.
      */
     V get() throws InterruptedException, ExecutionException;
 
     /**
-     * Wait if necessary for at most the given time for the computation
-     * to complete, and then retrieve its result.
+     * Waits if necessary for at most the given time for the computation
+     * to complete, and then retrieves its result.
+     *
      * @param timeout the maximum time to wait
      * @param granularity the time unit of the timeout argument
+     * @return computed result
+     * @throws CancellationException here???
+     * @throws ExecutionException if underlying computation threw an exception
      * @throws InterruptedException if current thread was interrupted while waiting
      * @throws TimeOutException if the wait timed out
-     * @throws ExecutionException if the underlying computation
-     * threw an exception.
      */
     V get(long timeout, TimeUnit granularity)
         throws InterruptedException, ExecutionException;

@@ -1,13 +1,16 @@
+/*
+ * @(#)CancellationException.java
+ */
+
 package java.util.concurrent;
 
 /**
- * Thrown when trying to retrieve the results of an asynchronous task
- * to indicate that the task was cancelled before its completion.
- * @fixme THROWN BY WHAT??
+ * Thrown when attempting to retrieve the result of a task
+ * that was cancelled before it completed.
+ *
+ * @see Cancellable
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/31 00:13:35 $
- * @editor $Author: tim $
  */
 public class CancellationException extends IllegalStateException {
 

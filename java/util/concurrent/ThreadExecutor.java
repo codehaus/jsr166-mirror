@@ -1,15 +1,18 @@
+/*
+ * @(#)ThreadExecutor.java
+ */
+
 package java.util.concurrent;
 
 import java.util.List;
 
 /**
- * A ThreadExecutor asynchronously executes many tasks without
- * necessarily using many threads.  Depending on its configuration,
- * ThreadExecutor can create a new thread for each task, execute tasks
- * sequentially in a single thread, or implement a thread pool with
- * reusable task threads.  
+ * An <tt>Executor</tt> that can execute many tasks concurrently.
+ * Depending on its configuration, a <tt>ThreadExecutor</tt> can create a new
+ * thread for each task, execute tasks sequentially in a single thread, or
+ * implement a thread pool with reusable threads.  
  *
- * <p>The most common configuration of ThreadExecutor is a thread
+ * <p> The most common configuration of ThreadExecutor is a thread
  * pool. Thread pools address solve two different problems at the same
  * time: they usually provide faster performance when executing large
  * numbers of asynchronous tasks, due to reduced per-task invocation
@@ -26,7 +29,9 @@ import java.util.List;
  * background thread for execution of tasks), and
  * <tt>newThreadPerTaskExeceutor</tt> (execute each task in a new
  * thread), that preconfigure settings for the most common usage
- * scenarios. If greater control is needed, you can use the
+ * scenarios.
+ *
+ * @fixme If greater control is needed, you can use the
  * constructor with custom parameters, selectively override
  * <tt>Callbacks</tt>, and/or dynamically change tuning
  * parameters.
@@ -118,19 +123,25 @@ import java.util.List;
  * are returned from the shutdownNow call.  In a graceful shutdown,
  * all queued tasks are allowed to run, but new tasks may not be
  * submitted.
- *
  * </dl>
- * @see Callbacks
+ *
+ * @see CannotExecuteHandler
+ * @see ThreadFactory
+ * @since 1.5
+ * @spec JSR-166
  */
-public class ThreadExecutor implements Executor, ExecutorService {
+public class ThreadExecutor implements ExecutorService {
 
     /** JAVADOC?? */
     private ThreadFactory threadFactory;
+    
+    //FIXME: private CannotExecuteHandler cannotExecuteHandler;
 
     /**
-     * Create a new ThreadExecutor with the given initial parameters.  
-     * If possible, it is better to use one of the factory methods instead
-     * of the general constructor.  
+     * Creates a new ThreadExecutor with the given initial parameters.  
+     * It may be more convenient to use one of the factory methods instead
+     * of this general purpose constructor.
+     *
      * @param minThreads the minimum number of threads to keep in the
      * pool, even if they are idle.
      * @param maxThreads the maximum number of threads to allow in the
@@ -143,43 +154,19 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * @param workQueue the queue to use for holding tasks before the
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
-     * @param handler the object providing policy control for creating
-     * threads, handling termination, etc.  
      * @throws IllegalArgumentException if minThreads, maxThreads, or
      * keepAliveTime less than zero, or if minThreads greater than
      * maxThreads.  
-     * @throws NullPointerException if workQueue or
-     * handler are null.
+     * @throws NullPointerException if workQueue is null
      */
     public ThreadExecutor(int minThreads,
         int maxThreads,
         long keepAliveTime,
         TimeUnit granularity,
-        BlockingQueue workQueue,
-        Callbacks handler) {}
-
-    /** JAVADOC?? */
-    public static class DefaultCallbacks implements Callbacks {
-        public void beforeExecute(Thread t, Runnable r, ExecutorService e) {
-        }
-
-        public void afterExecute(Runnable r, Throwable t, ExecutorService e) {
-        }
-
-        public boolean cannotExecute(Runnable r, ExecutorService e) {
-            if (!e.isShutdown()) {
-                /* CATCH RUNTIME EXCEPTIONS AND REPORT IN AFTER_EXECUTE! */
-                r.run();
-            }
-            return true;
-        }
-
-        public void terminated(ExecutorService e) {
-        }
-    }
+        BlockingQueue workQueue) {}
 
     /**
-     * Set the minimum allowed number of threads.  This overrides any
+     * Sets the minimum allowed number of threads.  This overrides any
      * value set in the constructor.  
      * @param minThreads the new minimum
      * @throws IllegalArgumentException if minhThreads less than zero
@@ -187,7 +174,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
     protected void setMinimumPoolSize(int minThreads) {}
 
     /**
-     * Set the maximum allowed number of threads. This overrides any
+     * Sets the maximum allowed number of threads. This overrides any
      * value set in the constructor.  
      * @param maxThreads the new maximum
      * @throws IllegalArgumentException if maxThreads less than zero or
@@ -196,7 +183,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
     protected void setMaximumPoolSize(int maxThreads) {}
 
     /**
-     * Set the time limit for which threads may remain idle before
+     * Sets the time limit for which threads may remain idle before
      * being terminated.  If there are more than the minimum number of
      * threads currently in the pool, after waiting this amount of
      * time without processing a task, excess threads will be
@@ -209,21 +196,21 @@ public class ThreadExecutor implements Executor, ExecutorService {
     protected void setKeepAliveTime(long time, TimeUnit granularity) {}
 
     /**
-     * Get the minimum allowed number of threads.  
+     * Gets the minimum allowed number of threads.  
      * @return the minimum
      *
      */
     protected int getMinimumPoolSize() { return 0; }
 
     /**
-     * Get the maximum allowed number of threads.
+     * Gets the maximum allowed number of threads.
      * @return the maximum
      *
      */
     protected int getMaximumPoolSize() { return 0; }
 
     /**
-     * Get the thread keep-alive time, which is the amount of time
+     * Gets the thread keep-alive time, which is the amount of time
      * which threads in excess of the minimum pool size may remain
      * idle before being terminated.  
      * @param granularity the desired time unit of the result
@@ -234,67 +221,57 @@ public class ThreadExecutor implements Executor, ExecutorService {
     // statistics
 
     /**
-     * Get the current number of threads in the pool.
+     * Gets the current number of threads in the pool.
      * @return the number of threads
      */
     protected int getPoolSize() { return 0; }
 
     /**
-     * Get the current number of threads that are actively
+     * Gets the current number of threads that are actively
      * executing tasks.
      * @return the number of threads
      */
     protected int getActiveCount() { return 0; }
 
     /**
-     * Get the maximum number of threads that have ever simultaneously
+     * Gets the maximum number of threads that have ever simultaneously
      * executed tasks.
      * @return the number of threads
      */
     protected int getMaximumActiveCount() { return 0; }
 
     /**
-     * Get the number of tasks that have been queued but not yet executed
+     * Gets the number of tasks that have been queued but not yet executed
      * @return the number of tasks.
      */
     protected int getQueueCount() { return 0; }
 
     /**
-     * Get the maximum number of tasks that have ever been queued
+     * Gets the maximum number of tasks that have ever been queued
      * waiting for execution.
      * @return the number of tasks.
      */
     protected int getMaximumQueueCount() { return 0; }
 
     /**
-     * Get the total number of tasks that have been scheduled for execution.
+     * Gets the total number of tasks that have been scheduled for execution.
      * @return the number of tasks.
      */
     protected int getCumulativeTaskCount() { return 0; }
 
     /**
-     * Get the total number of tasks that have completed execution.
+     * Gets the total number of tasks that have completed execution.
      * @return the number of tasks.
      */
     protected int getCumulativeCompletedTaskCount() { return 0; }
 
     /**
-     * Return the Callbacks handler.
+     * Returns the task queue used by the ThreadExecutor.  Note that
+     * this queue may be in active use.  Retrieveing the task queue
+     * does not prevent queued tasks from executing.
      */
-    protected Callbacks getCallbacks() {
+    protected BlockingQueue getQueue() {
         return null;
-    }
-
-    /**
-     * Set a new Intercepts handler. Actions that are already underway
-     * using the current handler will continue to use it; future
-     * actions will use the new one.  In general, this method should
-     * invoked only when the executor is known to be in a quiescent
-     * state.
-     *
-     * @param handler the new Intercept handler
-     */
-    protected void setCallbacks(Callbacks handler) {
     }
 
     /** Returns the thread factory used to create new threads */
@@ -308,27 +285,116 @@ public class ThreadExecutor implements Executor, ExecutorService {
     }
 
     /**
-     * Return the task queue used by the ThreadExecutor.  Note that
-     * this queue may be in active use.  Retrieveing the task queue
-     * does not prevent queued tasks from executing.
+     * Returns the CannotExecuteHandler.
      */
-    protected BlockingQueue getQueue() {
+    protected CannotExecuteHandler getCannotExecuteHandler() {
         return null;
     }
 
-    // Executor methods
+    /**
+     * Sets a new CannotExecuteHandler. Actions that are already underway
+     * using the current handler will continue to use it; future
+     * actions will use the new one.  In general, this method should
+     * invoked only when the executor is known to be in a quiescent
+     * state.
+     *
+     * @param handler the new CannotExecuteHandler
+     */
+    protected void setCannotExecuteHandler(CannotExecuteHandler handler) {
+    }
+
+    /* Various CannotExecuteHandler implementations. */
 
     /**
-     * Execute the given command sometime in the future.  The command
+     * Sets the policy for unexecutable tasks to be that the current thread
+     * executes the command if there are no available threads in the pool.
+     * This policy is set by default.
+     */
+    protected void callerRunsWhenCannotExecute() {
+        setCannotExecuteHandler(new CannotExecuteHandler() {
+            public boolean cannotExecute(Runnable r, boolean isShutdown) {
+                if (!isShutdown) {
+                    r.run();
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Sets the policy for handling unexecutable tasks to be to throw a RuntimeException.
+     */
+    protected void abortWhenCannotExecute() {
+        setCannotExecuteHandler(new CannotExecuteHandler() {
+            public boolean cannotExecute(Runnable r, boolean isShutdown) {
+                if (!isShutdown) {
+                    throw new CannotExecuteException();
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Sets the policy for blocked execution to be to wait until a thread
+     * is available.
+     */
+    protected void waitWhenCannotExecute() {
+        setCannotExecuteHandler(new CannotExecuteHandler() {
+            public boolean cannotExecute(Runnable r, boolean isShutdown) {
+                if (!isShutdown) {
+                    // FIXME: wait here
+                    // FIXME: throw CannotExecuteException if interrupted
+                    return false;
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Sets the policy for blocked execution to be to discard this request.
+     */
+    protected void discardWhenCannotExecute() {
+        setCannotExecuteHandler(new CannotExecuteHandler() {
+            public boolean cannotExecute(Runnable r, boolean isShutdown) {
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Sets the policy for blocked execution to be to discard the oldest
+     * unhandled request.
+     */
+    protected void discardOldestWhenCannotExecute() {
+        setCannotExecuteHandler(new CannotExecuteHandler() {
+            public boolean cannotExecute(Runnable r, boolean isShutdown) {
+                if (!isShutdown) {
+                    // FIXME: discard oldest here
+                    return false;
+                }
+                return true;
+            }
+        });
+    }
+
+    /* Executor methods. INHERIT this javadoc from interface??? */
+
+    /**
+     * Executes the given command sometime in the future.  The command
      * may execute in the calling thread, in a new thread, or in a
      * pool thread, at the discretion of the Executor implementation.
+     *
+     * @throws CannotExecuteException if command cannot be submitted for
+     * execution
      */
     public void execute(Runnable command) {}
 
-    // ExecutorService methods
+    /* ExecutorService methods. INHERIT this javadoc from interface??? */
 
     /**
-     * Interrupt the processing of all current tasks.  Depending on
+     * Interrupts the processing of all current tasks.  Depending on
      * whether the tasks ignore the InterruptedException, this may or
      * may not speed the completion of queued tasks, and may cause
      * improperly written tasks to fail.  The Executor remains enabled
@@ -337,7 +403,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
     public void interrupt() {}
 
     /**
-     * Return true if all tasks have completed following shut down.
+     * Returns true if all tasks have completed following shut down.
      * Note that isTerminated is never true unless <tt>shutdown</tt>
      * or <tt>shutdownNow</tt> have been invoked.
      */
@@ -346,7 +412,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
     }
 
     /**
-     * Block until all tasks have completed execution after a shutdown
+     * Blocks until all tasks have completed execution after a shutdown
      * request, or the timeout occurs, or the current Thread is
      * interrupted, whichever happens first.
      *
@@ -355,10 +421,11 @@ public class ThreadExecutor implements Executor, ExecutorService {
      * @throws java.lang.InterruptedException if interrupted while waiting.
      * @throws java.lang.IllegalStateException if not shut down.
      */
-    public void awaitTermination(long timeout, TimeUnit granularity) throws InterruptedException {}
+    public void awaitTermination(long timeout, TimeUnit granularity)
+    throws InterruptedException {}
 
     /**
-     * Initiate an orderly shutdown in which previously submitted tasks
+     * Initiates an orderly shutdown in which previously submitted tasks
      * are executed, but new tasks submitted to execute() subsequent to
      * calling shutdown() are not.
      *
@@ -371,7 +438,7 @@ public class ThreadExecutor implements Executor, ExecutorService {
     public void shutdown() {}
 
     /**
-     * Attempt to stop processing all actively executing tasks, never
+     * Attempts to stop processing all actively executing tasks, never
      * start processing previously submitted tasks that have not yet
      * commenced execution, and cause subsequently submitted tasks not
      * to be processed.  The exact fate of tasks submitted in
@@ -391,11 +458,42 @@ public class ThreadExecutor implements Executor, ExecutorService {
     }
 
     /**
-     * Return true if the Executor has been shut down.
+     * Returns true if the Executor has been shut down.
      */
     public boolean isShutdown() {
         return false;
     }
 
+    /*
+     * Methods invoked during various points of execution, allowing fine-grained
+     * control and monitoring.
+     */
+    
+    /**
+     * Method invoked prior to executing the given Runnable in given
+     * thread.  This method may be used to re-initialize ThreadLocals,
+     * or to perform logging.
+     *
+     * @param t the thread that will run task r.
+     * @param r the task that will be executed.
+     */
+    protected void beforeExecute(Thread t, Runnable r) { }
+    
+    /**
+     * Method invoked upon completion of execution of the given
+     * Runnable.  If non-null, the Throwable is the uncaught exception
+     * that caused execution to terminate abruptly.
+     *
+     * @param r the runnable that has completed.
+     * @param t the exception that cause termination, or null if
+     * execution completed normally.
+     */
+    protected void afterExecute(Runnable r, Throwable t) { }
+    
+    /**
+     * Method invoked when the Executor has terminated.  Default
+     * implementation does nothing.
+     */
+    protected void terminated() { }
 }
 

@@ -1,14 +1,16 @@
+/*
+ * @(#)ExecutionException.java
+ */
+
 package java.util.concurrent;
 
 /**
- * Thrown when attempting to retrieve the results of an asychronous
- * task that aborted, failing to produce a result.
+ * Thrown when attempting to retrieve the result of a task that aborted.
  * @fixme THROWN BY WHO??  MENTION THAT THIS IS WRAPPER FOR REAL CAUSE
  *
+ * @see Future
  * @since 1.5
  * @spec JSR-166
- * @revised $Date: 2003/01/31 00:13:35 $
- * @editor $Author: tim $
  */
 public class ExecutionException extends Exception {
 
@@ -24,7 +26,7 @@ public class ExecutionException extends Exception {
      * message. The cause is not initialized, and may subsequently be
      * initialized by a call to {@link #initCause(Throwable) initCause}.
      *
-     * @param message the detail message.
+     * @param message the detail message
      */
     protected ExecutionException(String message) {
         super(message);
@@ -34,9 +36,9 @@ public class ExecutionException extends Exception {
      * Constructs a <tt>ExecutionException</tt> with the specified detail
      * message and cause.
      *
-     * @param  message the detail message.
+     * @param  message the detail message
      * @param  cause the cause (which is saved for later retrieval by the
-     *         {@link #getCause()} method).
+     *         {@link #getCause()} method)
      */
     public ExecutionException(String message, Throwable cause) {
         super(message, cause);
@@ -51,7 +53,7 @@ public class ExecutionException extends Exception {
      * <tt>cause</tt>).
      *
      * @param  cause the cause (which is saved for later retrieval by the
-     *         {@link #getCause()} method).
+     *         {@link #getCause()} method)
      */
     public ExecutionException(Throwable cause) {
         super(cause);

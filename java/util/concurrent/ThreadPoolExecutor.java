@@ -1,17 +1,45 @@
+/*
+ * @(#)ThreadPoolExecutor.java
+ */
+
 package java.util.concurrent;
 
-/** JAVADOC?? */
-public class ThreadPoolExecutor extends ThreadExecutor
-    implements Executor, ExecutorService {
+/**
+ * An <tt>Executor</tt> that executes each submitted task on one of several
+ * pooled threads.
+ *
+ * @since 1.5
+ * @spec JSR-166
+ */
+public class ThreadPoolExecutor extends ThreadExecutor {
 
-    /** JAVADOC?? */
+    /**
+     * Constructs an executor using parameters that cause it to use a
+     * pool of threads for executing submitted tasks.
+     *
+     * @param minThreads the minimum number of threads to keep in the
+     * pool, even if they are idle
+     * @param maxThreads the maximum number of threads to allow in the
+     * pool
+     * @param keepAliveTime when the number of threads is greater than
+     * the minimum, this is the maximum time that excess idle threads
+     * will wait for new tasks before terminating.
+     * @param granularity the time unit for the keepAliveTime
+     * argument.
+     * @param queue the queue to use for holding tasks before the
+     * are executed. This queue will hold only the <tt>Runnable</tt>
+     * tasks submitted by the <tt>execute</tt> method.
+     * @throws IllegalArgumentException if minThreads, maxThreads, or
+     * keepAliveTime less than zero, or if minThreads greater than
+     * maxThreads.  
+     * @throws NullPointerException if queue is null
+     */
     public ThreadPoolExecutor(int minThreads,
                               int maxThreads,
                               long keepAliveTime,
                               TimeUnit granularity,
-                              BlockingQueue queue,
-                              ExecutorService.Callbacks callbacks) {
-        super(minThreads, maxThreads, keepAliveTime, granularity, queue, callbacks);
+                              BlockingQueue queue) {
+        super(minThreads, maxThreads, keepAliveTime, granularity, queue);
     }
 
     public void setMinimumPoolSize(int minThreads) {
@@ -66,15 +94,35 @@ public class ThreadPoolExecutor extends ThreadExecutor
         return super.getCumulativeCompletedTaskCount();
     }
 
-    public ExecutorService.Callbacks getCallbacks() {
-        return super.getCallbacks();
-    }
-
-    public void setCallbacks(ExecutorService.Callbacks handler) {
-        super.setCallbacks(handler);
-    }
-
     public BlockingQueue getQueue() {
         return super.getQueue();
+    }
+
+    public CannotExecuteHandler getCannotExecuteHandler() {
+        return super.getCannotExecuteHandler();
+    }
+
+    public void setCannotExecuteHandler(CannotExecuteHandler handler) {
+        super.setCannotExecuteHandler(handler);
+    }
+
+    public void callerRunsWhenCannotExecute() {
+        super.callerRunsWhenCannotExecute();
+    }
+
+    public void abortWhenCannotExecute() {
+        super.abortWhenCannotExecute();
+    }
+
+    public void waitWhenCannotExecute() {
+        super.waitWhenCannotExecute();
+    }
+
+    public void discardWhenCannotExecute() {
+        super.discardWhenCannotExecute();
+    }
+
+    public void discardOldestWhenCannotExecute() {
+        super.discardOldestWhenCannotExecute();
     }
 }

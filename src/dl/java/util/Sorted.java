@@ -1,4 +1,4 @@
- package java.util;
+package java.util;
 
 /**
  * Mixin interface used by collections, maps, and similar objects to

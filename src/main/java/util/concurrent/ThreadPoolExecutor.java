@@ -9,35 +9,34 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An {@link ExecutorService} that executes each submitted task on one
- * of several pooled threads.
+ * An {@link ExecutorService} that executes each submitted task using
+ * one of possibly several pooled threads.
  *
- * <p>Thread pools address two different problems at the same time:
- * they usually provide improved performance when executing large
- * numbers of asynchronous tasks, due to reduced per-task invocation
- * overhead, and they provide a means of bounding and managing the
- * resources, including threads, consumed in executing a collection of
- * tasks.
+ * <p>Thread pools address two different problems: they usually
+ * provide improved performance when executing large numbers of
+ * asynchronous tasks, due to reduced per-task invocation overhead,
+ * and they provide a means of bounding and managing the resources,
+ * including threads, consumed when executing a collection of tasks.
  *
- * <p>This class is very configurable and can be configured to create
- * a new thread for each task, or even to execute tasks sequentially
- * in a single thread, in addition to its most common configuration,
- * which reuses a pool of threads.
+ * <p>This class is designed to ge highly tunable. 
  *
  * <p>To be useful across a wide range of contexts, this class
- * provides many adjustable parameters and extensibility hooks.
- * However, programmers are urged to use the more convenient factory
- * methods <tt>newCachedThreadPool</tt> (unbounded thread pool, with
- * automatic thread reclamation), <tt>newFixedThreadPool</tt> (fixed
- * size thread pool), <tt>newSingleThreadPoolExecutor</tt> (single
- * background thread for execution of tasks), and
- * <tt>newThreadPerTaskExeceutor</tt> (execute each task in a new
- * thread), that preconfigure settings for the most common usage
- * scenarios.
+ * provides many adjustable parameters and extensibility hooks.  For
+ * example, it can be configured to create a new thread for each task,
+ * or even to execute tasks sequentially in a single thread, in
+ * addition to its most common configuration, which reuses a pool of
+ * threads.  However, programmers are urged to use the more convenient
+ * factory methods <tt>newCachedThreadPool</tt> (unbounded thread
+ * pool, with automatic thread reclamation),
+ * <tt>newFixedThreadPool</tt> (fixed size thread pool),
+ * <tt>newSingleThreadPoolExecutor</tt> (single background thread for
+ * execution of tasks), and <tt>newThreadPerTaskExeceutor</tt>
+ * (execute each task in a new thread), that preconfigure settings for
+ * the most common usage scenarios.
  *
- * <p>This class also maintain some basic statistics, such as the
- * number of completed tasks, that may be useful for monitoring and
- * tuning executors.
+ * <p>Each <tt>ThreadPoolExecutor</tt> also maintains some basic
+ * statistics, such as the number of completed tasks, that may be
+ * useful for monitoring and tuning executors.
  *
  * <h3>Tuning guide</h3>
  * <dl>
@@ -52,7 +51,10 @@ import java.util.*;
  * corePoolSize but less than maximumPoolSize threads running, a new
  * thread will be created only if the queue is full.  By setting
  * corePoolSize and maximumPoolSize the same, you create a fixed-size
- * thread pool.</dd>
+ * thread pool. By default, even core threads are only created and
+ * started when needed by new tasks, but this can be overridden
+ * dynamically using method <tt>prestartCoreThread</tt>.
+ * </dd>
  *
  * <dt>Keep-alive</dt>
  *
@@ -64,35 +66,33 @@ import java.util.*;
  * <dt>Queueing</dt>
  *
  * <dd>You are free to specify the queuing mechanism used to handle
- * submitted tasks.  A good default is to use queueless synchronous
- * channels to to hand off work to threads.  This is a safe,
- * conservative policy that avoids lockups when handling sets of
- * requests that might have internal dependencies.  Using an unbounded
- * queue (for example a LinkedBlockingQueue) which will cause new
- * tasks to be queued in cases where all corePoolSize threads are
- * busy, so no more that corePoolSize threads will be craated.  This
- * may be appropriate when each task is completely independent of
- * others, so tasks cannot affect each others execution. For example,
- * in an http server.  When given a choice, this pool always prefers
- * adding a new thread rather than queueing if there are currently
- * fewer than the current getCorePoolSize threads running, but
- * otherwise always prefers queuing a request rather than adding a new
- * thread.
+ * submitted tasks.  A good default is to use a zero-capacity
+ * <tt>SynchronousQueue</tt> to to hand off work to threads.  This is
+ * a safe, conservative policy that avoids lockups when handling sets
+ * of requests that might have internal dependencies.  Using an
+ * unbounded queue (for example a <tt>LinkedBlockingQueue</tt>) will
+ * cause new tasks to be queued in cases where all corePoolSize
+ * threads are busy, so no more than corePoolSize threads will be
+ * craated.  This may be appropriate when each task is completely
+ * independent of others, so tasks cannot affect each others
+ * execution. For example, in a web page server.  When given a choice,
+ * this pool always prefers adding a new thread rather than queueing
+ * if there are currently fewer than the current getCorePoolSize
+ * threads running, but otherwise always prefers queuing a request
+ * rather than adding a new thread.
  *
  * <p>While queuing can be useful in smoothing out transient bursts of
  * requests, especially in socket-based services, it is not very well
  * behaved when commands continue to arrive on average faster than
- * they can be processed.
- *
- * Queue sizes and maximum pool sizes can often be traded off for each
- * other. Using large queues and small pools minimizes CPU usage, OS
- * resources, and context-switching overhead, but can lead to
- * artifically low throughput.  If tasks frequently block (for example
- * if they are I/O bound), a JVM and underlying OS may be able to
- * schedule time for more threads than you otherwise allow. Use of
- * small queues or queueless handoffs generally requires larger pool
- * sizes, which keeps CPUs busier but may encounter unacceptable
- * scheduling overhead, which also decreases throughput.
+ * they can be processed.  Queue sizes and maximum pool sizes can
+ * often be traded off for each other. Using large queues and small
+ * pools minimizes CPU usage, OS resources, and context-switching
+ * overhead, but can lead to artifically low throughput.  If tasks
+ * frequently block (for example if they are I/O bound), a system may
+ * be able to schedule time for more threads than you otherwise
+ * allow. Use of small queues or queueless handoffs generally requires
+ * larger pool sizes, which keeps CPUs busier but may encounter
+ * unacceptable scheduling overhead, which also decreases throughput.
  * </dd>
  *
  * <dt>Creating new threads</dt>
@@ -110,7 +110,7 @@ import java.util.*;
  * the execution environment (for example, reinitializing
  * ThreadLocals), gather statistics, or perform logging.  </dd>
  *
- * <dt>Blocked execution</dt>
+ * <dt>Rejected tasks</dt>
  *
  * <dd>There are a number of factors which can bound the number of
  * tasks which can execute at once, including the maximum pool size
@@ -118,7 +118,8 @@ import java.util.*;
  * task cannot be executed because it has been refused by the queue
  * and no threads are available, or because the executor has been shut
  * down, the RejectedExecutionHandler's rejectedExecution method is
- * invoked.  </dd>
+ * invoked. The default (<tt>AbortPolicy</tt>) handler throws a runtime
+ * {@link RejectedExecutionException} upon rejection.  </dd>
  *
  * <dt>Termination</dt>
  *
@@ -137,7 +138,7 @@ import java.util.*;
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/14 15:34:04 $
+ * @revised $Date: 2003/08/24 23:32:25 $
  * @editor $Author: dl $
  * @author Doug Lea
  */
@@ -161,7 +162,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Set containing all worker threads in pool.
      */
-    private final Set<Worker> workers = new HashSet<Worker>();
+    private final HashSet<Worker> workers = new HashSet<Worker>();
 
     /**
      * Timeout in nanosecods for idle threads waiting for work.
@@ -244,7 +245,7 @@ public class ThreadPoolExecutor implements ExecutorService {
         new AbortPolicy();
 
     /**
-     * Invoke the rejected execution handler for the give command.
+     * Invoke the rejected execution handler for the given command.
      */
     void reject(Runnable command) {
         handler.rejectedExecution(command, this);
@@ -519,7 +520,7 @@ public class ThreadPoolExecutor implements ExecutorService {
                 } catch(RuntimeException ex) {
                     if (!ran)
                         afterExecute(task, ex);
-                    // else the exception occurred within
+                    // Else the exception occurred within
                     // afterExecute itself in which case we don't
                     // want to call it again.
                     throw ex;
@@ -555,10 +556,13 @@ public class ThreadPoolExecutor implements ExecutorService {
         }
     }
 
+    // Public methods
+
     /**
-     * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
-     * parameters.  It may be more convenient to use one of the factory
-     * methods instead of this general purpose constructor.
+     * Creates a new <tt>ThreadPoolExecutor</tt> with the given
+     * initial parameters.  It may be more convenient to use one of
+     * the {@link @Executors} factory methods instead of this general
+     * purpose constructor.
      *
      * @param corePoolSize the number of threads to keep in the
      * pool, even if they are idle.
@@ -845,8 +849,9 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * Returns the task queue used by this executor.  Note that
-     * this queue may be in active use.  Retrieveing the task queue
+     * Returns the task queue used by this executor. Access to the
+     * task queue is intended primarily for debugging and monitoring.
+     * This queue may be in active use.  Retrieveing the task queue
      * does not prevent queued tasks from executing.
      *
      * @return the task queue
@@ -1016,7 +1021,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * @param time the time to wait.  A time value of zero will cause
      * excess threads to terminate immediately after executing tasks.
      * @param unit  the time unit of the time argument
-     * @throws IllegalArgumentException if msecs less than zero
+     * @throws IllegalArgumentException if time less than zero
      * @see #getKeepAliveTime
      */
     public void setKeepAliveTime(long time, TimeUnit unit) {
@@ -1088,7 +1093,8 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Returns the approximate total number of tasks that have been
      * scheduled for execution. Because the states of tasks and
      * threads may change dynamically during computation, the returned
-     * value is only an approximation.
+     * value is only an approximation, but one that does not ever
+     * decrease across successive calls.
      *
      * @return the number of tasks
      */
@@ -1112,7 +1118,8 @@ public class ThreadPoolExecutor implements ExecutorService {
      * Returns the approximate total number of tasks that have
      * completed execution. Because the states of tasks and threads
      * may change dynamically during computation, the returned value
-     * is only an approximation.
+     * is only an approximation, but one that does not ever decrease
+     * across successive calls.
      *
      * @return the number of tasks
      */
@@ -1129,10 +1136,10 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * Method invoked prior to executing the given Runnable in given
-     * thread.  This method may be used to re-initialize ThreadLocals,
-     * or to perform logging. Note: To properly nest multiple
-     * overridings, subclasses should generally invoke
+     * Method invoked prior to executing the given Runnable in the
+     * given thread.  This method may be used to re-initialize
+     * ThreadLocals, or to perform logging. Note: To properly nest
+     * multiple overridings, subclasses should generally invoke
      * <tt>super.beforeExecute</tt> at the end of this method.
      *
      * @param t the thread that will run task r.
@@ -1155,14 +1162,16 @@ public class ThreadPoolExecutor implements ExecutorService {
 
     /**
      * Method invoked when the Executor has terminated.  Default
-     * implementation does nothing.
+     * implementation does nothing. Note: To properly nest multiple
+     * overridings, subclasses should generally invoke
+     * <tt>super.terminated</tt> within this method.
      */
     protected void terminated() { }
 
     /**
-     * A handler for unexecutable tasks that runs these tasks directly in the
-     * calling thread of the <tt>execute</tt> method.  This is the default
-     * <tt>RejectedExecutionHandler</tt>.
+     * A handler for unexecutable tasks that runs these tasks directly
+     * in the calling thread of the <tt>execute</tt> method.  This is
+     * the default <tt>RejectedExecutionHandler</tt>.
      */
    public static class CallerRunsPolicy implements RejectedExecutionHandler {
 

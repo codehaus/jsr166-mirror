@@ -17,8 +17,8 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/08/19 15:04:57 $
- * @editor $Author: tim $
+ * @revised $Date: 2003/08/24 23:32:25 $
+ * @editor $Author: dl $
  * @author Doug Lea
  */
 public class Executors {
@@ -43,7 +43,10 @@ public class Executors {
 
     /**
      * Creates a thread pool that reuses a fixed set of threads
-     * operating off a shared unbounded queue.
+     * operating off a shared unbounded queue. If any thread
+     * terminates due to a failure during execution prior to shutdown,
+     * a new one will take its place if needed to execute subsequent
+     * tasks.
      *
      * @param nThreads the number of threads in the pool
      * @return the newly created thread pool
@@ -79,7 +82,8 @@ public class Executors {
      * shutdown, a new one will take its place if needed to execute
      * subsequent tasks.)  Tasks are guaranteed to execute
      * sequentially, and no more than one task will be active at any
-     * given time.
+     * given time. This method is equivalent in effect to
+     *<tt>new FixedThreadPool(1)</tt>.
      *
      * @return the newly-created single-threaded Executor
      */
@@ -117,7 +121,9 @@ public class Executors {
      * thread will be created and added to the pool. Threads that have
      * not been used for sixty seconds are terminated and removed from
      * the cache. Thus, a pool that remains idle for long enough will
-     * not consume any resources.
+     * not consume any resources. Note that pools with similar
+     * properties but different details (for example, timeout parameters)
+     * may be created using {@link ThreadPoolExecutor} constructors.
      *
      * @return the newly created thread pool
      */

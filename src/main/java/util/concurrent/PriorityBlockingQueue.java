@@ -16,6 +16,12 @@ import java.util.*;
  * While this queue is logically unbounded,
  * attempted additions may fail due to resource exhaustion (causing
  * <tt>OutOfMemoryError</tt>).
+ *
+ * <p>The Iterator provided in method {@link #iterator()} is
+ * <em>not</em> guaranteed to traverse the elements of the
+ * PriorityBlockingQueue in any particular order. If you need ordered
+ * traversal, consider using <tt>Arrays.sort(pq.toArray())</tt>.
+ *
  * @since 1.5
  * @author Doug Lea
 */

@@ -25,12 +25,20 @@ import java.util.*;
  * zero.
  *
  * <p> Delayed tasks execute no sooner than they are enabled, but
- * without any real-time guarantees about when, after they are enabled
+ * without any real-time guarantees about when, after they are enabled,
  * they will commence. Tasks tied for the same execution time are
- * enabled in first-in-first-out (FIFO) order of submission. An
- * internal {@link DelayQueue} used for scheduling relies on relative
- * delays, which may drift from absolute times (as returned by
- * <tt>System.currentTimeMillis</tt>) over sufficiently long periods.
+ * enabled in first-in-first-out (FIFO) order of submission. 
+ *
+ * <p>All <t>schedule</tt> methods accept <em>relative</em> delays and
+ * periods as arguments, not absolute times or dates. It is a simple
+ * matter to transform an absolute time represented as a
+ * <tt>java.util.Date</tt>, to the required form. For example, to
+ * schedule at a certain future <tt>date</tt>, you can use:
+ * <tt>schedule(task, date.getTime() - System.currentTimeMillis,
+ * TimeUnit.MILLISECONDS)</tt>. Beware however that expiration of a
+ * relative delay need not coincide with the current <tt>Date</tt> at
+ * which the task is enabled due to network time synchronization
+ * protocols, clock drift, or other factors.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not especially useful for
@@ -318,24 +326,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * Creates and executes a one-shot action that becomes enabled
-     * after the given date.
-     * @param command the task to execute.
-     * @param date the time to commence excution.
-     * @return a handle that can be used to cancel the task.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     */
-    public ScheduledCancellable schedule(Runnable command, Date date) {
-        long triggerTime = System.nanoTime() + 
-            TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
-                                          System.currentTimeMillis()); 
-        ScheduledCancellableTask t = new ScheduledCancellableTask(command, triggerTime);
-        delayedExecute(t);
-        return t;
-    }
-    
-    /**
      * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and subsequently with the given
      * period; that is executions will commence after
@@ -359,32 +349,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
         return t;
     }
     
-    /**
-     * Creates a periodic action that becomes enabled first after the
-     * given date, and subsequently with the given period
-     * period; that is executions will commence after
-     * <tt>initialDate</tt> then <tt>initialDate+period</tt>, then
-     * <tt>initialDate + 2 * period</tt>, and so on.
-     * @param command the task to execute.
-     * @param initialDate the time to delay first execution.
-     * @param period the period between commencement of successive
-     * executions.
-     * @param unit the time unit of the  period parameter.
-     * @return a handle that can be used to cancel the task.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     */
-    public ScheduledCancellable scheduleAtFixedRate(Runnable command, Date initialDate, long period, TimeUnit unit) {
-        long triggerTime = System.nanoTime() + 
-            TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
-                                          System.currentTimeMillis()); 
-        ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
-                                        triggerTime,
-                                        unit.toNanos(period), 
-                                        true);
-        delayedExecute(t);
-        return t;
-    }
 
     /**
      * Creates and executes a periodic action that becomes enabled first
@@ -411,33 +375,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
     
     /**
-     * Creates a periodic action that becomes enabled first after the
-     * given date, and subsequently with the given delay between
-     * the termination of one execution and the commencement of the
-     * next.
-     * @param command the task to execute.
-     * @param initialDate the time to delay first execution.
-     * @param delay the delay between the termination of one
-     * execution and the commencement of the next.
-     * @param unit the time unit of the  delay parameter.
-     * @return a handle that can be used to cancel the task.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     */
-    public ScheduledCancellable scheduleWithFixedDelay(Runnable command, Date initialDate, long delay, TimeUnit unit) {
-        long triggerTime = System.nanoTime() + 
-            TimeUnit.MILLISECONDS.toNanos(initialDate.getTime() - 
-                                          System.currentTimeMillis()); 
-        ScheduledCancellableTask t = new ScheduledCancellableTask(command, 
-                                        triggerTime,
-                                        unit.toNanos(delay), 
-                                        false);
-        delayedExecute(t);
-        return t;
-    }
-
-
-    /**
      * Creates and executes a ScheduledFuture that becomes enabled after the
      * given delay.
      * @param callable the function to execute.
@@ -449,24 +386,6 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      */
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
         long triggerTime = System.nanoTime() + unit.toNanos(delay);
-        ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
-        delayedExecute(t);
-        return t;
-    }
-
-    /**
-     * Creates and executes a one-shot action that becomes enabled after
-     * the given date.
-     * @param callable the function to execute.
-     * @param date the time to commence excution.
-     * @return a ScheduledFuture that can be used to extract result or cancel.
-     * @throws RejectedExecutionException if task cannot be scheduled
-     * for execution because the executor has been shut down.
-     */
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, Date date) {
-        long triggerTime = System.nanoTime() + 
-            TimeUnit.MILLISECONDS.toNanos(date.getTime() - 
-                                          System.currentTimeMillis()); 
         ScheduledFutureTask<V> t = new ScheduledFutureTask<V>(callable, triggerTime);
         delayedExecute(t);
         return t;
@@ -609,8 +528,8 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
      * @return true if the task was removed
      */
     public boolean remove(Runnable task) {
-        if (task instanceof ScheduledCancellable && super.getQueue().remove(task))
-            return true;
+        if (task instanceof ScheduledCancellable) 
+            return super.remove(task);
 
         // The task might actually have been wrapped as a ScheduledCancellable
         // in execute(), in which case we need to maually traverse
@@ -632,11 +551,13 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
 
 
     /**
-     * Returns the task queue used by this executor.  Each element
-     * of this queue is a <tt>ScheduledCancellable</tt>, including those
-     * tasks submitted using <tt>execute</tt> which are for
-     * scheduling purposes used as the basis of a zero-delay
-     * <tt>ScheduledCancellable</tt>.
+     * Returns the task queue used by this executor.  Each element of
+     * this queue is a <tt>ScheduledCancellable</tt>, including those
+     * tasks submitted using <tt>execute</tt> which are for scheduling
+     * purposes used as the basis of a zero-delay
+     * <tt>ScheduledCancellable</tt>. Iteration over this queue is
+     * </em>not</em> guaranteed to travserse tasks in the order in
+     * which they will execute.
      *
      * @return the task queue
      */
@@ -645,8 +566,9 @@ public class ScheduledExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * If executed task was periodic, cause the task for the next
-     * period to execute.
+     * Override of <tt>Executor</tt> hook method to support periodic
+     * tasks.  If the executed task was periodic, causes the task for
+     * the next period to execute.
      * @param r the task (assumed to be a ScheduledCancellable)
      * @param t the exception
      */

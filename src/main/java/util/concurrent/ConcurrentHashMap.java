@@ -608,14 +608,15 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         return false;
     }
     /**
-     * Tests if some key maps into the specified value in this table.
-     * This operation is more expensive than the
+     * Legacy method testing if some key maps into the specified value
+     * in this table.  This operation is more expensive than the
      * <code>containsKey</code> method.
      * 
      * <p> Note that this method is identical in functionality to
-     * containsValue, This method esists solely to ensure plug-in
-     * compatibility with class <tt>Hashtable</tt>, which supported
-     * this method prior to introduction of the collections framework.
+     * <tt>containsValue</tt>, This method esists solely to ensure
+     * plug-in compatibility with class {@link java.util.Hashtable},
+     * which supported this method prior to introduction of the
+     * collections framework.
 
      * @param      value   a value to search for.
      * @return     <code>true</code> if and only if some key maps to the

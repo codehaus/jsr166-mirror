@@ -21,8 +21,7 @@
   <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
   <property name="build.ant.dir"        location="${build.dir}/ant"/>
-  <property name="build.pubdocs.dir"    location="${build.dir}/javadocs"/>
-  <property name="build.privdocs.dir"   location="${build.dir}/privdocs"/>
+  <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
   <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
 
@@ -32,6 +31,10 @@
   <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
   <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
   <property name="lib.dir"              location="${basedir}/lib"/>
+  <property name="dist.dir"             location="${basedir}/dist"/>
+
+  <!-- Distribution locations -->
+  <property name="dist.javadocs.dir"    location="${dist.dir}/docs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
@@ -84,28 +87,12 @@
 
   <target name="test" depends="report-tests"/>
 
-  <target name="docs" depends="public-docs, private-docs"/>
 
-  <target name="public-docs" depends="clean-docs, filter-src">
-    <delete dir="${build.pubdocs.dir}"/>
-    <mkdir dir="${build.pubdocs.dir}"/>
-    <javadoc destdir="${build.pubdocs.dir}"
-                link="http://java.sun.com/j2se/1.4.1/docs/api"
-            overview="${src.dir}/intro.html"
-              source="${build.sourcelevel}">
-
-      <packageset dir="${build.filter.src.dir}">
-        <include name="java/**"/>
-      </packageset>
-
-    </javadoc>
-  </target>
-
-
-  <target name="private-docs" depends="clean-docs, filter-src">
-    <delete dir="${build.privdocs.dir}"/>
-    <mkdir dir="${build.privdocs.dir}"/>
-    <javadoc destdir="${build.privdocs.dir}"
+  <target name="docs" depends="clean-filtered-src, filter-src"
+          description="Builds javadocs with custom tags to build folder">
+    <delete dir="${build.javadocs.dir}"/>
+    <mkdir dir="${build.javadocs.dir}"/>
+    <javadoc destdir="${build.javadocs.dir}"
                 link="http://java.sun.com/j2se/1.4.1/docs/api"
             overview="${src.dir}/intro.html"
               source="${build.sourcelevel}">
@@ -122,17 +109,42 @@
   </target>
 
 
-  <target name="clean" depends="clean-docs">
+  <target name="dist-docs" depends="clean-filtered-src, filter-src"
+          description="Builds javadocs without custom tags to dist folder">
+    <delete dir="${dist.javadocs.dir}"/>
+    <mkdir dir="${dist.javadocs.dir}"/>
+    <javadoc destdir="${dist.javadocs.dir}"
+                link="http://java.sun.com/j2se/1.4.1/docs/api"
+            overview="${src.dir}/intro.html"
+              source="${build.sourcelevel}">
+
+      <packageset dir="${build.filter.src.dir}">
+        <include name="java/**"/>
+      </packageset>
+
+    </javadoc>
+  </target>
+
+
+  <target name="dist" depends="clean, jar, dist-docs">
+    <!-- nothing to do here yet -->
+  </target>
+
+
+  <target name="clean">
     <delete dir="${build.dir}"/>
     <delete dir="${build.classes.dir}"/>
     <delete dir="${build.lib.dir}"/>
   </target>
 
 
-  <target name="clean-docs">
+  <target name="dist-clean" depends="clean">
+    <delete dir="${dist.dir}"/>
+  </target>
+
+
+  <target name="clean-filtered-src">
     <delete dir="${build.filter.src.dir}"/>
-    <delete dir="${build.pubdocs.dir}"/>
-    <delete dir="${build.privdocs.dir}"/>
   </target>
 
 

@@ -1391,7 +1391,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     }
 
     /**
-     * Returns true if given thread is currently queued. 
+     * Returns true if the given thread is currently queued. 
      *
      * <p> This implementation traverses the queue to determine
      * presence of the given thread.

@@ -100,13 +100,13 @@ import java.util.*;
  *
  * <ul>
  *
- * <li> If fewer than corePoolSize threads are running, a
- * <tt>ThreadPoolExecutor</tt> always prefers adding a new thread
+ * <li> If fewer than corePoolSize threads are running, the Executor
+ * always prefers adding a new thread
  * rather than queueing.</li>
  *
- * <li> If corePoolSize or more threads are running, a
- * <tt>ThreadPoolExecutor</tt>
- * always prefers queuing a request rather than adding a new thread.</li>
+ * <li> If corePoolSize or more threads are running, the Executor
+ * always prefers queuing a request rather than adding a new
+ * thread.</li>
  * 
  * <li> If a request cannot be queued, a new thread is created unless
  * this would exceed maximumPoolSize, in which case, the task will be
@@ -199,7 +199,7 @@ import java.util.*;
  *
  * <dt>Hook methods</dt>
  *
- * <dd>This class has <tt>protected</tt> overridable {@link
+ * <dd>This class provides <tt>protected</tt> overridable {@link
  * ThreadPoolExecutor#beforeExecute} and {@link
  * ThreadPoolExecutor#afterExecute} methods that are called before and
  * after execution of each task.  These can be used to manipulate the
@@ -961,7 +961,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      * functionality. Cancelled tasks are never executed, but may
      * accumulate in work queues until worker threads can actively
      * remove them. Invoking this method instead tries to remove them now.
-     * However, this method may fail to remove all such tasks in
+     * However, this method may fail to remove tasks in
      * the presence of interference by other threads.
      */
 

@@ -13,8 +13,7 @@ public interface ThreadFactory {
      * names, daemon status, ThreadGroups, etc.
      * @param r the runnable that the thread will run upon
      * <tt>start</tt>.
-     * @param e if nonnull, the Executor constructing this thread.
      * @return the constructed thread.
      **/
-    public Thread newThread(Runnable r, Executor e);
+    public Thread newThread(Runnable r);
 }

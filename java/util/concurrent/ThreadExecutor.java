@@ -28,7 +28,7 @@ import java.util.*;
  * thread), that preconfigure settings for the most common usage
  * scenarios. If greater control is needed, you can use the
  * constructor with custom parameters, selectively override
- * <tt>ExecutorIntercepts</tt>, and/or dynamically change tuning
+ * <tt>Callbacks</tt>, and/or dynamically change tuning
  * parameters.
  *
  * <p> This class also maintain some basic statistics, such as the
@@ -91,12 +91,12 @@ import java.util.*;
  * scheduling overhead, which also decreases throughput.
  *
  * <dt> Creating new threads.  New threads are created through the
- * ExecutorIntercepts.  By default, threads are created simply with
+ * Callbacks.  By default, threads are created simply with
  * the new Thread(Runnable) constructor, but by overriding
- * ExecutorIntercepts.newThread, you can alter the thread's name,
+ * Callbacks.newThread, you can alter the thread's name,
  * thread group, priority, daemon status, etc.
  *
- * <dt> Before and after intercepts.  The ExecutorIntercepts class has
+ * <dt> Before and after intercepts.  The Callbacks class has
  * methods which are called before and after execution of a task.
  * These can be used to manipulate the execution environment (for
  * example, reinitializing ThreadLocals), gather statistics, or
@@ -110,7 +110,7 @@ import java.util.*;
  * tasks will be discarded if the bound is reached.  If the executor
  * determines that a task cannot be executed because it has been
  * refused by the queue and no threads are available, the
- * ExecutorIntercepts.cannotExecute method will be called.  
+ * Callbacks.cannotExecute method will be called.
  *
  * <dt> Termination.  ThreadExecutor supports two shutdown options,
  * immediate and graceful.  In an immediate shutdown, any threads
@@ -120,9 +120,11 @@ import java.util.*;
  * submitted.
  *
  * </dl>
- * @see ExecutorIntercepts
+ * @see Callbacks
  **/
-public class ThreadExecutor implements Executor {
+public class ThreadExecutor implements Executor, ExecutorService {
+
+    private ThreadFactory threadFactory;
 
     /**
      * Create a new ThreadExecutor with the given initial parameters.  
@@ -153,85 +155,26 @@ public class ThreadExecutor implements Executor {
         long keepAliveTime,
         TimeUnit granularity,
         BlockingQueue workQueue,
-        ExecutorIntercepts handler) {}
+        Callbacks handler) {}
 
-    /**
-     * Construct a thread pool using parameters that cause it to use
-     * fixed set of threads operating off a shared unbounded queue,
-     * and a default set of intercepts.  This factory method arranges
-     * the most common initial parameters for thread pools used in
-     * multithreaded servers.
-     *
-     * @param nthreads the number of threads in the pool.
-     **/
-    public static ThreadExecutor newFixedThreadPool(int nthreads) {
-        return new ThreadExecutor(nthreads,
-            nthreads,
-            0,
-            TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue(),
-            new ExecutorIntercepts());
+
+    public static class DefaultCallbacks implements Callbacks {
+        public void beforeExecute(Thread t, Runnable r, ExecutorService e) {
+        }
+
+        public void afterExecute(Runnable r, Throwable t, ExecutorService e) {
+        }
+
+        public boolean cannotExecute(Runnable r, ExecutorService e) {
+            if (!e.isShutdown()) {
+                r.run();
+            }
+            return true;
+        }
+
+        public void terminated(ExecutorService e) {
+        }
     }
-
-    /**
-     * Construct a thread executor using parameters that cause it to
-     * use a single thread operating off an unbounded queue, and a
-     * default set of intercepts. (Note however that if this single
-     * thread terminates due to a failure during execution prior to
-     * shutdown, a new one will take its place if needed to execute
-     * subsequent tasks.)  Tasks are guaranteed to execute
-     * sequentially, and no more than one task will be active at any
-     * given time.
-     *
-     **/
-    public static ThreadExecutor newSingleThreadExecutor() {
-        return new ThreadExecutor(1,
-            1,
-            0,
-            TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue(),
-            new ExecutorIntercepts());
-    }
-
-    /**
-     * Construct a thread pool using parameters that cause it to act
-     * as cache-based pool.  These pools will typically improve the
-     * performance of programs that execute many short-lived
-     * asynchronous tasks.  Calls to <tt>execute</tt> reuse previously
-     * constructed threads, if available, to execute new Runnables.
-     * If no existing thread is available, a new thread will be
-     * created and added to the cache. Threads that have not been used
-     * for sixty seconds are terminated and removed from the cache.
-     * Thus, a pool that remains idle for long enough will not consume
-     * any resources.
-     *
-     * */
-    public static ThreadExecutor newCachedThreadPool() {
-        return new ThreadExecutor(0,
-            Integer.MAX_VALUE,
-            60000,
-            TimeUnit.MILLISECONDS,
-            new SynchronousQueue(),
-            new ExecutorIntercepts());
-    }
-
-
-    /**
-     * Construct a thread pool using parameters that cause it to use a
-     * new thread for each task.  This provides no efficiency savings
-     * over manually creating new threads, but still offers the
-     * manageability benefits of ThreadExecutor for tracking active
-     * threads, shutdown, and so on.
-     */
-    public static ThreadExecutor newThreadPerTaskExecutor() {
-        return new ThreadExecutor(0,
-            Integer.MAX_VALUE,
-            0,
-            TimeUnit.MILLISECONDS,
-            new SynchronousQueue(),
-            new ExecutorIntercepts());
-    }
-
 
     /**
      * Set the minimum allowed number of threads.  This overrides any
@@ -239,7 +182,7 @@ public class ThreadExecutor implements Executor {
      * @param minThreads the new minimum
      * @throws IllegalArgumentException if minhThreads less than zero
      */
-    public void setMinimumPoolSize(int minThreads) {}
+    protected void setMinimumPoolSize(int minThreads) {}
 
     /**
      * Set the maximum allowed number of threads. This overrides any
@@ -249,7 +192,7 @@ public class ThreadExecutor implements Executor {
      * less than getMinimumPoolSize.
      *
      */
-    public void setMaximumPoolSize(int maxThreads) {}
+    protected void setMaximumPoolSize(int maxThreads) {}
 
     /**
      * Set the time limit for which threads may remain idle before
@@ -262,21 +205,21 @@ public class ThreadExecutor implements Executor {
      * @param granularity  the time unit of the time argument
      * @throws IllegalArgumentException if msecs less than zero
      * */
-    public void setKeepAliveTime(long time, TimeUnit granularity) {}
+    protected void setKeepAliveTime(long time, TimeUnit granularity) {}
 
     /**
      * Get the minimum allowed number of threads.  
      * @return the minimum
      *
      */
-    public int getMinimumPoolSize() { return 0; }
+    protected int getMinimumPoolSize() { return 0; }
 
     /**
      * Get the maximum allowed number of threads.
      * @return the maximum
      *
      */
-    public int getMaximumPoolSize() { return 0; }
+    protected int getMaximumPoolSize() { return 0; }
 
     /**
      * Get the thread keep-alive time, which is the amount of time
@@ -285,7 +228,7 @@ public class ThreadExecutor implements Executor {
      * @param granularity the desired time unit of the result
      * @return the time limit
      */
-    public long getKeepAliveTime(TimeUnit granularity) { return 0; }
+    protected long getKeepAliveTime(TimeUnit granularity) { return 0; }
 
     // statistics
 
@@ -293,51 +236,51 @@ public class ThreadExecutor implements Executor {
      * Get the current number of threads in the pool.
      * @return the number of threads
      */
-    public int getPoolSize() { return 0; }
+    protected int getPoolSize() { return 0; }
 
     /**
      * Get the current number of threads that are actively
      * executing tasks.
      * @return the number of threads
      */
-    public int getActiveCount() { return 0; }
+    protected int getActiveCount() { return 0; }
 
     /**
      * Get the maximum number of threads that have ever simultaneously
      * executed tasks.
      * @return the number of threads
      */
-    public int getMaximumActiveCount() { return 0; }
+    protected int getMaximumActiveCount() { return 0; }
 
     /**
      * Get the number of tasks that have been queued but not yet executed
      * @return the number of tasks.
      */
-    public int getQueueCount() { return 0; }
+    protected int getQueueCount() { return 0; }
 
     /**
      * Get the maximum number of tasks that have ever been queued
      * waiting for execution.
      * @return the number of tasks.
      */
-    public int getMaximumQueueCount() { return 0; }
+    protected int getMaximumQueueCount() { return 0; }
 
     /**
      * Get the total number of tasks that have been scheduled for execution.
      * @return the number of tasks.
      */
-    public int getCumulativeTaskCount() { return 0; }
+    protected int getCumulativeTaskCount() { return 0; }
 
     /**
      * Get the total number of tasks that have completed execution.
      * @return the number of tasks.
      */
-    public int getCumulativeCompletedTaskCount() { return 0; }
+    protected int getCumulativeCompletedTaskCount() { return 0; }
 
     /**
-     * Return the Intercepts handler.
+     * Return the Callbacks handler.
      */
-    public ExecutorIntercepts getIntercepts() {
+    protected Callbacks getCallbacks() {
         return null;
     }
 
@@ -349,7 +292,17 @@ public class ThreadExecutor implements Executor {
      * state.
      *
      * @param handler the new Intercept handler */
-    public void setIntercepts(ExecutorIntercepts handler) {
+    protected void setCallbacks(Callbacks handler) {
+    }
+
+    /** Returns the thread factory used to create new threads */
+    public ThreadFactory getThreadFactory() {
+        return threadFactory;
+    }
+
+    /** Sets the thread factory used to create new threads */
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        this.threadFactory = threadFactory;
     }
 
 
@@ -358,9 +311,20 @@ public class ThreadExecutor implements Executor {
      * this queue may be in active use.  Retrieveing the task queue
      * does not prevent queued tasks from executing.
      **/
-    public BlockingQueue getQueue() {
+    protected BlockingQueue getQueue() {
         return null;
     }
+
+    // Executor methods
+
+    /**
+     * Execute the given command sometime in the future.  The command
+     * may execute in the calling thread, in a new thread, or in a
+     * pool thread, at the discretion of the Executor implementation.
+     **/
+    public void execute(Runnable command) {}
+
+    // ExecutorService methods
 
     /**
      * Interrupt the processing of all current tasks.  Depending on
@@ -387,20 +351,10 @@ public class ThreadExecutor implements Executor {
      *
      * @param timeout the maximum time to wait
      * @param granularity the time unit of the timeout argument.
-     * @throws InterruptedException if interrupted while waiting.
-     * @throws IllegalStateException if not shut down.
+     * @throws java.lang.InterruptedException if interrupted while waiting.
+     * @throws java.lang.IllegalStateException if not shut down.
      **/
     public void awaitTermination(long timeout, TimeUnit granularity) throws InterruptedException {}
-
-    // Executor methods
-
-
-    /**
-     * Execute the given command sometime in the future.  The command
-     * may execute in the calling thread, in a new thread, or in a
-     * pool thread, at the discretion of the Executor implementation.
-     **/
-    public void execute(Runnable command) {}
 
     /**
      * Initiate an orderly shutdown in which previously submitted tasks

@@ -77,6 +77,11 @@
 
     <mkdir dir="${build.classes.dir}"/>
 
+<!--
+    <echo>javac ${gjc.args}</echo>
+    <echo>bootclasspath=${compile.bootclasspath}</echo>
+-->
+
     <javac srcdir="${prepare.src.dir}"
           destdir="${build.classes.dir}"
             debug="${build.debug}"
@@ -85,8 +90,8 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${build.javac.args}"/>
+      <compilerarg    line="${gjc.args}"/>
+      <bootclasspath refid="compile.bootclasspath"/>
 
     </javac>
 
@@ -177,8 +182,8 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${build.javac.args} -s"/>
+      <compilerarg    line="${gjc.args} -s"/>
+      <bootclasspath refid="compile.bootclasspath"/>
 
     </javac>
 
@@ -272,8 +277,8 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${build.javac.args}"/>
+      <compilerarg    line="${gjc.args}"/>
+      <bootclasspath refid="compile.bootclasspath"/>
 
     </javac>
 
@@ -411,6 +416,12 @@
 
     <mkdir dir="${build.testcases.dir}"/>
 
+<!--
+    <echo>javac ${gjc.args}</echo>
+    <echo>bootclasspath=${test.compile.bootclasspath}</echo>
+    <echo>classpath="${test.classpath}"</echo>
+-->
+
     <javac srcdir="${test.src.dir}"
           destdir="${build.testcases.dir}"
             debug="${build.debug}"
@@ -419,9 +430,9 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <classpath refid="test.classpath"/>
-      <bootclasspath refid="javac.bootclasspath"/>
-      <compilerarg line="${build.javac.args}"/>
+      <compilerarg    line="${gjc.args}"/>
+      <bootclasspath refid="test.compile.bootclasspath"/>
+      <classpath     refid="test.classpath"/>
 
     </javac>
 
@@ -443,7 +454,7 @@
                     dir="${build.reports.dir}"
                    fork="true">
 
-      <jvmarg value="${test.bootclasspath.arg}"/>
+      <jvmarg value="-Xbootclasspath/p:${test.run.bootclasspath}"/>
 
       <formatter type="xml"/>
 
@@ -489,7 +500,7 @@
     <property name="gjc.version"
              value="2.0"/>
 
-    <condition property="build.novariance" value="-novariance">
+    <condition property="novariance.arg" value="-novariance">
       <and>
         <equals arg1="${gjc.version}" arg2="2.0"/>
         <or>
@@ -499,7 +510,7 @@
       </and>
     </condition>
 
-    <property name="build.novariance"
+    <property name="novariance.arg"
              value=""/>
 
     <property name="gjc.dir"
@@ -509,14 +520,14 @@
           location="${gjc.dir}/${gjc.version}/javac.jar"/>
 
     <property name="collect.jar"
-          location="${gjc.dir}/${gjc.version}/collect${build.novariance}.jar"/>
+          location="${gjc.dir}/${gjc.version}/collect${novariance.arg}.jar"/>
 
 
-    <condition property="build.warnunchecked" value="-warnunchecked">
+    <condition property="warnunchecked.arg" value="-warnunchecked">
       <istrue value="${gjc.warnunchecked}"/>
     </condition>
 
-    <property name="build.warnunchecked" value=""/>
+    <property name="warnunchecked.arg" value=""/>
 
     <condition property="prepare.src.dir" value="${build.dir}/prepare-src">
       <istrue value="${build.nothreads}"/>
@@ -527,35 +538,26 @@
      ! Bootclasspath munging for source compilation.
      -->
 
-    <path id="javac.bootclasspath.prefix">
+    <path id="pre.bootclasspath">
       <!-- <pathelement location="${src.dir}"/> -->
       <pathelement location="${javac.jar}"/>
     </path>
 
-    <path id="javac.bootclasspath">
+    <path id="compile.bootclasspath">
       <!-- <pathelement location="${src.dir}"/> -->
       <pathelement location="${collect.jar}"/>
       <pathelement location="${rt.jar}"/>
     </path>
 
-    <!-- Flatten bootclasspath prefix into a platform-appropriate string -->
-    <property name="javac.bootclasspath.prefix"
-             refid="javac.bootclasspath.prefix"/>
+    <!-- Flatten paths into platform-appropriate strings -->
+    <property name="pre.bootclasspath"     refid="pre.bootclasspath"/>
+    <property name="compile.bootclasspath" refid="compile.bootclasspath"/>
 
-    <!-- Turn the flattened bootclasspath prefix into a javac argument -->
-    <property name="build.bootclasspath.arg"
-             value='-J-Xbootclasspath/p:${javac.bootclasspath.prefix}'/>
-
-    <!-- Flatten bootclasspath for trace message -->
-    <property name="javac.bootclasspath"
-             refid="javac.bootclasspath"/>
 
     <!-- Common options in javac invocations -->
-    <property name="build.javac.args"
-             value="${build.bootclasspath.arg} ${build.warnunchecked} ${build.novariance}"/>
-
-    <echo>javac ${build.javac.args}</echo>
-    <echo>bootclasspath=${javac.bootclasspath}</echo>
+    <property name="gjc.args"
+             value="-J-Xbootclasspath/p:${pre.bootclasspath} ${warnunchecked.arg} ${novariance.arg}"
+    />
 
   </target>
 
@@ -591,7 +593,8 @@
   </target>
 
 
-  <target name="configure-tests">
+  <target name="configure-tests"
+       depends="configure-compiler">
 
     <!-- junit.framework.Protectable is in JUnit 3.8.1 but not in 3.7 -->
     <available property="junit.available"
@@ -612,12 +615,21 @@
       <pathelement location="${junit.jar}"/>
     </path>
 
-    <!-- Flatten test classpath into a platform-appropriate string -->
-    <property name="test.classpath" refid="test.classpath"/>
+    <path id="test.compile.bootclasspath">
+      <pathelement location="${javac.jar}"/>
+      <pathelement location="${collect.jar}"/>
+      <pathelement location="${rt.jar}"/>
+    </path>
 
-    <!-- Turn the flattened test classpath into a javac argument -->
-    <property name="test.bootclasspath.arg"
-             value='-Xbootclasspath/p:${test.classpath}'/>
+    <path id="test.run.bootclasspath">
+      <pathelement location="${javac.jar}"/>
+      <path refid="test.classpath"/>
+    </path>
+
+    <!-- Flatten test classpaths into platform-appropriate strings -->
+    <property name="test.classpath"             refid="test.classpath"/>
+    <property name="test.compile.bootclasspath" refid="test.compile.bootclasspath"/>
+    <property name="test.run.bootclasspath"     refid="test.run.bootclasspath"/>
 
   </target>
 

@@ -772,6 +772,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt>, and
      * <tt>clear</tt> operations.  It does not support the <tt>add</tt> or
      * <tt>addAll</tt> operations.
+     * The returned <tt>iterator</tt> is a "weakly consistent" iterator that
+     * will never throw {@link java.util.ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed to)
+     * reflect any modifications subsequent to construction.
      *
      * @return a set view of the keys contained in this map.
      */
@@ -789,6 +794,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
      * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt> operations.
      * It does not support the <tt>add</tt> or <tt>addAll</tt> operations.
+     * The returned <tt>iterator</tt> is a "weakly consistent" iterator that
+     * will never throw {@link java.util.ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed to)
+     * reflect any modifications subsequent to construction.
      *
      * @return a collection view of the values contained in this map.
      */
@@ -807,6 +817,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
      * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt> operations.
      * It does not support the <tt>add</tt> or <tt>addAll</tt> operations.
+     * The returned <tt>iterator</tt> is a "weakly consistent" iterator that
+     * will never throw {@link java.util.ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed to)
+     * reflect any modifications subsequent to construction.
      *
      * @return a collection view of the mappings contained in this map.
      */

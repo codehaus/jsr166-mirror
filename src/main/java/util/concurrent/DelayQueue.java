@@ -270,7 +270,10 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
     /**
      * Returns an iterator over the elements in this queue. The iterator
-     * does not return the elements in any particular order.
+     * does not return the elements in any particular order. The
+     * returned iterator is a "fast-fail" iterator that will
+     * throw {@link java.util.ConcurrentModificationException}
+     * upon detected interference.
      *
      * @return an iterator over the elements in this queue.
      */

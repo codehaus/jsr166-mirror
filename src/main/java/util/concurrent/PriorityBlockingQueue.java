@@ -327,6 +327,20 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Atomically removes all of the elements from this delay queue.
+     * The queue will be empty after this call returns.
+     */
+    public void clear() {
+        lock.lock();
+        try {
+            q.clear();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
     public <T> T[] toArray(T[] a) {
         lock.lock();
         try {
@@ -340,6 +354,10 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue. The iterator
      * does not return the elements in any particular order.
+     * The
+     * returned iterator is a "fast-fail" iterator that will
+     * throw {@link java.util.ConcurrentModificationException}
+     * upon detected interference.     
      *
      * @return an iterator over the elements in this queue.
      */

@@ -48,7 +48,7 @@ import java.util.*;
  * thread is created to handle the request, even if other worker
  * threads are idle.  If there are more than the minimum but less than
  * the maximum number of threads running, a new thread will be created
- * only if all other threads are busy.  By setting minimumPoolSize and
+ * only if the queue is full.  By setting minimumPoolSize and
  * maximumPoolSize to N, you create a fixed-size thread pool.</dd>
  *
  * <dt>Keep-alive</dt>
@@ -76,9 +76,7 @@ import java.util.*;
  * <p>While queuing can be useful in smoothing out transient bursts of
  * requests, especially in socket-based services, it is not very well
  * behaved when commands continue to arrive on average faster than
- * they can be processed.  Using a bounded queue implements an overflow
- * policy which drops requests which cannot be handled due to insufficient
- * capacity.
+ * they can be processed.
  *
  * Queue sizes and maximum pool sizes can often be traded off for each
  * other. Using large queues and small pools minimizes CPU usage, OS
@@ -98,8 +96,8 @@ import java.util.*;
  * thread group, priority, daemon status, etc.
  * </dd>
  * <dt>Before and after intercepts</dt>
- * <dd>The Callbacks class has
- * methods which are called before and after execution of a task.
+ * <dd>This class has overridable
+ * methods that which are called before and after execution of each task.
  * These can be used to manipulate the execution environment (for
  * example, reinitializing ThreadLocals), gather statistics, or
  * perform logging.
@@ -107,13 +105,13 @@ import java.util.*;
  * <dt>Blocked execution</dt>
  * <dd>There are a number of factors which can
  * bound the number of tasks which can execute at once, including the
- * maximum pool size and the queuing mechanism used.  If you are using
- * a synchronous queue, the execute() method will block until threads
- * are available to execute.  If you are using a bounded queue, then
- * tasks will be discarded if the bound is reached.  If the executor
+ * maximum pool size and the queuing mechanism used.
+ * If the executor
  * determines that a task cannot be executed because it has been
- * refused by the queue and no threads are available, the
- * cannotExecute method will be called.
+ * refused by the queue and no threads are available, or because
+ * the executor has been shut down, the
+ * RejectedExecutionHandler's rejectedExecution method is
+ * invoked.
  * </dd>
  * <dt>Termination</dt>
  * <dd>ThreadExecutor supports two shutdown options,
@@ -126,77 +124,101 @@ import java.util.*;
  * </dl>
  *
  * @since 1.5
- * @see BlockedExecutionHandler
+ * @see RejectedExecutionHandler
  * @see Executors
  * @see ThreadFactory
  *
  * @spec JSR-166
- * @revised $Date: 2003/05/25 19:46:55 $
+ * @revised $Date: 2003/05/26 14:55:59 $
  * @editor $Author: tim $
  *
  */
 public class ThreadPoolExecutor implements ExecutorService {
     /**
-     * Queue used for holding tasks and handing off to worker threads
+     * Queue used for holding tasks and handing off to worker threads.
      */
     private final BlockingQueue<Runnable> workQueue;
+
     /**
-     * Lock held on updates to nthreads, minThreads, maxThreads, threads map
+     * Lock held on updates to nthreads, minThreads, maxThreads, and
+     * workers set.
      */
     private final ReentrantLock mainLock = new ReentrantLock();
+
     /**
      * Wait condition to support awaitTermination
      */
     private final Condition termination = mainLock.newCondition();
-    /**
-     * Map from threads to workers
-     */
-    private final Map<Thread,Worker> threads = new HashMap<Thread,Worker>();
 
     /**
-     * timeout in nanosecods for idle threads waiting for work.
+     * Set containing all worker threads in pool.
+     */
+    private final Set<Worker> workers = new HashSet<Worker>();
+
+    /**
+     * Timeout in nanosecods for idle threads waiting for work.
+     * Threads use this timeout only when there are more than
+     * minThreads present. Otherwise they wait forever for new work.
      */
     private volatile long  keepAliveTime;
+
     /**
-     * minimum pool sise, updated only while holding mainLock
+     * Minimum pool size, updated only while holding mainLock,
+     * but volatile to allow concurrent readability even
+     * during updates.
      */
     private volatile int   minThreads;
+
     /**
-     * maximum pool sise, updated only while holding mainLock
+     * Maximum pool size, updated only while holding mainLock
+     * but volatile to allow concurrent readability even
+     * during updates.
      */
     private volatile int   maxThreads;
+
     /**
-     * current pool sise, updated only while holding mainLock
+     * Current pool size, updated only while holding mainLock
+     * but volatile to allow concurrent readability even
+     * during updates.
      */
     private volatile int   nthreads;
+
     /**
-     * Latch true when shutdown called
+     * Shutdown status, becomes (and remains) nonzero when shutdown called.
      */
-    private volatile boolean isShutdown;
+    private volatile int shutdownStatus;
+
+    // Special values for status
+    private static final int NOT_SHUTDOWN       = 0;
+    private static final int SHUTDOWN_WHEN_IDLE = 1;
+    private static final int SHUTDOWN_NOW       = 2;
+
     /**
-     * Latch true when all threads terminate after shutdown
+     * Latch that becomes true when all threads terminate after shutdown.
      */
     private volatile boolean isTerminated;
+
     /**
-     * handler called when saturated or chutdown in execute.
+     * Handler called when saturated or shutdown in execute.
      */
-    private volatile BlockedExecutionHandler handler = defaultHandler;
+    private volatile RejectedExecutionHandler handler = defaultHandler;
+
     /**
-     * factory for new threads.
+     * Factory for new threads.
      */
     private volatile ThreadFactory threadFactory = defaultThreadFactory;
+
     /**
-     * Track largest attained pool size
+     * Tracks largest attained pool size.
      */
     private int largestPoolSize;
+
     /**
-     * Counter for completed tasks.
+     * Counter for completed tasks. Updated only on termination of
+     * worker threads.
      */
     private long completedTaskCount;
 
-    /**
-     *
-     */
     private static final ThreadFactory defaultThreadFactory =
         new ThreadFactory() {
             public Thread newThread(Runnable r) {
@@ -204,10 +226,7 @@ public class ThreadPoolExecutor implements ExecutorService {
             }
         };
 
-    /**
-     *
-     */
-    private static final BlockedExecutionHandler defaultHandler =
+    private static final RejectedExecutionHandler defaultHandler =
         new AbortPolicy();
 
     /**
@@ -217,15 +236,17 @@ public class ThreadPoolExecutor implements ExecutorService {
     private void addThread(Runnable firstTask) {
         Worker w = new Worker(firstTask);
         Thread t = threadFactory.newThread(w);
-        threads.put(t, w);
-        if (++nthreads > largestPoolSize)
-            largestPoolSize = nthreads;
+        w.thread = t;
+        workers.add(w);
+        int nt = ++nthreads;
+        if (nt > largestPoolSize)
+            largestPoolSize = nt;
         t.start();
     }
 
     /**
      * Create and start a new thread running firstTask as its first
-     * task, only if nthreads below minThreads;
+     * task, only if less than minThreads are running.
      * @return true if successful.
      */
     private boolean addIfUnderMin(Runnable task) {
@@ -242,8 +263,8 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     /**
-     * Create and start a new thread only if below maxThreads.
-     * The new thread runs as its first task the next task
+     * Create and start a new thread only if less than maxThreads
+     * running.  The new thread runs as its first task the next task
      * in queue, or if there is none, the given task.
      * @return null on failure, else the first task to be run by new thread.
      */
@@ -269,15 +290,16 @@ public class ThreadPoolExecutor implements ExecutorService {
      */
     private Runnable getTask() throws InterruptedException {
         for (;;) {
-            if (isShutdown)
+            int stat = shutdownStatus;
+            if (stat == SHUTDOWN_NOW)
                 return null;
-
+            long timeout = keepAliveTime;
+            if (timeout <= 0) // must die immediately for 0 timeout
+                return null;
+            if (stat == SHUTDOWN_WHEN_IDLE)
+                return workQueue.poll();
             if (nthreads <= minThreads)
                 return workQueue.take();
-
-            long timeout = keepAliveTime;
-            if (timeout <= 0)
-                return null;
             Runnable task =  workQueue.poll(timeout, TimeUnit.NANOSECONDS);
             if (task != null)
                 return task;
@@ -295,53 +317,43 @@ public class ThreadPoolExecutor implements ExecutorService {
         mainLock.lock();
         try {
             completedTaskCount += w.completedTasks;
-            threads.remove(Thread.currentThread());
+            workers.remove(w);
 
-            if (--nthreads == 0) {
-                if (isShutdown) {
-                    allDone = true;
-                    isTerminated = true;
-                    termination.signalAll();
-                }
-                else if (workQueue.size() > 0) {
-                    // If there are queued tasks but no threads, create one.
-                    Runnable r = workQueue.poll();
-                    if (r != null)
-                        addThread(r);
+            if (--nthreads > 0)
+                return;
+
+            int stat = shutdownStatus;
+
+            // If there are queued tasks but no threads, create replacement.
+            if (stat != SHUTDOWN_NOW) {
+                Runnable r = workQueue.poll();
+                if (r != null) {
+                    addThread(r);
+                    return;
                 }
             }
+
+            // if no tasks, but not shutdown, can exit without replacement
+            if (stat == NOT_SHUTDOWN)
+                return;
+
+            allDone = true;
+            isTerminated = true;
+            termination.signalAll();
         }
         finally {
             mainLock.unlock();
         }
+
         if (allDone)
             terminated();
     }
 
     /**
-     * Run a task, surrounded by before/after methods.
-     */
-    private void runTask(Runnable task) {
-        boolean ran = false;
-        beforeExecute(Thread.currentThread(), task);
-        try {
-            task.run();
-            ran = true;
-            afterExecute(task, null);
-        }
-        catch(RuntimeException ex) {
-            if (!ran)
-                afterExecute(task, ex);
-            // else the exception occurred within afterExecute itself
-            // in which case we don't want to call it again.
-            throw ex;
-        }
-    }
-
-    /**
-     * Runnable for Worker threads
+     *  Worker threads
      */
     private class Worker implements Runnable {
+
         /**
          * The runLock is acquired and released surrounding each task
          * execution. It mainly protects against interrupts that are
@@ -357,15 +369,21 @@ public class ThreadPoolExecutor implements ExecutorService {
 
         /**
          * Per thread completed task counter; accumulated
-         * into completedTaskCount upone termination
+         * into completedTaskCount upon termination.
          */
         volatile long completedTasks;
 
         /**
-         * Per-thread cancellation. Normally tracks isShutdown,
+         * Per-thread cancellation. Normally tracks shutdownStatus
          * but can also be set to cancel only this thread.
          */
-        volatile boolean cancelled;
+        volatile int status;
+
+        /**
+         * Thread this worker is running in.  Acts as a final field,
+         * but cannot be set until thread is created.
+         */
+        Thread thread;
 
         Worker(Runnable firstTask) {
             this.firstTask = firstTask;
@@ -378,11 +396,11 @@ public class ThreadPoolExecutor implements ExecutorService {
         /**
          * Cause thread to die at next idle point
          */
-        void cancel(Thread t) {
-            cancelled = true;
+        void cancel() {
+            status = SHUTDOWN_WHEN_IDLE;
             if (runLock.tryLock()) {
                 try {
-                    t.interrupt();
+                    thread.interrupt();
                 }
                 finally {
                     runLock.unlock();
@@ -393,19 +411,37 @@ public class ThreadPoolExecutor implements ExecutorService {
         /**
          * Cause thread to die even if running a task.
          */
-        void cancelNow(Thread t) {
-            cancelled = true;
-            t.interrupt();
+        void cancelNow() {
+            status = SHUTDOWN_NOW;
+            thread.interrupt();
         }
 
         /**
-         * Run a single task
+         * Run a single task between before/after methods.
          */
-        private void execute(Runnable task) {
+        private void runTask(Runnable task) {
             runLock.lock();
             try {
-                runTask(task);
-                ++completedTasks;
+                // If interrupted on entry, abort only if immediate cancel.
+                if (Thread.interrupted() && status == SHUTDOWN_NOW)
+                    return;
+
+                boolean ran = false;
+                beforeExecute(thread, task);
+                try {
+                    task.run();
+                    ran = true;
+                    afterExecute(task, null);
+                    ++completedTasks;
+                }
+                catch(RuntimeException ex) {
+                    if (!ran)
+                        afterExecute(task, ex);
+                    // else the exception occurred within
+                    // afterExecute itself in which case we don't
+                    // want to call it again.
+                    throw ex;
+                }
             }
             finally {
                 runLock.unlock();
@@ -420,14 +456,14 @@ public class ThreadPoolExecutor implements ExecutorService {
                 if (firstTask != null) {
                     Runnable task = firstTask;
                     firstTask = null;
-                    execute(task);
+                    runTask(task);
                 }
 
-                while (!cancelled) {
+                while (status != SHUTDOWN_NOW) {
                     Runnable task = getTask();
                     if (task == null)
                         break;
-                    execute(task);
+                    runTask(task);
                     task = null; // unnecessary but can help GC
                 }
             }
@@ -468,12 +504,12 @@ public class ThreadPoolExecutor implements ExecutorService {
                               TimeUnit unit,
                               BlockingQueue<Runnable> workQueue) {
         this(minThreads, maxThreads, keepAliveTime, unit, workQueue,
-             null, null);
+             defaultThreadFactory, defaultHandler);
     }
 
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
-     * parameters
+     * parameters.
      *
      * @param minThreads the minimum number of threads to keep in the
      * pool, even if they are idle.
@@ -488,16 +524,83 @@ public class ThreadPoolExecutor implements ExecutorService {
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
      * @param threadFactory the factory to use when the executor
-     * creates a new thread. If null, a default handler that
-     * simply returns a <tt>new Thread</tt> is used.
-     * @param handler the handler to use when execution is blocked
-     * because the thread bounds and queue capacities are reached.
-     * If null, a default handler is used that throws
-     * <tt>BlockedExecutionException</tt>.
+     * creates a new thread.
      * @throws IllegalArgumentException if minThreads, or
      * keepAliveTime less than zero, or if maxThreads less than or
      * equal to zero, or if minThreads greater than maxThreads.
-     * @throws NullPointerException if <tt>workQueue</tt> is null
+     * @throws NullPointerException if <tt>workQueue</tt>
+     * or <tt>threadFactory</tt> are null.
+     */
+    public ThreadPoolExecutor(int minThreads,
+                              int maxThreads,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue<Runnable> workQueue,
+                              ThreadFactory threadFactory) {
+
+        this(minThreads, maxThreads, keepAliveTime, unit, workQueue,
+             threadFactory, defaultHandler);
+    }
+
+    /**
+     * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
+     * parameters.
+     *
+     * @param minThreads the minimum number of threads to keep in the
+     * pool, even if they are idle.
+     * @param maxThreads the maximum number of threads to allow in the
+     * pool.
+     * @param keepAliveTime when the number of threads is greater than
+     * the minimum, this is the maximum time that excess idle threads
+     * will wait for new tasks before terminating.
+     * @param unit the time unit for the keepAliveTime
+     * argument.
+     * @param workQueue the queue to use for holding tasks before the
+     * are executed. This queue will hold only the <tt>Runnable</tt>
+     * tasks submitted by the <tt>execute</tt> method.
+     * @param handler the handler to use when execution is blocked
+     * because the thread bounds and queue capacities are reached.
+     * @throws IllegalArgumentException if minThreads, or
+     * keepAliveTime less than zero, or if maxThreads less than or
+     * equal to zero, or if minThreads greater than maxThreads.
+     * @throws NullPointerException if <tt>workQueue</tt>
+     * or  <tt>handler</tt> are null.
+     */
+    public ThreadPoolExecutor(int minThreads,
+                              int maxThreads,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue<Runnable> workQueue,
+                              RejectedExecutionHandler handler) {
+        this(minThreads, maxThreads, keepAliveTime, unit, workQueue,
+             defaultThreadFactory, handler);
+    }
+
+    /**
+     * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
+     * parameters.
+     *
+     * @param minThreads the minimum number of threads to keep in the
+     * pool, even if they are idle.
+     * @param maxThreads the maximum number of threads to allow in the
+     * pool.
+     * @param keepAliveTime when the number of threads is greater than
+     * the minimum, this is the maximum time that excess idle threads
+     * will wait for new tasks before terminating.
+     * @param unit the time unit for the keepAliveTime
+     * argument.
+     * @param workQueue the queue to use for holding tasks before the
+     * are executed. This queue will hold only the <tt>Runnable</tt>
+     * tasks submitted by the <tt>execute</tt> method.
+     * @param threadFactory the factory to use when the executor
+     * creates a new thread.
+     * @param handler the handler to use when execution is blocked
+     * because the thread bounds and queue capacities are reached.
+     * @throws IllegalArgumentException if minThreads, or
+     * keepAliveTime less than zero, or if maxThreads less than or
+     * equal to zero, or if minThreads greater than maxThreads.
+     * @throws NullPointerException if <tt>workQueue</tt>
+     * or <tt>threadFactory</tt> or <tt>handler</tt> are null.
      */
     public ThreadPoolExecutor(int minThreads,
                               int maxThreads,
@@ -505,26 +608,20 @@ public class ThreadPoolExecutor implements ExecutorService {
                               TimeUnit unit,
                               BlockingQueue<Runnable> workQueue,
                               ThreadFactory threadFactory,
-                              BlockedExecutionHandler handler) {
+                              RejectedExecutionHandler handler) {
         if (minThreads < 0 ||
             maxThreads <= 0 ||
             maxThreads < minThreads ||
             keepAliveTime < 0)
             throw new IllegalArgumentException();
-        if (workQueue == null)
+        if (workQueue == null || threadFactory == null || handler == null)
             throw new NullPointerException();
         this.minThreads = minThreads;
         this.maxThreads = maxThreads;
         this.workQueue = workQueue;
         this.keepAliveTime = unit.toNanos(keepAliveTime);
-        if (threadFactory == null)
-            this.threadFactory = defaultThreadFactory;
-        else
-            this.threadFactory = threadFactory;
-        if (handler == null)
-            this.handler = defaultHandler;
-        else
-            this.handler = handler;
+        this.threadFactory = threadFactory;
+        this.handler = handler;
     }
 
 
@@ -534,18 +631,18 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * If the task cannot be submitted for execution, either because this
      * executor has been shutdown or because its capacity has been reached,
-     * the task is handled by the current <tt>BlockedExecutionHandler</tt>.
+     * the task is handled by the current <tt>RejectedExecutionHandler</tt>.
      *
      * @param command the task to execute
-     * @throws BlockedExecutionException at discretion of
-     * <tt>BlockedExecutionHandler</tt>, if task cannot be accepted for execution
+     * @throws RejectedExecutionException at discretion of
+     * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted for execution
      */
     public void execute(Runnable command) {
-        boolean cannotExecute = false;
         for (;;) {
-            cannotExecute = cannotExecute || isShutdown;
-            if (cannotExecute && !handler.canRetryExecution(command, this))
+            if (shutdownStatus != 0) {
+                handler.rejectedExecution(command, this);
                 return;
+            }
             if (nthreads < minThreads && addIfUnderMin(command))
                 return;
             if (workQueue.offer(command))
@@ -553,43 +650,34 @@ public class ThreadPoolExecutor implements ExecutorService {
             Runnable r = addIfUnderMax(command);
             if (r == command)
                 return;
-            else if (r == null)
-                cannotExecute = true;
-            // else new thread is running another task; must retry
+            if (r == null) {
+                handler.rejectedExecution(command, this);
+                return;
+            }
+            // else retry
         }
     }
 
-
-
     public void shutdown() {
-        isShutdown = true;
         mainLock.lock();
         try {
-            Iterator<Map.Entry<Thread, Worker>> it = threads.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<Thread, Worker> e = it.next();
-                Thread t = e.getKey();
-                Worker w = e.getValue();
-                w.cancel(t);
-            }
+            if (shutdownStatus == 0) // don't override shotdownNow
+                shutdownStatus = SHUTDOWN_WHEN_IDLE;
+
+            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
+                it.next().cancel();
         }
         finally {
             mainLock.unlock();
         }
-
     }
 
     public List shutdownNow() {
-        isShutdown = true;
         mainLock.lock();
         try {
-            Iterator<Map.Entry<Thread, Worker>> it = threads.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<Thread, Worker> e = it.next();
-                Thread t = e.getKey();
-                Worker w = e.getValue();
-                w.cancelNow(t);
-            }
+            shutdownStatus = SHUTDOWN_NOW;
+            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
+                it.next().cancelNow();
         }
         finally {
             mainLock.unlock();
@@ -598,7 +686,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     public boolean isShutdown() {
-        return isShutdown;
+        return shutdownStatus != 0;
     }
 
     public boolean isTerminated() {
@@ -606,7 +694,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     }
 
     public boolean awaitTermination(long timeout, TimeUnit unit)
-            throws InterruptedException {
+        throws InterruptedException {
         mainLock.lock();
         try {
             return termination.await(timeout, unit);
@@ -625,7 +713,6 @@ public class ThreadPoolExecutor implements ExecutorService {
         this.threadFactory = threadFactory;
     }
 
-
     /**
      * Returns the thread factory used to create new threads.
      *
@@ -635,13 +722,12 @@ public class ThreadPoolExecutor implements ExecutorService {
         return threadFactory;
     }
 
-
     /**
      * Sets a new handler for unexecutable tasks.
      *
      * @param handler the new handler
      */
-    public void setBlockedExecutionHandler(BlockedExecutionHandler handler) {
+    public void setRejectedExecutionHandler(RejectedExecutionHandler handler) {
         this.handler = handler;
     }
 
@@ -650,7 +736,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the current handler
      */
-    public BlockedExecutionHandler getBlockedExecutionHandler() {
+    public RejectedExecutionHandler getRejectedExecutionHandler() {
         return handler;
     }
 
@@ -683,15 +769,12 @@ public class ThreadPoolExecutor implements ExecutorService {
             this.minThreads = minThreads;
             int extra = mt - minThreads;
             if (extra > 0 && nthreads > minThreads) {
-                Iterator<Map.Entry<Thread, Worker>> it = threads.entrySet().iterator();
+                Iterator<Worker> it = workers.iterator();
                 while (it.hasNext() &&
                        extra > 0 &&
                        nthreads > minThreads &&
                        workQueue.size() >= workQueue.maximumSize()) {
-                    Map.Entry<Thread, Worker> e = it.next();
-                    Worker w = e.getValue();
-                    Thread t = e.getKey();
-                    w.cancel(t);
+                    it.next().cancel();
                     --extra;
                 }
             }
@@ -728,14 +811,13 @@ public class ThreadPoolExecutor implements ExecutorService {
         try {
             int mt = this.maxThreads;
             this.maxThreads = maxThreads;
-            if (mt > maxThreads && nthreads > maxThreads) {
-                int extra = mt - minThreads;
-                Iterator<Map.Entry<Thread, Worker>> it = threads.entrySet().iterator();
-                while (it.hasNext() && extra > 0 && nthreads > maxThreads) {
-                    Map.Entry<Thread, Worker> e = it.next();
-                    Worker w = e.getValue();
-                    Thread t = e.getKey();
-                    w.cancel(t);
+            int extra = mt - minThreads;
+            if (extra > 0 && nthreads > maxThreads) {
+                Iterator<Worker> it = workers.iterator();
+                while (it.hasNext() &&
+                       extra > 0 &&
+                       nthreads > maxThreads) {
+                    it.next().cancel();
                     --extra;
                 }
             }
@@ -790,7 +872,7 @@ public class ThreadPoolExecutor implements ExecutorService {
      *
      * @return the number of threads
      */
-    public int getPoolSize() {
+    public int getCurrentPoolSize() {
         return nthreads;
     }
 
@@ -804,9 +886,8 @@ public class ThreadPoolExecutor implements ExecutorService {
         mainLock.lock();
         try {
             int n = 0;
-            for (Iterator<Worker> it = threads.values().iterator(); it.hasNext();) {
-                Worker w = it.next();
-                if (w.isActive())
+            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); ) {
+                if (it.next().isActive())
                     ++n;
             }
             return n;
@@ -844,7 +925,7 @@ public class ThreadPoolExecutor implements ExecutorService {
         mainLock.lock();
         try {
             long n = completedTaskCount;
-            for (Iterator<Worker> it = threads.values().iterator(); it.hasNext();) {
+            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); ) {
                 Worker w = it.next();
                 n += w.completedTasks;
                 if (w.isActive())
@@ -869,10 +950,8 @@ public class ThreadPoolExecutor implements ExecutorService {
         mainLock.lock();
         try {
             long n = completedTaskCount;
-            for (Iterator<Worker> it = threads.values().iterator(); it.hasNext();) {
-                Worker w = it.next();
-                n += w.completedTasks;
-            }
+            for (Iterator<Worker> it = workers.iterator(); it.hasNext(); )
+                n += it.next().completedTasks;
             return n;
         }
         finally {
@@ -910,35 +989,34 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * A handler for unexecutable tasks that runs these tasks directly in the
      * calling thread of the <tt>execute</tt> method.  This is the default
-     * <tt>BlockedExecutionHandler</tt>.
+     * <tt>RejectedExecutionHandler</tt>.
      */
-   public static class CallerRunsPolicy implements BlockedExecutionHandler {
+   public static class CallerRunsPolicy implements RejectedExecutionHandler {
 
         /**
          * Constructs a <tt>CallerRunsPolicy</tt>.
          */
         public CallerRunsPolicy() { }
 
-        public boolean canRetryExecution(Runnable r, ThreadPoolExecutor e) {
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             if (!e.isShutdown()) {
                 r.run();
             }
-            return false;
         }
     }
 
     /**
-     * A handler for unexecutable tasks that throws a <tt>BlockedExecutionException</tt>.
+     * A handler for unexecutable tasks that throws a <tt>RejectedExecutionException</tt>.
      */
-    public static class AbortPolicy implements BlockedExecutionHandler {
+    public static class AbortPolicy implements RejectedExecutionHandler {
 
         /**
          * Constructs a <tt>AbortPolicy</tt>.
          */
         public AbortPolicy() { }
 
-        public boolean canRetryExecution(Runnable r, ThreadPoolExecutor e) {
-            throw new BlockedExecutionException();
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            throw new RejectedExecutionException();
         }
     }
 
@@ -946,59 +1024,53 @@ public class ThreadPoolExecutor implements ExecutorService {
      * A handler for unexecutable tasks that waits until the task can be
      * submitted for execution.
      */
-    public static class WaitPolicy implements BlockedExecutionHandler {
+    public static class WaitPolicy implements RejectedExecutionHandler {
         /**
          * Constructs a <tt>WaitPolicy</tt>.
          */
         public WaitPolicy() { }
 
-        public boolean canRetryExecution(Runnable r, ThreadPoolExecutor e) {
-            if (!e.isShutdown) {
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            if (!e.isShutdown()) {
                 try {
                     e.getQueue().put(r);
-                    return false;
                 }
                 catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
-                    throw new BlockedExecutionException(ie);
+                    throw new RejectedExecutionException(ie);
                 }
             }
-            return false;
         }
     }
 
     /**
      * A handler for unexecutable tasks that silently discards these tasks.
      */
-    public static class DiscardPolicy implements BlockedExecutionHandler {
+    public static class DiscardPolicy implements RejectedExecutionHandler {
 
         /**
          * Constructs <tt>DiscardPolicy</tt>.
          */
         public DiscardPolicy() { }
 
-        public boolean canRetryExecution(Runnable r, ThreadPoolExecutor e) {
-            return false;
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
         }
     }
 
     /**
      * A handler for unexecutable tasks that discards the oldest unhandled request.
      */
-    public static class DiscardOldestPolicy implements BlockedExecutionHandler {
+    public static class DiscardOldestPolicy implements RejectedExecutionHandler {
         /**
          * Constructs a <tt>DiscardOldestPolicy</tt> for the given executor.
          */
         public DiscardOldestPolicy() { }
 
-        public boolean canRetryExecution(Runnable r, ThreadPoolExecutor e) {
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             if (!e.isShutdown()) {
                 e.getQueue().poll();
-                return true;
+                e.execute(r);
             }
-            return false;
         }
     }
-
-
 }

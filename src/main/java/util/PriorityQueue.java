@@ -41,7 +41,7 @@
  * @author Josh Bloch
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
-    implements Sorted, Queue<E>, java.io.Serializable {
+    implements Queue<E>, java.io.Serializable {
 
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 
@@ -116,17 +116,51 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>PriorityQueue</tt> containing the elements in the 
-     * specified collection.  
-     * The priority queue has an initial capacity of 110% of the
-     * size of the specified collection or 1 if the collection is empty.
-     * If the specified collection
-     * implements the {@link Sorted} interface, the priority queue will be
-     * sorted according to the same comparator, or according to its elements'
-     * natural order if the collection is sorted according to its elements'
-     * natural order.  If the specified collection does not implement
-     * <tt>Sorted</tt>, the priority queue is ordered according to
-     * its elements' natural order.
+     * Common code to initialize underlying queue array across
+     * constructors below.
+     */
+    private void initializeArray(Collection<? extends E> c) {
+        int sz = c.size();
+        int initialCapacity = (int)Math.min((sz * 110L) / 100,
+                                            Integer.MAX_VALUE - 1);
+        if (initialCapacity < 1)
+            initialCapacity = 1;
+
+        this.queue = new Object[initialCapacity + 1];
+    }
+
+    /**
+     * Initially fill elements of the queue array under the 
+     * knowledge that it is sorted or is another PQ, in which
+     * case we can just place the elements without fixups.
+     */
+    private void fillFromSorted(Collection<? extends E> c) {
+        for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
+            queue[++size] = i.next();
+    }
+
+
+    /**
+     * Initially fill elements of the queue array that is
+     * not to our knowledge sorted, so we must add them
+     * one by one.
+     */
+    private void fillFromUnsorted(Collection<? extends E> c) {
+        for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
+            add(i.next());
+    }
+
+    /**
+     * Creates a <tt>PriorityQueue</tt> containing the elements in the
+     * specified collection.  The priority queue has an initial
+     * capacity of 110% of the size of the specified collection or 1
+     * if the collection is empty.  If the specified collection is an
+     * instance of a {@link SortedSet} or is another
+     * <tt>PriorityQueue</tt>, the priority queue will be sorted
+     * according to the same comparator, or according to its elements'
+     * natural order if the collection is sorted according to its
+     * elements' natural order.  Otherwise, the priority queue is
+     * ordered according to its elements' natural order.
      *
      * @param c the collection whose elements are to be placed
      *        into this priority queue.
@@ -137,24 +171,89 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * is <tt>null</tt>
      */
     public PriorityQueue(Collection<? extends E> c) {
-        int sz = c.size();
-        int initialCapacity = (int)Math.min((sz * 110L) / 100,
-                                            Integer.MAX_VALUE - 1);
-        if (initialCapacity < 1)
-            initialCapacity = 1;
-
-        this.queue = new Object[initialCapacity + 1];
-
-        if (c instanceof Sorted) {
-            comparator = (Comparator<? super E>)((Sorted)c).comparator();
-        } else {
-            comparator = null;
+        initializeArray(c);
+        if (c instanceof SortedSet<? extends E>) {
+            SortedSet<? extends E> s = (SortedSet<? extends E>) c;
+            comparator = (Comparator<? super E>)s.comparator();
+            fillFromSorted(s);
         }
-
-        for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
-            add(i.next());
+        else if (c instanceof PriorityQueue<? extends E>) {
+            PriorityQueue<? extends E> s = (PriorityQueue<? extends E>) c;
+            comparator = (Comparator<? super E>)s.comparator();
+            fillFromSorted(s);
+        }
+        else {
+            comparator = null;
+            fillFromUnsorted(c);
+        }
     }
 
+    /**
+     * Creates a <tt>PriorityQueue</tt> containing the elements in the
+     * specified collection.  The priority queue has an initial
+     * capacity of 110% of the size of the specified collection or 1
+     * if the collection is empty.  This priority queue will be sorted
+     * according to the same comparator as the given collection, or
+     * according to its elements' natural order if the collection is
+     * sorted according to its elements' natural order.
+     *
+     * @param c the collection whose elements are to be placed
+     *        into this priority queue.
+     * @throws ClassCastException if elements of the specified collection
+     *         cannot be compared to one another according to the priority
+     *         queue's ordering.
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
+     */
+    public PriorityQueue(PriorityQueue<? extends E> c) {
+        initializeArray(c);
+        comparator = (Comparator<? super E>)c.comparator();
+        fillFromSorted(c);
+    }
+
+    /**
+     * Creates a <tt>PriorityQueue</tt> containing the elements in the
+     * specified collection.  The priority queue has an initial
+     * capacity of 110% of the size of the specified collection or 1
+     * if the collection is empty.  This priority queue will be sorted
+     * according to the same comparator as the given collection, or
+     * according to its elements' natural order if the collection is
+     * sorted according to its elements' natural order.
+     *
+     * @param c the collection whose elements are to be placed
+     *        into this priority queue.
+     * @throws ClassCastException if elements of the specified collection
+     *         cannot be compared to one another according to the priority
+     *         queue's ordering.
+     * @throws NullPointerException if <tt>c</tt> or any element within it
+     * is <tt>null</tt>
+     */
+    public PriorityQueue(SortedSet<? extends E> c) {
+        initializeArray(c);
+        comparator = (Comparator<? super E>)c.comparator();
+        fillFromSorted(c);
+    }
+
+    /**
+     * Resize array, if necessary, to be able to hold given index
+     */
+    private void grow(int index) {
+        int newlen = queue.length;
+        if (index < newlen) // don't need to grow
+            return;
+        if (index == Integer.MAX_VALUE)
+            throw new OutOfMemoryError();
+        while (newlen <= index) {
+            if (newlen >= Integer.MAX_VALUE / 2)  // avoid overflow
+                newlen = Integer.MAX_VALUE;
+            else
+                newlen <<= 2;
+        }
+        Object[] newQueue = new Object[newlen];
+        System.arraycopy(queue, 0, newQueue, 0, queue.length);
+        queue = newQueue;
+    }
+            
     // Queue Methods
 
     /**
@@ -173,11 +272,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         ++size;
 
         // Grow backing store if necessary
-        while (size >= queue.length) {
-            Object[] newQueue = new Object[2 * queue.length];
-            System.arraycopy(queue, 0, newQueue, 0, queue.length);
-            queue = newQueue;
-        }
+        if (size >= queue.length) 
+            grow(size);
 
         queue[size] = o;
         fixUp(size);
@@ -412,7 +508,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * <tt>Object</tt>) in the proper order.
      * @param s the stream
      */
-    private synchronized void writeObject(java.io.ObjectOutputStream s)
+    private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException{
         // Write out element count, and any hidden stuff
         s.defaultWriteObject();
@@ -430,7 +526,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * deserialize it).
      * @param s the stream
      */
-    private synchronized void readObject(java.io.ObjectInputStream s)
+    private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
         // Read in size, and any hidden stuff
         s.defaultReadObject();

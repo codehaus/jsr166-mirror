@@ -10,14 +10,17 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * An unbounded {@link BlockingQueue blocking queue} based on a
- * {@link PriorityQueue},
- * obeying its ordering rules and implementation characteristics.
+ * An unbounded {@link BlockingQueue blocking queue} based on a {@link
+ * PriorityQueue}, obeying its ordering rules and implementation
+ * characteristics.  While this queue is logically unbounded,
+ * attempted additions may fail due to resource exhaustion (causing
+ * <tt>OutOfMemoryError</tt>) when <tt>Integer.MAX_VALUE</tt> elements
+ * are held.
  * @since 1.5
  * @author Doug Lea
 */
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
-        implements Sorted, BlockingQueue<E>, java.io.Serializable {
+    implements BlockingQueue<E>, java.io.Serializable {
 
     private final PriorityQueue<E> q;
     private final ReentrantLock lock = new ReentrantLock(true);
@@ -62,15 +65,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Create a <tt>PriorityBlockingQueue</tt> containing the elements
-     * in the specified
-     * collection.  The priority queue has an initial capacity of 110% of the
-     * size of the specified collection. If the specified collection
-     * implements the {@link Sorted} interface, the priority queue will be
-     * sorted according to the same comparator, or according to its elements'
-     * natural order if the collection is sorted according to its elements'
-     * natural order.  If the specified collection does not implement
-     * <tt>Sorted</tt>, the priority queue is ordered according to
-     * its elements' natural order.
+     * in the specified collection.  The priority queue has an initial
+     * capacity of 110% of the size of the specified collection. If
+     * the specified collection is a {@link SortedSet} or a {@link
+     * PriorityQueue}, this priority queue will be sorted according to
+     * the same comparator, or according to its elements' natural
+     * order if the collection is sorted according to its elements'
+     * natural order.  Otherwise, this priority queue is ordered
+     * according to its elements' natural order.
      *
      * @param c the collection whose elements are to be placed
      *        into this priority queue.

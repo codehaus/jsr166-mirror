@@ -67,6 +67,7 @@
 
   <!-- Files excludes from emulation jar -->
   <patternset id="atomic.exclusion">
+    <exclude name="java/util/concurrent/atomic/AtomicBoolean*"/>
     <exclude name="java/util/concurrent/atomic/AtomicInteger*"/>
     <exclude name="java/util/concurrent/atomic/AtomicLong*"/>
     <exclude name="java/util/concurrent/atomic/AtomicReference*"/>

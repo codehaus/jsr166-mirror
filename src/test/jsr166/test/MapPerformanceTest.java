@@ -14,11 +14,28 @@ public class MapPerformanceTest extends TestCase {
 
     static TestTimer timer = new TestTimer();
 
-    public void testMapImpls () {
+    public void testHashMap () {
         try {
-            doTest("java.util.HashMap", 25, 100, false);
-            doTest("java.util.WeakHashMap", 25, 100, false);
-            doTest("java.util.concurrent.ConcurrentHashMap", 25, 100, false);
+            doTest("java.util.HashMap", 20, 100, false);
+        }
+        catch (Exception e) {
+            fail("should not throw exception");
+        }
+    }
+
+    public void testWeakHashMap () {
+        try {
+            doTest("java.util.WeakHashMap", 20, 100, false);
+        }
+        catch (Exception e) {
+            e.printStackTrace(System.err);
+            fail("should not throw exception");
+        }
+    }
+
+    public void testConcurrentHashMap () {
+        try {
+            doTest("java.util.concurrent.ConcurrentHashMap", 20, 1000, false);
         }
         catch (Exception e) {
             fail("should not throw exception");

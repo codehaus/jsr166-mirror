@@ -18,10 +18,16 @@ final class AtomicLinkedNode {
     private volatile Object item;
     private volatile AtomicLinkedNode next;
 
-    private static final AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode> nextUpdater =
-    new AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode>(AtomicLinkedNode.class, AtomicLinkedNode.class, "next");
-    private static final AtomicReferenceFieldUpdater<AtomicLinkedNode, Object> itemUpdater
-     = new AtomicReferenceFieldUpdater<AtomicLinkedNode, Object>(AtomicLinkedNode.class, Object.class, "item");
+    private static final 
+        AtomicReferenceFieldUpdater<AtomicLinkedNode, AtomicLinkedNode> 
+        nextUpdater =
+        AtomicReferenceFieldUpdater.newUpdater
+        (AtomicLinkedNode.class, AtomicLinkedNode.class, "next");
+    private static final 
+        AtomicReferenceFieldUpdater<AtomicLinkedNode, Object> 
+        itemUpdater =
+        AtomicReferenceFieldUpdater.newUpdater
+        (AtomicLinkedNode.class, Object.class, "item");
 
     AtomicLinkedNode(Object x) { item = x; }
 

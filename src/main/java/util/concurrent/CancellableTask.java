@@ -39,7 +39,9 @@ public class CancellableTask implements Cancellable, Runnable {
     private static final Object CANCELLED = new Object();
 
     private static AtomicReferenceFieldUpdater<CancellableTask, Object> 
-        runnerUpdater = new AtomicReferenceFieldUpdater<CancellableTask, Object>(CancellableTask.class, Object.class, "runner");
+        runnerUpdater = 
+        AtomicReferenceFieldUpdater.newUpdater
+        (CancellableTask.class, Object.class, "runner");
 
     /**
      * The runnable underlying this task

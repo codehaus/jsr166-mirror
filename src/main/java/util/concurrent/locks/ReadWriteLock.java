@@ -31,7 +31,7 @@ package java.util.concurrent.locks;
  * operations, and the contention for the data - that is, the number of
  * threads that will try to read or write the data at the same time.
  * For example, a collection that is initially populated with data and
- * thereafter infrequently modified, whilst being frequently searched
+ * thereafter infrequently modified, while being frequently searched
  * (such as a directory of some kind) is an ideal candidate for the use of
  * a read-write lock. However, if updates become frequent then the data
  * spends most of its time being exclusively locked and there is little, if any

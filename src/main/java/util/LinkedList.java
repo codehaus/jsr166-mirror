@@ -25,7 +25,7 @@ package java.util;
  *
  * All of the operations perform as could be expected for a doubly-linked
  * list.  Operations that index into the list will traverse the list from
- * the begining or the end, whichever is closer to the specified index.<p>
+ * the beginning or the end, whichever is closer to the specified index.<p>
  *
  * <b>Note that this implementation is not synchronized.</b> If multiple
  * threads access a list concurrently, and at least one of the threads

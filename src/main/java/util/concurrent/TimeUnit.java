@@ -117,7 +117,7 @@ public final class TimeUnit implements java.io.Serializable {
 
     /**
      * Convert the given time duration in the given unit to the
-     * current unit.  Conversions from finer to coarser granulaties
+     * current unit.  Conversions from finer to coarser granularities
      * truncate, so lose precision. For example converting
      * <tt>999</tt> milliseconds to seconds results in
      * <tt>0</tt>. Conversions from coarser to finer granularities

@@ -91,7 +91,7 @@ import java.util.Date;
  * different from that of the <tt>Object</tt> monitor methods, such as 
  * guaranteed ordering for notifications, or not requiring a lock to be held 
  * when performing notifications.
- * If an implementation provides such specialised semantics then the 
+ * If an implementation provides such specialized semantics then the 
  * implementation must document those semantics.
  *
  * <p>Note that <tt>Condition</tt> instances are just normal objects and can 
@@ -139,7 +139,7 @@ import java.util.Date;
  * interruption are often infrequent, an implementation can favor responding
  * to an interrupt over normal method return. This is true even if it can be
  * shown that the interrupt occurred after another action may have unblocked
- * the thread. An implementation should document this behaviour. 
+ * the thread. An implementation should document this behavior. 
  *
  *
  * @since 1.5
@@ -188,7 +188,7 @@ public interface Condition {
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
      *
-     * <p>An implementation can favour responding to an interrupt over normal
+     * <p>An implementation can favor responding to an interrupt over normal
      * method return in response to a signal. In that case the implementation
      * must ensure that the signal is redirected to another waiting thread, if
      * there is one.
@@ -303,7 +303,7 @@ public interface Condition {
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
      *
-     * <p>An implementation can favour responding to an interrupt over normal
+     * <p>An implementation can favor responding to an interrupt over normal
      * method return in response to a signal, or over indicating the elapse
      * of the specified waiting time. In either case the implementation
      * must ensure that the signal is redirected to another waiting thread, if
@@ -372,7 +372,7 @@ public interface Condition {
      * is released.
      *
      *
-     * <p>The return value idicates whether the deadline has elapsed,
+     * <p>The return value indicates whether the deadline has elapsed,
      * which can be used as follows:
      * <pre>
      * synchronized boolean aMethod(Date deadline) {
@@ -395,7 +395,7 @@ public interface Condition {
      * thrown (such as {@link IllegalMonitorStateException}) and the
      * implementation must document that fact.
      *
-     * <p>An implementation can favour responding to an interrupt over normal
+     * <p>An implementation can favor responding to an interrupt over normal
      * method return in response to a signal, or over indicating the passing
      * of the specified deadline. In either case the implementation
      * must ensure that the signal is redirected to another waiting thread, if

@@ -53,7 +53,7 @@ import java.util.*;
  * corePoolSize and maximumPoolSize the same, you create a fixed-size
  * thread pool. By setting maximumPoolSize to an essentially unbounded
  * value such as <tt>Integer.MAX_VALUE</tt>, you allow the pool to
- * accomodate an arbitrary number of concurrent tasks. Most typically,
+ * accommodate an arbitrary number of concurrent tasks. Most typically,
  * core and maximum pool sizes are set only upon construction, but they
  * may also be changed dynamically using {@link
  * ThreadPoolExecutor#setCorePoolSize} and {@link
@@ -144,7 +144,7 @@ import java.util.*;
  * tune and control.  Queue sizes and maximum pool sizes may be traded
  * off for each other: Using large queues and small pools minimizes
  * CPU usage, OS resources, and context-switching overhead, but can
- * lead to artifically low throughput.  If tasks frequently block (for
+ * lead to artificially low throughput.  If tasks frequently block (for
  * example if they are I/O bound), a system may be able to schedule
  * time for more threads than you otherwise allow. Use of small queues
  * generally requires larger pool sizes, which keeps CPUs busier but
@@ -958,7 +958,7 @@ public class ThreadPoolExecutor implements ExecutorService {
     /**
      * Returns the task queue used by this executor. Access to the
      * task queue is intended primarily for debugging and monitoring.
-     * This queue may be in active use.  Retrieveing the task queue
+     * This queue may be in active use.  Retrieving the task queue
      * does not prevent queued tasks from executing.
      *
      * @return the task queue

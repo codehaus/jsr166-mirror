@@ -137,7 +137,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Searches for the first occurence of the given argument, testing 
+     * Searches for the first occurrence of the given argument, testing 
      * for equality using the <tt>equals</tt> method. 
      *
      * @param   elem   an object.
@@ -169,7 +169,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Searches for the first occurence of the given argument, beginning
+     * Searches for the first occurrence of the given argument, beginning
      * the search at <tt>index</tt>, and testing for equality using
      * the <tt>equals</tt> method.
      *
@@ -961,7 +961,7 @@ public class CopyOnWriteArrayList<E>
      * inclusive, and toIndex, exclusive.  The returned List is backed by this
      * List, so changes in the returned List are reflected in this List, and
      * vice-versa.  While mutative operations are supported, they are
-     * probably not very useful for CopyOnWriteArrays.
+     * probably not very useful for CopyOnWriteArrayLists.
      * <p>
      * The semantics of the List returned by this method become undefined if
      * the backing list (i.e., this List) is <i>structurally modified</i> in

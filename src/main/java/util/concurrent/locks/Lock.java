@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * and allowing multiple locks to be acquired and released in any
  * order.
  *
- * <p>With this increased flexibilty comes additional
+ * <p>With this increased flexibility comes additional
  * responsibility. The absence of block-structured locking removes the
  * automatic release of locks that occurs with <tt>synchronized</tt>
  * methods and statements. In most cases, the following idiom
@@ -73,7 +73,7 @@ import java.util.concurrent.TimeUnit;
  * <p>A <tt>Lock</tt> class can also provide behavior and semantics
  * that is quite different from that of the implicit monitor lock,
  * such as guaranteed ordering, non-reentrant usage, or deadlock
- * detection. If an implementation provides such specialised semantics
+ * detection. If an implementation provides such specialized semantics
  * then the implementation must document those semantics.
  *
  * <p>Note that <tt>Lock</tt> instances are just normal objects and can 
@@ -111,7 +111,7 @@ import java.util.concurrent.TimeUnit;
  * acquisition of a lock may not be available in a given <tt>Lock</tt>
  * class.  Consequently, an implementation is not required to define
  * exactly the same guarantees or semantics for all three forms of
- * lock acquistion, nor is it required to support interruption of an
+ * lock acquisition, nor is it required to support interruption of an
  * ongoing lock acquisition.  An implementation is required to clearly
  * document the semantics and guarantees provided by each of the
  * locking methods. It must also obey the interruption semantics as
@@ -123,7 +123,7 @@ import java.util.concurrent.TimeUnit;
  * interruption are often infrequent, an implementation can favor responding
  * to an interrupt over normal method return. This is true even if it can be
  * shown that the interrupt occurred after another action may have unblocked
- * the thread. An implementation should document this behaviour. 
+ * the thread. An implementation should document this behavior. 
  *
  *
  * @see ReentrantLock

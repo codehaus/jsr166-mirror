@@ -30,7 +30,7 @@ import java.util.*;
  * ordering is not guaranteed. However, an <tt>ArrayBlockingQueue</tt>
  * constructed with fairness set to <tt>true</tt> grants blocked
  * threads access in FIFO order. Fairness generally decreases
- * throughput but reduces variablility and avoids starvation.
+ * throughput but reduces variability and avoids starvation.
  *
  * <p>This class implements all of the <em>optional</em> methods
  * of the {@link Collection} and {@link Iterator} interfaces.

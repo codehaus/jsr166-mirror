@@ -265,7 +265,7 @@ public class CyclicBarrier {
      *
      * <p>If the barrier is {@link #reset} while any thread is waiting, or if 
      * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked,
-     * or whilst any thread is waiting,
+     * or while any thread is waiting,
      * then {@link BrokenBarrierException} is thrown.
      *
      * <p>If any thread is {@link Thread#interrupt interrupted} while waiting,
@@ -327,7 +327,7 @@ public class CyclicBarrier {
      *
      * <p>If the barrier is {@link #reset} while any thread is waiting, or if 
      * the barrier {@link #isBroken is broken} when <tt>await</tt> is invoked,
-     * or whilst any thread is waiting,
+     * or while any thread is waiting,
      * then {@link BrokenBarrierException} is thrown.
      *
      * <p>If any thread is {@link Thread#interrupt interrupted} while waiting,

@@ -18,8 +18,8 @@ import java.util.concurrent.atomic.*;
  * queue the shortest time. New elements
  * are inserted at the tail of the queue, and the queue retrieval
  * operations obtain elements at the head of the queue.
- * A <tt>ConcurrentLinkedQueue</tt> is an especially good choice when 
- * many threads will share access to a common queue.
+ * A <tt>ConcurrentLinkedQueue</tt> is an appropriate choice when 
+ * many threads will share access to a common collection.
  * This queue does not permit <tt>null</tt> elements.
  *
  * <p>This implementation employs an efficient &quot;wait-free&quot; 

@@ -329,7 +329,7 @@ V&gt; {
         }
 
         /**
-         * Causes this futue to report an <tt>ExecutionException</tt>
+         * Causes this future to report an <tt>ExecutionException</tt>
          * with the given throwable as its cause.
          * @param t the cause of failure.
          */ 

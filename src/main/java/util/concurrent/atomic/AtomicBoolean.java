@@ -33,7 +33,7 @@ public class AtomicBoolean implements java.io.Serializable {
     /**
      * Creates a new <tt>AtomicBoolean</tt> with the given initial value.
      *
-     * @param initialValue the intial value
+     * @param initialValue the initial value
      */
     public AtomicBoolean(boolean initialValue) {
         value = initialValue ? 1 : 0;

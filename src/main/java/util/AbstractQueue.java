@@ -21,7 +21,7 @@ package java.util;
  * insertion of <tt>null</tt> elements, along with methods {@link
  * Queue#peek}, {@link Queue#poll}, {@link Collection#size}, and a
  * {@link Collection#iterator} supporting {@link
- * Iterator#remove}. Typically, additional methods will be overriden
+ * Iterator#remove}. Typically, additional methods will be overridden
  * as well. If these requirements cannot be met, consider instead
  * subclassing {@link AbstractCollection}.
  *

@@ -649,7 +649,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * fair ordering policy, a call to <tt>tryLock()</tt> <em>will</em>
      * immediately acquire the lock if it is available, whether or not
      * other threads are currently waiting for the lock. 
-     * This &quot;barging&quot; behaviour can be useful in certain 
+     * This &quot;barging&quot; behavior can be useful in certain 
      * circumstances, even though it breaks fairness. If you want to honor
      * the fairness setting for this lock, then use 
      * {@link #tryLock(long, TimeUnit) tryLock(0, TimeUnit.SECONDS) }
@@ -915,7 +915,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * change dynamically while constructing this result, the returned
      * collection is only a best-effort estimate.  The elements of the
      * returned collection are in no particular order.  This method is
-     * designed to facilate construction of subclasses that provide
+     * designed to facilitate construction of subclasses that provide
      * more extensive lock monitoring facilities.
      * @return the collection of threads
      */
@@ -934,7 +934,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * <tt>null</tt> if not owned. Note that the owner may be
      * momentarily <tt>null</tt> even if there are threads trying to
      * acquire the lock but have not yet done so.  This method is
-     * designed to facilate construction of subclasses that provide
+     * designed to facilitate construction of subclasses that provide
      * more extensive lock monitoring facilities.
      * @return the owner, or <tt>null</tt> if not owned.
      */
@@ -1638,7 +1638,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * threads may change dynamically while constructing this
          * result, the returned collection is only a best-effort
          * estimate. The elements of the returned collection are in no
-         * particular order.  This method is designed to facilate
+         * particular order.  This method is designed to facilitate
          * construction of subclasses that provide more extensive
          * condition monitoring facilities.
          * @return the collection of threads

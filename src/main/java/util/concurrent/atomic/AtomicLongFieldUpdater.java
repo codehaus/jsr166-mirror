@@ -71,7 +71,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * <tt>==</tt> the expected value. This method is guaranteed to be
      * atomic with respect to other calls to <tt>compareAndSet</tt> and
      * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field, and may fail spruiously.
+     * changes in the field, and may fail spuriously.
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value

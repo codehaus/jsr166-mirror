@@ -106,7 +106,7 @@ public class FutureTask<V> extends CancellableTask implements Future<V> {
      * method is called, the computation is assumed to be completed --
      * threads already waiting for the result via <tt>get</tt> are
      * unblocked, and future attempts to retrieve the result will not
-     * block. While not explicity disallowed, it is rarely a good idea
+     * block. While not explicitly disallowed, it is rarely a good idea
      * to invoke <tt>set</tt> more than once.
      *
      * @param v the value

@@ -82,7 +82,7 @@ import java.util.concurrent.locks.*;
  * When used in this way, the binary semaphore has the property (unlike many
  * {@link Lock} implementations, that the &quot;lock&quot; can be released by
  * a thread other than the owner (as semaphores have no notion of ownership).
- * This can be useful in some specialised contexts, such as deadlock recovery.
+ * This can be useful in some specialized contexts, such as deadlock recovery.
  *
  * <p>This class makes no guarantees about the order in which threads
  * acquire permits. In particular, barging is permitted, that is, a thread

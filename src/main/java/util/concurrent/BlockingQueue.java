@@ -64,7 +64,7 @@ import java.util.Queue;
  *
  * class Consumer implements Runnable {
  *   private final BlockingQueue queue;
- *   Concumer(BlockingQueue q) { queue = q; }
+ *   Consumer(BlockingQueue q) { queue = q; }
  *   public void run() {
  *     try {
  *       while(true) { consume(queue.take()); }

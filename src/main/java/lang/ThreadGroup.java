@@ -921,8 +921,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
                 Thread.getDefaultUncaughtExceptionHandler();
             if (ueh != null) {
                 ueh.uncaughtException(t, e);
-            }
-            else if (!(e instanceof ThreadDeath)) {
+            } else if (!(e instanceof ThreadDeath)) {
                 e.printStackTrace(System.err);
             }
         }

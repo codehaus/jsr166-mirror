@@ -82,8 +82,8 @@ package java.util.concurrent;
  * @see FutureTask
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/04 11:34:19 $
- * @editor $Author: dl $
+ * @revised $Date: 2003/06/04 15:31:45 $
+ * @editor $Author: tim $
  */
 public interface Executor {
 
@@ -93,7 +93,7 @@ public interface Executor {
      * thread, at the discretion of the <tt>Executor</tt> implementation.
      *
      * @param command the runnable task
-     * @throws CannotExecuteException if command cannot be submitted for
+     * @throws ExecutionException if command cannot be submitted for
      * execution
      */
     void execute(Runnable command);

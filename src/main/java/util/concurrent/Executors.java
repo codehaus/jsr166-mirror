@@ -24,7 +24,7 @@ import java.util.*;
  * @see Future
  *
  * @spec JSR-166
- * @revised $Date: 2003/06/04 15:28:04 $
+ * @revised $Date: 2003/06/04 15:31:45 $
  * @editor $Author: tim $
  */
 public class Executors {
@@ -159,7 +159,7 @@ public class Executors {
      * @param value the value which will become the return value of
      * the task upon task completion
      * @return a Future representing pending completion of the task
-     * @throws CannotExecuteException if the task cannot be scheduled
+     * @throws ExecutionException if the task cannot be scheduled
      * for execution
      */
     public static <T> Future<T> execute(Executor executor, Runnable task, T value) {
@@ -181,7 +181,7 @@ public class Executors {
      * @param executor the Executor to which the task will be submitted
      * @param task the task to submit
      * @return a Future representing pending completion of the task
-     * @throws CannotExecuteException if task cannot be scheduled for execution
+     * @throws ExecutionException if task cannot be scheduled for execution
      */
     public static <T> FutureTask<T> execute(Executor executor, Callable<T> task) {
         FutureTask<T> ftask;
@@ -201,7 +201,7 @@ public class Executors {
      *
      * @param executor the Executor to which the task will be submitted
      * @param task the task to submit
-     * @throws CannotExecuteException if task cannot be scheduled for execution
+     * @throws ExecutionException if task cannot be scheduled for execution
      */
     public static void invoke(Executor executor, Runnable task)
             throws ExecutionException, InterruptedException {
@@ -217,7 +217,7 @@ public class Executors {
      * @param executor the Executor to which the task will be submitted
      * @param task the task to submit
      * @return a Future representing pending completion of the task
-     * @throws CannotExecuteException if task cannot be scheduled for execution
+     * @throws ExecutionException if task cannot be scheduled for execution
      */
     public static <T> T invoke(Executor executor, Callable<T> task)
             throws ExecutionException, InterruptedException {

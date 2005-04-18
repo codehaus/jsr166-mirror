@@ -1,6 +1,6 @@
 /*
  * @test %I% %E%
- * @bug xxxxxx
+ * @bug 6236036
  * @compile PollMemoryLeak.java
  * @run -Xmx16m main/timeout=3600 PollMemoryLeak
  * @summary  Checks for OutOfMemoryError when an unbounded

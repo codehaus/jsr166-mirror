@@ -129,7 +129,7 @@ public class CyclicBarrier {
     private int count;
 
     /**
-     * Updates state on barrier trip and wake up everyone.
+     * Updates state on barrier trip and wakes up everyone.
      * Called only while holding lock.
      */
     private void nextGeneration() {
@@ -142,7 +142,7 @@ public class CyclicBarrier {
     }
 
     /**
-     * Sets current barrier generation as broken and wakes up everyone
+     * Sets current barrier generation as broken and wakes up everyone.
      * Called only while holding lock.
      */
     private void breakBarrier() {
@@ -214,7 +214,6 @@ public class CyclicBarrier {
             lock.unlock();
         }
     }
-
 
     /**
      * Creates a new <tt>CyclicBarrier</tt> that will trip when the
@@ -305,7 +304,7 @@ public class CyclicBarrier {
      * zero indicates the last to arrive.
      *
      * @throws InterruptedException if the current thread was interrupted
-     * while waiting
+     * while waiting.
      * @throws BrokenBarrierException if <em>another</em> thread was
      * interrupted or timed out while the current thread was waiting,
      * or the barrier was reset, or the barrier was broken when
@@ -370,11 +369,11 @@ public class CyclicBarrier {
      * @param timeout the time to wait for the barrier
      * @param unit the time unit of the timeout parameter
      * @return the arrival index of the current thread, where index
-     *  <tt>{@link #getParties()} - 1</tt> indicates the first to arrive and
+     * <tt>{@link #getParties()} - 1</tt> indicates the first to arrive and
      * zero indicates the last to arrive.
      *
      * @throws InterruptedException if the current thread was interrupted
-     * while waiting
+     * while waiting.
      * @throws TimeoutException if the specified timeout elapses.
      * @throws BrokenBarrierException if <em>another</em> thread was
      * interrupted or timed out while the current thread was waiting,
@@ -394,7 +393,7 @@ public class CyclicBarrier {
      * @return <tt>true</tt> if one or more parties broke out of this
      * barrier due to interruption or timeout since construction or
      * the last reset, or a barrier action failed due to an exception;
-     * and <tt>false</tt> otherwise.
+     * <tt>false</tt> otherwise.
      */
     public boolean isBroken() {
         final ReentrantLock lock = this.lock;
@@ -430,7 +429,7 @@ public class CyclicBarrier {
      * Returns the number of parties currently waiting at the barrier.
      * This method is primarily useful for debugging and assertions.
      *
-     * @return the number of parties currently blocked in {@link #await}
+     * @return the number of parties currently blocked in {@link #await}.
      **/
     public int getNumberWaiting() {
         final ReentrantLock lock = this.lock;

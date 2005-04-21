@@ -159,7 +159,7 @@ public class CyclicBarrier {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            Generation g = generation;
+            final Generation g = generation;
 
             if (g.broken)
                 throw new BrokenBarrierException();
@@ -169,23 +169,20 @@ public class CyclicBarrier {
                 throw new InterruptedException();
             }
 
-            int index = --count;
-            if (index == 0) {  // tripped
-                nextGeneration();
-                boolean ranAction = false;
-                try {
-                    Runnable command = barrierCommand;
-                    if (command != null)
-                        command.run();
-                    ranAction = true;
-                    return 0;
-                } finally {
-                    if (!ranAction) {
-                        // Mark g (not the now-current generation) broken.
-                        g.broken = true;
-                    }
-                }
-            }
+           int index = --count;
+           if (index == 0) {  // tripped
+               boolean ranAction = false;
+               try {
+                   if (barrierCommand != null)
+                       barrierCommand.run();
+                   ranAction = true;
+                   nextGeneration();
+                   return 0;
+               } finally {
+                   if (!ranAction)
+                       breakBarrier();
+               }
+           }
 
             // loop until tripped, broken, interrupted, or timed out
             for (;;) {
@@ -199,7 +196,7 @@ public class CyclicBarrier {
                     throw ie;
                 }
 
-                if (g.broken )
+                if (g.broken)
                     throw new BrokenBarrierException();
 
                 if (g.tripped)
@@ -435,7 +432,7 @@ public class CyclicBarrier {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return parties - count;
+            return generation.broken ? 0 : parties - count;
         } finally {
             lock.unlock();
         }

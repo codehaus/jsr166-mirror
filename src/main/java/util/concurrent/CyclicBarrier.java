@@ -85,7 +85,7 @@ import java.util.concurrent.locks.*;
  * point prematurely because of interruption, failure, or timeout, all
  * other threads waiting at that barrier point will also leave
  * abnormally via {@link BrokenBarrierException} (or
- * <tt>InterruptedException</tt> if they too were interrupted at about
+ * {@link InterruptedException} if they too were interrupted at about
  * the same time).
  *
  * @since 1.5
@@ -123,8 +123,8 @@ public class CyclicBarrier {
 
     /**
      * Number of parties still waiting. Counts down from parties to 0
-     * on each generation. This only has meaning for the current non-broken
-     * generation. It is reset to parties on each new generation.
+     * on each generation.  It is reset to parties on each new
+     * generation or when broken.
      */
     private int count;
 
@@ -147,6 +147,7 @@ public class CyclicBarrier {
      */
     private void breakBarrier() {
         generation.broken = true;
+        count = parties;
         trip.signalAll();
     }
 
@@ -173,8 +174,9 @@ public class CyclicBarrier {
            if (index == 0) {  // tripped
                boolean ranAction = false;
                try {
-                   if (barrierCommand != null)
-                       barrierCommand.run();
+		   final Runnable command = barrierCommand;
+                   if (command != null)
+                       command.run();
                    ranAction = true;
                    nextGeneration();
                    return 0;
@@ -235,7 +237,7 @@ public class CyclicBarrier {
     /**
      * Creates a new <tt>CyclicBarrier</tt> that will trip when the
      * given number of parties (threads) are waiting upon it, and
-     * does not perform a predefined action upon each barrier.
+     * does not perform a predefined action when the barrier is tripped.
      *
      * @param parties the number of threads that must invoke {@link #await}
      * before the barrier is tripped.
@@ -249,7 +251,7 @@ public class CyclicBarrier {
     /**
      * Returns the number of parties required to trip this barrier.
      * @return the number of parties required to trip this barrier.
-     **/
+     */
     public int getParties() {
         return parties;
     }
@@ -432,7 +434,7 @@ public class CyclicBarrier {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return generation.broken ? 0 : parties - count;
+            return parties - count;
         } finally {
             lock.unlock();
         }

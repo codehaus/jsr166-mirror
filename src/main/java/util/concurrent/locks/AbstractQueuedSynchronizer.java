@@ -94,6 +94,12 @@ import sun.misc.Unsafe;
  * means of using this class. All other methods are declared
  * <tt>final</tt> because they cannot be independently varied.
  *
+ * <p>You may also find the inherited methods from {@link
+ * AbstractOwnableSynchronizer} useful to keep track of the thread
+ * owning an exclusive synchronizer.  You are encouraged to use them
+ * -- this enables monitoring and diagnostic tools to assist users in
+ * detemining which threads hold locks.
+ *
  * <p> Even though this class is based on an internal FIFO queue, it
  * does not automatically enforce FIFO acquisition policies.  The core
  * of exclusive synchronization takes the form:
@@ -157,7 +163,10 @@ import sun.misc.Unsafe;
  *
  * <p>Here is a non-reentrant mutual exclusion lock class that uses
  * the value zero to represent the unlocked state, and one to
- * represent the locked state. It also supports conditions and exposes
+ * represent the locked state. While a non-reentrant lock
+ * does not strictly require recording of the current owner
+ * thread, this class does so anyway to make usage easier to monitor.
+ * It also supports conditions and exposes
  * one of the instrumentation methods:
  *
  * <pre>
@@ -173,13 +182,18 @@ import sun.misc.Unsafe;
  *      // Acquire the lock if state is zero
  *      public boolean tryAcquire(int acquires) {
  *        assert acquires == 1; // Otherwise unused
- *        return compareAndSetState(0, 1);
+ *        if (compareAndSetState(0, 1)) {
+ *          setExclusiveOwnerThread(Thread.currentThread());
+ *          return true;
+ *        }
+ *        return false;
  *      }
  *
  *      // Release the lock by setting state to zero
  *      protected boolean tryRelease(int releases) {
  *        assert releases == 1; // Otherwise unused
  *        if (getState() == 0) throw new IllegalMonitorStateException();
+ *        setExclusiveOwnerThread(null);
  *        setState(0);
  *        return true;
  *      }
@@ -246,7 +260,10 @@ import sun.misc.Unsafe;
  * @since 1.5
  * @author Doug Lea
  */
-public abstract class AbstractQueuedSynchronizer implements java.io.Serializable {
+public abstract class AbstractQueuedSynchronizer 
+    extends AbstractOwnableSynchronizer
+    implements java.io.Serializable {
+
     private static final long serialVersionUID = 7373984972572414691L;
 
     /**
@@ -676,8 +693,8 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * Convenience method to park and then check if interrupted
      * @return true if interrupted
      */
-    private static boolean parkAndCheckInterrupt() {
-        LockSupport.park();
+    private final boolean parkAndCheckInterrupt() {
+        LockSupport.park(this);
         return Thread.interrupted();
     }
 
@@ -768,7 +785,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     return false;
                 }
                 if (shouldParkAfterFailedAcquire(p, node)) {
-                    LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);
                     if (Thread.interrupted())
                         break;
                     long now = System.nanoTime();
@@ -873,7 +890,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     return false;
                 }
                 if (shouldParkAfterFailedAcquire(p, node)) {
-                    LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);
                     if (Thread.interrupted())
                         break;
                     long now = System.nanoTime();
@@ -1737,7 +1754,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             int savedState = fullyRelease(node);
             boolean interrupted = false;
             while (!isOnSyncQueue(node)) {
-                LockSupport.park();
+                LockSupport.park(this);
                 if (Thread.interrupted())
                     interrupted = true;
             }
@@ -1801,7 +1818,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
             int savedState = fullyRelease(node);
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
-                LockSupport.park();
+                LockSupport.park(this);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
             }
@@ -1839,7 +1856,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(nanosTimeout);
+                LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
 
@@ -1886,7 +1903,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     timedout = transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkUntil(abstime);
+                LockSupport.parkUntil(this, abstime);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
             }
@@ -1930,7 +1947,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
                     timedout = transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(nanosTimeout);
+                LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
                 long now = System.nanoTime();

@@ -27,7 +27,9 @@ import sun.misc.Unsafe;
  * @since 1.6
  * @author Doug Lea
  */
-public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializable {
+public abstract class AbstractQueuedLongSynchronizer 
+    extends AbstractOwnableSynchronizer
+    implements java.io.Serializable {
 
     private static final long serialVersionUID = 7373984972572414692L;
 
@@ -465,8 +467,8 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
      * Convenience method to park and then check if interrupted
      * @return true if interrupted
      */
-    private static boolean parkAndCheckInterrupt() {
-        LockSupport.park();
+    private final boolean parkAndCheckInterrupt() {
+        LockSupport.park(this);
         return Thread.interrupted();
     }
 
@@ -557,7 +559,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
                     return false;
                 }
                 if (shouldParkAfterFailedAcquire(p, node)) {
-                    LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);
                     if (Thread.interrupted())
                         break;
                     long now = System.nanoTime();
@@ -662,7 +664,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
                     return false;
                 }
                 if (shouldParkAfterFailedAcquire(p, node)) {
-                    LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);
                     if (Thread.interrupted())
                         break;
                     long now = System.nanoTime();
@@ -1526,7 +1528,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
             long savedState = fullyRelease(node);
             boolean interrupted = false;
             while (!isOnSyncQueue(node)) {
-                LockSupport.park();
+                LockSupport.park(this);
                 if (Thread.interrupted())
                     interrupted = true;
             }
@@ -1590,7 +1592,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
             long savedState = fullyRelease(node);
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
-                LockSupport.park();
+                LockSupport.park(this);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
             }
@@ -1628,7 +1630,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
                     transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(nanosTimeout);
+                LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
 
@@ -1675,7 +1677,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
                     timedout = transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkUntil(abstime);
+                LockSupport.parkUntil(this, abstime);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
             }
@@ -1719,7 +1721,7 @@ public abstract class AbstractQueuedLongSynchronizer implements java.io.Serializ
                     timedout = transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(nanosTimeout);
+                LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) 
                     break;
                 long now = System.nanoTime();

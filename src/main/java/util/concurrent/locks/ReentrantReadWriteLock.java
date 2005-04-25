@@ -204,9 +204,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * Subclassed into fair and nonfair versions.
      */
     abstract static class Sync extends AbstractQueuedSynchronizer {
-        /** Current (exclusive) owner thread */
-        transient Thread owner;
-
         /**
          * Perform write lock. Allows fast path in non-fair version.
          */
@@ -225,11 +222,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             int w = exclusiveCount(c);
             if (w + acquires >= SHARED_UNIT)
                 throw new Error("Maximum lock count exceeded");
-            if (c != 0 && (w == 0 || current != owner))
+            if (c != 0 && (w == 0 || current != getExclusiveOwnerThread()))
                 return false;
             if (!compareAndSetState(c, c + acquires)) 
                 return false;
-            owner = current;
+            setExclusiveOwnerThread(current);
             return true;
         }
 
@@ -243,7 +240,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 if (nextc < c)
                     throw new Error("Maximum lock count exceeded");
                 if (exclusiveCount(c) != 0 && 
-                    owner != Thread.currentThread())
+                    getExclusiveOwnerThread() != Thread.currentThread())
                     return -1;
                 if (compareAndSetState(c, nextc)) 
                     return 1;
@@ -254,13 +251,13 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         protected final boolean tryRelease(int releases) {
             Thread current = Thread.currentThread();
             int c = getState();
-            if (owner != current)
+            if (getExclusiveOwnerThread() != current)
                 throw new IllegalMonitorStateException();
             int nextc = c - releases;
             boolean free = false;
             if (exclusiveCount(c) == releases) {
                 free = true;
-                owner = null;
+                setExclusiveOwnerThread(null);
             }
             setState(nextc);
             return free;
@@ -279,7 +276,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     
         protected final boolean isHeldExclusively() {
             return exclusiveCount(getState()) != 0 && 
-                owner == Thread.currentThread();
+                getExclusiveOwnerThread() == Thread.currentThread();
         }
 
         // Methods relayed to outer class
@@ -290,7 +287,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         final Thread getOwner() {
             int c = exclusiveCount(getState());
-            Thread o = owner;
+            Thread o = getExclusiveOwnerThread();
             return (c == 0)? null : o;
         }
         
@@ -304,7 +301,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         final int getWriteHoldCount() {
             int c = exclusiveCount(getState());
-            Thread o = owner;
+            Thread o = getExclusiveOwnerThread();
             return (o == Thread.currentThread())? c : 0;
         }
 
@@ -336,7 +333,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         // Use fastpath for main write lock method
         final void wlock() {
             if (compareAndSetState(0, 1))
-                owner = Thread.currentThread();
+                setExclusiveOwnerThread(Thread.currentThread());
             else
                 acquire(1);
         }
@@ -355,14 +352,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             int w = exclusiveCount(c);
             if (w + acquires >= SHARED_UNIT)
                 throw new Error("Maximum lock count exceeded");
-            if ((w == 0 || current != owner) &&
+            if ((w == 0 || current != getExclusiveOwnerThread()) &&
                 (c != 0 || 
                  ((first = getFirstQueuedThread()) != null && 
                   first != current)))
                 return false;
             if (!compareAndSetState(c, c + acquires)) 
                 return false;
-            owner = current;
+            setExclusiveOwnerThread(current);
             return true;
         }
 
@@ -371,7 +368,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             for (;;) {
                 int c = getState();
                 if (exclusiveCount(c) != 0) {
-                    if (owner != current)
+                    if (getExclusiveOwnerThread() != current)
                         return -1;
                 } else {
                     Thread first = getFirstQueuedThread();
@@ -874,10 +871,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * @return a string identifying this lock, as well as its lock state.
          */
         public String toString() {
-            Thread owner = sync.getOwner();
-            return super.toString() + ((owner == null) ?
+            Thread o = sync.getOwner();
+            return super.toString() + ((o == null) ?
                                        "[Unlocked]" :
-                                       "[Locked by thread " + owner.getName() + "]");
+                                       "[Locked by thread " + o.getName() + "]");
         }
 
     }

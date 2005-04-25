@@ -88,9 +88,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * represent the number of holds on the lock.
      */
     static abstract class Sync  extends AbstractQueuedSynchronizer {
-        /** Current owner thread */
-        transient Thread owner;
-
         /**
          * Perform {@link Lock#lock}. The main reason for subclassing
          * is to allow fast path for nonfair version.
@@ -107,11 +104,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             int c = getState();
             if (c == 0) {
                 if (compareAndSetState(0, acquires)) {
-                    owner = current;
+                    setExclusiveOwnerThread(current);
                     return true;
                 }
             }
-            else if (current == owner) {
+            else if (current == getExclusiveOwnerThread()) {
                 setState(c+acquires);
                 return true;
             }
@@ -120,19 +117,19 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         protected final boolean tryRelease(int releases) {
             int c = getState() - releases;
-            if (Thread.currentThread() != owner)
+            if (Thread.currentThread() != getExclusiveOwnerThread())
                 throw new IllegalMonitorStateException();
             boolean free = false;
             if (c == 0) {
                 free = true;
-                owner = null;
+                setExclusiveOwnerThread(null);
             }
             setState(c);
             return free;
         }
 
         protected final boolean isHeldExclusively() {
-            return getState() != 0 && owner == Thread.currentThread();
+            return getState() != 0 && getExclusiveOwnerThread() == Thread.currentThread();
         }
 
         final ConditionObject newCondition() {
@@ -143,13 +140,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         final Thread getOwner() {
             int c = getState();
-            Thread o = owner;
+            Thread o = getExclusiveOwnerThread();
             return (c == 0)? null : o;
         }
         
         final int getHoldCount() {
             int c = getState();
-            Thread o = owner;
+            Thread o = getExclusiveOwnerThread();
             return (o == Thread.currentThread())? c : 0;
         }
         
@@ -178,7 +175,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          */
         final void lock() {
             if (compareAndSetState(0, 1))
-                owner = Thread.currentThread();
+                setExclusiveOwnerThread(Thread.currentThread());
             else
                 acquire(1);
         }
@@ -207,11 +204,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 Thread first = getFirstQueuedThread();
                 if ((first == null || first == current) && 
                     compareAndSetState(0, acquires)) {
-                    owner = current;
+                    setExclusiveOwnerThread(current);
                     return true;
                 }
             }
-            else if (current == owner) {
+            else if (current == getExclusiveOwnerThread()) {
                 setState(c+acquires);
                 return true;
             }
@@ -722,9 +719,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @return a string identifying this lock, as well as its lock state.
      */
     public String toString() {
-        Thread owner = sync.getOwner();
-        return super.toString() + ((owner == null) ?
+        Thread o = sync.getOwner();
+        return super.toString() + ((o == null) ?
                                    "[Unlocked]" :
-                                   "[Locked by thread " + owner.getName() + "]");
+                                   "[Locked by thread " + o.getName() + "]");
     }
 }

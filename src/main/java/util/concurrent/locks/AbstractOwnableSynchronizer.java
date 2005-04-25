@@ -10,7 +10,7 @@ package java.util.concurrent.locks;
  * A synchronizer that may be exclusively owned by a thread.  This
  * class provides a basis for creating locks and related synchronizers
  * that may entail a notion of ownership.  The
- * <tt>AbstractOwnableSynchronizer</tt> class itself oes not manage or
+ * <tt>AbstractOwnableSynchronizer</tt> class itself does not manage or
  * use this information. However, subclasses and tools may use
  * appropriately maintained values to help control and monitor access
  * and provide diagnostics.
@@ -18,7 +18,7 @@ package java.util.concurrent.locks;
  * @since 1.6
  * @author Doug Lea
  */
-public class AbstractOwnableSynchronizer {
+public abstract class AbstractOwnableSynchronizer {
     /**
      * Empty constructor for use by subclasses.
      */

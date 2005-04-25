@@ -15,7 +15,7 @@ import sun.misc.Unsafe;
  * @author Doug Lea
  * @param <V> The type of object referred to by this reference
  */
-public class AtomicReference<V>  implements java.io.Serializable { 
+public class AtomicReference<V>  implements java.io.Serializable {
     private static final long serialVersionUID = -1848883965231344442L;
 
     private static final Unsafe unsafe =  Unsafe.getUnsafe();
@@ -31,7 +31,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
     private volatile V value;
 
     /**
-     * Create a new AtomicReference with the given initial value.
+     * Creates a new AtomicReference with the given initial value.
      *
      * @param initialValue the initial value
      */
@@ -40,31 +40,31 @@ public class AtomicReference<V>  implements java.io.Serializable {
     }
 
     /**
-     * Create a new AtomicReference with null initial value.
+     * Creates a new AtomicReference with null initial value.
      */
     public AtomicReference() {
     }
-  
+
     /**
-     * Get the current value.
+     * Gets the current value.
      *
      * @return the current value
      */
     public final V get() {
         return value;
     }
-  
+
     /**
-     * Set to the given value.
+     * Sets to the given value.
      *
      * @param newValue the new value
      */
     public final void set(V newValue) {
         value = newValue;
     }
-  
+
     /**
-     * Atomically set the value to the given updated value
+     * Atomically sets the value to the given updated value
      * if the current value <tt>==</tt> the expected value.
      * @param expect the expected value
      * @param update the new value
@@ -76,7 +76,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
     }
 
     /**
-     * Atomically set the value to the given updated value
+     * Atomically sets the value to the given updated value
      * if the current value <tt>==</tt> the expected value.
      * May fail spuriously.
      * @param expect the expected value
@@ -88,7 +88,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
     }
 
     /**
-     * Set to the given value and return the old value.
+     * Atomically sets to the given value and returns the old value.
      *
      * @param newValue the new value
      * @return the previous value

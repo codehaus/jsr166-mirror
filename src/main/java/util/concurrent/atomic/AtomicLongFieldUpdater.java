@@ -28,9 +28,10 @@ import java.lang.reflect.*;
  */
 public abstract class  AtomicLongFieldUpdater<T>  {
     /**
-     * Creates an updater for objects with the given field.  The Class
-     * argument is needed to check that reflective types and generic
-     * types match.
+     * Creates and returns an updater for objects with the given field.
+     * The Class argument is needed to check that reflective types and
+     * generic types match.
+     *
      * @param tclass the class of the objects holding the field
      * @param fieldName the name of the field to be updated.
      * @return the updater
@@ -53,12 +54,12 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     }
 
     /**
-     * Atomically set the value of the field of the given object managed
-     * by this Updater to the given updated value if the current value
-     * <tt>==</tt> the expected value. This method is guaranteed to be
-     * atomic with respect to other calls to <tt>compareAndSet</tt> and
-     * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field.
+     * Atomically sets the field of the given object managed by this updater
+     * to the given updated value if the current value <tt>==</tt> the
+     * expected value. This method is guaranteed to be atomic with respect to
+     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * necessarily with respect to other changes in the field.
+     *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
@@ -66,16 +67,16 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * @throws ClassCastException if <tt>obj</tt> is not an instance
      * of the class possessing the field established in the constructor.
      */
-
     public abstract boolean compareAndSet(T obj, long expect, long update);
 
     /**
-     * Atomically set the value of the field of the given object managed
-     * by this Updater to the given updated value if the current value
-     * <tt>==</tt> the expected value. This method is guaranteed to be
-     * atomic with respect to other calls to <tt>compareAndSet</tt> and
-     * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field, and may fail spuriously.
+     * Atomically sets the field of the given object managed by this updater
+     * to the given updated value if the current value <tt>==</tt> the
+     * expected value. This method is guaranteed to be atomic with respect to
+     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * necessarily with respect to other changes in the field, and may fail
+     * spuriously.
+     *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
@@ -83,27 +84,31 @@ public abstract class  AtomicLongFieldUpdater<T>  {
      * @throws ClassCastException if <tt>obj</tt> is not an instance
      * of the class possessing the field established in the constructor.
      */
-
     public abstract boolean weakCompareAndSet(T obj, long expect, long update);
 
     /**
-     * Set the field of the given object managed by this updater. This
-     * operation is guaranteed to act as a volatile store with respect
-     * to subsequent invocations of <tt>compareAndSet</tt>.
+     * Sets the field of the given object managed by this updater to the
+     * given updated value. This operation is guaranteed to act as a volatile
+     * store with respect to subsequent invocations of
+     * <tt>compareAndSet</tt>.
+     *
      * @param obj An object whose field to set
      * @param newValue the new value
      */
     public abstract void set(T obj, long newValue);
 
     /**
-     * Get the current value held in the field by the given object.
+     * Gets the current value held in the field of the given object managed
+     * by this updater.
+     *
      * @param obj An object whose field to get
      * @return the current value
      */
     public abstract long get(T obj);
 
     /**
-     * Set to the given value and return the old value.
+     * Atomically sets the field of the given object managed by this updater
+     * to the given value and returns the old value.
      *
      * @param obj An object whose field to get and set
      * @param newValue the new value
@@ -118,9 +123,11 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     }
 
     /**
-     * Atomically increment by one the current value.
+     * Atomically increments by one the current value of the field of the
+     * given object managed by this updater.
+     *
      * @param obj An object whose field to get and set
-     * @return the previous value;
+     * @return the previous value
      */
     public long getAndIncrement(T obj) {
         for (;;) {
@@ -131,11 +138,12 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 
-
     /**
-     * Atomically decrement by one the current value.
+     * Atomically decrements by one the current value of the field of the
+     * given object managed by this updater.
+     *
      * @param obj An object whose field to get and set
-     * @return the previous value;
+     * @return the previous value
      */
     public long getAndDecrement(T obj) {
         for (;;) {
@@ -146,12 +154,13 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 
-
     /**
-     * Atomically add the given value to current value.
+     * Atomically adds the given value to the current value of the field of
+     * the given object managed by this updater.
+     *
      * @param obj An object whose field to get and set
      * @param delta the value to add
-     * @return the previous value;
+     * @return the previous value
      */
     public long getAndAdd(T obj, long delta) {
         for (;;) {
@@ -163,9 +172,11 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     }
 
     /**
-     * Atomically increment by one the current value.
+     * Atomically increments by one the current value of the field of the
+     * given object managed by this updater.
+     *
      * @param obj An object whose field to get and set
-     * @return the updated value;
+     * @return the updated value
      */
     public long incrementAndGet(T obj) {
         for (;;) {
@@ -176,11 +187,12 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 
-
     /**
-     * Atomically decrement by one the current value.
+     * Atomically decrements by one the current value of the field of the
+     * given object managed by this updater.
+     *
      * @param obj An object whose field to get and set
-     * @return the updated value;
+     * @return the updated value
      */
     public long decrementAndGet(T obj) {
         for (;;) {
@@ -191,12 +203,13 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 
-
     /**
-     * Atomically add the given value to current value.
+     * Atomically adds the given value to the current value of the field of
+     * the given object managed by this updater.
+     *
      * @param obj An object whose field to get and set
      * @param delta the value to add
-     * @return the updated value;
+     * @return the updated value
      */
     public long addAndGet(T obj, long delta) {
         for (;;) {
@@ -219,14 +232,14 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             } catch(Exception ex) {
                 throw new RuntimeException(ex);
             }
-            
+
             Class fieldt = field.getType();
             if (fieldt != long.class)
                 throw new IllegalArgumentException("Must be long type");
-            
+
             if (!Modifier.isVolatile(field.getModifiers()))
                 throw new IllegalArgumentException("Must be volatile type");
-            
+
             this.tclass = tclass;
             offset = unsafe.objectFieldOffset(field);
         }
@@ -269,14 +282,14 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             } catch(Exception ex) {
                 throw new RuntimeException(ex);
             }
-            
+
             Class fieldt = field.getType();
             if (fieldt != long.class)
                 throw new IllegalArgumentException("Must be long type");
-            
+
             if (!Modifier.isVolatile(field.getModifiers()))
                 throw new IllegalArgumentException("Must be volatile type");
-            
+
             this.tclass = tclass;
             offset = unsafe.objectFieldOffset(field);
         }
@@ -286,7 +299,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
                 throw new ClassCastException();
             synchronized(this) {
                 long v = unsafe.getLong(obj, offset);
-                if (v != expect) 
+                if (v != expect)
                     return false;
                 unsafe.putLong(obj, offset, update);
                 return true;
@@ -314,4 +327,3 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
     }
 }
-

@@ -58,7 +58,7 @@ public class AtomicBoolean implements java.io.Serializable {
     }
 
     /**
-     * Atomically set the value to the given updated value
+     * Atomically sets the value to the given updated value
      * if the current value <tt>==</tt> the expected value.
      *
      * @param expect the expected value
@@ -73,9 +73,10 @@ public class AtomicBoolean implements java.io.Serializable {
     }
 
     /**
-     * Atomically set the value to the given updated value
+     * Atomically sets the value to the given updated value
      * if the current value <tt>==</tt> the expected value.
      * May fail spuriously.
+     *
      * @param expect the expected value
      * @param update the new value
      * @return true if successful.
@@ -96,7 +97,7 @@ public class AtomicBoolean implements java.io.Serializable {
     }
 
     /**
-     * Sets to the given value and returns the previous value.
+     * Atomically sets to the given value and returns the previous value.
      *
      * @param newValue the new value
      * @return the previous value

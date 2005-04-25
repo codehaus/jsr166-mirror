@@ -47,9 +47,10 @@ import java.lang.reflect.*;
 public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
     /**
-     * Creates an updater for objects with the given field.  The Class
-     * arguments are needed to check that reflective types and generic
-     * types match.
+     * Creates and returns an updater for objects with the given field.
+     * The Class arguments are needed to check that reflective types and
+     * generic types match.
+     *
      * @param tclass the class of the objects holding the field.
      * @param vclass the class of the field
      * @param fieldName the name of the field to be updated.
@@ -60,8 +61,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      */
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
         // Currently rely on standard intrinsics implementation
-        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass, 
-                                                        vclass, 
+        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass,
+                                                        vclass,
                                                         fieldName);
     }
 
@@ -72,27 +73,27 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
     }
 
     /**
-     * Atomically set the value of the field of the given object managed
-     * by this Updater to the given updated value if the current value
-     * <tt>==</tt> the expected value. This method is guaranteed to be
-     * atomic with respect to other calls to <tt>compareAndSet</tt> and
-     * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field.
+     * Atomically sets the field of the given object managed by this updater
+     * to the given updated value if the current value <tt>==</tt> the
+     * expected value. This method is guaranteed to be atomic with respect to
+     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * necessarily with respect to other changes in the field.
+     *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
      * @return true if successful.
      */
-
     public abstract boolean compareAndSet(T obj, V expect, V update);
 
     /**
-     * Atomically set the value of the field of the given object managed
-     * by this Updater to the given updated value if the current value
-     * <tt>==</tt> the expected value. This method is guaranteed to be
-     * atomic with respect to other calls to <tt>compareAndSet</tt> and
-     * <tt>set</tt>, but not necessarily with respect to other
-     * changes in the field, and may fail spuriously.
+     * Atomically sets the field of the given object managed by this updater
+     * to the given updated value if the current value <tt>==</tt> the
+     * expected value. This method is guaranteed to be atomic with respect to
+     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * necessarily with respect to other changes in the field, and may fail
+     * spuriously.
+     *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
@@ -101,23 +102,28 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
     public abstract boolean weakCompareAndSet(T obj, V expect, V update);
 
     /**
-     * Set the field of the given object managed by this updater. This
-     * operation is guaranteed to act as a volatile store with respect
-     * to subsequent invocations of <tt>compareAndSet</tt>.
+     * Sets the field of the given object managed by this updater to the
+     * given updated value. This operation is guaranteed to act as a volatile
+     * store with respect to subsequent invocations of
+     * <tt>compareAndSet</tt>.
+     *
      * @param obj An object whose field to set
      * @param newValue the new value
      */
     public abstract void set(T obj, V newValue);
 
     /**
-     * Get the current value held in the field by the given object.
+     * Gets the current value held in the field of the given object managed
+     * by this updater.
+     *
      * @param obj An object whose field to get
      * @return the current value
      */
     public abstract V get(T obj);
 
     /**
-     * Set to the given value and return the old value.
+     * Atomically sets the field of the given object managed by this updater
+     * to the given value and returns the old value.
      *
      * @param obj An object whose field to get and set
      * @param newValue the new value
@@ -149,10 +155,10 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             } catch(Exception ex) {
                 throw new RuntimeException(ex);
             }
-            
+
             if (vclass != fieldClass)
                 throw new ClassCastException();
-            
+
             if (!Modifier.isVolatile(field.getModifiers()))
                 throw new IllegalArgumentException("Must be volatile type");
 
@@ -160,7 +166,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             this.vclass = vclass;
             offset = unsafe.objectFieldOffset(field);
         }
-        
+
 
         public boolean compareAndSet(T obj, V expect, V update) {
             if (!tclass.isInstance(obj) ||
@@ -192,4 +198,3 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         }
     }
 }
-

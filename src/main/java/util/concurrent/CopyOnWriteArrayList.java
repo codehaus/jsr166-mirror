@@ -70,8 +70,9 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Creates a list containing the elements of the specified
-     * Collection, in the order they are returned by the Collection's
+     * collection, in the order they are returned by the collection's
      * iterator.
+     *
      * @param c the collection of initially held elements
      */
     public CopyOnWriteArrayList(Collection<? extends E> c) {
@@ -291,13 +292,13 @@ public class CopyOnWriteArrayList<E>
      * specified array.  If the list fits in the specified array, it is
      * returned therein.  Otherwise, a new array is allocated with the runtime
      * type of the specified array and the size of this list.
-     * <p>
-     * If the list fits in the specified array with room to spare
-     * (i.e., the array has more elements than the list),
-     * the element in the array immediately following the end of the
-     * collection is set to null.  This is useful in determining the length
-     * of the list <em>only</em> if the caller knows that the list
-     * does not contain any null elements.
+     *
+     * <p>If this list fits in the specified array with room to spare
+     * (i.e., the array has more elements than this list), the element
+     * in the array immediately following the end of the list is set to
+     * <tt>null</tt>.  This is useful in determining the length of this
+     * list <i>only</i> if the caller knows that this collection does
+     * not contain any <tt>null</tt> elements.)
      *
      * @param a the array into which the elements of the list are to
      *            be stored, if it is big enough; otherwise, a new array of the
@@ -368,7 +369,7 @@ public class CopyOnWriteArrayList<E>
      * Appends the specified element to the end of this list.
      *
      * @param element element to be appended to this list.
-     * @return true (as per the general contract of Collection.add).
+     * @return true (as per the general contract of <tt>Collection.add</tt>).
      */
     public synchronized boolean add(E element) {
         int len = array.length;
@@ -498,7 +499,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Append the element if not present.
-     * @param element element to be added to this Collection, if absent.
+     * @param element element to be added to this list, if absent.
      * @return true if added
      */
     public synchronized boolean addIfAbsent(E element) {
@@ -519,13 +520,14 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns true if this Collection contains all of the elements in the
-     * specified Collection.
-     * <p>
-     * This implementation iterates over the specified Collection, checking
-     * each element returned by the Iterator in turn to see if it's
-     * contained in this Collection.  If all elements are so contained
-     * true is returned, otherwise false.
+     * Returns true if this list contains all of the elements in the
+     * specified collection.
+     * 
+     * <p>This implementation iterates over the specified collection,
+     * checking each element returned by the Iterator in turn to see if
+     * it's contained in this list.  If all elements are so contained
+     * <tt>true</tt> is returned, otherwise <tt>false</tt>.
+     *
      * @param c the collection
      * @return true if all elements are contained
      */
@@ -542,13 +544,12 @@ public class CopyOnWriteArrayList<E>
 
 
     /**
-     * Removes from this Collection all of its elements that are contained in
-     * the specified Collection. This is a particularly expensive operation
+     * Removes from this list all of its elements that are contained in
+     * the specified collection. This is a particularly expensive operation
      * in this class because of the need for an internal temporary array.
-     * <p>
      *
      * @param c the collection
-     * @return true if this Collection changed as a result of the call.
+     * @return true if this list changed as a result of the call.
      */
     public synchronized boolean removeAll(Collection<?> c) {
         E[] elementData = array;
@@ -575,12 +576,13 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Retains only the elements in this Collection that are contained in the
-     * specified Collection (optional operation).  In other words, removes from
-     * this Collection all of its elements that are not contained in the
-     * specified Collection.
+     * Retains only the elements in this list that are contained in the
+     * specified collection (optional operation).  In other words, removes
+     * from this list all of its elements that are not contained in the
+     * specified collection.
+     *
      * @param c the collection
-     * @return true if this Collection changed as a result of the call.
+     * @return true if this list changed as a result of the call.
      */
     public synchronized boolean retainAll(Collection<?> c) {
         E[] elementData = array;
@@ -605,12 +607,12 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Appends all of the elements in the specified Collection that
+     * Appends all of the elements in the specified collection that
      * are not already contained in this list, to the end of
      * this list, in the order that they are returned by the
-     * specified Collection's Iterator.
+     * specified collection's iterator.
      *
-     * @param c elements to be added into this list.
+     * @param c elements to be added to this list.
      * @return the number of elements added
      */
     public synchronized int addAllAbsent(Collection<? extends E> c) {
@@ -650,9 +652,9 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Appends all of the elements in the specified Collection to the end of
-     * this list, in the order that they are returned by the
-     * specified Collection's Iterator.
+     * Appends all of the elements in the specified collection to the end
+     * of this list, in the order that they are returned by the specified
+     * collection's iterator.
      *
      * @param c elements to be inserted into this list.
      * @return true if any elements are added
@@ -761,7 +763,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns a string representation of this Collection, containing
+     * Returns a string representation of this list, containing
      * the String representation of each element.
      */
     public String toString() {
@@ -839,7 +841,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns an Iterator over the elements contained in this collection.
+     * Returns an Iterator over the elements contained in this list.
      * The iterator provides a snapshot of the state of the list
      * when the iterator was constructed. No synchronization is
      * needed while traversing the iterator. The iterator does
@@ -938,18 +940,17 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException always; remove is not supported
-         *            by this Iterator.
+         * @throws UnsupportedOperationException always; <tt>remove</tt>
+         *         is not supported by this iterator.
          */
-
         public void remove() {
             throw new UnsupportedOperationException();
         }
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException always; set is not supported
-         *            by this Iterator.
+         * @throws UnsupportedOperationException always; <tt>set</tt>
+         *         is not supported by this iterator.
          */
         public void set(E o) {
             throw new UnsupportedOperationException();
@@ -957,8 +958,8 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException always; add is not supported
-         *            by this Iterator.
+         * @throws UnsupportedOperationException always; <tt>add</tt>
+         *         is not supported by this iterator.
          */
         public void add(E o) {
             throw new UnsupportedOperationException();

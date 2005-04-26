@@ -135,7 +135,7 @@ import java.util.Queue;
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
- *  
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
@@ -152,10 +152,10 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @param o the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this queue, else <tt>false</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     boolean offer(E o);
-    
+
     /**
      * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for space to become available.
@@ -221,13 +221,13 @@ public interface BlockingQueue<E> extends Queue<E> {
     /**
      * Adds the specified element to this queue if it is possible to
      * do so immediately, returning <tt>true</tt> upon success, else
-     * throwing an IllegalStateException.  
+     * throwing an IllegalStateException.
      * @param o the element
      * @return <tt>true</tt> (as per the general contract of
      *         <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException if the specified element is <tt>null</tt>
-     * @throws IllegalStateException if element cannot be added
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws IllegalStateException if element cannot be added.
      */
     boolean add(E o);
 
@@ -247,10 +247,10 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @return the number of elements transferred.
      * @throws NullPointerException if c is null
      * @throws IllegalArgumentException if c is this queue
-     * 
+     *
      */
     int drainTo(Collection<? super E> c);
-    
+
     /**
      * Removes at most the given number of available elements from
      * this queue and adds them into the given collection.  A failure

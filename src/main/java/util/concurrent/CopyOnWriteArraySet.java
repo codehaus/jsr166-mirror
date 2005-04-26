@@ -27,8 +27,8 @@ import java.util.*;
  * </ul>
  *
  * <p> <b>Sample Usage.</b> The following code sketch uses a
- * copy-on-write set to maintain a set of Handler objects that 
- * perform some action upon state updates. 
+ * copy-on-write set to maintain a set of Handler objects that
+ * perform some action upon state updates.
  *
  * <pre>
  * class Handler { void handle(); ... }

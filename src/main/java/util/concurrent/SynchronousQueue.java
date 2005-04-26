@@ -39,7 +39,7 @@ import java.util.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces. 
+ * Iterator} interfaces.
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -116,13 +116,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * in order to recover fairness settings when deserialized.
      */
     static abstract class WaitQueue implements java.io.Serializable {
-        /** Create, add, and return node for x */
+        /** Creates, adds, and returns node for x. */
         abstract Node enq(Object x);
-        /** Remove and return node, or null if empty */
+        /** Removes and returns node, or null if empty. */
         abstract Node deq();
-        /** Remove a cancelled node to avoid garbage retention. */
+        /** Removes a cancelled node to avoid garbage retention. */
         abstract void unlink(Node node);
-        /** Return true if a cancelled node might be on queue */
+        /** Returns true if a cancelled node might be on queue. */
         abstract boolean shouldUnlink(Node node);
     }
 
@@ -164,7 +164,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             while (p != null) {
                 if (p == node) {
                     Node next = p.next;
-                    if (trail == null) 
+                    if (trail == null)
                         head = next;
                     else
                         trail.next = next;
@@ -210,7 +210,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             while (p != null) {
                 if (p == node) {
                     Node next = p.next;
-                    if (trail == null) 
+                    if (trail == null)
                         head = next;
                     else
                         trail.next = next;
@@ -225,7 +225,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /*
      * Unlink the given node from consumer queue.  Called by cancelled
      * (timeout, interrupt) waiters to avoid garbage retention in the
-     * absence of producers. 
+     * absence of producers.
      */
     private void unlinkCancelledConsumer(Node node) {
         // Use a form of double-check to avoid unnecessary locking and
@@ -234,7 +234,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         if (waitingConsumers.shouldUnlink(node)) {
             qlock.lock();
             try {
-                if (waitingConsumers.shouldUnlink(node)) 
+                if (waitingConsumers.shouldUnlink(node))
                     waitingConsumers.unlink(node);
             } finally {
                 qlock.unlock();
@@ -250,14 +250,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         if (waitingProducers.shouldUnlink(node)) {
             qlock.lock();
             try {
-                if (waitingProducers.shouldUnlink(node)) 
+                if (waitingProducers.shouldUnlink(node))
                     waitingProducers.unlink(node);
             } finally {
                 qlock.unlock();
             }
         }
     }
-        
+
     /**
      * Nodes each maintain an item and handle waits and signals for
      * getting and setting it. The class extends
@@ -308,9 +308,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * Tries to cancel on interrupt; if so rethrowing,
          * else setting interrupt state
          */
-        private void checkCancellationOnInterrupt(InterruptedException ie) 
+        private void checkCancellationOnInterrupt(InterruptedException ie)
             throws InterruptedException {
-            if (release(CANCEL)) 
+            if (release(CANCEL))
                 throw ie;
             Thread.currentThread().interrupt();
         }
@@ -458,7 +458,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             if (mustWait) {
                 try {
                     boolean x = node.waitForTake(nanos);
-                    if (!x) 
+                    if (!x)
                         unlinkCancelledProducer(node);
                     return x;
                 } catch (InterruptedException ex) {
@@ -547,7 +547,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             if (mustWait) {
                 try {
                     Object x = node.waitForPut(nanos);
-                    if (x == null) 
+                    if (x == null)
                         unlinkCancelledConsumer(node);
                     return (E)x;
                 } catch (InterruptedException ex) {
@@ -573,7 +573,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     * @param o the element to add.
     * @return <tt>true</tt> if it was possible to add the element to
     *         this queue, else <tt>false</tt>
-    * @throws NullPointerException if the specified element is <tt>null</tt>
+    * @throws NullPointerException if the specified element is <tt>null</tt>.
     */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
@@ -626,7 +626,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Always returns <tt>true</tt>. 
+     * Always returns <tt>true</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      * @return <tt>true</tt>
      */
@@ -710,7 +710,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Always returns <tt>null</tt>. 
+     * Always returns <tt>null</tt>.
      * A <tt>SynchronousQueue</tt> does not return elements
      * unless actively waited on.
      * @return <tt>null</tt>
@@ -792,8 +792,3 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         return n;
     }
 }
-
-
-
-
-

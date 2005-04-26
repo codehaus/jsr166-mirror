@@ -33,7 +33,7 @@ import java.util.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces. 
+ * Iterator} interfaces.
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -85,7 +85,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Insert element at current put position, advance, and signal.
+     * Inserts element at current put position, advances, and signals.
      * Call only when holding lock.
      */
     private void insert(E x) {
@@ -96,7 +96,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Extract element at current take position, advance, and signal.
+     * Extracts element at current take position, advances, and signals.
      * Call only when holding lock.
      */
     private E extract() {
@@ -178,7 +178,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException if <tt>capacity</tt> is less than
      * <tt>c.size()</tt>, or less than 1.
      * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     *         is <tt>null</tt>.
      */
     public ArrayBlockingQueue(int capacity, boolean fair,
                               Collection<? extends E> c) {
@@ -197,7 +197,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @param o the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this queue, else <tt>false</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
@@ -580,7 +580,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException},
+     * will never throw {@link ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
@@ -612,7 +612,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * that an element exists in hasNext(), we must return it in
          * the following next() call even if it was in the process of
          * being removed when hasNext() was called.
-         **/
+         */
         private E nextItem;
 
         /**
@@ -641,7 +641,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Check whether nextIndex is valid; if so setting nextItem.
+         * Checks whether nextIndex is valid; if so setting nextItem.
          * Stops iterator when either hits putIndex or sees null item.
          */
         private void checkNext() {

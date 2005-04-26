@@ -14,7 +14,7 @@ import java.security.PrivilegedExceptionAction;
 /**
  * An {@link Executor} that provides methods to manage termination and
  * methods that can produce a {@link Future} for tracking progress of
- * one or more asynchronous tasks.  
+ * one or more asynchronous tasks.
  *
  * <p>
  * An <tt>ExecutorService</tt> can be shut down, which will cause it
@@ -50,7 +50,7 @@ import java.security.PrivilegedExceptionAction;
  *      serverSocket = new ServerSocket(port);
  *      pool = Executors.newFixedThreadPool(poolSize);
  *    }
- * 
+ *
  *    public void serve() {
  *      try {
  *        for (;;) {
@@ -91,8 +91,8 @@ public interface ExecutorService extends Executor {
     /**
      * Attempts to stop all actively executing tasks, halts the
      * processing of waiting tasks, and returns a list of the tasks that were
-     * awaiting execution. 
-     *  
+     * awaiting execution.
+     *
      * <p>There are no guarantees beyond best-effort attempts to stop
      * processing actively executing tasks.  For example, typical
      * implementations will cancel via {@link Thread#interrupt}, so if any
@@ -165,7 +165,7 @@ public interface ExecutorService extends Executor {
 
     /**
      * Submits a Runnable task for execution and returns a Future
-     * representing that task. The Future's <tt>get</tt> method will 
+     * representing that task. The Future's <tt>get</tt> method will
      * return the given result upon successful completion.
      *
      * @param task the task to submit
@@ -173,13 +173,13 @@ public interface ExecutorService extends Executor {
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
-     * @throws NullPointerException if task null     
+     * @throws NullPointerException if task null
      */
     <T> Future<T> submit(Runnable task, T result);
 
     /**
-     * Submits a Runnable task for execution and returns a Future 
-     * representing that task. The Future's <tt>get</tt> method will 
+     * Submits a Runnable task for execution and returns a Future
+     * representing that task. The Future's <tt>get</tt> method will
      * return <tt>null</tt> upon successful completion.
      *
      * @param task the task to submit
@@ -192,8 +192,8 @@ public interface ExecutorService extends Executor {
 
     /**
      * Executes the given tasks, returning a list of Futures holding
-     * their status and results when all complete. 
-     * {@link Future#isDone} is <tt>true</tt> for each 
+     * their status and results when all complete.
+     * {@link Future#isDone} is <tt>true</tt> for each
      * element of the returned list.
      * Note that a <em>completed</em> task could have
      * terminated either normally or by throwing an exception.
@@ -215,9 +215,9 @@ public interface ExecutorService extends Executor {
 
     /**
      * Executes the given tasks, returning a list of Futures holding
-     * their status and results 
+     * their status and results
      * when all complete or the timeout expires, whichever happens first.
-     * {@link Future#isDone} is <tt>true</tt> for each 
+     * {@link Future#isDone} is <tt>true</tt> for each
      * element of the returned list.
      * Upon return, tasks that have not completed are cancelled.
      * Note that a <em>completed</em> task could have
@@ -239,8 +239,8 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
-    <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks, 
-                                  long timeout, TimeUnit unit) 
+    <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks,
+                                  long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**
@@ -284,8 +284,8 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if tasks cannot be scheduled
      * for execution
      */
-    <T> T invokeAny(Collection<Callable<T>> tasks, 
-                    long timeout, TimeUnit unit) 
+    <T> T invokeAny(Collection<Callable<T>> tasks,
+                    long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException;
 
 }

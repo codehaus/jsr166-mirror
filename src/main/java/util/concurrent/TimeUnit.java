@@ -117,19 +117,19 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toDays(d); }
         int excessNanos(long d, long m) { return 0; }
     };
-    
+
     /**
      * The index of this unit. This value is no longer used in this
      * version of this class, but is retained for serialization
      * compatibility with previous version.
      */
     private final int index;
-    
+
     /** Internal constructor */
     TimeUnit(int index) {
         this.index = index;
     }
-    
+
     // Handy constants for conversion methods
     static final long C0 = 1L;
     static final long C1 = C0 * 1000L;
@@ -138,9 +138,9 @@ public enum TimeUnit {
     static final long C4 = C3 * 60L;
     static final long C5 = C4 * 60L;
     static final long C6 = C5 * 24L;
-    
+
     static final long MAX = Long.MAX_VALUE;
-    
+
     /**
      * Scale d by m, checking for overflow.
      * This has a short name to make above code more readable.
@@ -150,7 +150,7 @@ public enum TimeUnit {
         if (d < -over) return Long.MIN_VALUE;
         return d * m;
     }
-    
+
     /**
      * Convert the given time duration in the given unit to this
      * unit.  Conversions from finer to coarser granularities
@@ -168,7 +168,7 @@ public enum TimeUnit {
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      */
     public abstract long convert(long duration, TimeUnit unit);
-    
+
     /**
      * Equivalent to <tt>NANOSECONDS.convert(duration, this)</tt>.
      * @param duration the duration
@@ -178,7 +178,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public abstract long toNanos(long duration);
-    
+
     /**
      * Equivalent to <tt>MICROSECONDS.convert(duration, this)</tt>.
      * @param duration the duration
@@ -188,7 +188,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public abstract long toMicros(long duration);
-    
+
     /**
      * Equivalent to <tt>MILLISECONDS.convert(duration, this)</tt>.
      * @param duration the duration
@@ -198,7 +198,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public abstract long toMillis(long duration);
-    
+
     /**
      * Equivalent to <tt>SECONDS.convert(duration, this)</tt>.
      * @param duration the duration
@@ -208,7 +208,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public abstract long toSeconds(long duration);
-    
+
     /**
      * Equivalent to <tt>MINUTES.convert(duration, this)</tt>.
      * @param duration the duration
@@ -218,7 +218,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public abstract long toMinutes(long duration);
-    
+
     /**
      * Equivalent to <tt>HOURS.convert(duration, this)</tt>.
      * @param duration the duration
@@ -228,7 +228,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public abstract long toHours(long duration);
-    
+
     /**
      * Equivalent to <tt>DAYS.convert(duration, this)</tt>.
      * @param duration the duration
@@ -236,7 +236,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public abstract long toDays(long duration);
-    
+
     /**
      * Utility to compute the excess-nanosecond argument to wait,
      * sleep, join.
@@ -245,9 +245,9 @@ public enum TimeUnit {
      * @return the number of nanoseconds
      */
     abstract int excessNanos(long d, long m);
-    
+
     /**
-     * Perform a timed <tt>Object.wait</tt> using this time unit.
+     * Performs a timed <tt>Object.wait</tt> using this time unit.
      * This is a convenience method that converts timeout arguments
      * into the form required by the <tt>Object.wait</tt> method.
      *
@@ -276,9 +276,9 @@ public enum TimeUnit {
             obj.wait(ms, ns);
         }
     }
-    
+
     /**
-     * Perform a timed <tt>Thread.join</tt> using this time unit.
+     * Performs a timed <tt>Thread.join</tt> using this time unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.join</tt> method.
      * @param thread the thread to wait for
@@ -295,9 +295,9 @@ public enum TimeUnit {
             thread.join(ms, ns);
         }
     }
-    
+
     /**
-     * Perform a <tt>Thread.sleep</tt> using this unit.
+     * Performs a <tt>Thread.sleep</tt> using this unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.sleep</tt> method.
      * @param timeout the minimum time to sleep. If less than
@@ -312,5 +312,5 @@ public enum TimeUnit {
             Thread.sleep(ms, ns);
         }
     }
-    
+
 }

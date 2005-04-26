@@ -68,7 +68,7 @@ public class Exchanger<V> {
 
     /** Holder for the item being exchanged */
     private V item;
-    
+
     /**
      * Arrival count transitions from 0 to 1 to 2 then back to 0
      * during an exchange.
@@ -88,16 +88,16 @@ public class Exchanger<V> {
             while (arrivalCount == 2) {
                 if (!timed)
                     taken.await();
-                else if (nanos > 0) 
+                else if (nanos > 0)
                     nanos = taken.awaitNanos(nanos);
-                else 
+                else
                     throw new TimeoutException();
             }
 
             int count = ++arrivalCount;
 
             // If item is already waiting, replace it and signal other thread
-            if (count == 2) { 
+            if (count == 2) {
                 other = item;
                 item = x;
                 taken.signal();
@@ -109,13 +109,13 @@ public class Exchanger<V> {
 
             item = x;
             InterruptedException interrupted = null;
-            try { 
+            try {
                 while (arrivalCount != 2) {
                     if (!timed)
                         taken.await();
-                    else if (nanos > 0) 
+                    else if (nanos > 0)
                         nanos = taken.awaitNanos(nanos);
-                    else 
+                    else
                         break; // timed out
                 }
             } catch (InterruptedException ie) {
@@ -127,9 +127,9 @@ public class Exchanger<V> {
             other = item;
             item = null;
             count = arrivalCount;
-            arrivalCount = 0; 
+            arrivalCount = 0;
             taken.signal();
-            
+
             // If the other thread replaced item, then we must
             // continue even if cancelled.
             if (count == 2) {
@@ -139,7 +139,7 @@ public class Exchanger<V> {
             }
 
             // If no one is waiting for us, we can back out
-            if (interrupted != null) 
+            if (interrupted != null)
                 throw interrupted;
             else  // must be timeout
                 throw new TimeoutException();
@@ -149,8 +149,8 @@ public class Exchanger<V> {
     }
 
     /**
-     * Create a new Exchanger.
-     **/
+     * Creates a new Exchanger.
+     */
     public Exchanger() {
     }
 
@@ -163,7 +163,7 @@ public class Exchanger<V> {
      * it is resumed for thread scheduling purposes and receives the object
      * passed in by the current thread. The current thread returns immediately,
      * receiving the object passed to the exchange by that other thread.
-     * <p>If no other thread is already waiting at the exchange then the 
+     * <p>If no other thread is already waiting at the exchange then the
      * current thread is disabled for thread scheduling purposes and lies
      * dormant until one of two things happens:
      * <ul>
@@ -173,22 +173,22 @@ public class Exchanger<V> {
      * </ul>
      * <p>If the current thread:
      * <ul>
-     * <li>has its interrupted status set on entry to this method; or 
+     * <li>has its interrupted status set on entry to this method; or
      * <li>is {@link Thread#interrupt interrupted} while waiting
-     * for the exchange, 
+     * for the exchange,
      * </ul>
-     * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. 
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
      *
      * @param x the object to exchange
      * @return the object provided by the other thread.
-     * @throws InterruptedException if current thread was interrupted 
+     * @throws InterruptedException if current thread was interrupted
      * while waiting
-     **/
+     */
     public V exchange(V x) throws InterruptedException {
         try {
             return doExchange(x, false, 0);
-        } catch (TimeoutException cannotHappen) { 
+        } catch (TimeoutException cannotHappen) {
             throw new Error(cannotHappen);
         }
     }
@@ -205,7 +205,7 @@ public class Exchanger<V> {
      * passed in by the current thread. The current thread returns immediately,
      * receiving the object passed to the exchange by that other thread.
      *
-     * <p>If no other thread is already waiting at the exchange then the 
+     * <p>If no other thread is already waiting at the exchange then the
      * current thread is disabled for thread scheduling purposes and lies
      * dormant until one of three things happens:
      * <ul>
@@ -216,16 +216,16 @@ public class Exchanger<V> {
      * </ul>
      * <p>If the current thread:
      * <ul>
-     * <li>has its interrupted status set on entry to this method; or 
+     * <li>has its interrupted status set on entry to this method; or
      * <li>is {@link Thread#interrupt interrupted} while waiting
-     * for the exchange, 
+     * for the exchange,
      * </ul>
-     * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. 
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
      *
      * <p>If the specified waiting time elapses then {@link TimeoutException}
      * is thrown.
-     * If the time is 
+     * If the time is
      * less than or equal to zero, the method will not wait at all.
      *
      * @param x the object to exchange
@@ -236,12 +236,10 @@ public class Exchanger<V> {
      * while waiting
      * @throws TimeoutException if the specified waiting time elapses before
      * another thread enters the exchange.
-     **/
-    public V exchange(V x, long timeout, TimeUnit unit) 
+     */
+    public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
         return doExchange(x, true, unit.toNanos(timeout));
     }
 
 }
-
-

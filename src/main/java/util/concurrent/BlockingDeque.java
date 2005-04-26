@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-import java.util.*;  
+import java.util.*;
 
 /**
  * A {@link Deque} that additionally supports operations that wait for
@@ -31,7 +31,7 @@ import java.util.*;
  *    <td>{@link #putFirst putFirst(e)}</td>
  *    <td>{@link #offerFirst(Object, long, TimeUnit) offerFirst(e, time, unit)}</td>
  *    <td>{@link #putLast putLast(e)}</td>
- *    <td>{@link #offerLast(Object, long, TimeUnit) offerLast(e, time, unit)}</td> 
+ *    <td>{@link #offerLast(Object, long, TimeUnit) offerLast(e, time, unit)}</td>
  *  </tr>
  *  <tr>
  *    <td><b>Remove</b></td>
@@ -193,7 +193,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      */
     void put(E o) throws InterruptedException;
 
-    /** 
+    /**
      * Inserts the specified element as the lest element of this
      * deque, if possible.  When using deques that may impose
      * insertion restrictions (for example capacity bounds), method

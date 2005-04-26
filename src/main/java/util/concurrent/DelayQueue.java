@@ -22,7 +22,7 @@ import java.util.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces. 
+ * Iterator} interfaces.
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -51,7 +51,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      *
      * @param c the collection
      * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     *         is <tt>null</tt>.
      *
      */
     public DelayQueue(Collection<? extends E> c) {
@@ -361,7 +361,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * Returns an iterator over the elements in this queue. The iterator
      * does not return the elements in any particular order. The
      * returned iterator is a thread-safe "fast-fail" iterator that will
-     * throw {@link java.util.ConcurrentModificationException}
+     * throw {@link ConcurrentModificationException}
      * upon detected interference.
      *
      * @return an iterator over the elements in this queue.

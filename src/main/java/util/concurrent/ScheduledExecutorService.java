@@ -10,13 +10,13 @@ import java.util.*;
 
 /**
  * An {@link ExecutorService} that can schedule commands to run after a given
- * delay, or to execute periodically. 
+ * delay, or to execute periodically.
  *
  * <p> The <tt>schedule</tt> methods create tasks with various delays
  * and return a task object that can be used to cancel or check
  * execution. The <tt>scheduleAtFixedRate</tt> and
  * <tt>scheduleWithFixedDelay</tt> methods create and execute tasks
- * that run periodically until cancelled.  
+ * that run periodically until cancelled.
  *
  * <p> Commands submitted using the {@link Executor#execute} and
  * {@link ExecutorService} <tt>submit</tt> methods are scheduled with
@@ -33,27 +33,27 @@ import java.util.*;
  * TimeUnit.MILLISECONDS)</tt>. Beware however that expiration of a
  * relative delay need not coincide with the current <tt>Date</tt> at
  * which the task is enabled due to network time synchronization
- * protocols, clock drift, or other factors. 
+ * protocols, clock drift, or other factors.
  *
  * The {@link Executors} class provides convenient factory methods for
  * the ScheduledExecutorService implementations provided in this package.
  *
  * <h3>Usage Example</h3>
- * 
+ *
  * Here is a class with a method that sets up a ScheduledExecutorService
  * to beep every ten seconds for an hour:
  *
  * <pre>
  * import static java.util.concurrent.TimeUnit.*;
  * class BeeperControl {
- *    private final ScheduledExecutorService scheduler = 
+ *    private final ScheduledExecutorService scheduler =
  *       Executors.newScheduledThreadPool(1);
  *
  *    public void beepForAnHour() {
  *        final Runnable beeper = new Runnable() {
  *                public void run() { System.out.println("beep"); }
  *            };
- *        final ScheduledFuture&lt;?&gt; beeperHandle = 
+ *        final ScheduledFuture&lt;?&gt; beeperHandle =
  *            scheduler.scheduleAtFixedRate(beeper, 10, 10, SECONDS);
  *        scheduler.schedule(new Runnable() {
  *                public void run() { beeperHandle.cancel(true); }
@@ -100,11 +100,11 @@ public interface ScheduledExecutorService extends ExecutorService {
      * after the given initial delay, and subsequently with the given
      * period; that is executions will commence after
      * <tt>initialDelay</tt> then <tt>initialDelay+period</tt>, then
-     * <tt>initialDelay + 2 * period</tt>, and so on.  
+     * <tt>initialDelay + 2 * period</tt>, and so on.
      * If any execution of the task
      * encounters an exception, subsequent executions are suppressed.
      * Otherwise, the task will only terminate via cancellation or
-     * termination of the executor. If any execution of this task 
+     * termination of the executor. If any execution of this task
      * takes longer than its period, then subsequent executions
      * may start late, but will not concurrently execute.
      * @param command the task to execute.
@@ -120,7 +120,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @throws IllegalArgumentException if period less than or equal to zero.
      */
     public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit);
-    
+
     /**
      * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and subsequently with the

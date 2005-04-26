@@ -4,13 +4,13 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 
-package java.util.concurrent; 
+package java.util.concurrent;
 import java.util.*;
 
 /**
  * Static methods that operate on or return instances of collection
  * and synchronizer classes and interfaces defined in this package.
- * 
+ *
  * @since 1.6
  * @author Doug Lea
  */
@@ -31,7 +31,7 @@ public class Concurrent {
         return new AsLIFOBlockingQueue<T>(deque);
     }
 
-    static class AsLIFOBlockingQueue<E> extends AbstractQueue<E> 
+    static class AsLIFOBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
         private final BlockingDeque<E> q;
         AsLIFOBlockingQueue(BlockingDeque<E> q) { this.q = q; }

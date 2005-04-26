@@ -41,8 +41,8 @@ package java.util.concurrent;
  * }
  * </pre>
  *
- * The {@link FutureTask} class is an implementation of <tt>Future</tt> that 
- * implements <tt>Runnable</tt>, and so may be executed by an <tt>Executor</tt>. 
+ * The {@link FutureTask} class is an implementation of <tt>Future</tt> that
+ * implements <tt>Runnable</tt>, and so may be executed by an <tt>Executor</tt>.
  * For example, the above construction with <tt>submit</tt> could be replaced by:
  * <pre>
  *     FutureTask&lt;String&gt; future =
@@ -88,12 +88,12 @@ public interface Future<V> {
     boolean isCancelled();
 
     /**
-     * Returns <tt>true</tt> if this task completed.  
+     * Returns <tt>true</tt> if this task completed.
      *
      * Completion may be due to normal termination, an exception, or
      * cancellation -- in all of these cases, this method will return
      * <tt>true</tt>.
-     * 
+     *
      * @return <tt>true</tt> if this task completed.
      */
     boolean isDone();
@@ -128,6 +128,3 @@ public interface Future<V> {
     V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException;
 }
-
-
-

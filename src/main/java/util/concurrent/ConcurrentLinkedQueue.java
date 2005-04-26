@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.*;
 
 
 /**
- * An unbounded thread-safe {@linkplain Queue queue} based on linked nodes.  
+ * An unbounded thread-safe {@linkplain Queue queue} based on linked nodes.
  * This queue orders elements FIFO (first-in-first-out).
  * The <em>head</em> of the queue is that element that has been on the
  * queue the longest time.
@@ -18,11 +18,11 @@ import java.util.concurrent.atomic.*;
  * queue the shortest time. New elements
  * are inserted at the tail of the queue, and the queue retrieval
  * operations obtain elements at the head of the queue.
- * A <tt>ConcurrentLinkedQueue</tt> is an appropriate choice when 
+ * A <tt>ConcurrentLinkedQueue</tt> is an appropriate choice when
  * many threads will share access to a common collection.
  * This queue does not permit <tt>null</tt> elements.
  *
- * <p>This implementation employs an efficient &quot;wait-free&quot; 
+ * <p>This implementation employs an efficient &quot;wait-free&quot;
  * algorithm based on one described in <a
  * href="http://www.cs.rochester.edu/u/michael/PODC96.html"> Simple,
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces. 
+ * Iterator} interfaces.
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -63,56 +63,56 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     private static class Node<E> {
         private volatile E item;
         private volatile Node<E> next;
-        
-        private static final 
-            AtomicReferenceFieldUpdater<Node, Node> 
+
+        private static final
+            AtomicReferenceFieldUpdater<Node, Node>
             nextUpdater =
             AtomicReferenceFieldUpdater.newUpdater
             (Node.class, Node.class, "next");
-        private static final 
-            AtomicReferenceFieldUpdater<Node, Object> 
+        private static final
+            AtomicReferenceFieldUpdater<Node, Object>
             itemUpdater =
             AtomicReferenceFieldUpdater.newUpdater
             (Node.class, Object.class, "item");
-        
+
         Node(E x) { item = x; }
-        
+
         Node(E x, Node<E> n) { item = x; next = n; }
-        
+
         E getItem() {
             return item;
         }
-        
+
         boolean casItem(E cmp, E val) {
             return itemUpdater.compareAndSet(this, cmp, val);
         }
-        
+
         void setItem(E val) {
             itemUpdater.set(this, val);
         }
-        
+
         Node<E> getNext() {
             return next;
         }
-        
+
         boolean casNext(Node<E> cmp, Node<E> val) {
             return nextUpdater.compareAndSet(this, cmp, val);
         }
-        
+
         void setNext(Node<E> val) {
             nextUpdater.set(this, val);
         }
-        
+
     }
 
-    private static final 
-        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node> 
-        tailUpdater = 
+    private static final
+        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node>
+        tailUpdater =
         AtomicReferenceFieldUpdater.newUpdater
         (ConcurrentLinkedQueue.class, Node.class, "tail");
-    private static final 
-        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node> 
-        headUpdater = 
+    private static final
+        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node>
+        headUpdater =
         AtomicReferenceFieldUpdater.newUpdater
         (ConcurrentLinkedQueue.class,  Node.class, "head");
 
@@ -141,19 +141,19 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     public ConcurrentLinkedQueue() {}
 
     /**
-     * Creates a <tt>ConcurrentLinkedQueue</tt> 
+     * Creates a <tt>ConcurrentLinkedQueue</tt>
      * initially containing the elements of the given collection,
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * is <tt>null</tt>.
      */
     public ConcurrentLinkedQueue(Collection<? extends E> c) {
         for (Iterator<? extends E> it = c.iterator(); it.hasNext();)
             add(it.next());
     }
 
-    // Have to override just to update the javadoc 
+    // Have to override just to update the javadoc
 
     /**
      * Adds the specified element to the tail of this queue.
@@ -161,7 +161,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean add(E o) {
         return offer(o);
@@ -173,7 +173,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @param o the element to add.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Queue.offer</tt>).
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
@@ -362,7 +362,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      * The returned iterator is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException},
+     * will never throw {@link ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
@@ -384,7 +384,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
          * that an element exists in hasNext(), we must return it in
          * the following next() call even if it was in the process of
          * being removed when hasNext() was called.
-         **/
+         */
         private E nextItem;
 
         /**

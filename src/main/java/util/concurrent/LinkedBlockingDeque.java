@@ -48,7 +48,7 @@ public class LinkedBlockingDeque<E>
 
     /** Doubly-linked list node class */
     static final class Node<E> {
-	E item; 
+	E item;
         Node<E> prev;
         Node<E> next;
         Node(E x, Node<E> p, Node<E> n) {
@@ -99,7 +99,7 @@ public class LinkedBlockingDeque<E>
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * is <tt>null</tt>.
      */
     public LinkedBlockingDeque(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
@@ -111,7 +111,7 @@ public class LinkedBlockingDeque<E>
     // Basic linking and unlinking operations, called only while holding lock
 
     /**
-     * Link e as first element, or return false if full
+     * Links e as first element, or returns false if full.
      */
     private boolean linkFirst(E e) {
         if (count >= capacity)
@@ -129,7 +129,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Link e as last element, or return false if full
+     * Links e as last element, or returns false if full.
      */
     private boolean linkLast(E e) {
         if (count >= capacity)
@@ -147,7 +147,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Remove and return first element, or null if empty
+     * Removes and returns first element, or null if empty.
      */
     private E unlinkFirst() {
         Node<E> f = first;
@@ -155,9 +155,9 @@ public class LinkedBlockingDeque<E>
             return null;
         Node<E> n = f.next;
         first = n;
-        if (n == null) 
+        if (n == null)
             last = null;
-        else 
+        else
             n.prev = null;
         --count;
         notFull.signal();
@@ -165,7 +165,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Remove and return last element, or null if empty
+     * Removes and returns last element, or null if empty.
      */
     private E unlinkLast() {
         Node<E> l = last;
@@ -173,9 +173,9 @@ public class LinkedBlockingDeque<E>
             return null;
         Node<E> p = l.prev;
         last = p;
-        if (p == null) 
+        if (p == null)
             first = null;
-        else 
+        else
             p.next = null;
         --count;
         notFull.signal();
@@ -189,7 +189,7 @@ public class LinkedBlockingDeque<E>
         Node<E> p = x.prev;
         Node<E> n = x.next;
         if (p == null) {
-            if (n == null) 
+            if (n == null)
                 first = last = null;
             else {
                 n.prev = null;
@@ -228,12 +228,12 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public void addFirst(E e) { 
+    public void addFirst(E e) {
         if (!offerFirst(e))
             throw new IllegalStateException("Deque full");
     }
 
-    public void addLast(E e) { 
+    public void addLast(E e) {
         if (!offerLast(e))
             throw new IllegalStateException("Deque full");
     }
@@ -363,7 +363,7 @@ public class LinkedBlockingDeque<E>
             lock.unlock();
         }
     }
-        
+
     public boolean offerLast(E o, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (o == null) throw new NullPointerException();
@@ -382,7 +382,7 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public E pollFirst(long timeout, TimeUnit unit) 
+    public E pollFirst(long timeout, TimeUnit unit)
         throws InterruptedException {
         lock.lockInterruptibly();
         try {
@@ -400,7 +400,7 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public E pollLast(long timeout, TimeUnit unit) 
+    public E pollLast(long timeout, TimeUnit unit)
         throws InterruptedException {
         lock.lockInterruptibly();
         try {
@@ -477,7 +477,7 @@ public class LinkedBlockingDeque<E>
         if (o == null) return false;
         lock.lock();
         try {
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 if (o.equals(p.item))
                     return true;
             return false;
@@ -542,7 +542,7 @@ public class LinkedBlockingDeque<E>
         try {
             Object[] a = new Object[count];
             int k = 0;
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 a[k++] = p.item;
             return a;
         } finally {
@@ -560,7 +560,7 @@ public class LinkedBlockingDeque<E>
                     );
 
             int k = 0;
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 a[k++] = (T)p.item;
             if (a.length > k)
                 a[k] = null;
@@ -601,7 +601,7 @@ public class LinkedBlockingDeque<E>
             throw new IllegalArgumentException();
         lock.lock();
         try {
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 c.add(p.item);
             int n = count;
             count = 0;
@@ -640,7 +640,7 @@ public class LinkedBlockingDeque<E>
     /**
      * Returns an iterator over the elements in this deque in proper sequence.
      * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException},
+     * will never throw {@link ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
@@ -662,7 +662,7 @@ public class LinkedBlockingDeque<E>
          * an element exists in hasNext(), we must return item read
          * under lock (in advance()) even if it was in the process of
          * being removed when hasNext() was called.
-         **/
+         */
         private E nextItem;
 
         /**
@@ -678,7 +678,7 @@ public class LinkedBlockingDeque<E>
         /**
          * Advance next, or if not yet initialized, set to first node.
          */
-        private void advance() { 
+        private void advance() {
             final ReentrantLock lock = LinkedBlockingDeque.this.lock;
             lock.lock();
             try {
@@ -715,7 +715,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Save the state to a stream (that is, serialize it).
+     * Save the state of this deque to a stream (that is, serialize it).
      *
      * @serialData The capacity (int), followed by elements (each an
      * <tt>Object</tt>) in the proper order, followed by a null
@@ -738,7 +738,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Reconstitute this deque instance from a stream (that is,
+     * Reconstitute this deque from a stream (that is,
      * deserialize it).
      * @param s the stream
      */
@@ -756,5 +756,5 @@ public class LinkedBlockingDeque<E>
             add(item);
         }
     }
-    
+
 }

@@ -40,7 +40,7 @@ import java.util.*;
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  *
- **/
+ */
 public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
     private static final long serialVersionUID = -6903933977591709194L;
@@ -94,7 +94,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private final Condition notFull = putLock.newCondition();
 
     /**
-     * Signal a waiting take. Called only from put/offer (which do not
+     * Signals a waiting take. Called only from put/offer (which do not
      * otherwise ordinarily lock takeLock.)
      */
     private void signalNotEmpty() {
@@ -108,7 +108,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Signal a waiting put. Called only from take/poll.
+     * Signals a waiting put. Called only from take/poll.
      */
     private void signalNotFull() {
         final ReentrantLock putLock = this.putLock;
@@ -121,7 +121,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a node and link it at end of queue
+     * Creates a node and links it at end of queue.
      * @param x the item
      */
     private void insert(E x) {
@@ -129,7 +129,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Remove a node from head of queue,
+     * Removes a node from head of queue,
      * @return the node
      */
     private E extract() {
@@ -185,7 +185,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * is <tt>null</tt>.
      */
     public LinkedBlockingQueue(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
@@ -320,7 +320,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * @param o the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this queue, else <tt>false</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
     public boolean offer(E o) {
         if (o == null) throw new NullPointerException();
@@ -562,7 +562,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
         return n;
     }
-        
+
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();
@@ -595,7 +595,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException},
+     * will never throw {@link ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.

@@ -463,7 +463,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Return value if this node contains a valid key-value pair,
+         * Returns value if this node contains a valid key-value pair,
          * else null.
          * @return this node's value if it isn't a marker or header or
          * is deleted, else null.
@@ -907,7 +907,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Creates and adds index nodes for given node.
+     * Creates and adds index nodes for the given node.
      * @param z the node
      * @param level the level of the index
      */
@@ -1331,7 +1331,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Remove last entry; return key or null if empty.
+     * Removes last entry; returns key or null if empty.
      */
     K pollLastKey() {
         return (K)doRemoveLast(true);

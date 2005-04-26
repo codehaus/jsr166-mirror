@@ -154,7 +154,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         /**
-         * Reconstitute this lock instance from a stream
+         * Reconstitute this lock instance from a stream.
          * @param s the stream
          */
         private void readObject(java.io.ObjectInputStream s)

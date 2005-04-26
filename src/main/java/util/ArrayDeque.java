@@ -24,11 +24,12 @@ import java.io.*;
  *
  * <p>The iterators returned by this class's <tt>iterator</tt> method are
  * <i>fail-fast</i>: If the deque is modified at any time after the iterator
- * is created, in any way except through the iterator's own remove method, the
- * iterator will generally throw a {@link ConcurrentModificationException}.
- * Thus, in the face of concurrent modification, the iterator fails quickly
- * and cleanly, rather than risking arbitrary, non-deterministic behavior at
- * an undetermined time in the future.
+ * is created, in any way except through the iterator's own <tt>remove</tt>
+ * method, the iterator will generally throw a {@link
+ * ConcurrentModificationException}.  Thus, in the face of concurrent
+ * modification, the iterator fails quickly and cleanly, rather than risking
+ * arbitrary, non-deterministic behavior at an undetermined time in the
+ * future.
  *
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
@@ -129,7 +130,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Copy the elements from our element array into the specified array,
+     * Copies the elements from our element array into the specified array,
      * in order (from first to last element in the deque).  It is assumed
      * that the array is large enough to hold all elements in the deque.
      *
@@ -520,7 +521,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Remove the element at the specified position in the elements array,
+     * Removes the element at the specified position in the elements array,
      * adjusting head, tail, and size as necessary.  This can result in
      * motion of elements backwards or forwards in the array.
      *
@@ -558,9 +559,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this collection contains no elements.<p>
+     * Returns <tt>true</tt> if this deque contains no elements.<p>
      *
-     * @return <tt>true</tt> if this collection contains no elements.
+     * @return <tt>true</tt> if this deque contains no elements.
      */
     public boolean isEmpty() {
         return head == tail;
@@ -659,6 +660,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Removes all of the elements from this deque.
+     * The deque will be empty after this call returns.
      */
     public void clear() {
         int h = head;

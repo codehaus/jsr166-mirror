@@ -329,8 +329,8 @@ public class CopyOnWriteArrayList<E>
      *
      * @param  index index of element to return.
      * @return the element at the specified position in this list.
-     * @throws    IndexOutOfBoundsException if index is out of range <tt>(index
-     *            &lt; 0 || index &gt;= size())</tt>.
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public E get(int index) {
         E[] elementData = array();
@@ -345,8 +345,8 @@ public class CopyOnWriteArrayList<E>
      * @param index index of element to replace.
      * @param element element to be stored at the specified position.
      * @return the element previously at the specified position.
-     * @throws    IndexOutOfBoundsException if index out of range
-     *            <tt>(index &lt; 0 || index &gt;= size())</tt>.
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public synchronized E set(int index, E element) {
         int len = array.length;
@@ -386,8 +386,8 @@ public class CopyOnWriteArrayList<E>
      *
      * @param index index at which the specified element is to be inserted.
      * @param element element to be inserted.
-     * @throws    IndexOutOfBoundsException if index is out of range
-     *            <tt>(index &lt; 0 || index &gt; size())</tt>.
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public synchronized void add(int index, E element) {
         int len = array.length;
@@ -408,8 +408,8 @@ public class CopyOnWriteArrayList<E>
      *
      * @param index the index of the element to removed.
      * @return the element that was removed from the list.
-     * @throws    IndexOutOfBoundsException if index out of range <tt>(index
-     *            &lt; 0 || index &gt;= size())</tt>.
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public synchronized E remove(int index) {
         int len = array.length;
@@ -683,8 +683,8 @@ public class CopyOnWriteArrayList<E>
      * @param index index at which to insert first element
      *                from the specified collection.
      * @param c elements to be inserted into this list.
-     * @throws IndexOutOfBoundsException if index out of range (index
-     *              &lt; 0 || index &gt; size()).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      * @return true if any elements are added
      */
     public synchronized boolean addAll(int index, Collection<? extends E> c) {
@@ -877,8 +877,8 @@ public class CopyOnWriteArrayList<E>
      * @param index index of first element to be returned from the
      *                ListIterator (by a call to getNext).
      * @return the iterator
-     * @throws IndexOutOfBoundsException if index is out of range
-     *              (index &lt; 0 || index &gt; size()).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public ListIterator<E> listIterator(final int index) {
         E[] elementData = array();

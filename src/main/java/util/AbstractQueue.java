@@ -28,7 +28,7 @@ package java.util;
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
- *  
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
@@ -47,14 +47,14 @@ public abstract class AbstractQueue<E>
     /**
      * Adds the specified element to this queue. This implementation
      * returns <tt>true</tt> if <tt>offer</tt> succeeds, else
-     * throws an IllegalStateException. 
-     * 
+     * throws an IllegalStateException.
+     *
      * @param o the element
      * @return <tt>true</tt> (as per the general contract of
      *         <tt>Collection.add</tt>).
      *
-     * @throws NullPointerException if the specified element is <tt>null</tt>
-     * @throws IllegalStateException if element cannot be added
+     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws IllegalStateException if the element cannot be added.
      */
     public boolean add(E o) {
         if (offer(o))
@@ -79,9 +79,8 @@ public abstract class AbstractQueue<E>
             throw new NoSuchElementException();
     }
 
-
     /**
-     * Retrieves, but does not remove, the head of this queue.  
+     * Retrieves, but does not remove, the head of this queue.
      * This implementation returns the result of <tt>peek</tt>
      * unless the queue is empty.
      *
@@ -97,8 +96,8 @@ public abstract class AbstractQueue<E>
     }
 
     /**
-     * Removes all of the elements from this collection.
-     * The collection will be empty after this call returns.
+     * Removes all of the elements from this queue.
+     * The queue will be empty after this call returns.
      * <p>This implementation repeatedly invokes {@link #poll poll} until it
      * returns <tt>null</tt>.
      */
@@ -116,19 +115,19 @@ public abstract class AbstractQueue<E>
      *
      * <p>This implementation iterates over the specified collection,
      * and adds each element returned by the iterator to this
-     * collection, in turn.  A runtime exception encountered while
+     * queue, in turn.  A runtime exception encountered while
      * trying to add an element (including, in particular, a
      * <tt>null</tt> element) may result in only some of the elements
      * having been successfully added when the associated exception is
      * thrown.
      *
-     * @param c collection whose elements are to be added to this collection.
-     * @return <tt>true</tt> if this collection changed as a result of the
+     * @param c collection whose elements are to be added to this queue.
+     * @return <tt>true</tt> if this queue changed as a result of the
      *         call.
      * @throws NullPointerException if the specified collection or
-     * any of its elements are null.
+     *         any of its elements are null.
      * @throws IllegalArgumentException if c is this queue.
-     * 
+     *
      * @see #add(Object)
      */
     public boolean addAll(Collection<? extends E> c) {

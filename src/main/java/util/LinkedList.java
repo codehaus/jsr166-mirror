@@ -5,7 +5,7 @@
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
-package java.util; 
+package java.util;
 
 /**
  * Linked list implementation of the <tt>List</tt> interface.  Implements all
@@ -36,16 +36,17 @@ package java.util;
  * Collections.synchronizedList method.  This is best done at creation time,
  * to prevent accidental unsynchronized access to the list: <pre>
  *     List list = Collections.synchronizedList(new LinkedList(...));
- * </pre><p>
+ * </pre>
  *
- * The iterators returned by the this class's <tt>iterator</tt> and
+ * <p>The iterators returned by this class's <tt>iterator</tt> and
  * <tt>listIterator</tt> methods are <i>fail-fast</i>: if the list is
- * structurally modified at any time after the iterator is created, in any way
- * except through the Iterator's own <tt>remove</tt> or <tt>add</tt> methods,
- * the iterator will throw a <tt>ConcurrentModificationException</tt>.  Thus,
- * in the face of concurrent modification, the iterator fails quickly and
- * cleanly, rather than risking arbitrary, non-deterministic behavior at an
- * undetermined time in the future.
+ * structurally modified at any time after the iterator is created, in
+ * any way except through the Iterator's own <tt>remove</tt> or
+ * <tt>add</tt> methods, the iterator will throw a {@link
+ * ConcurrentModificationException}.  Thus, in the face of concurrent
+ * modification, the iterator fails quickly and cleanly, rather than
+ * risking arbitrary, non-deterministic behavior at an undetermined
+ * time in the future.
  *
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
@@ -53,9 +54,9 @@ package java.util;
  * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
  * exception for its correctness:   <i>the fail-fast behavior of iterators
- * should be used only to detect bugs.</i><p>
+ * should be used only to detect bugs.</i>
  *
- * This class is a member of the
+ * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
  *
@@ -152,7 +153,7 @@ public class LinkedList<E>
     }
 
     /**
-     * Appends the given element at the end of this list.  (Identical in
+     * Appends the given element to the end of this list.  (Identical in
      * function to the <tt>add</tt> method; included only for consistency.)
      *
      * @param o the element to be inserted at the end of this list.
@@ -184,7 +185,7 @@ public class LinkedList<E>
     }
 
     /**
-     * Appends the specified element at the end of this list.
+     * Appends the specified element to the end of this list.
      *
      * @param o element to be appended to this list.
      * @return <tt>true</tt> (as per the general contract of
@@ -225,7 +226,7 @@ public class LinkedList<E>
     }
 
     /**
-     * Appends all of the elements in the specified collection at the end of
+     * Appends all of the elements in the specified collection to the end of
      * this list, in the order that they are returned by the specified
      * collection's iterator.  The behavior of this operation is undefined if
      * the specified collection is modified while the operation is in
@@ -252,8 +253,8 @@ public class LinkedList<E>
      *		    from the specified collection.
      * @param c elements to be inserted into this list.
      * @return <tt>true</tt> if this list changed as a result of the call.
-     * @throws IndexOutOfBoundsException if the specified index is out of
-     *            range (<tt>index &lt; 0 || index &gt; size()</tt>).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      * @throws NullPointerException if the specified collection is null.
      */
     public boolean addAll(int index, Collection<? extends E> c) {
@@ -304,8 +305,8 @@ public class LinkedList<E>
      * @param index index of element to return.
      * @return the element at the specified position in this list.
      *
-     * @throws IndexOutOfBoundsException if the specified index is out of
-     * range (<tt>index &lt; 0 || index &gt;= size()</tt>).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public E get(int index) {
         return entry(index).element;
@@ -318,8 +319,8 @@ public class LinkedList<E>
      * @param index index of element to replace.
      * @param element element to be stored at the specified position.
      * @return the element previously at the specified position.
-     * @throws IndexOutOfBoundsException if the specified index is out of
-     *		  range (<tt>index &lt; 0 || index &gt;= size()</tt>).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public E set(int index, E element) {
         Entry<E> e = entry(index);
@@ -336,8 +337,8 @@ public class LinkedList<E>
      * @param index index at which the specified element is to be inserted.
      * @param element element to be inserted.
      *
-     * @throws IndexOutOfBoundsException if the specified index is out of
-     *		  range (<tt>index &lt; 0 || index &gt; size()</tt>).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public void add(int index, E element) {
         addBefore(element, (index==size ? header : entry(index)));
@@ -351,15 +352,15 @@ public class LinkedList<E>
      * @param index the index of the element to removed.
      * @return the element previously at the specified position.
      *
-     * @throws IndexOutOfBoundsException if the specified index is out of
-     * 		  range (<tt>index &lt; 0 || index &gt;= size()</tt>).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public E remove(int index) {
         return remove(entry(index));
     }
 
     /**
-     * Return the indexed entry.
+     * Returns the indexed entry.
      */
     private Entry<E> entry(int index) {
         if (index < 0 || index >= size)
@@ -597,7 +598,7 @@ public class LinkedList<E>
      *
      * @return the element at the front of this list (which is the top
      *     of the stack represented by this list)
-     * @throws NoSuchElementException if this list is empty
+     * @throws NoSuchElementException if this list is empty.
      * @since 1.6
      */
     public E pop() {
@@ -663,8 +664,8 @@ public class LinkedList<E>
      *		    list-iterator (by a call to <tt>next</tt>).
      * @return a ListIterator of the elements in this list (in proper
      * 	       sequence), starting at the specified position in the list.
-     * @throws    IndexOutOfBoundsException if index is out of range
-     *		  (<tt>index &lt; 0 || index &gt; size()</tt>).
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      * @see List#listIterator(int)
      */
     public ListIterator<E> listIterator(int index) {

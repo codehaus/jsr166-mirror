@@ -14,11 +14,11 @@ import java.util.Map;
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
- *  
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
- * @param <V> the type of mapped values 
+ * @param <V> the type of mapped values
  */
 public interface ConcurrentMap<K, V> extends Map<K, V> {
     /**
@@ -26,12 +26,13 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * with a value, associate it with the given value.
      * This is equivalent to
      * <pre>
-     *   if (!map.containsKey(key)) 
-     *      return map.put(key, value);
+     *   if (!map.containsKey(key))
+     *       return map.put(key, value);
      *   else
-     *      return map.get(key);
+     *       return map.get(key);
      * </pre>
-     * Except that the action is performed atomically.
+     * except that the action is performed atomically.
+     *
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>
@@ -39,73 +40,71 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         also indicate that the map previously associated <tt>null</tt>
      *         with the specified key, if the implementation supports
      *         <tt>null</tt> values.
-     *
      * @throws UnsupportedOperationException if the <tt>put</tt> operation is
-     *            not supported by this map.
+     *         not supported by this map.
      * @throws ClassCastException if the class of the specified key or value
-     *            prevents it from being stored in this map.
+     *         prevents it from being stored in this map.
      * @throws IllegalArgumentException if some aspect of this key or value
-     *            prevents it from being stored in this map.
+     *         prevents it from being stored in this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
-     *            keys or values, and the specified key or value is
-     *            <tt>null</tt>.
+     *         keys or values, and the specified key or value is <tt>null</tt>.
      *
      */
     V putIfAbsent(K key, V value);
 
     /**
-     * Remove entry for key only if currently mapped to given value.
-     * Acts as
-     * <pre> 
-     *  if ((map.containsKey(key) && map.get(key).equals(value)) {
-     *     map.remove(key);
-     *     return true;
-     * } else return false;
+     * Removes the entry for a key only if currently mapped to a given value.
+     * This is equivalent to
+     * <pre>
+     *   if (map.containsKey(key) && map.get(key).equals(value)) {
+     *       map.remove(key);
+     *       return true;
+     *   } else return false;
      * </pre>
      * except that the action is performed atomically.
+     *
      * @param key key with which the specified value is associated.
      * @param value value associated with the specified key.
      * @return true if the value was removed, false otherwise
      * @throws UnsupportedOperationException if the <tt>remove</tt> operation is
-     *            not supported by this map.
+     *         not supported by this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
-     *            keys or values, and the specified key or value is
-     *            <tt>null</tt>.
+     *         keys or values, and the specified key or value is <tt>null</tt>.
      */
     boolean remove(Object key, Object value);
 
-
     /**
-     * Replace entry for key only if currently mapped to given value.
-     * Acts as
-     * <pre> 
-     *  if ((map.containsKey(key) && map.get(key).equals(oldValue)) {
-     *     map.put(key, newValue);
-     *     return true;
-     * } else return false;
+     * Replaces the entry for a key only if currently mapped to a given value.
+     * This is equivalent to
+     * <pre>
+     *   if (map.containsKey(key) && map.get(key).equals(oldValue)) {
+     *       map.put(key, newValue);
+     *       return true;
+     *   } else return false;
      * </pre>
      * except that the action is performed atomically.
+     *
      * @param key key with which the specified value is associated.
      * @param oldValue value expected to be associated with the specified key.
      * @param newValue value to be associated with the specified key.
      * @return true if the value was replaced
      * @throws UnsupportedOperationException if the <tt>put</tt> operation is
-     *            not supported by this map.
+     *         not supported by this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
-     *            keys or values, and the specified key or value is
-     *            <tt>null</tt>.
+     *         keys or values, and the specified key or value is <tt>null</tt>.
      */
     boolean replace(K key, V oldValue, V newValue);
 
     /**
-     * Replace entry for key only if currently mapped to some value.
-     * Acts as
-     * <pre> 
-     *  if ((map.containsKey(key)) {
-     *     return map.put(key, value);
-     * } else return null;
+     * Replaces the entry for a key only if currently mapped to some value.
+     * This is equivalent to
+     * <pre>
+     *   if (map.containsKey(key)) {
+     *       return map.put(key, value);
+     *   } else return null;
      * </pre>
      * except that the action is performed atomically.
+     *
      * @param key key with which the specified value is associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>
@@ -114,10 +113,9 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         with the specified key, if the implementation supports
      *         <tt>null</tt> values.
      * @throws UnsupportedOperationException if the <tt>put</tt> operation is
-     *            not supported by this map.
+     *         not supported by this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
-     *            keys or values, and the specified key or value is
-     *            <tt>null</tt>.
+     *         keys or values, and the specified key or value is <tt>null</tt>.
      */
     V replace(K key, V value);
 

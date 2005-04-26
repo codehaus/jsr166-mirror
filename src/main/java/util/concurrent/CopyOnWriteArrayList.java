@@ -20,7 +20,7 @@ import java.util.*;
 /**
  * A thread-safe variant of {@link java.util.ArrayList} in which all mutative
  * operations (add, set, and so on) are implemented by making a fresh
- * copy of the underlying array.  
+ * copy of the underlying array.
  *
  * <p> This is ordinarily too costly, but may be <em>more</em> efficient
  * than alternatives when traversal operations vastly outnumber
@@ -58,7 +58,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Accessor to the array intended to be called from
      * within unsynchronized read-only methods
-     **/
+     */
     private E[] array() { return array; }
 
     /**
@@ -83,17 +83,17 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Create a new CopyOnWriteArrayList holding a copy of given array.
+     * Creates a new CopyOnWriteArrayList holding a copy of given array.
      *
      * @param toCopyIn the array (a copy of this array is used as the
      *        internal array)
-     **/
+     */
     public CopyOnWriteArrayList(E[] toCopyIn) {
         copyIn(toCopyIn, 0, toCopyIn.length);
     }
 
     /**
-     * Replace the held array with a copy of the <tt>n</tt> elements
+     * Replaces the held array with a copy of the <tt>n</tt> elements
      * of the provided array, starting at position <tt>first</tt>.  To
      * copy an entire array, call with arguments (array, 0,
      * array.length).
@@ -103,7 +103,7 @@ public class CopyOnWriteArrayList<E>
      * start copying from.
      * @param n the number of elements to copy. This will be the new size of
      * the list.
-     **/
+     */
     private synchronized void copyIn(E[] toCopyIn, int first, int n) {
         array  = (E[]) new Object[n];
         System.arraycopy(toCopyIn, first, array, 0, n);
@@ -142,8 +142,8 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Searches for the first occurrence of the given argument, testing 
-     * for equality using the <tt>equals</tt> method. 
+     * Searches for the first occurrence of the given argument, testing
+     * for equality using the <tt>equals</tt> method.
      *
      * @param   elem   an object.
      * @return  the index of the first occurrence of the argument in this
@@ -159,7 +159,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * static version allows repeated call without needed
      * to grab lock for array each time
-     **/
+     */
     private static int indexOf(Object elem, Object[] elementData, int len) {
         if (elem == null) {
             for (int i = 0; i < len; i++)
@@ -500,7 +500,7 @@ public class CopyOnWriteArrayList<E>
      * Append the element if not present.
      * @param element element to be added to this Collection, if absent.
      * @return true if added
-     **/
+     */
     public synchronized boolean addIfAbsent(E element) {
         // Copy while checking if already present.
         // This wins in the most common case where it is not present
@@ -709,7 +709,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Check if the given index is in range.  If not, throw an appropriate
+     * Checks if the given index is in range.  If not, throws an appropriate
      * runtime exception.
      */
     private void rangeCheck(int index, int length) {
@@ -822,7 +822,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns the hash code value for this List.  
+     * Returns the hash code value for this List.
      *
      * <p> This implementation uses the definition in {@link
      * List#hashCode}.
@@ -923,7 +923,7 @@ public class CopyOnWriteArrayList<E>
         public E previous() {
             try {
                 return array[--cursor];
-            } catch(IndexOutOfBoundsException e) {
+            } catch (IndexOutOfBoundsException e) {
                 throw new NoSuchElementException();
             }
         }
@@ -982,7 +982,7 @@ public class CopyOnWriteArrayList<E>
      * @param fromIndex low endpoint (inclusive) of the subList.
      * @param toIndex high endpoint (exclusive) of the subList.
      * @return a view of the specified range within this List.
-     * @throws IndexOutOfBoundsException if 
+     * @throws IndexOutOfBoundsException if
      *     (fromIndex &lt; 0 || toIndex &gt; size || fromIndex &gt; toIndex).
      */
     public synchronized List<E> subList(int fromIndex, int toIndex) {

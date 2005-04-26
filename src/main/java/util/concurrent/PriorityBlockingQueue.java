@@ -21,7 +21,7 @@ import java.util.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces. 
+ * Iterator} interfaces.
  * The Iterator provided in method {@link #iterator()} is
  * <em>not</em> guaranteed to traverse the elements of the
  * PriorityBlockingQueue in any particular order. If you need ordered
@@ -44,7 +44,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     private final Condition notEmpty = lock.newCondition();
 
     /**
-     * Creates a <tt>PriorityBlockingQueue</tt> with the default initial 
+     * Creates a <tt>PriorityBlockingQueue</tt> with the default initial
      * capacity
      * (11) that orders its elements according to their natural
      * ordering (using <tt>Comparable</tt>).
@@ -55,9 +55,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a <tt>PriorityBlockingQueue</tt> with the specified initial
-     * capacity
-     * that orders its elements according to their natural ordering
-     * (using <tt>Comparable</tt>).
+     * capacity that orders its elements according to their {@linkplain
+     * Comparable natural ordering}.
      *
      * @param initialCapacity the initial capacity for this priority queue.
      * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
@@ -69,8 +68,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a <tt>PriorityBlockingQueue</tt> with the specified initial
-     * capacity
-     * that orders its elements according to the specified comparator.
+     * capacity that orders its elements according to the specified
+     * comparator.
      *
      * @param initialCapacity the initial capacity for this priority queue.
      * @param comparator the comparator used to order this priority queue.
@@ -87,13 +86,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Creates a <tt>PriorityBlockingQueue</tt> containing the elements
      * in the specified collection.  The priority queue has an initial
-     * capacity of 110% of the size of the specified collection. If
+     * capacity of 110% of the size of the specified collection.  If
      * the specified collection is a {@link SortedSet} or a {@link
      * PriorityQueue}, this priority queue will be sorted according to
-     * the same comparator, or according to its elements' natural
-     * order if the collection is sorted according to its elements'
-     * natural order.  Otherwise, this priority queue is ordered
-     * according to its elements' natural order.
+     * the same comparator, or according to the natural ordering of its
+     * elements if the collection is sorted according to the natural
+     * ordering of its elements.  Otherwise, this priority queue is
+     * ordered according to the natural ordering of its elements.
      *
      * @param c the collection whose elements are to be placed
      *        into this priority queue.
@@ -126,12 +125,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns the comparator used to order this collection, or <tt>null</tt>
-     * if this collection is sorted according to its elements natural ordering
-     * (using <tt>Comparable</tt>).
+     * Returns the comparator used to order the elements in this queue,
+     * or <tt>null</tt> if this queue uses the {@linkplain Comparable
+     * natural ordering} of its elements.
      *
-     * @return the comparator used to order this collection, or <tt>null</tt>
-     * if this collection is sorted according to its elements natural ordering.
+     * @return the comparator used to order the elements in this queue,
+     *         or <tt>null</tt> if this queue uses the natural
+     *         ordering of its elements.
      */
     public Comparator<? super E> comparator() {
         return q.comparator();
@@ -387,9 +387,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Returns an iterator over the elements in this queue. The
      * iterator does not return the elements in any particular order.
      * The returned iterator is a thread-safe "fast-fail" iterator
-     * that will throw {@link
-     * java.util.ConcurrentModificationException} upon detected
-     * interference.
+     * that will throw {@link ConcurrentModificationException} upon
+     * detected interference.
      *
      * @return an iterator over the elements in this queue.
      */

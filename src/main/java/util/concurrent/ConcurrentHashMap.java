@@ -286,7 +286,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         /**
-         * Set table to new HashEntry array.
+         * Sets table to new HashEntry array.
          * Call only while holding lock or in constructor.
          */
         void setTable(HashEntry[] newTable) {
@@ -295,7 +295,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         /**
-         * Return properly casted first entry of bin for given hash
+         * Returns properly casted first entry of bin for given hash.
          */
         HashEntry<K,V> getFirst(int hash) {
             HashEntry[] tab = table;
@@ -888,7 +888,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *   else
      *      return map.get(key);
      * </pre>
-     * Except that the action is performed atomically.
+     * except that the action is performed atomically.
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>

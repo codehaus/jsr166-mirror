@@ -98,7 +98,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * The default concurrency level for this table, used when not
      * otherwise specified in a constructor.
-     **/
+     */
     static final int DEFAULT_CONCURRENCY_LEVEL = 16;
 
     /**
@@ -128,12 +128,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Mask value for indexing into segments. The upper bits of a
      * key's hash code are used to choose the segment.
-     **/
+     */
     final int segmentMask;
 
     /**
      * Shift value for indexing within segments.
-     **/
+     */
     final int segmentShift;
 
     /**
@@ -203,7 +203,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Segments are specialized versions of hash tables.  This
      * subclasses from ReentrantLock opportunistically, just to
      * simplify some locking and avoid separate construction.
-     **/
+     */
     static final class Segment<K,V> extends ReentrantLock implements Serializable {
         /*
          * Segments maintain a table of entry lists that are ALWAYS
@@ -246,7 +246,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         /**
          * The number of elements in this segment's region.
-         **/
+         */
         transient volatile int count;
 
         /**
@@ -288,7 +288,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         /**
          * Set table to new HashEntry array.
          * Call only while holding lock or in constructor.
-         **/
+         */
         void setTable(HashEntry[] newTable) {
             threshold = (int)(newTable.length * loadFactor);
             table = newTable;

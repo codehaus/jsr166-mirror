@@ -429,7 +429,7 @@ public class CyclicBarrier {
      * This method is primarily useful for debugging and assertions.
      *
      * @return the number of parties currently blocked in {@link #await}.
-     **/
+     */
     public int getNumberWaiting() {
         final ReentrantLock lock = this.lock;
         lock.lock();

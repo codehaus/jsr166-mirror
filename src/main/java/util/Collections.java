@@ -37,7 +37,7 @@ import java.lang.reflect.Array;
  * example, invoking the <tt>sort</tt> method on an unmodifiable list that is
  * already sorted may or may not throw <tt>UnsupportedOperationException</tt>.
  *
- * <p>This class is a member of the 
+ * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
  *
@@ -97,7 +97,7 @@ public class Collections {
      * The sorting algorithm is a modified mergesort (in which the merge is
      * omitted if the highest element in the low sublist is less than the
      * lowest element in the high sublist).  This algorithm offers guaranteed
-     * n log(n) performance. 
+     * n log(n) performance.
      *
      * This implementation dumps the specified list into an array, sorts
      * the array, and iterates over the list resetting each element
@@ -135,7 +135,7 @@ public class Collections {
      * The sorting algorithm is a modified mergesort (in which the merge is
      * omitted if the highest element in the low sublist is less than the
      * lowest element in the high sublist).  This algorithm offers guaranteed
-     * n log(n) performance. 
+     * n log(n) performance.
      *
      * The specified list must be modifiable, but need not be resizable.
      * This implementation dumps the specified list into an array, sorts
@@ -361,7 +361,7 @@ public class Collections {
      *
      * @param  list the list whose elements are to be reversed.
      * @throws UnsupportedOperationException if the specified list or
-     *         its list-iterator does not support the <tt>set</tt> method.
+     *         its list-iterator does not support the <tt>set</tt> operation.
      */
     public static void reverse(List<?> list) {
         int size = list.size();
@@ -405,7 +405,7 @@ public class Collections {
      *
      * @param  list the list to be shuffled.
      * @throws UnsupportedOperationException if the specified list or
-     *         its list-iterator does not support the <tt>set</tt> method.
+     *         its list-iterator does not support the <tt>set</tt> operation.
      */
     public static void shuffle(List<?> list) {
         shuffle(list, r);
@@ -712,7 +712,7 @@ public class Collections {
      *     Collections.rotate(l.subList(1, 4), -1);
      * </pre>
      * The resulting list is <tt>[a, c, d, b, e]</tt>.
-     * 
+     *
      * <p>To move more than one element forward, increase the absolute value
      * of the rotation distance.  To move elements backward, use a positive
      * shift distance.
@@ -736,7 +736,7 @@ public class Collections {
      *        constraints on this value; it may be zero, negative, or
      *        greater than <tt>list.size()</tt>.
      * @throws UnsupportedOperationException if the specified list or
-     *         its list-iterator does not support the <tt>set</tt> method.
+     *         its list-iterator does not support the <tt>set</tt> operation.
      * @since 1.4
      */
     public static void rotate(List<?> list, int distance) {
@@ -772,7 +772,7 @@ public class Collections {
     private static void rotate2(List<?> list, int distance) {
         int size = list.size();
         if (size == 0)
-            return; 
+            return;
         int mid =  -distance % size;
         if (mid < 0)
             mid += size;
@@ -799,7 +799,7 @@ public class Collections {
      *         <tt>e</tt> such that
      *         <tt>(oldVal==null ?  e==null : oldVal.equals(e))</tt>.
      * @throws UnsupportedOperationException if the specified list or
-     *         its list-iterator does not support the <tt>set</tt> method.
+     *         its list-iterator does not support the <tt>set</tt> operation.
      * @since  1.4
      */
     public static <T> boolean replaceAll(List<T> list, T oldVal, T newVal) {
@@ -970,7 +970,7 @@ public class Collections {
      * that the backing collection is a set or a list.<p>
      *
      * The returned collection will be serializable if the specified collection
-     * is serializable. 
+     * is serializable.
      *
      * @param  c the collection for which an unmodifiable view is to be
      *	       returned.
@@ -1046,7 +1046,7 @@ public class Collections {
      * iterator, result in an <tt>UnsupportedOperationException</tt>.<p>
      *
      * The returned set will be serializable if the specified set
-     * is serializable. 
+     * is serializable.
      *
      * @param  s the set for which an unmodifiable view is to be returned.
      * @return an unmodifiable view of the specified set.
@@ -1078,10 +1078,10 @@ public class Collections {
      * an <tt>UnsupportedOperationException</tt>.<p>
      *
      * The returned sorted set will be serializable if the specified sorted set
-     * is serializable. 
+     * is serializable.
      *
      * @param s the sorted set for which an unmodifiable view is to be
-     *        returned. 
+     *        returned.
      * @return an unmodifiable view of the specified sorted set.
      */
     public static <T> SortedSet<T> unmodifiableSortedSet(SortedSet<T> s) {
@@ -1252,7 +1252,7 @@ public class Collections {
      * <tt>UnsupportedOperationException</tt>.<p>
      *
      * The returned map will be serializable if the specified map
-     * is serializable. 
+     * is serializable.
      *
      * @param  m the map for which an unmodifiable view is to be returned.
      * @return an unmodifiable view of the specified map.
@@ -1334,7 +1334,7 @@ public class Collections {
 	    private static final long serialVersionUID = 7854390611657943733L;
 
             UnmodifiableEntrySet(Set<? extends Map.Entry<? extends K, ? extends V>> s) {
-                super((Set<Map.Entry<K,V>>)(Set)s);
+                super((Set)s);
             }
             public Iterator<Map.Entry<K,V>> iterator() {
                 return new Iterator<Map.Entry<K,V>>() {
@@ -1456,10 +1456,10 @@ public class Collections {
      * an <tt>UnsupportedOperationException</tt>.<p>
      *
      * The returned sorted map will be serializable if the specified sorted map
-     * is serializable. 
+     * is serializable.
      *
      * @param m the sorted map for which an unmodifiable view is to be
-     *        returned. 
+     *        returned.
      * @return an unmodifiable view of the specified sorted map.
      */
     public static <K,V> SortedMap<K,V> unmodifiableSortedMap(SortedMap<K, ? extends V> m) {
@@ -1523,7 +1523,7 @@ public class Collections {
      * that the backing collection is a set or a list.<p>
      *
      * The returned collection will be serializable if the specified collection
-     * is serializable. 
+     * is serializable.
      *
      * @param  c the collection to be "wrapped" in a synchronized collection.
      * @return a synchronized view of the specified collection.
@@ -1673,7 +1673,7 @@ public class Collections {
      * sorted set when iterating over it or any of its <tt>subSet</tt>,
      * <tt>headSet</tt>, or <tt>tailSet</tt> views.
      * <pre>
-     *  SortedSet s = Collections.synchronizedSortedSet(new HashSortedSet());
+     *  SortedSet s = Collections.synchronizedSortedSet(new TreeSet());
      *      ...
      *  synchronized(s) {
      *      Iterator i = s.iterator(); // Must be in the synchronized block
@@ -1683,7 +1683,7 @@ public class Collections {
      * </pre>
      * or:
      * <pre>
-     *  SortedSet s = Collections.synchronizedSortedSet(new HashSortedSet());
+     *  SortedSet s = Collections.synchronizedSortedSet(new TreeSet());
      *  SortedSet s2 = s.headSet(foo);
      *      ...
      *  synchronized(s) {  // Note: s, not s2!!!
@@ -2007,7 +2007,7 @@ public class Collections {
 	public Set<Map.Entry<K,V>> entrySet() {
             synchronized(mutex) {
                 if (entrySet==null)
-                    entrySet = new SynchronizedSet<Map.Entry<K,V>>((Set<Map.Entry<K,V>>)m.entrySet(), mutex);
+                    entrySet = new SynchronizedSet<Map.Entry<K,V>>(m.entrySet(), mutex);
                 return entrySet;
             }
 	}
@@ -2045,7 +2045,7 @@ public class Collections {
      * collections views of any of its <tt>subMap</tt>, <tt>headMap</tt> or
      * <tt>tailMap</tt> views.
      * <pre>
-     *  SortedMap m = Collections.synchronizedSortedMap(new HashSortedMap());
+     *  SortedMap m = Collections.synchronizedSortedMap(new TreeMap());
      *      ...
      *  Set s = m.keySet();  // Needn't be in synchronized block
      *      ...
@@ -2057,7 +2057,7 @@ public class Collections {
      * </pre>
      * or:
      * <pre>
-     *  SortedMap m = Collections.synchronizedSortedMap(new HashSortedMap());
+     *  SortedMap m = Collections.synchronizedSortedMap(new TreeMap());
      *  SortedMap m2 = m.subMap(foo, bar);
      *      ...
      *  Set s2 = m2.keySet();  // Needn't be in synchronized block
@@ -2191,7 +2191,7 @@ public class Collections {
                                                       Class<E> type) {
         return new CheckedCollection<E>(c, type);
     }
- 
+
     /**
      * @serial include
      */
@@ -2265,7 +2265,7 @@ public class Collections {
         private E[] zeroLengthElementArray = null; // Lazily initialized
 
         /*
-         * We don't need locking or volatile, because it's OK if we create 
+         * We don't need locking or volatile, because it's OK if we create
          * several zeroLengthElementArrays, and they're immutable.
          */
         E[] zeroLengthElementArray() {
@@ -2300,7 +2300,7 @@ public class Collections {
     public static <E> Set<E> checkedSet(Set<E> s, Class<E> type) {
         return new CheckedSet<E>(s, type);
     }
- 
+
     /**
      * @serial include
      */
@@ -2604,7 +2604,7 @@ public class Collections {
         private V[] zeroLengthValueArray = null;
 
         /*
-         * We don't need locking or volatile, because it's OK if we create 
+         * We don't need locking or volatile, because it's OK if we create
          * several zeroLengthValueArrays, and they're immutable.
          */
         private K[] zeroLengthKeyArray() {
@@ -3168,7 +3168,8 @@ public class Collections {
 
 	public Set<Map.Entry<K,V>> entrySet() {
 	    if (entrySet==null)
-		entrySet = singleton((Map.Entry<K,V>)new ImmutableEntry<K,V>(k, v));
+		entrySet = Collections.<Map.Entry<K,V>>singleton(
+		    new SimpleImmutableEntry<K,V>(k, v));
 	    return entrySet;
 	}
 
@@ -3178,40 +3179,6 @@ public class Collections {
 	    return values;
 	}
 
-        private static class ImmutableEntry<K,V>
-	    implements Map.Entry<K,V> {
-            final K k;
-            final V v;
-
-            ImmutableEntry(K key, V value) {
-                k = key;
-                v = value;
-            }
-
-            public K getKey()   {return k;}
-
-            public V getValue() {return v;}
-
-            public V setValue(V value) {
-                throw new UnsupportedOperationException();
-            }
-
-            public boolean equals(Object o) {
-                if (!(o instanceof Map.Entry))
-                    return false;
-                Map.Entry e = (Map.Entry)o;
-                return eq(e.getKey(), k) && eq(e.getValue(), v);
-            }
-
-            public int hashCode() {
-                return ((k==null ? 0 : k.hashCode()) ^
-                        (v==null ? 0 : v.hashCode()));
-            }
-
-            public String toString() {
-                return k+"="+v;
-            }
-        }
     }
 
     /**
@@ -3324,10 +3291,10 @@ public class Collections {
     public static <T> Comparator<T> reverseOrder(Comparator<T> cmp) {
         if (cmp == null)
             return new ReverseComparator();  // Unchecked warning!!
- 
+
         return new ReverseComparator2<T>(cmp);
     }
- 
+
     /**
      * @serial include
      */
@@ -3335,7 +3302,7 @@ public class Collections {
         Serializable
     {
         private static final long serialVersionUID = 4374092139857L;
- 
+
         /**
          * The comparator specified in the static factory.  This will never
          * be null, as the static factory returns a ReverseComparator
@@ -3344,12 +3311,12 @@ public class Collections {
          * @serial
          */
         private Comparator<T> cmp;
- 
+
         ReverseComparator2(Comparator<T> cmp) {
             assert cmp != null;
             this.cmp = cmp;
         }
- 
+
         public int compare(T t1, T t2) {
             return cmp.compare(t2, t1);
         }
@@ -3469,7 +3436,7 @@ public class Collections {
             c1 = c2;
             c2 = tmp;
         }
- 
+
         for (Object e : c1)
             if (c2.contains(e))
                 return false;
@@ -3493,7 +3460,7 @@ public class Collections {
      * @param a the elements to insert into <tt>c</tt>
      * @return <tt>true</tt> if the collection changed as a result of the call
      * @throws UnsupportedOperationException if <tt>c</tt> does not support
-     *         the <tt>add</tt> method
+     *         the <tt>add</tt> operation.
      * @throws NullPointerException if <tt>elements</tt> contains one or more
      *         null values and <tt>c</tt> does not support null elements, or
      *         if <tt>c</tt> or <tt>elements</tt> are <tt>null</tt>
@@ -3599,7 +3566,7 @@ public class Collections {
         return new AsLIFOQueue<T>(deque);
     }
 
-    static class AsLIFOQueue<E> extends AbstractQueue<E> 
+    static class AsLIFOQueue<E> extends AbstractQueue<E>
         implements Queue<E>, Serializable {
         private final Deque<E> q;
         AsLIFOQueue(Deque<E> q)            { this.q = q; }

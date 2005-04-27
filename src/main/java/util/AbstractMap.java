@@ -477,7 +477,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      *
      * This implementation first checks if the specified object is this map;
      * if so it returns <tt>true</tt>.  Then, it checks if the specified
-     * object is a map whose size is identical to the size of this set; if
+     * object is a map whose size is identical to the size of this map; if
      * not, it returns <tt>false</tt>.  If so, it iterates over this map's
      * <tt>entrySet</tt> collection, and checks that the specified map
      * contains each mapping that this map contains.  If the specified map

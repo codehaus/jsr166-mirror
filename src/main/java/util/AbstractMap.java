@@ -33,9 +33,12 @@ import java.util.Map.Entry;
  * implementation in detail.  Each of these methods may be overridden if the
  * map being implemented admits a more efficient implementation.<p>
  *
- * This class is a member of the 
+ * This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
+ *
+ * @param <K> the type of keys maintained by this map
+ * @param <V> the type of mapped values
  *
  * @author  Josh Bloch
  * @author  Neal Gafter
@@ -84,16 +87,16 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * More formally, returns <tt>true</tt> if and only if this map contains
      * at least one mapping to a value <tt>v</tt> such that <tt>(value==null ?
      * v==null : value.equals(v))</tt>.  This operation will probably require
-     * time linear in the map size for most implementations of map.<p>
+     * time linear in the map size for most implementations of <tt>Map</tt>.<p>
      *
-     * This implementation iterates over entrySet() searching for an entry
+     * This implementation iterates over <tt>entrySet()</tt> searching for an entry
      * with the specified value.  If such an entry is found, <tt>true</tt> is
      * returned.  If the iteration terminates without finding such an entry,
      * <tt>false</tt> is returned.  Note that this implementation requires
      * linear time in the size of the map.
      *
      * @param value value whose presence in this map is to be tested.
-     * 
+     *
      * @return <tt>true</tt> if this map maps one or more keys to this value.
      */
     public boolean containsValue(Object value) {
@@ -127,10 +130,9 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      *
      * @param key key whose presence in this map is to be tested.
      * @return <tt>true</tt> if this map contains a mapping for the specified
-     *            key.
-     * 
-     * @throws NullPointerException if the key is <tt>null</tt> and this map
-     *            does not permit <tt>null</tt> keys.
+     *         key.
+     * @throws NullPointerException if <tt>key</tt> is <tt>null</tt>
+     *         and this map does not permit <tt>null</tt> keys.
      */
     public boolean containsKey(Object key) {
 	Iterator<Map.Entry<K,V>> i = entrySet().iterator();
@@ -167,10 +169,10 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      *
      * @param key key whose associated value is to be returned.
      * @return the value to which this map maps the specified key.
-     * 
-     * @throws NullPointerException if the key is <tt>null</tt> and this map
-     *		  does not permit <tt>null</tt> keys.
-     * 
+     *
+     * @throws NullPointerException if <tt>key</tt> is <tt>null</tt>
+     *         and this map does not permit <tt>null</tt> keys.
+     *
      * @see #containsKey(Object)
      */
     public V get(Object key) {
@@ -204,25 +206,21 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      *
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
-     * 
+     *
      * @return the previous value associated with specified key, or <tt>null</tt>
      *	       if there was no mapping for key.  (A <tt>null</tt> return can
      *	       also indicate that the map previously associated <tt>null</tt>
      *	       with the specified key, if the implementation supports
      *	       <tt>null</tt> values.)
-     * 
-     * @throws UnsupportedOperationException if the <tt>put</tt> operation is
-     *	          not supported by this map.
-     * 
+     *
+     * @throws UnsupportedOperationException if the <tt>put</tt> operation
+     *         is not supported by this map.
      * @throws ClassCastException if the class of the specified key or value
-     * 	          prevents it from being stored in this map.
-     * 
-     * @throws IllegalArgumentException if some aspect of this key or value *
-     *            prevents it from being stored in this map.
-     * 
+     *         prevents it from being stored in this map.
+     * @throws IllegalArgumentException if some aspect of this key or value
+     *         prevents it from being stored in this map.
      * @throws NullPointerException if this map does not permit <tt>null</tt>
-     *            keys or values, and the specified key or value is
-     *            <tt>null</tt>.
+     *         keys or values, and the specified key or value is <tt>null</tt>.
      */
     public V put(K key, V value) {
 	throw new UnsupportedOperationException();
@@ -235,7 +233,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * This implementation iterates over <tt>entrySet()</tt> searching for an
      * entry with the specified key.  If such an entry is found, its value is
      * obtained with its <tt>getValue</tt> operation, the entry is removed
-     * from the Collection (and the backing map) with the iterator's
+     * from the collection (and the backing map) with the iterator's
      * <tt>remove</tt> operation, and the saved value is returned.  If the
      * iteration terminates without finding such an entry, <tt>null</tt> is
      * returned.  Note that this implementation requires linear time in the
@@ -253,7 +251,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      *	       with the specified key, if the implementation supports
      *	       <tt>null</tt> values.)
      * @throws UnsupportedOperationException if the <tt>remove</tt> operation
-     * 		  is not supported by this map.
+     *         is not supported by this map.
      */
     public V remove(Object key) {
 	Iterator<Entry<K,V>> i = entrySet().iterator();
@@ -297,15 +295,13 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * the <tt>put</tt> operation and the specified map is nonempty.
      *
      * @param t mappings to be stored in this map.
-     * 
+     *
      * @throws UnsupportedOperationException if the <tt>putAll</tt> operation
-     * 		  is not supported by this map.
-     * 
+     *         is not supported by this map.
      * @throws ClassCastException if the class of a key or value in the
-     * 	          specified map prevents it from being stored in this map.
-     * 
+     *         specified map prevents it from being stored in this map.
      * @throws IllegalArgumentException if some aspect of a key or value in
-     *	          the specified map prevents it from being stored in this map.
+     *         the specified map prevents it from being stored in this map.
      * @throws NullPointerException if the specified map is <tt>null</tt>, or if
      *         this map does not permit <tt>null</tt> keys or values, and the
      *         specified map contains <tt>null</tt> keys or values.
@@ -327,8 +323,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * <tt>UnsupportedOperationException</tt> if the <tt>entrySet</tt>
      * does not support the <tt>clear</tt> operation.
      *
-     * @throws    UnsupportedOperationException clear is not supported
-     * 		  by this map.
+     * @throws UnsupportedOperationException if the <tt>clear</tt> operation
+     *         is not supported by this map.
      */
     public void clear() {
 	entrySet().clear();
@@ -346,27 +342,29 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     transient volatile Collection<V> values = null;
 
     /**
-     * Returns a Set view of the keys contained in this map.  The Set is
-     * backed by the map, so changes to the map are reflected in the Set,
-     * and vice-versa.  (If the map is modified while an iteration over
-     * the Set is in progress, the results of the iteration are undefined.)
-     * The Set supports element removal, which removes the corresponding entry
-     * from the map, via the Iterator.remove, Set.remove,  removeAll
-     * retainAll, and clear operations.  It does not support the add or
-     * addAll operations.<p>
+     * Returns a {@link Set} view of the keys contained in this map.
+     * The set is backed by the map, so changes to the map are
+     * reflected in the set, and vice-versa.  If the map is modified
+     * while an iteration over the set is in progress (except through
+     * the iterator's own <tt>remove</tt> operation), the results of
+     * the iteration are undefined.  The set supports element removal,
+     * which removes the corresponding mapping from the map, via the
+     * <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
+     * <tt>removeAll</tt> <tt>retainAll</tt>, and <tt>clear</tt>
+     * operations.  It does not support the add or <tt>addAll</tt>
+     * operations.
      *
-     * This implementation returns a Set that subclasses
-     * AbstractSet.  The subclass's iterator method returns a "wrapper
-     * object" over this map's entrySet() iterator.  The size method delegates
-     * to this map's size method and the contains method delegates to this
-     * map's containsKey method.<p>
+     * <p>This implementation returns a set that subclasses {@link AbstractSet}.
+     * The subclass's iterator method returns a "wrapper object" over this
+     * map's <tt>entrySet()</tt> iterator.  The <tt>size</tt> method
+     * delegates to this map's <tt>size</tt> method and the
+     * <tt>contains</tt> method delegates to this map's
+     * <tt>containsKey</tt> method.
      *
-     * The Set is created the first time this method is called,
+     * <p>The set is created the first time this method is called,
      * and returned in response to all subsequent calls.  No synchronization
      * is performed, so there is a slight chance that multiple calls to this
-     * method will not all return the same Set.
-     *
-     * @return a Set view of the keys contained in this map.
+     * method will not all return the same set.
      */
     public Set<K> keySet() {
 	if (keySet == null) {
@@ -402,26 +400,29 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     }
 
     /**
-     * Returns a collection view of the values contained in this map.  The
-     * collection is backed by the map, so changes to the map are reflected in
-     * the collection, and vice-versa.  (If the map is modified while an
-     * iteration over the collection is in progress, the results of the
-     * iteration are undefined.)  The collection supports element removal,
-     * which removes the corresponding entry from the map, via the
-     * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
-     * <tt>removeAll</tt>, <tt>retainAll</tt> and <tt>clear</tt> operations.
-     * It does not support the <tt>add</tt> or <tt>addAll</tt> operations.<p>
+     * Returns a {@link Collection} view of the values contained in this map.
+     * The collection is backed by the map, so changes to the map are
+     * reflected in the collection, and vice-versa.  If the map is
+     * modified while an iteration over the collection is in progress
+     * (except through the iterator's own <tt>remove</tt> operation),
+     * the results of the iteration are undefined.  The collection
+     * supports element removal, which removes the corresponding
+     * mapping from the map, via the <tt>Iterator.remove</tt>,
+     * <tt>Collection.remove</tt>, <tt>removeAll</tt>,
+     * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
+     * support the add or <tt>addAll</tt> operations.
      *
-     * This implementation returns a collection that subclasses abstract
-     * collection.  The subclass's iterator method returns a "wrapper object"
-     * over this map's <tt>entrySet()</tt> iterator.  The size method
-     * delegates to this map's size method and the contains method delegates
-     * to this map's containsValue method.<p>
+     * <p>This implementation returns a collection that subclasses {@link
+     * AbstractCollection}.  The subclass's iterator method returns a
+     * "wrapper object" over this map's <tt>entrySet()</tt> iterator.
+     * The <tt>size</tt> method delegates to this map's <tt>size</tt>
+     * method and the <tt>contains</tt> method delegates to this map's
+     * <tt>containsValue</tt> method.
      *
-     * The collection is created the first time this method is called, and
+     * <p>The collection is created the first time this method is called, and
      * returned in response to all subsequent calls.  No synchronization is
      * performed, so there is a slight chance that multiple calls to this
-     * method will not all return the same Collection.
+     * method will not all return the same collection.
      *
      * @return a collection view of the values contained in this map.
      */
@@ -458,19 +459,6 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	return values;
     }
 
-    /**
-     * Returns a set view of the mappings contained in this map.  Each element
-     * in this set is a Map.Entry.  The set is backed by the map, so changes
-     * to the map are reflected in the set, and vice-versa.  (If the map is
-     * modified while an iteration over the set is in progress, the results of
-     * the iteration are undefined.)  The set supports element removal, which
-     * removes the corresponding entry from the map, via the
-     * <tt>Iterator.remove</tt>, <tt>Set.remove</tt>, <tt>removeAll</tt>,
-     * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not support
-     * the <tt>add</tt> or <tt>addAll</tt> operations.
-     *
-     * @return a set view of the mappings contained in this map.
-     */
     public abstract Set<Entry<K,V>> entrySet();
 
 
@@ -523,9 +511,9 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
                         return false;
                 }
             }
-        } catch(ClassCastException unused) {
+        } catch (ClassCastException unused) {
             return false;
-        } catch(NullPointerException unused) {
+        } catch (NullPointerException unused) {
             return false;
         }
 
@@ -604,7 +592,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	buf.append("}");
 	return buf.toString();
     }
-    
+
     /**
      * Returns a shallow copy of this <tt>AbstractMap</tt> instance: the keys
      * and values themselves are not cloned.

@@ -268,9 +268,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
 
     /**
-     * Returns <tt>true</tt> if this collection contains no elements.<p>
+     * Returns <tt>true</tt> if this queue contains no elements.
      *
-     * @return <tt>true</tt> if this collection contains no elements.
+     * @return <tt>true</tt> if this queue contains no elements.
      */
     public boolean isEmpty() {
         return first() == null;

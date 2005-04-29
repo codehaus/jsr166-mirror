@@ -25,9 +25,9 @@ package java.util;
  * operations cannot fail.
  *
  * <p>The twelve methods described above are summarized in the
- * following table:<p>
+ * following table:
  *
- * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <p><table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER COLSPAN = 2> <b>First Element (Head)</b></td>
@@ -67,64 +67,62 @@ package java.util;
  * used as a queue, FIFO (First-In-First-Out) behavior results.  Elements are
  * added at the end of the deque and removed from the beginning.  The methods
  * inherited from the <tt>Queue</tt> interface are precisely equivalent to
- * <tt>Deque</tt> methods as indicated in the following table:<p>
+ * <tt>Deque</tt> methods as indicated in the following table:
  *
- * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <p><table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td ALIGN=CENTER> <b><tt>Queue</tt> Method</b></td>
  *    <td ALIGN=CENTER> <b>Equivalent <tt>Deque</tt> Method</b></td>
  *  </tr>
  *  <tr>
- *   <tr>
  *    <td>{@link java.util.Queue#offer offer(e)}</td>
  *    <td>{@link #offerLast offerLast(e)}</td>
- *   </tr>
- *   <tr>
+ *  </tr>
+ *  <tr>
  *    <td>{@link java.util.Queue#add add(e)}</td>
  *    <td>{@link #addLast addLast(e)}</td>
- *   </tr>
- *   <tr>
+ *  </tr>
+ *  <tr>
  *    <td>{@link java.util.Queue#poll poll()}</td>
  *    <td>{@link #pollFirst pollFirst()}</td>
- *   </tr>
- *   <tr>
+ *  </tr>
+ *  <tr>
  *    <td>{@link java.util.Queue#remove remove()}</td>
  *    <td>{@link #removeFirst removeFirst()}</td>
- *   </tr>
- *   <tr>
+ *  </tr>
+ *  <tr>
  *    <td>{@link java.util.Queue#peek peek()}</td>
  *    <td>{@link #peek peekFirst()}</td>
- *   </tr>
- *   <tr>
+ *  </tr>
+ *  <tr>
  *    <td>{@link java.util.Queue#element element()}</td>
  *    <td>{@link #getFirst getFirst()}</td>
- *   </tr>
+ *  </tr>
  * </table>
  *
  * <p>Deques can also be used as LIFO (Last-In-First-Out) stacks.  This
  * interface should be used in preference to the legacy {@link Stack} class.
  * When a deque is used as a stack, elements are pushed and popped from the
  * beginning of the deque.  Stack methods are precisely equivalent to
- * <tt>Deque</tt> methods as indicated in the table below:<p>
+ * <tt>Deque</tt> methods as indicated in the table below:
  *
- * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <p><table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td ALIGN=CENTER> <b>Stack Method</b></td>
  *    <td ALIGN=CENTER> <b>Equivalent <tt>Deque</tt> Method</b></td>
  *  </tr>
  *  <tr>
- *   <tr>
  *    <td>{@link #push push(e)}</td>
  *    <td>{@link #addFirst addFirst(e)}</td>
- *   </tr>
- *   <tr>
+ *  </tr>
+ *  <tr>
  *    <td>{@link #pop pop()}</td>
  *    <td>{@link #removeFirst removeFirst()}</td>
- *   </tr>
- *   <tr>
+ *  </tr>
+ *  <tr>
  *    <td>{@link #peek peek()}</td>
  *    <td>{@link #peekFirst peekFirst()}</td>
- *   </tr>
+ *  </tr>
  * </table>
  *
  * <p>Note that the {@link #peek peek} method works equally well when
@@ -232,7 +230,7 @@ public interface Deque<E> extends Queue<E> {
     E pollLast();
 
     /**
-     * Removes and returns the first element of this deque.  This method
+     * Retrieves and removes the first element of this deque.  This method
      * differs from the <tt>pollFirst</tt> method only in that it throws an
      * exception if this deque is empty.
      *

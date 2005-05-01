@@ -1,11 +1,14 @@
 /*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
+ * Written by Doug Lea, Bill Scherer, and Michael Scott with
+ * assistance from members of JCP JSR-166 Expert Group and released to
+ * the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
  */
 
 package java.util.concurrent;
 import java.util.concurrent.locks.*;
+import java.util.concurrent.atomic.*;
+import java.util.Random;
 
 /**
  * A synchronization point at which two threads can exchange objects.
@@ -59,99 +62,219 @@ import java.util.concurrent.locks.*;
  * </pre>
  *
  * @since 1.5
- * @author Doug Lea
+ * @author Doug Lea and Bill Scherer and Michael Scott
  * @param <V> The type of objects that may be exchanged
  */
 public class Exchanger<V> {
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Condition taken = lock.newCondition();
+    /*
+     * The underlying idea is to use a stack to hold nodes containing
+     * pairs of items to be exchanged. Except that:
+     *
+     *  *  Only one element of the pair is known on creation by a
+     *     first-arriving thread; the other is a "hole" waiting to be
+     *     filled in. This is a degenerate form of the dual stacks
+     *     described in "Nonblocking Concurrent Objects with Condition
+     *     Synchronization",  by W. N. Scherer III and M. L. Scott.
+     *     18th Annual Conf. on  Distributed Computing, Oct. 2004.
+     *     It is "degenerate" in that both the items and the holes
+     *     are shared in the same nodes.
+     *
+     *  *  There isn't really a stack here! There can't be -- if two
+     *     nodes were both in the stack, they should cancel themselves
+     *     out by combining. So that's what we do. The 0th element of
+     *     the "arena" array serves only as the top of stack.  The
+     *     remainder of the array is a form of the elimination backoff
+     *     collision array described in "A Scalable Lock-free Stack
+     *     Algorithm", by D. Hendler, N. Shavit, and L. Yerushalmi.
+     *     16th ACM Symposium on Parallelism in Algorithms and
+     *     Architectures, June 2004. Here, threads spin (using short
+     *     timed waits with exponential backoff) looking for each
+     *     other.  If they fail to find others waiting, they try the
+     *     top spot again.  As shown in that paper, this always
+     *     converges.
+     *
+     * The backoff elimination mechanics never come into play in
+     * common usages where only two threads ever meet to exchange
+     * items, but they prevent contention bottlenecks when an
+     * exchanger is used by a large number of threads.
+     */
 
-    /** Holder for the item being exchanged */
-    private V item;
+    /** 
+     * Size of collision space. Using a size of half the number of
+     * CPUs provides enough space for threads to find each other but
+     * not so much that it would always require one or more to time
+     * out to become unstuck. Note that the arena array holds SIZE+1
+     * elements, to include the top-of-stack slot.
+     */
+    private static final int SIZE = 
+        (Runtime.getRuntime().availableProcessors() + 1) / 2;
 
     /**
-     * Arrival count transitions from 0 to 1 to 2 then back to 0
-     * during an exchange.
+     * Base unit in nanoseconds for backoffs. Must be a power of two.
+     * Should be small because backoffs exponentially increase from
+     * base.
      */
-    private int arrivalCount;
+    private static final long BACKOFF_BASE = 128L;
 
-    /**
-     * Main exchange function, handling the different policy variants.
+    /** 
+     * Sentinel item representing cancellation.  This value is placed
+     * in holes on cancellation, and used as a return value from Node
+     * methods to indicate failure to set or get hole.
+     **/
+    static final Object FAIL = new Object();
+
+    /** 
+     * The collision arena. arena[0] is used as the top of the stack.
+     * The remainder is used as the collision elimination space.
+     * Each slot holds an AtomicReference<Node>, but this cannot be 
+     * expressed for arrays, so elements are casted on each use.
      */
-    private V doExchange(V x, boolean timed, long nanos) throws InterruptedException, TimeoutException {
-        lock.lock();
-        try {
-            V other;
+    private final AtomicReference[] arena;
 
-            // If arrival count already at two, we must wait for
-            // a previous pair to finish and reset the count;
-            while (arrivalCount == 2) {
-                if (!timed)
-                    taken.await();
-                else if (nanos > 0)
-                    nanos = taken.awaitNanos(nanos);
-                else
-                    throw new TimeoutException();
-            }
-
-            int count = ++arrivalCount;
-
-            // If item is already waiting, replace it and signal other thread
-            if (count == 2) {
-                other = item;
-                item = x;
-                taken.signal();
-                return other;
-            }
-
-            // Otherwise, set item and wait for another thread to
-            // replace it and signal us.
-
-            item = x;
-            InterruptedException interrupted = null;
-            try {
-                while (arrivalCount != 2) {
-                    if (!timed)
-                        taken.await();
-                    else if (nanos > 0)
-                        nanos = taken.awaitNanos(nanos);
-                    else
-                        break; // timed out
-                }
-            } catch (InterruptedException ie) {
-                interrupted = ie;
-            }
-
-            // Get and reset item and count after the wait.
-            // (We need to do this even if wait was aborted.)
-            other = item;
-            item = null;
-            count = arrivalCount;
-            arrivalCount = 0;
-            taken.signal();
-
-            // If the other thread replaced item, then we must
-            // continue even if cancelled.
-            if (count == 2) {
-                if (interrupted != null)
-                    Thread.currentThread().interrupt();
-                return other;
-            }
-
-            // If no one is waiting for us, we can back out
-            if (interrupted != null)
-                throw interrupted;
-            else  // must be timeout
-                throw new TimeoutException();
-        } finally {
-            lock.unlock();
-        }
-    }
+    /** Generator for random backoffs and delays. */
+    private final Random random = new Random();
 
     /**
      * Creates a new Exchanger.
      */
     public Exchanger() {
+	arena = new AtomicReference[SIZE + 1];
+        for (int i = 0; i < arena.length; ++i)
+            arena[i] = new AtomicReference();
+    }
+
+    /**
+     * Main exchange function, handling the different policy variants.
+     * Uses Object, not "V" as argument and return value to simplify
+     * handling of internal sentinel values. Callers from public
+     * methods cast accordingly.
+     * @param item the item to exchange.
+     * @param timed true if the wait is timed.
+     * @param nanos if timed, the maximum wait time.
+     * @return the other thread's item.
+     */
+    private Object doExchange(Object item, boolean timed, long nanos)
+	throws InterruptedException, TimeoutException {
+	Node me = new Node(item);
+	long lastTime = (timed)? System.nanoTime() : 0;
+        int idx = 0;     // start out at slot representing top
+	int backoff = 0; // increases on failure to occupy a slot
+
+	for (;;) {
+            AtomicReference<Node> slot = (AtomicReference<Node>)arena[idx];
+
+            // If this slot is already occupied, there is a waiting item...
+            Node you = slot.get();
+            if (you != null) {
+                Object v = you.fillHole(item);
+                slot.compareAndSet(you, null);
+                if (v != FAIL)       // ... unless it was cancelled
+                    return v;
+            }
+
+            // Try to occupy this slot
+            if (slot.compareAndSet(null, me)) {
+                // If this is top slot, use regular wait, else backoff-wait
+                Object v = ((idx == 0)?
+                            me.waitForHole(timed, nanos) :
+                            me.waitForHole(true, randomDelay(backoff)));
+                slot.compareAndSet(me, null);
+                if (v != FAIL)
+                    return v;
+                if (Thread.interrupted())
+                    throw new InterruptedException();
+                if (timed) {
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;
+                    lastTime = now;
+                    if (nanos <= 0)
+                        throw new TimeoutException();
+                }
+
+                me = new Node(item);      // Throw away nodes on failure
+                if (backoff < SIZE - 1)   // Increase or stay saturated
+                    ++backoff;
+                idx = 0;                  // Restart at top
+            }
+
+            else // Retry with a random non-top slot <= backoff
+                idx = 1 + random.nextInt(backoff + 1);
+
+        }
+    }
+
+    /**
+     * Returns a random delay less than (base times (2 raised to backoff))
+     */
+    private long randomDelay(int backoff) {
+        return ((BACKOFF_BASE << backoff) - 1) & random.nextInt();
+    }
+
+    /**
+     * Nodes hold partially exchanged data. This class
+     * opportunistically subclasses AtomicReference to represent the
+     * hole. So get() returns hole, and compareAndSet CAS'es value
+     * into hole.  Note that this class cannot be parameterized as V
+     * because the sentinel value FAIL is only of type Object.
+     */
+    static final class Node extends AtomicReference<Object> {
+        /** The element offered by the Thread creating this node. */
+	final Object item;
+        /** The Thread creating this node. */
+        final Thread waiter;
+
+        /**
+         * Creates node with given item and empty hole.
+         * @param item the item.
+         */
+	Node(Object item) {
+            this.item = item;
+            waiter = Thread.currentThread();
+        }
+
+        /**
+         * Tries to fill in hole. On success, wakes up the waiter.
+         * @param val the value to place in hole.
+         * @return on success, the item; on failure, FAIL.
+         */
+	Object fillHole(Object val) {
+            if (compareAndSet(null, val)) {
+                LockSupport.unpark(waiter);
+                return item;
+            }
+            return FAIL;
+	}
+
+        /**
+         * Wait for and get the hole filled in by another thread.
+         * Fail if timed out or interrupted before hole filled.
+         * @param timed true if the wait is timed.
+         * @param nanos if timed, the maximum wait time.
+         * @return on success, the hole; on failure, FAIL.
+         */
+        Object waitForHole(boolean timed, long nanos) {
+            long lastTime = (timed)? System.nanoTime() : 0;
+            Object h = get();
+            while (h == null) {
+                if (!timed)
+                    LockSupport.park();
+                else {
+                    LockSupport.parkNanos(nanos);
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;
+                    lastTime = now;
+                }
+                // If interrupted or timed out, try to cancel by
+                // CASing FAIL as hole value.
+                if ((h = get()) == null &&
+                    (Thread.currentThread().isInterrupted() ||
+                     (timed && nanos <= 0))) {
+                    compareAndSet(null, FAIL);
+                    h = get();
+                }
+            }
+            return h;
+        }
     }
 
     /**
@@ -187,7 +310,7 @@ public class Exchanger<V> {
      */
     public V exchange(V x) throws InterruptedException {
         try {
-            return doExchange(x, false, 0);
+            return (V)doExchange(x, false, 0);
         } catch (TimeoutException cannotHappen) {
             throw new Error(cannotHappen);
         }
@@ -239,7 +362,6 @@ public class Exchanger<V> {
      */
     public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
-        return doExchange(x, true, unit.toNanos(timeout));
+        return (V)doExchange(x, true, unit.toNanos(timeout));
     }
-
 }

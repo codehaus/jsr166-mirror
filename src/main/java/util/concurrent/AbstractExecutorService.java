@@ -57,7 +57,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         if (ntasks == 0)
             throw new IllegalArgumentException();
         List<Future<T>> futures= new ArrayList<Future<T>>(ntasks);
-        ExecutorCompletionService<T> ecs = 
+        ExecutorCompletionService<T> ecs =
             new ExecutorCompletionService<T>(this);
 
         // For efficiency, especially in executors with limited
@@ -79,14 +79,14 @@ public abstract class AbstractExecutorService implements ExecutorService {
             int active = 1;
 
             for (;;) {
-                Future<T> f = ecs.poll(); 
+                Future<T> f = ecs.poll();
                 if (f == null) {
                     if (ntasks > 0) {
                         --ntasks;
                         futures.add(ecs.submit(it.next()));
                         ++active;
                     }
-                    else if (active == 0) 
+                    else if (active == 0)
                         break;
                     else if (timed) {
                         f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
@@ -96,7 +96,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
                         nanos -= now - lastTime;
                         lastTime = now;
                     }
-                    else 
+                    else
                         f = ecs.take();
                 }
                 if (f != null) {
@@ -111,14 +111,14 @@ public abstract class AbstractExecutorService implements ExecutorService {
                         ee = new ExecutionException(rex);
                     }
                 }
-            }    
+            }
 
             if (ee == null)
                 ee = new ExecutionException();
             throw ee;
 
         } finally {
-            for (Future<T> f : futures) 
+            for (Future<T> f : futures)
                 f.cancel(true);
         }
     }
@@ -133,8 +133,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
     }
 
-    public <T> T invokeAny(Collection<Callable<T>> tasks, 
-                           long timeout, TimeUnit unit) 
+    public <T> T invokeAny(Collection<Callable<T>> tasks,
+                           long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         return doInvokeAny(tasks, true, unit.toNanos(timeout));
     }
@@ -153,8 +153,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             }
             for (Future<T> f : futures) {
                 if (!f.isDone()) {
-                    try { 
-                        f.get(); 
+                    try {
+                        f.get();
                     } catch (CancellationException ignore) {
                     } catch (ExecutionException ignore) {
                     }
@@ -164,13 +164,13 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!done)
-                for (Future<T> f : futures) 
+                for (Future<T> f : futures)
                     f.cancel(true);
         }
     }
 
-    public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks, 
-                                         long timeout, TimeUnit unit) 
+    public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks,
+                                         long timeout, TimeUnit unit)
         throws InterruptedException {
         if (tasks == null || unit == null)
             throw new NullPointerException();
@@ -178,7 +178,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
         boolean done = false;
         try {
-            for (Callable<T> t : tasks) 
+            for (Callable<T> t : tasks)
                 futures.add(new FutureTask<T>(t));
 
             long lastTime = System.nanoTime();
@@ -192,15 +192,15 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 nanos -= now - lastTime;
                 lastTime = now;
                 if (nanos <= 0)
-                    return futures; 
+                    return futures;
             }
 
             for (Future<T> f : futures) {
                 if (!f.isDone()) {
-                    if (nanos <= 0) 
-                        return futures; 
-                    try { 
-                        f.get(nanos, TimeUnit.NANOSECONDS); 
+                    if (nanos <= 0)
+                        return futures;
+                    try {
+                        f.get(nanos, TimeUnit.NANOSECONDS);
                     } catch (CancellationException ignore) {
                     } catch (ExecutionException ignore) {
                     } catch (TimeoutException toe) {
@@ -215,7 +215,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!done)
-                for (Future<T> f : futures) 
+                for (Future<T> f : futures)
                     f.cancel(true);
         }
     }

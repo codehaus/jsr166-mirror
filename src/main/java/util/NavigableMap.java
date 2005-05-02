@@ -30,7 +30,7 @@ package java.util;
  * <tt>navigableTailMap</tt> differ from the similarly named
  * <tt>SortedMap</tt> methods only in that the returned maps
  * are guaranteed to obey the <tt>NavigableMap</tt> interface.
- * 
+ *
  * <p>This interface additionally defines methods <tt>firstEntry</tt>,
  * <tt>pollFirstEntry</tt>, <tt>lastEntry</tt>, and
  * <tt>pollLastEntry</tt> that return and/or remove the least and
@@ -45,14 +45,14 @@ package java.util;
  *
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
- * @param <V> the type of mapped values 
+ * @param <V> the type of mapped values
  */
 public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a key-value mapping associated with the least key
      * greater than or equal to the given key, or <tt>null</tt> if there is
-     * no such entry. 
-     * 
+     * no such entry.
+     *
      * @param key the key.
      * @return an Entry associated with ceiling of given key, or <tt>null</tt>
      * if there is no such Entry.
@@ -66,7 +66,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns least key greater than or equal to the given key, or
      * <tt>null</tt> if there is no such key.
-     * 
+     *
      * @param key the key.
      * @return the ceiling key, or <tt>null</tt>
      * if there is no such key.
@@ -80,8 +80,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a key-value mapping associated with the greatest
      * key strictly less than the given key, or <tt>null</tt> if there is no
-     * such entry. 
-     * 
+     * such entry.
+     *
      * @param key the key.
      * @return an Entry with greatest key less than the given
      * key, or <tt>null</tt> if there is no such Entry.
@@ -95,7 +95,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns the greatest key strictly less than the given key, or
      * <tt>null</tt> if there is no such key.
-     * 
+     *
      * @param key the key.
      * @return the greatest key less than the given
      * key, or <tt>null</tt> if there is no such key.
@@ -110,7 +110,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * Returns a key-value mapping associated with the greatest key
      * less than or equal to the given key, or <tt>null</tt> if there
      * is no such entry.
-     * 
+     *
      * @param key the key.
      * @return an Entry associated with floor of given key, or <tt>null</tt>
      * if there is no such Entry.
@@ -125,7 +125,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * Returns the greatest key
      * less than or equal to the given key, or <tt>null</tt> if there
      * is no such key.
-     * 
+     *
      * @param key the key.
      * @return the floor of given key, or <tt>null</tt> if there is no
      * such key.
@@ -140,7 +140,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * Returns a key-value mapping associated with the least key
      * strictly greater than the given key, or <tt>null</tt> if there
      * is no such entry.
-     * 
+     *
      * @param key the key.
      * @return an Entry with least key greater than the given key, or
      * <tt>null</tt> if there is no such Entry.
@@ -154,7 +154,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns the least key strictly greater than the given key, or
      * <tt>null</tt> if there is no such key.
-     * 
+     *
      * @param key the key.
      * @return the least key greater than the given key, or
      * <tt>null</tt> if there is no such key.
@@ -168,8 +168,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a key-value mapping associated with the least
      * key in this map, or <tt>null</tt> if the map is empty.
-     * 
-     * @return an Entry with least key, or <tt>null</tt> 
+     *
+     * @return an Entry with least key, or <tt>null</tt>
      * if the map is empty.
      */
     Map.Entry<K,V> firstEntry();
@@ -177,7 +177,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a key-value mapping associated with the greatest
      * key in this map, or <tt>null</tt> if the map is empty.
-     * 
+     *
      * @return an Entry with greatest key, or <tt>null</tt>
      * if the map is empty.
      */
@@ -186,7 +186,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Removes and returns a key-value mapping associated with
      * the least key in this map, or <tt>null</tt> if the map is empty.
-     * 
+     *
      * @return the removed first entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
@@ -195,7 +195,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Removes and returns a key-value mapping associated with
      * the greatest key in this map, or <tt>null</tt> if the map is empty.
-     * 
+     *
      * @return the removed last entry of this map, or <tt>null</tt>
      * if the map is empty.
      */
@@ -244,7 +244,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned
      * navigable map is empty.)  The returned navigable map is backed
      * by this map, so changes in the returned navigable map are
-     * reflected in this map, and vice-versa. 
+     * reflected in this map, and vice-versa.
      *
      * @param fromKey low endpoint (inclusive) of the subMap.
      * @param toKey high endpoint (exclusive) of the subMap.
@@ -268,7 +268,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * Returns a view of the portion of this map whose keys are strictly less
      * than <tt>toKey</tt>.  The returned navigable map is backed by this map, so
      * changes in the returned navigable map are reflected in this map, and
-     * vice-versa.  
+     * vice-versa.
      * @param toKey high endpoint (exclusive) of the headMap.
      * @return a view of the portion of this map whose keys are strictly
      *                less than <tt>toKey</tt>.

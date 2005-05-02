@@ -12,11 +12,11 @@ package java.util.concurrent.locks;
  * The {@link #readLock read lock} may be held simultaneously by
  * multiple reader threads, so long as there are no writers.  The
  * {@link #writeLock write lock} is exclusive.
- * 
+ *
  * <p>A read-write lock allows for a greater level of concurrency in
  * accessing shared data than that permitted by a mutual exclusion lock.
  * It exploits the fact that while only a single thread at a time (a
- * <em>writer</em> thread) can modify the shared data, in many cases any 
+ * <em>writer</em> thread) can modify the shared data, in many cases any
  * number of threads can concurrently read the data (hence <em>reader</em>
  * threads).
  * In theory, the increase in concurrency permitted by the use of a read-write
@@ -27,7 +27,7 @@ package java.util.concurrent.locks;
  *
  * <p>Whether or not a read-write lock will improve performance over the use
  * of a mutual exclusion lock depends on the frequency that the data is
- * read compared to being modified, the duration of the read and write 
+ * read compared to being modified, the duration of the read and write
  * operations, and the contention for the data - that is, the number of
  * threads that will try to read or write the data at the same time.
  * For example, a collection that is initially populated with data and
@@ -56,7 +56,7 @@ package java.util.concurrent.locks;
  * lengthy delays for a write if the readers are frequent and long-lived as
  * expected. Fair, or &quot;in-order&quot; implementations are also possible.
  *
- * <li>Determining whether readers that request the read lock while a 
+ * <li>Determining whether readers that request the read lock while a
  * reader is active and a writer is waiting, are granted the read lock.
  * Preference to the reader can delay the writer indefinitely, while
  * preference to the writer can reduce the potential for concurrency.

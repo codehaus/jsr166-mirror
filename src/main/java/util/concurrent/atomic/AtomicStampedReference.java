@@ -8,7 +8,7 @@ package java.util.concurrent.atomic;
 
 /**
  * An <tt>AtomicStampedReference</tt> maintains an object reference
- * along with an integer "stamp", that can be updated atomically.  
+ * along with an integer "stamp", that can be updated atomically.
  *
  * <p> Implementation note. This implementation maintains stamped
  * references by creating internal objects representing "boxed"
@@ -108,7 +108,7 @@ public class AtomicStampedReference<V>  {
      * Atomically sets the value of both the reference and stamp
      * to the given update values if the
      * current reference is <tt>==</tt> to the expected reference
-     * and the current stamp is equal to the expected stamp. 
+     * and the current stamp is equal to the expected stamp.
      *
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference

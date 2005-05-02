@@ -21,7 +21,7 @@ package java.util.concurrent;
  * executor.execute(new RunnableTask2());
  * ...
  * </pre>
- * 
+ *
  * However, the <tt>Executor</tt> interface does not strictly
  * require that execution be asynchronous. In the simplest case, an
  * executor can run the submitted task immediately in the caller's

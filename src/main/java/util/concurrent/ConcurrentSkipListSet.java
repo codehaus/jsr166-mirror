@@ -58,11 +58,11 @@ public class ConcurrentSkipListSet<E>
      * fields of underlying map, but enables this field to be declared
      * final, which is necessary for thread safety.
      */
-    private final ConcurrentSkipListMap<E,Object> m; 
+    private final ConcurrentSkipListMap<E,Object> m;
 
     /**
      * Constructs a new, empty set, sorted according to the elements' natural
-     * order. 
+     * order.
      */
     public ConcurrentSkipListSet() {
         m = new ConcurrentSkipListMap<E,Object>();
@@ -70,7 +70,7 @@ public class ConcurrentSkipListSet<E>
 
     /**
      * Constructs a new, empty set, sorted according to the specified
-     * comparator.  
+     * comparator.
      *
      * @param c the comparator that will be used to sort this set.  A
      *        <tt>null</tt> value indicates that the elements' <i>natural
@@ -257,7 +257,7 @@ public class ConcurrentSkipListSet<E>
             return false;
         }
     }
-    
+
     /**
      * Removes from this set all of its elements that are contained in
      * the specified collection.  If the specified collection is also
@@ -267,7 +267,7 @@ public class ConcurrentSkipListSet<E>
      * @param  c collection that defines which elements will be removed from
      *           this set.
      * @return <tt>true</tt> if this set changed as a result of the call.
-     * 
+     *
      * @throws ClassCastException if the types of one or more elements in this
      *            set are incompatible with the specified collection
      * @throws NullPointerException if the specified collection, or any
@@ -281,13 +281,13 @@ public class ConcurrentSkipListSet<E>
                 modified = true;
         return modified;
     }
-    
+
     /* ---------------- Relational operations -------------- */
 
     /**
      * Returns an element greater than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return an element greater than or equal to given element, or
      * <tt>null</tt> if there is no such element.
@@ -302,7 +302,7 @@ public class ConcurrentSkipListSet<E>
     /**
      * Returns an element strictly less than the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return the greatest element less than the given element, or
      * <tt>null</tt> if there is no such element.
@@ -317,7 +317,7 @@ public class ConcurrentSkipListSet<E>
     /**
      * Returns an element less than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return the greatest element less than or equal to given
      * element, or <tt>null</tt> if there is no such element.
@@ -332,7 +332,7 @@ public class ConcurrentSkipListSet<E>
     /**
      * Returns an element strictly greater than the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return the least element greater than the given element, or
      * <tt>null</tt> if there is no such element.
@@ -403,7 +403,7 @@ public class ConcurrentSkipListSet<E>
      * <tt>fromElement</tt> and <tt>toElement</tt> are equal, the returned
      * navigable set is empty.)  The returned navigable set is backed by this set,
      * so changes in the returned navigable set are reflected in this set, and
-     * vice-versa. 
+     * vice-versa.
      * @param fromElement low endpoint (inclusive) of the subSet.
      * @param toElement high endpoint (exclusive) of the subSet.
      * @return a view of the portion of this set whose elements range from
@@ -426,7 +426,7 @@ public class ConcurrentSkipListSet<E>
      * Returns a view of the portion of this set whose elements are strictly
      * less than <tt>toElement</tt>.  The returned navigable set is backed by
      * this set, so changes in the returned navigable set are reflected in this
-     * set, and vice-versa.  
+     * set, and vice-versa.
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
      * 	       less than toElement.
@@ -523,23 +523,23 @@ public class ConcurrentSkipListSet<E>
      * <tt>tailSet</tt> methods of their underlying sets.
      *
      */
-    static class ConcurrentSkipListSubSet<E> 
-        extends AbstractSet<E> 
+    static class ConcurrentSkipListSubSet<E>
+        extends AbstractSet<E>
         implements NavigableSet<E>, java.io.Serializable {
 
         private static final long serialVersionUID = -7647078645896651609L;
 
         /** The underlying submap  */
         private final ConcurrentSkipListMap.ConcurrentSkipListSubMap<E,Object> s;
-        
+
         /**
-         * Creates a new submap. 
+         * Creates a new submap.
          * @param fromElement inclusive least value, or <tt>null</tt> if from start
          * @param toElement exclusive upper bound or <tt>null</tt> if to end
          * @throws IllegalArgumentException if fromElement and toElement
          * nonnull and fromElement greater than toElement
          */
-        ConcurrentSkipListSubSet(ConcurrentSkipListMap<E,Object> map, 
+        ConcurrentSkipListSubSet(ConcurrentSkipListMap<E,Object> map,
                                  E fromElement, E toElement) {
             s = new ConcurrentSkipListMap.ConcurrentSkipListSubMap<E,Object>
                 (map, fromElement, toElement);
@@ -550,7 +550,7 @@ public class ConcurrentSkipListSet<E>
         public NavigableSet<E> navigableSubSet(E fromElement, E toElement) {
             if (!s.inOpenRange(fromElement) || !s.inOpenRange(toElement))
                 throw new IllegalArgumentException("element out of range");
-            return new ConcurrentSkipListSubSet<E>(s.getMap(), 
+            return new ConcurrentSkipListSubSet<E>(s.getMap(),
                                                    fromElement, toElement);
         }
 
@@ -558,15 +558,15 @@ public class ConcurrentSkipListSet<E>
             E least = s.getLeast();
             if (!s.inOpenRange(toElement))
                 throw new IllegalArgumentException("element out of range");
-            return new ConcurrentSkipListSubSet<E>(s.getMap(), 
+            return new ConcurrentSkipListSubSet<E>(s.getMap(),
                                                    least, toElement);
         }
-        
+
         public NavigableSet<E> navigableTailSet(E fromElement) {
             E fence = s.getFence();
             if (!s.inOpenRange(fromElement))
                 throw new IllegalArgumentException("element out of range");
-            return new ConcurrentSkipListSubSet<E>(s.getMap(), 
+            return new ConcurrentSkipListSubSet<E>(s.getMap(),
                                                    fromElement, fence);
         }
 
@@ -577,7 +577,7 @@ public class ConcurrentSkipListSet<E>
         public SortedSet<E> headSet(E toElement) {
             return navigableHeadSet(toElement);
         }
-        
+
         public SortedSet<E> tailSet(E fromElement) {
             return navigableTailSet(fromElement);
         }
@@ -601,7 +601,7 @@ public class ConcurrentSkipListSet<E>
         public Iterator<E> descendingIterator() {
             return s.descendingKeySet().iterator();
         }
-        public E pollFirst() { 
+        public E pollFirst() {
             Map.Entry<E,?> e = s.pollFirstEntry();
             return (e == null)? null : e.getKey();
         }
@@ -611,4 +611,4 @@ public class ConcurrentSkipListSet<E>
         }
 
     }
-}    
+}

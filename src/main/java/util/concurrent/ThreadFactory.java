@@ -11,7 +11,7 @@ package java.util.concurrent;
  * removes hardwiring of calls to {@link Thread#Thread(Runnable) new Thread},
  * enabling applications to use special thread subclasses, priorities, etc.
  *
- * <p> 
+ * <p>
  * The simplest implementation of this interface is just:
  * <pre>
  * class SimpleThreadFactory implements ThreadFactory {
@@ -23,11 +23,11 @@ package java.util.concurrent;
  *
  * The {@link Executors#defaultThreadFactory} method provides a more
  * useful simple implementation, that sets the created thread context
- * to known values before returning it. 
+ * to known values before returning it.
  * @since 1.5
  * @author Doug Lea
  */
-public interface ThreadFactory { 
+public interface ThreadFactory {
 
     /**
      * Constructs a new <tt>Thread</tt>.  Implementations may also initialize

@@ -5,7 +5,7 @@
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
-package java.util;  
+package java.util;
 
 /**
  * This class implements the <tt>Set</tt> interface, backed by a
@@ -299,7 +299,7 @@ public class TreeSet<E>
      * For example, suppose that <tt>s</tt> is a navigable set of
      * strings.  The following idiom obtains a view containing all of
      * the strings in <tt>s</tt> from <tt>low</tt> to <tt>high</tt>,
-     * inclusive: 
+     * inclusive:
      * <pre> NavigableSet sub = s.navigableSubSet(low, high+"\0");
      * </pre>
      *
@@ -349,7 +349,7 @@ public class TreeSet<E>
      * bounded by <tt>successor(highEndpoint)</tt>.  For example,
      * suppose that <tt>s</tt> is a navigable set of strings.  The
      * following idiom obtains a view containing all of the strings in
-     * <tt>s</tt> that are less than or equal to <tt>high</tt>: 
+     * <tt>s</tt> that are less than or equal to <tt>high</tt>:
      * <pre> NavigableSet head = s.navigableHeadSet(high+"\0");</pre>
      *
      * @param toElement high endpoint (exclusive) of the headSet.
@@ -510,7 +510,7 @@ public class TreeSet<E>
     /**
      * Returns an element greater than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return an element greater than or equal to given element, or
      * <tt>null</tt> if there is no such element.
@@ -527,7 +527,7 @@ public class TreeSet<E>
     /**
      * Returns an element strictly less than the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return the greatest element less than the given element, or
      * <tt>null</tt> if there is no such element.
@@ -544,7 +544,7 @@ public class TreeSet<E>
     /**
      * Returns an element less than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return the greatest element less than or equal to given
      * element, or <tt>null</tt> if there is no such element.
@@ -561,7 +561,7 @@ public class TreeSet<E>
     /**
      * Returns an element strictly greater than the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param e the value to match
      * @return the least element greater than the given element, or
      * <tt>null</tt> if there is no such element.

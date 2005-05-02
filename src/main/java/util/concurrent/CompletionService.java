@@ -36,24 +36,24 @@ public interface CompletionService<V> {
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
-     * @throws NullPointerException if task null     
+     * @throws NullPointerException if task null
      */
     Future<V> submit(Callable<V> task);
 
 
     /**
-     * Submits a Runnable task for execution and returns a Future 
+     * Submits a Runnable task for execution and returns a Future
      * representing that task. Upon completion,
      * this task may be taken or polled.
      *
      * @param task the task to submit
      * @param result the result to return upon successful completion
      * @return a Future representing pending completion of the task,
-     * and whose <tt>get()</tt> method will return the given result value 
+     * and whose <tt>get()</tt> method will return the given result value
      * upon completion
      * @throws RejectedExecutionException if task cannot be scheduled
      * for execution
-     * @throws NullPointerException if task null     
+     * @throws NullPointerException if task null
      */
     Future<V> submit(Runnable task, V result);
 

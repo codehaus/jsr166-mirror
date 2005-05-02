@@ -18,18 +18,18 @@ import java.security.AccessControlException;
  * ExecutorService}, {@link ScheduledExecutorService}, {@link
  * ThreadFactory}, and {@link Callable} classes defined in this
  * package. This class supports the following kinds of methods:
- * 
+ *
  * <ul>
- *   <li> Methods that create and return an {@link ExecutorService} 
- *        set up with commonly useful configuration settings. 
- *   <li> Methods that create and return a {@link ScheduledExecutorService} 
- *        set up with commonly useful configuration settings. 
+ *   <li> Methods that create and return an {@link ExecutorService}
+ *        set up with commonly useful configuration settings.
+ *   <li> Methods that create and return a {@link ScheduledExecutorService}
+ *        set up with commonly useful configuration settings.
  *   <li> Methods that create and return a "wrapped" ExecutorService, that
  *        disables reconfiguration by making implementation-specific methods
  *        inaccessible.
  *   <li> Methods that create and return a {@link ThreadFactory}
  *        that sets newly created threads to a known state.
- *   <li> Methods that create and return a {@link Callable} 
+ *   <li> Methods that create and return a {@link Callable}
  *        out of other closure-like forms, so they can be used
  *        in execution methods requiring <tt>Callable</tt>.
  * </ul>
@@ -98,7 +98,7 @@ public class Executors {
      * equivalent <tt>newFixedThreadPool(1, threadFactory)</tt> the returned executor
      * is guaranteed not to be reconfigurable to use additional
      * threads.
-     * 
+     *
      * @param threadFactory the factory to use when creating new
      * threads
      *
@@ -148,7 +148,7 @@ public class Executors {
                                       new SynchronousQueue<Runnable>(),
                                       threadFactory);
     }
-   
+
     /**
      * Creates a single-threaded executor that can schedule commands
      * to run after a given delay, or to execute periodically.
@@ -186,9 +186,9 @@ public class Executors {
         return new DelegatedScheduledExecutorService
             (new ScheduledThreadPoolExecutor(1, threadFactory));
     }
-    
+
     /**
-     * Creates a thread pool that can schedule commands to run after a 
+     * Creates a thread pool that can schedule commands to run after a
      * given delay, or to execute periodically.
      * @param corePoolSize the number of threads to keep in the pool,
      * even if they are idle.
@@ -199,12 +199,12 @@ public class Executors {
     }
 
     /**
-     * Creates a thread pool that can schedule commands to run after a 
+     * Creates a thread pool that can schedule commands to run after a
      * given delay, or to execute periodically.
      * @param corePoolSize the number of threads to keep in the pool,
      * even if they are idle.
      * @param threadFactory the factory to use when the executor
-     * creates a new thread. 
+     * creates a new thread.
      * @return a newly created scheduled thread pool
      */
     public static ScheduledExecutorService newScheduledThreadPool(
@@ -244,7 +244,7 @@ public class Executors {
             throw new NullPointerException();
         return new DelegatedScheduledExecutorService(executor);
     }
-        
+
     /**
      * Returns a default thread factory used to create new threads.
      * This factory creates all new threads used by an Executor in the
@@ -375,7 +375,7 @@ public class Executors {
             throw new NullPointerException();
         return new PrivilegedCallable(callable);
     }
-    
+
     /**
      * Returns a {@link Callable} object that will, when
      * called, execute the given <tt>callable</tt> under the current
@@ -409,12 +409,12 @@ public class Executors {
         final Runnable task;
         final T result;
         RunnableAdapter(Runnable  task, T result) {
-            this.task = task; 
+            this.task = task;
             this.result = result;
         }
-        public T call() { 
-            task.run(); 
-            return result; 
+        public T call() {
+            task.run();
+            return result;
         }
     }
 
@@ -471,7 +471,7 @@ public class Executors {
                 }, acc);
             if (exception != null)
                 throw exception;
-            else 
+            else
                 return result;
         }
     }
@@ -517,7 +517,7 @@ public class Executors {
                 }, acc);
             if (exception != null)
                 throw exception;
-            else 
+            else
                 return result;
         }
     }
@@ -535,13 +535,13 @@ public class Executors {
             SecurityManager s = System.getSecurityManager();
             group = (s != null)? s.getThreadGroup() :
                                  Thread.currentThread().getThreadGroup();
-            namePrefix = "pool-" + 
-                          poolNumber.getAndIncrement() + 
+            namePrefix = "pool-" +
+                          poolNumber.getAndIncrement() +
                          "-thread-";
         }
 
         public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, 
+            Thread t = new Thread(group, r,
                                   namePrefix + threadNumber.getAndIncrement(),
                                   0);
             if (t.isDaemon())
@@ -565,21 +565,21 @@ public class Executors {
             this.acc = AccessController.getContext();
             acc.checkPermission(new RuntimePermission("setContextClassLoader"));
         }
-        
+
         public Thread newThread(final Runnable r) {
             return super.newThread(new Runnable() {
                 public void run() {
                     AccessController.doPrivileged(new PrivilegedAction() {
-                        public Object run() { 
+                        public Object run() {
                             Thread.currentThread().setContextClassLoader(ccl);
                             r.run();
-                            return null; 
+                            return null;
                         }
                     }, acc);
                 }
             });
         }
-        
+
     }
 
    /**
@@ -611,8 +611,8 @@ public class Executors {
             throws InterruptedException {
             return e.invokeAll(tasks);
         }
-        public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks, 
-                                             long timeout, TimeUnit unit) 
+        public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks,
+                                             long timeout, TimeUnit unit)
             throws InterruptedException {
             return e.invokeAll(tasks, timeout, unit);
         }
@@ -620,19 +620,19 @@ public class Executors {
             throws InterruptedException, ExecutionException {
             return e.invokeAny(tasks);
         }
-        public <T> T invokeAny(Collection<Callable<T>> tasks, 
-                               long timeout, TimeUnit unit) 
+        public <T> T invokeAny(Collection<Callable<T>> tasks,
+                               long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
             return e.invokeAny(tasks, timeout, unit);
         }
     }
-    
+
     /**
-     * A wrapper class that exposes only the ExecutorService and 
+     * A wrapper class that exposes only the ExecutorService and
      * ScheduleExecutor methods of a ScheduledExecutorService implementation.
      */
     static class DelegatedScheduledExecutorService
-            extends DelegatedExecutorService 
+            extends DelegatedExecutorService
             implements ScheduledExecutorService {
         private final ScheduledExecutorService e;
         DelegatedScheduledExecutorService(ScheduledExecutorService executor) {
@@ -653,7 +653,7 @@ public class Executors {
         }
     }
 
-        
+
     /** Cannot instantiate. */
     private Executors() {}
 }

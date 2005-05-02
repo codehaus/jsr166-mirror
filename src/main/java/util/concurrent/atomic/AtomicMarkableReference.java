@@ -106,7 +106,7 @@ public class AtomicMarkableReference<V>  {
      * Atomically sets the value of both the reference and mark
      * to the given update values if the
      * current reference is <tt>==</tt> to the expected reference
-     * and the current mark is equal to the expected mark.  
+     * and the current mark is equal to the expected mark.
      *
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference

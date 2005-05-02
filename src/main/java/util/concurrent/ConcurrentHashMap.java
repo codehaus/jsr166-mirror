@@ -70,7 +70,7 @@ import java.io.ObjectOutputStream;
  * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
- * @param <V> the type of mapped values 
+ * @param <V> the type of mapped values
  */
 public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         implements ConcurrentMap<K, V>, Serializable {
@@ -107,7 +107,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * be a power of two <= 1<<30 to ensure that entries are indexible
      * using ints.
      */
-    static final int MAXIMUM_CAPACITY = 1 << 30; 
+    static final int MAXIMUM_CAPACITY = 1 << 30;
 
     /**
      * The maximum number of segments to allow; used to bound
@@ -175,8 +175,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * ConcurrentHashMap list entry. Note that this is never exported
-     * out as a user-visible Map.Entry. 
-     * 
+     * out as a user-visible Map.Entry.
+     *
      * Because the value field is volatile, not final, it is legal wrt
      * the Java Memory Model for an unsynchronized reader to see null
      * instead of initial value when read via a data race.  Although a
@@ -353,8 +353,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 HashEntry[] tab = table;
                 int len = tab.length;
                 for (int i = 0 ; i < len; i++) {
-                    for (HashEntry<K,V> e = (HashEntry<K,V>)tab[i]; 
-                         e != null ; 
+                    for (HashEntry<K,V> e = (HashEntry<K,V>)tab[i];
+                         e != null ;
                          e = e.next) {
                         V v = e.value;
                         if (v == null) // recheck
@@ -436,7 +436,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         void rehash() {
-            HashEntry[] oldTable = table;            
+            HashEntry[] oldTable = table;
             int oldCapacity = oldTable.length;
             if (oldCapacity >= MAXIMUM_CAPACITY)
                 return;
@@ -524,7 +524,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         ++modCount;
                         HashEntry<K,V> newFirst = e.next;
                         for (HashEntry<K,V> p = first; p != e; p = p.next)
-                            newFirst = new HashEntry<K,V>(p.key, p.hash,  
+                            newFirst = new HashEntry<K,V>(p.key, p.hash,
                                                           newFirst, p.value);
                         tab[index] = newFirst;
                         count = c; // write-volatile
@@ -567,7 +567,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * bin exceeds this threshold.
      * @param concurrencyLevel the estimated number of concurrently
      * updating threads. The implementation performs internal sizing
-     * to try to accommodate this many threads.  
+     * to try to accommodate this many threads.
      * @throws IllegalArgumentException if the initial capacity is
      * negative or the load factor or concurrencyLevel are
      * nonpositive.
@@ -606,7 +606,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with the specified initial capacity
-     * and load factor and with the default concurrencyLevel 
+     * and load factor and with the default concurrencyLevel
      * (<tt>16</tt>).
      *
      * @param initialCapacity The implementation performs internal
@@ -635,8 +635,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with a default initial capacity
-     * (<tt>16</tt>), load factor 
-     * (<tt>0.75f</tt>), and concurrencyLevel 
+     * (<tt>16</tt>), load factor
+     * (<tt>0.75f</tt>), and concurrencyLevel
      * (<tt>16</tt>).
      */
     public ConcurrentHashMap() {
@@ -647,7 +647,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Creates a new map with the same mappings as the given map.  The
      * map is created with a capacity of 1.5 times the number of
      * mappings in the given map or <tt>16</tt>
-     * (whichever is greater), and a default load factor 
+     * (whichever is greater), and a default load factor
      * (<tt>0.75f</tt>) and concurrencyLevel
      * (<tt>16</tt>).
      * @param t the map
@@ -680,7 +680,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         for (int i = 0; i < segments.length; ++i) {
             if (segments[i].count != 0)
                 return false;
-            else 
+            else
                 mcsum += mc[i] = segments[i].modCount;
         }
         // If mcsum happens to be zero, then we know we got a snapshot
@@ -689,7 +689,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         if (mcsum != 0) {
             for (int i = 0; i < segments.length; ++i) {
                 if (segments[i].count != 0 ||
-                    mc[i] != segments[i].modCount) 
+                    mc[i] != segments[i].modCount)
                     return false;
             }
         }
@@ -727,16 +727,16 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     }
                 }
             }
-            if (check == sum) 
+            if (check == sum)
                 break;
         }
         if (check != sum) { // Resort to locking all segments
             sum = 0;
-            for (int i = 0; i < segments.length; ++i) 
+            for (int i = 0; i < segments.length; ++i)
                 segments[i].lock();
-            for (int i = 0; i < segments.length; ++i) 
+            for (int i = 0; i < segments.length; ++i)
                 sum += segments[i].count;
-            for (int i = 0; i < segments.length; ++i) 
+            for (int i = 0; i < segments.length; ++i)
                 segments[i].unlock();
         }
         if (sum > Integer.MAX_VALUE)
@@ -790,7 +790,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public boolean containsValue(Object value) {
         if (value == null)
             throw new NullPointerException();
-        
+
         // See explanation of modCount use above
 
         final Segment[] segments = this.segments;
@@ -820,7 +820,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 return false;
         }
         // Resort to locking all segments
-        for (int i = 0; i < segments.length; ++i) 
+        for (int i = 0; i < segments.length; ++i)
             segments[i].lock();
         boolean found = false;
         try {
@@ -831,7 +831,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 }
             }
         } finally {
-            for (int i = 0; i < segments.length; ++i) 
+            for (int i = 0; i < segments.length; ++i)
                 segments[i].unlock();
         }
         return found;
@@ -859,7 +859,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Maps the specified <tt>key</tt> to the specified
      * <tt>value</tt> in this table. Neither the key nor the
-     * value can be <tt>null</tt>. 
+     * value can be <tt>null</tt>.
      *
      * <p> The value can be retrieved by calling the <tt>get</tt> method
      * with a key that is equal to the original key.
@@ -883,7 +883,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * with a value, associate it with the given value.
      * This is equivalent to
      * <pre>
-     *   if (!map.containsKey(key)) 
+     *   if (!map.containsKey(key))
      *      return map.put(key, value);
      *   else
      *      return map.get(key);</pre>
@@ -891,7 +891,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *         if there was no mapping for key. 
+     *         if there was no mapping for key.
      * @throws NullPointerException if the specified key or value is
      *            <tt>null</tt>.
      */
@@ -936,7 +936,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Remove entry for key only if currently mapped to given value.
      * Acts as
-     * <pre> 
+     * <pre>
      *  if (map.get(key).equals(value)) {
      *     map.remove(key);
      *     return true;
@@ -957,7 +957,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Replaces entry for key only if currently mapped to given value.
      * Acts as
-     * <pre> 
+     * <pre>
      *  if (map.get(key).equals(oldValue)) {
      *     map.put(key, newValue);
      *     return true;
@@ -980,7 +980,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Replaces entry for key only if currently mapped to some value.
      * Acts as
-     * <pre> 
+     * <pre>
      *  if (map.containsKey(key)) {
      *     return map.put(key, value);
      * } else return null;</pre>
@@ -988,7 +988,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param key key with which the specified value is associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *         if there was no mapping for key.  
+     *         if there was no mapping for key.
      * @throws NullPointerException if the specified key or value is
      *            <tt>null</tt>.
      */
@@ -1163,7 +1163,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         public V nextElement() { return super.nextEntry().value; }
     }
 
-    
+
 
     /**
      * Entry iterator. Exported Entry objects must write-through

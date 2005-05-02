@@ -522,7 +522,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Returns true if this list contains all of the elements in the
      * specified collection.
-     * 
+     *
      * <p>This implementation iterates over the specified collection,
      * checking each element returned by the Iterator in turn to see if
      * it's contained in this list.  If all elements are so contained

@@ -33,7 +33,7 @@ package java.util.concurrent;
  *        int n = solvers.size();
  *        for (int i = 0; i &lt; n; ++i) {
  *            Result r = ecs.take().get();
- *            if (r != null) 
+ *            if (r != null)
  *                use(r);
  *        }
  *    }
@@ -44,7 +44,7 @@ package java.util.concurrent;
  * and cancelling all other tasks when the first one is ready:
  *
  * <pre>
- *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers) 
+ *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers)
  *      throws InterruptedException {
  *        CompletionService&lt;Result&gt; ecs = new ExecutorCompletionService&lt;Result&gt;(e);
  *        int n = solvers.size();
@@ -94,7 +94,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * @throws NullPointerException if executor is <tt>null</tt>
      */
     public ExecutorCompletionService(Executor executor) {
-        if (executor == null) 
+        if (executor == null)
             throw new NullPointerException();
         this.executor = executor;
         this.completionQueue = new LinkedBlockingQueue<Future<V>>();
@@ -111,7 +111,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      */
     public ExecutorCompletionService(Executor executor,
                                      BlockingQueue<Future<V>> completionQueue) {
-        if (executor == null || completionQueue == null) 
+        if (executor == null || completionQueue == null)
             throw new NullPointerException();
         this.executor = executor;
         this.completionQueue = completionQueue;

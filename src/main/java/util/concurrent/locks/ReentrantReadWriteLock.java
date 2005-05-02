@@ -275,6 +275,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         protected final boolean isHeldExclusively() {
+            // While we must in general read state before owner,
+            // we don't need to do so to check if current thread is owner
             return getExclusiveOwnerThread() == Thread.currentThread();
         }
 

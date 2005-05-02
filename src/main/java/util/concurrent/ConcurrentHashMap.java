@@ -1071,7 +1071,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     public Set<Map.Entry<K,V>> entrySet() {
         Set<Map.Entry<K,V>> es = entrySet;
-        return (es != null) ? es : (entrySet = (Set<Map.Entry<K,V>>) (Set) new EntrySet());
+        return (es != null) ? es : (entrySet = new EntrySet());
     }
 
 

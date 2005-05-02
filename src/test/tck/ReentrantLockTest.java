@@ -886,7 +886,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             lock.lock();
             c.signal();
             lock.unlock();
-            assert(t.isInterrupted());
+            assertTrue(t.isInterrupted());
             t.join(SHORT_DELAY_MS);
             assertFalse(t.isAlive());
         }

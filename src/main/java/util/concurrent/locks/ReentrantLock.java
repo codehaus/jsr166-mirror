@@ -145,9 +145,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         final int getHoldCount() {
-            int c = getState();
-            return ((getExclusiveOwnerThread() == Thread.currentThread())? 
-                    c : 0);
+            return isHeldExclusively() ? getState() : 0;
         }
 
         final boolean isLocked() {

@@ -299,9 +299,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         final int getWriteHoldCount() {
-            int c = exclusiveCount(getState());
-            return ((getExclusiveOwnerThread() == Thread.currentThread())? 
-                    c : 0);
+            return isHeldExclusively() ? exclusiveCount(getState()) : 0;
         }
 
         /**

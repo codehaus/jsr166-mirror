@@ -11,8 +11,9 @@ import java.util.*;
  * A {@link Deque} that additionally supports operations that wait for
  * the deque to become non-empty when retrieving an element, and wait
  * for space to become available in the deque when storing an
- * element. These methods are summarized in the following table:<p>
+ * element. These methods are summarized in the following table:
  *
+ * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td></td>
@@ -47,8 +48,9 @@ import java.util.*;
  * <tt>BlockingDeque</tt> implementation may be used directly as a
  * FIFO <tt>BlockingQueue</tt>. The blocking methods inherited from
  * the <tt>BlockingQueue</tt> interface are precisely equivalent to
- * <tt>BlockingDeque</tt> methods as indicated in the following table:<p>
+ * <tt>BlockingDeque</tt> methods as indicated in the following table:
  *
+ * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td ALIGN=CENTER> <b><tt>BlockingQueue</tt> Method</b></td>

@@ -27,7 +27,8 @@ package java.util;
  * <p>The twelve methods described above are summarized in the
  * following table:
  *
- * <p><table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <p>
+ * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER COLSPAN = 2> <b>First Element (Head)</b></td>
@@ -69,7 +70,8 @@ package java.util;
  * inherited from the <tt>Queue</tt> interface are precisely equivalent to
  * <tt>Deque</tt> methods as indicated in the following table:
  *
- * <p><table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <p>
+ * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td ALIGN=CENTER> <b><tt>Queue</tt> Method</b></td>
  *    <td ALIGN=CENTER> <b>Equivalent <tt>Deque</tt> Method</b></td>
@@ -106,7 +108,8 @@ package java.util;
  * beginning of the deque.  Stack methods are precisely equivalent to
  * <tt>Deque</tt> methods as indicated in the table below:
  *
- * <p><table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <p>
+ * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td ALIGN=CENTER> <b>Stack Method</b></td>
  *    <td ALIGN=CENTER> <b>Equivalent <tt>Deque</tt> Method</b></td>

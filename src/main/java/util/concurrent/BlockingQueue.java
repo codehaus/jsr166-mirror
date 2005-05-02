@@ -23,6 +23,7 @@ import java.util.Queue;
  * <tt>BlockingQueue</tt> implementations; in most implementations, insert
  * operations cannot fail.
  *
+ * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td></td>

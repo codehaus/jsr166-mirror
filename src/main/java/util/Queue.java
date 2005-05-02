@@ -18,7 +18,8 @@ package java.util;
  * implementations; in most implementations, insert operations cannot
  * fail.
  *
- * <p><table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <p>
+ * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER><em>Throws exception</em></td>

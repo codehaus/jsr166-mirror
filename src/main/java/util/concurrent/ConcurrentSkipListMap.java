@@ -2610,7 +2610,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Initializes descending iterator starting at key less
          * than or equal to given fence key, or
          * last node if fence is <tt>null</tt>, but not less than
-         * least, or beginning if lest is <tt>null</tt>.
+         * least, or beginning if least is <tt>null</tt>.
          */
         final void initDescending(K least, K fence) {
             for (;;) {

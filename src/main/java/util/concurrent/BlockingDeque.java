@@ -194,7 +194,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
     void put(E o) throws InterruptedException;
 
     /**
-     * Inserts the specified element as the lest element of this
+     * Inserts the specified element as the last element of this
      * deque, if possible.  When using deques that may impose
      * insertion restrictions (for example capacity bounds), method
      * <tt>offer</tt> is generally preferable to method {@link

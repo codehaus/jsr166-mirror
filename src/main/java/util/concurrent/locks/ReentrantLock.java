@@ -129,8 +129,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         protected final boolean isHeldExclusively() {
-            return getState() != 0 &&
-		getExclusiveOwnerThread() == Thread.currentThread();
+            // While we must in general read state before owner,
+            // we don't need to do so to check if current thread is owner
+            return getExclusiveOwnerThread() == Thread.currentThread();
         }
 
         final ConditionObject newCondition() {
@@ -145,8 +146,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         final int getHoldCount() {
             int c = getState();
-            Thread o = getExclusiveOwnerThread();
-            return (o == Thread.currentThread())? c : 0;
+            return ((getExclusiveOwnerThread() == Thread.currentThread())? 
+                    c : 0);
         }
 
         final boolean isLocked() {

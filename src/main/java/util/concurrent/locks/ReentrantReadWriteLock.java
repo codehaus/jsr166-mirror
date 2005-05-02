@@ -275,8 +275,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         protected final boolean isHeldExclusively() {
-            return exclusiveCount(getState()) != 0 &&
-                getExclusiveOwnerThread() == Thread.currentThread();
+            return getExclusiveOwnerThread() == Thread.currentThread();
         }
 
         // Methods relayed to outer class
@@ -286,9 +285,9 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         final Thread getOwner() {
-            int c = exclusiveCount(getState());
-            Thread o = getExclusiveOwnerThread();
-            return (c == 0)? null : o;
+            return ((exclusiveCount(getState()) == 0)? 
+                    null : 
+                    getExclusiveOwnerThread());
         }
 
         final int getReadLockCount() {
@@ -301,8 +300,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
         final int getWriteHoldCount() {
             int c = exclusiveCount(getState());
-            Thread o = getExclusiveOwnerThread();
-            return (o == Thread.currentThread())? c : 0;
+            return ((getExclusiveOwnerThread() == Thread.currentThread())? 
+                    c : 0);
         }
 
         /**

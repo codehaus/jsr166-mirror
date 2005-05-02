@@ -44,6 +44,7 @@ import java.util.*;
  *
  * @author Doug Lea
  * @param <E> the type of elements maintained by this set
+ * @since 1.6
  */
 public class ConcurrentSkipListSet<E>
     extends AbstractSet<E>

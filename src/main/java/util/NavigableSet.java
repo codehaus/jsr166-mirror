@@ -36,6 +36,7 @@ package java.util;
  *
  * @author Doug Lea
  * @param <E> the type of elements maintained by this set
+ * @since 1.6
  */
 public interface NavigableSet<E> extends SortedSet<E> {
     /**

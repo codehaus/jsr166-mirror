@@ -137,7 +137,7 @@ public interface Queue<E> extends Collection<E> {
 
     /**
      * Retrieves and removes the head of this queue.  This method
-     * differs from the <tt>poll</tt> method in that it throws an
+     * differs from the {@link #poll} method only in that it throws an
      * exception if this queue is empty.
      *
      * @return the head of this queue.
@@ -156,7 +156,7 @@ public interface Queue<E> extends Collection<E> {
 
     /**
      * Retrieves, but does not remove, the head of this queue.  This method
-     * differs from the <tt>peek</tt> method only in that it throws an
+     * differs from the {@link #peek} method only in that it throws an
      * exception if this queue is empty.
      *
      * @return the head of this queue.

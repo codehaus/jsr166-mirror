@@ -231,7 +231,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves and removes the first element of this deque.  This method
-     * differs from the <tt>pollFirst</tt> method only in that it throws an
+     * differs from the {@link #pollFirst} method only in that it throws an
      * exception if this deque is empty.
      *
      * @return the first element of this deque
@@ -241,7 +241,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves and removes the last element of this deque.  This method
-     * differs from the <tt>pollLast</tt> method only in that it throws an
+     * differs from the {@link #pollLast} method only in that it throws an
      * exception if this deque is empty.
      *
      * @return the last element of this deque
@@ -269,7 +269,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves, but does not remove, the first element of this
-     * deque.  This method differs from the <tt>peekFirst</tt> method only
+     * deque.  This method differs from the {@link #peekFirst} method only
      * in that it throws an exception if this deque is empty.
      *
      * @return the first element of this deque
@@ -279,7 +279,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves, but does not remove, the last element of this
-     * deque.  This method differs from the <tt>peekLast</tt> method only
+     * deque.  This method differs from the {@link #peekLast} method only
      * in that it throws an exception if this deque is empty.
      *
      * @return the last element of this deque
@@ -367,7 +367,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves and removes the head of the queue represented by this deque.
-     * This method differs from the <tt>poll</tt> method only in that it
+     * This method differs from the {@link #poll} method only in that it
      * throws an exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
@@ -390,7 +390,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
-     * this deque.  This method differs from the <tt>peek</tt> method only in
+     * this deque.  This method differs from the {@link #peek} method only in
      * that it throws an exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #getFirst()}.

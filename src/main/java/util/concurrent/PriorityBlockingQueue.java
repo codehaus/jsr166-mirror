@@ -111,7 +111,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Adds the specified element to this queue.
-     * @param o the element to add
+     * @param e the element to add
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
@@ -120,8 +120,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
      */
-    public boolean add(E o) {
-        return super.add(o);
+    public boolean add(E e) {
+        return super.add(e);
     }
 
     /**
@@ -140,19 +140,19 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element into this priority queue.
      *
-     * @param o the element to add
+     * @param e the element to add
      * @return <tt>true</tt>
      * @throws ClassCastException if the specified element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o) {
-        if (o == null) throw new NullPointerException();
+    public boolean offer(E e) {
+        if (e == null) throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            boolean ok = q.offer(o);
+            boolean ok = q.offer(e);
             assert ok;
             notEmpty.signal();
             return true;
@@ -164,20 +164,20 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to this priority queue. As the queue is
      * unbounded this method will never block.
-     * @param o the element to add
+     * @param e the element to add
      * @throws ClassCastException if the element cannot be compared
      * with elements currently in the priority queue according
      * to the priority queue's ordering.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public void put(E o) {
-        offer(o); // never need to block
+    public void put(E e) {
+        offer(e); // never need to block
     }
 
     /**
      * Inserts the specified element into this priority queue. As the queue is
      * unbounded this method will never block.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
      * @return <tt>true</tt>
@@ -186,8 +186,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * to the priority queue's ordering.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o, long timeout, TimeUnit unit) {
-        return offer(o); // never need to block
+    public boolean offer(E e, long timeout, TimeUnit unit) {
+        return offer(e); // never need to block
     }
 
     public E take() throws InterruptedException {

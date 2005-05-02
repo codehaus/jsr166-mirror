@@ -49,15 +49,15 @@ public abstract class AbstractQueue<E>
      * returns <tt>true</tt> if <tt>offer</tt> succeeds, else
      * throws an IllegalStateException.
      *
-     * @param o the element
+     * @param e the element
      * @return <tt>true</tt> (as per the general contract of
      *         <tt>Collection.add</tt>).
      *
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      * @throws IllegalStateException if the element cannot be added.
      */
-    public boolean add(E o) {
-        if (offer(o))
+    public boolean add(E e) {
+        if (offer(e))
             return true;
         else
             throw new IllegalStateException("Queue full");

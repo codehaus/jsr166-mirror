@@ -61,17 +61,17 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Inserts the specified element into this delay queue.
      *
-     * @param o the element to add
+     * @param e the element to add
      * @return <tt>true</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o) {
+    public boolean offer(E e) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             E first = q.peek();
-            q.offer(o);
-            if (first == null || o.compareTo(first) < 0)
+            q.offer(e);
+            if (first == null || e.compareTo(first) < 0)
                 available.signalAll();
             return true;
         } finally {
@@ -83,36 +83,36 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Adds the specified element to this delay queue. As the queue is
      * unbounded this method will never block.
-     * @param o the element to add
+     * @param e the element to add
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public void put(E o) {
-        offer(o);
+    public void put(E e) {
+        offer(e);
     }
 
     /**
      * Inserts the specified element into this delay queue. As the queue is
      * unbounded this method will never block.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
      * @return <tt>true</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o, long timeout, TimeUnit unit) {
-        return offer(o);
+    public boolean offer(E e, long timeout, TimeUnit unit) {
+        return offer(e);
     }
 
     /**
      * Adds the specified element to this queue.
-     * @param o the element to add
+     * @param e the element to add
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean add(E o) {
-        return offer(o);
+    public boolean add(E e) {
+        return offer(e);
     }
 
     /**

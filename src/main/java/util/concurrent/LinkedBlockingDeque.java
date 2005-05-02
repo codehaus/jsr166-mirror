@@ -432,10 +432,10 @@ public class LinkedBlockingDeque<E>
 
     // BlockingQueue methods
 
-    public void put(E o) throws InterruptedException  { putLast(o);  }
+    public void put(E e) throws InterruptedException  { putLast(e);  }
     public E take() throws InterruptedException       { return takeFirst(); }
-    public boolean offer(E o, long timeout, TimeUnit unit)
-        throws InterruptedException    { return offerLast(o, timeout, unit); }
+    public boolean offer(E e, long timeout, TimeUnit unit)
+        throws InterruptedException    { return offerLast(e, timeout, unit); }
     public E poll(long timeout, TimeUnit unit)
         throws InterruptedException    { return pollFirst(timeout, unit); }
 

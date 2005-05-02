@@ -225,12 +225,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public void put(E o) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+    public void put(E e) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
         // Note: convention in all put/take/etc is to preset
         // local var holding count  negative to indicate failure unless set.
         int c = -1;
@@ -254,7 +254,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 notFull.signal(); // propagate to a non-interrupted thread
                 throw ie;
             }
-            insert(o);
+            insert(e);
             c = count.getAndIncrement();
             if (c + 1 < capacity)
                 notFull.signal();
@@ -268,7 +268,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
@@ -278,10 +278,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o, long timeout, TimeUnit unit)
+    public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
 
-        if (o == null) throw new NullPointerException();
+        if (e == null) throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
         int c = -1;
         final ReentrantLock putLock = this.putLock;
@@ -290,7 +290,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         try {
             for (;;) {
                 if (count.get() < capacity) {
-                    insert(o);
+                    insert(e);
                     c = count.getAndIncrement();
                     if (c + 1 < capacity)
                         notFull.signal();
@@ -317,13 +317,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * Inserts the specified element at the tail of this queue if possible,
      * returning immediately if this queue is full.
      *
-     * @param o the element to add.
+     * @param e the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this queue, else <tt>false</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o) {
-        if (o == null) throw new NullPointerException();
+    public boolean offer(E e) {
+        if (e == null) throw new NullPointerException();
         final AtomicInteger count = this.count;
         if (count.get() == capacity)
             return false;
@@ -332,7 +332,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         putLock.lock();
         try {
             if (count.get() < capacity) {
-                insert(o);
+                insert(e);
                 c = count.getAndIncrement();
                 if (c + 1 < capacity)
                     notFull.signal();

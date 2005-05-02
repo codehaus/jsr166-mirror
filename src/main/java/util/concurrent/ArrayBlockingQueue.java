@@ -194,20 +194,20 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Inserts the specified element at the tail of this queue if possible,
      * returning immediately if this queue is full.
      *
-     * @param o the element to add.
+     * @param e the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this queue, else <tt>false</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o) {
-        if (o == null) throw new NullPointerException();
+    public boolean offer(E e) {
+        if (e == null) throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (count == items.length)
                 return false;
             else {
-                insert(o);
+                insert(e);
                 return true;
             }
         } finally {
@@ -218,7 +218,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
@@ -228,17 +228,17 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o, long timeout, TimeUnit unit)
+    public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
 
-        if (o == null) throw new NullPointerException();
+        if (e == null) throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (count != items.length) {
-                    insert(o);
+                    insert(e);
                     return true;
                 }
                 if (nanos <= 0)
@@ -352,12 +352,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public void put(E o) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+    public void put(E e) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
         final E[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
@@ -369,7 +369,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 notFull.signal(); // propagate to non-interrupted thread
                 throw ie;
             }
-            insert(o);
+            insert(e);
         } finally {
             lock.unlock();
         }

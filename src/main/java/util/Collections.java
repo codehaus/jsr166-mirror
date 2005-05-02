@@ -1014,7 +1014,7 @@ public class Collections {
 	    };
         }
 
-	public boolean add(E o){
+	public boolean add(E e){
 	    throw new UnsupportedOperationException();
         }
 	public boolean remove(Object o) {
@@ -1183,10 +1183,10 @@ public class Collections {
 		public void remove() {
 		    throw new UnsupportedOperationException();
                 }
-		public void set(E o) {
+		public void set(E e) {
 		    throw new UnsupportedOperationException();
                 }
-		public void add(E o) {
+		public void add(E e) {
 		    throw new UnsupportedOperationException();
                 }
 	    };
@@ -1577,8 +1577,8 @@ public class Collections {
             return c.iterator(); // Must be manually synched by user!
         }
 
-	public boolean add(E o) {
-	    synchronized(mutex) {return c.add(o);}
+	public boolean add(E e) {
+	    synchronized(mutex) {return c.add(e);}
         }
 	public boolean remove(Object o) {
 	    synchronized(mutex) {return c.remove(o);}
@@ -2236,9 +2236,9 @@ public class Collections {
             c.clear();
         }
 
-        public boolean add(E o){
-            typeCheck(o);
-            return c.add(o);
+        public boolean add(E e){
+            typeCheck(e);
+            return c.add(e);
         }
 
         public boolean addAll(Collection<? extends E> coll) {
@@ -2456,14 +2456,14 @@ public class Collections {
                 public int previousIndex()   { return i.previousIndex(); }
                 public void remove()         { i.remove(); }
 
-                public void set(E o) {
-                    typeCheck(o);
-                    i.set(o);
+                public void set(E e) {
+                    typeCheck(e);
+                    i.set(e);
                 }
 
-                public void add(E o) {
-                    typeCheck(o);
-                    i.add(o);
+                public void add(E e) {
+                    typeCheck(e);
+                    i.add(e);
                 }
             };
         }
@@ -2658,7 +2658,7 @@ public class Collections {
                 s.clear();
             }
 
-            public boolean add(Map.Entry<K, V> o){
+            public boolean add(Map.Entry<K, V> e){
                 throw new UnsupportedOperationException();
             }
             public boolean addAll(Collection<? extends Map.Entry<K, V>> coll) {
@@ -3060,7 +3060,7 @@ public class Collections {
 
         final private E element;
 
-        SingletonSet(E o) {element = o;}
+        SingletonSet(E e) {element = e;}
 
         public Iterator<E> iterator() {
             return new Iterator<E>() {
@@ -3212,11 +3212,11 @@ public class Collections {
         int n;
         E element;
 
-        CopiesList(int n, E o) {
+        CopiesList(int n, E e) {
             if (n < 0)
                 throw new IllegalArgumentException("List length = " + n);
             this.n = n;
-            element = o;
+            element = e;
         }
 
         public int size() {
@@ -3570,7 +3570,7 @@ public class Collections {
         implements Queue<E>, Serializable {
         private final Deque<E> q;
         AsLIFOQueue(Deque<E> q)            { this.q = q; }
-        public boolean offer(E o)          { return q.offerFirst(o); }
+        public boolean offer(E e)          { return q.offerFirst(e); }
         public E poll()                    { return q.pollFirst(); }
         public E remove()                  { return q.removeFirst(); }
         public E peek()                    { return q.peekFirst(); }
@@ -3581,7 +3581,7 @@ public class Collections {
         public Iterator<E> iterator()      { return q.iterator(); }
         public Object[] toArray()          { return q.toArray(); }
         public <T> T[] toArray(T[] a)      { return q.toArray(a); }
-        public boolean add(E o)            { return q.offerFirst(o); }
+        public boolean add(E e)            { return q.offerFirst(e); }
         public boolean remove(Object o)    { return q.remove(o); }
         public void clear()                { q.clear(); }
     }

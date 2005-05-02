@@ -187,12 +187,12 @@ public class LinkedList<E>
     /**
      * Appends the specified element to the end of this list.
      *
-     * @param o element to be appended to this list.
+     * @param e element to be appended to this list.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      */
-    public boolean add(E o) {
-	addBefore(o, header);
+    public boolean add(E e) {
+	addBefore(e, header);
         return true;
     }
 
@@ -487,13 +487,13 @@ public class LinkedList<E>
     /**
      * Adds the specified element as the tail (last element) of this list.
      *
-     * @param o the element to add.
+     * @param e the element to add.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Queue.offer</tt>)
      * @since 1.5
      */
-    public boolean offer(E o) {
-        return add(o);
+    public boolean offer(E e) {
+        return add(e);
     }
 
     // Deque operations
@@ -746,17 +746,17 @@ public class LinkedList<E>
 	    expectedModCount++;
 	}
 
-	public void set(E o) {
+	public void set(E e) {
 	    if (lastReturned == header)
 		throw new IllegalStateException();
 	    checkForComodification();
-	    lastReturned.element = o;
+	    lastReturned.element = e;
 	}
 
-	public void add(E o) {
+	public void add(E e) {
 	    checkForComodification();
 	    lastReturned = header;
-	    addBefore(o, next);
+	    addBefore(e, next);
 	    nextIndex++;
 	    expectedModCount++;
 	}
@@ -779,8 +779,8 @@ public class LinkedList<E>
 	}
     }
 
-    private Entry<E> addBefore(E o, Entry<E> e) {
-	Entry<E> newEntry = new Entry<E>(o, e, e.previous);
+    private Entry<E> addBefore(E e, Entry<E> entry) {
+	Entry<E> newEntry = new Entry<E>(e, entry, entry.previous);
 	newEntry.previous.next = newEntry;
 	newEntry.next.previous = newEntry;
 	size++;

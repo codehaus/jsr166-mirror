@@ -387,12 +387,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to this queue, waiting if necessary for
      * another thread to receive it.
-     * @param o the element to add
+     * @param e the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public void put(E o) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+    public void put(E e) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
         final ReentrantLock qlock = this.qlock;
 
         for (;;) {
@@ -403,7 +403,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             try {
                 node = waitingConsumers.deq();
                 if ( (mustWait = (node == null)) )
-                    node = waitingProducers.enq(o);
+                    node = waitingProducers.enq(e);
             } finally {
                 qlock.unlock();
             }
@@ -418,7 +418,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 }
             }
 
-            else if (node.setItem(o))
+            else if (node.setItem(e))
                 return;
 
             // else consumer cancelled, so retry
@@ -428,7 +428,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for another thread to receive it.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
@@ -438,8 +438,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o, long timeout, TimeUnit unit) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+    public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
         final ReentrantLock qlock = this.qlock;
         for (;;) {
@@ -450,7 +450,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             try {
                 node = waitingConsumers.deq();
                 if ( (mustWait = (node == null)) )
-                    node = waitingProducers.enq(o);
+                    node = waitingProducers.enq(e);
             } finally {
                 qlock.unlock();
             }
@@ -467,7 +467,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 }
             }
 
-            else if (node.setItem(o))
+            else if (node.setItem(e))
                 return true;
 
             // else consumer cancelled, so retry
@@ -570,13 +570,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     * Inserts the specified element into this queue, if another thread is
     * waiting to receive it.
     *
-    * @param o the element to add.
+    * @param e the element to add.
     * @return <tt>true</tt> if it was possible to add the element to
     *         this queue, else <tt>false</tt>
     * @throws NullPointerException if the specified element is <tt>null</tt>.
     */
-    public boolean offer(E o) {
-        if (o == null) throw new NullPointerException();
+    public boolean offer(E e) {
+        if (e == null) throw new NullPointerException();
         final ReentrantLock qlock = this.qlock;
 
         for (;;) {
@@ -590,7 +590,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             if (node == null)
                 return false;
 
-            else if (node.setItem(o))
+            else if (node.setItem(e))
                 return true;
             // else retry
         }

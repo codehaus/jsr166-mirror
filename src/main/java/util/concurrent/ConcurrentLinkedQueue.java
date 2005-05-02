@@ -157,27 +157,27 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     /**
      * Adds the specified element to the tail of this queue.
-     * @param o the element to add.
+     * @param e the element to add.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Collection.add</tt>).
      *
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean add(E o) {
-        return offer(o);
+    public boolean add(E e) {
+        return offer(e);
     }
 
     /**
      * Inserts the specified element to the tail of this queue.
      *
-     * @param o the element to add.
+     * @param e the element to add.
      * @return <tt>true</tt> (as per the general contract of
      * <tt>Queue.offer</tt>).
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    public boolean offer(E o) {
-        if (o == null) throw new NullPointerException();
-        Node<E> n = new Node<E>(o, null);
+    public boolean offer(E e) {
+        if (e == null) throw new NullPointerException();
+        Node<E> n = new Node<E>(e, null);
         for(;;) {
             Node<E> t = tail;
             Node<E> s = t.getNext();

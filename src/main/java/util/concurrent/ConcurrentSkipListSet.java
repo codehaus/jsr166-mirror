@@ -175,16 +175,16 @@ public class ConcurrentSkipListSet<E>
     /**
      * Adds the specified element to this set if it is not already present.
      *
-     * @param o element to be added to this set.
+     * @param e element to be added to this set.
      * @return <tt>true</tt> if the set did not already contain the specified
      *         element.
      *
      * @throws ClassCastException if the specified object cannot be compared
      * 		  with the elements currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     * @throws NullPointerException if e is <tt>null</tt>.
      */
-    public boolean add(E o) {
-	return m.putIfAbsent(o, Boolean.TRUE) == null;
+    public boolean add(E e) {
+	return m.putIfAbsent(e, Boolean.TRUE) == null;
     }
 
     /**
@@ -288,60 +288,60 @@ public class ConcurrentSkipListSet<E>
      * Returns an element greater than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return an element greater than or equal to given element, or
      * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>
+     * @throws NullPointerException if e is <tt>null</tt>
      */
-    public E ceiling(E o) {
-        return m.ceilingKey(o);
+    public E ceiling(E e) {
+        return m.ceilingKey(e);
     }
 
     /**
      * Returns an element strictly less than the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return the greatest element less than the given element, or
      * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     * @throws NullPointerException if e is <tt>null</tt>.
      */
-    public E lower(E o) {
-        return m.lowerKey(o);
+    public E lower(E e) {
+        return m.lowerKey(e);
     }
 
     /**
      * Returns an element less than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return the greatest element less than or equal to given
      * element, or <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     * @throws NullPointerException if e is <tt>null</tt>.
      */
-    public E floor(E o) {
-        return m.floorKey(o);
+    public E floor(E e) {
+        return m.floorKey(e);
     }
 
     /**
      * Returns an element strictly greater than the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return the least element greater than the given element, or
      * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     * @throws NullPointerException if e is <tt>null</tt>.
      */
-    public E higher(E o) {
-        return m.higherKey(o);
+    public E higher(E e) {
+        return m.higherKey(e);
     }
 
     /**
@@ -590,12 +590,12 @@ public class ConcurrentSkipListSet<E>
         public void clear()               { s.clear(); }
         public E first()                  { return s.firstKey(); }
         public E last()                   { return s.lastKey(); }
-        public E ceiling(E o)             { return s.ceilingKey(o); }
-        public E lower(E o)               { return s.lowerKey(o); }
-        public E floor(E o)               { return s.floorKey(o); }
-        public E higher(E o)              { return s.higherKey(o); }
+        public E ceiling(E e)             { return s.ceilingKey(e); }
+        public E lower(E e)               { return s.lowerKey(e); }
+        public E floor(E e)               { return s.floorKey(e); }
+        public E higher(E e)              { return s.higherKey(e); }
         public boolean remove(Object o) { return s.remove(o)==Boolean.TRUE; }
-        public boolean add(E o)       { return s.put(o, Boolean.TRUE)==null; }
+        public boolean add(E e)       { return s.put(e, Boolean.TRUE)==null; }
         public Comparator<? super E> comparator() { return s.comparator(); }
         public Iterator<E> iterator()     { return s.keySet().iterator(); }
         public Iterator<E> descendingIterator() {

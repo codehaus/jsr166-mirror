@@ -149,17 +149,17 @@ public interface BlockingQueue<E> extends Queue<E> {
      * preferable to method {@link Collection#add}, which can fail to
      * insert an element only by throwing an exception.
      *
-     * @param o the element to add.
+     * @param e the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this queue, else <tt>false</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    boolean offer(E o);
+    boolean offer(E e);
 
     /**
      * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
@@ -169,7 +169,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    boolean offer(E o, long timeout, TimeUnit unit)
+    boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**
@@ -198,11 +198,11 @@ public interface BlockingQueue<E> extends Queue<E> {
     /**
      * Adds the specified element to this queue, waiting if necessary for
      * space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    void put(E o) throws InterruptedException;
+    void put(E e) throws InterruptedException;
 
     /**
      * Returns the number of additional elements that this queue can ideally
@@ -223,14 +223,14 @@ public interface BlockingQueue<E> extends Queue<E> {
      * Adds the specified element to this queue if it is possible to
      * do so immediately, returning <tt>true</tt> upon success, else
      * throwing an IllegalStateException.
-     * @param o the element
+     * @param e the element
      * @return <tt>true</tt> (as per the general contract of
      *         <tt>Collection.add</tt>).
      *
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      * @throws IllegalStateException if element cannot be added.
      */
-    boolean add(E o);
+    boolean add(E e);
 
     /**
      * Removes all available elements from this queue and adds them

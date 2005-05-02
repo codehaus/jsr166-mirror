@@ -42,57 +42,57 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * Returns an element greater than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return an element greater than or equal to given element, or
      * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt> 
+     * @throws NullPointerException if e is <tt>null</tt> 
      * and this set does not permit <tt>null</tt> elements
      */
-    E ceiling(E o);
+    E ceiling(E e);
 
     /**
      * Returns an element strictly less than the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return the greatest element less than the given element, or
      * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>
+     * @throws NullPointerException if e is <tt>null</tt>
      * and this set does not permit <tt>null</tt> elements
      */
-    E lower(E o);
+    E lower(E e);
 
     /**
      * Returns an element less than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return the greatest element less than or equal to given
      * element, or <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     * @throws NullPointerException if e is <tt>null</tt>.
      * and this set does not permit <tt>null</tt> elements
      */
-    E floor(E o);
+    E floor(E e);
 
     /**
      * Returns an element strictly greater than the given element, or
      * <tt>null</tt> if there is no such element.
      * 
-     * @param o the value to match
+     * @param e the value to match
      * @return the least element greater than the given element, or
      * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if o cannot be compared with the elements
+     * @throws ClassCastException if e cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>
+     * @throws NullPointerException if e is <tt>null</tt>
      * and this set does not permit <tt>null</tt> elements
      */
-    E higher(E o);
+    E higher(E e);
 
     /**
      * Retrieves and removes the first (lowest) element.

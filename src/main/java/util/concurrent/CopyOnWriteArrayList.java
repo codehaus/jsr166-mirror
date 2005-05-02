@@ -952,7 +952,7 @@ public class CopyOnWriteArrayList<E>
          * @throws UnsupportedOperationException always; <tt>set</tt>
          *         is not supported by this iterator.
          */
-        public void set(E o) {
+        public void set(E e) {
             throw new UnsupportedOperationException();
         }
 
@@ -961,7 +961,7 @@ public class CopyOnWriteArrayList<E>
          * @throws UnsupportedOperationException always; <tt>add</tt>
          *         is not supported by this iterator.
          */
-        public void add(E o) {
+        public void add(E e) {
             throw new UnsupportedOperationException();
         }
     }
@@ -1167,11 +1167,11 @@ public class CopyOnWriteArrayList<E>
             throw new UnsupportedOperationException();
         }
 
-        public void set(E o) {
+        public void set(E e) {
             throw new UnsupportedOperationException();
         }
 
-        public void add(E o) {
+        public void add(E e) {
             throw new UnsupportedOperationException();
         }
     }

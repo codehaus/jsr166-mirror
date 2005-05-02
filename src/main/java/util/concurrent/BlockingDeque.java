@@ -189,11 +189,11 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      *
      * <p>This method is equivalent to {@link #putLast}.
      *
-     * @param o the element to add
+     * @param e the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    void put(E o) throws InterruptedException;
+    void put(E e) throws InterruptedException;
 
     /**
      * Inserts the specified element as the last element of this
@@ -205,12 +205,12 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      *
      * <p>This method is equivalent to {@link #offerLast}.
      *
-     * @param o the element to add.
+     * @param e the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this deque, else <tt>false</tt>
      * @throws NullPointerException if the specified element is <tt>null</tt>
      */
-    boolean offer(E o, long timeout, TimeUnit unit)
+    boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**

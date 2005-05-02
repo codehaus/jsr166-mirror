@@ -120,11 +120,11 @@ public interface Queue<E> extends Collection<E> {
      * preferable to method {@link Collection#add}, which can fail to
      * insert an element only by throwing an exception.
      *
-     * @param o the element to insert.
+     * @param e the element to insert.
      * @return <tt>true</tt> if it was possible to add the element to
      * this queue, else <tt>false</tt>
      */
-    boolean offer(E o);
+    boolean offer(E e);
 
     /**
      * Retrieves and removes the head of this queue, or <tt>null</tt>

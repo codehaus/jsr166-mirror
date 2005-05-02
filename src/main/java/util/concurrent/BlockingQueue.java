@@ -205,15 +205,16 @@ public interface BlockingQueue<E> extends Queue<E> {
     void put(E o) throws InterruptedException;
 
     /**
-     * Returns the number of elements that this queue can ideally (in
-     * the absence of memory or resource constraints) accept without
-     * blocking, or <tt>Integer.MAX_VALUE</tt> if there is no
-     * intrinsic limit.
-     * <p>Note that you <em>cannot</em> always tell if
-     * an attempt to <tt>add</tt> an element will succeed by
-     * inspecting <tt>remainingCapacity</tt> because it may be the
-     * case that another thread is about to <tt>put</tt> or <tt>take</tt> an
-     * element.
+     * Returns the number of additional elements that this queue can ideally
+     * (in the absence of memory or resource constraints) accept without
+     * blocking, or <tt>Integer.MAX_VALUE</tt> if there is no intrinsic
+     * limit.
+     *
+     * <p>Note that you <em>cannot</em> always tell if an attempt to insert
+     * an element will succeed by inspecting <tt>remainingCapacity</tt>
+     * because it may be the case that another thread is about to
+     * <tt>put</tt> or <tt>take</tt> an element.
+     *
      * @return the remaining capacity
      */
     int remainingCapacity();

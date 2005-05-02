@@ -208,15 +208,15 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     // this doc comment is a modified copy of the inherited doc comment,
     // without the reference to unlimited queues.
     /**
-     * Returns the number of elements that this queue can ideally (in
-     * the absence of memory or resource constraints) accept without
+     * Returns the number of additional elements that this queue can ideally
+     * (in the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue
      * less the current <tt>size</tt> of this queue.
-     * <p>Note that you <em>cannot</em> always tell if
-     * an attempt to <tt>add</tt> an element will succeed by
-     * inspecting <tt>remainingCapacity</tt> because it may be the
-     * case that a waiting consumer is ready to <tt>take</tt> an
-     * element out of an otherwise full queue.
+     *
+     * <p>Note that you <em>cannot</em> always tell if an attempt to insert
+     * an element will succeed by inspecting <tt>remainingCapacity</tt>
+     * because it may be the case that another thread is about to
+     * <tt>put</tt> or <tt>take</tt> an element.
      */
     public int remainingCapacity() {
         return capacity - count.get();

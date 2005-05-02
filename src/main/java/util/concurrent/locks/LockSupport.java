@@ -40,7 +40,7 @@ import sun.misc.Unsafe;
  * <tt>blocker</tt> object parameter. This object is recorded while
  * the thread is blocked to permit monitoring and diagnostic tools to
  * identify the reasons that threads are blocked. (Such tools may
- * access blockers using method {@link getBlocker}.) The use of these
+ * access blockers using method {@link #getBlocker}.) The use of these
  * forms rather than the original forms without this parameter is
  * strongly encouraged. The normal argument to supply as a
  * <tt>blocker</tt> within a lock implementation is <tt>this</tt>.
@@ -93,7 +93,7 @@ public class LockSupport {
         try {
             parkBlockerOffset = unsafe.objectFieldOffset
                 (java.lang.Thread.class.getDeclaredField("parkBlocker"));
-        } catch(Exception ex) { throw new Error(ex); }
+        } catch (Exception ex) { throw new Error(ex); }
     }
 
     private static void setBlocker(Thread t, Object arg) {

@@ -676,7 +676,7 @@ public class LinkedBlockingDeque<E>
         }
 
         /**
-         * Advances next, or if not yet initialized, set to first node.
+         * Advances next, or if not yet initialized, sets to first node.
          */
         private void advance() {
             final ReentrantLock lock = LinkedBlockingDeque.this.lock;

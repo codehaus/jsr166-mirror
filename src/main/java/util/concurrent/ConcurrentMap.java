@@ -29,8 +29,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *   if (!map.containsKey(key))
      *       return map.put(key, value);
      *   else
-     *       return map.get(key);
-     * </pre>
+     *       return map.get(key);</pre>
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is to be associated.
@@ -59,8 +58,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *   if (map.containsKey(key) && map.get(key).equals(value)) {
      *       map.remove(key);
      *       return true;
-     *   } else return false;
-     * </pre>
+     *   } else return false;</pre>
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is associated.
@@ -80,8 +78,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *   if (map.containsKey(key) && map.get(key).equals(oldValue)) {
      *       map.put(key, newValue);
      *       return true;
-     *   } else return false;
-     * </pre>
+     *   } else return false;</pre>
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is associated.
@@ -101,8 +98,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * <pre>
      *   if (map.containsKey(key)) {
      *       return map.put(key, value);
-     *   } else return null;
-     * </pre>
+     *   } else return null;</pre>
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is associated.

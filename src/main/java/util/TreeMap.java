@@ -351,7 +351,7 @@ public class TreeMap<K,V>
         // Offload comparator-based version for sake of performance
         if (comparator != null)
             return getEntryUsingComparator(key);
-	Comparable<K> k = (Comparable<K>) key;
+	Comparable<? super K> k = (Comparable<? super K>) key;
         Entry<K,V> p = root;
         while (p != null) {
             int cmp = k.compareTo(p.key);
@@ -1760,8 +1760,8 @@ public class TreeMap<K,V>
      * Compares two keys using the correct comparison method for this TreeMap.
      */
     private int compare(K k1, K k2) {
-        return (comparator==null ? ((Comparable</*-*/K>)k1).compareTo(k2)
-                                 : comparator.compare((K)k1, (K)k2));
+        return comparator==null ? ((Comparable<? super K>)k1).compareTo(k2)
+                                : comparator.compare(k1, k2);
     }
 
     /**
@@ -2193,7 +2193,7 @@ public class TreeMap<K,V>
     }
 
     /** Intended to be called only from TreeSet.addAll **/
-    void addAllForTreeSet(SortedSet<Map.Entry<K,V>> set, V defaultVal) {
+    void addAllForTreeSet(SortedSet<? extends K> set, V defaultVal) {
 	try {
 	    buildFromSorted(set.size(), set.iterator(), null, defaultVal);
 	} catch (java.io.IOException cannotHappen) {

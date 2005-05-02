@@ -265,9 +265,9 @@ public class TreeSet<E>
         if (m.size()==0 && c.size() > 0 &&
 	    c instanceof SortedSet &&
             m instanceof TreeMap) {
-            SortedSet<Map.Entry<E, Object>> set = (SortedSet<Map.Entry<E, Object>>) (SortedSet) c;
+            SortedSet<? extends E> set = (SortedSet<? extends E>) c;
             TreeMap<E,Object> map = (TreeMap<E, Object>) m;
-            Comparator<? super E> cc = (Comparator<E>) set.comparator();
+            Comparator<? super E> cc = (Comparator<? super E>) set.comparator();
             Comparator<? super E> mc = map.comparator();
             if (cc==mc || (cc != null && cc.equals(mc))) {
                 map.addAllForTreeSet(set, PRESENT);
@@ -652,7 +652,7 @@ public class TreeSet<E>
 	s.defaultReadObject();
 
         // Read in Comparator
-        Comparator<E> c = (Comparator<E>) s.readObject();
+        Comparator<? super E> c = (Comparator<? super E>) s.readObject();
 
         // Create backing TreeMap
 	TreeMap<E,Object> tm;

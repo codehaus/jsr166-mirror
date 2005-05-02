@@ -612,7 +612,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             throw new NullPointerException();
         return (comparator != null)
             ? new ComparableUsingComparator(key, comparator)
-            : (Comparable<K>)key;
+            : (Comparable<? super K>)key;
     }
 
     /**
@@ -624,7 +624,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         if (cmp != null)
             return cmp.compare(k1, k2);
         else
-            return ((Comparable<K>)k1).compareTo(k2);
+            return ((Comparable<? super K>)k1).compareTo(k2);
     }
 
     /**

@@ -2057,7 +2057,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Remove entry for key only if currently mapped to given value.
      * Acts as
      * <pre>
-     *  if ((map.containsKey(key) && map.get(key).equals(value)) {
+     *  if (map.containsKey(key) && map.get(key).equals(value)) {
      *     map.remove(key);
      *     return true;
      * } else return false;
@@ -2080,7 +2080,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Replace entry for key only if currently mapped to given value.
      * Acts as
      * <pre>
-     *  if ((map.containsKey(key) && map.get(key).equals(oldValue)) {
+     *  if (map.containsKey(key) && map.get(key).equals(oldValue)) {
      *     map.put(key, newValue);
      *     return true;
      * } else return false;
@@ -2117,7 +2117,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Replace entry for key only if currently mapped to some value.
      * Acts as
      * <pre>
-     *  if ((map.containsKey(key)) {
+     *  if (map.containsKey(key)) {
      *     return map.put(key, value);
      * } else return null;
      * </pre>

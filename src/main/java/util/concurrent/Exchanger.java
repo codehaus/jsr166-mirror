@@ -99,14 +99,14 @@ public class Exchanger<V> {
      * exchanger is used by a large number of threads.
      */
 
-    /** 
+    /**
      * Size of collision space. Using a size of half the number of
      * CPUs provides enough space for threads to find each other but
      * not so much that it would always require one or more to time
      * out to become unstuck. Note that the arena array holds SIZE+1
      * elements, to include the top-of-stack slot.
      */
-    private static final int SIZE = 
+    private static final int SIZE =
         (Runtime.getRuntime().availableProcessors() + 1) / 2;
 
     /**
@@ -116,17 +116,17 @@ public class Exchanger<V> {
      */
     private static final long BACKOFF_BASE = 128L;
 
-    /** 
+    /**
      * Sentinel item representing cancellation.  This value is placed
      * in holes on cancellation, and used as a return value from Node
      * methods to indicate failure to set or get hole.
-     **/
+     */
     static final Object FAIL = new Object();
 
-    /** 
+    /**
      * The collision arena. arena[0] is used as the top of the stack.
      * The remainder is used as the collision elimination space.
-     * Each slot holds an AtomicReference<Node>, but this cannot be 
+     * Each slot holds an AtomicReference<Node>, but this cannot be
      * expressed for arrays, so elements are casted on each use.
      */
     private final AtomicReference[] arena;
@@ -246,8 +246,8 @@ public class Exchanger<V> {
 	}
 
         /**
-         * Wait for and get the hole filled in by another thread.
-         * Fail if timed out or interrupted before hole filled.
+         * Waits for and gets the hole filled in by another thread.
+         * Fails if timed out or interrupted before hole filled.
          * @param timed true if the wait is timed.
          * @param nanos if timed, the maximum wait time.
          * @return on success, the hole; on failure, FAIL.
@@ -282,10 +282,12 @@ public class Exchanger<V> {
      * it is {@link Thread#interrupt interrupted}),
      * and then transfers the given object to it, receiving its object
      * in return.
+     *
      * <p>If another thread is already waiting at the exchange point then
      * it is resumed for thread scheduling purposes and receives the object
      * passed in by the current thread. The current thread returns immediately,
      * receiving the object passed to the exchange by that other thread.
+     *
      * <p>If no other thread is already waiting at the exchange then the
      * current thread is disabled for thread scheduling purposes and lies
      * dormant until one of two things happens:

@@ -1338,7 +1338,7 @@ public class TreeMap<K,V>
 	    TreeMap.Entry<K,V> e = fromStart ? getFirstEntry() : getCeilingEntry(fromKey);
             K first = key(e);
             if (!toEnd && compare(first, toKey) >= 0)
-                throw(new NoSuchElementException());
+                throw new NoSuchElementException();
             return first;
         }
 
@@ -1346,7 +1346,7 @@ public class TreeMap<K,V>
 	    TreeMap.Entry<K,V> e = toEnd ? getLastEntry() : getLowerEntry(toKey);
             K last = key(e);
             if (!fromStart && compare(last, fromKey) < 0)
-                throw(new NoSuchElementException());
+                throw new NoSuchElementException();
             return last;
         }
 

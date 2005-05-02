@@ -146,20 +146,20 @@ public class LinkedList<E>
     /**
      * Inserts the given element at the beginning of this list.
      *
-     * @param o the element to be inserted at the beginning of this list.
+     * @param e the element to be inserted at the beginning of this list.
      */
-    public void addFirst(E o) {
-	addBefore(o, header.next);
+    public void addFirst(E e) {
+	addBefore(e, header.next);
     }
 
     /**
      * Appends the given element to the end of this list.  (Identical in
      * function to the <tt>add</tt> method; included only for consistency.)
      *
-     * @param o the element to be inserted at the end of this list.
+     * @param e the element to be inserted at the end of this list.
      */
-    public void addLast(E o) {
-	addBefore(o, header);
+    public void addLast(E e) {
+	addBefore(e, header);
     }
 
     /**

@@ -87,20 +87,20 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
     /**
      * Adds the specified element as the first element of this deque,
      * waiting if necessary for space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    void putFirst(E o) throws InterruptedException;
+    void putFirst(E e) throws InterruptedException;
 
     /**
      * Adds the specified element as the last element of this deque,
      * waiting if necessary for space to become available.
-     * @param o the element to add
+     * @param e the element to add
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    void putLast(E o) throws InterruptedException;
+    void putLast(E e) throws InterruptedException;
 
     /**
      * Retrieves and removes the first element of this deque, waiting
@@ -122,7 +122,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * Inserts the specified element as the first element of this deque,
      * waiting if necessary up to the specified wait time for space to
      * become available.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
@@ -132,14 +132,14 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    boolean offerFirst(E o, long timeout, TimeUnit unit)
+    boolean offerFirst(E e, long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**
      * Inserts the specified element as the last element of this deque,
      * waiting if necessary up to the specified wait time for space to
      * become available.
-     * @param o the element to add
+     * @param e the element to add
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
      * @param unit a <tt>TimeUnit</tt> determining how to interpret the
@@ -149,7 +149,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * @throws InterruptedException if interrupted while waiting.
      * @throws NullPointerException if the specified element is <tt>null</tt>.
      */
-    boolean offerLast(E o, long timeout, TimeUnit unit)
+    boolean offerLast(E e, long timeout, TimeUnit unit)
         throws InterruptedException;
 
 

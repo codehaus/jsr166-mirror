@@ -208,21 +208,21 @@ public class LinkedBlockingDeque<E>
 
     // Deque methods
 
-    public boolean offerFirst(E o) {
-        if (o == null) throw new NullPointerException();
+    public boolean offerFirst(E e) {
+        if (e == null) throw new NullPointerException();
         lock.lock();
         try {
-            return linkFirst(o);
+            return linkFirst(e);
         } finally {
             lock.unlock();
         }
     }
 
-    public boolean offerLast(E o) {
-        if (o == null) throw new NullPointerException();
+    public boolean offerLast(E e) {
+        if (e == null) throw new NullPointerException();
         lock.lock();
         try {
-            return linkLast(o);
+            return linkLast(e);
         } finally {
             lock.unlock();
         }
@@ -300,22 +300,22 @@ public class LinkedBlockingDeque<E>
 
     // BlockingDeque methods
 
-    public void putFirst(E o) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+    public void putFirst(E e) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
         lock.lock();
         try {
-            while (!linkFirst(o))
+            while (!linkFirst(e))
                 notFull.await();
         } finally {
             lock.unlock();
         }
     }
 
-    public void putLast(E o) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+    public void putLast(E e) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
         lock.lock();
         try {
-            while (!linkLast(o))
+            while (!linkLast(e))
                 notFull.await();
         } finally {
             lock.unlock();
@@ -346,14 +346,14 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public boolean offerFirst(E o, long timeout, TimeUnit unit)
+    public boolean offerFirst(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+        if (e == null) throw new NullPointerException();
         lock.lockInterruptibly();
         try {
             long nanos = unit.toNanos(timeout);
             for (;;) {
-                if (linkFirst(o))
+                if (linkFirst(e))
                     return true;
                 if (nanos <= 0)
                     return false;
@@ -364,14 +364,14 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public boolean offerLast(E o, long timeout, TimeUnit unit)
+    public boolean offerLast(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+        if (e == null) throw new NullPointerException();
         lock.lockInterruptibly();
         try {
             long nanos = unit.toNanos(timeout);
             for (;;) {
-                if (linkLast(o))
+                if (linkLast(e))
                     return true;
                 if (nanos <= 0)
                     return false;

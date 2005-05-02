@@ -2003,9 +2003,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         try {
             return (containsAllMappings(this, t) &&
                     containsAllMappings(t, this));
-        } catch(ClassCastException unused) {
+        } catch (ClassCastException unused) {
             return false;
-        } catch(NullPointerException unused) {
+        } catch (NullPointerException unused) {
             return false;
         }
     }

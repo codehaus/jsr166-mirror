@@ -103,11 +103,11 @@ public abstract class AbstractExecutorService implements ExecutorService {
                     --active;
                     try {
                         return f.get();
-                    } catch(InterruptedException ie) {
+                    } catch (InterruptedException ie) {
                         throw ie;
-                    } catch(ExecutionException eex) {
+                    } catch (ExecutionException eex) {
                         ee = eex;
-                    } catch(RuntimeException rex) {
+                    } catch (RuntimeException rex) {
                         ee = new ExecutionException(rex);
                     }
                 }
@@ -155,8 +155,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 if (!f.isDone()) {
                     try { 
                         f.get(); 
-                    } catch(CancellationException ignore) {
-                    } catch(ExecutionException ignore) {
+                    } catch (CancellationException ignore) {
+                    } catch (ExecutionException ignore) {
                     }
                 }
             }
@@ -201,9 +201,9 @@ public abstract class AbstractExecutorService implements ExecutorService {
                         return futures; 
                     try { 
                         f.get(nanos, TimeUnit.NANOSECONDS); 
-                    } catch(CancellationException ignore) {
-                    } catch(ExecutionException ignore) {
-                    } catch(TimeoutException toe) {
+                    } catch (CancellationException ignore) {
+                    } catch (ExecutionException ignore) {
+                    } catch (TimeoutException toe) {
                         return futures;
                     }
                     long now = System.nanoTime();

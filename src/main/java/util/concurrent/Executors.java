@@ -463,7 +463,7 @@ public class Executors {
                     public Object run() {
                         try {
                             result = task.call();
-                        } catch(Exception ex) {
+                        } catch (Exception ex) {
                             exception = ex;
                         }
                         return null;
@@ -506,7 +506,7 @@ public class Executors {
                                 savedcl = cl;
                             }
                             result = task.call();
-                        } catch(Exception ex) {
+                        } catch (Exception ex) {
                             exception = ex;
                         } finally {
                             if (savedcl != null)

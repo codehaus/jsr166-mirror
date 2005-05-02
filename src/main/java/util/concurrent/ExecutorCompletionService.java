@@ -60,7 +60,7 @@ package java.util.concurrent;
  *                        result = r;
  *                        break;
  *                    }
- *                } catch(ExecutionException ignore) {}
+ *                } catch (ExecutionException ignore) {}
  *            }
  *        }
  *        finally {

@@ -323,7 +323,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     private transient DescendingEntrySet descendingEntrySet;
 
     /**
-     * Initialize or reset state. Needed by constructors, clone,
+     * Initializes or resets state. Needed by constructors, clone,
      * clear, readObject. and ConcurrentSkipListSet.clone.
      * (Note that comparator must be separately initialized.)
      */
@@ -2077,7 +2077,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Replace entry for key only if currently mapped to given value.
+     * Replaces entry for key only if currently mapped to given value.
      * Acts as
      * <pre>
      *  if (map.containsKey(key) && map.get(key).equals(oldValue)) {
@@ -2114,7 +2114,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Replace entry for key only if currently mapped to some value.
+     * Replaces entry for key only if currently mapped to some value.
      * Acts as
      * <pre>
      *  if (map.containsKey(key)) {
@@ -2527,7 +2527,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return next != null;
         }
 
-        /** initialize ascending iterator for entire range  */
+        /** Initializes ascending iterator for entire range. */
         final void initAscending() {
             for (;;) {
 		next = findFirst();
@@ -2540,7 +2540,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * initialize ascending iterator starting at given least key,
+         * Initializes ascending iterator starting at given least key,
          * or first node if least is <tt>null</tt>, but not greater or
          * equal to fence, or end if fence is <tt>null</tt>.
          */
@@ -2559,7 +2559,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 }
             }
         }
-        /** advance next to higher entry */
+        /** Advances next to higher entry. */
         final void ascend() {
             if ((last = next) == null)
                 throw new NoSuchElementException();
@@ -2594,7 +2594,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        /** initialize descending iterator for entire range  */
+        /** Initializes descending iterator for entire range. */
         final void initDescending() {
             for (;;) {
 		next = findLast();
@@ -2607,7 +2607,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * initialize descending iterator starting at key less
+         * Initializes descending iterator starting at key less
          * than or equal to given fence key, or
          * last node if fence is <tt>null</tt>, but not less than
          * least, or beginning if lest is <tt>null</tt>.
@@ -2628,7 +2628,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        /** advance next to lower entry */
+        /** Advances next to lower entry. */
         final void descend() {
             if ((last = next) == null)
                 throw new NoSuchElementException();

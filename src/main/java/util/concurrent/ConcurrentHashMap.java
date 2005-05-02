@@ -303,7 +303,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         /**
-         * Read value field of an entry under lock. Called if value
+         * Reads value field of an entry under lock. Called if value
          * field ever appears to be null. This is possible only if a
          * compiler happens to reorder a HashEntry initialization with
          * its table assignment, which is legal under memory model
@@ -957,7 +957,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 
     /**
-     * Replace entry for key only if currently mapped to given value.
+     * Replaces entry for key only if currently mapped to given value.
      * Acts as
      * <pre> 
      *  if (map.get(key).equals(oldValue)) {
@@ -981,7 +981,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Replace entry for key only if currently mapped to some value.
+     * Replaces entry for key only if currently mapped to some value.
      * Acts as
      * <pre> 
      *  if (map.containsKey(key)) {

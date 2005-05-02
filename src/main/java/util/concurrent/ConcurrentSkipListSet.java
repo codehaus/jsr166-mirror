@@ -115,7 +115,7 @@ public class ConcurrentSkipListSet<E>
      *
      * @return a shallow copy of this set.
      */
-    public Object clone() {
+    public ConcurrentSkipListSet<E> clone() {
         ConcurrentSkipListSet<E> clone = null;
 	try {
 	    clone = (ConcurrentSkipListSet<E>) super.clone();

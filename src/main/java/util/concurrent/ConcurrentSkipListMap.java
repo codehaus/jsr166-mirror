@@ -1556,7 +1556,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *
      * @return a shallow copy of this map.
      */
-    public Object clone() {
+    public ConcurrentSkipListMap<K,V> clone() {
         ConcurrentSkipListMap<K,V> clone = null;
         try {
             clone = (ConcurrentSkipListMap<K,V>) super.clone();

@@ -117,7 +117,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
     /**
      * Retrieves and removes the head of this queue, waiting
-     * if no elements with an unexpired delay are present on this queue.
+     * if no elements with an expired delay are present on this queue.
      * @return the head of this queue
      * @throws InterruptedException if interrupted while waiting.
      */
@@ -151,7 +151,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Retrieves and removes the head of this queue, waiting
      * if necessary up to the specified wait time if no elements with
-     * an unexpired delay are
+     * an expired delay are
      * present on this queue.
      * @param timeout how long to wait before giving up, in units of
      * <tt>unit</tt>
@@ -159,7 +159,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * <tt>timeout</tt> parameter
      * @return the head of this queue, or <tt>null</tt> if the
      * specified waiting time elapses before an element with
-     * an unexpired delay is present.
+     * an expired delay is present.
      * @throws InterruptedException if interrupted while waiting.
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
@@ -198,10 +198,10 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
     /**
      * Retrieves and removes the head of this queue, or <tt>null</tt>
-     * if this queue has no elements with an unexpired delay.
+     * if this queue has no elements with an expired delay.
      *
      * @return the head of this queue, or <tt>null</tt> if this
-     *         queue has no elements with an unexpired delay.
+     *         queue has no elements with an expired delay.
      */
     public E poll() {
         final ReentrantLock lock = this.lock;
@@ -225,10 +225,10 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Retrieves, but does not remove, the head of this queue,
      * returning <tt>null</tt> if this queue has no elements with an
-     * unexpired delay.
+     * expired delay.
      *
      * @return the head of this queue, or <tt>null</tt> if this queue
-     * has no elements with an unexpired delay.
+     * has no elements with an expired delay.
      */
     public E peek() {
         final ReentrantLock lock = this.lock;

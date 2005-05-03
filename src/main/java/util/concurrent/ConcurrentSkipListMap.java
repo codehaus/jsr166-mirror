@@ -52,6 +52,10 @@ import java.util.concurrent.atomic.*;
  * null return values cannot be reliably distinguished from the
  * absence of elements.
  *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values

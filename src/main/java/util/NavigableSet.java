@@ -34,6 +34,10 @@ package java.util;
  * <tt>null</tt> elements. (Note that sorted sets of {@link
  * Comparable} elements intrinsically do not permit <tt>null</tt>.)
  *
+ * <p>This interface is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @author Doug Lea
  * @param <E> the type of elements maintained by this set
  * @since 1.6

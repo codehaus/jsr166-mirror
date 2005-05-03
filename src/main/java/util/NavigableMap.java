@@ -43,6 +43,10 @@ package java.util;
  * that it is possible to change mappings in the associated map using
  * method <tt>put</tt>.
  *
+ * <p>This interface is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values

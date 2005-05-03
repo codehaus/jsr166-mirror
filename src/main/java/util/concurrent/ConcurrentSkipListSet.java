@@ -42,6 +42,10 @@ import java.util.*;
  * because <tt>null</tt> arguments and return values cannot be reliably
  * distinguished from the absence of elements.
  *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html">
+ * Java Collections Framework</a>.
+ *
  * @author Doug Lea
  * @param <E> the type of elements maintained by this set
  * @since 1.6

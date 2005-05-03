@@ -953,7 +953,6 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             sync.acquire(1);
             c.signal();
             sync.release(1);
-            assert(t.isInterrupted());
             t.join(SHORT_DELAY_MS);
             assertFalse(t.isAlive());
         }

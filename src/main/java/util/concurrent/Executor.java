@@ -52,7 +52,7 @@ package java.util.concurrent;
  *
  * <pre>
  * class SerialExecutor implements Executor {
- *     final Queue&lt;Runnable&gt; tasks = new LinkedBlockingQueue&lt;Runnable&gt;();
+ *     final Queue&lt;Runnable&gt; tasks = new ArrayDeque&lt;Runnable&gt;();
  *     final Executor executor;
  *     Runnable active;
  *

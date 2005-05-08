@@ -21,11 +21,41 @@ import java.util.*;
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces.
- * The Iterator provided in method {@link #iterator()} is
- * <em>not</em> guaranteed to traverse the elements of the
- * PriorityBlockingQueue in any particular order. If you need ordered
- * traversal, consider using <tt>Arrays.sort(pq.toArray())</tt>.
+ * Iterator} interfaces.  The Iterator provided in method {@link
+ * #iterator()} is <em>not</em> guaranteed to traverse the elements of
+ * the PriorityBlockingQueue in any particular order. If you need
+ * ordered traversal, consider using
+ * <tt>Arrays.sort(pq.toArray())</tt>.  Also, method <tt>drainTo</tt>
+ * can be used to <em>remove</em> some or all elements in priority
+ * order and place them in another collection.
+ *
+ * <p>Operations on this class make no guarantees about the ordering
+ * of elements with equal priority. If you need to enforce an
+ * ordering, you can define custom classes or comparators that use a
+ * secondary key to break ties in primary priority values.  For
+ * example, here is a class that applies first-in-first-out
+ * tie-breaking to comparable elements. To use it, you would insert a
+ * <tt>new FIFOEntry(anEntry)</tt> instead of a plain entry object.
+ *
+ * <pre>
+ * class FIFOEntry&lt;E extends Comparable&lt;? super E&gt;&gt;
+ *    implements Comparable&lt;FIFOEntry&lt;E&gt;&gt; {
+ *   static AtomicLong seq = new AtomicLong();
+ *   final long seqNum;
+ *   final E entry;
+ *   public FIFOEntry(E entry) {
+ *     seqNum = seq.getAndIncrement();
+ *     this.entry = entry;
+ *   }
+ *   public E getEntry() { return entry; }
+ *   public int compareTo(FIFOEntry&lt;E&gt; other) {
+ *     int res = entry.compareTo(other.entry);
+ *     if (res == 0 && other.entry != this.entry)
+ *       res = (seqNum &lt; other.seqNum ? -1 : 1);
+ *     return res;
+ *   }
+ * }
+ * </pre>
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">

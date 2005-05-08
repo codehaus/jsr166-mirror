@@ -254,23 +254,20 @@ public class Exchanger<V> {
          */
         Object waitForHole(boolean timed, long nanos) {
             long lastTime = (timed)? System.nanoTime() : 0;
-            Object h = get();
-            while (h == null) {
-                if (!timed)
+            Object h;
+            while ((h = get()) == null) {
+                // If interrupted or timed out, try to cancel by
+                // CASing FAIL as hole value.
+                if (Thread.currentThread().isInterrupted() ||
+                    (timed && nanos <= 0)) 
+                    compareAndSet(null, FAIL);
+                else if (!timed)
                     LockSupport.park();
                 else {
                     LockSupport.parkNanos(nanos);
                     long now = System.nanoTime();
                     nanos -= now - lastTime;
                     lastTime = now;
-                }
-                // If interrupted or timed out, try to cancel by
-                // CASing FAIL as hole value.
-                if ((h = get()) == null &&
-                    (Thread.currentThread().isInterrupted() ||
-                     (timed && nanos <= 0))) {
-                    compareAndSet(null, FAIL);
-                    h = get();
                 }
             }
             return h;

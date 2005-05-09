@@ -4,6 +4,10 @@
 # the supplied TRIALS, which controls the max number of threads
 # and/or test iterations in most programs.
 
+# Written by Doug Lea with assistance from members of JCP JSR-166
+# Expert Group and released to the public domain, as explained at
+# http://creativecommons.org/licenses/publicdomain
+
 # Set env variable RUNJAVA to java executable. Otherwise uses "java"
 RUN="java"
 if [ -n "$RUNJAVA" ]; then

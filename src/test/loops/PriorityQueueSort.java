@@ -1,4 +1,9 @@
 /*
+ * Written by Josh Bloch and Doug Lea with assistance from members of
+ * JCP JSR-166 Expert Group and released to the public domain, as
+ * explained at http://creativecommons.org/licenses/publicdomain
+ */
+/*
  * @test
  * @synopsis Checks that a priority queue returns elements in sorted order across various operations
  */

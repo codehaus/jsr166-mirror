@@ -349,6 +349,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertSame(q, wq);
             assertFalse(wq.contains(tasks[0]));
             assertTrue(wq.contains(tasks[4]));
+            for (int i = 1; i < 5; ++i)
+                tasks[i].cancel(true);
+            p1.shutdownNow();
         } catch(Exception e) {
             unexpectedException();
         } finally {

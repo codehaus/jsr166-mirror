@@ -265,7 +265,10 @@ public class FutureTask<V> implements Future<V>, Runnable {
                 return;
             try {
                 runner = Thread.currentThread();
-                innerSet(callable.call());
+                if (getState() == RUNNING) 
+                    innerSet(callable.call());
+                else
+                    runner = null;
             } catch (Throwable ex) {
                 innerSetException(ex);
             }
@@ -276,7 +279,8 @@ public class FutureTask<V> implements Future<V>, Runnable {
                 return false;
             try {
                 runner = Thread.currentThread();
-                callable.call(); // don't set result
+                if (getState() == RUNNING)
+                    callable.call(); // don't set result
                 runner = null;
                 return compareAndSetState(RUNNING, 0);
             } catch (Throwable ex) {

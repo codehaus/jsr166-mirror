@@ -287,8 +287,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
         final Thread getOwner() {
-            return ((exclusiveCount(getState()) == 0)? 
-                    null : 
+            return ((exclusiveCount(getState()) == 0)?
+                    null :
                     getExclusiveOwnerThread());
         }
 

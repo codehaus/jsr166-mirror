@@ -18,7 +18,7 @@ package java.util.concurrent.locks;
  * @since 1.6
  * @author Doug Lea
  */
-public abstract class AbstractOwnableSynchronizer 
+public abstract class AbstractOwnableSynchronizer
     implements java.io.Serializable {
 
     /** Use serial ID even though all fields transient. */

@@ -937,7 +937,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Remove entry for key only if currently mapped to given value.
      * This is equivalent to
      * <pre>
-     *  if (map.get(key).equals(value)) {
+     *  if (map.containsKey(key) && map.get(key).equals(value)) {
      *     map.remove(key);
      *     return true;
      * } else return false;</pre>
@@ -958,7 +958,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Replaces entry for key only if currently mapped to given value.
      * This is equivalent to
      * <pre>
-     *  if (map.get(key).equals(oldValue)) {
+     *  if (map.containsKey(key) && map.get(key).equals(oldValue)) {
      *     map.put(key, newValue);
      *     return true;
      * } else return false;</pre>

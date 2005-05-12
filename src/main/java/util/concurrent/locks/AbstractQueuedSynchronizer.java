@@ -98,7 +98,7 @@ import sun.misc.Unsafe;
  * AbstractOwnableSynchronizer} useful to keep track of the thread
  * owning an exclusive synchronizer.  You are encouraged to use them
  * -- this enables monitoring and diagnostic tools to assist users in
- * detemining which threads hold locks.
+ * determining which threads hold locks.
  *
  * <p> Even though this class is based on an internal FIFO queue, it
  * does not automatically enforce FIFO acquisition policies.  The core

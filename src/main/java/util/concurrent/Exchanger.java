@@ -259,7 +259,7 @@ public class Exchanger<V> {
                 // If interrupted or timed out, try to cancel by
                 // CASing FAIL as hole value.
                 if (Thread.currentThread().isInterrupted() ||
-                    (timed && nanos <= 0)) 
+                    (timed && nanos <= 0))
                     compareAndSet(null, FAIL);
                 else if (!timed)
                     LockSupport.park();

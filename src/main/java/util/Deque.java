@@ -37,9 +37,9 @@ package java.util;
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER><em>Throws exception</em></td>
- *    <td ALIGN=CENTER><em>Returns special value</em></td>
+ *    <td ALIGN=CENTER><em>Special value</em></td>
  *    <td ALIGN=CENTER><em>Throws exception</em></td>
- *    <td ALIGN=CENTER><em>Returns special value</em></td>
+ *    <td ALIGN=CENTER><em>Special value</em></td>
  *  </tr>
  *  <tr>
  *    <td><b>Insert</b></td>
@@ -77,28 +77,28 @@ package java.util;
  *    <td ALIGN=CENTER> <b>Equivalent <tt>Deque</tt> Method</b></td>
  *  </tr>
  *  <tr>
- *    <td>{@link java.util.Queue#offer offer(e)}</td>
- *    <td>{@link #offerLast offerLast(e)}</td>
- *  </tr>
- *  <tr>
  *    <td>{@link java.util.Queue#add add(e)}</td>
  *    <td>{@link #addLast addLast(e)}</td>
  *  </tr>
  *  <tr>
- *    <td>{@link java.util.Queue#poll poll()}</td>
- *    <td>{@link #pollFirst pollFirst()}</td>
+ *    <td>{@link java.util.Queue#offer offer(e)}</td>
+ *    <td>{@link #offerLast offerLast(e)}</td>
  *  </tr>
  *  <tr>
  *    <td>{@link java.util.Queue#remove remove()}</td>
  *    <td>{@link #removeFirst removeFirst()}</td>
  *  </tr>
  *  <tr>
- *    <td>{@link java.util.Queue#peek peek()}</td>
- *    <td>{@link #peek peekFirst()}</td>
+ *    <td>{@link java.util.Queue#poll poll()}</td>
+ *    <td>{@link #pollFirst pollFirst()}</td>
  *  </tr>
  *  <tr>
  *    <td>{@link java.util.Queue#element element()}</td>
  *    <td>{@link #getFirst getFirst()}</td>
+ *  </tr>
+ *  <tr>
+ *    <td>{@link java.util.Queue#peek peek()}</td>
+ *    <td>{@link #peek peekFirst()}</td>
  *  </tr>
  * </table>
  *
@@ -134,9 +134,10 @@ package java.util;
  *
  * <p>This interface provides two methods to remove interior
  * elements, {@link #removeFirstOccurrence removeFirstOccurrence} and
- * {@link #removeLastOccurrence removeLastOccurrence}.  Unlike the
- * {@link List} interface, this interface does not provide support for
- * indexed access to elements.
+ * {@link #removeLastOccurrence removeLastOccurrence}.
+ *
+ * <p>Unlike the {@link List} interface, this interface does not
+ * provide support for indexed access to elements.
  *
  * <p>While <tt>Deque</tt> implementations are not strictly required
  * to prohibit the insertion of null elements, they are strongly
@@ -163,215 +164,237 @@ package java.util;
 
 public interface Deque<E> extends Queue<E> {
     /**
+     * Inserts the specified element at the front of this deque if it is
+     * possible to do so immediately without violating capacity restrictions.
+     * When using a capacity-restricted deque, it is generally preferable to
+     * use method {@link #offerFirst}.
+     *
+     * @param e the element to add
+     * @throws IllegalStateException if the element cannot be added at this
+     *         time due to capacity restrictions
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this deque
+     * @throws IllegalArgumentException if some property of the specified
+     *         element prevents it from being added to this deque
+     */
+    void addFirst(E e);
+
+    /**
+     * Inserts the specified element at the end of this deque  if it is
+     * possible to do so immediately without violating capacity restrictions.
+     * When using a capacity-restricted deque, it is generally preferable to
+     * use method {@link #offerLast}.
+     *
+     * @param e the element to add
+     * @throws IllegalStateException if the element cannot be added at this
+     *         time due to capacity restrictions
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this deque
+     * @throws IllegalArgumentException if some property of the specified
+     *         element prevents it from being added to this deque
+     */
+    void addLast(E e);
+
+    /**
      * Inserts the specified element at the front of this deque unless it would
      * violate capacity restrictions.  When using a capacity-restricted deque,
-     * this method is generally preferable to method <tt>addFirst</tt>, which
-     * can fail to insert an element only by throwing an exception.
+     * this method is generally preferable to the {@link #addFirst} method,
+     * which can fail to insert an element only by throwing an exception.
      *
-     * @param e the element to insert
+     * @param e the element to add
      * @return <tt>true</tt> if it was possible to insert the element,
-     *     else <tt>false</tt>
+     *         else <tt>false</tt>
      * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
+     *         deque does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this deque
+     * @throws IllegalArgumentException if some property of the specified
+     *         element prevents it from being added to this deque
      */
     boolean offerFirst(E e);
 
     /**
      * Inserts the specified element at the end of this deque unless it would
      * violate capacity restrictions.  When using a capacity-restricted deque,
-     * this method is generally preferable to method <tt>addLast</tt> which
-     * can fail to insert an element only by throwing an exception.
+     * this method is generally preferable to the {@link #addLast} method,
+     * which can fail to insert an element only by throwing an exception.
      *
-     * @param e the element to insert
+     * @param e the element to add
      * @return <tt>true</tt> if it was possible to insert the element,
-     *     else <tt>false</tt>
+     *         else <tt>false</tt>
      * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
+     *         deque does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this deque
+     * @throws IllegalArgumentException if some property of the specified
+     *         element prevents it from being added to this deque
      */
     boolean offerLast(E e);
 
     /**
-     * Inserts the specified element at the front of this deque unless it
-     * would violate capacity restrictions.
-     *
-     * @param e the element to insert
-     * @throws IllegalStateException if it was not possible to insert
-     *    the element due to capacity restrictions
-     * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
-     */
-    void addFirst(E e);
-
-    /**
-     * Inserts the specified element at the end of this deque unless it would
-     * violate capacity restrictions.
-     *
-     * @param e the element to insert
-     * @throws IllegalStateException if it was not possible to insert
-     *    the element due to capacity restrictions
-     * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
-     */
-    void addLast(E e);
-
-    /**
-     * Retrieves and removes the first element of this deque, or
-     * <tt>null</tt> if this deque is empty.
-     *
-     * @return the first element of this deque, or <tt>null</tt> if
-     *     this deque is empty
-     */
-    E pollFirst();
-
-    /**
-     * Retrieves and removes the last element of this deque, or
-     * <tt>null</tt> if this deque is empty.
-     *
-     * @return the last element of this deque, or <tt>null</tt> if
-     *     this deque is empty
-     */
-    E pollLast();
-
-    /**
      * Retrieves and removes the first element of this deque.  This method
-     * differs from the {@link #pollFirst} method only in that it throws an
-     * exception if this deque is empty.
+     * differs from {@link #pollFirst} only in that it throws an exception
+     * if this deque is empty.
      *
-     * @return the first element of this deque
+     * @return the head of this deque
      * @throws NoSuchElementException if this deque is empty
      */
     E removeFirst();
 
     /**
      * Retrieves and removes the last element of this deque.  This method
-     * differs from the {@link #pollLast} method only in that it throws an
-     * exception if this deque is empty.
+     * differs from {@link #pollLast} only in that it throws an exception if
+     * this deque is empty.
      *
-     * @return the last element of this deque
+     * @return the tail of this deque
      * @throws NoSuchElementException if this deque is empty
      */
     E removeLast();
 
     /**
-     * Retrieves, but does not remove, the first element of this deque,
-     * returning <tt>null</tt> if this deque is empty.
+     * Retrieves and removes the first element of this deque,
+     * or returns <tt>null</tt> if this deque is empty.
      *
-     * @return the first element of this deque, or <tt>null</tt> if
-     *     this deque is empty
+     * @return the head of this deque, or <tt>null</tt> if this deque is empty
      */
-    E peekFirst();
+    E pollFirst();
 
     /**
-     * Retrieves, but does not remove, the last element of this deque,
-     * returning <tt>null</tt> if this deque is empty.
+     * Retrieves and removes the last element of this deque,
+     * or returns <tt>null</tt> if this deque is empty.
      *
-     * @return the last element of this deque, or <tt>null</tt> if this deque
-     *     is empty
+     * @return the tail of this deque, or <tt>null</tt> if this deque is empty
      */
-    E peekLast();
+    E pollLast();
 
     /**
-     * Retrieves, but does not remove, the first element of this
-     * deque.  This method differs from the {@link #peekFirst} method only
-     * in that it throws an exception if this deque is empty.
+     * Retrieves, but does not remove, the first element of this deque.
+     * This method differs from {@link #peekFirst} only in that it throws an
+     * exception if this deque is empty.
      *
-     * @return the first element of this deque
+     * @return the head of this deque
      * @throws NoSuchElementException if this deque is empty
      */
     E getFirst();
 
     /**
-     * Retrieves, but does not remove, the last element of this
-     * deque.  This method differs from the {@link #peekLast} method only
-     * in that it throws an exception if this deque is empty.
+     * Retrieves, but does not remove, the last element of this deque.
+     * This method differs from {@link #peekLast} only in that it throws an
+     * exception if this deque is empty.
      *
-     * @return the last element of this deque
+     * @return the tail of this deque
      * @throws NoSuchElementException if this deque is empty
      */
     E getLast();
 
     /**
-     * Removes the first occurrence of the specified element in this
-     * deque.  If the deque does not contain the element, it is
-     * unchanged.  More formally, removes the first element <tt>e</tt>
-     * such that <tt>(o==null ? e==null : o.equals(e))</tt> (if
-     * such an element exists).
+     * Retrieves, but does not remove, the first element of this deque,
+     * or returns <tt>null</tt> if this deque is empty.
+     *
+     * @return the head of this deque, or <tt>null</tt> if this deque is empty
+     */
+    E peekFirst();
+
+    /**
+     * Retrieves, but does not remove, the last element of this deque,
+     * or returns <tt>null</tt> if this deque is empty.
+     *
+     * @return the tail of this deque, or <tt>null</tt> if this deque is empty
+     */
+    E peekLast();
+
+    /**
+     * Removes the first occurrence of the specified element from this deque.
+     * If the deque does not contain the element, it is unchanged.
+     * More formally, removes the first element <tt>e</tt> such that
+     * <tt>(o==null ? e==null : o.equals(e))</tt> (if such an element exists).
+     * Returns true if this deque contained the specified element (or
+     * equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @return <tt>true</tt> if an element was removed as a result of this call
      * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
+     *         deque does not permit null elements (optional)
+     * @throws ClassCastException if the class of the specified element
+     *         is incompatible with this collection (optional)
      */
     boolean removeFirstOccurrence(Object o);
 
     /**
-     * Removes the last occurrence of the specified element in this
-     * deque.  If the deque does not contain the element, it is
-     * unchanged.  More formally, removes the last element <tt>e</tt>
-     * such that <tt>(o==null ? e==null : o.equals(e))</tt> (if
-     * such an element exists).
+     * Removes the last occurrence of the specified element from this deque.
+     * If the deque does not contain the element, it is unchanged.
+     * More formally, removes the last element <tt>e</tt> such that
+     * <tt>(o==null ? e==null : o.equals(e))</tt> (if such an element exists).
+     * Returns true if this deque contained the specified element (or
+     * equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @return <tt>true</tt> if an element was removed as a result of this call
      * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
+     *         deque does not permit null elements (optional)
+     * @throws ClassCastException if the class of the specified element
+     *         is incompatible with this collection (optional)
      */
     boolean removeLastOccurrence(Object o);
-
 
     // *** Queue methods ***
 
     /**
      * Inserts the specified element into the queue represented by this deque
-     * unless it would violate capacity restrictions.  In other words, inserts
-     * the specified element at the end of this deque.  When using a
-     * capacity-restricted deque, this method is generally preferable to the
-     * {@link #add} method, which can fail to insert an element only by
-     * throwing an exception.
+     * (in other words, at the tail of this deque) if it is possible to do so
+     * immediately without violating capacity restrictions, returning
+     * <tt>true</tt> upon success and throwing an
+     * <tt>IllegalStateException</tt> if no space is currently available.
+     * When using a capacity-restricted deque, it is generally preferable to
+     * use {@link #offer(Object) offer}.
      *
-     * <p>This method is equivalent to {@link #offerLast}.
+     * <p>This method is equivalent to {@link #addLast(Object) addLast}.
      *
-     * @param e the element to insert
-     * @return <tt>true</tt> if it was possible to insert the element,
-     *     else <tt>false</tt>
-     * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
-     */
-    boolean offer(E e);
-
-    /**
-     * Inserts the specified element into the queue represented by this
-     * deque unless it would violate capacity restrictions.  In other words,
-     * inserts the specified element as the last element of this deque.
-     *
-     * <p>This method is equivalent to {@link #addLast}.
-     *
-     * @param e the element to insert
+     * @param e the element to add
      * @return <tt>true</tt> (as per the spec for {@link Collection#add})
-     * @throws IllegalStateException if it was not possible to insert
-     *    the element due to capacity restrictions
+     * @throws IllegalStateException if the element cannot be added at this
+     *         time due to capacity restrictions
      * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
+     *         deque does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this deque
+     * @throws IllegalArgumentException if some property of the specified
+     *         element prevents it from being added to this deque
      */
     boolean add(E e);
 
     /**
-     * Retrieves and removes the head of the queue represented by
-     * this deque, or <tt>null</tt> if this deque is empty.  In other words,
-     * retrieves and removes the first element of this deque, or <tt>null</tt>
-     * if this deque is empty.
+     * Inserts the specified element into the queue represented by this deque
+     * (in other words, at the tail of this deque) if it is possible to do so
+     * immediately without violating capacity restrictions, returning
+     * <tt>true</tt> upon success and <tt>false</tt> if no space is currently
+     * available.  When using a capacity-restricted deque, this method is
+     * generally preferable to the {@link #add} method, which can fail to
+     * insert an element only by throwing an exception.
      *
-     * <p>This method is equivalent to {@link #pollFirst()}.
+     * <p>This method is equivalent to {@link #offerLast}.
      *
-     * @return the first element of this deque, or <tt>null</tt> if
-     *     this deque is empty
+     * @param e the element to add
+     * @return <tt>true</tt> if the element was added to this deque, else
+     *         <tt>false</tt>
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this deque
+     * @throws IllegalArgumentException if some property of the specified
+     *         element prevents it from being added to this deque
      */
-    E poll();
+    boolean offer(E e);
 
     /**
-     * Retrieves and removes the head of the queue represented by this deque.
-     * This method differs from the {@link #poll} method only in that it
-     * throws an exception if this deque is empty.
+     * Retrieves and removes the head of the queue represented by this deque
+     * (in other words, the first element of this deque).
+     * This method differs from {@link #poll} only in that it throws an
+     * exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
      *
@@ -381,20 +404,22 @@ public interface Deque<E> extends Queue<E> {
     E remove();
 
     /**
-     * Retrieves, but does not remove, the head of the queue represented by
-     * this deque, returning <tt>null</tt> if this deque is empty.
+     * Retrieves and removes the head of the queue represented by this deque
+     * (in other words, the first element of this deque), or returns
+     * <tt>null</tt> if this deque is empty.
      *
-     * <p>This method is equivalent to {@link #peekFirst()}.
+     * <p>This method is equivalent to {@link #pollFirst()}.
      *
-     * @return the head of the queue represented by this deque, or
-     *     <tt>null</tt> if this deque is empty
+     * @return the first element of this deque, or <tt>null</tt> if
+     *         this deque is empty
      */
-    E peek();
+    E poll();
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
-     * this deque.  This method differs from the {@link #peek} method only in
-     * that it throws an exception if this deque is empty.
+     * this deque (in other words, the first element of this deque).
+     * This method differs from {@link #peek} only in that it throws an
+     * exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #getFirst()}.
      *
@@ -403,21 +428,39 @@ public interface Deque<E> extends Queue<E> {
      */
     E element();
 
+    /**
+     * Retrieves, but does not remove, the head of the queue represented by
+     * this deque (in other words, the first element of this deque), or
+     * returns <tt>null</tt> if this deque is empty.
+     *
+     * <p>This method is equivalent to {@link #peekFirst()}.
+     *
+     * @return the head of the queue represented by this deque, or
+     *         <tt>null</tt> if this deque is empty
+     */
+    E peek();
+
 
     // *** Stack methods ***
 
     /**
-     * Pushes an element onto the stack represented by this deque.  In other
-     * words, inserts the element at the front of this deque unless it would
-     * violate capacity restrictions.
+     * Pushes an element onto the stack represented by this deque (in other
+     * words, at the head of this deque) if it is possible to do so
+     * immediately without violating capacity restrictions, returning
+     * <tt>true</tt> upon success and throwing an
+     * <tt>IllegalStateException</tt> if no space is currently available.
      *
      * <p>This method is equivalent to {@link #addFirst}.
      *
      * @param e the element to push
-     * @throws IllegalStateException if it was not possible to insert
-     *    the element due to capacity restrictions
+     * @throws IllegalStateException if the element cannot be added at this
+     *         time due to capacity restrictions
      * @throws NullPointerException if the specified element is null and this
-     *     deque does not permit null elements
+     *         deque does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this deque
+     * @throws IllegalArgumentException if some property of the specified
+     *         element prevents it from being added to this deque
      */
     void push(E e);
 
@@ -428,13 +471,54 @@ public interface Deque<E> extends Queue<E> {
      * <p>This method is equivalent to {@link #removeFirst()}.
      *
      * @return the element at the front of this deque (which is the top
-     *     of the stack represented by this deque)
+     *         of the stack represented by this deque)
      * @throws NoSuchElementException if this deque is empty
      */
     E pop();
 
 
-    // *** Collection Method ***
+    // *** Collection methods ***
+
+    /**
+     * Removes the first occurrence of the specified element from this deque.
+     * If the deque does not contain the element, it is unchanged.
+     * More formally, removes the first element <tt>e</tt> such that
+     * <tt>(o==null ? e==null : o.equals(e))</tt> (if such an element exists).
+     * Returns true if this deque contained the specified element (or
+     * equivalently, if this deque changed as a result of the call).
+     *
+     * <p>This method is equivalent to {@link #removeFirstOccurrence}.
+     *
+     * @param o element to be removed from this deque, if present
+     * @return <tt>true</tt> if an element was removed as a result of this call
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements (optional)
+     * @throws ClassCastException if the class of the specified element
+     *         is incompatible with this collection (optional)
+     */
+    boolean remove(Object o);
+
+    /**
+     * Returns <tt>true</tt> if this deque contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this deque
+     * contains at least one element <tt>e</tt> such that <tt>(o==null ? 
+     * e==null : o.equals(e))</tt>.
+     *
+     * @param o element whose presence in this deque is to be tested
+     * @return <tt>true</tt> if this deque contains the specified element
+     * @throws ClassCastException if the type of the specified element
+     *         is incompatible with this deque (optional)
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements (optional)
+     */
+    boolean contains(Object o);
+
+    /**
+     * Returns the number of elements in this deque.
+     *
+     * @return the number of elements in this deque
+     */
+    public int size();
 
     /**
      * Returns an iterator over the elements in this deque.  The elements

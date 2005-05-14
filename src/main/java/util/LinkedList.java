@@ -89,8 +89,8 @@ public class LinkedList<E>
      * collection, in the order they are returned by the collection's
      * iterator.
      *
-     * @param  c the collection whose elements are to be placed into this list.
-     * @throws NullPointerException if the specified collection is null.
+     * @param  c the collection whose elements are to be placed into this list
+     * @throws NullPointerException if the specified collection is null
      */
      public LinkedList(Collection<? extends E> c) {
 	 this();
@@ -100,8 +100,8 @@ public class LinkedList<E>
     /**
      * Returns the first element in this list.
      *
-     * @return the first element in this list.
-     * @throws    NoSuchElementException if this list is empty.
+     * @return the first element in this list
+     * @throws NoSuchElementException if this list is empty
      */
     public E getFirst() {
 	if (size==0)
@@ -113,8 +113,8 @@ public class LinkedList<E>
     /**
      * Returns the last element in this list.
      *
-     * @return the last element in this list.
-     * @throws    NoSuchElementException if this list is empty.
+     * @return the last element in this list
+     * @throws NoSuchElementException if this list is empty
      */
     public E getLast()  {
 	if (size==0)
@@ -126,8 +126,8 @@ public class LinkedList<E>
     /**
      * Removes and returns the first element from this list.
      *
-     * @return the first element from this list.
-     * @throws    NoSuchElementException if this list is empty.
+     * @return the first element from this list
+     * @throws NoSuchElementException if this list is empty
      */
     public E removeFirst() {
 	return remove(header.next);
@@ -136,8 +136,8 @@ public class LinkedList<E>
     /**
      * Removes and returns the last element from this list.
      *
-     * @return the last element from this list.
-     * @throws    NoSuchElementException if this list is empty.
+     * @return the last element from this list
+     * @throws NoSuchElementException if this list is empty
      */
     public E removeLast() {
 	return remove(header.previous);
@@ -146,7 +146,7 @@ public class LinkedList<E>
     /**
      * Inserts the given element at the beginning of this list.
      *
-     * @param e the element to be inserted at the beginning of this list.
+     * @param e the element to be inserted at the beginning of this list
      */
     public void addFirst(E e) {
 	addBefore(e, header.next);
@@ -156,7 +156,7 @@ public class LinkedList<E>
      * Appends the given element to the end of this list.  (Identical in
      * function to the <tt>add</tt> method; included only for consistency.)
      *
-     * @param e the element to be inserted at the end of this list.
+     * @param e the element to be inserted at the end of this list
      */
     public void addLast(E e) {
 	addBefore(e, header);
@@ -168,8 +168,8 @@ public class LinkedList<E>
      * at least one element <tt>e</tt> such that <tt>(o==null ? e==null
      * : o.equals(e))</tt>.
      *
-     * @param o element whose presence in this list is to be tested.
-     * @return <tt>true</tt> if this list contains the specified element.
+     * @param o element whose presence in this list is to be tested
+     * @return <tt>true</tt> if this list contains the specified element
      */
     public boolean contains(Object o) {
         return indexOf(o) != -1;
@@ -178,7 +178,7 @@ public class LinkedList<E>
     /**
      * Returns the number of elements in this list.
      *
-     * @return the number of elements in this list.
+     * @return the number of elements in this list
      */
     public int size() {
 	return size;
@@ -187,9 +187,8 @@ public class LinkedList<E>
     /**
      * Appends the specified element to the end of this list.
      *
-     * @param e element to be appended to this list.
-     * @return <tt>true</tt> (as per the general contract of
-     * <tt>Collection.add</tt>).
+     * @param e element to be appended to this list
+     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
      */
     public boolean add(E e) {
 	addBefore(e, header);
@@ -203,8 +202,8 @@ public class LinkedList<E>
      * <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt> (if such an
      * element exists).
      *
-     * @param o element to be removed from this list, if present.
-     * @return <tt>true</tt> if the list contained the specified element.
+     * @param o element to be removed from this list, if present
+     * @return <tt>true</tt> if the list contained the specified element
      */
     public boolean remove(Object o) {
         if (o==null) {
@@ -233,9 +232,9 @@ public class LinkedList<E>
      * progress.  (This implies that the behavior of this call is undefined if
      * the specified Collection is this list, and this list is nonempty.)
      *
-     * @param c the elements to be inserted into this list.
-     * @return <tt>true</tt> if this list changed as a result of the call.
-     * @throws NullPointerException if the specified collection is null.
+     * @param c the elements to be inserted into this list
+     * @return <tt>true</tt> if this list changed as a result of the call
+     * @throws NullPointerException if the specified collection is null
      */
     public boolean addAll(Collection<? extends E> c) {
         return addAll(size, c);
@@ -249,13 +248,13 @@ public class LinkedList<E>
      * in the list in the order that they are returned by the
      * specified collection's iterator.
      *
-     * @param index index at which to insert first element
-     *		    from the specified collection.
-     * @param c elements to be inserted into this list.
-     * @return <tt>true</tt> if this list changed as a result of the call.
+     * @param index index at which to insert the first element
+     *              from the specified collection
+     * @param c elements to be inserted into this list
+     * @return <tt>true</tt> if this list changed as a result of the call
      * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
-     * @throws NullPointerException if the specified collection is null.
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
+     * @throws NullPointerException if the specified collection is null
      */
     public boolean addAll(int index, Collection<? extends E> c) {
         if (index < 0 || index > size)
@@ -302,11 +301,10 @@ public class LinkedList<E>
     /**
      * Returns the element at the specified position in this list.
      *
-     * @param index index of element to return.
-     * @return the element at the specified position in this list.
-     *
+     * @param index index of element to return
+     * @return the element at the specified position in this list
      * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
      */
     public E get(int index) {
         return entry(index).element;
@@ -316,11 +314,11 @@ public class LinkedList<E>
      * Replaces the element at the specified position in this list with the
      * specified element.
      *
-     * @param index index of element to replace.
-     * @param element element to be stored at the specified position.
-     * @return the element previously at the specified position.
+     * @param index index of element to replace
+     * @param element element to be stored at the specified position
+     * @return the element previously at the specified position
      * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
      */
     public E set(int index, E element) {
         Entry<E> e = entry(index);
@@ -334,11 +332,11 @@ public class LinkedList<E>
      * Shifts the element currently at that position (if any) and any
      * subsequent elements to the right (adds one to their indices).
      *
-     * @param index index at which the specified element is to be inserted.
-     * @param element element to be inserted.
+     * @param index index at which the specified element is to be inserted
+     * @param element element to be inserted
      *
      * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
      */
     public void add(int index, E element) {
         addBefore(element, (index==size ? header : entry(index)));
@@ -349,11 +347,11 @@ public class LinkedList<E>
      * subsequent elements to the left (subtracts one from their indices).
      * Returns the element that was removed from the list.
      *
-     * @param index the index of the element to removed.
-     * @return the element previously at the specified position.
+     * @param index the index of the element to be removed
+     * @return the element previously at the specified position
      *
      * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
+     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
      */
     public E remove(int index) {
         return remove(entry(index));
@@ -387,10 +385,10 @@ public class LinkedList<E>
      * <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt>, or -1 if
      * there is no such index.
      *
-     * @param o element to search for.
+     * @param o element to search for
      * @return the index in this list of the first occurrence of the
-     * 	       specified element, or -1 if the list does not contain this
-     * 	       element.
+     *         specified element, or -1 if the list does not contain this
+     *         element
      */
     public int indexOf(Object o) {
         int index = 0;
@@ -417,10 +415,10 @@ public class LinkedList<E>
      * <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt>, or -1 if
      * there is no such index.
      *
-     * @param o element to search for.
+     * @param o element to search for
      * @return the index in this list of the last occurrence of the
-     * 	       specified element, or -1 if the list does not contain this
-     * 	       element.
+     *         specified element, or -1 if the list does not contain this
+     *         element
      */
     public int lastIndexOf(Object o) {
         int index = size;
@@ -444,7 +442,7 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the head (first element) of this list.
-     * @return the head of this list, or <tt>null</tt> if this list is empty.
+     * @return the head of this list, or <tt>null</tt> if this list is empty
      * @since 1.5
      */
     public E peek() {
@@ -455,8 +453,8 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the head (first element) of this list.
-     * @return the head of this list.
-     * @throws NoSuchElementException if this list is empty.
+     * @return the head of this list
+     * @throws NoSuchElementException if this list is empty
      * @since 1.5
      */
     public E element() {
@@ -464,8 +462,8 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves and removes the head (first element) of this list.
-     * @return the head of this list, or <tt>null</tt> if this list is empty.
+     * Retrieves and removes the head (first element) of this list
+     * @return the head of this list, or <tt>null</tt> if this list is empty
      * @since 1.5
      */
     public E poll() {
@@ -476,8 +474,9 @@ public class LinkedList<E>
 
     /**
      * Retrieves and removes the head (first element) of this list.
-     * @return the head of this list.
-     * @throws NoSuchElementException if this list is empty.
+     *
+     * @return the head of this list
+     * @throws NoSuchElementException if this list is empty
      * @since 1.5
      */
     public E remove() {
@@ -487,9 +486,8 @@ public class LinkedList<E>
     /**
      * Adds the specified element as the tail (last element) of this list.
      *
-     * @param e the element to add.
-     * @return <tt>true</tt> (as per the general contract of
-     * <tt>Queue.offer</tt>)
+     * @param e the element to add
+     * @return <tt>true</tt> (as per the spec for {@link Queue#offer})
      * @since 1.5
      */
     public boolean offer(E e) {
@@ -523,10 +521,10 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the first element of this list,
-     * returning <tt>null</tt> if this list is empty.
+     * or returns <tt>null</tt> if this list is empty.
      *
-     * @return the first element of this list, or <tt>null</tt> if
-     *     this list is empty
+     * @return the first element of this list, or <tt>null</tt>
+     *         if this list is empty.
      * @since 1.6
      */
     public E peekFirst() {
@@ -537,10 +535,10 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the last element of this list,
-     * returning <tt>null</tt> if this list is empty.
+     * or returns <tt>null</tt> if this list is empty.
      *
-     * @return the last element of this list, or <tt>null</tt> if this list
-     *     is empty
+     * @return the last element of this list, or <tt>null</tt>
+     *         if this list is empty.
      * @since 1.6
      */
     public E peekLast() {
@@ -597,8 +595,8 @@ public class LinkedList<E>
      * <p>This method is equivalent to {@link #removeFirst()}.
      *
      * @return the element at the front of this list (which is the top
-     *     of the stack represented by this list)
-     * @throws NoSuchElementException if this list is empty.
+     *         of the stack represented by this list)
+     * @throws NoSuchElementException if this list is empty
      * @since 1.6
      */
     public E pop() {
@@ -660,10 +658,10 @@ public class LinkedList<E>
      * than risking arbitrary, non-deterministic behavior at an undetermined
      * time in the future.
      *
-     * @param index index of first element to be returned from the
-     *		    list-iterator (by a call to <tt>next</tt>).
+     * @param index index of the first element to be returned from the
+     *              list-iterator (by a call to <tt>next</tt>).
      * @return a ListIterator of the elements in this list (in proper
-     * 	       sequence), starting at the specified position in the list.
+     *         sequence), starting at the specified position in the list.
      * @throws IndexOutOfBoundsException if the index is out of range
      *         (<tt>index &lt; 0 || index &gt; size()</tt>).
      * @see List#listIterator(int)
@@ -806,7 +804,7 @@ public class LinkedList<E>
      * Returns a shallow copy of this <tt>LinkedList</tt>. (The elements
      * themselves are not cloned.)
      *
-     * @return a shallow copy of this <tt>LinkedList</tt> instance.
+     * @return a shallow copy of this <tt>LinkedList</tt> instance
      */
     public Object clone() {
         LinkedList<E> clone = null;
@@ -834,7 +832,7 @@ public class LinkedList<E>
      * in the correct order.
      *
      * @return an array containing all of the elements in this list
-     * 	       in the correct order.
+     *         in the correct order.
      */
     public Object[] toArray() {
 	Object[] result = new Object[size];
@@ -859,12 +857,12 @@ public class LinkedList<E>
      * does not contain any null elements.
      *
      * @param a the array into which the elements of the list are to
-     *		be stored, if it is big enough; otherwise, a new array of the
-     * 		same runtime type is allocated for this purpose.
-     * @return an array containing the elements of the list.
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose.
+     * @return an array containing the elements of the list
      * @throws ArrayStoreException if the runtime type of a is not a
-     *         supertype of the runtime type of every element in this list.
-     * @throws NullPointerException if the specified array is null.
+     *         supertype of the runtime type of every element in this list
+     * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T[] a) {
         if (a.length < size)
@@ -888,8 +886,8 @@ public class LinkedList<E>
      * is, serialize it).
      *
      * @serialData The size of the list (the number of elements it
-     *		   contains) is emitted (int), followed by all of its
-     * elements (each an Object) in the proper order.
+     *             contains) is emitted (int), followed by all of its
+     *             elements (each an Object) in the proper order.
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {

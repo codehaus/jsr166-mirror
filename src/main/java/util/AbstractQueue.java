@@ -43,18 +43,25 @@ public abstract class AbstractQueue<E>
     protected AbstractQueue() {
     }
 
-
     /**
-     * Adds the specified element to this queue. This implementation
-     * returns <tt>true</tt> if <tt>offer</tt> succeeds, else
-     * throws an IllegalStateException.
+     * Inserts the specified element into this queue if it is possible to do so
+     * immediately without violating capacity restrictions, returning
+     * <tt>true</tt> upon success and throwing an <tt>IllegalStateException</tt>
+     * if no space is currently available.
      *
-     * @param e the element
-     * @return <tt>true</tt> (as per the general contract of
-     *         <tt>Collection.add</tt>).
+     * <p>This implementation returns <tt>true</tt> if <tt>offer</tt> succeeds,
+     * else throws an <tt>IllegalStateException</tt>.
      *
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
-     * @throws IllegalStateException if the element cannot be added.
+     * @param e the element to add
+     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @throws IllegalStateException if the element cannot be added at this
+     *         time due to capacity restrictions
+     * @throws NullPointerException if the specified element is null and
+     *         this queue not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this queue
+     * @throws IllegalArgumentException if some property of this element
+     *         prevents it from being added to this queue
      */
     public boolean add(E e) {
         if (offer(e))
@@ -64,12 +71,15 @@ public abstract class AbstractQueue<E>
     }
 
     /**
-     * Retrieves and removes the head of this queue.
-     * This implementation returns the result of <tt>poll</tt>
+     * Retrieves and removes the head of this queue.  This method differs
+     * from {@link #poll} only in that it throws an exception if this queue
+     * is empty.
+     *
+     * <p>This implementation returns the result of <tt>poll</tt>
      * unless the queue is empty.
      *
-     * @return the head of this queue.
-     * @throws NoSuchElementException if this queue is empty.
+     * @return the head of this queue
+     * @throws NoSuchElementException if this queue is empty
      */
     public E remove() {
         E x = poll();
@@ -80,12 +90,15 @@ public abstract class AbstractQueue<E>
     }
 
     /**
-     * Retrieves, but does not remove, the head of this queue.
-     * This implementation returns the result of <tt>peek</tt>
+     * Retrieves, but does not remove, the head of this queue.  This method
+     * differs from {@link #peek} only in that it throws an exception if
+     * this queue is empty.
+     *
+     * <p>This implementation returns the result of <tt>peek</tt>
      * unless the queue is empty.
      *
-     * @return the head of this queue.
-     * @throws NoSuchElementException if this queue is empty.
+     * @return the head of this queue
+     * @throws NoSuchElementException if this queue is empty
      */
     public E element() {
         E x = peek();
@@ -98,6 +111,7 @@ public abstract class AbstractQueue<E>
     /**
      * Removes all of the elements from this queue.
      * The queue will be empty after this call returns.
+     *
      * <p>This implementation repeatedly invokes {@link #poll poll} until it
      * returns <tt>null</tt>.
      */
@@ -121,13 +135,18 @@ public abstract class AbstractQueue<E>
      * having been successfully added when the associated exception is
      * thrown.
      *
-     * @param c collection whose elements are to be added to this queue.
-     * @return <tt>true</tt> if this queue changed as a result of the
-     *         call.
-     * @throws NullPointerException if the specified collection or
-     *         any of its elements are null.
-     * @throws IllegalArgumentException if c is this queue.
-     *
+     * @param c collection whose elements are to be added to this queue
+     * @return <tt>true</tt> if this queue changed as a result of the call
+     * @throws NullPointerException if the specified collection contains a
+     *         null element and this queue does not permit null elements,
+     *         or if the specified collection is null
+     * @throws ClassCastException if the class of an element of the specified
+     * 	       collection prevents it from being added to this queue
+     * @throws IllegalArgumentException if some property of an element of the
+     *	       specified collection prevents it from being added to this
+     *	       queue, or if the specified collection is this queue
+     * @throws IllegalStateException if not all the elements can be added at
+     *         this time due to insertion restrictions
      * @see #add(Object)
      */
     public boolean addAll(Collection<? extends E> c) {

@@ -23,7 +23,7 @@ package java.util;
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER><em>Throws exception</em></td>
- *    <td ALIGN=CENTER><em>Returns special value</em></td>
+ *    <td ALIGN=CENTER><em>Special value</em></td>
  *  </tr>
  *  <tr>
  *    <td><b>Insert</b></td>
@@ -113,55 +113,77 @@ package java.util;
  * @param <E> the type of elements held in this collection
  */
 public interface Queue<E> extends Collection<E> {
+    /**
+     * Inserts the specified element into this queue if it is possible to do so
+     * immediately without violating capacity restrictions, returning
+     * <tt>true</tt> upon success and throwing an <tt>IllegalStateException</tt>
+     * if no space is currently available.
+     *
+     * @param e the element to add
+     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @throws IllegalStateException if the element cannot be added at this
+     *         time due to capacity restrictions
+     * @throws NullPointerException if the specified element is null and
+     *         this queue not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this queue
+     * @throws IllegalArgumentException if some property of this element
+     *         prevents it from being added to this queue
+     */
+    boolean add(E e);
 
     /**
-     * Inserts the specified element into this queue, if possible.  When
-     * using queues that may impose insertion restrictions (for
-     * example capacity bounds), method <tt>offer</tt> is generally
-     * preferable to method {@link Collection#add}, which can fail to
-     * insert an element only by throwing an exception.
+     * Inserts the specified element into this queue if it is possible to do
+     * so immediately without violating capacity restrictions.
+     * When using a capacity-restricted deque, this method is generally
+     * preferable to {@link #add}, which can fail to insert an element only
+     * by throwing an exception.
      *
-     * @param e the element to insert.
-     * @return <tt>true</tt> if it was possible to add the element to
-     * this queue, else <tt>false</tt>
+     * @param e the element to add
+     * @return <tt>true</tt> if the element was added to this queue, else
+     *         <tt>false</tt>
+     * @throws NullPointerException if the specified element is null and
+     *         this queue does not permit null elements
+     * @throws ClassCastException if the class of the specified element
+     *         prevents it from being added to this queue
+     * @throws IllegalArgumentException if some property of this element
+     *         prevents it from being added to this queue
      */
     boolean offer(E e);
 
     /**
-     * Retrieves and removes the head of this queue, or <tt>null</tt>
-     * if this queue is empty.
+     * Retrieves and removes the head of this queue.  This method differs
+     * from {@link #poll} only in that it throws an exception if this queue
+     * is empty.
      *
-     * @return the head of this queue, or <tt>null</tt> if this
-     *         queue is empty.
-     */
-    E poll();
-
-    /**
-     * Retrieves and removes the head of this queue.  This method
-     * differs from the {@link #poll} method only in that it throws an
-     * exception if this queue is empty.
-     *
-     * @return the head of this queue.
-     * @throws NoSuchElementException if this queue is empty.
+     * @return the head of this queue
+     * @throws NoSuchElementException if this queue is empty
      */
     E remove();
 
     /**
-     * Retrieves, but does not remove, the head of this queue,
-     * returning <tt>null</tt> if this queue is empty.
+     * Retrieves and removes the head of this queue,
+     * or returns <tt>null</tt> if this queue is empty.
      *
-     * @return the head of this queue, or <tt>null</tt> if this queue
-     * is empty.
+     * @return the head of this queue, or <tt>null</tt> if this queue is empty
      */
-    E peek();
+    E poll();
 
     /**
      * Retrieves, but does not remove, the head of this queue.  This method
-     * differs from the {@link #peek} method only in that it throws an
-     * exception if this queue is empty.
+     * differs from {@link #peek} only in that it throws an exception if
+     * this queue is empty.
      *
-     * @return the head of this queue.
-     * @throws NoSuchElementException if this queue is empty.
+     * @return the head of this queue
+     * @throws NoSuchElementException if this queue is empty
      */
     E element();
+
+    /**
+     * Retrieves, but does not remove, the head of this queue,
+     * or returns <tt>null</tt> if this queue is empty.
+     *
+     * @return the head of this queue, or <tt>null</tt> if this queue is empty
+     */
+    E peek();
 }

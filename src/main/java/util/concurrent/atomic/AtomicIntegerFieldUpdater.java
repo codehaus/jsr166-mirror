@@ -229,6 +229,9 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
             Field field = null;
             try {
                 field = tclass.getDeclaredField(fieldName);
+                sun.reflect.Reflection.ensureMemberAccess
+                    (sun.reflect.Reflection.getCallerClass(3),
+                     tclass, null, field.getModifiers());
             } catch(Exception ex) {
                 throw new RuntimeException(ex);
             }

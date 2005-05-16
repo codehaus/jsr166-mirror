@@ -56,10 +56,10 @@ public abstract class AbstractQueue<E>
      * @return <tt>true</tt> (as per the spec for {@link Collection#add})
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
-     * @throws NullPointerException if the specified element is null and
-     *         this queue not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this queue
+     * @throws NullPointerException if the specified element is null and
+     *         this queue not permit null elements
      * @throws IllegalArgumentException if some property of this element
      *         prevents it from being added to this queue
      */
@@ -137,14 +137,14 @@ public abstract class AbstractQueue<E>
      *
      * @param c collection whose elements are to be added to this queue
      * @return <tt>true</tt> if this queue changed as a result of the call
+     * @throws ClassCastException if the class of an element of the specified
+     *         collection prevents it from being added to this queue
      * @throws NullPointerException if the specified collection contains a
      *         null element and this queue does not permit null elements,
      *         or if the specified collection is null
-     * @throws ClassCastException if the class of an element of the specified
-     * 	       collection prevents it from being added to this queue
      * @throws IllegalArgumentException if some property of an element of the
-     *	       specified collection prevents it from being added to this
-     *	       queue, or if the specified collection is this queue
+     *         specified collection prevents it from being added to this
+     *         queue, or if the specified collection is this queue
      * @throws IllegalStateException if not all the elements can be added at
      *         this time due to insertion restrictions
      * @see #add(Object)

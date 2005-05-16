@@ -85,8 +85,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * finding such an entry, <tt>false</tt> is returned.  Note that this
      * implementation requires linear time in the size of the map.
      *
-     * @throws NullPointerException {@inheritDoc}
      * @throws ClassCastException   {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean containsValue(Object value) {
 	Iterator<Entry<K,V>> i = entrySet().iterator();
@@ -116,8 +116,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * implementation requires linear time in the size of the map; many
      * implementations will override this method.
      *
-     * @throws NullPointerException {@inheritDoc}
      * @throws ClassCastException   {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean containsKey(Object key) {
 	Iterator<Map.Entry<K,V>> i = entrySet().iterator();
@@ -147,8 +147,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * implementation requires linear time in the size of the map; many
      * implementations will override this method.
      *
-     * @throws NullPointerException          {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
      */
     public V get(Object key) {
 	Iterator<Entry<K,V>> i = entrySet().iterator();
@@ -178,8 +178,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * <tt>UnsupportedOperationException</tt>.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
-     * @throws NullPointerException          {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public V put(K key, V value) {
@@ -204,8 +204,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * contains a mapping for the specified key.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
-     * @throws NullPointerException          {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
      */
     public V remove(Object key) {
 	Iterator<Entry<K,V>> i = entrySet().iterator();
@@ -247,8 +247,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * the <tt>put</tt> operation and the specified map is nonempty.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
-     * @throws NullPointerException          {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public void putAll(Map<? extends K, ? extends V> m) {

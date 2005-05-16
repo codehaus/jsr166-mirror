@@ -172,10 +172,10 @@ public interface Deque<E> extends Queue<E> {
      * @param e the element to add
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
-     * @throws NullPointerException if the specified element is null and this
-     *         deque does not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
@@ -190,10 +190,10 @@ public interface Deque<E> extends Queue<E> {
      * @param e the element to add
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
-     * @throws NullPointerException if the specified element is null and this
-     *         deque does not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
@@ -208,10 +208,10 @@ public interface Deque<E> extends Queue<E> {
      * @param e the element to add
      * @return <tt>true</tt> if it was possible to insert the element,
      *         else <tt>false</tt>
-     * @throws NullPointerException if the specified element is null and this
-     *         deque does not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
@@ -226,10 +226,10 @@ public interface Deque<E> extends Queue<E> {
      * @param e the element to add
      * @return <tt>true</tt> if it was possible to insert the element,
      *         else <tt>false</tt>
-     * @throws NullPointerException if the specified element is null and this
-     *         deque does not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
@@ -311,16 +311,17 @@ public interface Deque<E> extends Queue<E> {
      * Removes the first occurrence of the specified element from this deque.
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the first element <tt>e</tt> such that
-     * <tt>(o==null ? e==null : o.equals(e))</tt> (if such an element exists).
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>
+     * (if such an element exists).
      * Returns true if this deque contained the specified element (or
      * equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if an element was removed as a result of this call
+     * @throws ClassCastException if the class of the specified element
+     *         is incompatible with this deque (optional)
      * @throws NullPointerException if the specified element is null and this
      *         deque does not permit null elements (optional)
-     * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this collection (optional)
      */
     boolean removeFirstOccurrence(Object o);
 
@@ -328,16 +329,17 @@ public interface Deque<E> extends Queue<E> {
      * Removes the last occurrence of the specified element from this deque.
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the last element <tt>e</tt> such that
-     * <tt>(o==null ? e==null : o.equals(e))</tt> (if such an element exists).
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>
+     * (if such an element exists).
      * Returns true if this deque contained the specified element (or
      * equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if an element was removed as a result of this call
+     * @throws ClassCastException if the class of the specified element
+     *         is incompatible with this deque (optional)
      * @throws NullPointerException if the specified element is null and this
      *         deque does not permit null elements (optional)
-     * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this collection (optional)
      */
     boolean removeLastOccurrence(Object o);
 
@@ -358,10 +360,10 @@ public interface Deque<E> extends Queue<E> {
      * @return <tt>true</tt> (as per the spec for {@link Collection#add})
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
-     * @throws NullPointerException if the specified element is null and this
-     *         deque does not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
@@ -381,10 +383,10 @@ public interface Deque<E> extends Queue<E> {
      * @param e the element to add
      * @return <tt>true</tt> if the element was added to this deque, else
      *         <tt>false</tt>
-     * @throws NullPointerException if the specified element is null and this
-     *         deque does not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
@@ -455,10 +457,10 @@ public interface Deque<E> extends Queue<E> {
      * @param e the element to push
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
-     * @throws NullPointerException if the specified element is null and this
-     *         deque does not permit null elements
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
+     * @throws NullPointerException if the specified element is null and this
+     *         deque does not permit null elements
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
@@ -483,7 +485,8 @@ public interface Deque<E> extends Queue<E> {
      * Removes the first occurrence of the specified element from this deque.
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the first element <tt>e</tt> such that
-     * <tt>(o==null ? e==null : o.equals(e))</tt> (if such an element exists).
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>
+     * (if such an element exists).
      * Returns true if this deque contained the specified element (or
      * equivalently, if this deque changed as a result of the call).
      *
@@ -491,18 +494,18 @@ public interface Deque<E> extends Queue<E> {
      *
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if an element was removed as a result of this call
+     * @throws ClassCastException if the class of the specified element
+     *         is incompatible with this deque (optional)
      * @throws NullPointerException if the specified element is null and this
      *         deque does not permit null elements (optional)
-     * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this collection (optional)
      */
     boolean remove(Object o);
 
     /**
      * Returns <tt>true</tt> if this deque contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this deque
-     * contains at least one element <tt>e</tt> such that <tt>(o==null ? 
-     * e==null : o.equals(e))</tt>.
+     * More formally, returns <tt>true</tt> if and only if this deque contains
+     * at least one element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
      *
      * @param o element whose presence in this deque is to be tested
      * @return <tt>true</tt> if this deque contains the specified element

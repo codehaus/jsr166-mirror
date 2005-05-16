@@ -216,26 +216,26 @@ public class FutureTask<V> implements Future<V>, Runnable {
         }
 
         void innerSet(V v) {
-            for (;;) {
-                int s = getState();
-                if (ranOrCancelled(s))
-                    return;
-                if (compareAndSetState(s, RAN))
-                    break;
-            }
+	    for (;;) {
+		int s = getState();
+		if (ranOrCancelled(s))
+		    return;
+		if (compareAndSetState(s, RAN))
+		    break;
+	    }
             result = v;
             releaseShared(0);
             done();
         }
 
         void innerSetException(Throwable t) {
-            for (;;) {
-                int s = getState();
-                if (ranOrCancelled(s))
-                    return;
-                if (compareAndSetState(s, RAN))
-                    break;
-            }
+	    for (;;) {
+		int s = getState();
+		if (ranOrCancelled(s))
+		    return;
+		if (compareAndSetState(s, RAN))
+		    break;
+	    }
             exception = t;
             result = null;
             releaseShared(0);
@@ -243,13 +243,13 @@ public class FutureTask<V> implements Future<V>, Runnable {
         }
 
         boolean innerCancel(boolean mayInterruptIfRunning) {
-            for (;;) {
-                int s = getState();
-                if (ranOrCancelled(s))
-                    return false;
-                if (compareAndSetState(s, CANCELLED))
-                    break;
-            }
+	    for (;;) {
+		int s = getState();
+		if (ranOrCancelled(s))
+		    return false;
+		if (compareAndSetState(s, CANCELLED))
+		    break;
+	    }
             if (mayInterruptIfRunning) {
                 Thread r = runner;
                 if (r != null)

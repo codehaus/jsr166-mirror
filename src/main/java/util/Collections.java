@@ -569,7 +569,7 @@ public class Collections {
 	Iterator<? extends T> i = coll.iterator();
 	T candidate = i.next();
 
-        while(i.hasNext()) {
+        while (i.hasNext()) {
 	    T next = i.next();
 	    if (next.compareTo(candidate) < 0)
 		candidate = next;
@@ -606,7 +606,7 @@ public class Collections {
 	Iterator<? extends T> i = coll.iterator();
 	T candidate = i.next();
 
-        while(i.hasNext()) {
+        while (i.hasNext()) {
 	    T next = i.next();
 	    if (comp.compare(next, candidate) < 0)
 		candidate = next;
@@ -639,7 +639,7 @@ public class Collections {
 	Iterator<? extends T> i = coll.iterator();
 	T candidate = i.next();
 
-        while(i.hasNext()) {
+        while (i.hasNext()) {
 	    T next = i.next();
 	    if (next.compareTo(candidate) > 0)
 		candidate = next;
@@ -676,7 +676,7 @@ public class Collections {
 	Iterator<? extends T> i = coll.iterator();
 	T candidate = i.next();
 
-        while(i.hasNext()) {
+        while (i.hasNext()) {
 	    T next = i.next();
 	    if (comp.compare(next, candidate) > 0)
 		candidate = next;
@@ -1051,7 +1051,6 @@ public class Collections {
      * @param  s the set for which an unmodifiable view is to be returned.
      * @return an unmodifiable view of the specified set.
      */
-
     public static <T> Set<T> unmodifiableSet(Set<? extends T> s) {
 	return new UnmodifiableSet<T>(s);
     }
@@ -2246,13 +2245,13 @@ public class Collections {
              * Dump coll into an array of the required type.  This serves
              * three purposes: it insulates us from concurrent changes in
              * the contents of coll, it type-checks all of the elements in
-             * coll, and it provides all-or-nothing semantics(which we
+             * coll, and it provides all-or-nothing semantics (which we
              * wouldn't get if we type-checked each element as we added it).
              */
             E[] a = null;
             try {
                 a = coll.toArray(zeroLengthElementArray());
-            } catch(ArrayStoreException e) {
+            } catch (ArrayStoreException e) {
                 throw new ClassCastException();
             }
 
@@ -2436,7 +2435,7 @@ public class Collections {
             E[] a = null;
             try {
                 a = c.toArray(zeroLengthElementArray());
-            } catch(ArrayStoreException e) {
+            } catch (ArrayStoreException e) {
                 throw new ClassCastException();
             }
 
@@ -2582,13 +2581,13 @@ public class Collections {
             K[] keys = null;
             try {
                 keys = t.keySet().toArray(zeroLengthKeyArray());
-            } catch(ArrayStoreException e) {
+            } catch (ArrayStoreException e) {
                 throw new ClassCastException();
             }
             V[] values = null;
             try {
                 values = t.values().toArray(zeroLengthValueArray());
-            } catch(ArrayStoreException e) {
+            } catch (ArrayStoreException e) {
                 throw new ClassCastException();
             }
 
@@ -3462,9 +3461,9 @@ public class Collections {
      * @throws UnsupportedOperationException if <tt>c</tt> does not support
      *         the <tt>add</tt> operation.
      * @throws NullPointerException if <tt>elements</tt> contains one or more
-     *         null values and <tt>c</tt> does not support null elements, or
+     *         null values and <tt>c</tt> does not permit null elements, or
      *         if <tt>c</tt> or <tt>elements</tt> are <tt>null</tt>
-     * @throws IllegalArgumentException if some aspect of a value in
+     * @throws IllegalArgumentException if some property of a value in
      *         <tt>elements</tt> prevents it from being added to <tt>c</tt>
      * @see Collection#addAll(Collection)
      * @since 1.5

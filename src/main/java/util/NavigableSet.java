@@ -9,18 +9,18 @@ package java.util;
 /**
  * A {@link SortedSet} extended with navigation methods reporting
  * closest matches for given search targets. Methods <tt>lower</tt>,
- * <tt>floor</tt>, <tt>ceiling</tt>, and <tt>higher</tt> return keys
+ * <tt>floor</tt>, <tt>ceiling</tt>, and <tt>higher</tt> return elements
  * respectively less than, less than or equal, greater than or equal,
- * and greater than a given key, returning <tt>null</tt> if there is
- * no such key.  A <tt>NavigableSet</tt> may be viewed and traversed
+ * and greater than a given element, returning <tt>null</tt> if there is
+ * no such element.  A <tt>NavigableSet</tt> may be viewed and traversed
  * in either ascending or descending order.  The <tt>Collection</tt>
  * <tt>iterator</tt> method returns an ascending <tt>Iterator</tt> and
- * the additional method <tt>descendingIterator</tt> returns
+ * the additional method <tt>descendingIterator</tt> returns a
  * descending iterator. The performance of ascending traversals is
  * likely to be faster than descending traversals.  This interface
  * additionally defines methods <tt>pollFirst</tt> and
- * <t>pollLast</tt> that return and remove the lowest and highest key,
- * if one exists, else returning <tt>null</tt>.
+ * <tt>pollLast</tt> that return and remove the lowest and highest
+ * element, if one exists, else returning <tt>null</tt>.
  * Methods <tt>navigableSubSet</tt>, <tt>navigableHeadSet</tt>, and
  * <tt>navigableTailSet</tt> differ from the similarly named
  * <tt>SortedSet</tt> methods only in that the returned sets
@@ -30,7 +30,7 @@ package java.util;
  * implementations that permit <tt>null</tt> elements. However, even
  * in this case the result can be disambiguated by checking
  * <tt>contains(null)</tt>. To avoid such issues, implementations of
- * this interface are encouraged <em>not</em> to permit insertion of
+ * this interface are encouraged to <em>not</em> permit insertion of
  * <tt>null</tt> elements. (Note that sorted sets of {@link
  * Comparable} elements intrinsically do not permit <tt>null</tt>.)
  *
@@ -44,80 +44,80 @@ package java.util;
  */
 public interface NavigableSet<E> extends SortedSet<E> {
     /**
-     * Returns an element greater than or equal to the given element, or
-     * <tt>null</tt> if there is no such element.
+     * Returns the greatest element in this set strictly less than the
+     * given element, or <tt>null</tt> if there is no such element.
      *
      * @param e the value to match
-     * @return an element greater than or equal to given element, or
-     * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if e cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if e is <tt>null</tt>
-     * and this set does not permit <tt>null</tt> elements
-     */
-    E ceiling(E e);
-
-    /**
-     * Returns an element strictly less than the given element, or
-     * <tt>null</tt> if there is no such element.
-     *
-     * @param e the value to match
-     * @return the greatest element less than the given element, or
-     * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if e cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if e is <tt>null</tt>
-     * and this set does not permit <tt>null</tt> elements
+     * @return the greatest element less than <tt>e</tt>,
+     *         or <tt>null</tt> if there is no such element
+     * @throws ClassCastException if the specified element cannot be
+     *         compared with the elements currently in the set
+     * @throws NullPointerException if the specified element is null
+     *         and this set does not permit null elements
      */
     E lower(E e);
 
     /**
-     * Returns an element less than or equal to the given element, or
-     * <tt>null</tt> if there is no such element.
+     * Returns the greatest element in this set less than or equal to
+     * the given element, or <tt>null</tt> if there is no such element.
      *
      * @param e the value to match
-     * @return the greatest element less than or equal to given
-     * element, or <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if e cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if e is <tt>null</tt>.
-     * and this set does not permit <tt>null</tt> elements
+     * @return the greatest element less than or equal to <tt>e</tt>,
+     *         or <tt>null</tt> if there is no such element
+     * @throws ClassCastException if the specified element cannot be
+     *         compared with the elements currently in the set
+     * @throws NullPointerException if the specified element is null
+     *         and this set does not permit null elements
      */
     E floor(E e);
 
     /**
-     * Returns an element strictly greater than the given element, or
-     * <tt>null</tt> if there is no such element.
+     * Returns the least element in this set greater than or equal to
+     * the given element, or <tt>null</tt> if there is no such element.
      *
      * @param e the value to match
-     * @return the least element greater than the given element, or
-     * <tt>null</tt> if there is no such element.
-     * @throws ClassCastException if e cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if e is <tt>null</tt>
-     * and this set does not permit <tt>null</tt> elements
+     * @return the least element greater than or equal to <tt>e</tt>,
+     *         or <tt>null</tt> if there is no such element
+     * @throws ClassCastException if the specified element cannot be
+     *         compared with the elements currently in the set
+     * @throws NullPointerException if the specified element is null
+     *         and this set does not permit null elements
+     */
+    E ceiling(E e);
+
+    /**
+     * Returns the least element in this set strictly greater than the
+     * given element, or <tt>null</tt> if there is no such element.
+     *
+     * @param e the value to match
+     * @return the least element greater than <tt>e</tt>,
+     *         or <tt>null</tt> if there is no such element
+     * @throws ClassCastException if the specified element cannot be
+     *         compared with the elements currently in the set
+     * @throws NullPointerException if the specified element is null
+     *         and this set does not permit null elements
      */
     E higher(E e);
 
     /**
      * Retrieves and removes the first (lowest) element.
      *
-     * @return the first element, or <tt>null</tt> if empty.
+     * @return the first element, or <tt>null</tt> if this set is empty
      */
     E pollFirst();
 
     /**
      * Retrieves and removes the last (highest) element.
      *
-     * @return the last element, or <tt>null</tt> if empty.
+     * @return the last element, or <tt>null</tt> if this set is empty
      */
     E pollLast();
 
     /**
-     * Returns an iterator over the elements in this collection, in
+     * Returns an iterator over the elements in this set, in
      * descending order.
      *
-     * @return an <tt>Iterator</tt> over the elements in this collection
+     * @return an <tt>Iterator</tt> over the elements in this set
      */
     Iterator<E> descendingIterator();
 
@@ -125,57 +125,86 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * Returns a view of the portion of this set whose elements range
      * from <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
      * exclusive.  (If <tt>fromElement</tt> and <tt>toElement</tt> are
-     * equal, the returned navigable set is empty.)  The returned
-     * navigable set is backed by this set, so changes in the returned
-     * navigable set are reflected in this set, and vice-versa.
+     * equal, the returned set is empty.)  The returned set is backed
+     * by this set, so changes in the returned set are reflected in
+     * this set, and vice-versa.  The returned set supports all
+     * optional set operations that this set supports.
      *
-     * @param fromElement low endpoint (inclusive) of the subSet.
-     * @param toElement high endpoint (exclusive) of the subSet.
+     * <p>The returned set will throw an <tt>IllegalArgumentException</tt>
+     * on an attempt to insert an element outside its range.
+     *
+     * @param fromElement low endpoint (inclusive) of the returned set
+     * @param toElement high endpoint (exclusive) of the returned set
      * @return a view of the portion of this set whose elements range from
-     * 	       <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
-     * 	       exclusive.
+     *         <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>, exclusive
      * @throws ClassCastException if <tt>fromElement</tt> and
-     *         <tt>toElement</tt> cannot be compared to one another using
-     *         this set's comparator (or, if the set has no comparator,
-     *         using natural ordering).
-     * @throws IllegalArgumentException if <tt>fromElement</tt> is
-     * greater than <tt>toElement</tt>.
+     *         <tt>toElement</tt> cannot be compared to one another using this
+     *         set's comparator (or, if the set has no comparator, using
+     *         natural ordering).  Implementations may, but are not required
+     *         to, throw this exception if <tt>fromElement</tt> or
+     *         <tt>toElement</tt> cannot be compared to elements currently in
+     *         the set.
      * @throws NullPointerException if <tt>fromElement</tt> or
-     *	       <tt>toElement</tt> is <tt>null</tt>
-     * and this set does not permit <tt>null</tt> elements
+     *         <tt>toElement</tt> is null and this set does
+     *         not permit null elements
+     * @throws IllegalArgumentException if <tt>fromElement</tt> is
+     *         greater than <tt>toElement</tt>; or if this set itself
+     *         has a restricted range, and <tt>fromElement</tt> or
+     *         <tt>toElement</tt> lies outside the bounds of the range.
      */
     NavigableSet<E> navigableSubSet(E fromElement, E toElement);
 
     /**
      * Returns a view of the portion of this set whose elements are
-     * strictly less than <tt>toElement</tt>.  The returned navigable
-     * set is backed by this set, so changes in the returned navigable
-     * set are reflected in this set, and vice-versa.
-     * @param toElement high endpoint (exclusive) of the headSet.
+     * strictly less than <tt>toElement</tt>.  The returned set is
+     * backed by this set, so changes in the returned set are
+     * reflected in this set, and vice-versa.  The returned set
+     * supports all optional set operations that this set supports.
+     *
+     * <p>The returned set will throw an <tt>IllegalArgumentException</tt>
+     * on an attempt to insert an element outside its range.
+     *
+     * @param toElement high endpoint (exclusive) of the returned set
      * @return a view of the portion of this set whose elements are strictly
-     * 	       less than toElement.
+     *         less than <tt>toElement</tt>
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
-     *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
-     * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>
-     * and this set does not permit <tt>null</tt> elements
+     *         if <tt>toElement</tt> does not implement {@link Comparable}).
+     *         Implementations may, but are not required to, throw this
+     *         exception if <tt>toElement</tt> cannot be compared to elements
+     *         currently in the set.
+     * @throws NullPointerException if <tt>toElement</tt> is null and
+     *         this set does not permit null elements
+     * @throws IllegalArgumentException if this set itself has a
+     *         restricted range, and <tt>toElement</tt> lies outside the
+     *         bounds of the range
      */
     NavigableSet<E> navigableHeadSet(E toElement);
 
     /**
      * Returns a view of the portion of this set whose elements are
      * greater than or equal to <tt>fromElement</tt>.  The returned
-     * navigable set is backed by this set, so changes in the returned
-     * navigable set are reflected in this set, and vice-versa.
-     * @param fromElement low endpoint (inclusive) of the tailSet.
-     * @return a view of the portion of this set whose elements are
-     * greater than or equal to <tt>fromElement</tt>.
-     * @throws ClassCastException if <tt>fromElement</tt> is not
-     * compatible with this set's comparator (or, if the set has no
-     * comparator, if <tt>fromElement</tt> does not implement
-     * <tt>Comparable</tt>).
-     * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
-     * and this set does not permit <tt>null</tt> elements
+     * set is backed by this set, so changes in the returned set are
+     * reflected in this set, and vice-versa.  The returned set
+     * supports all optional set operations that this set supports.
+     *
+     * <p>The returned set will throw an <tt>IllegalArgumentException</tt>
+     * on an attempt to insert an element outside its range.
+     *
+     * @param fromElement low endpoint (inclusive) of the returned set
+     * @return a view of the portion of this set whose elements are greater
+     *         than or equal to <tt>fromElement</tt>
+     * @throws ClassCastException if <tt>fromElement</tt> is not compatible
+     *         with this set's comparator (or, if the set has no comparator,
+     *         if <tt>fromElement</tt> does not implement {@link Comparable}).
+     *         Implementations may, but are not required to, throw this
+     *         exception if <tt>fromElement</tt> cannot be compared to elements
+     *         currently in the set.
+     * @throws NullPointerException if <tt>fromElement</tt> is null
+     *         and this set does not permit null elements
+     * @throws IllegalArgumentException if this set itself has a
+     *         restricted range, and <tt>fromElement</tt> lies outside the
+     *         bounds of the range
      */
     NavigableSet<E> navigableTailSet(E fromElement);
 }

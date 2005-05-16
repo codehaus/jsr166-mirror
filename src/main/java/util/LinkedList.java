@@ -165,8 +165,8 @@ public class LinkedList<E>
     /**
      * Returns <tt>true</tt> if this list contains the specified element.
      * More formally, returns <tt>true</tt> if and only if this list contains
-     * at least one element <tt>e</tt> such that <tt>(o==null ? e==null
-     * : o.equals(e))</tt>.
+     * at least one element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
      *
      * @param o element whose presence in this list is to be tested
      * @return <tt>true</tt> if this list contains the specified element
@@ -196,14 +196,17 @@ public class LinkedList<E>
     }
 
     /**
-     * Removes the first occurrence of the specified element in this list.  If
-     * the list does not contain the element, it is unchanged.  More formally,
-     * removes the element with the lowest index <tt>i</tt> such that
-     * <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt> (if such an
-     * element exists).
+     * Removes the first occurrence of the specified element from this list,
+     * if it is present.  If this list does not contain the element, it is
+     * unchanged.  More formally, removes the element with the lowest index
+     * <tt>i</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>
+     * (if such an element exists).  Returns <tt>true</tt> if this list
+     * contained the specified element (or equivalently, if this list
+     * changed as a result of the call).
      *
      * @param o element to be removed from this list, if present
-     * @return <tt>true</tt> if the list contained the specified element
+     * @return <tt>true</tt> if this list contained the specified element
      */
     public boolean remove(Object o) {
         if (o==null) {
@@ -252,8 +255,7 @@ public class LinkedList<E>
      *              from the specified collection
      * @param c elements to be inserted into this list
      * @return <tt>true</tt> if this list changed as a result of the call
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
+     * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null
      */
     public boolean addAll(int index, Collection<? extends E> c) {
@@ -301,10 +303,9 @@ public class LinkedList<E>
     /**
      * Returns the element at the specified position in this list.
      *
-     * @param index index of element to return
+     * @param index index of the element to return
      * @return the element at the specified position in this list
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
+     * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E get(int index) {
         return entry(index).element;
@@ -314,11 +315,10 @@ public class LinkedList<E>
      * Replaces the element at the specified position in this list with the
      * specified element.
      *
-     * @param index index of element to replace
+     * @param index index of the element to replace
      * @param element element to be stored at the specified position
      * @return the element previously at the specified position
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
+     * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E set(int index, E element) {
         Entry<E> e = entry(index);
@@ -334,9 +334,7 @@ public class LinkedList<E>
      *
      * @param index index at which the specified element is to be inserted
      * @param element element to be inserted
-     *
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
+     * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public void add(int index, E element) {
         addBefore(element, (index==size ? header : entry(index)));
@@ -349,9 +347,7 @@ public class LinkedList<E>
      *
      * @param index the index of the element to be removed
      * @return the element previously at the specified position
-     *
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>)
+     * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E remove(int index) {
         return remove(entry(index));
@@ -524,7 +520,7 @@ public class LinkedList<E>
      * or returns <tt>null</tt> if this list is empty.
      *
      * @return the first element of this list, or <tt>null</tt>
-     *         if this list is empty.
+     *         if this list is empty
      * @since 1.6
      */
     public E peekFirst() {
@@ -538,7 +534,7 @@ public class LinkedList<E>
      * or returns <tt>null</tt> if this list is empty.
      *
      * @return the last element of this list, or <tt>null</tt>
-     *         if this list is empty.
+     *         if this list is empty
      * @since 1.6
      */
     public E peekLast() {
@@ -659,11 +655,10 @@ public class LinkedList<E>
      * time in the future.
      *
      * @param index index of the first element to be returned from the
-     *              list-iterator (by a call to <tt>next</tt>).
+     *              list-iterator (by a call to <tt>next</tt>)
      * @return a ListIterator of the elements in this list (in proper
-     *         sequence), starting at the specified position in the list.
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; size()</tt>).
+     *         sequence), starting at the specified position in the list
+     * @throws IndexOutOfBoundsException {@inheritDoc}
      * @see List#listIterator(int)
      */
     public ListIterator<E> listIterator(int index) {
@@ -832,7 +827,7 @@ public class LinkedList<E>
      * in the correct order.
      *
      * @return an array containing all of the elements in this list
-     *         in the correct order.
+     *         in the correct order
      */
     public Object[] toArray() {
 	Object[] result = new Object[size];

@@ -24,22 +24,22 @@ public interface ConcurrentNavigableMap<K,V>
 {
     /**
      * @throws ClassCastException       {@inheritDoc}
-     * @throws IllegalArgumentException {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
      */
     ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, K toKey);
 
     /**
      * @throws ClassCastException       {@inheritDoc}
-     * @throws IllegalArgumentException {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
      */
     ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey);
 
     /**
      * @throws ClassCastException       {@inheritDoc}
-     * @throws IllegalArgumentException {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
      */
     ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey);
 }

@@ -14,7 +14,7 @@ import java.util.*;
  * <tt>Delayed</tt> elements, in which an element can only be taken
  * when its delay has expired.  The <em>head</em> of the queue is that
  * <tt>Delayed</tt> element whose delay expired furthest in the
- * past. If no delay has expired there is no head and <tt>poll</tt>
+ * past.  If no delay has expired there is no head and <tt>poll</tt>
  * will return <tt>null</tt>. Expiration occurs when an element's
  * <tt>getDelay(TimeUnit.NANOSECONDS)</tt> method returns a value less
  * than or equal to zero.  This queue does not permit <tt>null</tt>
@@ -49,10 +49,9 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * Creates a <tt>DelayQueue</tt> initially containing the elements of the
      * given collection of {@link Delayed} instances.
      *
-     * @param c the collection
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     *         is <tt>null</tt>.
-     *
+     * @param c the collection of elements to initially contain
+     * @throws NullPointerException if the specified collection or any
+     *         of its elements are null
      */
     public DelayQueue(Collection<? extends E> c) {
         this.addAll(c);
@@ -62,8 +61,19 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * Inserts the specified element into this delay queue.
      *
      * @param e the element to add
+     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @throws NullPointerException if the specified element is null
+     */
+    public boolean add(E e) {
+        return offer(e);
+    }
+
+    /**
+     * Inserts the specified element into this delay queue.
+     *
+     * @param e the element to add
      * @return <tt>true</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
         final ReentrantLock lock = this.lock;
@@ -79,12 +89,12 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
-
     /**
-     * Adds the specified element to this delay queue. As the queue is
+     * Inserts the specified element into this delay queue. As the queue is
      * unbounded this method will never block.
+     *
      * @param e the element to add
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws NullPointerException {@inheritDoc}
      */
     public void put(E e) {
         offer(e);
@@ -93,33 +103,49 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Inserts the specified element into this delay queue. As the queue is
      * unbounded this method will never block.
+     *
      * @param e the element to add
      * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
      * @return <tt>true</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean offer(E e, long timeout, TimeUnit unit) {
         return offer(e);
     }
 
     /**
-     * Adds the specified element to this queue.
-     * @param e the element to add
-     * @return <tt>true</tt> (as per the general contract of
-     * <tt>Collection.add</tt>).
+     * Retrieves and removes the head of this queue, or returns <tt>null</tt>
+     * if this queue has no elements with an expired delay.
      *
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @return the head of this queue, or <tt>null</tt> if this
+     *         queue has no elements with an expired delay
      */
-    public boolean add(E e) {
-        return offer(e);
+    public E poll() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            E first = q.peek();
+            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
+                return null;
+            else {
+                E x = q.poll();
+                assert x != null;
+                if (q.size() != 0)
+                    available.signalAll();
+                return x;
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
-     * Retrieves and removes the head of this queue, waiting
-     * if no elements with an expired delay are present on this queue.
+     * Retrieves and removes the head of this queue, waiting if necessary
+     * until an element with an expired delay is available on this queue.
+     *
      * @return the head of this queue
-     * @throws InterruptedException if interrupted while waiting.
+     * @throws InterruptedException {@inheritDoc}
      */
     public E take() throws InterruptedException {
         final ReentrantLock lock = this.lock;
@@ -149,18 +175,14 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
-     * Retrieves and removes the head of this queue, waiting
-     * if necessary up to the specified wait time if no elements with
-     * an expired delay are
-     * present on this queue.
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
+     * Retrieves and removes the head of this queue, waiting if necessary
+     * until an element with an expired delay is available on this queue,
+     * or the specified wait time expires.
+     *
      * @return the head of this queue, or <tt>null</tt> if the
-     * specified waiting time elapses before an element with
-     * an expired delay is present.
-     * @throws InterruptedException if interrupted while waiting.
+     *         specified waiting time elapses before an element with
+     *         an expired delay becomes available
+     * @throws InterruptedException {@inheritDoc}
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         final ReentrantLock lock = this.lock;
@@ -195,40 +217,13 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
-
-    /**
-     * Retrieves and removes the head of this queue, or <tt>null</tt>
-     * if this queue has no elements with an expired delay.
-     *
-     * @return the head of this queue, or <tt>null</tt> if this
-     *         queue has no elements with an expired delay.
-     */
-    public E poll() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            E first = q.peek();
-            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
-                return null;
-            else {
-                E x = q.poll();
-                assert x != null;
-                if (q.size() != 0)
-                    available.signalAll();
-                return x;
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
     /**
      * Retrieves, but does not remove, the head of this queue,
      * returning <tt>null</tt> if this queue has no elements with an
      * expired delay.
      *
-     * @return the head of this queue, or <tt>null</tt> if this queue
-     * has no elements with an expired delay.
+     * @return the head of this queue, or <tt>null</tt> if this
+     *         queue has no elements with an expired delay
      */
     public E peek() {
         final ReentrantLock lock = this.lock;
@@ -250,6 +245,12 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();
@@ -274,6 +275,12 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();
@@ -303,6 +310,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Atomically removes all of the elements from this delay queue.
      * The queue will be empty after this call returns.
+     * Elements with an unexpired delay are not waited for; they are
+     * simply discarded from the queue.
      */
     public void clear() {
         final ReentrantLock lock = this.lock;
@@ -317,12 +326,26 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Always returns <tt>Integer.MAX_VALUE</tt> because
      * a <tt>DelayQueue</tt> is not capacity constrained.
+     *
      * @return <tt>Integer.MAX_VALUE</tt>
      */
     public int remainingCapacity() {
         return Integer.MAX_VALUE;
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue.
+     * The returned array elements are in no particular order.
+     *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this queue.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     * 
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
+     * @return an array containing all of the elements in this queue
+     */
     public Object[] toArray() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -333,11 +356,48 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
     }
 
-    public <T> T[] toArray(T[] array) {
+    /**
+     * Returns an array containing all of the elements in this queue; the
+     * runtime type of the returned array is that of the specified array.
+     * The returned array elements are in no particular order.
+     * If the queue fits in the specified array, it is returned therein.
+     * Otherwise, a new array is allocated with the runtime type of the
+     * specified array and the size of this queue.
+     *
+     * <p>If this queue fits in the specified array with room to spare
+     * (i.e., the array has more elements than this queue), the element in
+     * the array immediately following the end of the queue is set to
+     * <tt>null</tt>.
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+     *
+     * <p>Suppose <tt>x</tt> is a queue known to contain only strings.
+     * The following code can be used to dump the queue into a newly
+     * allocated array of <tt>String</tt>:
+     *
+     * <pre>
+     *     String[] y = x.toArray(new String[0]);</pre>
+     *
+     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
+     * <tt>toArray()</tt>.
+     *
+     * @param a the array into which the elements of the queue are to
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     * @return an array containing all of the elements in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this queue
+     * @throws NullPointerException if the specified array is null
+     */
+    public <T> T[] toArray(T[] a) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return q.toArray(array);
+            return q.toArray(a);
         } finally {
             lock.unlock();
         }
@@ -364,7 +424,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * throw {@link ConcurrentModificationException}
      * upon detected interference.
      *
-     * @return an iterator over the elements in this queue.
+     * @return an iterator over the elements in this queue
      */
     public Iterator<E> iterator() {
         final ReentrantLock lock = this.lock;

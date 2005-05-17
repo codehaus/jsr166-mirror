@@ -524,10 +524,10 @@ public interface Deque<E> extends Queue<E> {
     public int size();
 
     /**
-     * Returns an iterator over the elements in this deque.  The elements
-     * will be ordered from first (head) to last (tail).
+     * Returns an iterator over the elements in this deque in proper sequence.
+     * The elements will be returned in order from first (head) to last (tail).
      *
-     * @return an <tt>Iterator</tt> over the elements in this deque
+     * @return an iterator over the elements in this deque in proper sequence
      */
     Iterator<E> iterator();
 }

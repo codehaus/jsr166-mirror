@@ -114,10 +114,16 @@ public interface NavigableSet<E> extends SortedSet<E> {
     E pollLast();
 
     /**
-     * Returns an iterator over the elements in this set, in
-     * descending order.
+     * Returns an iterator over the elements in this set, in ascending order.
      *
-     * @return an <tt>Iterator</tt> over the elements in this set
+     * @return an iterator over the elements in this set, in ascending order
+     */
+    Iterator<E> iterator();
+
+    /**
+     * Returns an iterator over the elements in this set, in descending order.
+     *
+     * @return an iterator over the elements in this set, in descending order
      */
     Iterator<E> descendingIterator();
 

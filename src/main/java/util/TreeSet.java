@@ -154,20 +154,18 @@ public class TreeSet<E>
     }
 
     /**
-     * Returns an iterator over the elements in this set.  The elements
-     * are returned in ascending order.
+     * Returns an iterator over the elements in this set in ascending order.
      *
-     * @return an iterator over the elements in this set
+     * @return an iterator over the elements in this set in ascending order
      */
     public Iterator<E> iterator() {
 	return m.keySet().iterator();
     }
 
     /**
-     * Returns an iterator over the elements in this set.  The elements
-     * are returned in descending order.
+     * Returns an iterator over the elements in this set in descending order.
      *
-     * @return an iterator over the elements in this set
+     * @return an iterator over the elements in this set in descending order
      */
     public Iterator<E> descendingIterator() {
 	return m.descendingKeySet().iterator();

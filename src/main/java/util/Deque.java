@@ -206,8 +206,8 @@ public interface Deque<E> extends Queue<E> {
      * which can fail to insert an element only by throwing an exception.
      *
      * @param e the element to add
-     * @return <tt>true</tt> if it was possible to insert the element,
-     *         else <tt>false</tt>
+     * @return <tt>true</tt> if the element was added to this deque, else
+     *         <tt>false</tt>
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
      * @throws NullPointerException if the specified element is null and this
@@ -224,8 +224,8 @@ public interface Deque<E> extends Queue<E> {
      * which can fail to insert an element only by throwing an exception.
      *
      * @param e the element to add
-     * @return <tt>true</tt> if it was possible to insert the element,
-     *         else <tt>false</tt>
+     * @return <tt>true</tt> if the element was added to this deque, else
+     *         <tt>false</tt>
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
      * @throws NullPointerException if the specified element is null and this

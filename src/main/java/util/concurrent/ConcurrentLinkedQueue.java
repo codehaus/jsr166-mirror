@@ -156,7 +156,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     // Have to override just to update the javadoc
 
     /**
-     * Adds the specified element to the tail of this queue.
+     * Inserts the specified element at the tail of this queue.
      *
      * @return <tt>true</tt> (as per the spec for {@link Collection#add})
      * @throws NullPointerException if the specified element is null

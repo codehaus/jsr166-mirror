@@ -15,9 +15,10 @@ import java.util.*;
  * blocking retrieval operations.  While this queue is logically
  * unbounded, attempted additions may fail due to resource exhaustion
  * (causing <tt>OutOfMemoryError</tt>). This class does not permit
- * <tt>null</tt> elements.  A priority queue relying on natural
- * ordering also does not permit insertion of non-comparable objects
- * (doing so results in <tt>ClassCastException</tt>).
+ * <tt>null</tt> elements.  A priority queue relying on {@linkplain
+ * Comparable natural ordering} also does not permit insertion of
+ * non-comparable objects (doing so results in
+ * <tt>ClassCastException</tt>).
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -50,12 +51,11 @@ import java.util.*;
  *   public E getEntry() { return entry; }
  *   public int compareTo(FIFOEntry&lt;E&gt; other) {
  *     int res = entry.compareTo(other.entry);
- *     if (res == 0 && other.entry != this.entry)
+ *     if (res == 0 &amp;&amp; other.entry != this.entry)
  *       res = (seqNum &lt; other.seqNum ? -1 : 1);
  *     return res;
  *   }
- * }
- * </pre>
+ * }</pre>
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -74,21 +74,20 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     private final Condition notEmpty = lock.newCondition();
 
     /**
-     * Creates a <tt>PriorityBlockingQueue</tt> with the default initial
-     * capacity
-     * (11) that orders its elements according to their natural
-     * ordering (using <tt>Comparable</tt>).
+     * Creates a <tt>PriorityBlockingQueue</tt> with the default
+     * initial capacity (11) that orders its elements according to
+     * their {@linkplain Comparable natural ordering}.
      */
     public PriorityBlockingQueue() {
         q = new PriorityQueue<E>();
     }
 
     /**
-     * Creates a <tt>PriorityBlockingQueue</tt> with the specified initial
-     * capacity that orders its elements according to their {@linkplain
-     * Comparable natural ordering}.
+     * Creates a <tt>PriorityBlockingQueue</tt> with the specified
+     * initial capacity that orders its elements according to their
+     * {@linkplain Comparable natural ordering}.
      *
-     * @param initialCapacity the initial capacity for this priority queue.
+     * @param initialCapacity the initial capacity for this priority queue
      * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
      * than 1
      */
@@ -101,7 +100,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * capacity that orders its elements according to the specified
      * comparator.
      *
-     * @param initialCapacity the initial capacity for this priority queue.
+     * @param initialCapacity the initial capacity for this priority queue
      * @param comparator the comparator used to order this priority queue.
      * If <tt>null</tt> then the order depends on the elements' natural
      * ordering.
@@ -129,42 +128,25 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @throws ClassCastException if elements of the specified collection
      *         cannot be compared to one another according to the priority
      *         queue's ordering.
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * @throws NullPointerException if the specified collection or any
+     *         of its elements are null
      */
     public PriorityBlockingQueue(Collection<? extends E> c) {
         q = new PriorityQueue<E>(c);
     }
 
-
-    // these first few override just to update doc comments
-
     /**
-     * Adds the specified element to this queue.
-     * @param e the element to add
-     * @return <tt>true</tt> (as per the general contract of
-     * <tt>Collection.add</tt>).
+     * Inserts the specified element into this priority queue.
      *
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @param e the element to add
+     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
      * @throws ClassCastException if the specified element cannot be compared
-     * with elements currently in the priority queue according
-     * to the priority queue's ordering.
+     *         with elements currently in the priority queue according to the
+     *         priority queue's ordering
+     * @throws NullPointerException if the specified element is null
      */
     public boolean add(E e) {
-        return super.add(e);
-    }
-
-    /**
-     * Returns the comparator used to order the elements in this queue,
-     * or <tt>null</tt> if this queue uses the {@linkplain Comparable
-     * natural ordering} of its elements.
-     *
-     * @return the comparator used to order the elements in this queue,
-     *         or <tt>null</tt> if this queue uses the natural
-     *         ordering of its elements.
-     */
-    public Comparator<? super E> comparator() {
-        return q.comparator();
+        return offer(e);
     }
 
     /**
@@ -173,9 +155,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param e the element to add
      * @return <tt>true</tt>
      * @throws ClassCastException if the specified element cannot be compared
-     * with elements currently in the priority queue according
-     * to the priority queue's ordering.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *         with elements currently in the priority queue according to the
+     *         priority queue's ordering
+     * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
@@ -192,13 +174,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Adds the specified element to this priority queue. As the queue is
+     * Inserts the specified element into this priority queue. As the queue is
      * unbounded this method will never block.
+     *
      * @param e the element to add
-     * @throws ClassCastException if the element cannot be compared
-     * with elements currently in the priority queue according
-     * to the priority queue's ordering.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws ClassCastException if the specified element cannot be compared
+     *         with elements currently in the priority queue according to the
+     *         priority queue's ordering
+     * @throws NullPointerException if the specified element is null
      */
     public void put(E e) {
         offer(e); // never need to block
@@ -207,17 +190,28 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element into this priority queue. As the queue is
      * unbounded this method will never block.
+     *
      * @param e the element to add
      * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
      * @return <tt>true</tt>
-     * @throws ClassCastException if the element cannot be compared
-     * with elements currently in the priority queue according
-     * to the priority queue's ordering.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws ClassCastException if the specified element cannot be compared
+     *         with elements currently in the priority queue according to the
+     *         priority queue's ordering
+     * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e, long timeout, TimeUnit unit) {
         return offer(e); // never need to block
+    }
+
+    public E poll() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            return q.poll();
+        } finally {
+            lock.unlock();
+        }
     }
 
     public E take() throws InterruptedException {
@@ -234,17 +228,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             E x = q.poll();
             assert x != null;
             return x;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-
-    public E poll() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            return q.poll();
         } finally {
             lock.unlock();
         }
@@ -283,6 +266,19 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns the comparator used to order the elements in this queue,
+     * or <tt>null</tt> if this queue uses the {@linkplain Comparable
+     * natural ordering} of its elements.
+     *
+     * @return the comparator used to order the elements in this queue,
+     *         or <tt>null</tt> if this queue uses the natural
+     *         ordering of its elements.
+     */
+    public Comparator<? super E> comparator() {
+        return q.comparator();
+    }
+
     public int size() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -303,8 +299,15 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Removes a single instance of the specified element from this
-     * queue, if it is present.
+     * Removes a single instance of the specified element from this queue,
+     * if it is present.  More formally, removes an element <tt>e</tt> such
+     * that <tt>o.equals(e)</tt>, if this queue contains one or more such
+     * elements.
+     * Returns <tt>true</tt> if this queue contained the specified element
+     * (or equivalently, if this queue changed as a result of the call).
+     *
+     * @param o element to be removed from this queue, if present
+     * @return <tt>true</tt> if this queue changed as a result of the call
      */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;
@@ -316,6 +319,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns <tt>true</tt> if this queue contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this queue contains
+     * at least one element <tt>e</tt> such that <tt>o.equals(e)</tt>.
+     *
+     * @param o object to be checked for containment in this queue
+     * @return <tt>true</tt> if this queue contains the specified element
+     */
     public boolean contains(Object o) {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -326,6 +337,19 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue.
+     * The returned array elements are in no particular order.
+     *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this queue.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     * 
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
+     * @return an array containing all of the elements in this queue
+     */
     public Object[] toArray() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -347,6 +371,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();
@@ -367,6 +397,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();
@@ -403,6 +439,43 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue; the
+     * runtime type of the returned array is that of the specified array.
+     * The returned array elements are in no particular order.
+     * If the queue fits in the specified array, it is returned therein.
+     * Otherwise, a new array is allocated with the runtime type of the
+     * specified array and the size of this queue.
+     *
+     * <p>If this queue fits in the specified array with room to spare
+     * (i.e., the array has more elements than this queue), the element in
+     * the array immediately following the end of the queue is set to
+     * <tt>null</tt>.
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+     *
+     * <p>Suppose <tt>x</tt> is a queue known to contain only strings.
+     * The following code can be used to dump the queue into a newly
+     * allocated array of <tt>String</tt>:
+     *
+     * <pre>
+     *     String[] y = x.toArray(new String[0]);</pre>
+     *
+     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
+     * <tt>toArray()</tt>.
+     *
+     * @param a the array into which the elements of the queue are to
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     * @return an array containing all of the elements in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this queue
+     * @throws NullPointerException if the specified array is null
+     */
     public <T> T[] toArray(T[] a) {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -420,7 +493,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * that will throw {@link ConcurrentModificationException} upon
      * detected interference.
      *
-     * @return an iterator over the elements in this queue.
+     * @return an iterator over the elements in this queue
      */
     public Iterator<E> iterator() {
         final ReentrantLock lock = this.lock;

@@ -72,8 +72,10 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
 
     /**
      * Creates a set containing all of the elements of the specified
-     * Collection.
-     * @param c the collection
+     * collection.
+     * 
+     * @param c the collection of elements to initially contain
+     * @throws NullPointerException if the specified collection is null
      */
     public CopyOnWriteArraySet(Collection<? extends E> c) {
         al = new CopyOnWriteArrayList<E>();

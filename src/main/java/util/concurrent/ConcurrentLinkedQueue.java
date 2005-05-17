@@ -145,8 +145,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * initially containing the elements of the given collection,
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>.
+     * @throws NullPointerException if the specified collection or any
+     *         of its elements are null
      */
     public ConcurrentLinkedQueue(Collection<? extends E> c) {
         for (Iterator<? extends E> it = c.iterator(); it.hasNext();)

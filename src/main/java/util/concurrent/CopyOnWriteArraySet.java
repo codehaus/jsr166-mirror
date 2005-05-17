@@ -97,7 +97,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     public boolean  retainAll(Collection<?> c)        { return al.retainAll(c); }
 
     /**
-     * Returns an iterator over the elements contained in this collection
+     * Returns an iterator over the elements contained in this set
      * in the order in which these elements were added.
      */
     public Iterator<E>  iterator()            { return al.iterator(); }

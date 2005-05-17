@@ -564,8 +564,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * waiting to receive it.
      *
      * @param e the element to add
-     * @return <tt>true</tt> if it was possible to add the element to
-     *         this queue, else <tt>false</tt>
+     * @return <tt>true</tt> if the element was added to this queue, else
+     *         <tt>false</tt>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {

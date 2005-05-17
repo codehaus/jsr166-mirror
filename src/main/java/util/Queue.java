@@ -135,7 +135,7 @@ public interface Queue<E> extends Collection<E> {
     /**
      * Inserts the specified element into this queue if it is possible to do
      * so immediately without violating capacity restrictions.
-     * When using a capacity-restricted deque, this method is generally
+     * When using a capacity-restricted queue, this method is generally
      * preferable to {@link #add}, which can fail to insert an element only
      * by throwing an exception.
      *

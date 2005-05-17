@@ -468,7 +468,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * appended.  Finally a right brace is appended.  A string is obtained
      * from the stringbuffer, and returned.
      *
-     * @return a String representation of this map.
+     * @return a String representation of this map
      */
     public String toString() {
 	StringBuffer buf = new StringBuffer();
@@ -555,7 +555,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
          * Creates an entry representing the same mapping as the
          * specified entry.
          *
-         * @param entry the entry to copy.
+         * @param entry the entry to copy
          */
 	public SimpleEntry(Entry<? extends K, ? extends V> entry) {
 	    this.key   = entry.getKey();

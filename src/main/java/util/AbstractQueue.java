@@ -135,7 +135,7 @@ public abstract class AbstractQueue<E>
      * having been successfully added when the associated exception is
      * thrown.
      *
-     * @param c collection whose elements are to be added to this queue
+     * @param c collection containing elements to be added to this queue
      * @return <tt>true</tt> if this queue changed as a result of the call
      * @throws ClassCastException if the class of an element of the specified
      *         collection prevents it from being added to this queue

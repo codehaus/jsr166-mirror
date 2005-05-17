@@ -246,7 +246,7 @@ public class TreeSet<E>
     /**
      * Adds all of the elements in the specified collection to this set.
      *
-     * @param c elements to be added
+     * @param c collection containing elements to be added to this set
      * @return <tt>true</tt> if this set changed as a result of the call
      * @throws ClassCastException if the elements provided cannot be compared
      *         with the elements currently in the set

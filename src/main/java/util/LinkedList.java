@@ -235,7 +235,7 @@ public class LinkedList<E>
      * progress.  (This implies that the behavior of this call is undefined if
      * the specified Collection is this list, and this list is nonempty.)
      *
-     * @param c the elements to be inserted into this list
+     * @param c collection containing elements to be added to this list
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      */
@@ -253,7 +253,7 @@ public class LinkedList<E>
      *
      * @param index index at which to insert the first element
      *              from the specified collection
-     * @param c elements to be inserted into this list
+     * @param c collection containing elements to be added to this list
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null

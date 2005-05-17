@@ -12,7 +12,7 @@ import java.util.*;
  * A {@linkplain BlockingQueue blocking queue} in which each
  * <tt>put</tt> must wait for a <tt>take</tt>, and vice versa.  A
  * synchronous queue does not have any internal capacity, not even a
- * capacity of one. You cannot <tt>peek</tt> at a synchronous queue
+ * capacity of one.  You cannot <tt>peek</tt> at a synchronous queue
  * because an element is only present when you try to take it; you
  * cannot add an element (using any method) unless another thread is
  * trying to remove it; you cannot iterate as there is nothing to
@@ -57,16 +57,16 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
       This implementation divides actions into two cases for puts:
 
       * An arriving producer that does not already have a waiting consumer
-      creates a node holding item, and then waits for a consumer to take it.
+        creates a node holding item, and then waits for a consumer to take it.
       * An arriving producer that does already have a waiting consumer fills
-      the slot node created by the consumer, and notifies it to continue.
+        the slot node created by the consumer, and notifies it to continue.
 
       And symmetrically, two for takes:
 
       * An arriving consumer that does not already have a waiting producer
-      creates an empty slot node, and then waits for a producer to fill it.
+        creates an empty slot node, and then waits for a producer to fill it.
       * An arriving consumer that does already have a waiting producer takes
-      item from the node created by the producer, and notifies it to continue.
+        item from the node created by the producer, and notifies it to continue.
 
       When a put or take waiting for the actions of its counterpart
       aborts due to interruption or timeout, it marks the node
@@ -157,7 +157,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             return (node == last || node.next != null);
         }
 
-
         void unlink(Node node) {
             Node p = head;
             Node trail = null;
@@ -222,8 +221,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /*
-     * Unlink the given node from consumer queue.  Called by cancelled
+    /**
+     * Unlinks the given node from consumer queue.  Called by cancelled
      * (timeout, interrupt) waiters to avoid garbage retention in the
      * absence of producers.
      */
@@ -242,8 +241,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /*
-     * Unlink the given node from producer queue.  Symmetric
+    /**
+     * Unlinks the given node from producer queue.  Symmetric
      * to unlinkCancelledConsumer.
      */
     private void unlinkCancelledProducer(Node node) {
@@ -387,9 +386,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to this queue, waiting if necessary for
      * another thread to receive it.
-     * @param e the element to add
-     * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
     public void put(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -428,15 +427,11 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for another thread to receive it.
-     * @param e the element to add
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if
-     * the specified waiting time elapses before a consumer appears.
-     * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *
+     * @return <tt>true</tt> if successful, or <tt>false</tt> if the
+     *         specified waiting time elapses before a consumer appears.
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -477,8 +472,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Retrieves and removes the head of this queue, waiting if necessary
      * for another thread to insert it.
-     * @throws InterruptedException if interrupted while waiting.
+     *
      * @return the head of this queue
+     * @throws InterruptedException {@inheritDoc}
      */
     public E take() throws InterruptedException {
         final ReentrantLock qlock = this.qlock;
@@ -518,13 +514,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Retrieves and removes the head of this queue, waiting
      * if necessary up to the specified wait time, for another thread
      * to insert it.
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
+     *
      * @return the head of this queue, or <tt>null</tt> if the
-     * specified waiting time elapses before an element is present.
-     * @throws InterruptedException if interrupted while waiting.
+     *         specified waiting time elapses before an element is present.
+     * @throws InterruptedException {@inheritDoc}
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         long nanos = unit.toNanos(timeout);
@@ -566,15 +559,15 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     // Untimed nonblocking versions
 
-   /**
-    * Inserts the specified element into this queue, if another thread is
-    * waiting to receive it.
-    *
-    * @param e the element to add.
-    * @return <tt>true</tt> if it was possible to add the element to
-    *         this queue, else <tt>false</tt>
-    * @throws NullPointerException if the specified element is <tt>null</tt>.
-    */
+    /**
+     * Inserts the specified element into this queue, if another thread is
+     * waiting to receive it.
+     *
+     * @param e the element to add
+     * @return <tt>true</tt> if it was possible to add the element to
+     *         this queue, else <tt>false</tt>
+     * @throws NullPointerException if the specified element is null
+     */
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
         final ReentrantLock qlock = this.qlock;
@@ -628,6 +621,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>true</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @return <tt>true</tt>
      */
     public boolean isEmpty() {
@@ -637,7 +631,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     * @return zero.
+     *
+     * @return zero
      */
     public int size() {
         return 0;
@@ -646,7 +641,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     * @return zero.
+     *
+     * @return zero
      */
     public int remainingCapacity() {
         return 0;
@@ -661,6 +657,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param o the element
      * @return <tt>false</tt>
      */
@@ -680,10 +677,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns <tt>false</tt> unless given collection is empty.
+     * Returns <tt>false</tt> unless the given collection is empty.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param c the collection
-     * @return <tt>false</tt> unless given collection is empty
+     * @return <tt>false</tt> unless the given collection is empty
+     * @throws NullPointerException if the specified collection is null
      */
     public boolean containsAll(Collection<?> c) {
         return c.isEmpty();
@@ -692,6 +691,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param c the collection
      * @return <tt>false</tt>
      */
@@ -702,6 +702,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param c the collection
      * @return <tt>false</tt>
      */
@@ -713,6 +714,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Always returns <tt>null</tt>.
      * A <tt>SynchronousQueue</tt> does not return elements
      * unless actively waited on.
+     *
      * @return <tt>null</tt>
      */
     public E peek() {
@@ -754,8 +756,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Sets the zeroeth element of the specified array to <tt>null</tt>
      * (if the array has non-zero length) and returns it.
+     *
      * @param a the array
      * @return the specified array
+     * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T[] a) {
         if (a.length > 0)
@@ -763,7 +767,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         return a;
     }
 
-
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();
@@ -778,6 +787,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         return n;
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();

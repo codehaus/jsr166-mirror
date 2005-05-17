@@ -313,8 +313,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the first element <tt>e</tt> such that
      * <tt>o.equals(e)</tt> (if such an element exists).
-     * Returns true if this deque contained the specified element (or
-     * equivalently, if this deque changed as a result of the call).
+     * Returns <tt>true</tt> if this deque contained the specified element
+     * (or equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if the deque contained the specified element
@@ -341,8 +341,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the last element <tt>e</tt> such that
      * <tt>o.equals(e)</tt> (if such an element exists).
-     * Returns true if this deque contained the specified element (or
-     * equivalently, if this deque changed as a result of the call).
+     * Returns <tt>true</tt> if this deque contained the specified element
+     * (or equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if the deque contained the specified element
@@ -613,8 +613,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the first element <tt>e</tt> such that
      * <tt>o.equals(e)</tt> (if such an element exists).
-     * Returns true if this deque contained the specified element (or
-     * equivalently, if this deque changed as a result of the call).
+     * Returns <tt>true</tt> if this deque contained the specified element
+     * (or equivalently, if this deque changed as a result of the call).
      *
      * <p>This method is equivalent to {@link #removeFirstOccurrence}.
      *

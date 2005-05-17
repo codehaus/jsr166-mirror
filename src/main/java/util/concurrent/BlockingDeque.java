@@ -446,8 +446,8 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
      * {@link #offerLast(Object,long,TimeUnit) #offerLast}.
      *
      * @param e the element to add
-     * @return <tt>true</tt> if it was possible to add the element to
-     *         this deque, else <tt>false</tt>
+     * @return <tt>true</tt> if the element was added to this deque, else
+     *         <tt>false</tt>
      * @throws InterruptedException {@inheritDoc}
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this deque
@@ -573,10 +573,10 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
     public int size();
 
     /**
-     * Returns an iterator over the elements in this deque.  The elements
-     * will be ordered from first (head) to last (tail).
+     * Returns an iterator over the elements in this deque in proper sequence.
+     * The elements will be returned in order from first (head) to last (tail).
      *
-     * @return an <tt>Iterator</tt> over the elements in this deque
+     * @return an iterator over the elements in this deque in proper sequence
      */
     Iterator<E> iterator();
 

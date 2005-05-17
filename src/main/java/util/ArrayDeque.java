@@ -651,6 +651,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * maintained by this deque.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
      * 
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
      * @return an array containing all of the elements in this deque
      */
     public Object[] toArray() {

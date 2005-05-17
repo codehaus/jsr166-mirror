@@ -828,6 +828,9 @@ public class LinkedList<E>
      * maintained by this list.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
      * 
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
      * @return an array containing all of the elements in this list
      *         in proper sequence
      */

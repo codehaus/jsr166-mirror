@@ -20,6 +20,23 @@ import java.util.*;
  * to return other <tt>RunnableFuture</tt> implementations than
  * <tt>FutureTask</tt>.
  *
+ * <p> <b>Extension example</b>. Here is a sketch of a class
+ * that customizes {@link ThreadPoolExecutor} to use
+ * a <tt>CustomTask</tt> class instead of the default <tt>FutureTask</tt>:
+ * <pre>
+ * public class CustomThreadPoolExecutor extends ThreadPoolExecutor {
+ *
+ *     static class CustomTask&lt;V&gt; implements RunnableFuture&lt;V&gt; {...}
+ *
+ *    &lt;V&gt; protected RunnableFuture&lt;V&gt; newTaskFor(Callable&lt;V&gt; c) {
+ *         return new CustomTask&lt;V&gt;(c);
+ *     }
+ *    &lt;V&gt; protected RunnableFuture&lt;V&gt; newTaskFor(Runnable r, V v) {
+ *         return new CustomTask&lt;V&gt;(r, v);
+ *     } 
+ *     // ... add constructors, etc.
+ * }
+ * </pre>
  * @since 1.5
  * @author Doug Lea
  */
@@ -30,9 +47,11 @@ public abstract class AbstractExecutorService implements ExecutorService {
      * value.
      * @param runnable the runnable task being wrapped
      * @param value the default value for the returned future
-     * @return a RunnableFuture which when run will run the underlying
-     * runnable and which, as a Future, will yield the given value as its result
-     * and provide for cancellation of the underlying task.
+     * @return a <tt>RunnableFuture</tt> which when run will run the
+     * underlying runnable and which, as a <tt>Future</tt>, will yield
+     * the given value as its result and provide for cancellation of
+     * the underlying task.
+     * @since 1.6
      */
     protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
         return new FutureTask<T>(runnable, value);
@@ -41,9 +60,11 @@ public abstract class AbstractExecutorService implements ExecutorService {
     /**
      * Returns a <tt>RunnableFuture</tt> for the given callable task.
      * @param callable the callable task being wrapped
-     * @return a RunnableFuture which when run will call the underlying
-     * callable and which, as a Future, will yield the callable's result
-     * as its result and provide for cancellation of the underlying task.
+     * @return a <tt>RunnableFuture</tt> which when run will call the
+     * underlying callable and which, as a <tt>Future</tt>, will yield
+     * the callable's result as its result and provide for
+     * cancellation of the underlying task.
+     * @since 1.6
      */
     protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
         return new FutureTask<T>(callable);

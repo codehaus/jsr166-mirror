@@ -28,6 +28,30 @@ import java.util.*;
  * <tt>corePoolSize</tt> threads and an unbounded queue, adjustments
  * to <tt>maximumPoolSize</tt> have no useful effect.
  *
+ * <p>This class supports protected extension method
+ * <tt>decorateTask</tt> (one version each for <tt>Runnable</tt> and
+ * <tt>Callable</tt>) that can be used to customize the concrete task
+ * types used to execute commands. By default,  
+ * a <tt>ScheduledThreadPoolExecutor</tt> uses
+ * a task type extending {@link FutureTask}. However, this may
+ * be modified or replaced using subclasses of the form:
+ * <pre>
+ * public class CustomScheduledExecutor extends ScheduledThreadPoolExecutor {
+ *
+ *    static class CustomTask&lt;V&gt; implements RunnableScheduledFuture&lt;V&gt; { ... }
+ *
+ *    &lt;V&gt; protected RunnableScheduledFuture&lt;V&gt; decorateTask(
+ *                 Runnable r, RunnableScheduledFuture&lt;V&gt; task) {
+ *        return new CustomTask&lt;V&gt;(r, task);
+ *     }
+ *
+ *    &lt;V&gt; protected RunnableScheduledFuture&lt;V&gt; decorateTask(
+ *                 Callable c, RunnableScheduledFuture&lt;V&gt; task) {
+ *        return new CustomTask&lt;V&gt;(c, task);
+ *     }
+ *     // ... add constructors, etc.
+ * }
+ * </pre>
  * @since 1.5
  * @author Doug Lea
  */
@@ -130,7 +154,7 @@ public class ScheduledThreadPoolExecutor
          * Returns true if this is a periodic (not a one-shot) action.
          * @return true if periodic
          */
-        boolean isPeriodic() {
+        public boolean isPeriodic() {
             return period != 0;
         }
 
@@ -198,8 +222,8 @@ public class ScheduledThreadPoolExecutor
             Object[] entries = super.getQueue().toArray();
             for (int i = 0; i < entries.length; ++i) {
                 Object e = entries[i];
-                if (e instanceof ScheduledFutureTask) {
-                    ScheduledFutureTask<?> t = (ScheduledFutureTask<?>)e;
+                if (e instanceof RunnableScheduledFuture) {
+                    RunnableScheduledFuture<?> t = (RunnableScheduledFuture<?>)e;
                     if (t.isPeriodic()? !keepPeriodic : !keepDelayed)
                         t.cancel(false);
                 }
@@ -210,20 +234,43 @@ public class ScheduledThreadPoolExecutor
     }
 
     public boolean remove(Runnable task) {
-        if (!(task instanceof ScheduledFutureTask))
+        if (!(task instanceof RunnableScheduledFuture))
             return false;
         return getQueue().remove(task);
     }
 
-
+    /**
+     * Modify or replace the task used to execute a runnable.
+     * This method can be used to override the concrete 
+     * class used for managing internal tasks.
+     * The default implementation simply returns the given
+     * task.
+     * 
+     * @param runnable the submitted Runnable
+     * @param task the task created to execute the runnable
+     * @return a task that can execute the runnable
+     * @since 1.6
+     */
     protected <V> RunnableScheduledFuture<V> decorateTask(
-        Runnable runnable, RunnableScheduledFuture<V> f) {
-        return f;
+        Runnable runnable, RunnableScheduledFuture<V> task) {
+        return task;
     }
 
+    /**
+     * Modify or replace the task used to execute a callable.
+     * This method can be used to override the concrete 
+     * class used for managing internal tasks.
+     * The default implementation simply returns the given
+     * task.
+     * 
+     * @param callable the submitted Callable
+     * @param task the task created to execute the callable
+     * @return a task that can execute the callable
+     * @since 1.6
+     */
     protected <V> RunnableScheduledFuture<V> decorateTask(
-        Callable<V> callable, RunnableScheduledFuture<V> f) {
-        return f;
+        Callable<V> callable, RunnableScheduledFuture<V> task) {
+        return task;
     }
 
     /**
@@ -502,13 +549,13 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * An annoying wrapper class to convince generics compiler to
-     * use a DelayQueue<ScheduledFutureTask> as a BlockingQueue<Runnable>
+     * use a DelayQueue<RunnableScheduledFuture> as a BlockingQueue<Runnable>
      */
     private static class DelayedWorkQueue
         extends AbstractCollection<Runnable>
         implements BlockingQueue<Runnable> {
 
-        private final DelayQueue<ScheduledFutureTask> dq = new DelayQueue<ScheduledFutureTask>();
+        private final DelayQueue<RunnableScheduledFuture> dq = new DelayQueue<RunnableScheduledFuture>();
         public Runnable poll() { return dq.poll(); }
         public Runnable peek() { return dq.peek(); }
         public Runnable take() throws InterruptedException { return dq.take(); }
@@ -516,13 +563,13 @@ public class ScheduledThreadPoolExecutor
             return dq.poll(timeout, unit);
         }
 
-        public boolean add(Runnable x) { return dq.add((ScheduledFutureTask)x); }
-        public boolean offer(Runnable x) { return dq.offer((ScheduledFutureTask)x); }
+        public boolean add(Runnable x) { return dq.add((RunnableScheduledFuture)x); }
+        public boolean offer(Runnable x) { return dq.offer((RunnableScheduledFuture)x); }
         public void put(Runnable x)  {
-            dq.put((ScheduledFutureTask)x);
+            dq.put((RunnableScheduledFuture)x);
         }
         public boolean offer(Runnable x, long timeout, TimeUnit unit) {
-            return dq.offer((ScheduledFutureTask)x, timeout, unit);
+            return dq.offer((RunnableScheduledFuture)x, timeout, unit);
         }
 
         public Runnable remove() { return dq.remove(); }
@@ -542,7 +589,7 @@ public class ScheduledThreadPoolExecutor
         public <T> T[] toArray(T[] array) { return dq.toArray(array); }
         public Iterator<Runnable> iterator() {
             return new Iterator<Runnable>() {
-                private Iterator<ScheduledFutureTask> it = dq.iterator();
+                private Iterator<RunnableScheduledFuture> it = dq.iterator();
                 public boolean hasNext() { return it.hasNext(); }
                 public Runnable next() { return it.next(); }
                 public void remove() {  it.remove(); }

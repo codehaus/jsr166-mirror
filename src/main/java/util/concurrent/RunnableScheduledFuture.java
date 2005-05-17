@@ -15,4 +15,12 @@ package java.util.concurrent;
  * @param <V> The result type returned by this Future's <tt>get</tt> method
  */
 public interface RunnableScheduledFuture<V> extends Runnable, ScheduledFuture<V> {
+
+    /**
+     * Returns true if this is a periodic task. A periodic task may
+     * re-run according to some schedule. A non-periodic task can be
+     * run only once.
+     * @return true if this task is periodic.
+     */ 
+    boolean isPeriodic();
 }

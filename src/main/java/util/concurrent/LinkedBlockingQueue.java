@@ -224,7 +224,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Adds the specified element to the tail of this queue, waiting if
+     * Inserts the specified element at the tail of this queue, waiting if
      * necessary for space to become available.
      *
      * @throws InterruptedException {@inheritDoc}
@@ -311,11 +311,14 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element at the tail of this queue if possible,
-     * returning immediately if this queue is full.
+     * Inserts the specified element at the tail of this queue if it is
+     * possible to do so immediately without exceeding the queue's capacity,
+     * returning <tt>true</tt> upon success and <tt>false</tt> if this queue
+     * is full.
+     * When using a capacity-restricted queue, this method is generally
+     * preferable to method {@link BlockingQueue#add add}, which can fail to
+     * insert an element only by throwing an exception.
      *
-     * @return <tt>true</tt> if it was possible to add the element to
-     *         this queue, else <tt>false</tt>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
@@ -443,8 +446,15 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Removes a single instance of the specified element from this
-     * queue, if it is present.
+     * Removes a single instance of the specified element from this queue,
+     * if it is present.  More formally, removes an element <tt>e</tt> such
+     * that <tt>o.equals(e)</tt>, if this queue contains one or more such
+     * elements.
+     * Returns <tt>true</tt> if this queue contained the specified element
+     * (or equivalently, if this queue changed as a result of the call).
+     *
+     * @param o element to be removed from this queue, if present
+     * @return <tt>true</tt> if this queue changed as a result of the call
      */
     public boolean remove(Object o) {
         if (o == null) return false;

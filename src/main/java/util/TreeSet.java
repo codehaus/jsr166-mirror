@@ -106,15 +106,13 @@ public class TreeSet<E>
     }
 
     /**
-     * Constructs a new, empty tree set, sorted according to the
-     * specified comparator.  All elements inserted into the set must
-     * be <i>mutually comparable</i> by the specified comparator:
-     * <tt>comparator.compare(e1, e2)</tt> must not throw a
-     * <tt>ClassCastException</tt> for any elements <tt>e1</tt> and
-     * <tt>e2</tt> in the set.  If the user attempts to add an element
-     * to the set that violates this constraint, the
-     * <tt>add(Object)</tt> call will throw a
-     * <tt>ClassCastException</tt>.
+     * Constructs a new, empty tree set, sorted according to the specified
+     * comparator.  All elements inserted into the set must be <i>mutually
+     * comparable</i> by the specified comparator: <tt>comparator.compare(e1,
+     * e2)</tt> must not throw a <tt>ClassCastException</tt> for any elements
+     * <tt>e1</tt> and <tt>e2</tt> in the set.  If the user attempts to add
+     * an element to the set that violates this constraint, the
+     * <tt>add(Object)</tt> call will throw a <tt>ClassCastException</tt>.
      *
      * @param comparator the comparator that will be used to order this set.
      *        If <tt>null</tt>, the {@linkplain Comparable natural
@@ -125,12 +123,11 @@ public class TreeSet<E>
     }
 
     /**
-     * Constructs a new tree set containing the elements in the
-     * specified collection, sorted according to the <i>natural
-     * ordering</i> of its elements.  All elements inserted into the
-     * set must implement the {@link Comparable} interface.
-     * Furthermore, all such elements must be <i>mutually
-     * comparable</i>: <tt>e1.compareTo(e2)</tt> must not throw a
+     * Constructs a new tree set containing the elements in the specified
+     * collection, sorted according to the <i>natural ordering</i> of its
+     * elements.  All elements inserted into the set must implement the
+     * {@link Comparable} interface.  Furthermore, all such elements must be
+     * <i>mutually comparable</i>: <tt>e1.compareTo(e2)</tt> must not throw a
      * <tt>ClassCastException</tt> for any elements <tt>e1</tt> and
      * <tt>e2</tt> in the set.
      *

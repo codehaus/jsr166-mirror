@@ -375,16 +375,15 @@ public class LinkedList<E>
     // Search Operations
 
     /**
-     * Returns the index in this list of the first occurrence of the
-     * specified element, or -1 if the List does not contain this
-     * element.  More formally, returns the lowest index i such that
-     * <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt>, or -1 if
-     * there is no such index.
+     * Returns the index of the first occurrence of the specified element
+     * in this list, or -1 if this list does not contain the element.
+     * More formally, returns the lowest index <tt>i</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
+     * or -1 if there is no such index.
      *
      * @param o element to search for
-     * @return the index in this list of the first occurrence of the
-     *         specified element, or -1 if the list does not contain this
-     *         element
+     * @return the index of the first occurrence of the specified element in
+     *         this list, or -1 if this list does not contain the element
      */
     public int indexOf(Object o) {
         int index = 0;
@@ -405,16 +404,15 @@ public class LinkedList<E>
     }
 
     /**
-     * Returns the index in this list of the last occurrence of the
-     * specified element, or -1 if the list does not contain this
-     * element.  More formally, returns the highest index i such that
-     * <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt>, or -1 if
-     * there is no such index.
+     * Returns the index of the last occurrence of the specified element
+     * in this list, or -1 if this list does not contain the element.
+     * More formally, returns the highest index <tt>i</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
+     * or -1 if there is no such index.
      *
      * @param o element to search for
-     * @return the index in this list of the last occurrence of the
-     *         specified element, or -1 if the list does not contain this
-     *         element
+     * @return the index of the last occurrence of the specified element in
+     *         this list, or -1 if this list does not contain the element
      */
     public int lastIndexOf(Object o) {
         int index = size;
@@ -824,10 +822,14 @@ public class LinkedList<E>
 
     /**
      * Returns an array containing all of the elements in this list
-     * in the correct order.
+     * in proper sequence (from first to last element).
      *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this list.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     * 
      * @return an array containing all of the elements in this list
-     *         in the correct order
+     *         in proper sequence
      */
     public Object[] toArray() {
 	Object[] result = new Object[size];
@@ -839,24 +841,40 @@ public class LinkedList<E>
 
     /**
      * Returns an array containing all of the elements in this list in
-     * the correct order; the runtime type of the returned array is that of
-     * the specified array.  If the list fits in the specified array, it
-     * is returned therein.  Otherwise, a new array is allocated with the
-     * runtime type of the specified array and the size of this list.<p>
+     * proper sequence (from first to last element); the runtime type of
+     * the returned array is that of the specified array.  If the list fits
+     * in the specified array, it is returned therein.  Otherwise, a new
+     * array is allocated with the runtime type of the specified array and
+     * the size of this list.
      *
-     * If the list fits in the specified array with room to spare
-     * (i.e., the array has more elements than the list),
-     * the element in the array immediately following the end of the
-     * collection is set to null.  This is useful in determining the length
-     * of the list <i>only</i> if the caller knows that the list
-     * does not contain any null elements.
+     * <p>If the list fits in the specified array with room to spare (i.e.,
+     * the array has more elements than the list), the element in the array
+     * immediately following the end of the list is set to <tt>null</tt>.
+     * (This is useful in determining the length of the list <i>only</i> if
+     * the caller knows that the list does not contain any null elements.)
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+     *
+     * <p>Suppose <tt>x</tt> is a list known to contain only strings.
+     * The following code can be used to dump the list into a newly
+     * allocated array of <tt>String</tt>:
+     *
+     * <pre>
+     *     String[] y = x.toArray(new String[0]);</pre>
+     *
+     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
+     * <tt>toArray()</tt>.
      *
      * @param a the array into which the elements of the list are to
      *          be stored, if it is big enough; otherwise, a new array of the
      *          same runtime type is allocated for this purpose.
      * @return an array containing the elements of the list
-     * @throws ArrayStoreException if the runtime type of a is not a
-     *         supertype of the runtime type of every element in this list
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this list
      * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T[] a) {

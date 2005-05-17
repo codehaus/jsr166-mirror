@@ -645,32 +645,54 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Returns an array containing all of the elements in this deque
-     * in the correct order.
+     * in proper sequence (from first to last element).
      *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this deque.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     * 
      * @return an array containing all of the elements in this deque
-     *         in the correct order
      */
     public Object[] toArray() {
 	return copyElements(new Object[size()]);
     }
 
     /**
-     * Returns an array containing all of the elements in this deque in the
-     * correct order; the runtime type of the returned array is that of the
-     * specified array.  If the deque fits in the specified array, it is
-     * returned therein.  Otherwise, a new array is allocated with the runtime
-     * type of the specified array and the size of this deque.
+     * Returns an array containing all of the elements in this deque in
+     * proper sequence (from first to last element); the runtime type of the
+     * returned array is that of the specified array.  If the deque fits in
+     * the specified array, it is returned therein.  Otherwise, a new array
+     * is allocated with the runtime type of the specified array and the
+     * size of this deque.
      *
-     * <p>If the deque fits in the specified array with room to spare (i.e.,
-     * the array has more elements than the deque), the element in the array
-     * immediately following the end of the collection is set to <tt>null</tt>.
+     * <p>If this deque fits in the specified array with room to spare
+     * (i.e., the array has more elements than this deque), the element in
+     * the array immediately following the end of the deque is set to
+     * <tt>null</tt>.
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+     *
+     * <p>Suppose <tt>x</tt> is a deque known to contain only strings.
+     * The following code can be used to dump the deque into a newly
+     * allocated array of <tt>String</tt>:
+     *
+     * <pre>
+     *     String[] y = x.toArray(new String[0]);</pre>
+     *
+     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
+     * <tt>toArray()</tt>.
      *
      * @param a the array into which the elements of the deque are to
      *          be stored, if it is big enough; otherwise, a new array of the
      *          same runtime type is allocated for this purpose
-     * @return an array containing the elements of the deque
-     * @throws ArrayStoreException if the runtime type of a is not a supertype
-     *         of the runtime type of every element in this deque
+     * @return an array containing all of the elements in this deque
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this deque
+     * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T[] a) {
         int size = size();

@@ -168,9 +168,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Creates a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity.
      *
-     * @param capacity the capacity of this queue.
+     * @param capacity the capacity of this queue
      * @throws IllegalArgumentException if <tt>capacity</tt> is not greater
-     *         than zero.
+     *         than zero
      */
     public LinkedBlockingQueue(int capacity) {
         if (capacity <= 0) throw new IllegalArgumentException();
@@ -183,9 +183,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * {@link Integer#MAX_VALUE}, initially containing the elements of the
      * given collection,
      * added in traversal order of the collection's iterator.
+     *
      * @param c the collection of elements to initially contain
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>.
+     * @throws NullPointerException if the specified collection or any
+     *         of its elements are null
      */
     public LinkedBlockingQueue(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
@@ -199,7 +200,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns the number of elements in this queue.
      *
-     * @return  the number of elements in this queue.
+     * @return the number of elements in this queue
      */
     public int size() {
         return count.get();
@@ -216,7 +217,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * <p>Note that you <em>cannot</em> always tell if an attempt to insert
      * an element will succeed by inspecting <tt>remainingCapacity</tt>
      * because it may be the case that another thread is about to
-     * <tt>put</tt> or <tt>take</tt> an element.
+     * insert or remove an element.
      */
     public int remainingCapacity() {
         return capacity - count.get();
@@ -225,9 +226,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Adds the specified element to the tail of this queue, waiting if
      * necessary for space to become available.
-     * @param e the element to add
-     * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
     public void put(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -268,15 +269,11 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
-     * @param e the element to add
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
+     *
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
-     * the specified waiting time elapses before space is available.
-     * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *         the specified waiting time elapses before space is available.
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
     public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
@@ -317,10 +314,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * Inserts the specified element at the tail of this queue if possible,
      * returning immediately if this queue is full.
      *
-     * @param e the element to add.
      * @return <tt>true</tt> if it was possible to add the element to
      *         this queue, else <tt>false</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
@@ -479,6 +475,19 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         return removed;
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence.
+     *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this queue.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     * 
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
+     * @return an array containing all of the elements in this queue
+     */
     public Object[] toArray() {
         fullyLock();
         try {
@@ -493,6 +502,42 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence; the runtime type of the returned array is that of
+     * the specified array.  If the queue fits in the specified array, it
+     * is returned therein.  Otherwise, a new array is allocated with the
+     * runtime type of the specified array and the size of this queue.
+     *
+     * <p>If this queue fits in the specified array with room to spare
+     * (i.e., the array has more elements than this queue), the element in
+     * the array immediately following the end of the queue is set to
+     * <tt>null</tt>.
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+     *
+     * <p>Suppose <tt>x</tt> is a queue known to contain only strings.
+     * The following code can be used to dump the queue into a newly
+     * allocated array of <tt>String</tt>:
+     *
+     * <pre>
+     *     String[] y = x.toArray(new String[0]);</pre>
+     *
+     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
+     * <tt>toArray()</tt>.
+     *
+     * @param a the array into which the elements of the queue are to
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     * @return an array containing all of the elements in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this queue
+     * @throws NullPointerException if the specified array is null
+     */
     public <T> T[] toArray(T[] a) {
         fullyLock();
         try {
@@ -536,6 +581,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();
@@ -563,6 +614,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         return n;
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();
@@ -600,7 +657,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
      *
-     * @return an iterator over the elements in this queue in proper sequence.
+     * @return an iterator over the elements in this queue in proper sequence
      */
     public Iterator<E> iterator() {
       return new Itr();

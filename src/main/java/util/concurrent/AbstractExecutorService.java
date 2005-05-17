@@ -11,36 +11,61 @@ import java.util.*;
 /**
  * Provides default implementation of {@link ExecutorService}
  * execution methods. This class implements the <tt>submit</tt>,
- * <tt>invokeAny</tt> and <tt>invokeAll</tt> methods using the default
- * {@link FutureTask} class provided in this package.  For example,
+ * <tt>invokeAny</tt> and <tt>invokeAll</tt> methods using a
+ * {@link RunnableFuture} returned by <tt>newTaskFor</tt>, which defaults
+ * to the {@link FutureTask} class provided in this package.  For example,
  * the implementation of <tt>submit(Runnable)</tt> creates an
- * associated <tt>FutureTask</tt> that is executed and
- * returned. Subclasses overriding these methods to use different
- * {@link Future} implementations should do so consistently for each
- * of these methods.
+ * associated <tt>RunnableFuture</tt> that is executed and
+ * returned. Subclasses may override the <tt>newTaskFor</tt> methods
+ * to return other <tt>RunnableFuture</tt> implementations than
+ * <tt>FutureTask</tt>.
  *
  * @since 1.5
  * @author Doug Lea
  */
 public abstract class AbstractExecutorService implements ExecutorService {
 
+    /**
+     * Returns a <tt>RunnableFuture</tt> for the given runnable and default
+     * value.
+     * @param runnable the runnable task being wrapped
+     * @param value the default value for the returned future
+     * @return a RunnableFuture which when run will run the underlying
+     * runnable and which, as a Future, will yield the given value as its result
+     * and provide for cancellation of the underlying task.
+     */
+    protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
+        return new FutureTask<T>(runnable, value);
+    }
+
+    /**
+     * Returns a <tt>RunnableFuture</tt> for the given callable task.
+     * @param callable the callable task being wrapped
+     * @return a RunnableFuture which when run will call the underlying
+     * callable and which, as a Future, will yield the callable's result
+     * as its result and provide for cancellation of the underlying task.
+     */
+    protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
+        return new FutureTask<T>(callable);
+    }
+
     public Future<?> submit(Runnable task) {
         if (task == null) throw new NullPointerException();
-        FutureTask<Object> ftask = new FutureTask<Object>(task, null);
+        RunnableFuture<Object> ftask = newTaskFor(task, null);
         execute(ftask);
         return ftask;
     }
 
     public <T> Future<T> submit(Runnable task, T result) {
         if (task == null) throw new NullPointerException();
-        FutureTask<T> ftask = new FutureTask<T>(task, result);
+        RunnableFuture<T> ftask = newTaskFor(task, result);
         execute(ftask);
         return ftask;
     }
 
     public <T> Future<T> submit(Callable<T> task) {
         if (task == null) throw new NullPointerException();
-        FutureTask<T> ftask = new FutureTask<T>(task);
+        RunnableFuture<T> ftask = newTaskFor(task);
         execute(ftask);
         return ftask;
     }
@@ -147,7 +172,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         boolean done = false;
         try {
             for (Callable<T> t : tasks) {
-                FutureTask<T> f = new FutureTask<T>(t);
+                RunnableFuture<T> f = newTaskFor(t);
                 futures.add(f);
                 execute(f);
             }
@@ -179,7 +204,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         boolean done = false;
         try {
             for (Callable<T> t : tasks)
-                futures.add(new FutureTask<T>(t));
+                futures.add(newTaskFor(t));
 
             long lastTime = System.nanoTime();
 

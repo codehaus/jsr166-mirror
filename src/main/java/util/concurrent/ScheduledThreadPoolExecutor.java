@@ -58,11 +58,11 @@ public class ScheduledThreadPoolExecutor
      * Returns nanosecond time offset by origin
      */
     final long now() {
-	return System.nanoTime() - NANO_ORIGIN;
+        return System.nanoTime() - NANO_ORIGIN;
     }
 
     private class ScheduledFutureTask<V>
-            extends FutureTask<V> implements ScheduledFuture<V> {
+            extends FutureTask<V> implements RunnableScheduledFuture<V> {
 
         /** Sequence number to break ties FIFO */
         private final long sequenceNumber;
@@ -210,9 +210,20 @@ public class ScheduledThreadPoolExecutor
     }
 
     public boolean remove(Runnable task) {
-	if (!(task instanceof ScheduledFutureTask))
-	    return false;
-	return getQueue().remove(task);
+        if (!(task instanceof ScheduledFutureTask))
+            return false;
+        return getQueue().remove(task);
+    }
+
+
+    protected <V> RunnableScheduledFuture<V> decorateTask(
+        Runnable runnable, RunnableScheduledFuture<V> f) {
+        return f;
+    }
+
+    protected <V> RunnableScheduledFuture<V> decorateTask(
+        Callable<V> callable, RunnableScheduledFuture<V> f) {
+        return f;
     }
 
     /**
@@ -286,8 +297,8 @@ public class ScheduledThreadPoolExecutor
         if (command == null || unit == null)
             throw new NullPointerException();
         long triggerTime = now() + unit.toNanos(delay);
-        ScheduledFutureTask<?> t =
-            new ScheduledFutureTask<Boolean>(command, null, triggerTime);
+        RunnableScheduledFuture<?> t = decorateTask(command,
+            new ScheduledFutureTask<Boolean>(command, null, triggerTime));
         delayedExecute(t);
         return t;
     }
@@ -299,8 +310,8 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (delay < 0) delay = 0;
         long triggerTime = now() + unit.toNanos(delay);
-        ScheduledFutureTask<V> t =
-            new ScheduledFutureTask<V>(callable, triggerTime);
+        RunnableScheduledFuture<V> t = decorateTask(callable,
+            new ScheduledFutureTask<V>(callable, triggerTime));
         delayedExecute(t);
         return t;
     }
@@ -315,11 +326,11 @@ public class ScheduledThreadPoolExecutor
             throw new IllegalArgumentException();
         if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
-        ScheduledFutureTask<?> t =
+        RunnableScheduledFuture<?> t = decorateTask(command,
             new ScheduledFutureTask<Object>(command,
                                             null,
                                             triggerTime,
-                                            unit.toNanos(period));
+                                            unit.toNanos(period)));
         delayedExecute(t);
         return t;
     }
@@ -334,11 +345,11 @@ public class ScheduledThreadPoolExecutor
             throw new IllegalArgumentException();
         if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
-        ScheduledFutureTask<?> t =
+        RunnableScheduledFuture<?> t = decorateTask(command,
             new ScheduledFutureTask<Boolean>(command,
                                              null,
                                              triggerTime,
-                                             unit.toNanos(-delay));
+                                             unit.toNanos(-delay)));
         delayedExecute(t);
         return t;
     }

@@ -650,7 +650,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>The returned array will be "safe" in that no references to it are
      * maintained by this deque.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
-     * 
+     *
      * <p>This method acts as bridge between array-based and collection-based
      * APIs.
      *

@@ -9,20 +9,21 @@ import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
- * A {@linkplain BlockingQueue blocking queue} in which each
- * <tt>put</tt> must wait for a <tt>take</tt>, and vice versa.  A
- * synchronous queue does not have any internal capacity, not even a
- * capacity of one.  You cannot <tt>peek</tt> at a synchronous queue
- * because an element is only present when you try to take it; you
- * cannot add an element (using any method) unless another thread is
- * trying to remove it; you cannot iterate as there is nothing to
- * iterate.  The <em>head</em> of the queue is the element that the
- * first queued thread is trying to add to the queue; if there are no
- * queued threads then no element is being added and the head is
- * <tt>null</tt>.  For purposes of other <tt>Collection</tt> methods
- * (for example <tt>contains</tt>), a <tt>SynchronousQueue</tt> acts
- * as an empty collection.  This queue does not permit <tt>null</tt>
- * elements.
+ * A {@linkplain BlockingQueue blocking queue} in which each insert
+ * operation must wait for a corresponding remove operation by another
+ * thread, and vice versa.  A synchronous queue does not have any
+ * internal capacity, not even a capacity of one.  You cannot
+ * <tt>peek</tt> at a synchronous queue because an element is only
+ * present when you try to remove it; you cannot insert an element
+ * (using any method) unless another thread is trying to remove it;
+ * you cannot iterate as there is nothing to iterate.  The
+ * <em>head</em> of the queue is the element that the first queued
+ * inserting thread is trying to add to the queue; if there is no such
+ * queued thread then no element is available for removal and
+ * <tt>poll()</tt> will return <tt>null</tt>.  For purposes of other
+ * <tt>Collection</tt> methods (for example <tt>contains</tt>), a
+ * <tt>SynchronousQueue</tt> acts as an empty collection.  This queue
+ * does not permit <tt>null</tt> elements.
  *
  * <p>Synchronous queues are similar to rendezvous channels used in
  * CSP and Ada. They are well suited for handoff designs, in which an

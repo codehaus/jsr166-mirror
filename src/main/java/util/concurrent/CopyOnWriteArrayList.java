@@ -282,7 +282,7 @@ public class CopyOnWriteArrayList<E>
      * <p>The returned array will be "safe" in that no references to it are
      * maintained by this list.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
-     * 
+     *
      * <p>This method acts as bridge between array-based and collection-based
      * APIs.
      *
@@ -541,7 +541,7 @@ public class CopyOnWriteArrayList<E>
      * it's contained in this list.  If all elements are so contained
      * <tt>true</tt> is returned, otherwise <tt>false</tt>.
      *
-     * @param  c collection to be checked for containment in this list
+     * @param c collection to be checked for containment in this list
      * @return <tt>true</tt> if this list contains all of the elements of the
      *         specified collection
      * @throws NullPointerException if the specified collection is null
@@ -629,7 +629,7 @@ public class CopyOnWriteArrayList<E>
      * this list, in the order that they are returned by the
      * specified collection's iterator.
      *
-     * @param c elements to be added to this list
+     * @param c collection containing elements to be added to this list
      * @return the number of elements added
      * @throws NullPointerException if the specified collection is null
      */
@@ -674,7 +674,7 @@ public class CopyOnWriteArrayList<E>
      * of this list, in the order that they are returned by the specified
      * collection's iterator.
      *
-     * @param c elements to be inserted into this list
+     * @param c collection containing elements to be added to this list
      * @return true if any elements are added
      * @throws NullPointerException if the specified collection is null
      */
@@ -703,7 +703,7 @@ public class CopyOnWriteArrayList<E>
      *
      * @param index index at which to insert the first element
      *        from the specified collection
-     * @param c collection containing elements to be inserted into this list
+     * @param c collection containing elements to be added to this list
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null

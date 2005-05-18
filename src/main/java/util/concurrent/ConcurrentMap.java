@@ -34,11 +34,11 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *
      * @param key key with which the specified value is to be associated
      * @param value value to be associated with the specified key
-     * @return the previous value associated with <tt>key</tt>, or
-     *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+     * @return the previous value associated with the specified key, or
+     *         <tt>null</tt> if there was no mapping for the key.
      *         (A <tt>null</tt> return can also indicate that the map
-     *         previously associated <tt>null</tt> with <tt>key</tt>,
-     *         if the implementation supports <tt>null</tt> values.)
+     *         previously associated <tt>null</tt> with the key,
+     *         if the implementation supports null values.)
      * @throws UnsupportedOperationException if the <tt>put</tt> operation
      *         is not supported by this map
      * @throws ClassCastException if the class of the specified key or value
@@ -62,12 +62,14 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is associated
-     * @param value value associated with the specified key
-     * @return true if the value was removed, false otherwise
+     * @param value value expected to be associated with the specified key
+     * @return <tt>true</tt> if the value was removed
      * @throws UnsupportedOperationException if the <tt>remove</tt> operation
      *         is not supported by this map
+     * @throws ClassCastException if the key or value is of an inappropriate
+     *         type for this map (optional)
      * @throws NullPointerException if the specified key or value is null,
-     *         and this map does not permit null keys or values
+     *         and this map does not permit null keys or values (optional)
      */
     boolean remove(Object key, Object value);
 
@@ -84,11 +86,15 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @param key key with which the specified value is associated
      * @param oldValue value expected to be associated with the specified key
      * @param newValue value to be associated with the specified key
-     * @return true if the value was replaced
+     * @return <tt>true</tt> if the value was replaced
      * @throws UnsupportedOperationException if the <tt>put</tt> operation
      *         is not supported by this map
+     * @throws ClassCastException if the class of a specified key or value
+     *         prevents it from being stored in this map
      * @throws NullPointerException if a specified key or value is null,
      *         and this map does not permit null keys or values
+     * @throws IllegalArgumentException if some property of a specified key
+     *         or value prevents it from being stored in this map
      */
     boolean replace(K key, V oldValue, V newValue);
 
@@ -103,16 +109,19 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *
      * @param key key with which the specified value is associated
      * @param value value to be associated with the specified key
-     * @return the previous value associated with <tt>key</tt>, or
-     *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+     * @return the previous value associated with the specified key, or
+     *         <tt>null</tt> if there was no mapping for the key.
      *         (A <tt>null</tt> return can also indicate that the map
-     *         previously associated <tt>null</tt> with <tt>key</tt>,
-     *         if the implementation supports <tt>null</tt> values.)
+     *         previously associated <tt>null</tt> with the key,
+     *         if the implementation supports null values.)
      * @throws UnsupportedOperationException if the <tt>put</tt> operation
      *         is not supported by this map
+     * @throws ClassCastException if the class of the specified key or value
+     *         prevents it from being stored in this map
      * @throws NullPointerException if the specified key or value is null,
      *         and this map does not permit null keys or values
+     * @throws IllegalArgumentException if some property of the specified key
+     *         or value prevents it from being stored in this map
      */
     V replace(K key, V value);
-
 }

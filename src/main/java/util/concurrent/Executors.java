@@ -252,7 +252,7 @@ public class Executors {
      * java.lang.SecurityManager}, it uses the group of {@link
      * System#getSecurityManager}, else the group of the thread
      * invoking this <tt>defaultThreadFactory</tt> method. Each new
-     * thread is created as a non-daemon thread with priority set to 
+     * thread is created as a non-daemon thread with priority set to
      * the smaller of <tt>Thread.NORM_PRIORITY</tt> and the maximum
      * priority permitted in the thread group.  New threads have names
      * accessible via {@link Thread#getName} of

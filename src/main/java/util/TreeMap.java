@@ -780,8 +780,8 @@ public class TreeMap<K,V>
      * the iteration are undefined.  The set supports element removal,
      * which removes the corresponding mapping from the map, via the
      * <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
-     * <tt>removeAll</tt> <tt>retainAll</tt>, and <tt>clear</tt>
-     * operations.  It does not support the add or <tt>addAll</tt>
+     * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
+     * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
      * operations.
      */
     public Set<K> keySet() {
@@ -826,7 +826,7 @@ public class TreeMap<K,V>
      * mapping from the map, via the <tt>Iterator.remove</tt>,
      * <tt>Collection.remove</tt>, <tt>removeAll</tt>,
      * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
-     * support the add or <tt>addAll</tt> operations.
+     * support the <tt>add</tt> or <tt>addAll</tt> operations.
      */
     public Collection<V> values() {
         Collection<V> vs = values;

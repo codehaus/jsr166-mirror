@@ -182,7 +182,7 @@ public interface Deque<E> extends Queue<E> {
     void addFirst(E e);
 
     /**
-     * Inserts the specified element at the end of this deque  if it is
+     * Inserts the specified element at the end of this deque if it is
      * possible to do so immediately without violating capacity restrictions.
      * When using a capacity-restricted deque, it is generally preferable to
      * use method {@link #offerLast}.

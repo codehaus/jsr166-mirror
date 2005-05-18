@@ -13,7 +13,7 @@ import sun.misc.Unsafe;
 /**
  * A version of {@link AbstractQueuedSynchronizer} in
  * which synchronization state is maintained as a <tt>long</tt>.
- * This class has  exactly the same structure, properties, and methods
+ * This class has exactly the same structure, properties, and methods
  * as <tt>AbstractQueuedSynchronizer</tt> with the exception
  * that all state-related parameters and results are defined
  * as <tt>long</tt> rather than <tt>int</tt>. This class

@@ -233,7 +233,7 @@ public class CountDownLatch {
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the <tt>timeout</tt> argument.
-     * @return <tt>true</tt> if the count reached zero  and <tt>false</tt>
+     * @return <tt>true</tt> if the count reached zero and <tt>false</tt>
      * if the waiting time elapsed before the count reached zero.
      *
      * @throws InterruptedException if the current thread is interrupted

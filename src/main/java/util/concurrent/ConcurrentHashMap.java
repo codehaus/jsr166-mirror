@@ -919,11 +919,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * {@inheritDoc}
      *
-     * @throws NullPointerException if the specified key or value is null
+     * @throws NullPointerException if the specified key is null
      */
     public boolean remove(Object key, Object value) {
         if (value == null)
-            throw new NullPointerException();
+            return false;
         int hash = hash(key);
         return segmentFor(hash).remove(key, hash, value) != null;
     }

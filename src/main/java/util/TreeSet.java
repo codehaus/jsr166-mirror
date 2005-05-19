@@ -196,9 +196,9 @@ public class TreeSet<E>
      * @return <tt>true</tt> if this set contains the specified element
      * @throws ClassCastException if the specified object cannot be compared
      *         with the elements currently in the set
-     * @throws NullPointerException if the specified element is null and
-     *         this set uses natural ordering and is non-empty, or its
-     *         comparator does not permit null elements
+     * @throws NullPointerException if the specified element is null
+     *         and this set uses natural ordering, or its comparator
+     *         does not permit null elements
      */
     public boolean contains(Object o) {
 	return m.containsKey(o);
@@ -212,9 +212,9 @@ public class TreeSet<E>
      *         element
      * @throws ClassCastException if the specified object cannot be compared
      *         with the elements currently in the set
-     * @throws NullPointerException if the specified element is null and
-     *         this set uses natural ordering and is non-empty, or its
-     *         comparator does not permit null elements
+     * @throws NullPointerException if the specified element is null
+     *         and this set uses natural ordering, or its comparator
+     *         does not permit null elements
      */
     public boolean add(E e) {
 	return m.put(e, PRESENT)==null;
@@ -227,9 +227,9 @@ public class TreeSet<E>
      * @return <tt>true</tt> if the set contained the specified element
      * @throws ClassCastException if the specified object cannot be compared
      *         with the elements currently in the set
-     * @throws NullPointerException if the specified element is null and
-     *         this set uses natural ordering and is non-empty, or its
-     *         comparator does not permit null elements
+     * @throws NullPointerException if the specified element is null
+     *         and this set uses natural ordering, or its comparator
+     *         does not permit null elements
      */
     public boolean remove(Object o) {
 	return m.remove(o)==PRESENT;
@@ -374,9 +374,9 @@ public class TreeSet<E>
 
     /**
      * @throws ClassCastException {@inheritDoc}
-     * @throws NullPointerException if the specified element is null and
-     *         this set uses natural ordering and is non-empty,
-     *         or its comparator does not permit null elements
+     * @throws NullPointerException if the specified element is null
+     *         and this set uses natural ordering, or its comparator
+     *         does not permit null elements
      */
     public E lower(E e) {
         return m.lowerKey(e);
@@ -384,9 +384,9 @@ public class TreeSet<E>
 
     /**
      * @throws ClassCastException {@inheritDoc}
-     * @throws NullPointerException if the specified element is null and
-     *         this set uses natural ordering and is non-empty,
-     *         or its comparator does not permit null elements
+     * @throws NullPointerException if the specified element is null
+     *         and this set uses natural ordering, or its comparator
+     *         does not permit null elements
      */
     public E floor(E e) {
         return m.floorKey(e);
@@ -394,9 +394,9 @@ public class TreeSet<E>
 
     /**
      * @throws ClassCastException {@inheritDoc}
-     * @throws NullPointerException if the specified element is null and
-     *         this set uses natural ordering and is non-empty,
-     *         or its comparator does not permit null elements
+     * @throws NullPointerException if the specified element is null
+     *         and this set uses natural ordering, or its comparator
+     *         does not permit null elements
      */
     public E ceiling(E e) {
         return m.ceilingKey(e);
@@ -404,9 +404,9 @@ public class TreeSet<E>
 
     /**
      * @throws ClassCastException {@inheritDoc}
-     * @throws NullPointerException if the specified element is null and
-     *         this set uses natural ordering and is non-empty,
-     *         or its comparator does not permit null elements
+     * @throws NullPointerException if the specified element is null
+     *         and this set uses natural ordering, or its comparator
+     *         does not permit null elements
      */
     public E higher(E e) {
         return m.higherKey(e);

@@ -40,13 +40,13 @@ import java.util.*;
  *
  *    static class CustomTask&lt;V&gt; implements RunnableScheduledFuture&lt;V&gt; { ... }
  *
- *    &lt;V&gt; protected RunnableScheduledFuture&lt;V&gt; decorateTask(
+ *    protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
  *                 Runnable r, RunnableScheduledFuture&lt;V&gt; task) {
  *        return new CustomTask&lt;V&gt;(r, task);
  *     }
  *
- *    &lt;V&gt; protected RunnableScheduledFuture&lt;V&gt; decorateTask(
- *                 Callable c, RunnableScheduledFuture&lt;V&gt; task) {
+ *    protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
+ *                 Callable&lt;V;gt; c, RunnableScheduledFuture&lt;V&gt; task) {
  *        return new CustomTask&lt;V&gt;(c, task);
  *     }
  *     // ... add constructors, etc.

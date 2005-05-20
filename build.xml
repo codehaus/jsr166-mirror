@@ -111,7 +111,9 @@
              fork="true">
 
       <include name="**/*.java"/>
+<!--
       <exclude name="java/lang/**"/>
+-->
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -147,12 +149,10 @@
     <mkdir dir="${build.javadocs.dir}"/>
 
     <javadoc destdir="${build.javadocs.dir}"
-                link="http://java.sun.com/j2se/1.4.1/docs/api"
+                link="http://java.sun.com/j2se/1.5.0/docs/api"
             overview="${src.dir}/intro.html"
-              source="${build.sourcelevel}">
-
-      <tag name="revised" description="Last revised:"/>
-      <tag name="spec"    description="Specified by:"/>
+            sourcepath="${src.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+    >           
 
       <packageset dir="${src.dir}"/>
 
@@ -257,12 +257,20 @@
     <mkdir dir="${dist.javadocs.dir}"/>
 
     <javadoc destdir="${dist.javadocs.dir}"
-                link="http://java.sun.com/j2se/1.4.2/docs/api"
+              link="http://java.sun.com/j2se/1.5.0/docs/api"
             overview="${src.dir}/intro.html"
-              source="${build.sourcelevel}">
 
-      <packageset dir="${src.dir}"/>
-
+            sourcepath="${src.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+     >
+      <packageset dir="${src.dir}" defaultexcludes="yes">
+      <include name="java/util/concurrent"/>
+      <include name="java/util/concurrent/atomic"/>
+      <include name="java/util/concurrent/locks"/>
+      </packageset>
+      <fileset dir="${topsrc.dir}" defaultexcludes="yes">
+      <include name="main/java/util/*.java"/>
+<!--      <include name="jsr166x/*.java"/> -->
+      </fileset>
     </javadoc>
 
   </target>
@@ -1002,6 +1010,8 @@
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
                 link="http://java.sun.com/j2se/1.5.0/docs/api/"
+            sourcepath="${jsr166xsrc.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="jsr166x"/>

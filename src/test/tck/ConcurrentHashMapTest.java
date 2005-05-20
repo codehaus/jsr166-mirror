@@ -501,6 +501,19 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
     }
 
     /**
+     * remove(x, null) returns false
+     */
+    public void testRemove3() {
+        try {
+            ConcurrentHashMap c = new ConcurrentHashMap(5);
+            c.put("sadsdf", "asdads");
+            assertFalse(c.remove("sadsdf", null));
+        } catch(NullPointerException e){
+            fail();
+        }
+    }
+
+    /**
      * A deserialized map equals original
      */
     public void testSerialization() {

@@ -150,11 +150,13 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(ReentrantLockTest.class));
         suite.addTest(new TestSuite(ReentrantReadWriteLockTest.class));
         suite.addTest(new TestSuite(ScheduledExecutorTest.class));
+        suite.addTest(new TestSuite(ScheduledExecutorSubclassTest.class));
         suite.addTest(new TestSuite(SemaphoreTest.class));
         suite.addTest(new TestSuite(SynchronousQueueTest.class));
         suite.addTest(new TestSuite(SystemTest.class));
         suite.addTest(new TestSuite(ThreadLocalTest.class));
         suite.addTest(new TestSuite(ThreadPoolExecutorTest.class));
+        suite.addTest(new TestSuite(ThreadPoolExecutorSubclassTest.class));
         suite.addTest(new TestSuite(ThreadTest.class));
         suite.addTest(new TestSuite(TimeUnitTest.class));
         suite.addTest(new TestSuite(TreeMapTest.class));

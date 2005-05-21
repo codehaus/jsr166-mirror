@@ -149,7 +149,7 @@ public class ConcurrentSkipListSet<E>
      * will be inaccurate. Thus, this method is typically not very
      * useful in concurrent applications.
      *
-     * @return  the number of elements in this set
+     * @return the number of elements in this set
      */
     public int size() {
 	return m.size();

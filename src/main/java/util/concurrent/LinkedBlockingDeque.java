@@ -680,6 +680,20 @@ public class LinkedBlockingDeque<E>
 
     // Collection methods
 
+    /**
+     * Removes the first occurrence of the specified element from this deque.
+     * If the deque does not contain the element, it is unchanged.
+     * More formally, removes the first element <tt>e</tt> such that
+     * <tt>o.equals(e)</tt> (if such an element exists).
+     * Returns <tt>true</tt> if this deque contained the specified element
+     * (or equivalently, if this deque changed as a result of the call).
+     *
+     * <p>This method is equivalent to
+     * {@link #removeFirstOccurrence(Object) removeFirstOccurrence}.
+     *
+     * @param o element to be removed from this deque, if present
+     * @return <tt>true</tt> if this deque changed as a result of the call
+     */
     public boolean remove(Object o) {
 	return removeFirstOccurrence(o);
     }

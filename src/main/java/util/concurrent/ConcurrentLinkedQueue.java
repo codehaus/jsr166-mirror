@@ -282,7 +282,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * asynchronous nature of these queues, determining the current
      * number of elements requires an O(n) traversal.
      *
-     * @return  the number of elements in this queue
+     * @return the number of elements in this queue
      */
     public int size() {
         int count = 0;
@@ -296,6 +296,14 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         return count;
     }
 
+    /**
+     * Returns <tt>true</tt> if this queue contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this queue contains
+     * at least one element <tt>e</tt> such that <tt>o.equals(e)</tt>.
+     *
+     * @param o object to be checked for containment in this queue
+     * @return <tt>true</tt> if this queue contains the specified element
+     */
     public boolean contains(Object o) {
         if (o == null) return false;
         for (Node<E> p = first(); p != null; p = p.getNext()) {
@@ -307,6 +315,17 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         return false;
     }
 
+    /**
+     * Removes a single instance of the specified element from this queue,
+     * if it is present.  More formally, removes an element <tt>e</tt> such
+     * that <tt>o.equals(e)</tt>, if this queue contains one or more such
+     * elements.
+     * Returns <tt>true</tt> if this queue contained the specified element
+     * (or equivalently, if this queue changed as a result of the call).
+     *
+     * @param o element to be removed from this queue, if present
+     * @return <tt>true</tt> if this queue changed as a result of the call
+     */
     public boolean remove(Object o) {
         if (o == null) return false;
         for (Node<E> p = first(); p != null; p = p.getNext()) {

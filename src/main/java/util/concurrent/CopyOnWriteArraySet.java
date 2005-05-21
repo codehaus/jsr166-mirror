@@ -181,7 +181,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
 
     /**
      * Removes all of the elements from this set.
-     * This set will be empty after this call returns.
+     * The set will be empty after this call returns.
      */
     public void clear() {
         al.clear();

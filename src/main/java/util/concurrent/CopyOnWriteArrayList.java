@@ -91,6 +91,7 @@ public class CopyOnWriteArrayList<E>
      *
      * @param toCopyIn the array (a copy of this array is used as the
      *        internal array)
+     * @throws NullPointerException if the specified array is null
      */
     public CopyOnWriteArrayList(E[] toCopyIn) {
         copyIn(toCopyIn, 0, toCopyIn.length);
@@ -512,8 +513,9 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Append the element if not present.
+     *
      * @param element element to be added to this list, if absent
-     * @return true if added
+     * @return <tt>true</tt> if the element was added
      */
     public synchronized boolean addIfAbsent(E element) {
         // Copy while checking if already present.
@@ -540,6 +542,7 @@ public class CopyOnWriteArrayList<E>
      * @return <tt>true</tt> if this list contains all of the elements of the
      *         specified collection
      * @throws NullPointerException if the specified collection is null
+     * @see #contains(Object)
      */
     public boolean containsAll(Collection<?> c) {
         E[] elementData = array();
@@ -559,8 +562,12 @@ public class CopyOnWriteArrayList<E>
      *
      * @param c collection containing elements to be removed from this list
      * @return <tt>true</tt> if this list changed as a result of the call
-     * @throws ClassCastException   {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
+     * @throws ClassCastException if the class of an element of this list
+     *         is incompatible with the specified collection (optional)
+     * @throws NullPointerException if this list contains a null element and the
+     *         specified collection does not permit null elements (optional),
+     *         or if the specified collection is null
+     * @see #remove(Object)
      */
     public synchronized boolean removeAll(Collection<?> c) {
         E[] elementData = array;
@@ -593,8 +600,12 @@ public class CopyOnWriteArrayList<E>
      *
      * @param c collection containing elements to be retained in this list
      * @return <tt>true</tt> if this list changed as a result of the call
-     * @throws ClassCastException   {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
+     * @throws ClassCastException if the class of an element of this list
+     *         is incompatible with the specified collection (optional)
+     * @throws NullPointerException if this list contains a null element and the
+     *         specified collection does not permit null elements (optional),
+     *         or if the specified collection is null
+     * @see #remove(Object)
      */
     public synchronized boolean retainAll(Collection<?> c) {
         E[] elementData = array;
@@ -627,6 +638,7 @@ public class CopyOnWriteArrayList<E>
      * @param c collection containing elements to be added to this list
      * @return the number of elements added
      * @throws NullPointerException if the specified collection is null
+     * @see #addIfAbsent(Object)
      */
     public synchronized int addAllAbsent(Collection<? extends E> c) {
         int numNew = c.size();
@@ -658,7 +670,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Removes all of the elements from this list.
-     *
+     * The list will be empty after this call returns.
      */
     public synchronized void clear() {
         array = (E[]) new Object[0];
@@ -670,8 +682,9 @@ public class CopyOnWriteArrayList<E>
      * collection's iterator.
      *
      * @param c collection containing elements to be added to this list
-     * @return true if any elements are added
+     * @return <tt>true</tt> if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
+     * @see #add(Object)
      */
     public synchronized boolean addAll(Collection<? extends E> c) {
         int numNew = c.size();
@@ -693,8 +706,8 @@ public class CopyOnWriteArrayList<E>
      * list, starting at the specified position.  Shifts the element
      * currently at that position (if any) and any subsequent elements to
      * the right (increases their indices).  The new elements will appear
-     * in the list in the order that they are returned by the
-     * specified Collection's iterator.
+     * in this list in the order that they are returned by the
+     * specified collection's iterator.
      *
      * @param index index at which to insert the first element
      *        from the specified collection
@@ -702,6 +715,7 @@ public class CopyOnWriteArrayList<E>
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null
+     * @see #add(int,Object)
      */
     public synchronized boolean addAll(int index, Collection<? extends E> c) {
         int len = array.length;

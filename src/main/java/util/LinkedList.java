@@ -232,8 +232,8 @@ public class LinkedList<E>
      * this list, in the order that they are returned by the specified
      * collection's iterator.  The behavior of this operation is undefined if
      * the specified collection is modified while the operation is in
-     * progress.  (This implies that the behavior of this call is undefined if
-     * the specified Collection is this list, and this list is nonempty.)
+     * progress.  (Note that this will occur if the specified collection is
+     * this list, and it's nonempty.)
      *
      * @param c collection containing elements to be added to this list
      * @return <tt>true</tt> if this list changed as a result of the call

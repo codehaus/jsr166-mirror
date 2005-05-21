@@ -1028,8 +1028,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Returns an enumeration of the keys in this table.
      *
-     * @return  an enumeration of the keys in this table
-     * @see     #keySet
+     * @return an enumeration of the keys in this table
+     * @see #keySet
      */
     public Enumeration<K> keys() {
         return new KeyIterator();
@@ -1038,8 +1038,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Returns an enumeration of the values in this table.
      *
-     * @return  an enumeration of the values in this table
-     * @see     #values
+     * @return an enumeration of the values in this table
+     * @see #values
      */
     public Enumeration<V> elements() {
         return new ValueIterator();

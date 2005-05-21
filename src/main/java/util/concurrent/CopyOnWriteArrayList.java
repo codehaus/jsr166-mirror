@@ -536,11 +536,6 @@ public class CopyOnWriteArrayList<E>
      * Returns <tt>true</tt> if this list contains all of the elements of the
      * specified collection.
      *
-     * <p>This implementation iterates over the specified collection,
-     * checking each element returned by the Iterator in turn to see if
-     * it's contained in this list.  If all elements are so contained
-     * <tt>true</tt> is returned, otherwise <tt>false</tt>.
-     *
      * @param c collection to be checked for containment in this list
      * @return <tt>true</tt> if this list contains all of the elements of the
      *         specified collection

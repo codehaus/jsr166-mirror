@@ -2058,11 +2058,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *
      * @throws ClassCastException if the specified key cannot be compared
      *         with the keys currently in the map
-     * @throws NullPointerException if the specified key or value is null
+     * @throws NullPointerException if the specified key is null
      */
     public boolean remove(Object key, Object value) {
         if (value == null)
-            throw new NullPointerException();
+            return false;
         return doRemove(key, value) != null;
     }
 

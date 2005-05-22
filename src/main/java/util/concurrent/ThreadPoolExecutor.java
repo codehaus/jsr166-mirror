@@ -694,10 +694,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     // Public methods
 
     /**
-     * Creates a new <tt>ThreadPoolExecutor</tt> with the given
-     * initial parameters and default thread factory and handler.  It
-     * may be more convenient to use one of the {@link Executors}
-     * factory methods instead of this general purpose constructor.
+     * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
+     * parameters and default thread factory and rejected execution handler.
+     * It may be more convenient to use one of the {@link Executors} factory
+     * methods instead of this general purpose constructor.
      *
      * @param corePoolSize the number of threads to keep in the
      * pool, even if they are idle.
@@ -727,7 +727,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
-     * parameters and default thread factory.
+     * parameters and default rejected execution handler.
      *
      * @param corePoolSize the number of threads to keep in the
      * pool, even if they are idle.
@@ -761,7 +761,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Creates a new <tt>ThreadPoolExecutor</tt> with the given initial
-     * parameters and default handler.
+     * parameters and default thread factory.
      *
      * @param corePoolSize the number of threads to keep in the
      * pool, even if they are idle.

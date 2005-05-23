@@ -7,14 +7,16 @@
 package java.util.concurrent;
 
 /**
- * A scheduled future that is also runnable.
+ * A {@link ScheduledFuture} that is {@link Runnable}. Successful
+ * execution of the <tt>run</tt> method causes completion of the
+ * <tt>Future</tt> and allows access to its results.
  * @see FutureTask
  * @see Executor
  * @since 1.6
  * @author Doug Lea
  * @param <V> The result type returned by this Future's <tt>get</tt> method
  */
-public interface RunnableScheduledFuture<V> extends Runnable, ScheduledFuture<V> {
+public interface RunnableScheduledFuture<V> extends RunnableFuture<V>, ScheduledFuture<V> {
 
     /**
      * Returns true if this is a periodic task. A periodic task may

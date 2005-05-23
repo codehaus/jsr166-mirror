@@ -98,6 +98,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     /**
      * Sets the result of this Future to the given value unless
      * this future has already been set or has been cancelled.
+     * This method is invoked internally by the <tt>run</tt> method
+     * upon successful completion of the computation.
      * @param v the value
      */
     protected void set(V v) {
@@ -108,16 +110,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * Causes this future to report an <tt>ExecutionException</tt>
      * with the given throwable as its cause, unless this Future has
      * already been set or has been cancelled.
+     * This method is invoked internally by the <tt>run</tt> method
+     * upon failure of the computation.
      * @param t the cause of failure.
      */
     protected void setException(Throwable t) {
         sync.innerSetException(t);
     }
 
-    /**
-     * Sets this Future to the result of computation unless
-     * it has been cancelled.
-     */
     public void run() {
         sync.innerRun();
     }

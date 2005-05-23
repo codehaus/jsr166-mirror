@@ -781,7 +781,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
      * @throws NullPointerException if <tt>workQueue</tt>
-     * or  <tt>handler</tt> are null.
+     * or <tt>handler</tt> are null.
      */
     public ThreadPoolExecutor(int corePoolSize,
                               int maximumPoolSize,
@@ -888,7 +888,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * shutting down this ExecutorService may manipulate threads that
      * the caller is not permitted to modify because it does not hold
      * {@link java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
-     * or the security manager's <tt>checkAccess</tt>  method denies access.
+     * or the security manager's <tt>checkAccess</tt> method denies access.
      */
     public void shutdown() {
         // Fail if caller doesn't have modifyThread permission. We

@@ -84,7 +84,7 @@ public interface ExecutorService extends Executor {
      * shutting down this ExecutorService may manipulate threads that
      * the caller is not permitted to modify because it does not hold
      * {@link java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
-     * or the security manager's <tt>checkAccess</tt>  method denies access.
+     * or the security manager's <tt>checkAccess</tt> method denies access.
      */
     void shutdown();
 

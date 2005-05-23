@@ -255,7 +255,7 @@ public enum TimeUnit {
      * method (see {@link BlockingQueue#poll BlockingQueue.poll})
      * using:
      *
-     * <pre>  public synchronized  Object poll(long timeout, TimeUnit unit) throws InterruptedException {
+     * <pre>  public synchronized Object poll(long timeout, TimeUnit unit) throws InterruptedException {
      *    while (empty) {
      *      unit.timedWait(this, timeout);
      *      ...

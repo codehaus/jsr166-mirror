@@ -95,6 +95,16 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
     public abstract void set(T obj, int newValue);
 
     /**
+     * Eventually sets the field of the given object managed by this
+     * updater to the given updated value. 
+     *
+     * @param obj An object whose field to set
+     * @param newValue the new value
+     */
+    public abstract void lazySet(T obj, int newValue);
+
+
+    /**
      * Gets the current value held in the field of the given object managed
      * by this updater.
      *
@@ -263,6 +273,12 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
             if (!tclass.isInstance(obj))
                 throw new ClassCastException();
             unsafe.putIntVolatile(obj, offset, newValue);
+        }
+
+        public void lazySet(T obj, int newValue) {
+            if (!tclass.isInstance(obj))
+                throw new ClassCastException();
+            unsafe.putInt(obj, offset, newValue);
         }
 
         public final int get(T obj) {

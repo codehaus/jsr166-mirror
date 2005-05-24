@@ -97,6 +97,15 @@ public class AtomicBoolean implements java.io.Serializable {
     }
 
     /**
+     * Eventually sets to the given value.
+     *
+     * @param newValue the new value
+     */
+    public final void lazySet(boolean newValue) {
+        unsafe.putBoolean(this, valueOffset, newValue);
+    }
+
+    /**
      * Atomically sets to the given value and returns the previous value.
      *
      * @param newValue the new value

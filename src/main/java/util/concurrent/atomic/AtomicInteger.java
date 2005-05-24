@@ -70,6 +70,15 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
+     * Eventually sets to the given value.
+     *
+     * @param newValue the new value
+     */
+    public final void lazySet(int newValue) {
+        unsafe.putInt(this, valueOffset, newValue);
+    }
+
+    /**
      * Atomically sets to the given value and returns the old value.
      *
      * @param newValue the new value

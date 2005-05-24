@@ -84,6 +84,16 @@ public class AtomicLong extends Number implements java.io.Serializable {
     }
 
     /**
+     * Eventually sets to the given value.
+     *
+     * @param newValue the new value
+     */
+    public final void lazySet(long newValue) {
+        unsafe.putLongVolatile(this, valueOffset, newValue);
+    }
+
+
+    /**
      * Atomically sets to the given value and returns the old value.
      *
      * @param newValue the new value

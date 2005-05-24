@@ -65,6 +65,14 @@ rules for volatiles:
   <li> <tt>set</tt> has the memory effects of writing (assigning) a
 <tt>volatile</tt> variable.
 
+  <li> <tt>lazySet</tt> has the memory effects of writing (assigning)
+  a <tt>volatile</tt> variable except that it permits reorderings with
+  subsequent (but not previous) memory actions that do not themselves
+  impose reordering constraints with ordinary non-<tt>volatile</tt>
+  writes.  Among other usage contexts, <tt>lazySet</tt> may apply when
+  nulling out, for the sake of garbage collection, a reference that is
+  never accessed again.
+  
   <li><tt>weakCompareAndSet</tt> atomically reads and conditionally
   writes a variable, is ordered with respect to other
   memory operations on that variable, but otherwise acts as an

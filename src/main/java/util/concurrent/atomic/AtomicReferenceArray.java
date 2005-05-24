@@ -94,6 +94,17 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
+     * Eventually sets the element at position <tt>i</tt> to the given value.
+     *
+     * @param i the index
+     * @param newValue the new value
+     */
+    public final void lazySet(int i, E newValue) {
+        unsafe.putObject(array, rawIndex(i), newValue);
+    }
+
+
+    /**
      * Atomically sets the element at position <tt>i</tt> to the given
      * value and returns the old value.
      *

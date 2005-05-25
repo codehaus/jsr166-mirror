@@ -488,7 +488,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             V v = getValidValue();
             if (v == null)
                 return null;
-            return new AbstractMap.SimpleImmutableEntry(key, v);
+            return new AbstractMap.SimpleImmutableEntry<K,V>(key, v);
         }
     }
 
@@ -614,9 +614,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     private Comparable<? super K> comparable(Object key) throws ClassCastException {
         if (key == null)
             throw new NullPointerException();
-        return (comparator != null)
-            ? new ComparableUsingComparator(key, comparator)
-            : (Comparable<? super K>)key;
+        if (comparator != null)
+            return new ComparableUsingComparator<K>((K)key, comparator);
+        else
+            return (Comparable<? super K>)key;
     }
 
     /**
@@ -1417,17 +1418,15 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Returns SimpleImmutableEntry or key for results of findNear
-     * after screening to ensure result is in given range. Needed by
-     * submaps.
+     * Returns key for results of findNear after screening to ensure
+     * result is in given range. Needed by submaps.
      * @param kkey the key
      * @param rel the relation -- OR'ed combination of EQ, LT, GT
      * @param least minimum allowed key value
      * @param fence key greater than maximum allowed key value
-     * @param keyOnly if true return key, else return SimpleImmutableEntry
-     * @return Key or Entry fitting relation, or <tt>null</tt> if no such
+     * @return Key fitting relation, or <tt>null</tt> if no such
      */
-    Object getNear(K kkey, int rel, K least, K fence, boolean keyOnly) {
+    K getNearKey(K kkey, int rel, K least, K fence) {
         K key = kkey;
         // Don't return keys less than least
         if ((rel & LT) == 0) {
@@ -1443,12 +1442,40 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return null;
             K k = n.key;
             V v = n.getValidValue();
-            if (v != null) {
-                if (keyOnly)
-                    return k;
-                else
-                    return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
+            if (v != null) 
+                return k;
+        }
+    }
+
+
+    /**
+     * Returns SimpleImmutableEntry for results of findNear after
+     * screening to ensure result is in given range. Needed by
+     * submaps.
+     * @param kkey the key
+     * @param rel the relation -- OR'ed combination of EQ, LT, GT
+     * @param least minimum allowed key value
+     * @param fence key greater than maximum allowed key value
+     * @return Entry fitting relation, or <tt>null</tt> if no such
+     */
+    Map.Entry<K,V> getNearEntry(K kkey, int rel, K least, K fence) {
+        K key = kkey;
+        // Don't return keys less than least
+        if ((rel & LT) == 0) {
+            if (compare(key, least) < 0) {
+                key = least;
+                rel = rel | EQ;
             }
+        }
+
+        for (;;) {
+            Node<K,V> n = findNear(key, rel);
+            if (n == null || !inHalfOpenRange(n.key, least, fence))
+                return null;
+            K k = n.key;
+            V v = n.getValidValue();
+            if (v != null) 
+                return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
         }
     }
 
@@ -1456,10 +1483,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Finds and removes least element of subrange.
      * @param least minimum allowed key value
      * @param fence key greater than maximum allowed key value
-     * @param keyOnly if true return key, else return SimpleImmutableEntry
-     * @return least Key or Entry, or <tt>null</tt> if no such
+     * @return least Entry, or <tt>null</tt> if no such
      */
-    Object removeFirstEntryOfSubrange(K least, K fence, boolean keyOnly) {
+    Map.Entry<K,V> removeFirstEntryOfSubrange(K least, K fence) {
         for (;;) {
             Node<K,V> n = findCeiling(least);
             if (n == null)
@@ -1468,12 +1494,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (fence != null && compare(k, fence) >= 0)
                 return null;
             V v = doRemove(k, null);
-            if (v != null) {
-                if (keyOnly)
-                    return k;
-                else
-                    return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
-            }
+            if (v != null) 
+                return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
         }
     }
 
@@ -1481,10 +1503,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Finds and removes greatest element of subrange.
      * @param least minimum allowed key value
      * @param fence key greater than maximum allowed key value
-     * @param keyOnly if true return key, else return SimpleImmutableEntry
-     * @return least Key or Entry, or <tt>null</tt> if no such
+     * @return least Entry, or <tt>null</tt> if no such
      */
-    Object removeLastEntryOfSubrange(K least, K fence, boolean keyOnly) {
+    Map.Entry removeLastEntryOfSubrange(K least, K fence) {
         for (;;) {
             Node<K,V> n = findLower(fence);
             if (n == null)
@@ -1493,14 +1514,12 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (least != null && compare(k, least) < 0)
                 return null;
             V v = doRemove(k, null);
-            if (v != null) {
-                if (keyOnly)
-                    return k;
-                else
-                    return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
-            }
+            if (v != null) 
+                return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
         }
     }
+
+
 
     /* ---------------- Constructors -------------- */
 
@@ -2148,7 +2167,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     public ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, K toKey) {
         if (fromKey == null || toKey == null)
             throw new NullPointerException();
-        return new ConcurrentSkipListSubMap(this, fromKey, toKey);
+        return new ConcurrentSkipListSubMap<K,V>(this, fromKey, toKey);
     }
 
     /**
@@ -2159,7 +2178,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     public ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey) {
         if (toKey == null)
             throw new NullPointerException();
-        return new ConcurrentSkipListSubMap(this, null, toKey);
+        return new ConcurrentSkipListSubMap<K,V>(this, null, toKey);
     }
 
     /**
@@ -2170,7 +2189,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     public ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey) {
         if (fromKey == null)
             throw new NullPointerException();
-        return new ConcurrentSkipListSubMap(this, fromKey, null);
+        return new ConcurrentSkipListSubMap<K,V>(this, fromKey, null);
     }
 
     /**
@@ -2852,13 +2871,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public Object[] toArray() {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
             for (Map.Entry e : this)
-                c.add(new AbstractMap.SimpleEntry(e.getKey(), e.getValue()));
+                c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
             return c.toArray();
         }
         public <T> T[] toArray(T[] a) {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
             for (Map.Entry e : this)
-                c.add(new AbstractMap.SimpleEntry(e.getKey(), e.getValue()));
+                c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
             return c.toArray(a);
         }
     }
@@ -3080,7 +3099,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 throw new NullPointerException();
             if (!inOpenRange(fromKey) || !inOpenRange(toKey))
                 throw new IllegalArgumentException("key out of range");
-            return new ConcurrentSkipListSubMap(m, fromKey, toKey);
+            return new ConcurrentSkipListSubMap<K,V>(m, fromKey, toKey);
         }
 
         public ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey) {
@@ -3088,7 +3107,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 throw new NullPointerException();
             if (!inOpenRange(toKey))
                 throw new IllegalArgumentException("key out of range");
-            return new ConcurrentSkipListSubMap(m, least, toKey);
+            return new ConcurrentSkipListSubMap<K,V>(m, least, toKey);
         }
 
         public  ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey) {
@@ -3096,7 +3115,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 throw new NullPointerException();
             if (!inOpenRange(fromKey))
                 throw new IllegalArgumentException("key out of range");
-            return new ConcurrentSkipListSubMap(m, fromKey, fence);
+            return new ConcurrentSkipListSubMap<K,V>(m, fromKey, fence);
         }
 
         public SortedMap<K,V> subMap(K fromKey, K toKey) {
@@ -3114,44 +3133,35 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /* ----------------  Relational methods -------------- */
 
         public Map.Entry<K,V> ceilingEntry(K key) {
-            return (Map.Entry<K,V>)
-                m.getNear(key, m.GT|m.EQ, least, fence, false);
+            return m.getNearEntry(key, m.GT|m.EQ, least, fence);
         }
 
         public K ceilingKey(K key) {
-            return (K)
-                m.getNear(key, m.GT|m.EQ, least, fence, true);
+            return m.getNearKey(key, m.GT|m.EQ, least, fence);
         }
 
         public Map.Entry<K,V> lowerEntry(K key) {
-            return (Map.Entry<K,V>)
-                m.getNear(key, m.LT, least, fence, false);
+            return m.getNearEntry(key, m.LT, least, fence);
         }
 
         public K lowerKey(K key) {
-            return (K)
-                m.getNear(key, m.LT, least, fence, true);
+            return m.getNearKey(key, m.LT, least, fence);
         }
 
         public Map.Entry<K,V> floorEntry(K key) {
-            return (Map.Entry<K,V>)
-                m.getNear(key, m.LT|m.EQ, least, fence, false);
+            return m.getNearEntry(key, m.LT|m.EQ, least, fence);
         }
 
         public K floorKey(K key) {
-            return (K)
-                m.getNear(key, m.LT|m.EQ, least, fence, true);
+            return m.getNearKey(key, m.LT|m.EQ, least, fence);
         }
 
-
         public Map.Entry<K,V> higherEntry(K key) {
-            return (Map.Entry<K,V>)
-                m.getNear(key, m.GT, least, fence, false);
+            return m.getNearEntry(key, m.GT, least, fence);
         }
 
         public K higherKey(K key) {
-            return (K)
-                m.getNear(key, m.GT, least, fence, true);
+            return m.getNearKey(key, m.GT, least, fence);
         }
 
         public Map.Entry<K,V> firstEntry() {
@@ -3177,13 +3187,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public Map.Entry<K,V> pollFirstEntry() {
-            return (Map.Entry<K,V>)
-                m.removeFirstEntryOfSubrange(least, fence, false);
+            return m.removeFirstEntryOfSubrange(least, fence);
         }
 
         public Map.Entry<K,V> pollLastEntry() {
-            return (Map.Entry<K,V>)
-                m.removeLastEntryOfSubrange(least, fence, false);
+            return m.removeLastEntryOfSubrange(least, fence);
         }
 
         /* ---------------- Submap Views -------------- */
@@ -3300,13 +3308,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             public Object[] toArray() {
                 Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
                 for (Map.Entry e : this)
-                    c.add(new AbstractMap.SimpleEntry(e.getKey(), e.getValue()));
+                    c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
                 return c.toArray();
             }
             public <T> T[] toArray(T[] a) {
                 Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
                 for (Map.Entry e : this)
-                    c.add(new AbstractMap.SimpleEntry(e.getKey(), e.getValue()));
+                    c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
                 return c.toArray(a);
             }
         }

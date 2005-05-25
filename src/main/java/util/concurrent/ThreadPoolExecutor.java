@@ -63,7 +63,7 @@ import java.util.*;
  * <dt> On-demand construction
  *
  * <dd> By default, even core threads are initially created and
- * started only when needed by new tasks, but this can be overridden
+ * started only when new tasks arrive, but this can be overridden
  * dynamically using method {@link
  * ThreadPoolExecutor#prestartCoreThread} or
  * {@link ThreadPoolExecutor#prestartAllCoreThreads}.
@@ -138,7 +138,7 @@ import java.util.*;
  *
  * <li><em> Unbounded queues.</em> Using an unbounded queue (for
  * example a {@link LinkedBlockingQueue} without a predefined
- * capacity) will cause new tasks to be queued in cases where all
+ * capacity) will cause new tasks to wait in the queue when all
  * corePoolSize threads are busy. Thus, no more than corePoolSize
  * threads will ever be created. (And the value of the maximumPoolSize
  * therefore doesn't have any effect.)  This may be appropriate when
@@ -1461,8 +1461,17 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Method invoked upon completion of execution of the given
      * Runnable.  This method is invoked by the thread that executed
      * the task. If non-null, the Throwable is the uncaught
-     * RuntimeException that caused execution to terminate
-     * abruptly. This implementation does nothing, but may be
+     * <tt>RuntimeException</tt> or <tt>Error</tt> that caused
+     * execution to terminate abruptly.
+     *
+     * <p><b>Note:</b> When actions are enclosed in tasks (such as
+     * {@link FutureTask}) either explicitly or via methods such as
+     * <tt>submit</tt>, these task objects catch and maintain
+     * computational exceptions, and so they do not cause abrupt
+     * termination, and the internal exceptions are <em>not</em> not
+     * passed to this method.
+     *
+     * <p>This implementation does nothing, but may be
      * customized in subclasses. Note: To properly nest multiple
      * overridings, subclasses should generally invoke
      * <tt>super.afterExecute</tt> at the beginning of this method.

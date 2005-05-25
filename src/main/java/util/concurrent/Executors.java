@@ -337,10 +337,10 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(PrivilegedAction action) {
+    public static Callable<Object> callable(PrivilegedAction<?> action) {
         if (action == null)
             throw new NullPointerException();
-        return new PrivilegedActionAdapter(action);
+        return new PrivilegedActionAdapter<Object>(action);
     }
 
     /**
@@ -351,10 +351,10 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(PrivilegedExceptionAction action) {
+    public static Callable<Object> callable(PrivilegedExceptionAction<?> action) {
         if (action == null)
             throw new NullPointerException();
-        return new PrivilegedExceptionActionAdapter(action);
+        return new PrivilegedExceptionActionAdapter<Object>(action);
     }
 
     /**
@@ -374,7 +374,7 @@ public class Executors {
     public static <T> Callable<T> privilegedCallable(Callable<T> callable) {
         if (callable == null)
             throw new NullPointerException();
-        return new PrivilegedCallable(callable);
+        return new PrivilegedCallable<T>(callable);
     }
 
     /**
@@ -398,7 +398,7 @@ public class Executors {
     public static <T> Callable<T> privilegedCallableUsingCurrentClassLoader(Callable<T> callable) {
         if (callable == null)
             throw new NullPointerException();
-        return new PrivilegedCallableUsingCurrentClassLoader(callable);
+        return new PrivilegedCallableUsingCurrentClassLoader<T>(callable);
     }
 
     // Non-public classes supporting the public methods
@@ -422,7 +422,7 @@ public class Executors {
     /**
      * A callable that runs given privileged action and returns its result
      */
-    static final class PrivilegedActionAdapter implements Callable<Object> {
+    static final class PrivilegedActionAdapter<T> implements Callable<Object> {
         PrivilegedActionAdapter(PrivilegedAction action) {
             this.action = action;
         }
@@ -435,7 +435,7 @@ public class Executors {
     /**
      * A callable that runs given privileged exception action and returns its result
      */
-    static final class PrivilegedExceptionActionAdapter implements Callable<Object> {
+    static final class PrivilegedExceptionActionAdapter<T> implements Callable<Object> {
         PrivilegedExceptionActionAdapter(PrivilegedExceptionAction action) {
             this.action = action;
         }
@@ -460,8 +460,8 @@ public class Executors {
         }
 
         public T call() throws Exception {
-            AccessController.doPrivileged(new PrivilegedAction() {
-                    public Object run() {
+            AccessController.doPrivileged(new PrivilegedAction<T>() {
+                    public T run() {
                         try {
                             result = task.call();
                         } catch (Exception ex) {
@@ -496,8 +496,8 @@ public class Executors {
         }
 
         public T call() throws Exception {
-            AccessController.doPrivileged(new PrivilegedAction() {
-                    public Object run() {
+            AccessController.doPrivileged(new PrivilegedAction<T>() {
+                    public T run() {
                         ClassLoader savedcl = null;
                         Thread t = Thread.currentThread();
                         try {
@@ -570,7 +570,7 @@ public class Executors {
         public Thread newThread(final Runnable r) {
             return super.newThread(new Runnable() {
                 public void run() {
-                    AccessController.doPrivileged(new PrivilegedAction() {
+                    AccessController.doPrivileged(new PrivilegedAction<Object>() {
                         public Object run() {
                             Thread.currentThread().setContextClassLoader(ccl);
                             r.run();

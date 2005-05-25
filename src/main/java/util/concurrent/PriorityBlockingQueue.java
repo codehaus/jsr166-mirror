@@ -499,7 +499,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return new Itr(q.iterator());
+            return new Itr<E>(q.iterator());
         } finally {
             lock.unlock();
         }

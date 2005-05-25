@@ -602,7 +602,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             throw new NullPointerException();
         if (c == this)
             throw new IllegalArgumentException();
-        Node first;
+        Node<E> first;
         fullyLock();
         try {
             first = head.next;

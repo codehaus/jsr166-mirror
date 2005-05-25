@@ -621,14 +621,14 @@ public class LinkedList<E>
      */
     public boolean removeLastOccurrence(Object o) {
         if (o==null) {
-            for (Entry e = header.previous; e != header; e = e.previous) {
+            for (Entry<E> e = header.previous; e != header; e = e.previous) {
                 if (e.element==null) {
                     remove(e);
                     return true;
                 }
             }
         } else {
-            for (Entry e = header.previous; e != header; e = e.previous) {
+            for (Entry<E> e = header.previous; e != header; e = e.previous) {
                 if (o.equals(e.element)) {
                     remove(e);
                     return true;

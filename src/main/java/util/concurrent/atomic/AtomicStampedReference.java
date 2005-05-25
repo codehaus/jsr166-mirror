@@ -94,7 +94,7 @@ public class AtomicStampedReference<V>  {
                                      V      newReference,
                                      int    expectedStamp,
                                      int    newStamp) {
-        ReferenceIntegerPair current = atomicRef.get();
+        ReferenceIntegerPair<V> current = atomicRef.get();
         return  expectedReference == current.reference &&
             expectedStamp == current.integer &&
             ((newReference == current.reference &&
@@ -120,7 +120,7 @@ public class AtomicStampedReference<V>  {
                                  V      newReference,
                                  int    expectedStamp,
                                  int    newStamp) {
-        ReferenceIntegerPair current = atomicRef.get();
+        ReferenceIntegerPair<V> current = atomicRef.get();
         return  expectedReference == current.reference &&
             expectedStamp == current.integer &&
             ((newReference == current.reference &&
@@ -138,7 +138,7 @@ public class AtomicStampedReference<V>  {
      * @param newStamp the new value for the stamp
      */
     public void set(V newReference, int newStamp) {
-        ReferenceIntegerPair current = atomicRef.get();
+        ReferenceIntegerPair<V> current = atomicRef.get();
         if (newReference != current.reference || newStamp != current.integer)
             atomicRef.set(new ReferenceIntegerPair<V>(newReference, newStamp));
     }
@@ -157,7 +157,7 @@ public class AtomicStampedReference<V>  {
      * @return true if successful
      */
     public boolean attemptStamp(V expectedReference, int newStamp) {
-        ReferenceIntegerPair current = atomicRef.get();
+        ReferenceIntegerPair<V> current = atomicRef.get();
         return  expectedReference == current.reference &&
             (newStamp == current.integer ||
              atomicRef.compareAndSet(current,

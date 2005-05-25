@@ -3567,6 +3567,7 @@ public class Collections {
 
     static class AsLIFOQueue<E> extends AbstractQueue<E>
         implements Queue<E>, Serializable {
+	private static final long serialVersionUID = 1802017725587941708L;
         private final Deque<E> q;
         AsLIFOQueue(Deque<E> q)            { this.q = q; }
         public boolean offer(E e)          { return q.offerFirst(e); }

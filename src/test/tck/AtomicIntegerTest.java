@@ -35,14 +35,14 @@ public class AtomicIntegerTest extends JSR166TestCase {
     }
 
     /**
-     * get returns the last value set
+     * get returns the last value lazySet in same thread
      */
-    public void testGetSet(){
+    public void testGetLazySet(){
         AtomicInteger ai = new AtomicInteger(1);
 	assertEquals(1,ai.get());
-	ai.set(2);
+	ai.lazySet(2);
 	assertEquals(2,ai.get());
-	ai.set(-3);
+	ai.lazySet(-3);
 	assertEquals(-3,ai.get());
 	
     }

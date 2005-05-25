@@ -78,8 +78,26 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 	assertEquals(two,a.get(this));
 	a.set(this,m3);
 	assertEquals(m3,a.get(this));
-	
     }
+
+    /**
+     *  get returns the last value lazySet by same thread
+     */
+    public void testGetLazySet(){
+        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
+        try {
+            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
+        } catch (RuntimeException ok) {
+            return;
+        }
+        x = one;
+	assertEquals(one,a.get(this));
+	a.lazySet(this,two);
+	assertEquals(two,a.get(this));
+	a.lazySet(this,m3);
+	assertEquals(m3,a.get(this));
+    }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */

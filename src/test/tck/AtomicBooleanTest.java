@@ -48,6 +48,19 @@ public class AtomicBooleanTest extends JSR166TestCase {
     }
 
     /**
+     * get returns the last value lazySet in same thread
+     */
+    public void testGetLazySet() {
+        AtomicBoolean ai = new AtomicBoolean(true);
+	assertEquals(true,ai.get());
+	ai.lazySet(false);
+	assertEquals(false,ai.get());
+	ai.lazySet(true);
+	assertEquals(true,ai.get());
+	
+    }
+
+    /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet() {

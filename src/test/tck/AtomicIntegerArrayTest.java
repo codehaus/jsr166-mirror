@@ -93,6 +93,21 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
     /**
+     * get returns the last value lazySet at index by same thread
+     */
+    public void testGetLazySet() {
+        AtomicIntegerArray ai = new AtomicIntegerArray(SIZE); 
+        for (int i = 0; i < SIZE; ++i) {
+            ai.lazySet(i, 1);
+            assertEquals(1,ai.get(i));
+            ai.lazySet(i, 2);
+            assertEquals(2,ai.get(i));
+            ai.lazySet(i, -3);
+            assertEquals(-3,ai.get(i));
+        }
+    }
+
+    /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet() {

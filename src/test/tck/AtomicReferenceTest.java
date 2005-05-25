@@ -44,8 +44,20 @@ public class AtomicReferenceTest extends JSR166TestCase {
 	assertEquals(two,ai.get());
 	ai.set(m3);
 	assertEquals(m3,ai.get());
-	
     }
+
+    /**
+     * get returns the last value lazySet in same thread
+     */
+    public void testGetLazySet(){
+        AtomicReference ai = new AtomicReference(one);
+	assertEquals(one,ai.get());
+	ai.lazySet(two);
+	assertEquals(two,ai.get());
+	ai.lazySet(m3);
+	assertEquals(m3,ai.get());
+    }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */

@@ -46,6 +46,20 @@ public class AtomicLongTest extends JSR166TestCase {
 	assertEquals(-3,ai.get());
 	
     }
+
+    /**
+     * get returns the last value lazySet in same thread
+     */
+    public void testGetLazySet(){
+        AtomicLong ai = new AtomicLong(1);
+	assertEquals(1,ai.get());
+	ai.lazySet(2);
+	assertEquals(2,ai.get());
+	ai.lazySet(-3);
+	assertEquals(-3,ai.get());
+	
+    }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */

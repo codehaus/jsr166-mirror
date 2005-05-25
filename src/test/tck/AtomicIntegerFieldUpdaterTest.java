@@ -78,6 +78,26 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(-3,a.get(this));
 	
     }
+
+    /**
+     *  get returns the last value lazySet by same thread
+     */
+    public void testGetLazySet() {
+        AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;
+        try {
+            a = AtomicIntegerFieldUpdater.newUpdater(AtomicIntegerFieldUpdaterTest.class, "x");
+        } catch (RuntimeException ok) {
+            return;
+        }
+        x = 1;
+	assertEquals(1,a.get(this));
+	a.lazySet(this,2);
+	assertEquals(2,a.get(this));
+	a.lazySet(this,-3);
+	assertEquals(-3,a.get(this));
+	
+    }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */

@@ -94,6 +94,21 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
     }
 
     /**
+     * get returns the last value lazySet at index by same thread
+     */
+    public void testGetLazySet(){
+        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
+        for (int i = 0; i < SIZE; ++i) {
+            ai.lazySet(i, one);
+            assertEquals(one,ai.get(i));
+            ai.lazySet(i, two);
+            assertEquals(two,ai.get(i));
+            ai.lazySet(i, m3);
+            assertEquals(m3,ai.get(i));
+        }
+    }
+
+    /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){

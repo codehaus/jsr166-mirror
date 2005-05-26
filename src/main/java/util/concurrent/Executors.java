@@ -337,10 +337,11 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(PrivilegedAction<?> action) {
+    public static Callable<Object> callable(final PrivilegedAction<?> action) {
         if (action == null)
             throw new NullPointerException();
-        return new PrivilegedActionAdapter<Object>(action);
+        return new Callable<Object>() {
+	    public Object call() { return action.run(); }};
     }
 
     /**
@@ -351,10 +352,11 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(PrivilegedExceptionAction<?> action) {
+    public static Callable<Object> callable(final PrivilegedExceptionAction<?> action) {
         if (action == null)
             throw new NullPointerException();
-        return new PrivilegedExceptionActionAdapter<Object>(action);
+	return new Callable<Object>() {
+	    public Object call() throws Exception { return action.run(); }};
     }
 
     /**
@@ -418,33 +420,6 @@ public class Executors {
             return result;
         }
     }
-
-    /**
-     * A callable that runs given privileged action and returns its result
-     */
-    static final class PrivilegedActionAdapter<T> implements Callable<Object> {
-        PrivilegedActionAdapter(PrivilegedAction action) {
-            this.action = action;
-        }
-        public Object call () {
-            return action.run();
-        }
-        private final PrivilegedAction action;
-    }
-
-    /**
-     * A callable that runs given privileged exception action and returns its result
-     */
-    static final class PrivilegedExceptionActionAdapter<T> implements Callable<Object> {
-        PrivilegedExceptionActionAdapter(PrivilegedExceptionAction action) {
-            this.action = action;
-        }
-        public Object call () throws Exception {
-            return action.run();
-        }
-        private final PrivilegedExceptionAction action;
-    }
-
 
     /**
      * A callable that runs under established access control settings

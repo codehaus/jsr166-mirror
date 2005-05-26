@@ -248,7 +248,7 @@ public class ConcurrentSkipListSet<E>
 	    return true;
 	if (!(o instanceof Set))
 	    return false;
-	Collection c = (Collection) o;
+	Collection<?> c = (Collection<?>) o;
         try {
             return containsAll(c) && c.containsAll(this);
         } catch (ClassCastException unused)   {

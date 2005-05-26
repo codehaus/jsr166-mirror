@@ -1146,12 +1146,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Removes first entry; returns either its key or a snapshot.
-     * @param keyOnly if true return key, else return SimpleImmutableEntry
-     * (This is a little ugly, but avoids code duplication.)
-     * @return null if empty, first key if keyOnly true, else key,value entry
+     * Removes first entry; returns its key
+     * @return null if empty or first key
      */
-    Object doRemoveFirst(boolean keyOnly) {
+    K doRemoveFirstKey() {
         for (;;) {
             Node<K,V> b = head.node;
             Node<K,V> n = b.next;
@@ -1171,10 +1169,35 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 findFirst(); // retry
             clearIndexToFirst();
             K key = n.key;
-            if (keyOnly)
-                return key;
-            else
-                return new AbstractMap.SimpleImmutableEntry<K,V>(key, (V)v);
+            return key;
+        }
+    }
+
+    /**
+     * Removes first entry; returns its snapshot.
+     * @return null if empty, else key,value entry
+     */
+    Map.Entry<K,V> doRemoveFirstEntry() {
+        for (;;) {
+            Node<K,V> b = head.node;
+            Node<K,V> n = b.next;
+            if (n == null)
+                return null;
+            Node<K,V> f = n.next;
+            if (n != b.next)
+                continue;
+            Object v = n.value;
+            if (v == null) {
+                n.helpDelete(b, f);
+                continue;
+            }
+            if (!n.casValue(v, null))
+                continue;
+            if (!n.appendMarker(f) || !b.casNext(n, f))
+                findFirst(); // retry
+            clearIndexToFirst();
+            K key = n.key;
+            return new AbstractMap.SimpleImmutableEntry<K,V>(key, (V)v);
         }
     }
 
@@ -1202,7 +1225,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Removes first entry; returns key or null if empty.
      */
     K pollFirstKey() {
-        return (K)doRemoveFirst(true);
+        return doRemoveFirstKey();
     }
 
     /* ---------------- Finding and removing last element -------------- */
@@ -1505,7 +1528,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @param fence key greater than maximum allowed key value
      * @return least Entry, or <tt>null</tt> if no such
      */
-    Map.Entry removeLastEntryOfSubrange(K least, K fence) {
+    Map.Entry<K,V> removeLastEntryOfSubrange(K least, K fence) {
         for (;;) {
             Node<K,V> n = findLower(fence);
             if (n == null)
@@ -2029,30 +2052,23 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 	    return true;
 	if (!(o instanceof Map))
 	    return false;
-	Map<K,V> t = (Map<K,V>) o;
+	Map<?,?> m = (Map<?,?>) o;
         try {
-            return (containsAllMappings(this, t) &&
-                    containsAllMappings(t, this));
+	    for (Map.Entry<K,V> e : this.entrySet())
+		if (! e.getValue().equals(m.get(e.getKey())))
+                    return false;
+	    for (Map.Entry<?,?> e : m.entrySet()) {
+                Object k = e.getKey();
+                Object v = e.getValue();
+		if (k == null || v == null || !v.equals(get(k)))
+                    return false;
+            }
+            return true;
         } catch (ClassCastException unused) {
             return false;
         } catch (NullPointerException unused) {
             return false;
         }
-    }
-
-    /**
-     * Helper for equals -- check for containment, avoiding nulls.
-     */
-    static <K,V> boolean containsAllMappings(Map<K,V> a, Map<K,V> b) {
-        Iterator<Entry<K,V>> it = b.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<K,V> e = it.next();
-            Object k = e.getKey();
-            Object v = e.getValue();
-            if (k == null || v == null || !v.equals(a.get(k)))
-                return false;
-        }
-        return true;
     }
 
     /* ------ ConcurrentMap API methods ------ */
@@ -2369,7 +2385,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * the <tt>Entry.setValue</tt> method.
      */
     public Map.Entry<K,V> pollFirstEntry() {
-        return (AbstractMap.SimpleImmutableEntry<K,V>)doRemoveFirst(false);
+        return doRemoveFirstEntry();
     }
 
     /**
@@ -2791,16 +2807,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             ConcurrentSkipListMap.this.clear();
         }
         public Object[] toArray() {
-            Collection<K> c = new ArrayList<K>();
-            for (Iterator<K> i = iterator(); i.hasNext(); )
-                c.add(i.next());
-            return c.toArray();
+            return new ArrayList<K>(this).toArray();
         }
         public <T> T[] toArray(T[] a) {
-            Collection<K> c = new ArrayList<K>();
-            for (Iterator<K> i = iterator(); i.hasNext(); )
-                c.add(i.next());
-            return c.toArray(a);
+            return new ArrayList<K>(this).toArray(a);
         }
     }
 
@@ -2870,14 +2880,16 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public Object[] toArray() {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-            for (Map.Entry e : this)
-                c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
+            for (Map.Entry<K,V> e : this)
+                c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
+                                                       e.getValue()));
             return c.toArray();
         }
         public <T> T[] toArray(T[] a) {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-            for (Map.Entry e : this)
-                c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
+            for (Map.Entry<K,V> e : this)
+                c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
+                                                       e.getValue()));
             return c.toArray(a);
         }
     }
@@ -3215,16 +3227,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return ConcurrentSkipListSubMap.this.containsKey(k);
             }
             public Object[] toArray() {
-                Collection<K> c = new ArrayList<K>();
-                for (Iterator<K> i = iterator(); i.hasNext(); )
-                    c.add(i.next());
-                return c.toArray();
+                return new ArrayList<K>(this).toArray();
             }
             public <T> T[] toArray(T[] a) {
-                Collection<K> c = new ArrayList<K>();
-                for (Iterator<K> i = iterator(); i.hasNext(); )
-                    c.add(i.next());
-                return c.toArray(a);
+                return new ArrayList<K>(this).toArray(a);
             }
         }
 
@@ -3307,14 +3313,16 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
             public Object[] toArray() {
                 Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-                for (Map.Entry e : this)
-                    c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
+                for (Map.Entry<K,V> e : this)
+                    c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
+                                                           e.getValue()));
                 return c.toArray();
             }
             public <T> T[] toArray(T[] a) {
                 Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-                for (Map.Entry e : this)
-                    c.add(new AbstractMap.SimpleEntry<K,V>((K)e.getKey(), (V)e.getValue()));
+                for (Map.Entry<K,V> e : this)
+                    c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
+                                                           e.getValue()));
                 return c.toArray(a);
             }
         }

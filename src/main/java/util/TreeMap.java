@@ -1066,11 +1066,11 @@ public class TreeMap<K,V>
         }
 
         public boolean containsKey(Object key) {
-            return inRange((K) key) && TreeMap.this.containsKey(key);
+            return inRange(key) && TreeMap.this.containsKey(key);
         }
 
         public V get(Object key) {
-            if (!inRange((K) key))
+            if (!inRange(key))
                 return null;
             return TreeMap.this.get(key);
         }
@@ -1082,7 +1082,7 @@ public class TreeMap<K,V>
         }
 
         public V remove(Object key) {
-            if (!inRange((K) key))
+            if (!inRange(key))
                 return null;
             return TreeMap.this.remove(key);
         }
@@ -1351,13 +1351,13 @@ public class TreeMap<K,V>
             return navigableTailMap(fromKey);
         }
 
-        private boolean inRange(K key) {
+        private boolean inRange(Object key) {
             return (fromStart || compare(key, fromKey) >= 0) &&
                    (toEnd     || compare(key, toKey)   <  0);
         }
 
         // This form allows the high endpoint (as well as all legit keys)
-        private boolean inRange2(K key) {
+        private boolean inRange2(Object key) {
             return (fromStart || compare(key, fromKey) >= 0) &&
                    (toEnd     || compare(key, toKey)   <= 0);
         }

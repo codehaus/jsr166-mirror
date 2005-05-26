@@ -483,7 +483,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     long timeout = keepAliveTime;
                     if (timeout <= 0) // die immediately for 0 timeout
                         return null;
-                    Runnable r =  workQueue.poll(timeout, TimeUnit.NANOSECONDS);
+                    Runnable r = workQueue.poll(timeout, TimeUnit.NANOSECONDS);
                     if (r != null)
                         return r;
                     if (poolSize > corePoolSize || allowCoreThreadTimeOut)
@@ -1458,23 +1458,22 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     protected void beforeExecute(Thread t, Runnable r) { }
 
     /**
-     * Method invoked upon completion of execution of the given
-     * Runnable.  This method is invoked by the thread that executed
-     * the task. If non-null, the Throwable is the uncaught
-     * <tt>RuntimeException</tt> or <tt>Error</tt> that caused
-     * execution to terminate abruptly.
+     * Method invoked upon completion of execution of the given Runnable.
+     * This method is invoked by the thread that executed the task. If
+     * non-null, the Throwable is the uncaught <tt>RuntimeException</tt>
+     * or <tt>Error</tt> that caused execution to terminate abruptly.
      *
      * <p><b>Note:</b> When actions are enclosed in tasks (such as
      * {@link FutureTask}) either explicitly or via methods such as
      * <tt>submit</tt>, these task objects catch and maintain
      * computational exceptions, and so they do not cause abrupt
-     * termination, and the internal exceptions are <em>not</em> not
+     * termination, and the internal exceptions are <em>not</em>
      * passed to this method.
      *
-     * <p>This implementation does nothing, but may be
-     * customized in subclasses. Note: To properly nest multiple
-     * overridings, subclasses should generally invoke
-     * <tt>super.afterExecute</tt> at the beginning of this method.
+     * <p>This implementation does nothing, but may be customized in
+     * subclasses. Note: To properly nest multiple overridings, subclasses
+     * should generally invoke <tt>super.afterExecute</tt> at the
+     * beginning of this method.
      *
      * @param r the runnable that has completed.
      * @param t the exception that caused termination, or null if

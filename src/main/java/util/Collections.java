@@ -408,9 +408,12 @@ public class Collections {
      *         its list-iterator does not support the <tt>set</tt> operation.
      */
     public static void shuffle(List<?> list) {
+        if (r == null) {
+            r = new Random();
+        }
         shuffle(list, r);
     }
-    private static Random r = new Random();
+    private static Random r;
 
     /**
      * Randomly permute the specified list using the specified source of

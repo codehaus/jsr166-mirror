@@ -3234,10 +3234,16 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return ConcurrentSkipListSubMap.this.containsKey(k);
             }
             public Object[] toArray() {
-                return new ArrayList<K>(this).toArray();
+                Collection<K> c = new ArrayList<K>();
+                for (Iterator<K> i = iterator(); i.hasNext(); )
+                    c.add(i.next());
+                return c.toArray();
             }
             public <T> T[] toArray(T[] a) {
-                return new ArrayList<K>(this).toArray(a);
+                Collection<K> c = new ArrayList<K>();
+                for (Iterator<K> i = iterator(); i.hasNext(); )
+                    c.add(i.next());
+                return c.toArray(a);
             }
         }
 

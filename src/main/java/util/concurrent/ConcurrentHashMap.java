@@ -195,6 +195,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             this.next = next;
             this.value = value;
         }
+
+	@SuppressWarnings("unchecked")
+	static final <K,V> HashEntry<K,V>[] newArray(int i) {
+	    return new HashEntry[i];
+	}
     }
 
     /**
@@ -265,9 +270,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         transient int threshold;
 
         /**
-         * The per-segment table. Declared as a raw type, casted
-         * to HashEntry<K,V> on each use.
-         */
+         * The per-segment table. */
         transient volatile HashEntry<K,V>[] table;
 
         /**
@@ -280,7 +283,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         Segment(int initialCapacity, float lf) {
             loadFactor = lf;
-            setTable(new HashEntry[initialCapacity]);
+            setTable(HashEntry.<K,V>newArray(initialCapacity));
+        }
+
+	@SuppressWarnings("unchecked")
+        static final <K,V> Segment<K,V>[] newArray(int i) {
+	    return new Segment[i];
         }
 
         /**
@@ -351,9 +359,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                 HashEntry<K,V>[] tab = table;
                 int len = tab.length;
                 for (int i = 0 ; i < len; i++) {
-                    for (HashEntry<K,V> e = (HashEntry<K,V>)tab[i];
-                         e != null ;
-                         e = e.next) {
+                    for (HashEntry<K,V> e = tab[i]; e != null; e = e.next) {
                         V v = e.value;
                         if (v == null) // recheck
                             v = readValueUnderLock(e);
@@ -453,7 +459,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
              * right now.
              */
 
-            HashEntry<K,V>[] newTable = (HashEntry<K,V>[])new HashEntry[oldCapacity << 1];
+            HashEntry<K,V>[] newTable = HashEntry.newArray(oldCapacity<<1);
             threshold = (int)(newTable.length * loadFactor);
             int sizeMask = newTable.length - 1;
             for (int i = 0; i < oldCapacity ; i++) {
@@ -587,7 +593,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         segmentShift = 32 - sshift;
         segmentMask = ssize - 1;
-        this.segments = (Segment<K,V>[]) new Segment[ssize];
+        this.segments = Segment.newArray(ssize);
 
         if (initialCapacity > MAXIMUM_CAPACITY)
             initialCapacity = MAXIMUM_CAPACITY;
@@ -1321,7 +1327,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         // Initialize each segment to be minimally sized, and let grow.
         for (int i = 0; i < segments.length; ++i) {
-            segments[i].setTable(new HashEntry[1]);
+            segments[i].setTable((HashEntry<K,V>[])HashEntry.newArray(1));
         }
 
         // Read the keys and values, and put the mappings in the table

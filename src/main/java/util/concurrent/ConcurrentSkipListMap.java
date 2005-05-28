@@ -1146,8 +1146,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Removes first entry; returns its key
-     * @return null if empty or first key
+     * Removes first entry; returns its key.
+     * @return null if empty, else key of first entry
      */
     K doRemoveFirstKey() {
         for (;;) {
@@ -1175,7 +1175,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Removes first entry; returns its snapshot.
-     * @return null if empty, else key,value entry
+     * @return null if empty, else snapshot of first entry
      */
     Map.Entry<K,V> doRemoveFirstEntry() {
         for (;;) {
@@ -1198,7 +1198,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             clearIndexToFirst();
             K key = n.key;
             return new AbstractMap.SimpleImmutableEntry<K,V>(key, (V)v);
-        }
+	}
     }
 
     /**
@@ -1465,7 +1465,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return null;
             K k = n.key;
             V v = n.getValidValue();
-            if (v != null) 
+            if (v != null)
                 return k;
         }
     }
@@ -1497,7 +1497,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return null;
             K k = n.key;
             V v = n.getValidValue();
-            if (v != null) 
+            if (v != null)
                 return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
         }
     }
@@ -1517,7 +1517,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (fence != null && compare(k, fence) >= 0)
                 return null;
             V v = doRemove(k, null);
-            if (v != null) 
+            if (v != null)
                 return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
         }
     }
@@ -1537,7 +1537,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (least != null && compare(k, least) < 0)
                 return null;
             V v = doRemove(k, null);
-            if (v != null) 
+            if (v != null)
                 return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
         }
     }
@@ -2806,7 +2806,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public void clear() {
             ConcurrentSkipListMap.this.clear();
         }
-
         public Object[] toArray() {
             Collection<K> c = new ArrayList<K>();
             for (Iterator<K> i = iterator(); i.hasNext(); )
@@ -2884,7 +2883,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public void clear() {
             ConcurrentSkipListMap.this.clear();
         }
-
         public Object[] toArray() {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
             for (Map.Entry<K,V> e : this)

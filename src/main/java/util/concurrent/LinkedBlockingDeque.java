@@ -737,7 +737,7 @@ public class LinkedBlockingDeque<E>
      * Variant of removeFirstOccurrence needed by iterator.remove.
      * Searches for the node, not its contents.
      */
-   boolean removeNode(Node<E> e) {
+    boolean removeNode(Node<E> e) {
         lock.lock();
         try {
             for (Node<E> p = first; p != null; p = p.next) {

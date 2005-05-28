@@ -871,12 +871,12 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public final boolean tryAcquireNanos(long arg, long nanosTimeout) throws InterruptedException {
-       if (Thread.interrupted())
-           throw new InterruptedException();
-       return tryAcquire(arg) ||
-           doAcquireNanos(arg, nanosTimeout);
-   }
+    public final boolean tryAcquireNanos(long arg, long nanosTimeout) throws InterruptedException {
+	if (Thread.interrupted())
+	    throw new InterruptedException();
+	return tryAcquire(arg) ||
+	    doAcquireNanos(arg, nanosTimeout);
+    }
 
     /**
      * Releases in exclusive mode.  Implemented by unblocking one or
@@ -932,7 +932,7 @@ public abstract class AbstractQueuedLongSynchronizer
             throw new InterruptedException();
         if (tryAcquireShared(arg) < 0)
             doAcquireSharedInterruptibly(arg);
-   }
+    }
 
     /**
      * Attempts to acquire in shared mode, aborting if interrupted, and
@@ -950,12 +950,12 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return true if acquired; false if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-   public final boolean tryAcquireSharedNanos(long arg, long nanosTimeout) throws InterruptedException {
-       if (Thread.interrupted())
-           throw new InterruptedException();
-       return tryAcquireShared(arg) >= 0 ||
-           doAcquireSharedNanos(arg, nanosTimeout);
-   }
+    public final boolean tryAcquireSharedNanos(long arg, long nanosTimeout) throws InterruptedException {
+	if (Thread.interrupted())
+	    throw new InterruptedException();
+	return tryAcquireShared(arg) >= 0 ||
+	    doAcquireSharedNanos(arg, nanosTimeout);
+    }
 
     /**
      * Releases in shared mode.  Implemented by unblocking one or more

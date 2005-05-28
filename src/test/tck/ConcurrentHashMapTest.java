@@ -150,6 +150,49 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
     }
 
     /**
+     *  keySet.toArray returns contains all keys
+     */
+    public void testKeySetToArray() {
+        ConcurrentHashMap map = map5();
+	Set s = map.keySet();
+        Object[] ar = s.toArray();
+        assertTrue(s.containsAll(Arrays.asList(ar)));
+	assertEquals(5, ar.length);
+        ar[0] = m10;
+        assertFalse(s.containsAll(Arrays.asList(ar)));
+    }
+
+    /**
+     *  Values.toArray contains all values
+     */
+    public void testValuesToArray() {
+        ConcurrentHashMap map = map5();
+	Collection v = map.values();
+        Object[] ar = v.toArray();
+        ArrayList s = new ArrayList(Arrays.asList(ar));
+	assertEquals(5, ar.length);
+	assertTrue(s.contains("A"));
+	assertTrue(s.contains("B"));
+	assertTrue(s.contains("C"));
+	assertTrue(s.contains("D"));
+	assertTrue(s.contains("E"));
+    }
+
+    /**
+     *  entrySet.toArray contains all entries
+     */
+    public void testEntrySetToArray() {
+        ConcurrentHashMap map = map5();
+	Set s = map.entrySet();
+        Object[] ar = s.toArray();
+        assertEquals(5, ar.length);
+        for (int i = 0; i < 5; ++i) {
+            assertTrue(map.containsKey(((Map.Entry)(ar[i])).getKey()));
+            assertTrue(map.containsValue(((Map.Entry)(ar[i])).getValue()));
+        }
+    }
+
+    /**
      * values collection contains all values
      */
     public void testValues() {

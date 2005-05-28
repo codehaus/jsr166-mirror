@@ -192,6 +192,23 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         }
     }
 
+
+    /**
+     *  Values.toArray contains all values
+     */
+    public void testValuesToArray() {
+        ConcurrentSkipListMap map = map5();
+	Collection v = map.values();
+        Object[] ar = v.toArray();
+        ArrayList s = new ArrayList(Arrays.asList(ar));
+	assertEquals(5, ar.length);
+	assertTrue(s.contains("A"));
+	assertTrue(s.contains("B"));
+	assertTrue(s.contains("C"));
+	assertTrue(s.contains("D"));
+	assertTrue(s.contains("E"));
+    }
+
     /**
      * values collection contains all values
      */

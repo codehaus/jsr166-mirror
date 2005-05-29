@@ -1149,7 +1149,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Removes first entry; returns its key.
      * @return null if empty, else key of first entry
      */
-    K doRemoveFirstKey() {
+    K pollFirstKey() {
         for (;;) {
             Node<K,V> b = head.node;
             Node<K,V> n = b.next;
@@ -1168,8 +1168,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (!n.appendMarker(f) || !b.casNext(n, f))
                 findFirst(); // retry
             clearIndexToFirst();
-            K key = n.key;
-            return key;
+            return n.key;
         }
     }
 
@@ -1196,8 +1195,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (!n.appendMarker(f) || !b.casNext(n, f))
                 findFirst(); // retry
             clearIndexToFirst();
-            K key = n.key;
-            return new AbstractMap.SimpleImmutableEntry<K,V>(key, (V)v);
+            return new AbstractMap.SimpleImmutableEntry<K,V>(n.key, (V)v);
 	}
     }
 
@@ -1221,12 +1219,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
-    /**
-     * Removes first entry; returns key or null if empty.
-     */
-    K pollFirstKey() {
-        return doRemoveFirstKey();
-    }
 
     /* ---------------- Finding and removing last element -------------- */
 

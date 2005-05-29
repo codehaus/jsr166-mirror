@@ -41,10 +41,13 @@ public class Executors {
 
     /**
      * Creates a thread pool that reuses a fixed set of threads
-     * operating off a shared unbounded queue. If any thread
-     * terminates due to a failure during execution prior to shutdown,
-     * a new one will take its place if needed to execute subsequent
-     * tasks.
+     * operating off a shared unbounded queue. At any point, at most
+     * <tt>nThreads</tt> threads will be active processing tasks. If
+     * additional tasks are submitted when all threads are active,
+     * they will wait in the queue until a thread is available.  If
+     * any thread terminates due to a failure during execution prior
+     * to shutdown, a new one will take its place if needed to execute
+     * subsequent tasks.
      *
      * @param nThreads the number of threads in the pool
      * @return the newly created thread pool
@@ -58,7 +61,13 @@ public class Executors {
     /**
      * Creates a thread pool that reuses a fixed set of threads
      * operating off a shared unbounded queue, using the provided
-     * ThreadFactory to create new threads when needed.
+     * ThreadFactory to create new threads when needed.  At any point,
+     * at most <tt>nThreads</tt> threads will be active processing
+     * tasks. If additional tasks are submitted when all threads are
+     * active, they will wait in the queue until a thread is
+     * available. If any thread terminates due to a failure during
+     * execution prior to shutdown, a new one will take its place if
+     * needed to execute subsequent tasks.
      *
      * @param nThreads the number of threads in the pool
      * @param threadFactory the factory to use when creating new threads
@@ -95,9 +104,9 @@ public class Executors {
      * Creates an Executor that uses a single worker thread operating
      * off an unbounded queue, and uses the provided ThreadFactory to
      * create a new thread when needed. Unlike the otherwise
-     * equivalent <tt>newFixedThreadPool(1, threadFactory)</tt> the returned executor
-     * is guaranteed not to be reconfigurable to use additional
-     * threads.
+     * equivalent <tt>newFixedThreadPool(1, threadFactory)</tt> the
+     * returned executor is guaranteed not to be reconfigurable to use
+     * additional threads.
      *
      * @param threadFactory the factory to use when creating new
      * threads

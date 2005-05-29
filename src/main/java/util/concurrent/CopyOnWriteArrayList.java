@@ -359,9 +359,7 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E get(int index) {
-        E[] elementData = array();
-        rangeCheck(index, elementData.length);
-        return elementData[index];
+        return array()[index];
     }
 
     /**
@@ -372,7 +370,6 @@ public class CopyOnWriteArrayList<E>
      */
     public synchronized E set(int index, E element) {
         int len = array.length;
-        rangeCheck(index, len);
         E oldValue = array[index];
 
         boolean same = (oldValue == element ||
@@ -429,7 +426,6 @@ public class CopyOnWriteArrayList<E>
      */
     public synchronized E remove(int index) {
         int len = array.length;
-        rangeCheck(index, len);
         E oldValue = array[index];
         E[] newArray = (E[]) new Object[len-1];
         System.arraycopy(array, 0, newArray, 0, index);

@@ -92,10 +92,10 @@ public class LinkedList<E>
      * @param  c the collection whose elements are to be placed into this list
      * @throws NullPointerException if the specified collection is null
      */
-     public LinkedList(Collection<? extends E> c) {
-	 this();
-	 addAll(c);
-     }
+    public LinkedList(Collection<? extends E> c) {
+	this();
+	addAll(c);
+    }
 
     /**
      * Returns the first element in this list.

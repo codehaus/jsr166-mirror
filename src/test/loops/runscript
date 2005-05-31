@@ -58,6 +58,8 @@ echo TimeoutProducerConsumerLoops
 $RUN TimeoutProducerConsumerLoops $TRIALS
 echo ExecutorCompletionServiceLoops
 $RUN ExecutorCompletionServiceLoops $TRIALS
+echo CachedThreadPoolLoops
+$RUN CachedThreadPoolLoops $TRIALS
 echo ConcurrentQueueLoops
 $RUN ConcurrentQueueLoops java.util.concurrent.ConcurrentLinkedQueue $TRIALS
 echo ConcurrentDequeLoops
@@ -102,6 +104,18 @@ echo MapWordLoops RWTreeMap
 $RUN MapWordLoops RWMap $TRIALS
 echo MapWordLoops ConcurrentSkipListMap
 $RUN MapWordLoops java.util.concurrent.ConcurrentSkipListMap $TRIALS
+echo CollectionWordLoops ConcurrentSkipListSet
+$RUN CollectionWordLoops java.util.concurrent.ConcurrentSkipListSet
+echo CollectionWordLoops ConcurrentLinkedQueue
+$RUN CollectionWordLoops java.util.concurrent.ConcurrentLinkedQueue
+echo CollectionWordLoops CopyOnWriteArrayList
+$RUN CollectionWordLoops java.util.concurrent.CopyOnWriteArrayList
+echo CollectionWordLoops ArrayDeque
+$RUN CollectionWordLoops java.util.ArrayDeque
+echo ListBash CopyOnWriteArrayList 
+$RUN ListBash java.util.concurrent.CopyOnWriteArrayList 100 100
+echo ListBash LinkedList
+$RUN ListBash java.util.LinkedList 100 100
 echo TimeUnitLoops
 $RUN TimeUnitLoops
 echo ReadHoldingWriteLock

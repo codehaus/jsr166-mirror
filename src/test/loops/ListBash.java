@@ -22,6 +22,7 @@ public class ListBash {
 
         boolean synch = (args.length>3);
 
+        boolean canRemove = true;
 	for (int i=0; i<numItr; i++) {
 	    List s1 = newList(cl, synch);
 	    AddRandoms(s1, listSize);
@@ -63,9 +64,14 @@ public class ListBash {
 		Object o = e.next();
 		if (!union.contains(o))
 		    fail("List doesn't contain one of its elements.");
-		e.remove();
+                if (canRemove) {
+                    try { e.remove();
+                    } catch (UnsupportedOperationException uoe) {
+                        canRemove = false;
+                    }
+                }
 	    }
-	    if (!union.isEmpty())
+	    if (canRemove && !union.isEmpty())
 		fail("List nonempty after deleting all elements.");
 
 	    s1.clear();
@@ -91,73 +97,79 @@ public class ListBash {
 	if (s.size() != listSize)
 	    fail("Size of [0..n-1] != n");
 
-	List even = clone(s, cl, synch);
-	Iterator it = even.iterator();
-	while(it.hasNext())
-	    if(((Integer)it.next()).intValue() % 2 == 1)
-		it.remove();
-	it = even.iterator();
-	while(it.hasNext())
-	    if(((Integer)it.next()).intValue() % 2 == 1)
-		fail("Failed to remove all odd nubmers.");
+        List even = clone(s, cl, synch);
+        List odd = clone(s, cl, synch);
+        List all;
+        Iterator it;
 
-	List odd = clone(s, cl, synch);
-	for (int i=0; i<(listSize/2); i++)
-	    odd.remove(i);
-	for (int i=0; i<(listSize/2); i++) {
-            int ii = ((Integer)odd.get(i)).intValue();
-	    if(ii % 2 != 1)
-		fail("Failed to remove all even nubmers. " + ii);
+        if (!canRemove)
+            all = clone(s, cl, synch);
+        else {
+            it = even.iterator();
+            while(it.hasNext())
+                if(((Integer)it.next()).intValue() % 2 == 1)
+                    it.remove();
+            it = even.iterator();
+            while(it.hasNext())
+                if(((Integer)it.next()).intValue() % 2 == 1)
+                    fail("Failed to remove all odd nubmers.");
+            
+            for (int i=0; i<(listSize/2); i++)
+                odd.remove(i);
+            for (int i=0; i<(listSize/2); i++) {
+                int ii = ((Integer)odd.get(i)).intValue();
+                if(ii % 2 != 1)
+                    fail("Failed to remove all even nubmers. " + ii);
+            }
+
+            all = clone(odd, cl, synch);
+            for (int i=0; i<(listSize/2); i++)
+                all.add(2*i, even.get(i));
+            if (!all.equals(s))
+                fail("Failed to reconstruct ints from odds and evens.");
+            
+            all = clone(odd,  cl, synch);
+            ListIterator itAll = all.listIterator(all.size());
+            ListIterator itEven = even.listIterator(even.size());
+            while (itEven.hasPrevious()) {
+                itAll.previous();
+                itAll.add(itEven.previous());
+                itAll.previous(); // ???
+            }
+            itAll = all.listIterator();
+            while (itAll.hasNext()) {
+                Integer i = (Integer)itAll.next();
+                itAll.set(new Integer(i.intValue()));
+            }
+            itAll = all.listIterator();
+            it = s.iterator();
+            while(it.hasNext())
+                if(it.next()==itAll.next())
+                    fail("Iterator.set failed to change value.");
         }
-
-	List all = clone(odd, cl, synch);
-	for (int i=0; i<(listSize/2); i++)
-	    all.add(2*i, even.get(i));
-	if (!all.equals(s))
-	    fail("Failed to reconstruct ints from odds and evens.");
-
-	all = clone(odd,  cl, synch);
-	ListIterator itAll = all.listIterator(all.size());
-	ListIterator itEven = even.listIterator(even.size());
-	while (itEven.hasPrevious()) {
-	    itAll.previous();
-	    itAll.add(itEven.previous());
-	    itAll.previous(); // ???
-	}
-	itAll = all.listIterator();
-	while (itAll.hasNext()) {
-	    Integer i = (Integer)itAll.next();
-	    itAll.set(new Integer(i.intValue()));
-	}
-	itAll = all.listIterator();
-	it = s.iterator();
-	while(it.hasNext())
-	    if(it.next()==itAll.next())
-		fail("Iterator.set failed to change value.");
-
-	if (!all.equals(s))
-	    fail("Failed to reconstruct ints with ListIterator.");
-
-	it = all.listIterator();
-	int i=0;
-	while (it.hasNext()) {
-	    Object o = it.next();
-	    if (all.indexOf(o) != all.lastIndexOf(o))
-		fail("Apparent duplicate detected.");
-	    if (all.subList(i,   all.size()).indexOf(o) != 0) {
+        if (!all.equals(s))
+            fail("Failed to reconstruct ints with ListIterator.");
+        
+        it = all.listIterator();
+        int i=0;
+        while (it.hasNext()) {
+            Object o = it.next();
+            if (all.indexOf(o) != all.lastIndexOf(o))
+                fail("Apparent duplicate detected.");
+            if (all.subList(i,   all.size()).indexOf(o) != 0) {
                 System.out.println("s0: " + all.subList(i,   all.size()).indexOf(o));
                 fail("subList/indexOf is screwy.");
             }
             if (all.subList(i+1, all.size()).indexOf(o) != -1) {
                 System.out.println("s-1: " + all.subList(i+1, all.size()).indexOf(o));
-		fail("subList/indexOf is screwy.");
+                fail("subList/indexOf is screwy.");
             }
             if (all.subList(0,i+1).lastIndexOf(o) != i) {
                 System.out.println("si" + all.subList(0,i+1).lastIndexOf(o));
-		fail("subList/lastIndexOf is screwy.");
+                fail("subList/lastIndexOf is screwy.");
             }
-	    i++;
-	}
+            i++;
+        }
 
         List l = newList(cl, synch);
         AddRandoms(l, listSize);

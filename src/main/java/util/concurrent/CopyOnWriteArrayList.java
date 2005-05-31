@@ -48,26 +48,20 @@ import java.util.*;
  * @param <E> the type of elements held in this collection
  */
 public class CopyOnWriteArrayList<E>
-        implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
+    implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
     private static final long serialVersionUID = 8673264195747942595L;
 
-    /**
-     * The held array. Directly accessed only within synchronized
-     * methods.
-     */
+    /** The array, accessed only via getArray/setArray. */
     private volatile transient E[] array;
 
-    /**
-     * Accessor to the array intended to be called from
-     * within unsynchronized read-only methods
-     */
-    private E[] array() { return array; }
+    private E[]  getArray()      { return array; }
+    private void setArray(E[] a) { array = a; }
 
     /**
      * Creates an empty list.
      */
     public CopyOnWriteArrayList() {
-        array = (E[]) new Object[0];
+        setArray((E[]) new Object[0]);
     }
 
     /**
@@ -79,11 +73,11 @@ public class CopyOnWriteArrayList<E>
      * @throws NullPointerException if the specified collection is null
      */
     public CopyOnWriteArrayList(Collection<? extends E> c) {
-        array = (E[]) new Object[c.size()];
-        Iterator<? extends E> i = c.iterator();
+        E[] elements = (E[]) new Object[c.size()];
         int size = 0;
-        while (i.hasNext())
-            array[size++] = i.next();
+        for (Iterator<? extends E> i = c.iterator(); i.hasNext(); )
+            elements[size++] = i.next();
+        setArray(elements);
     }
 
     /**
@@ -110,8 +104,10 @@ public class CopyOnWriteArrayList<E>
      * the list.
      */
     private synchronized void copyIn(E[] toCopyIn, int first, int n) {
-        array = (E[]) new Object[n];
-        System.arraycopy(toCopyIn, first, array, 0, n);
+        int limit = first + n;
+        if (limit > toCopyIn.length) 
+            throw new IndexOutOfBoundsException();
+        setArray((E[]) cloneRange(toCopyIn, first, limit, Object[].class));
     }
 
     /**
@@ -120,7 +116,7 @@ public class CopyOnWriteArrayList<E>
      * @return the number of elements in this list
      */
     public int size() {
-        return array().length;
+        return getArray().length;
     }
 
     /**
@@ -130,6 +126,49 @@ public class CopyOnWriteArrayList<E>
      */
     public boolean isEmpty() {
         return size() == 0;
+    }
+
+    /**  
+     * static version of indexOf, to allow repeated calls without
+     * needing to grab re-acquire array each time.
+     * @param o element to search for
+     * @param elements the array
+     * @param index first index to search
+     * @param fence one past last index to search
+     * @return index of element, or -1 if absent
+     */
+    private static int indexOf(Object o, Object[] elements, 
+                               int index, int fence) {
+        if (o == null) {
+            for (int i = index; i < fence; i++)
+                if (elements[i] == null)
+                    return i;
+        } else {
+            for (int i = index; i < fence; i++)
+                if (o.equals(elements[i]))
+                    return i;
+        }
+        return -1;
+    }
+    
+    /**  
+     * static version of lastIndexOf.
+     * @param o element to search for
+     * @param elements the array
+     * @param index first index to search
+     * @return index of element, or -1 if absent
+     */
+    private static int lastIndexOf(Object o, Object[] elements, int index) {
+        if (o == null) {
+            for (int i = index; i >= 0; i--)
+                if (elements[i] == null)
+                    return i;
+        } else {
+            for (int i = index; i >= 0; i--)
+                if (o.equals(elements[i]))
+                    return i;
+        }
+        return -1;
     }
 
     /**
@@ -142,36 +181,18 @@ public class CopyOnWriteArrayList<E>
      * @return <tt>true</tt> if this list contains the specified element
      */
     public boolean contains(Object o) {
-        E[] elementData = array();
-        int len = elementData.length;
-        return indexOf(o, elementData, len) >= 0;
+        E[] elements = getArray();
+        return indexOf(o, elements, 0, elements.length) >= 0;
     }
 
     /**
      * {@inheritDoc}
      */
     public int indexOf(Object o) {
-        E[] elementData = array();
-        int len = elementData.length;
-        return indexOf(o, elementData, len);
+        E[] elements = getArray();
+        return indexOf(o, elements, 0, elements.length);
     }
 
-    /**
-     * static version allows repeated call without needing
-     * to grab lock for array each time
-     */
-    private static int indexOf(Object o, Object[] elementData, int len) {
-        if (o == null) {
-            for (int i = 0; i < len; i++)
-                if (elementData[i]==null)
-                    return i;
-        } else {
-            for (int i = 0; i < len; i++)
-                if (o.equals(elementData[i]))
-                    return i;
-        }
-        return -1;
-    }
 
     /**
      * Returns the index of the first occurrence of the specified element in
@@ -189,41 +210,16 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException if the specified index is negative
      */
     public int indexOf(E e, int index) {
-        E[] elementData = array();
-        int elementCount = elementData.length;
-
-        if (e == null) {
-            for (int i = index ; i < elementCount ; i++)
-                if (elementData[i]==null)
-                    return i;
-        } else {
-            for (int i = index ; i < elementCount ; i++)
-                if (e.equals(elementData[i]))
-                    return i;
-        }
-        return -1;
+        E[] elements = getArray();
+        return indexOf(e, elements, index, elements.length);
     }
 
     /**
      * {@inheritDoc}
      */
     public int lastIndexOf(Object o) {
-        E[] elementData = array();
-        int len = elementData.length;
-        return lastIndexOf(o, elementData, len);
-    }
-
-    private static int lastIndexOf(Object o, Object[] elementData, int len) {
-        if (o == null) {
-            for (int i = len-1; i >= 0; i--)
-                if (elementData[i]==null)
-                    return i;
-        } else {
-            for (int i = len-1; i >= 0; i--)
-                if (o.equals(elementData[i]))
-                    return i;
-        }
-        return -1;
+        E[] elements = getArray();
+        return lastIndexOf(o, elements, elements.length - 1);
     }
 
     /**
@@ -243,18 +239,8 @@ public class CopyOnWriteArrayList<E>
      *         than or equal to the current size of this list
      */
     public int lastIndexOf(E e, int index) {
-        // needed in order to compile on 1.2b3
-        E[] elementData = array();
-        if (e == null) {
-            for (int i = index; i >= 0; i--)
-                if (elementData[i]==null)
-                    return i;
-        } else {
-            for (int i = index; i >= 0; i--)
-                if (e.equals(elementData[i]))
-                    return i;
-        }
-        return -1;
+        E[] elements = getArray();
+        return lastIndexOf(e, elements, index);
     }
 
     /**
@@ -265,10 +251,9 @@ public class CopyOnWriteArrayList<E>
      */
     public Object clone() {
         try {
-            E[] elementData = array();
+            E[] elements = getArray();
             CopyOnWriteArrayList<E> v = (CopyOnWriteArrayList<E>)super.clone();
-            v.array = (E[]) new Object[elementData.length];
-            System.arraycopy(elementData, 0, v.array, 0, elementData.length);
+            v.setArray(clone(elements, elements.length));
             return v;
         } catch (CloneNotSupportedException e) {
             // this shouldn't happen, since we are Cloneable
@@ -290,10 +275,8 @@ public class CopyOnWriteArrayList<E>
      * @return an array containing all the elements in this list
      */
     public Object[] toArray() {
-        Object[] elementData = array();
-        Object[] result = new Object[elementData.length];
-        System.arraycopy(elementData, 0, result, 0, elementData.length);
-        return result;
+        Object[] elements = getArray();
+        return clone(elements, elements.length);
     }
 
     /**
@@ -336,19 +319,16 @@ public class CopyOnWriteArrayList<E>
      * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T a[]) {
-        E[] elementData = array();
-
-        if (a.length < elementData.length)
-            a = (T[])
-            java.lang.reflect.Array.newInstance(a.getClass().getComponentType(),
-            elementData.length);
-
-        System.arraycopy(elementData, 0, a, 0, elementData.length);
-
-        if (a.length > elementData.length)
-            a[elementData.length] = null;
-
-        return a;
+        E[] elements = getArray();
+        int len = elements.length;
+        if (a.length < len)
+            return (T[]) clone(elements, len, a.getClass());
+        else {
+            System.arraycopy(elements, 0, a, 0, len);
+            if (a.length > len)
+                a[len] = null;
+            return a;
+        }
     }
 
     // Positional Access Operations
@@ -359,7 +339,7 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E get(int index) {
-        return array()[index];
+        return getArray()[index];
     }
 
     /**
@@ -369,16 +349,15 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public synchronized E set(int index, E element) {
-        int len = array.length;
-        E oldValue = array[index];
+        E[] elements = getArray();
+        int len = elements.length;
+        E oldValue = elements[index];
 
-        boolean same = (oldValue == element ||
-        (element != null && element.equals(oldValue)));
-        if (!same) {
-            E[] newArray = (E[]) new Object[len];
-            System.arraycopy(array, 0, newArray, 0, len);
-            newArray[index] = element;
-            array = newArray;
+        if (oldValue != element &&
+            (element == null || !element.equals(oldValue))) {
+            E[] newElements = clone(elements, len);
+            newElements[index] = element;
+            setArray(newElements);
         }
         return oldValue;
     }
@@ -386,15 +365,15 @@ public class CopyOnWriteArrayList<E>
     /**
      * Appends the specified element to the end of this list.
      *
-     * @param element element to be appended to this list
+     * @param e element to be appended to this list
      * @return <tt>true</tt> (as per the spec for {@link Collection#add})
      */
-    public synchronized boolean add(E element) {
-        int len = array.length;
-        E[] newArray = (E[]) new Object[len+1];
-        System.arraycopy(array, 0, newArray, 0, len);
-        newArray[len] = element;
-        array = newArray;
+    public synchronized boolean add(E e) {
+        E[] elements = getArray();
+        int len = elements.length;
+        E[] newElements = clone(elements, len + 1);
+        newElements[len] = e;
+        setArray(newElements);
         return true;
     }
 
@@ -406,15 +385,23 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public synchronized void add(int index, E element) {
-        int len = array.length;
+        E[] elements = getArray();
+        int len = elements.length;
         if (index > len || index < 0)
-            throw new IndexOutOfBoundsException("Index: "+index+", Size: "+len);
-
-        E[] newArray = (E[]) new Object[len+1];
-        System.arraycopy(array, 0, newArray, 0, index);
-        newArray[index] = element;
-        System.arraycopy(array, index, newArray, index+1, len - index);
-        array = newArray;
+            throw new IndexOutOfBoundsException("Index: " + index+
+                                                ", Size: " + len);
+        E[] newElements;
+        int numMoved = len - index;
+        if (numMoved == 0) 
+            newElements = clone(elements, len + 1);
+        else {
+            newElements = (E[]) new Object[len + 1];
+            System.arraycopy(elements, 0, newElements, 0, index);
+            System.arraycopy(elements, index, newElements, index + 1, 
+                             numMoved);
+        }
+        newElements[index] = element;
+        setArray(newElements);
     }
 
     /**
@@ -425,14 +412,19 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public synchronized E remove(int index) {
-        int len = array.length;
-        E oldValue = array[index];
-        E[] newArray = (E[]) new Object[len-1];
-        System.arraycopy(array, 0, newArray, 0, index);
+        E[] elements = getArray();
+        int len = elements.length;
+        E oldValue = elements[index];
         int numMoved = len - index - 1;
-        if (numMoved > 0)
-            System.arraycopy(array, index+1, newArray, index, numMoved);
-        array = newArray;
+        if (numMoved == 0)  
+            setArray(clone(elements, len - 1));
+        else {
+            E[] newElements = (E[]) new Object[len - 1];
+            System.arraycopy(elements, 0, newElements, 0, index);
+            System.arraycopy(elements, index + 1, newElements, index, 
+                             numMoved);
+            setArray(newElements);
+        }
         return oldValue;
     }
 
@@ -450,33 +442,34 @@ public class CopyOnWriteArrayList<E>
      * @return <tt>true</tt> if this list contained the specified element
      */
     public synchronized boolean remove(Object o) {
-        int len = array.length;
-        if (len == 0) return false;
-
-        // Copy while searching for element to remove
-        // This wins in the normal case of element being present
-
-        int newlen = len-1;
-        E[] newArray = (E[]) new Object[newlen];
-
-        for (int i = 0; i < newlen; ++i) {
-            if (o == array[i] ||
-            (o != null && o.equals(array[i]))) {
-                // found one;  copy remaining and exit
-                for (int k = i + 1; k < len; ++k) newArray[k-1] = array[k];
-                array = newArray;
+        E[] elements = getArray();
+        int len = elements.length;
+        if (len != 0) {
+            // Copy while searching for element to remove
+            // This wins in the normal case of element being present
+            int newlen = len - 1;
+            E[] newElements = (E[]) new Object[newlen];
+            
+            for (int i = 0; i < newlen; ++i) {
+                if (o == elements[i] || 
+                    (o != null && o.equals(elements[i]))) {
+                    // found one;  copy remaining and exit
+                    for (int k = i + 1; k < len; ++k)
+                        newElements[k - 1] = elements[k];
+                    setArray(newElements);
+                    return true;
+                } else
+                    newElements[i] = elements[i];
+            }
+            
+            // special handling for last cell
+            if (o == elements[newlen] ||
+                (o != null && o.equals(elements[newlen]))) {
+                setArray(newElements);
                 return true;
-            } else
-                newArray[i] = array[i];
+            }
         }
-        // special handling for last cell
-
-        if (o == array[newlen] ||
-        (o != null && o.equals(array[newlen]))) {
-            array = newArray;
-            return true;
-        } else
-            return false; // throw away copy
+        return false; 
     }
 
     /**
@@ -493,40 +486,45 @@ public class CopyOnWriteArrayList<E>
      *              &gt; size() || toIndex &lt; fromIndex)
      */
     private synchronized void removeRange(int fromIndex, int toIndex) {
-        int len = array.length;
+        E[] elements = getArray();
+        int len = elements.length;
 
         if (fromIndex < 0 || fromIndex >= len ||
-        toIndex > len || toIndex < fromIndex)
+            toIndex > len || toIndex < fromIndex)
             throw new IndexOutOfBoundsException();
-
+        int newlen = len - (toIndex - fromIndex);
         int numMoved = len - toIndex;
-        int newlen = len - (toIndex-fromIndex);
-        E[] newArray = (E[]) new Object[newlen];
-        System.arraycopy(array, 0, newArray, 0, fromIndex);
-        System.arraycopy(array, toIndex, newArray, fromIndex, numMoved);
-        array = newArray;
+        if (numMoved == 0) 
+            setArray(clone(elements, newlen));
+        else {
+            E[] newElements = (E[]) new Object[newlen];
+            System.arraycopy(elements, 0, newElements, 0, fromIndex);
+            System.arraycopy(elements, toIndex, newElements, 
+                             fromIndex, numMoved);
+            setArray(newElements);
+        }
     }
 
     /**
      * Append the element if not present.
      *
-     * @param element element to be added to this list, if absent
+     * @param e element to be added to this list, if absent
      * @return <tt>true</tt> if the element was added
      */
-    public synchronized boolean addIfAbsent(E element) {
+    public synchronized boolean addIfAbsent(E e) {
         // Copy while checking if already present.
         // This wins in the most common case where it is not present
-        int len = array.length;
-        E[] newArray = (E[]) new Object[len + 1];
+        E[] elements = getArray();
+        int len = elements.length;
+        E[] newElements = (E[]) new Object[len + 1];
         for (int i = 0; i < len; ++i) {
-            if (element == array[i] ||
-            (element != null && element.equals(array[i])))
+            if (e == elements[i] || (e != null && e.equals(elements[i])))
                 return false; // exit, throwing away copy
             else
-                newArray[i] = array[i];
+                newElements[i] = elements[i];
         }
-        newArray[len] = element;
-        array = newArray;
+        newElements[len] = e;
+        setArray(newElements);
         return true;
     }
 
@@ -541,13 +539,12 @@ public class CopyOnWriteArrayList<E>
      * @see #contains(Object)
      */
     public boolean containsAll(Collection<?> c) {
-        E[] elementData = array();
-        int len = elementData.length;
-        Iterator e = c.iterator();
-        while (e.hasNext())
-            if (indexOf(e.next(), elementData, len) < 0)
+        E[] elements = getArray();
+        int len = elements.length;
+        for (Iterator e = c.iterator(); e.hasNext(); ) {
+            if (indexOf(e.next(), elements, 0, len) < 0)
                 return false;
-
+        }
         return true;
     }
 
@@ -566,27 +563,23 @@ public class CopyOnWriteArrayList<E>
      * @see #remove(Object)
      */
     public synchronized boolean removeAll(Collection<?> c) {
-        E[] elementData = array;
-        int len = elementData.length;
-        if (len == 0) return false;
-
-        // temp array holds those elements we know we want to keep
-        E[] temp = (E[]) new Object[len];
-        int newlen = 0;
-        for (int i = 0; i < len; ++i) {
-            E element = elementData[i];
-            if (!c.contains(element)) {
-                temp[newlen++] = element;
+        E[] elements = getArray();
+        int len = elements.length;
+        if (len != 0) {
+            // temp array holds those elements we know we want to keep
+            int newlen = 0;
+            E[] temp = (E[]) new Object[len];
+            for (int i = 0; i < len; ++i) {
+                E element = elements[i];
+                if (!c.contains(element)) 
+                    temp[newlen++] = element;
+            }
+            if (newlen != len) {
+                setArray((E[])cloneRange(temp, 0, newlen, Object[].class));
+                return true;
             }
         }
-
-        if (newlen == len) return false;
-
-        //  copy temp as new array
-        E[] newArray = (E[]) new Object[newlen];
-        System.arraycopy(temp, 0, newArray, 0, newlen);
-        array = newArray;
-        return true;
+        return false;
     }
 
     /**
@@ -604,25 +597,22 @@ public class CopyOnWriteArrayList<E>
      * @see #remove(Object)
      */
     public synchronized boolean retainAll(Collection<?> c) {
-        E[] elementData = array;
-        int len = elementData.length;
-        if (len == 0) return false;
-
-        E[] temp = (E[]) new Object[len];
-        int newlen = 0;
-        for (int i = 0; i < len; ++i) {
-            E element = elementData[i];
-            if (c.contains(element)) {
-                temp[newlen++] = element;
+        E[] elements = getArray();
+        int len = elements.length;
+        if (len != 0) {
+            int newlen = 0;
+            E[] temp = (E[]) new Object[len];
+            for (int i = 0; i < len; ++i) {
+                E element = elements[i];
+                if (c.contains(element)) 
+                    temp[newlen++] = element;
+            }
+            if (newlen != len) {
+                setArray((E[])cloneRange(temp, 0, newlen, Object[].class));
+                return true;
             }
         }
-
-        if (newlen == len) return false;
-
-        E[] newArray = (E[]) new Object[newlen];
-        System.arraycopy(temp, 0, newArray, 0, newlen);
-        array = newArray;
-        return true;
+        return false;
     }
 
     /**
@@ -637,30 +627,26 @@ public class CopyOnWriteArrayList<E>
      * @see #addIfAbsent(Object)
      */
     public synchronized int addAllAbsent(Collection<? extends E> c) {
-        int numNew = c.size();
-        if (numNew == 0) return 0;
-
-        E[] elementData = array;
-        int len = elementData.length;
-
-        E[] temp = (E[]) new Object[numNew];
         int added = 0;
-        Iterator<? extends E> e = c.iterator();
-        while (e.hasNext()) {
-            E element = e.next();
-            if (indexOf(element, elementData, len) < 0) {
-                if (indexOf(element, temp, added) < 0) {
+        int numNew = c.size();
+        if (numNew != 0) {
+            E[] elements = getArray();
+            int len = elements.length;
+            
+            E[] temp = (E[]) new Object[numNew];
+            for (Iterator<? extends E> e = c.iterator(); e.hasNext(); ) {
+                E element = e.next();
+                if (indexOf(element, elements, 0, len) < 0 &&
+                    indexOf(element, temp, 0, added) < 0) 
                     temp[added++] = element;
-                }
+            }
+            if (added != 0) {
+                E[] newElements = (E[]) new Object[len + added];
+                System.arraycopy(elements, 0, newElements, 0, len);
+                System.arraycopy(temp, 0, newElements, len, added);
+                setArray(newElements);
             }
         }
-
-        if (added == 0) return 0;
-
-        E[] newArray = (E[]) new Object[len+added];
-        System.arraycopy(elementData, 0, newArray, 0, len);
-        System.arraycopy(temp, 0, newArray, len, added);
-        array = newArray;
         return added;
     }
 
@@ -669,7 +655,7 @@ public class CopyOnWriteArrayList<E>
      * The list will be empty after this call returns.
      */
     public synchronized void clear() {
-        array = (E[]) new Object[0];
+        setArray((E[]) new Object[0]);
     }
 
     /**
@@ -684,16 +670,17 @@ public class CopyOnWriteArrayList<E>
      */
     public synchronized boolean addAll(Collection<? extends E> c) {
         int numNew = c.size();
-        if (numNew == 0) return false;
+        if (numNew == 0) 
+            return false;
 
-        int len = array.length;
-        E[] newArray = (E[]) new Object[len+numNew];
-        System.arraycopy(array, 0, newArray, 0, len);
+        E[] elements = getArray();
+        int len = elements.length;
+        E[] newElements = (E[]) new Object[len + numNew];
+        System.arraycopy(elements, 0, newElements, 0, len);
         Iterator<? extends E> e = c.iterator();
-        for (int i=0; i<numNew; i++)
-            newArray[len++] = e.next();
-        array = newArray;
-
+        for (int i = 0; i < numNew; i++)
+            newElements[len++] = e.next();
+        setArray(newElements);
         return true;
     }
 
@@ -714,33 +701,31 @@ public class CopyOnWriteArrayList<E>
      * @see #add(int,Object)
      */
     public synchronized boolean addAll(int index, Collection<? extends E> c) {
-        int len = array.length;
+        E[] elements = getArray();
+        int len = elements.length;
         if (index > len || index < 0)
-            throw new IndexOutOfBoundsException("Index: "+index+", Size: "+len);
-
+            throw new IndexOutOfBoundsException("Index: " + index + 
+                                                ", Size: "+ len);
         int numNew = c.size();
-        if (numNew == 0) return false;
-
-        E[] newArray = (E[]) new Object[len+numNew];
-        System.arraycopy(array, 0, newArray, 0, len);
+        if (numNew == 0) 
+            return false;
         int numMoved = len - index;
-        if (numMoved > 0)
-            System.arraycopy(array, index, newArray, index + numNew, numMoved);
+        E[] newElements;
+        if (numMoved == 0) 
+            newElements = clone(elements, len + numNew);
+        else {
+            newElements = (E[]) new Object[len + numNew];
+            System.arraycopy(elements, index, newElements, 
+                             index + numNew, numMoved);
+            System.arraycopy(elements, index, newElements, 
+                             index + numNew, numMoved);
+        }
         Iterator<? extends E> e = c.iterator();
-        for (int i=0; i<numNew; i++)
-            newArray[index++] = e.next();
-        array = newArray;
+        for (int i = 0; i < numNew; i++)
+            newElements[index++] = e.next();
+        setArray(newElements);
 
         return true;
-    }
-
-    /**
-     * Checks if the given index is in range.  If not, throws an appropriate
-     * runtime exception.
-     */
-    private void rangeCheck(int index, int length) {
-        if (index >= length || index < 0)
-            throw new IndexOutOfBoundsException("Index: "+index+", Size: "+ length);
     }
 
     /**
@@ -757,13 +742,14 @@ public class CopyOnWriteArrayList<E>
         // Write out element count, and any hidden stuff
         s.defaultWriteObject();
 
-        E[] elementData = array();
+        E[] elements = getArray();
+        int len = elements.length;
         // Write out array length
-        s.writeInt(elementData.length);
+        s.writeInt(len);
 
         // Write out all elements in the proper order.
-        for (int i=0; i<elementData.length; i++)
-            s.writeObject(elementData[i]);
+        for (int i = 0; i < len; i++)
+            s.writeObject(elements[i]);
     }
 
     /**
@@ -777,13 +763,13 @@ public class CopyOnWriteArrayList<E>
         s.defaultReadObject();
 
         // Read in array length and allocate array
-        int arrayLength = s.readInt();
-        E[] elementData = (E[]) new Object[arrayLength];
+        int len = s.readInt();
+        E[] elements = (E[]) new Object[len];
 
         // Read in all elements in the proper order.
-        for (int i=0; i<elementData.length; i++)
-            elementData[i] = (E) s.readObject();
-        array = elementData;
+        for (int i = 0; i < len; i++)
+            elements[i] = (E) s.readObject();
+        setArray(elements);
     }
 
     /**
@@ -791,12 +777,12 @@ public class CopyOnWriteArrayList<E>
      * the String representation of each element.
      */
     public String toString() {
+        E[] elements = getArray();
+        int maxIndex = elements.length - 1;
         StringBuffer buf = new StringBuffer();
-        Iterator e = iterator();
         buf.append("[");
-        int maxIndex = size() - 1;
         for (int i = 0; i <= maxIndex; i++) {
-            buf.append(String.valueOf(e.next()));
+            buf.append(String.valueOf(elements[i]));
             if (i < maxIndex)
                 buf.append(", ");
         }
@@ -832,7 +818,7 @@ public class CopyOnWriteArrayList<E>
         while (e1.hasNext()) {
             E o1 = e1.next();
             E o2 = e2.next();
-            if (!(o1==null ? o2==null : o1.equals(o2)))
+            if (!(o1 == null ? o2 == null : o1.equals(o2)))
                 return false;
         }
         return true;
@@ -847,10 +833,11 @@ public class CopyOnWriteArrayList<E>
      */
     public int hashCode() {
         int hashCode = 1;
-        Iterator<E> i = iterator();
-        while (i.hasNext()) {
-            E obj = i.next();
-            hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
+        E[] elements = getArray();
+        int len = elements.length;
+        for (int i = 0; i < len; ++i) {
+            E obj = elements[i];
+            hashCode = 31 * hashCode + (obj == null ? 0 : obj.hashCode());
         }
         return hashCode;
     }
@@ -866,7 +853,7 @@ public class CopyOnWriteArrayList<E>
      * @return an iterator over the elements in this list in proper sequence
      */
     public Iterator<E> iterator() {
-        return new COWIterator<E>(array(), 0);
+        return new COWIterator<E>(getArray(), 0);
     }
 
     /**
@@ -878,7 +865,7 @@ public class CopyOnWriteArrayList<E>
      * <tt>remove</tt>, <tt>set</tt> or <tt>add</tt> methods.
      */
     public ListIterator<E> listIterator() {
-        return new COWIterator<E>(array(), 0);
+        return new COWIterator<E>(getArray(), 0);
     }
 
     /**
@@ -891,31 +878,27 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public ListIterator<E> listIterator(final int index) {
-        E[] elementData = array();
-        int len = elementData.length;
-        if (index<0 || index>len)
-            throw new IndexOutOfBoundsException("Index: "+index);
+        E[] elements = getArray();
+        int len = elements.length;
+        if (index < 0 || index > len)
+            throw new IndexOutOfBoundsException("Index: " + index);
 
-        return new COWIterator<E>(array(), index);
+        return new COWIterator<E>(getArray(), index);
     }
 
     private static class COWIterator<E> implements ListIterator<E> {
-
         /** Snapshot of the array **/
-        private final E[] array;
-
-        /**
-         * Index of element to be returned by subsequent call to next.
-         */
+        private final E[] snapshot;
+        /** Index of element to be returned by subsequent call to next.  */
         private int cursor;
 
-        private COWIterator(E[] elementArray, int initialCursor) {
-            array = elementArray;
+        private COWIterator(E[] elements, int initialCursor) {
             cursor = initialCursor;
+            snapshot = elements;
         }
 
         public boolean hasNext() {
-            return cursor < array.length;
+            return cursor < snapshot.length;
         }
 
         public boolean hasPrevious() {
@@ -924,7 +907,7 @@ public class CopyOnWriteArrayList<E>
 
         public E next() {
             try {
-                return array[cursor++];
+                return snapshot[cursor++];
             } catch (IndexOutOfBoundsException ex) {
                 throw new NoSuchElementException();
             }
@@ -932,7 +915,7 @@ public class CopyOnWriteArrayList<E>
 
         public E previous() {
             try {
-                return array[--cursor];
+                return snapshot[--cursor];
             } catch (IndexOutOfBoundsException e) {
                 throw new NoSuchElementException();
             }
@@ -943,7 +926,7 @@ public class CopyOnWriteArrayList<E>
         }
 
         public int previousIndex() {
-            return cursor-1;
+            return cursor - 1;
         }
 
         /**
@@ -975,17 +958,19 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns a view of the portion of this list between <tt>fromIndex</tt>,
-     * inclusive, and <tt>toIndex</tt>, exclusive.  The returned list is
-     * backed by this list, so changes in the returned list are reflected in
-     * this list, and vice-versa.  While mutative operations are supported,
-     * they are probably not very useful for CopyOnWriteArrayLists.
+     * Returns a view of the portion of this list between
+     * <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.
+     * The returned list is backed by this list, so changes in the
+     * returned list are reflected in this list, and vice-versa.
+     * While mutative operations are supported, they are probably not
+     * very useful for CopyOnWriteArrayLists.
      *
-     * <p>The semantics of the list returned by this method become undefined if
-     * the backing list (i.e., this list) is <i>structurally modified</i> in
-     * any way other than via the returned list.  (Structural modifications are
-     * those that change the size of the list, or otherwise perturb it in such
-     * a fashion that iterations in progress may yield incorrect results.)
+     * <p>The semantics of the list returned by this method become
+     * undefined if the backing list (i.e., this list) is
+     * <i>structurally modified</i> in any way other than via the
+     * returned list.  (Structural modifications are those that change
+     * the size of the list, or otherwise perturb it in such a fashion
+     * that iterations in progress may yield incorrect results.)
      *
      * @param fromIndex low endpoint (inclusive) of the subList
      * @param toIndex high endpoint (exclusive) of the subList
@@ -994,14 +979,14 @@ public class CopyOnWriteArrayList<E>
      */
     public synchronized List<E> subList(int fromIndex, int toIndex) {
         // synchronized since sublist constructor depends on it.
-        int len = array.length;
-        if (fromIndex<0 || toIndex>len  || fromIndex>toIndex)
+        E[] elements = getArray();
+        int len = elements.length;
+        if (fromIndex < 0 || toIndex > len  || fromIndex > toIndex)
             throw new IndexOutOfBoundsException();
         return new COWSubList<E>(this, fromIndex, toIndex);
     }
 
     private static class COWSubList<E> extends AbstractList<E> {
-
         /*
           This class extends AbstractList merely for convenience, to
           avoid having to define addAll, etc. This doesn't hurt, but
@@ -1015,7 +1000,7 @@ public class CopyOnWriteArrayList<E>
           improving.  The kinds of list operations inherited from
           AbstractList are already so slow on COW sublists that
           adding a bit more space/time doesn't seem even noticeable.
-         */
+        */
 
         private final CopyOnWriteArrayList<E> l;
         private final int offset;
@@ -1023,32 +1008,32 @@ public class CopyOnWriteArrayList<E>
         private E[] expectedArray;
 
         private COWSubList(CopyOnWriteArrayList<E> list,
-        int fromIndex, int toIndex) {
+                           int fromIndex, int toIndex) {
             l = list;
-            expectedArray = l.array();
+            expectedArray = l.getArray();
             offset = fromIndex;
             size = toIndex - fromIndex;
         }
 
         // only call this holding l's lock
         private void checkForComodification() {
-            if (l.array != expectedArray)
+            if (l.getArray() != expectedArray)
                 throw new ConcurrentModificationException();
         }
 
         // only call this holding l's lock
         private void rangeCheck(int index) {
-            if (index<0 || index>=size)
-                throw new IndexOutOfBoundsException("Index: "+index+ ",Size: "+size);
+            if (index < 0 || index >= size)
+                throw new IndexOutOfBoundsException("Index: " + index +
+                                                    ",Size: " + size);
         }
-
 
         public E set(int index, E element) {
             synchronized(l) {
                 rangeCheck(index);
                 checkForComodification();
-                E x = l.set(index+offset, element);
-                expectedArray = l.array;
+                E x = l.set(index + offset, element);
+                expectedArray = l.getArray();
                 return x;
             }
         }
@@ -1057,7 +1042,7 @@ public class CopyOnWriteArrayList<E>
             synchronized(l) {
                 rangeCheck(index);
                 checkForComodification();
-                return l.get(index+offset);
+                return l.get(index + offset);
             }
         }
 
@@ -1073,8 +1058,8 @@ public class CopyOnWriteArrayList<E>
                 checkForComodification();
                 if (index<0 || index>size)
                     throw new IndexOutOfBoundsException();
-                l.add(index+offset, element);
-                expectedArray = l.array;
+                l.add(index + offset, element);
+                expectedArray = l.getArray();
                 size++;
             }
         }
@@ -1083,7 +1068,7 @@ public class CopyOnWriteArrayList<E>
             synchronized(l) {
                 checkForComodification();
                 l.removeRange(offset, offset+size);
-                expectedArray = l.array;
+                expectedArray = l.getArray();
                 size = 0;
             }
         }
@@ -1092,8 +1077,8 @@ public class CopyOnWriteArrayList<E>
             synchronized(l) {
                 rangeCheck(index);
                 checkForComodification();
-                E result = l.remove(index+offset);
-                expectedArray = l.array;
+                E result = l.remove(index + offset);
+                expectedArray = l.getArray();
                 size--;
                 return result;
             }
@@ -1110,7 +1095,8 @@ public class CopyOnWriteArrayList<E>
             synchronized(l) {
                 checkForComodification();
                 if (index<0 || index>size)
-                    throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
+                    throw new IndexOutOfBoundsException("Index: "+index+
+                                                        ", Size: "+size);
                 return new COWSubListIterator<E>(l, index, offset, size);
             }
         }
@@ -1120,7 +1106,8 @@ public class CopyOnWriteArrayList<E>
                 checkForComodification();
                 if (fromIndex<0 || toIndex>size)
                     throw new IndexOutOfBoundsException();
-                return new COWSubList<E>(l, fromIndex+offset, toIndex+offset);
+                return new COWSubList<E>(l, fromIndex + offset, 
+                                         toIndex + offset);
             }
         }
 
@@ -1132,11 +1119,12 @@ public class CopyOnWriteArrayList<E>
         private final int index;
         private final int offset;
         private final int size;
-        private COWSubListIterator(List<E> l, int index, int offset, int size) {
+        private COWSubListIterator(List<E> l, int index, int offset, 
+                                   int size) {
             this.index = index;
             this.offset = offset;
             this.size = size;
-            i = l.listIterator(index+offset);
+            i = l.listIterator(index + offset);
         }
 
         public boolean hasNext() {
@@ -1180,6 +1168,33 @@ public class CopyOnWriteArrayList<E>
         public void add(E e) {
             throw new UnsupportedOperationException();
         }
+    }
+
+    // Temporary emulations of anticipated new j.u.Arrays functions
+
+    private static <T,U> T[] cloneRange(U[] original, int from, int to, 
+                                        Class<? extends T[]> newType) {
+        int newLength = to - from;
+        if (newLength < 0)
+            throw new IllegalArgumentException(from + " > " + to);
+        T[] copy = (T[]) java.lang.reflect.Array.newInstance
+            (newType.getComponentType(), newLength);
+        System.arraycopy(original, from, copy, 0,
+                         Math.min(original.length - from, newLength));
+        return copy;
+    }
+    
+    private static <T,U> T[] clone(U[] original, int newLength, 
+                                   Class<? extends T[]> newType) {
+        T[] copy = (T[]) java.lang.reflect.Array.newInstance
+            (newType.getComponentType(), newLength);
+        System.arraycopy(original, 0, copy, 0,
+                         Math.min(original.length, newLength));
+        return copy;
+    }
+
+    private static <T> T[] clone(T[] original, int newLength) {
+        return (T[]) clone(original, newLength, original.getClass());
     }
 
 }

@@ -726,8 +726,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *
      * The traversal loops in doPut, doRemove, and findNear all
      * include the same three kinds of checks. And specialized
-     * versions appear in doRemoveFirst, doRemoveLast, findFirst, and
-     * findLast. They can't easily share code because each uses the
+     * versions appear in findFirst, and findLast and their
+     * variants. They can't easily share code because each uses the
      * reads of fields held in locals occurring in the orders they
      * were performed.
      *
@@ -1146,7 +1146,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Removes first entry; returns its key.
+     * Removes first entry; returns its key.  Note: The
+     * mostly-redundant methods for removing first and last keys vs
+     * entries exist to avoid needless creation of Entry nodes when
+     * only the key is needed. The minor reduction in overhead is
+     * worth the minor code duplication.
      * @return null if empty, else key of first entry
      */
     K pollFirstKey() {
@@ -1201,7 +1205,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Clears out index nodes associated with deleted first entry.
-     * Needed by doRemoveFirst.
      */
     private void clearIndexToFirst() {
         for (;;) {
@@ -1268,13 +1271,42 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
+    /**
+     * Specialized variant of findPredecessor to get predecessor of
+     * last valid node. Needed by doRemoveLast. It is possible that
+     * all successors of returned node will have been deleted upon
+     * return, in which case this method can be retried.
+     * @return likely predecessor of last node
+     */
+    private Node<K,V> findPredecessorOfLast() {
+        for (;;) {
+            Index<K,V> q = head;
+            for (;;) {
+                Index<K,V> d, r;
+                if ((r = q.right) != null) {
+                    if (r.indexesDeletedNode()) {
+                        q.unlink(r);
+                        break;    // must restart
+                    }
+                    // proceed as far across as possible without overshooting
+                    if (r.node.next != null) {
+                        q = r;
+                        continue;
+                    }
+                }
+                if ((d = q.down) != null)
+                    q = d;
+                else
+                    return q.node;
+            }
+        }
+    }
 
     /**
-     * Specialized version of doRemove for last entry.
-     * @param keyOnly if true return key, else return SimpleImmutableEntry
-     * @return null if empty, last key if keyOnly true, else key,value entry
+     * Specialized version of doRemove for last key.
+     * @return null if empty, else the last key
      */
-    Object doRemoveLast(boolean keyOnly) {
+    K pollLastKey() {
         for (;;) {
             Node<K,V> b = findPredecessorOfLast();
             Node<K,V> n = b.next;
@@ -1311,50 +1343,55 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     if (head.right == null)
                         tryReduceLevel();
                 }
-                if (keyOnly)
-                    return key;
-                else
-                    return new AbstractMap.SimpleImmutableEntry<K,V>(key, (V)v);
+                return key;
             }
         }
     }
 
     /**
-     * Specialized variant of findPredecessor to get predecessor of
-     * last valid node. Needed by doRemoveLast. It is possible that
-     * all successors of returned node will have been deleted upon
-     * return, in which case this method can be retried.
-     * @return likely predecessor of last node
+     * Specialized version of doRemove for last.
+     * @return null if empty, else snapshot of the last entry
      */
-    private Node<K,V> findPredecessorOfLast() {
+    Map.Entry<K,V> doRemoveLastEntry() {
         for (;;) {
-            Index<K,V> q = head;
-            for (;;) {
-                Index<K,V> d, r;
-                if ((r = q.right) != null) {
-                    if (r.indexesDeletedNode()) {
-                        q.unlink(r);
-                        break;    // must restart
-                    }
-                    // proceed as far across as possible without overshooting
-                    if (r.node.next != null) {
-                        q = r;
-                        continue;
-                    }
-                }
-                if ((d = q.down) != null)
-                    q = d;
+            Node<K,V> b = findPredecessorOfLast();
+            Node<K,V> n = b.next;
+            if (n == null) {
+                if (b.isBaseHeader())               // empty
+                    return null;
                 else
-                    return q.node;
+                    continue; // all b's successors are deleted; retry
+            }
+            for (;;) {
+                Node<K,V> f = n.next;
+                if (n != b.next)                    // inconsistent read
+                    break;
+                Object v = n.value;
+                if (v == null) {                    // n is deleted
+                    n.helpDelete(b, f);
+                    break;
+                }
+                if (v == n || b.value == null)      // b is deleted
+                    break;
+                if (f != null) {
+                    b = n;
+                    n = f;
+                    continue;
+                }
+                if (!n.casValue(v, null))
+                    break;
+                K key = n.key;
+                Comparable<? super K> ck = comparable(key);
+                if (!n.appendMarker(f) || !b.casNext(n, f))
+                    findNode(ck);                  // Retry via findNode
+                else {
+                    findPredecessor(ck);           // Clean index
+                    if (head.right == null)
+                        tryReduceLevel();
+                }
+                return new AbstractMap.SimpleImmutableEntry<K,V>(key, (V)v);
             }
         }
-    }
-
-    /**
-     * Removes last entry; returns key or null if empty.
-     */
-    K pollLastKey() {
-        return (K)doRemoveLast(true);
     }
 
     /* ---------------- Relational operations -------------- */
@@ -2387,7 +2424,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * the <tt>Entry.setValue</tt> method.
      */
     public Map.Entry<K,V> pollLastEntry() {
-        return (AbstractMap.SimpleImmutableEntry<K,V>)doRemoveLast(false);
+        return doRemoveLastEntry();
     }
 
 

@@ -270,7 +270,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         transient int threshold;
 
         /**
-         * The per-segment table. */
+         *  The per-segment table. 
+         */
         transient volatile HashEntry<K,V>[] table;
 
         /**
@@ -1327,7 +1328,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
         // Initialize each segment to be minimally sized, and let grow.
         for (int i = 0; i < segments.length; ++i) {
-            segments[i].setTable((HashEntry<K,V>[])HashEntry.newArray(1));
+            segments[i].setTable(new HashEntry[1]);
         }
 
         // Read the keys and values, and put the mappings in the table

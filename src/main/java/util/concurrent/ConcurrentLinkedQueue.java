@@ -174,7 +174,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
         Node<E> n = new Node<E>(e, null);
-        for(;;) {
+        for (;;) {
             Node<E> t = tail;
             Node<E> s = t.getNext();
             if (t == tail) {

@@ -270,7 +270,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         transient int threshold;
 
         /**
-         *  The per-segment table. 
+         * The per-segment table.
          */
         transient volatile HashEntry<K,V>[] table;
 

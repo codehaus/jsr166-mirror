@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.security.AccessControlContext;
@@ -40,7 +41,7 @@ import java.security.AccessControlException;
 public class Executors {
 
     /**
-     * Creates a thread pool that reuses a fixed set of threads
+     * Creates a thread pool that reuses a fixed number of threads
      * operating off a shared unbounded queue. At any point, at most
      * <tt>nThreads</tt> threads will be active processing tasks. If
      * additional tasks are submitted when all threads are active,
@@ -59,7 +60,7 @@ public class Executors {
     }
 
     /**
-     * Creates a thread pool that reuses a fixed set of threads
+     * Creates a thread pool that reuses a fixed number of threads
      * operating off a shared unbounded queue, using the provided
      * ThreadFactory to create new threads when needed.  At any point,
      * at most <tt>nThreads</tt> threads will be active processing

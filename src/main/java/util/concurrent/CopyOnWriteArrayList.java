@@ -138,6 +138,14 @@ public class CopyOnWriteArrayList<E>
         return size() == 0;
     }
 
+    
+    /**
+     * Test for equality, coping with nulls.
+     */
+    private static boolean eq(Object o1, Object o2) {
+        return (o1 == null ? o2 == null : o1.equals(o2));
+    }
+
     /**
      * static version of indexOf, to allow repeated calls without
      * needing to re-acquire array each time.
@@ -363,8 +371,7 @@ public class CopyOnWriteArrayList<E>
             int len = elements.length;
             Object oldValue = elements[index];
 
-            if (oldValue != element &&
-                (element == null || !element.equals(oldValue))) {
+            if (oldValue != element) {
                 Object[] newElements = copyOf(elements, len);
                 newElements[index] = element;
                 setArray(newElements);
@@ -486,8 +493,7 @@ public class CopyOnWriteArrayList<E>
                 Object[] newElements = new Object[newlen];
 
                 for (int i = 0; i < newlen; ++i) {
-                    if (o == elements[i] ||
-                        (o != null && o.equals(elements[i]))) {
+                    if (eq(o, elements[i])) {
                         // found one;  copy remaining and exit
                         for (int k = i + 1; k < len; ++k)
                             newElements[k - 1] = elements[k];
@@ -498,8 +504,7 @@ public class CopyOnWriteArrayList<E>
                 }
 
                 // special handling for last cell
-                if (o == elements[newlen] ||
-                    (o != null && o.equals(elements[newlen]))) {
+                if (eq(o, elements[newlen])) {
                     setArray(newElements);
                     return true;
                 }
@@ -565,7 +570,7 @@ public class CopyOnWriteArrayList<E>
             int len = elements.length;
             Object[] newElements = new Object[len + 1];
             for (int i = 0; i < len; ++i) {
-                if (e == elements[i] || (e != null && e.equals(elements[i])))
+                if (eq(e, elements[i]))
                     return false; // exit, throwing away copy
                 else
                     newElements[i] = elements[i];
@@ -861,15 +866,15 @@ public class CopyOnWriteArrayList<E>
     public String toString() {
         Object[] elements = getArray();
         int maxIndex = elements.length - 1;
-        StringBuffer buf = new StringBuffer();
-        buf.append("[");
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
         for (int i = 0; i <= maxIndex; i++) {
-            buf.append(String.valueOf(elements[i]));
+            sb.append(String.valueOf(elements[i]));
             if (i < maxIndex)
-                buf.append(", ");
+                sb.append(", ");
         }
-        buf.append("]");
-        return buf.toString();
+        sb.append("]");
+        return sb.toString();
     }
 
     /**
@@ -891,16 +896,14 @@ public class CopyOnWriteArrayList<E>
         if (!(o instanceof List))
             return false;
 
-        List<E> l2 = (List<E>)(o);
+        List<?> l2 = (List<?>)(o);
         if (size() != l2.size())
             return false;
 
         ListIterator<?> e1 = listIterator();
         ListIterator<?> e2 = l2.listIterator();
         while (e1.hasNext()) {
-            Object o1 = e1.next();
-            Object o2 = e2.next();
-            if (!(o1 == null ? o2 == null : o1.equals(o2)))
+            if (!eq(e1.next(), e2.next()))
                 return false;
         }
         return true;

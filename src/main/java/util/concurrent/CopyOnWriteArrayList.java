@@ -798,8 +798,6 @@ public class CopyOnWriteArrayList<E>
                     newElements = new Object[len + numNew];
                     System.arraycopy(elements, index, newElements,
                                      index + numNew, numMoved);
-                    System.arraycopy(elements, index, newElements,
-                                     index + numNew, numMoved);
                 }
                 for (E e : c)
                     newElements[index++] = e;

@@ -92,7 +92,6 @@ public class AtomicLong extends Number implements java.io.Serializable {
         unsafe.putLongVolatile(this, valueOffset, newValue);
     }
 
-
     /**
      * Atomically sets to the given value and returns the old value.
      *

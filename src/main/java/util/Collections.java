@@ -6,6 +6,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc
 import java.io.Serializable;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
@@ -1365,10 +1366,7 @@ public class Collections {
                 // We don't pass a to c.toArray, to avoid window of
                 // vulnerability wherein an unscrupulous multithreaded client
                 // could get his hands on raw (unwrapped) Entries from c.
-		Object[] arr =
-		    c.toArray(
-			a.length==0 ? a :
-			(T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0));
+		Object[] arr = c.toArray(a.length==0 ? a : Arrays.copyOf(a, 0));
 
                 for (int i=0; i<arr.length; i++)
                     arr[i] = new UnmodifiableEntry<K,V>((Map.Entry<K,V>)arr[i]);
@@ -2702,8 +2700,7 @@ public class Collections {
                 // We don't pass a to s.toArray, to avoid window of
                 // vulnerability wherein an unscrupulous multithreaded client
                 // could get his hands on raw (unwrapped) Entries from s.
-                Object[] arr = s.toArray(a.length==0 ? a :
-                   (T[])Array.newInstance(a.getClass().getComponentType(), 0));
+                Object[] arr = s.toArray(a.length==0 ? a : Arrays.copyOf(a, 0));
 
                 for (int i=0; i<arr.length; i++)
                     arr[i] = new CheckedEntry<K,V>((Map.Entry<K,V>)arr[i],

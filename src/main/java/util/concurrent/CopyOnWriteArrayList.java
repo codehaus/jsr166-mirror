@@ -756,8 +756,6 @@ public class CopyOnWriteArrayList<E>
      */
     public boolean addAll(int index, Collection<? extends E> c) {
 	int numNew = c.size();
-	if (numNew == 0)
-	    return false;
 	final ReentrantLock lock = this.lock;
 	lock.lock();
 	try {
@@ -766,6 +764,8 @@ public class CopyOnWriteArrayList<E>
 	    if (index > len || index < 0)
 		throw new IndexOutOfBoundsException("Index: "+index+
 						    ", Size: "+len);
+            if (numNew == 0)
+                return false;
 	    int numMoved = len - index;
 	    Object[] newElements;
 	    if (numMoved == 0)

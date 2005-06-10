@@ -71,6 +71,55 @@ class LoopHelpers {
         return 36969 * (x & 65535) + (x >> 16);
     }
 
+    /**
+     * Marsaglia xorshift (1, 3, 10)
+     */
+    public static int compute6(int y) { 
+        y ^= y << 1; 
+        y ^= y >>> 3; 
+        y ^= (y << 10);
+        return y;
+    }
+
+    /**
+     * Marsaglia xorshift (6, 21, 7)
+     */
+    public static int compute7(int y) {
+        y ^= y << 6; 
+        y ^= y >>> 21; 
+        y ^= (y << 7);
+        return y;
+    }
+
+    public static final long compute8InitialValue = 88172645463325252L;
+
+    /**
+     * Marsaglia xorshift for longs
+     */
+    public static long compute8(long x) { 
+        x ^= x << 13; 
+        x ^= x >>> 7; 
+        x ^= (x << 17);
+        return x;
+    }
+
+
+    /** Multiplication-free RNG from Marsaglia "Xorshift RNGs" paper */
+    public static class MarsagliaRandom {
+        int x;
+        int y = 842502087;
+        int z = (int)(3579807591L & 0xffff);
+        int w = 273326509;
+        public MarsagliaRandom(int seed) { x = seed;  }
+        public MarsagliaRandom() { this((int)System.nanoTime()); }
+        public int next() {
+            int t = x ^ (x << 11);
+            x = y; 
+            y = z; 
+            z = w;
+            return w = (w ^ (w >>> 19)) ^ (t ^ (t >>> 8));
+        }
+    }
 
     /**
      * An actually useful random number generator, but unsynchronized.

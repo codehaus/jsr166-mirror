@@ -84,7 +84,7 @@ public final class SimpleLockLoops {
                         if (k > 0) {
                             x = v;
                             while (k-- > 0)
-                                x = LoopHelpers.compute4(x);
+                                x = LoopHelpers.compute6(x);
                             v = x;
                         }
                         else x = sum + 1;
@@ -92,7 +92,7 @@ public final class SimpleLockLoops {
                     if ((x += readBarrier) == 0)
                         ++readBarrier;
                     for (int l = x & 7; l > 0; --l)
-                        sum += LoopHelpers.compute4(sum);
+                        sum += LoopHelpers.compute6(sum);
                 } 
                 barrier.await();
                 result += sum;

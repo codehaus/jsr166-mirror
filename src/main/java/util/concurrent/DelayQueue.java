@@ -219,11 +219,12 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
     /**
      * Retrieves, but does not remove, the head of this queue,
-     * returning <tt>null</tt> if this queue has no elements with an
-     * expired delay.
+     * or returns <tt>null</tt> if this queue is empty.
+     * Unlike <tt>poll</tt>, this method can be used to inspect
+     * elements that have not yet expired.
      *
      * @return the head of this queue, or <tt>null</tt> if this
-     *         queue has no elements with an expired delay
+     *         queue is empty.
      */
     public E peek() {
         final ReentrantLock lock = this.lock;

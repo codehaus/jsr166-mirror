@@ -471,8 +471,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @return a String representation of this map
      */
     public String toString() {
-	StringBuffer buf = new StringBuffer();
-	buf.append("{");
+	StringBuilder sb = new StringBuilder();
+	sb.append("{");
 
 	Iterator<Entry<K,V>> i = entrySet().iterator();
         boolean hasNext = i.hasNext();
@@ -481,21 +481,21 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	    K key = e.getKey();
             V value = e.getValue();
 	    if (key == this)
-		buf.append("(this Map)");
+		sb.append("(this Map)");
 	    else
-		buf.append(key);
-	    buf.append("=");
+		sb.append(key);
+	    sb.append("=");
 	    if (value == this)
-		buf.append("(this Map)");
+		sb.append("(this Map)");
 	    else
-		buf.append(value);
+		sb.append(value);
             hasNext = i.hasNext();
             if (hasNext)
-                buf.append(", ");
+                sb.append(", ");
         }
 
-	buf.append("}");
-	return buf.toString();
+	sb.append("}");
+	return sb.toString();
     }
 
     /**

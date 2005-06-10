@@ -1272,9 +1272,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Specialized variant of findPredecessor to get predecessor of
-     * last valid node. Needed by doRemoveLast. It is possible that
-     * all successors of returned node will have been deleted upon
+     * Specialized variant of findPredecessor to get predecessor of last
+     * valid node.  Needed when removing the last entry.  It is possible
+     * that all successors of returned node will have been deleted upon
      * return, in which case this method can be retried.
      * @return likely predecessor of last node
      */
@@ -1303,8 +1303,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Specialized version of doRemove for last key.
-     * @return null if empty, else the last key
+     * Removes last entry; returns key or null if empty.
+     * @return null if empty, else key of last entry
      */
     K pollLastKey() {
         for (;;) {
@@ -1349,8 +1349,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Specialized version of doRemove for last.
-     * @return null if empty, else snapshot of the last entry
+     * Removes last entry; returns its snapshot.
+     * Specialized variant of doRemove.
+     * @return null if empty, else snapshot of last entry
      */
     Map.Entry<K,V> doRemoveLastEntry() {
         for (;;) {

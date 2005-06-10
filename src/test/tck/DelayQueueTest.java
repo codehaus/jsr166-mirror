@@ -592,8 +592,10 @@ public class DelayQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(new PDelay(i), ((PDelay)q.peek()));
             q.poll();
-            assertTrue(q.peek() == null ||
-                       i != ((PDelay)q.peek()).intValue());
+            if (q.isEmpty())
+                assertNull(q.peek());
+            else
+                assertTrue(i != ((PDelay)q.peek()).intValue());
         }
 	assertNull(q.peek());
     }
@@ -883,6 +885,23 @@ public class DelayQueueTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * peek of a non-empty queue returns non-null even if not expired
+     */
+    public void testPeekDelayed() {
+        DelayQueue q = new DelayQueue();
+        q.add(new NanoDelay(Long.MAX_VALUE));
+        assert(q.peek() != null);
+    }
+
+    /**
+     * poll of a non-empty queue returns null if no expired elements.
+     */
+    public void testPollDelayed() {
+        DelayQueue q = new DelayQueue();
+        q.add(new NanoDelay(Long.MAX_VALUE));
+        assertNull(q.poll());
+    }
 
     /**
      * drainTo(null) throws NPE

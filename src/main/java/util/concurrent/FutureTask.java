@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc
 import java.util.concurrent.locks.*;
 
 /**
@@ -112,7 +113,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * already been set or has been cancelled.
      * This method is invoked internally by the <tt>run</tt> method
      * upon failure of the computation.
-     * @param t the cause of failure.
+     * @param t the cause of failure
      */
     protected void setException(Throwable t) {
         sync.innerSetException(t);

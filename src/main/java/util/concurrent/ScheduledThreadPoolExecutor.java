@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc
 import java.util.concurrent.atomic.*;
 import java.util.*;
 
@@ -550,8 +551,8 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * An annoying wrapper class to convince generics compiler to
-     * use a DelayQueue<RunnableScheduledFuture> as a BlockingQueue<Runnable>
+     * An annoying wrapper class to convince javac to use a
+     * DelayQueue<RunnableScheduledFuture> as a BlockingQueue<Runnable>
      */
     private static class DelayedWorkQueue
         extends AbstractCollection<Runnable>
@@ -565,8 +566,12 @@ public class ScheduledThreadPoolExecutor
             return dq.poll(timeout, unit);
         }
 
-        public boolean add(Runnable x) { return dq.add((RunnableScheduledFuture)x); }
-        public boolean offer(Runnable x) { return dq.offer((RunnableScheduledFuture)x); }
+        public boolean add(Runnable x) {
+	    return dq.add((RunnableScheduledFuture)x);
+	}
+        public boolean offer(Runnable x) {
+	    return dq.offer((RunnableScheduledFuture)x);
+	}
         public void put(Runnable x)  {
             dq.put((RunnableScheduledFuture)x);
         }

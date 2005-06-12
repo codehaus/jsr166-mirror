@@ -17,7 +17,11 @@ import java.util.*;
  * past.  If no delay has expired there is no head and <tt>poll</tt>
  * will return <tt>null</tt>. Expiration occurs when an element's
  * <tt>getDelay(TimeUnit.NANOSECONDS)</tt> method returns a value less
- * than or equal to zero.  This queue does not permit <tt>null</tt>
+ * than or equal to zero.  Even though unexpired elements cannot be
+ * removed using <tt>take</tt> or <tt>poll</tt>, they are otherwise
+ * treated as normal elements. For example, the <tt>size</tt> method
+ * returns the count of both expired and unexpired elements.
+ * This queue does not permit <tt>null</tt>
  * elements.
  *
  * <p>This class and its iterator implement all of the
@@ -218,10 +222,11 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
-     * Retrieves, but does not remove, the head of this queue,
-     * or returns <tt>null</tt> if this queue is empty.
-     * Unlike <tt>poll</tt>, this method can be used to inspect
-     * elements that have not yet expired.
+     * Retrieves, but does not remove, the head of this queue, or
+     * returns <tt>null</tt> if this queue is empty.  Unlike
+     * <tt>poll</tt>, if no expired elements are available in the queue,
+     * this method returns the element that will expire next,
+     * if one exists.
      *
      * @return the head of this queue, or <tt>null</tt> if this
      *         queue is empty.
@@ -406,7 +411,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
     /**
      * Removes a single instance of the specified element from this
-     * queue, if it is present.
+     * queue, if it is present, whether or not it has expired.
      */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;
@@ -419,11 +424,12 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
-     * Returns an iterator over the elements in this queue. The iterator
-     * does not return the elements in any particular order. The
-     * returned iterator is a thread-safe "fast-fail" iterator that will
-     * throw {@link ConcurrentModificationException}
-     * upon detected interference.
+     * Returns an iterator over all the elements (both expired and
+     * unexpired) in this queue. The iterator does not
+     * return the elements in any particular order. The returned
+     * iterator is a thread-safe "fast-fail" iterator that will throw
+     * {@link ConcurrentModificationException} upon detected
+     * interference.
      *
      * @return an iterator over the elements in this queue
      */

@@ -22,7 +22,8 @@ public interface RunnableScheduledFuture<V> extends RunnableFuture<V>, Scheduled
      * Returns true if this is a periodic task. A periodic task may
      * re-run according to some schedule. A non-periodic task can be
      * run only once.
-     * @return true if this task is periodic.
-     */ 
+     *
+     * @return true if this task is periodic
+     */
     boolean isPeriodic();
 }

@@ -88,6 +88,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * represent the number of holds on the lock.
      */
     static abstract class Sync  extends AbstractQueuedSynchronizer {
+        private static final long serialVersionUID = -5179523762034025860L;
+
         /**
          * Performs {@link Lock#lock}. The main reason for subclassing
          * is to allow fast path for nonfair version.
@@ -167,6 +169,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * Sync object for non-fair locks
      */
     final static class NonfairSync extends Sync {
+        private static final long serialVersionUID = 7316153563782823691L;
+
         /**
          * Performs lock.  Try immediate barge, backing up to normal
          * acquire on failure.
@@ -181,12 +185,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         protected final boolean tryAcquire(int acquires) {
             return nonfairTryAcquire(acquires);
         }
+
     }
 
     /**
      * Sync object for fair locks
      */
     final static class FairSync  extends Sync {
+        private static final long serialVersionUID = -3000897897090466540L;
+
         final void lock() {
             acquire(1);
         }

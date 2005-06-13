@@ -265,6 +265,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *  0 for waiting, 1 for ack, -1 for cancelled.
      */
     static final class Node extends AbstractQueuedSynchronizer {
+        private static final long serialVersionUID = -2631493897867746127L;
+
         /** Synchronization state value representing that node acked */
         private static final int ACK    =  1;
         /** Synchronization state value representing that node cancelled */

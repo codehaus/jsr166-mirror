@@ -134,6 +134,8 @@ public class Semaphore implements java.io.Serializable {
      * versions.
      */
     abstract static class Sync extends AbstractQueuedSynchronizer {
+        private static final long serialVersionUID = 1192457210091910933L;
+
         Sync(int permits) {
             setState(permits);
         }
@@ -182,6 +184,8 @@ public class Semaphore implements java.io.Serializable {
      * NonFair version
      */
     final static class NonfairSync extends Sync {
+        private static final long serialVersionUID = -2694183684443567898L;
+
         NonfairSync(int permits) {
             super(permits);
         }
@@ -195,6 +199,8 @@ public class Semaphore implements java.io.Serializable {
      * Fair version
      */
     final static class FairSync extends Sync {
+        private static final long serialVersionUID = 2014338818796000944L;
+
         FairSync(int permits) {
             super(permits);
         }

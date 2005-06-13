@@ -128,6 +128,8 @@ public class CountDownLatch {
      * Uses AQS state to represent count.
      */
     private static final class Sync extends AbstractQueuedSynchronizer {
+        private static final long serialVersionUID = 4982264981922014374L;
+
         Sync(int count) {
             setState(count);
         }

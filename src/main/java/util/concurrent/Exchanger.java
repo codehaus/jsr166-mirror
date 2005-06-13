@@ -218,6 +218,8 @@ public class Exchanger<V> {
      * because the sentinel value FAIL is only of type Object.
      */
     static final class Node extends AtomicReference<Object> {
+        private static final long serialVersionUID = -3221313401284163686L;
+        
         /** The element offered by the Thread creating this node. */
 	final Object item;
         /** The Thread creating this node. */

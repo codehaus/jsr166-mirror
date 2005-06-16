@@ -861,9 +861,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Maps the specified <tt>key</tt> to the specified
-     * <tt>value</tt> in this table. Neither the key nor the
-     * value can be <tt>null</tt>.
+     * Maps the specified key to the specified value in this table.
+     * Neither the key nor the value can be null.
      *
      * <p> The value can be retrieved by calling the <tt>get</tt> method
      * with a key that is equal to the original key.

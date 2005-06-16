@@ -6,6 +6,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc
 
 /**
  * A Red-Black tree based {@link NavigableMap} implementation.
@@ -1519,7 +1520,7 @@ public class TreeMap<K,V>
     }
 
     /**
-     * Test two values  for equality.  Differs from o1.equals(o2) only in
+     * Test two values for equality.  Differs from o1.equals(o2) only in
      * that it copes with <tt>null</tt> o1 properly.
      */
     private static boolean valEquals(Object o1, Object o2) {

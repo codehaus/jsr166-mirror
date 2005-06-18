@@ -151,6 +151,10 @@ public enum TimeUnit {
         return d * m;
     }
 
+    // To maintain full signature compatibility with 1.5, method
+    // convert etc are not declared abstract but otherwise act as
+    // abstract methods.
+
     /**
      * Convert the given time duration in the given unit to this
      * unit.  Conversions from finer to coarser granularities
@@ -160,14 +164,19 @@ public enum TimeUnit {
      * with arguments that would numerically overflow saturate to
      * <tt>Long.MIN_VALUE</tt> if negative or <tt>Long.MAX_VALUE</tt>
      * if positive.
+     * <p>
+     * For example, to convert 10 minutes to milliseconds, use:
+     * <tt>TimeUnit.MILLISECONDS.convert(10L, TimeUnit.MINUTES)</tt>
      *
-     * @param duration the time duration in the given <tt>unit</tt>
-     * @param unit the unit of the <tt>duration</tt> argument
+     * @param sourceDuration the time duration in the given <tt>unit</tt>
+     * @param sourceUnit the unit of the <tt>sourceDuration</tt> argument
      * @return the converted duration in this unit,
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      */
-    public abstract long convert(long duration, TimeUnit unit);
+    public long convert(long sourceDuration, TimeUnit sourceUnit) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Equivalent to <tt>NANOSECONDS.convert(duration, this)</tt>.
@@ -177,7 +186,9 @@ public enum TimeUnit {
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      * @see #convert
      */
-    public abstract long toNanos(long duration);
+    public long toNanos(long duration) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Equivalent to <tt>MICROSECONDS.convert(duration, this)</tt>.
@@ -187,7 +198,9 @@ public enum TimeUnit {
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      * @see #convert
      */
-    public abstract long toMicros(long duration);
+    public long toMicros(long duration) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Equivalent to <tt>MILLISECONDS.convert(duration, this)</tt>.
@@ -197,7 +210,9 @@ public enum TimeUnit {
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      * @see #convert
      */
-    public abstract long toMillis(long duration);
+    public long toMillis(long duration) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Equivalent to <tt>SECONDS.convert(duration, this)</tt>.
@@ -207,7 +222,9 @@ public enum TimeUnit {
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      * @see #convert
      */
-    public abstract long toSeconds(long duration);
+    public long toSeconds(long duration) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Equivalent to <tt>MINUTES.convert(duration, this)</tt>.
@@ -218,7 +235,9 @@ public enum TimeUnit {
      * @see #convert
      * @since 1.6
      */
-    public abstract long toMinutes(long duration);
+    public long toMinutes(long duration) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Equivalent to <tt>HOURS.convert(duration, this)</tt>.
@@ -229,7 +248,9 @@ public enum TimeUnit {
      * @see #convert
      * @since 1.6
      */
-    public abstract long toHours(long duration);
+    public long toHours(long duration) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Equivalent to <tt>DAYS.convert(duration, this)</tt>.
@@ -238,7 +259,9 @@ public enum TimeUnit {
      * @see #convert
      * @since 1.6
      */
-    public abstract long toDays(long duration);
+    public long toDays(long duration) {
+        throw new AbstractMethodError();
+    }
 
     /**
      * Utility to compute the excess-nanosecond argument to wait,

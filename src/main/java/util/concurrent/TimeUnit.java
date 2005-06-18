@@ -151,9 +151,10 @@ public enum TimeUnit {
         return d * m;
     }
 
-    // To maintain full signature compatibility with 1.5, method
-    // convert etc are not declared abstract but otherwise act as
-    // abstract methods.
+    // To maintain full signature compatibility with 1.5, and to improve the
+    // clarity of the generated javadoc (see 6287639: Abstract methods in
+    // enum classes should not be listed as abstract), method convert
+    // etc. are not declared abstract but otherwise act as abstract methods.
 
     /**
      * Convert the given time duration in the given unit to this
@@ -164,11 +165,11 @@ public enum TimeUnit {
      * with arguments that would numerically overflow saturate to
      * <tt>Long.MIN_VALUE</tt> if negative or <tt>Long.MAX_VALUE</tt>
      * if positive.
-     * <p>
-     * For example, to convert 10 minutes to milliseconds, use:
+     *
+     * <p>For example, to convert 10 minutes to milliseconds, use:
      * <tt>TimeUnit.MILLISECONDS.convert(10L, TimeUnit.MINUTES)</tt>
      *
-     * @param sourceDuration the time duration in the given <tt>unit</tt>
+     * @param sourceDuration the time duration in the given <tt>sourceUnit</tt>
      * @param sourceUnit the unit of the <tt>sourceDuration</tt> argument
      * @return the converted duration in this unit,
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively

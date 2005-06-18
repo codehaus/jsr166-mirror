@@ -507,7 +507,7 @@ public class LinkedBlockingDeque<E>
      * violate capacity restrictions.  When using a capacity-restricted deque,
      * it is generally preferable to use method {@link #offer(Object) offer}.
      *
-     * <p>This method is equivalent to {@link #addLast(Object) addLast}.
+     * <p>This method is equivalent to {@link #addLast}.
      *
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions

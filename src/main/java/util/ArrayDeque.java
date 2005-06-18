@@ -4,6 +4,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc
 import java.io.*;
 
 /**
@@ -202,7 +203,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Inserts the specified element at the end of this deque.
-     * This method is equivalent to {@link #add} and {@link #push}.
+     *
+     * <p>This method is equivalent to {@link #add}.
      *
      * @param e the element to add
      * @throws NullPointerException if the specified element is null

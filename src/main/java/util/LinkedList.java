@@ -6,6 +6,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc
 
 /**
  * Linked list implementation of the <tt>List</tt> interface.  Implements all
@@ -144,19 +145,20 @@ public class LinkedList<E>
     }
 
     /**
-     * Inserts the given element at the beginning of this list.
+     * Inserts the specified element at the beginning of this list.
      *
-     * @param e the element to be inserted at the beginning of this list
+     * @param e the element to add
      */
     public void addFirst(E e) {
 	addBefore(e, header.next);
     }
 
     /**
-     * Appends the given element to the end of this list.  (Identical in
-     * function to the <tt>add</tt> method; included only for consistency.)
+     * Appends the specified element to the end of this list.
      *
-     * @param e the element to be inserted at the end of this list
+     * <p>This method is equivalent to {@link #add}.
+     *
+     * @param e the element to add
      */
     public void addLast(E e) {
 	addBefore(e, header);
@@ -186,6 +188,8 @@ public class LinkedList<E>
 
     /**
      * Appends the specified element to the end of this list.
+     *
+     * <p>This method is equivalent to {@link #addLast}.
      *
      * @param e element to be appended to this list
      * @return <tt>true</tt> (as per the spec for {@link Collection#add})

@@ -5,6 +5,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc
 
 /**
  * A linear collection that supports element insertion and removal at
@@ -187,6 +188,8 @@ public interface Deque<E> extends Queue<E> {
      * When using a capacity-restricted deque, it is generally preferable to
      * use method {@link #offerLast}.
      *
+     * <p>This method is equivalent to {@link #add}.
+     *
      * @param e the element to add
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
@@ -354,7 +357,7 @@ public interface Deque<E> extends Queue<E> {
      * When using a capacity-restricted deque, it is generally preferable to
      * use {@link #offer(Object) offer}.
      *
-     * <p>This method is equivalent to {@link #addLast(Object) addLast}.
+     * <p>This method is equivalent to {@link #addLast}.
      *
      * @param e the element to add
      * @return <tt>true</tt> (as per the spec for {@link Collection#add})

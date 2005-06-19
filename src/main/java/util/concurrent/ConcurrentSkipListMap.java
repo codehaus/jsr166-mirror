@@ -891,7 +891,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Returns a random level for inserting a new node.
-     * Hardwired to k=1, p=0.5, max 31.
+     * Hardwired to k=1, p=0.5, max 31 (see
+     * Pugh's "Skip List Cookbook", sec 3.4).
      *
      * This uses the simplest of the generators described in George
      * Marsaglia's "Xorshift RNGs" paper.  This is not a high-quality

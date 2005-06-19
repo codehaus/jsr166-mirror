@@ -153,7 +153,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Inserts the specified element into this priority queue.
      *
      * @param e the element to add
-     * @return <tt>true</tt>
+     * @return <tt>true</tt> (as per the spec for {@link Queue#offer})
      * @throws ClassCastException if the specified element cannot be compared
      *         with elements currently in the priority queue according to the
      *         priority queue's ordering

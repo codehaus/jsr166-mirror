@@ -661,7 +661,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      *
-     * @param o the element
+     * @param o object to be checked for containment in this queue
      * @return <tt>false</tt>
      */
     public boolean contains(Object o) {

@@ -337,7 +337,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         values = null;
         descendingEntrySet = null;
         descendingKeySet = null;
-        randomSeed = (int) System.nanoTime();
+        randomSeed = ((int) System.nanoTime()) | 1; // ensure nonzero
         head = new HeadIndex<K,V>(new Node<K,V>(null, BASE_HEADER, null),
                                   null, null, 1);
     }
@@ -893,17 +893,17 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Returns a random level for inserting a new node.
      * Hardwired to k=1, p=0.5, max 31.
      *
-     * This uses a cheap pseudo-random function that according to
-     * http://home1.gte.net/deleyd/random/random4.html was used in
-     * Turbo Pascal. It seems the fastest usable one here. The low
-     * bits are apparently not very random (the original used only
-     * upper 16 bits) so we traverse from highest bit down (i.e., test
-     * sign), thus hardly ever use lower bits.
+     * This uses the simplest of the generators described in George
+     * Marsaglia's "Xorshift RNGs" paper.  This is not a high-quality
+     * generator but is acceptable here. Note that bits are checked
+     * by testing sign, which is a little faster than testing low bit.
      */
     private int randomLevel() {
         int level = 0;
         int r = randomSeed;
-        randomSeed = r * 134775813 + 1;
+        int x = r ^ (r << 13);
+        x ^= x >>> 17;
+        randomSeed = x ^ (x << 5);
         if (r < 0) {
             while ((r <<= 1) > 0)
                 ++level;

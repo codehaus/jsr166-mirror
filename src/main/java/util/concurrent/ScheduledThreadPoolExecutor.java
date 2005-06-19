@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.*; // for javadoc
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.concurrent.atomic.*;
 import java.util.*;
 
@@ -32,7 +32,7 @@ import java.util.*;
  * <p>This class supports protected extension method
  * <tt>decorateTask</tt> (one version each for <tt>Runnable</tt> and
  * <tt>Callable</tt>) that can be used to customize the concrete task
- * types used to execute commands. By default,  
+ * types used to execute commands. By default,
  * a <tt>ScheduledThreadPoolExecutor</tt> uses
  * a task type extending {@link FutureTask}. However, this may
  * be modified or replaced using subclasses of the form:
@@ -242,11 +242,11 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * Modify or replace the task used to execute a runnable.
-     * This method can be used to override the concrete 
+     * This method can be used to override the concrete
      * class used for managing internal tasks.
      * The default implementation simply returns the given
      * task.
-     * 
+     *
      * @param runnable the submitted Runnable
      * @param task the task created to execute the runnable
      * @return a task that can execute the runnable
@@ -259,11 +259,11 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * Modify or replace the task used to execute a callable.
-     * This method can be used to override the concrete 
+     * This method can be used to override the concrete
      * class used for managing internal tasks.
      * The default implementation simply returns the given
      * task.
-     * 
+     *
      * @param callable the submitted Callable
      * @param task the task created to execute the callable
      * @return a task that can execute the callable

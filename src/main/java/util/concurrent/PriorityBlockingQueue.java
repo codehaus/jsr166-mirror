@@ -160,7 +160,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
-        if (e == null) throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {

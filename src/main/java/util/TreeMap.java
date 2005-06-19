@@ -6,7 +6,7 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc
+import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A Red-Black tree based {@link NavigableMap} implementation.
@@ -217,7 +217,8 @@ public class TreeMap<K,V>
      * specified value.  More formally, returns <tt>true</tt> if and only if
      * this map contains at least one mapping to a value <tt>v</tt> such
      * that <tt>(value==null ? v==null : value.equals(v))</tt>.  This
-     * operation requires time linear in the map size.
+     * operation will probably require time linear in the map size for
+     * most implementations.
      *
      * @param value value whose presence in this map is to be tested
      * @return <tt>true</tt> if a mapping to <tt>value</tt> exists;

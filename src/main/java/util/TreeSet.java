@@ -6,6 +6,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A {@link NavigableSet} implementation based on a {@link TreeMap}.
@@ -191,8 +192,11 @@ public class TreeSet<E>
 
     /**
      * Returns <tt>true</tt> if this set contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this set
+     * contains an element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
      *
-     * @param o the object to be checked for containment in this set
+     * @param o object to be checked for containment in this set
      * @return <tt>true</tt> if this set contains the specified element
      * @throws ClassCastException if the specified object cannot be compared
      *         with the elements currently in the set
@@ -206,12 +210,17 @@ public class TreeSet<E>
 
     /**
      * Adds the specified element to this set if it is not already present.
+     * More formally, adds the specified element <tt>e</tt> to this set if
+     * the set contains no element <tt>e2</tt> such that
+     * <tt>(e==null&nbsp;?&nbsp;e2==null&nbsp;:&nbsp;e.equals(e2))</tt>.
+     * If this set already contains the element, the call leaves the set
+     * unchanged and returns <tt>false</tt>.
      *
      * @param e element to be added to this set
-     * @return <tt>true</tt> if the set did not already contain the specified
+     * @return <tt>true</tt> if this set did not already contain the specified
      *         element
      * @throws ClassCastException if the specified object cannot be compared
-     *         with the elements currently in the set
+     *         with the elements currently in this set
      * @throws NullPointerException if the specified element is null
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
@@ -222,11 +231,17 @@ public class TreeSet<E>
 
     /**
      * Removes the specified element from this set if it is present.
+     * More formally, removes an element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>,
+     * if this set contains such an element.  Returns <tt>true</tt> if
+     * this set contained the element (or equivalently, if this set
+     * changed as a result of the call).  (This set will not contain the
+     * element once the call returns.)
      *
      * @param o object to be removed from this set, if present
-     * @return <tt>true</tt> if the set contained the specified element
+     * @return <tt>true</tt> if this set contained the specified element
      * @throws ClassCastException if the specified object cannot be compared
-     *         with the elements currently in the set
+     *         with the elements currently in this set
      * @throws NullPointerException if the specified element is null
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements

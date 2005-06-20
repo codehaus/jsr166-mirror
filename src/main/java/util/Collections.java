@@ -6,7 +6,7 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc
+import java.util.*; // for javadoc (till 6280605 is fixed)
 import java.io.Serializable;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
@@ -1291,7 +1291,7 @@ public class Collections {
 	public V remove(Object key) {
 	    throw new UnsupportedOperationException();
         }
-	public void putAll(Map<? extends K, ? extends V> t) {
+	public void putAll(Map<? extends K, ? extends V> m) {
 	    throw new UnsupportedOperationException();
         }
 	public void clear() {

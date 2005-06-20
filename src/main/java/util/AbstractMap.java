@@ -6,6 +6,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc (till 6280605 is fixed)
 import java.util.Map.Entry;
 
 /**
@@ -404,8 +405,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 
 	if (!(o instanceof Map))
 	    return false;
-	Map<K,V> t = (Map<K,V>) o;
-	if (t.size() != size())
+	Map<K,V> m = (Map<K,V>) o;
+	if (m.size() != size())
 	    return false;
 
         try {
@@ -415,10 +416,10 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 		K key = e.getKey();
                 V value = e.getValue();
                 if (value == null) {
-                    if (!(t.get(key)==null && t.containsKey(key)))
+                    if (!(m.get(key)==null && m.containsKey(key)))
                         return false;
                 } else {
-                    if (!value.equals(t.get(key)))
+                    if (!value.equals(m.get(key)))
                         return false;
                 }
             }

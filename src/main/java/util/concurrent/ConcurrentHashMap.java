@@ -611,8 +611,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with the specified initial capacity
-     * and load factor and with the default concurrencyLevel
-     * (<tt>16</tt>).
+     * and load factor and with the default concurrencyLevel (16).
      *
      * @param initialCapacity The implementation performs internal
      * sizing to accommodate this many elements.
@@ -628,8 +627,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Creates a new, empty map with the specified initial capacity,
-     * and with default load factor (<tt>0.75f</tt>)
-     * and concurrencyLevel (<tt>16</tt>).
+     * and with default load factor (0.75) and concurrencyLevel (16).
      *
      * @param initialCapacity the initial capacity. The implementation
      * performs internal sizing to accommodate this many elements.
@@ -641,22 +639,19 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Creates a new, empty map with a default initial capacity
-     * (<tt>16</tt>), load factor
-     * (<tt>0.75f</tt>), and concurrencyLevel
-     * (<tt>16</tt>).
+     * Creates a new, empty map with a default initial capacity (16),
+     * load factor (0.75) and concurrencyLevel (16).
      */
     public ConcurrentHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
     }
 
     /**
-     * Creates a new map with the same mappings as the given map.  The
-     * map is created with a capacity of 1.5 times the number of
-     * mappings in the given map or <tt>16</tt>
-     * (whichever is greater), and a default load factor
-     * (<tt>0.75f</tt>) and concurrencyLevel
-     * (<tt>16</tt>).
+     * Creates a new map with the same mappings as the given map.
+     * The map is created with a capacity of 1.5 times the number
+     * of mappings in the given map or 16 (whichever is greater),
+     * and a default load factor (0.75) and concurrencyLevel (16).
+     *
      * @param m the map
      */
     public ConcurrentHashMap(Map<? extends K, ? extends V> m) {

@@ -388,7 +388,13 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     // Comparison and hashing
 
     /**
-     * {@inheritDoc}
+     * Compares the specified object with this map for equality.  Returns
+     * <tt>true</tt> if the given object is also a map and the two maps
+     * represent the same mappings.  More formally, two maps <tt>m1</tt> and
+     * <tt>m2</tt> represent the same mappings if
+     * <tt>m1.entrySet().equals(m2.entrySet())</tt>.  This ensures that the
+     * <tt>equals</tt> method works properly across different implementations
+     * of the <tt>Map</tt> interface.
      *
      * <p>This implementation first checks if the specified object is this map;
      * if so it returns <tt>true</tt>.  Then, it checks if the specified
@@ -398,6 +404,9 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * contains each mapping that this map contains.  If the specified map
      * fails to contain such a mapping, <tt>false</tt> is returned.  If the
      * iteration completes, <tt>true</tt> is returned.
+     *
+     * @param o object to be compared for equality with this map
+     * @return <tt>true</tt> if the specified object is equal to this map
      */
     public boolean equals(Object o) {
 	if (o == this)
@@ -433,14 +442,19 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the hash code value for this map.  The hash code of a map is
+     * defined to be the sum of the hash codes of each entry in the map's
+     * <tt>entrySet()</tt> view.  This ensures that <tt>m1.equals(m2)</tt>
+     * implies that <tt>m1.hashCode()==m2.hashCode()</tt> for any two maps
+     * <tt>m1</tt> and <tt>m2</tt>, as required by the general contract of
+     * {@link Object#hashCode}.
      *
      * <p>This implementation iterates over <tt>entrySet()</tt>, calling
-     * <tt>hashCode()</tt> on each element (entry) in the set, and
-     * adding up the results.
+     * {@link Map.Entry#hashCode hashCode()} on each element (entry) in the
+     * set, and adding up the results.
      *
+     * @return the hash code value for this map
      * @see Map.Entry#hashCode()
-     * @see Object#hashCode()
      * @see Object#equals(Object)
      * @see Set#equals(Object)
      */

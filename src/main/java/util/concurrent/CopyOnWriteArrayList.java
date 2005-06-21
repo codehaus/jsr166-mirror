@@ -886,9 +886,9 @@ public class CopyOnWriteArrayList<E>
     /**
      * Returns the hash code value for this list.
      *
-     * <p> This implementation uses the definition in {@link
-     * List#hashCode}.
-     * @return the hash code
+     * <p>This implementation uses the definition in {@link List#hashCode}.
+     *
+     * @return the hash code value for this list
      */
     public int hashCode() {
         int hashCode = 1;

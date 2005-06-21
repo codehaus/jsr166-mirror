@@ -1845,7 +1845,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Removes the mapping for this key from this map if present.
+     * Removes the mapping for the specified key from this map if present.
      *
      * @param  key key for which mapping should be removed
      * @return the previous value associated with the specified key, or

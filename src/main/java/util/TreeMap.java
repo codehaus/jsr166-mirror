@@ -521,7 +521,7 @@ public class TreeMap<K,V>
 
     /**
      * Associates the specified value with the specified key in this map.
-     * If the map previously contained a mapping for this key, the old
+     * If the map previously contained a mapping for the key, the old
      * value is replaced.
      *
      * @param key key with which the specified value is to be associated

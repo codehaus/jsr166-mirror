@@ -752,8 +752,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <tt>null</tt> if the map contains no mapping for the key.
      *
      * @param key key whose associated value is to be returned
-     * @return the value associated with <tt>key</tt> in this map, or
-     *         <tt>null</tt> if there is no mapping for <tt>key</tt>
+     * @return the value to which this map maps the specified key, or
+     *         <tt>null</tt> if the map contains no mapping for the key
      * @throws NullPointerException if the specified key is null
      */
     public V get(Object key) {

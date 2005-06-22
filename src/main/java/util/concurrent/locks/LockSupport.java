@@ -99,7 +99,6 @@ public class LockSupport {
     private static void setBlocker(Thread t, Object arg) {
         // Even though volatile, hotspot doesn't need a write barrier here.
         unsafe.putObject(t, parkBlockerOffset, arg);
-        //        unsafe.putOrderedObject(t, parkBlockerOffset, arg);
     }
 
     /**

@@ -90,12 +90,14 @@ import java.util.concurrent.TimeUnit;
  *
  * <h3>Memory Synchronization</h3>
  * <p>All <tt>Lock</tt> implementations <em>must</em> enforce the same
- * memory synchronization semantics as provided by the built-in monitor lock:
+ * memory synchronization semantics as provided by the built-in monitor 
+ * lock, as described in <a href="http://java.sun.com/docs/books/jls/">
+ * The Java Language Specification, Third Edition (17.4 Memory Model)</a>:
  * <ul>
- * <li>A successful lock operation acts like a successful
- * <tt>monitorEnter</tt> action
- * <li>A successful <tt>unlock</tt> operation acts like a successful
- * <tt>monitorExit</tt> action
+ * <li>A successful <tt>lock</tt> operation has the same memory
+ * synchronization effects as a successful <em>Lock</em> action.
+ * <li>A successful <tt>unlock</tt> operation has the same
+ * memory synchronization effects as a successful <em>Unlock</em> action.
  * </ul>
  *
  * Unsuccessful locking and unlocking operations, and reentrant

@@ -13,9 +13,12 @@ package java.util.concurrent.locks;
  * multiple reader threads, so long as there are no writers.  The
  * {@link #writeLock write lock} is exclusive.
  *
- * <p>All <tt>ReadWriteLock</tt> implementations must guarantee that the
- * memory synchronization effects of <tt>writeLock</tt> operations
- * also hold with respect to the associated <tt>readLock</tt>.
+ * <p>All <tt>ReadWriteLock</tt> implementations must guarantee that
+ * the memory synchronization effects of <tt>writeLock</tt> operations
+ * (as specified in the {@link Lock} interface) also hold with respect
+ * to the associated <tt>readLock</tt>. That is, a thread successfully
+ * acquiring the read lock will see all updates made upon previous
+ * release of the write lock.
  *
  * <p>A read-write lock allows for a greater level of concurrency in
  * accessing shared data than that permitted by a mutual exclusion lock.

@@ -549,6 +549,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * implementations. For example, it may be convenient to return
      * arrays of <tt>SimpleEntry</tt> instances in method
      * <tt>Map.entrySet().toArray</tt>
+     *
+     * @since 1.6
      */
     public static class SimpleEntry<K,V> implements Entry<K,V> {
 	private final K key;
@@ -639,6 +641,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * does not support method <tt>setValue</tt>.  This class may be
      * convenient in methods that return thread-safe snapshots of
      * key-value mappings.
+     *
+     * @since 1.6
      */
     public static class SimpleImmutableEntry<K,V> implements Entry<K,V> {
 	private final K key;

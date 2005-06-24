@@ -3502,6 +3502,7 @@ public class Collections {
      * @param map the backing map
      * @return the set backed by the map
      * @throws IllegalArgumentException if <tt>map</tt> is not empty
+     * @since 1.6
      */
     public static <E> Set<E> asSet(Map<E, Boolean> map) {
         return new MapAsSet<E>(map);

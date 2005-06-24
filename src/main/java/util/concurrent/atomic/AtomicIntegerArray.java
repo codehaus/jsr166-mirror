@@ -98,6 +98,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      *
      * @param i the index
      * @param newValue the new value
+     * @since 1.6
      */
     public final void lazySet(int i, int newValue) {
         unsafe.putInt(array, rawIndex(i), newValue);

@@ -167,6 +167,7 @@ public class TreeSet<E>
      * Returns an iterator over the elements in this set in descending order.
      *
      * @return an iterator over the elements in this set in descending order
+     * @since 1.6
      */
     public Iterator<E> descendingIterator() {
 	return m.descendingKeySet().iterator();
@@ -292,6 +293,7 @@ public class TreeSet<E>
      *         <tt>toElement</tt> is null and this set uses natural ordering,
      *         or its comparator does not permit null elements
      * @throws IllegalArgumentException {@inheritDoc}
+     * @since 1.6
      */
     public NavigableSet<E> navigableSubSet(E fromElement, E toElement) {
 	return new TreeSet<E>(m.navigableSubMap(fromElement, toElement));
@@ -303,6 +305,7 @@ public class TreeSet<E>
      *         this set uses natural ordering, or its comparator does
      *         not permit null elements
      * @throws IllegalArgumentException {@inheritDoc}
+     * @since 1.6
      */
     public NavigableSet<E> navigableHeadSet(E toElement) {
 	return new TreeSet<E>(m.navigableHeadMap(toElement));
@@ -314,6 +317,7 @@ public class TreeSet<E>
      *         this set uses natural ordering, or its comparator does
      *         not permit null elements
      * @throws IllegalArgumentException {@inheritDoc}
+     * @since 1.6
      */
     public NavigableSet<E> navigableTailSet(E fromElement) {
 	return new TreeSet<E>(m.navigableTailMap(fromElement));
@@ -392,6 +396,7 @@ public class TreeSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
+     * @since 1.6
      */
     public E lower(E e) {
         return m.lowerKey(e);
@@ -402,6 +407,7 @@ public class TreeSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
+     * @since 1.6
      */
     public E floor(E e) {
         return m.floorKey(e);
@@ -412,6 +418,7 @@ public class TreeSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
+     * @since 1.6
      */
     public E ceiling(E e) {
         return m.ceilingKey(e);
@@ -422,16 +429,23 @@ public class TreeSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
+     * @since 1.6
      */
     public E higher(E e) {
         return m.higherKey(e);
     }
 
+    /**
+     * @since 1.6
+     */
     public E pollFirst() {
         Map.Entry<E,?> e = m.pollFirstEntry();
         return (e == null)? null : e.getKey();
     }
 
+    /**
+     * @since 1.6
+     */
     public E pollLast() {
         Map.Entry<E,?> e = m.pollLastEntry();
         return (e == null)? null : e.getKey();

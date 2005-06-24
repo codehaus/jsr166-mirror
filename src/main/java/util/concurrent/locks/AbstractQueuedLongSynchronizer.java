@@ -1383,6 +1383,8 @@ public abstract class AbstractQueuedLongSynchronizer
      *
      * <p> This class is Serializable, but all fields are transient,
      * so deserialized conditions have no waiters.
+     *
+     * @since 1.6
      */
     public class ConditionObject implements Condition, java.io.Serializable {
         private static final long serialVersionUID = 1173984872572414699L;

@@ -620,6 +620,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * bin exceeds this threshold.
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative or the load factor is nonpositive
+     *
+     * @since 1.6
      */
     public ConcurrentHashMap(int initialCapacity, float loadFactor) {
         this(initialCapacity, loadFactor, DEFAULT_CONCURRENCY_LEVEL);

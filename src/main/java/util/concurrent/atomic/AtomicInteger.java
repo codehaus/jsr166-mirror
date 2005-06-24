@@ -31,7 +31,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicInteger.class.getDeclaredField("value"));
-      } catch(Exception ex) { throw new Error(ex); }
+      } catch (Exception ex) { throw new Error(ex); }
     }
 
     private volatile int value;
@@ -73,6 +73,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * Eventually sets to the given value.
      *
      * @param newValue the new value
+     * @since 1.6
      */
     public final void lazySet(int newValue) {
         unsafe.putInt(this, valueOffset, newValue);

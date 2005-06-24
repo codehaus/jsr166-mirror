@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.concurrent.locks.*;
 import java.util.*;
 
@@ -1245,6 +1246,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * terminated due to lack of incoming tasks.
      * @return <tt>true</tt> if core threads are allowed to time out,
      * else <tt>false</tt>
+     *
+     * @since 1.6
      */
     public boolean allowsCoreThreadTimeOut() {
         return allowCoreThreadTimeOut;
@@ -1263,6 +1266,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @param value <tt>true</tt> if should time out, else <tt>false</tt>
      * @throws IllegalArgumentException if value is <tt>true</tt>
      * and the current keep-alive time is not greater than zero.
+     *
+     * @since 1.6
      */
     public void allowCoreThreadTimeOut(boolean value) {
         if (value && keepAliveTime <= 0)

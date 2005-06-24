@@ -45,7 +45,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicLong.class.getDeclaredField("value"));
-      } catch(Exception ex) { throw new Error(ex); }
+      } catch (Exception ex) { throw new Error(ex); }
     }
 
     private volatile long value;
@@ -87,6 +87,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * Eventually sets to the given value.
      *
      * @param newValue the new value
+     * @since 1.6
      */
     public final void lazySet(long newValue) {
         unsafe.putLongVolatile(this, valueOffset, newValue);

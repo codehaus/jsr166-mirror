@@ -25,7 +25,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicReference.class.getDeclaredField("value"));
-      } catch(Exception ex) { throw new Error(ex); }
+      } catch (Exception ex) { throw new Error(ex); }
     }
 
     private volatile V value;
@@ -64,9 +64,10 @@ public class AtomicReference<V>  implements java.io.Serializable {
     }
 
     /**
-     * Eventually sets to the given value. 
+     * Eventually sets to the given value.
      *
      * @param newValue the new value
+     * @since 1.6
      */
     public final void lazySet(V newValue) {
         unsafe.putObject(this, valueOffset, newValue);

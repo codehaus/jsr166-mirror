@@ -645,16 +645,25 @@ public class TreeMap<K,V>
 
     // NavigableMap API methods
 
+    /**
+     * @since 1.6
+     */
     public Map.Entry<K,V> firstEntry() {
         Entry<K,V> e = getFirstEntry();
         return (e == null)? null : new AbstractMap.SimpleImmutableEntry<K,V>(e);
     }
 
+    /**
+     * @since 1.6
+     */
     public Map.Entry<K,V> lastEntry() {
         Entry<K,V> e = getLastEntry();
         return (e == null)? null : new AbstractMap.SimpleImmutableEntry<K,V>(e);
     }
 
+    /**
+     * @since 1.6
+     */
     public Map.Entry<K,V> pollFirstEntry() {
         Entry<K,V> p = getFirstEntry();
         if (p == null)
@@ -664,6 +673,9 @@ public class TreeMap<K,V>
         return result;
     }
 
+    /**
+     * @since 1.6
+     */
     public Map.Entry<K,V> pollLastEntry() {
         Entry<K,V> p = getLastEntry();
         if (p == null)
@@ -678,6 +690,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public Map.Entry<K,V> lowerEntry(K key) {
         Entry<K,V> e =  getLowerEntry(key);
@@ -689,6 +702,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public K lowerKey(K key) {
         Entry<K,V> e =  getLowerEntry(key);
@@ -700,6 +714,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public Map.Entry<K,V> floorEntry(K key) {
         Entry<K,V> e = getFloorEntry(key);
@@ -711,6 +726,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public K floorKey(K key) {
         Entry<K,V> e = getFloorEntry(key);
@@ -722,6 +738,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public Map.Entry<K,V> ceilingEntry(K key) {
         Entry<K,V> e = getCeilingEntry(key);
@@ -733,6 +750,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public K ceilingKey(K key) {
         Entry<K,V> e = getCeilingEntry(key);
@@ -744,6 +762,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public Map.Entry<K,V> higherEntry(K key) {
         Entry<K,V> e = getHigherEntry(key);
@@ -755,6 +774,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     * @since 1.6
      */
     public K higherKey(K key) {
         Entry<K,V> e = getHigherEntry(key);
@@ -922,6 +942,9 @@ public class TreeMap<K,V>
         }
     }
 
+    /**
+     * @since 1.6
+     */
     public Set<Map.Entry<K,V>> descendingEntrySet() {
         Set<Map.Entry<K,V>> es = descendingEntrySet;
         return (es != null) ? es : (descendingEntrySet = new DescendingEntrySet());
@@ -933,6 +956,9 @@ public class TreeMap<K,V>
         }
     }
 
+    /**
+     * @since 1.6
+     */
     public Set<K> descendingKeySet() {
         Set<K> ks = descendingKeySet;
         return (ks != null) ? ks : (descendingKeySet = new DescendingKeySet());
@@ -950,6 +976,7 @@ public class TreeMap<K,V>
      *         null and this map uses natural ordering, or its comparator
      *         does not permit null keys
      * @throws IllegalArgumentException {@inheritDoc}
+     * @since 1.6
      */
     public NavigableMap<K,V> navigableSubMap(K fromKey, K toKey) {
         return new SubMap(fromKey, toKey);
@@ -961,6 +988,7 @@ public class TreeMap<K,V>
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
      * @throws IllegalArgumentException {@inheritDoc}
+     * @since 1.6
      */
     public NavigableMap<K,V> navigableHeadMap(K toKey) {
         return new SubMap(toKey, true);
@@ -972,6 +1000,7 @@ public class TreeMap<K,V>
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
      * @throws IllegalArgumentException {@inheritDoc}
+     * @since 1.6
      */
     public NavigableMap<K,V> navigableTailMap(K fromKey) {
         return new SubMap(fromKey, false);

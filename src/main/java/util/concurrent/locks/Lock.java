@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent.locks;
+import java.util.concurrent.locks.*; // for javadoc (till 6280605 is fixed)
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -90,7 +91,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <h3>Memory Synchronization</h3>
  * <p>All <tt>Lock</tt> implementations <em>must</em> enforce the same
- * memory synchronization semantics as provided by the built-in monitor 
+ * memory synchronization semantics as provided by the built-in monitor
  * lock, as described in <a href="http://java.sun.com/docs/books/jls/">
  * The Java Language Specification, Third Edition (17.4 Memory Model)</a>:
  * <ul>

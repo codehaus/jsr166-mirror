@@ -114,10 +114,11 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
     /**
      * Eventually sets the field of the given object managed by this
-     * updater to the given updated value. 
+     * updater to the given updated value.
      *
      * @param obj An object whose field to set
      * @param newValue the new value
+     * @since 1.6
      */
     public abstract void lazySet(T obj, V newValue);
 
@@ -164,7 +165,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
                     (sun.reflect.Reflection.getCallerClass(3),
                      tclass, null, field.getModifiers());
                 fieldClass = field.getType();
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
 

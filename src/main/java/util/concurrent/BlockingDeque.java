@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.*;
 
 /**
@@ -451,7 +452,7 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
      * specified wait time if necessary for space to become available.
      *
      * <p>This method is equivalent to
-     * {@link #offerLast(Object,long,TimeUnit) #offerLast}.
+     * {@link #offerLast(Object,long,TimeUnit) offerLast}.
      *
      * @param e the element to add
      * @return <tt>true</tt> if the element was added to this deque, else

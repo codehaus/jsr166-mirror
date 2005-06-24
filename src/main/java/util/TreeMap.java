@@ -255,8 +255,8 @@ public class TreeMap<K,V>
      * <tt>null</tt> if the map contains no mapping for the key.  A return
      * value of <tt>null</tt> does not <i>necessarily</i> indicate that the
      * map contains no mapping for the key; it's also possible that the map
-     * explicitly maps the key to <tt>null</tt>.  The {@link #containsKey}
-     * operation may be used to distinguish these two cases.
+     * explicitly maps the key to <tt>null</tt>.  The {@link #containsKey
+     * containsKey} operation may be used to distinguish these two cases.
      *
      * @param key key whose associated value is to be returned
      * @return the value to which this map maps the specified key, or

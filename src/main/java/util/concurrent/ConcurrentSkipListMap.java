@@ -2240,44 +2240,35 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Equivalent to {@link #navigableSubMap} but with a return type
-     * conforming to the <tt>SortedMap</tt> interface.
-     *
-     * <p>{@inheritDoc}
+     * {@inheritDoc}
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public SortedMap<K,V> subMap(K fromKey, K toKey) {
+    public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey) {
         return navigableSubMap(fromKey, toKey);
     }
 
     /**
-     * Equivalent to {@link #navigableHeadMap} but with a return type
-     * conforming to the <tt>SortedMap</tt> interface.
-     *
-     * <p>{@inheritDoc}
+     * {@inheritDoc}
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException if <tt>toKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public SortedMap<K,V> headMap(K toKey) {
+    public ConcurrentNavigableMap<K,V> headMap(K toKey) {
         return navigableHeadMap(toKey);
     }
 
     /**
-     * Equivalent to {@link #navigableTailMap} but with a return type
-     * conforming to the <tt>SortedMap</tt> interface.
-     *
-     * <p>{@inheritDoc}
+     * {@inheritDoc}
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException if <tt>fromKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public SortedMap<K,V> tailMap(K fromKey) {
+    public ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
         return navigableTailMap(fromKey);
     }
 
@@ -3166,15 +3157,15 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new ConcurrentSkipListSubMap<K,V>(m, fromKey, fence);
         }
 
-        public SortedMap<K,V> subMap(K fromKey, K toKey) {
+        public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey) {
             return navigableSubMap(fromKey, toKey);
         }
 
-        public SortedMap<K,V> headMap(K toKey) {
+        public ConcurrentNavigableMap<K,V> headMap(K toKey) {
             return navigableHeadMap(toKey);
         }
 
-        public SortedMap<K,V> tailMap(K fromKey) {
+        public ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
             return navigableTailMap(fromKey);
         }
 

@@ -8,7 +8,8 @@ package java.util.concurrent;
 import java.util.*;
 
 /**
- * A {@link ConcurrentMap} supporting {@link NavigableMap} operations.
+ * A {@link ConcurrentMap} supporting {@link NavigableMap} operations,
+ * and recursively so for its navigable sub-maps.
  *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
@@ -42,4 +43,36 @@ public interface ConcurrentNavigableMap<K,V>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey);
+
+
+    /**
+     * Equivalent to {@link #navigableSubMap}.
+     *
+     * <p>{@inheritDoc}
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey);
+
+    /**
+     * Equivalent to {@link #navigableHeadMap}.
+     *
+     * <p>{@inheritDoc}
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    ConcurrentNavigableMap<K,V> headMap(K toKey);
+
+    /**
+     * Equivalent to {@link #navigableTailMap}.
+     *
+     * <p>{@inheritDoc}
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    ConcurrentNavigableMap<K,V> tailMap(K fromKey);
+
 }

@@ -942,7 +942,7 @@ public class CopyOnWriteArrayList<E>
         if (index<0 || index>len)
             throw new IndexOutOfBoundsException("Index: "+index);
 
-        return new COWIterator<E>(getArray(), index);
+        return new COWIterator<E>(elements, index);
     }
 
     private static class COWIterator<E> implements ListIterator<E> {

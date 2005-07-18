@@ -2069,9 +2069,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Returns <tt>true</tt> if the given object is also a map and the
      * two maps represent the same mappings.  More formally, two maps
      * <tt>m1</tt> and <tt>m2</tt> represent the same mappings if
-     * <tt>m1.keySet().equals(m2.keySet())</tt> and for every key
-     * <tt>k</tt> in <tt>m1.keySet()</tt>, <tt> (m1.get(k)==null ?
-     * m2.get(k)==null : m1.get(k).equals(m2.get(k))) </tt>.  This
+     * <tt>m1.entrySet().equals(m2.entrySet())</tt>.  This
      * operation may return misleading results if either map is
      * concurrently modified during execution of this method.
      *

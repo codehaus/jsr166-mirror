@@ -28,8 +28,9 @@ package java.util;
  * subrange traversals in either direction using <tt>navigableSubMap</tt>.
  * Methods <tt>navigableSubMap</tt>, <tt>navigableHeadMap</tt>, and
  * <tt>navigableTailMap</tt> differ from the similarly named
- * <tt>SortedMap</tt> methods only in that the returned maps
- * are guaranteed to obey the <tt>NavigableMap</tt> interface.
+ * <tt>SortedMap</tt> methods only in their declared return types.
+ * Submaps of any <tt>NavigableMap</tt> must obey
+ * the <tt>NavigableMap</tt> interface.
  *
  * <p>This interface additionally defines methods <tt>firstEntry</tt>,
  * <tt>pollFirstEntry</tt>, <tt>lastEntry</tt>, and

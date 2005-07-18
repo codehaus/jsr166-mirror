@@ -6,6 +6,7 @@
 
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.concurrent.locks.*;
 import java.util.*;
 
@@ -380,12 +381,11 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * precise control over the runtime type of the output array, and may,
      * under certain circumstances, be used to save allocation costs.
      *
-     * <p>Suppose <tt>x</tt> is a queue known to contain only strings.
-     * The following code can be used to dump the queue into a newly
-     * allocated array of <tt>String</tt>:
+     * <p>The following code can be used to dump a delay queue into a newly
+     * allocated array of <tt>Delayed</tt>:
      *
      * <pre>
-     *     String[] y = x.toArray(new String[0]);</pre>
+     *     Delayed[] a = q.toArray(new Delayed[0]);</pre>
      *
      * Note that <tt>toArray(new Object[0])</tt> is identical in function to
      * <tt>toArray()</tt>.

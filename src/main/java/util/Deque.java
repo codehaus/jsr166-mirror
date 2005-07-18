@@ -5,7 +5,7 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc
+import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A linear collection that supports element insertion and removal at
@@ -240,8 +240,8 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves and removes the first element of this deque.  This method
-     * differs from {@link #pollFirst} only in that it throws an exception
-     * if this deque is empty.
+     * differs from {@link #pollFirst pollFirst} only in that it throws an
+     * exception if this deque is empty.
      *
      * @return the head of this deque
      * @throws NoSuchElementException if this deque is empty
@@ -250,8 +250,8 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves and removes the last element of this deque.  This method
-     * differs from {@link #pollLast} only in that it throws an exception if
-     * this deque is empty.
+     * differs from {@link #pollLast pollLast} only in that it throws an
+     * exception if this deque is empty.
      *
      * @return the tail of this deque
      * @throws NoSuchElementException if this deque is empty
@@ -276,8 +276,9 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves, but does not remove, the first element of this deque.
-     * This method differs from {@link #peekFirst} only in that it throws an
-     * exception if this deque is empty.
+     * 
+     * This method differs from {@link #peekFirst peekFirst} only in that it
+     * throws an exception if this deque is empty.
      *
      * @return the head of this deque
      * @throws NoSuchElementException if this deque is empty
@@ -286,8 +287,8 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves, but does not remove, the last element of this deque.
-     * This method differs from {@link #peekLast} only in that it throws an
-     * exception if this deque is empty.
+     * This method differs from {@link #peekLast peekLast} only in that it
+     * throws an exception if this deque is empty.
      *
      * @return the tail of this deque
      * @throws NoSuchElementException if this deque is empty
@@ -360,7 +361,7 @@ public interface Deque<E> extends Queue<E> {
      * <p>This method is equivalent to {@link #addLast}.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
      * @throws ClassCastException if the class of the specified element
@@ -398,7 +399,7 @@ public interface Deque<E> extends Queue<E> {
     /**
      * Retrieves and removes the head of the queue represented by this deque
      * (in other words, the first element of this deque).
-     * This method differs from {@link #poll} only in that it throws an
+     * This method differs from {@link #poll poll} only in that it throws an
      * exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
@@ -423,7 +424,7 @@ public interface Deque<E> extends Queue<E> {
     /**
      * Retrieves, but does not remove, the head of the queue represented by
      * this deque (in other words, the first element of this deque).
-     * This method differs from {@link #peek} only in that it throws an
+     * This method differs from {@link #peek peek} only in that it throws an
      * exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #getFirst()}.

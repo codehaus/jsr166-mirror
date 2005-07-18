@@ -4,7 +4,7 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc
+import java.util.*; // for javadoc (till 6280605 is fixed)
 import java.io.*;
 
 /**
@@ -221,7 +221,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Inserts the specified element at the front of this deque.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Deque#offerFirst})
+     * @return <tt>true</tt> (as specified by {@link Deque#offerFirst})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offerFirst(E e) {
@@ -233,7 +233,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Inserts the specified element at the end of this deque.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Deque#offerLast})
+     * @return <tt>true</tt> (as specified by {@link Deque#offerLast})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offerLast(E e) {
@@ -373,7 +373,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>This method is equivalent to {@link #addLast}.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws NullPointerException if the specified element is null
      */
     public boolean add(E e) {
@@ -387,7 +387,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>This method is equivalent to {@link #offerLast}.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Queue#offer})
+     * @return <tt>true</tt> (as specified by {@link Queue#offer})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
@@ -396,7 +396,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves and removes the head of the queue represented by this deque.
-     * This method differs from {@link #poll} only in that it throws an
+     *
+     * This method differs from {@link #poll poll} only in that it throws an
      * exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #removeFirst}.
@@ -424,8 +425,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
-     * this deque.  This method differs from {@link #peek} only in that it
-     * throws an exception if this deque is empty.
+     * this deque.  This method differs from {@link #peek peek} only in
+     * that it throws an exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #getFirst}.
      *

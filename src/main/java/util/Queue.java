@@ -120,7 +120,7 @@ public interface Queue<E> extends Collection<E> {
      * if no space is currently available.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
      * @throws ClassCastException if the class of the specified element
@@ -153,8 +153,8 @@ public interface Queue<E> extends Collection<E> {
 
     /**
      * Retrieves and removes the head of this queue.  This method differs
-     * from {@link #poll} only in that it throws an exception if this queue
-     * is empty.
+     * from {@link #poll poll} only in that it throws an exception if this
+     * queue is empty.
      *
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
@@ -171,8 +171,8 @@ public interface Queue<E> extends Collection<E> {
 
     /**
      * Retrieves, but does not remove, the head of this queue.  This method
-     * differs from {@link #peek} only in that it throws an exception if
-     * this queue is empty.
+     * differs from {@link #peek peek} only in that it throws an exception
+     * if this queue is empty.
      *
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty

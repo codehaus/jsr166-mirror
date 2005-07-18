@@ -193,7 +193,7 @@ public class LinkedList<E>
      * <p>This method is equivalent to {@link #addLast}.
      *
      * @param e element to be appended to this list
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
 	addBefore(e, header);
@@ -486,7 +486,7 @@ public class LinkedList<E>
      * Adds the specified element as the tail (last element) of this list.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Queue#offer})
+     * @return <tt>true</tt> (as specified by {@link Queue#offer})
      * @since 1.5
      */
     public boolean offer(E e) {
@@ -498,7 +498,7 @@ public class LinkedList<E>
      * Inserts the specified element at the front of this list.
      *
      * @param e the element to insert
-     * @return <tt>true</tt> (as per the spec for {@link Deque#offerFirst})
+     * @return <tt>true</tt> (as specified by {@link Deque#offerFirst})
      * @since 1.6
      */
     public boolean offerFirst(E e) {

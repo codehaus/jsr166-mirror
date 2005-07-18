@@ -360,7 +360,7 @@ public class CopyOnWriteArrayList<E>
      * Appends the specified element to the end of this list.
      *
      * @param e element to be appended to this list
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
 	final ReentrantLock lock = this.lock;

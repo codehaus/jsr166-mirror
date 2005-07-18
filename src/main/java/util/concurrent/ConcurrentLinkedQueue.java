@@ -158,7 +158,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue.
      *
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws NullPointerException if the specified element is null
      */
     public boolean add(E e) {
@@ -168,7 +168,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue.
      *
-     * @return <tt>true</tt> (as per the spec for {@link Queue#offer})
+     * @return <tt>true</tt> (as specified by {@link Queue#offer})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {

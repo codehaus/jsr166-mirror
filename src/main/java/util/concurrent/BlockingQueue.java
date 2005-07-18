@@ -152,7 +152,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * use {@link #offer(Object) offer}.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
      * @throws ClassCastException if the class of the specified element

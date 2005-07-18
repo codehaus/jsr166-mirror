@@ -200,7 +200,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * <tt>IllegalStateException</tt> if this queue is full.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws IllegalStateException if this queue is full
      * @throws NullPointerException if the specified element is null
      */

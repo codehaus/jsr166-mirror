@@ -5,6 +5,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * This class provides skeletal implementations of some {@link Queue}
@@ -53,7 +54,7 @@ public abstract class AbstractQueue<E>
      * else throws an <tt>IllegalStateException</tt>.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws IllegalStateException if the element cannot be added at this
      *         time due to capacity restrictions
      * @throws ClassCastException if the class of the specified element
@@ -72,8 +73,8 @@ public abstract class AbstractQueue<E>
 
     /**
      * Retrieves and removes the head of this queue.  This method differs
-     * from {@link #poll} only in that it throws an exception if this queue
-     * is empty.
+     * from {@link #poll poll} only in that it throws an exception if this
+     * queue is empty.
      *
      * <p>This implementation returns the result of <tt>poll</tt>
      * unless the queue is empty.
@@ -91,7 +92,7 @@ public abstract class AbstractQueue<E>
 
     /**
      * Retrieves, but does not remove, the head of this queue.  This method
-     * differs from {@link #peek} only in that it throws an exception if
+     * differs from {@link #peek peek} only in that it throws an exception if
      * this queue is empty.
      *
      * <p>This implementation returns the result of <tt>peek</tt>

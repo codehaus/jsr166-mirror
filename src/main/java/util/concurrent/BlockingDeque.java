@@ -470,8 +470,8 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
     /**
      * Retrieves and removes the head of the queue represented by this deque
      * (in other words, the first element of this deque).
-     * This method differs from {@link #poll} only in that it throws an
-     * exception if this deque is empty.
+     * This method differs from {@link #poll poll} only in that it
+     * throws an exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #removeFirst() removeFirst}.
      *

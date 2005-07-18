@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.*;
 
 /**
@@ -49,6 +50,7 @@ public interface ConcurrentNavigableMap<K,V>
      * Equivalent to {@link #navigableSubMap}.
      *
      * <p>{@inheritDoc}
+     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
@@ -59,6 +61,7 @@ public interface ConcurrentNavigableMap<K,V>
      * Equivalent to {@link #navigableHeadMap}.
      *
      * <p>{@inheritDoc}
+     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
@@ -69,6 +72,7 @@ public interface ConcurrentNavigableMap<K,V>
      * Equivalent to {@link #navigableTailMap}.
      *
      * <p>{@inheritDoc}
+     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}

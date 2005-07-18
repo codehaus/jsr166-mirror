@@ -23,7 +23,7 @@ package java.util;
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER><em>Throws exception</em></td>
- *    <td ALIGN=CENTER><em>Special value</em></td>
+ *    <td ALIGN=CENTER><em>Returns special value</em></td>
  *  </tr>
  *  <tr>
  *    <td><b>Insert</b></td>

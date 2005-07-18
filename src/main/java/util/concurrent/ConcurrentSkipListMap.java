@@ -2240,8 +2240,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
@@ -2251,8 +2249,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException if <tt>toKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
@@ -2262,8 +2258,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException if <tt>fromKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}

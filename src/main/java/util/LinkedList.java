@@ -6,7 +6,7 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc
+import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * Linked list implementation of the <tt>List</tt> interface.  Implements all
@@ -26,18 +26,20 @@ import java.util.*; // for javadoc
  * list.  Operations that index into the list will traverse the list from
  * the beginning or the end, whichever is closer to the specified index.<p>
  *
- * <b>Note that this implementation is not synchronized.</b> If multiple
- * threads access a list concurrently, and at least one of the threads
- * modifies the list structurally, it <i>must</i> be synchronized
- * externally.  (A structural modification is any operation that adds or
- * deletes one or more elements; merely setting the value of an element is not
- * a structural modification.)  This is typically accomplished by
- * synchronizing on some object that naturally encapsulates the list.  If no
- * such object exists, the list should be "wrapped" using the
- * Collections.synchronizedList method.  This is best done at creation time,
- * to prevent accidental unsynchronized access to the list: <pre>
- *     List list = Collections.synchronizedList(new LinkedList(...));
- * </pre>
+ * <p><strong>Note that this implementation is not synchronized.</strong>
+ * If multiple threads access a linked list concurrently, and at least
+ * one of the threads modifies the list structurally, it <i>must</i> be
+ * synchronized externally.  (A structural modification is any operation
+ * that adds or deletes one or more elements; merely setting the value of
+ * an element is not a structural modification.)  This is typically
+ * accomplished by synchronizing on some object that naturally
+ * encapsulates the list.
+ *
+ * If no such object exists, the list should be "wrapped" using the
+ * {@link Collections#synchronizedList Collections.synchronizedList}
+ * method.  This is best done at creation time, to prevent accidental
+ * unsynchronized access to the list:<pre>
+ *   List list = Collections.synchronizedList(new LinkedList(...));</pre>
  *
  * <p>The iterators returned by this class's <tt>iterator</tt> and
  * <tt>listIterator</tt> methods are <i>fail-fast</i>: if the list is
@@ -66,7 +68,6 @@ import java.util.*; // for javadoc
  * @see	    List
  * @see	    ArrayList
  * @see	    Vector
- * @see	    Collections#synchronizedList(List)
  * @since 1.2
  * @param <E> the type of elements held in this collection
  */

@@ -31,19 +31,19 @@ import java.util.*; // for javadoc (till 6280605 is fixed)
  * <i>is</i> well-defined even if its ordering is inconsistent with equals; it
  * just fails to obey the general contract of the <tt>Map</tt> interface.
  *
- * <p><b>Note that this implementation is not synchronized.</b> If multiple
- * threads access a map concurrently, and at least one of the threads modifies
- * the map structurally, it <i>must</i> be synchronized externally.  (A
- * structural modification is any operation that adds or deletes one or more
- * mappings; merely changing the value associated with an existing key is not
- * a structural modification.)  This is typically accomplished by
- * synchronizing on some object that naturally encapsulates the map.  If no
- * such object exists, the map should be "wrapped" using the
- * <tt>Collections.synchronizedMap</tt> method.  This is best done at creation
- * time, to prevent accidental unsynchronized access to the map:
- * <pre>
- *     Map m = Collections.synchronizedMap(new TreeMap(...));
- * </pre>
+ * <p><strong>Note that this implementation is not synchronized.</strong>
+ * If multiple threads access a map concurrently, and at least one of the
+ * threads modifies the map structurally, it <i>must</i> be synchronized
+ * externally.  (A structural modification is any operation that adds or
+ * deletes one or more mappings; merely changing the value associated
+ * with an existing key is not a structural modification.)  This is
+ * typically accomplished by synchronizing on some object that naturally
+ * encapsulates the map.
+ * If no such object exists, the map should be "wrapped" using the
+ * {@link Collections#synchronizedSortedMap Collections.synchronizedSortedMap}
+ * method.  This is best done at creation time, to prevent accidental
+ * unsynchronized access to the map: <pre>
+ *   SortedMap m = Collections.synchronizedSortedMap(new TreeMap(...));</pre>
  *
  * <p>The iterators returned by the <tt>iterator</tt> method of the collections
  * returned by all of this class's "collection view methods" are
@@ -83,7 +83,6 @@ import java.util.*; // for javadoc (till 6280605 is fixed)
  * @see Comparable
  * @see Comparator
  * @see Collection
- * @see Collections#synchronizedMap(Map)
  * @since 1.2
  */
 
@@ -541,11 +540,12 @@ public class TreeMap<K,V>
         Entry<K,V> t = root;
 
         if (t == null) {
-            if (key == null) {
-                if (comparator == null)
-                    throw new NullPointerException();
-                comparator.compare(key, key);
-            }
+	    // TBD
+//             if (key == null) {
+//                 if (comparator == null)
+//                     throw new NullPointerException();
+//                 comparator.compare(key, key);
+//             }
             incrementSize();
             root = new Entry<K,V>(key, value, null);
             return null;

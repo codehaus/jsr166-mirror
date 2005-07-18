@@ -29,15 +29,16 @@ import java.util.*; // for javadoc (till 6280605 is fixed)
  * <i>is</i> well-defined even if its ordering is inconsistent with equals; it
  * just fails to obey the general contract of the <tt>Set</tt> interface.
  *
- * <p><b>Note that this implementation is not synchronized.</b> If multiple
- * threads access a set concurrently, and at least one of the threads modifies
- * the set, it <i>must</i> be synchronized externally.  This is typically
- * accomplished by synchronizing on some object that naturally encapsulates
- * the set.  If no such object exists, the set should be "wrapped" using the
- * <tt>Collections.synchronizedSet</tt> method.  This is best done at creation
- * time, to prevent accidental unsynchronized access to the set: <pre>
- *     SortedSet s = Collections.synchronizedSortedSet(new TreeSet(...));
- * </pre>
+ * <p><strong>Note that this implementation is not synchronized.</strong>
+ * If multiple threads access a tree set concurrently, and at least one
+ * of the threads modifies the set, it <i>must</i> be synchronized
+ * externally.  This is typically accomplished by synchronizing on some
+ * object that naturally encapsulates the set.
+ * If no such object exists, the set should be "wrapped" using the
+ * {@link Collections#synchronizedSortedSet Collections.synchronizedSortedSet}
+ * method.  This is best done at creation time, to prevent accidental
+ * unsynchronized access to the set: <pre>
+ *   SortedSet s = Collections.synchronizedSortedSet(new TreeSet(...));</pre>
  *
  * <p>The iterators returned by this class's <tt>iterator</tt> method are
  * <i>fail-fast</i>: if the set is modified at any time after the iterator is
@@ -68,7 +69,6 @@ import java.util.*; // for javadoc (till 6280605 is fixed)
  * @see	    HashSet
  * @see     Comparable
  * @see     Comparator
- * @see	    Collections#synchronizedSortedSet(SortedSet)
  * @see	    TreeMap
  * @since   1.2
  */

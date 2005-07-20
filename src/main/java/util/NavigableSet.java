@@ -5,6 +5,7 @@
  */
 
 package java.util;
+import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A {@link SortedSet} extended with navigation methods reporting
@@ -24,10 +25,8 @@ package java.util;
  * Methods <tt>navigableSubSet</tt>, <tt>navigableHeadSet</tt>, and
  * <tt>navigableTailSet</tt> differ from the similarly named
  * <tt>SortedSet</tt> methods only in their declared return types.
- * Subsets of any <tt>NavigableSet</tt> must obey
- * the <tt>NavigableSet</tt> interface.
- * 
- * are guaranteed to obey the <tt>NavigableSet</tt> interface.
+ * Subsets of any <tt>NavigableSet</tt> must implement the
+ * <tt>NavigableSet</tt> interface.
  *
  * <p> The return values of navigation methods may be ambiguous in
  * implementations that permit <tt>null</tt> elements. However, even

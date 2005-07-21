@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.*; // for javadoc
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.concurrent.locks.*;
 
 /**
@@ -76,10 +76,16 @@ public class FutureTask<V> implements RunnableFuture<V> {
         return sync.innerCancel(mayInterruptIfRunning);
     }
 
+    /**
+     * @throws CancellationException {@inheritDoc}
+     */
     public V get() throws InterruptedException, ExecutionException {
         return sync.innerGet();
     }
 
+    /**
+     * @throws CancellationException {@inheritDoc}
+     */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         return sync.innerGet(unit.toNanos(timeout));

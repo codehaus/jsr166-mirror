@@ -22,13 +22,15 @@ import java.util.*;
  * <em>fairness</em> policy.  When constructed as fair, threads
  * contend for entry using an approximately arrival-order policy. When
  * the write lock is released either the longest-waiting single writer
- * will be assigned the write lock, or if there is a reader waiting
- * longer than any writer, the set of readers will be assigned the
- * read lock.  When constructed as non-fair, the order of entry to the
- * lock need not be in arrival order.  In either case, if readers are
- * active and a writer enters the lock then no subsequent readers will
- * be granted the read lock until after that writer has acquired and
- * released the write lock.
+ * thread will be assigned the write lock, or if there is a reader
+ * thread waiting longer than any writer thread, the set of readers
+ * will be assigned the read lock.  If reader threads are active and a
+ * writer thread enters the lock then no other subsequent reader
+ * threads will be granted the read lock until after that writer
+ * thread has acquired and released the write lock.
+ *
+ * <p>When constructed as non-fair, the order of entry to the read and
+ * write lock is unspecified, subject to the following constraints.
  *
  * <li><b>Reentrancy</b>
  * <p>This lock allows both readers and writers to reacquire read or
@@ -134,15 +136,8 @@ import java.util.*;
  *
  * <h3>Implementation Notes</h3>
  *
- * <p>A reentrant write lock intrinsically defines an owner and can
- * only be released by the thread that acquired it.  In contrast, in
- * this implementation, the read lock has no concept of ownership, and
- * there is no requirement that the thread releasing a read lock is
- * the same as the one that acquired it.  However, this property is
- * not guaranteed to hold in future implementations of this class.
- *
  * <p> This lock supports a maximum of 65536 recursive write locks
- * and 65536 read locks. Attempts to exceed these limits result in
+ * and 65535 read locks. Attempts to exceed these limits result in
  * {@link Error} throws from locking methods.
  *
  * @since 1.5
@@ -157,6 +152,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     private final ReentrantReadWriteLock.WriteLock writerLock;
     /** Performs all synchronization mechanics */
     private final Sync sync;
+
 
     /**
      * Creates a new <tt>ReentrantReadWriteLock</tt> with
@@ -183,22 +179,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     public ReentrantReadWriteLock.WriteLock writeLock() { return writerLock; }
     public ReentrantReadWriteLock.ReadLock  readLock()  { return readerLock; }
 
-    /*
-     * Read vs write count extraction constants and functions.
-     * Lock state is logically divided into two shorts: The lower
-     * one representing the exclusive (writer) lock hold count,
-     * and the upper the shared (reader) hold count.
-     */
-
-    static final int SHARED_SHIFT   = 16;
-    static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-    static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
-
-    /** Returns the number of shared holds represented in count  */
-    static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
-    /** Returns the number of exclusive holds represented in count  */
-    static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
-
     /**
      * Synchronization implementation for ReentrantReadWriteLock.
      * Subclassed into fair and nonfair versions.
@@ -206,73 +186,226 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     abstract static class Sync extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = 6317671515068378041L;
 
-        /**
-         * Performs write lock. Allows fast path in non-fair version.
+        /*
+         * Read vs write count extraction constants and functions.
+         * Lock state is logically divided into two shorts: The lower
+         * one representing the exclusive (writer) lock hold count,
+         * and the upper the shared (reader) hold count.
          */
-        abstract void wlock();
+
+        static final int SHARED_SHIFT   = 16;
+        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+        static final int MAX_COUNT      = (1 << SHARED_SHIFT) - 1;
+        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+
+        /** Returns the number of shared holds represented in count  */
+        static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
+        /** Returns the number of exclusive holds represented in count  */
+        static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
 
         /**
-         * Performs non-fair tryLock for write.  tryAcquire is
-         * implemented in subclasses, but both versions need nonfair
-         * try for trylock method.
+         * A counter for per-thread read hold counts. 
+         * Maintained as a ThreadLocal; cached in cachedHoldCounter
          */
-        final boolean nonfairTryAcquire(int acquires) {
-            // mask out readlocks if called from condition methods
-            acquires = exclusiveCount(acquires);
+        static final class HoldCounter {
+            int count;
+            // Use id, not reference, to avoid garbage retention
+            final long tid = Thread.currentThread().getId();
+            /** Decrement if positive; return previous value */
+            int tryDecrement() {
+                int c = count;
+                if (c > 0)
+                    count = c - 1;
+                return c;
+            }
+        }
+
+        /**
+         * ThreadLocal subclass. Easiest to explicitly define for sake
+         * of deserialization
+         */
+        static final class ThreadLocalHoldCounter 
+            extends ThreadLocal<HoldCounter> {
+            public HoldCounter initialValue() {
+                return new HoldCounter();
+            }
+        }
+
+        /**
+         * The number of read locks held by current thread.
+         * Initialized only in constructor and readObject.
+         */
+        transient ThreadLocalHoldCounter readHolds;
+
+        /**
+         * The hold count of the last thread to successfully acquire
+         * readLock. This saves ThreadLocal lookup in the common case
+         * where the next thread to release is the last one to
+         * acquire. This is non-volatile since it is just used
+         * as a heuristic, and would be great for threads to cache.
+         */
+        transient HoldCounter cachedHoldCounter;
+
+        Sync() {
+            readHolds = new ThreadLocalHoldCounter();
+            setState(getState()); // ensures visibility of readHolds
+        }
+
+        /*
+         * Acquires and releases use the same code for fair and
+         * nonfair locks, but differ in whether/how they allow barging
+         * when queues are non-empty.
+         */
+
+        /** 
+         * Return true if a reader thread that is otherwise
+         * eligible for lock should block because of policy
+         * for overtaking other waiting threads.
+         */
+        abstract boolean readerShouldBlock(Thread current);
+
+
+        /** 
+         * Return true if a writer thread that is otherwise
+         * eligible for lock should block because of policy
+         * for overtaking other waiting threads.
+         */
+        abstract boolean writerShouldBlock(Thread current);
+
+        protected final boolean tryRelease(int releases) {
+            int nextc = getState() - releases;
+            if (Thread.currentThread() != getExclusiveOwnerThread())
+                throw new IllegalMonitorStateException();
+            if (exclusiveCount(nextc) == 0) {
+                setExclusiveOwnerThread(null);
+                setState(nextc);
+                return true;
+            } else {
+                setState(nextc);
+                return false;
+            }
+        }
+
+        protected final boolean tryAcquire(int acquires) {
             Thread current = Thread.currentThread();
             int c = getState();
-            int w = exclusiveCount(c);
-            if (w + acquires >= SHARED_UNIT)
-                throw new Error("Maximum lock count exceeded");
-            if (c != 0 && (w == 0 || current != getExclusiveOwnerThread()))
-                return false;
-            if (!compareAndSetState(c, c + acquires))
+            if (c != 0) {
+                int w = exclusiveCount(c);
+                if (w == 0 ||current != getExclusiveOwnerThread())
+                    return false;
+                if (w + exclusiveCount(acquires) > MAX_COUNT)
+                    throw new Error("Maximum lock count exceeded");
+            }
+            if (writerShouldBlock(current) || 
+                !compareAndSetState(c, c + acquires)) 
                 return false;
             setExclusiveOwnerThread(current);
             return true;
         }
 
-        /**
-         * Performs nonfair tryLock for read.
-         */
-        final int nonfairTryAcquireShared(int acquires) {
+
+        protected final boolean tryReleaseShared(int unused) {
+            HoldCounter rh = cachedHoldCounter;
+            Thread current = Thread.currentThread();
+            if (rh == null || rh.tid != current.getId())
+                rh = readHolds.get();
+            if (rh.tryDecrement() <= 0)
+                throw new IllegalMonitorStateException();
             for (;;) {
                 int c = getState();
-                int nextc = c + (acquires << SHARED_SHIFT);
-                if (nextc < c)
-                    throw new Error("Maximum lock count exceeded");
-                if (exclusiveCount(c) != 0 &&
-                    getExclusiveOwnerThread() != Thread.currentThread())
-                    return -1;
-                if (compareAndSetState(c, nextc))
-                    return 1;
-                // Recheck count if lost CAS
+                int nextc = c - SHARED_UNIT;
+                if (compareAndSetState(c, nextc)) 
+                    return nextc == 0;
             }
         }
 
-        protected final boolean tryRelease(int releases) {
+        protected final int tryAcquireShared(int unused) {
+            int c = getState();
+            Thread current = Thread.currentThread();
+            if (exclusiveCount(c) != 0 && 
+                getExclusiveOwnerThread() != current)
+                return -1;
+            if (sharedCount(c) == MAX_COUNT) 
+                throw new Error("Maximum lock count exceeded");
+            if (!readerShouldBlock(current) && 
+                compareAndSetState(c, c + SHARED_UNIT)) {
+                HoldCounter rh = cachedHoldCounter;
+                if (rh == null || rh.tid != current.getId()) 
+                    cachedHoldCounter = rh = readHolds.get();
+                rh.count++;
+                return 1;
+            }
+            return fullTryAcquireShared(current);
+        }
+
+
+        /**
+         * Full version of acquire for reads, that handles CAS misses
+         * and reentrant reads not dealt with in tryAcquireShared.
+         */
+        final int fullTryAcquireShared(Thread current) {
+            HoldCounter rh = cachedHoldCounter;
+            if (rh == null || rh.tid != current.getId())
+                rh = readHolds.get();
+            for (;;) {
+                int c = getState();
+                int w = exclusiveCount(c);
+                if ((w != 0 && getExclusiveOwnerThread() != current) ||
+                    ((rh.count | w) == 0 && readerShouldBlock(current)))
+                    return -1;
+                if (sharedCount(c) == MAX_COUNT) 
+                    throw new Error("Maximum lock count exceeded");
+                if (compareAndSetState(c, c + SHARED_UNIT)) {
+                    cachedHoldCounter = rh; // cache for release
+                    rh.count++;
+                    return 1;
+                }
+            }
+        }
+
+        /**
+         * Performs tryLock for write, enabling barging in both modes.
+         * This is identical in effect to tryAcquire except for lack
+         * of calls to readerShouldBlock
+         */
+        final boolean tryWriteLock() {
             Thread current = Thread.currentThread();
             int c = getState();
-            if (getExclusiveOwnerThread() != current)
-                throw new IllegalMonitorStateException();
-            int nextc = c - releases;
-            boolean free = false;
-            if (exclusiveCount(c) == releases) {
-                free = true;
-                setExclusiveOwnerThread(null);
+            if (c != 0) {
+                int w = exclusiveCount(c);
+                if (w == 0 ||current != getExclusiveOwnerThread())
+                    return false;
+                if (w == MAX_COUNT)
+                    throw new Error("Maximum lock count exceeded");
             }
-            setState(nextc);
-            return free;
+            if (!compareAndSetState(c, c + 1)) 
+                return false;
+            setExclusiveOwnerThread(current);
+            return true;
         }
 
-        protected final boolean tryReleaseShared(int releases) {
+
+        /**
+         * Performs tryLock for read, enabling barging in both modes.
+         * This is identical in effect to tryAcquireShared except for
+         * lack of calls to readerShouldBlock
+         */
+        final boolean tryReadLock() {
+            Thread current = Thread.currentThread();
             for (;;) {
                 int c = getState();
-                int nextc = c - (releases << SHARED_SHIFT);
-                if (nextc < 0)
-                    throw new IllegalMonitorStateException();
-                if (compareAndSetState(c, nextc))
-                    return nextc == 0;
+                if (exclusiveCount(c) != 0 && 
+                    getExclusiveOwnerThread() != current)
+                    return false;
+                if (sharedCount(c) == MAX_COUNT) 
+                    throw new Error("Maximum lock count exceeded");
+                if (compareAndSetState(c, c + SHARED_UNIT)) {
+                    HoldCounter rh = cachedHoldCounter;
+                    if (rh == null || rh.tid != current.getId()) 
+                        cachedHoldCounter = rh = readHolds.get();
+                    rh.count++;
+                    return true;
+                }
             }
         }
 
@@ -306,6 +439,10 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return isHeldExclusively() ? exclusiveCount(getState()) : 0;
         }
 
+        final int getReadHoldCount() {
+            return getReadLockCount() == 0? 0 : readHolds.get().count;
+        }
+
         /**
          * Reconstitute this lock instance from a stream
          * @param s the stream
@@ -313,6 +450,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {
             s.defaultReadObject();
+            readHolds = new ThreadLocalHoldCounter();
             setState(0); // reset to unlocked state
         }
 
@@ -324,21 +462,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     final static class NonfairSync extends Sync {
         private static final long serialVersionUID = -8159625535654395037L;
-
-        protected final boolean tryAcquire(int acquires) {
-            return nonfairTryAcquire(acquires);
+        final boolean writerShouldBlock(Thread current) { 
+            return false; // writers can always barge
         }
-
-        protected final int tryAcquireShared(int acquires) {
-            return nonfairTryAcquireShared(acquires);
-        }
-
-        // Use fastpath for main write lock method
-        final void wlock() {
-            if (compareAndSetState(0, 1))
-                setExclusiveOwnerThread(Thread.currentThread());
-            else
-                acquire(1);
+        final boolean readerShouldBlock(Thread current) { 
+            /* As a heuristic to avoid indefinite writer starvation,
+             * block if the thread that momentarily appears to be head
+             * of queue, if one exists, is a waiting writer. This is
+             * only a probablistic effect since a new reader will not
+             * block if there is a waiting writer behind other enabled
+             * readers that have not yet drained from the queue.
+             */
+            return apparentlyFirstQueuedisExclusive(); 
         }
     }
 
@@ -347,50 +482,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     final static class FairSync extends Sync {
         private static final long serialVersionUID = -2274990926593161451L;
-
-        protected final boolean tryAcquire(int acquires) {
-            // mask out readlocks if called from condition methods
-            acquires = exclusiveCount(acquires);
-            Thread current = Thread.currentThread();
-            Thread first;
-            int c = getState();
-            int w = exclusiveCount(c);
-            if (w + acquires >= SHARED_UNIT)
-                throw new Error("Maximum lock count exceeded");
-            if ((w == 0 || current != getExclusiveOwnerThread()) &&
-                (c != 0 ||
-                 ((first = getFirstQueuedThread()) != null &&
-                  first != current)))
-                return false;
-            if (!compareAndSetState(c, c + acquires))
-                return false;
-            setExclusiveOwnerThread(current);
-            return true;
+        final boolean writerShouldBlock(Thread current) { 
+            return !isFirst(current); // only proceed if first in queue
         }
-
-        protected final int tryAcquireShared(int acquires) {
-            Thread current = Thread.currentThread();
-            for (;;) {
-                int c = getState();
-                if (exclusiveCount(c) != 0) {
-                    if (getExclusiveOwnerThread() != current)
-                        return -1;
-                } else {
-		    Thread first = getFirstQueuedThread();
-		    if (first != null && first != current)
-			return -1;
-		}
-                int nextc = c + (acquires << SHARED_SHIFT);
-                if (nextc < c)
-                    throw new Error("Maximum lock count exceeded");
-                if (compareAndSetState(c, nextc))
-                    return 1;
-                // Recheck count if lost CAS
-            }
-        }
-
-        final void wlock() { // no fast path
-            acquire(1);
+        final boolean readerShouldBlock(Thread current) { 
+            return !isFirst(current); // only proceed if first in queue
         }
     }
 
@@ -493,7 +589,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * @return <tt>true</tt> if the read lock was acquired.
          */
         public  boolean tryLock() {
-            return sync.nonfairTryAcquireShared(1) >= 0;
+            return sync.tryReadLock();
         }
 
         /**
@@ -635,7 +731,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * time the write lock hold count is set to one.
          */
         public void lock() {
-            sync.wlock();
+            sync.acquire(1);
         }
 
         /**
@@ -723,7 +819,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          * by the current thread; and <tt>false</tt> otherwise.
          */
         public boolean tryLock( ) {
-            return sync.nonfairTryAcquire(1);
+            return sync.tryWriteLock();
         }
 
         /**
@@ -951,6 +1047,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     }
 
     /**
+     * Queries the number of reentrant read holds on this lock by the
+     * current thread.  A reader thread has a hold on a lock for
+     * each lock action that is not matched by an unlock action.
+     *
+     * @return the number of holds on the read lock by the current thread,
+     * or zero if the read lock is not held by the current thread.
+     */
+    public int getReadHoldCount() {
+        return sync.getReadHoldCount();
+    }
+
+    /**
      * Returns a collection containing threads that may be waiting to
      * acquire the write lock.  Because the actual set of threads may
      * change dynamically while constructing this result, the returned
@@ -1115,8 +1223,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     public String toString() {
         int c = sync.getCount();
-        int w = exclusiveCount(c);
-        int r = sharedCount(c);
+        int w = Sync.exclusiveCount(c);
+        int r = Sync.sharedCount(c);
 
         return super.toString() +
             "[Write locks = " + w + ", Read locks = " + r + "]";

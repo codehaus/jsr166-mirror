@@ -1310,6 +1310,47 @@ public abstract class AbstractQueuedSynchronizer
         return false;
     }
 
+    /**
+     * Return true if the apparent first queued thread, if one exists,
+     * is not waiting in exclusive mode. Used only as
+     * a heuristic in ReentrantReadWriteLock.
+     */
+    final boolean apparentlyFirstQueuedisExclusive() {
+        Node h, s;
+        return ((h = head) != null && (s = h.next) != null &&
+                s.nextWaiter != Node.SHARED);
+    }
+
+    /**
+     * Return true if the queue is empty or if the given thread
+     * is at the head of the queue. This is reliable only if
+     * <tt>current</tt> is actually Thread.currentThread() of caller.
+     */
+    final boolean isFirst(Thread current) {
+        Node h, s;
+        return ((h = head) == null ||
+                ((s = h.next) != null && s.thread == current) ||
+                fullIsFirst(current));
+    }
+
+    final boolean fullIsFirst(Thread current) {
+        Node h;
+        Node s;
+        Thread firstThread = null;
+        if (((h = head) != null && (s = h.next) != null &&
+             s.prev == head && (firstThread = s.thread) != null))
+            return firstThread == current;
+        Node t = tail;
+        while (t != null && t != head) {
+            Thread tt = t.thread;
+            if (tt != null)
+                firstThread = tt;
+            t = t.prev;
+        }
+        return firstThread == current || firstThread == null;
+    }
+
+
     // Instrumentation and monitoring methods
 
     /**

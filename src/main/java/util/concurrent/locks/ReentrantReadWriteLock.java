@@ -19,29 +19,33 @@ import java.util.*;
  *
  * <p> This class does not impose a reader or writer preference
  * ordering for lock access.  However, it does support an optional
- * <em>fairness</em> policy.  When constructed as fair, threads
- * contend for entry using an approximately arrival-order policy. When
- * the write lock is released either the longest-waiting single writer
- * thread will be assigned the write lock, or if there is a reader
- * thread waiting longer than any writer thread, the set of readers
- * will be assigned the read lock.  If reader threads are active and a
- * writer thread enters the lock then no other subsequent reader
- * threads will be granted the read lock until after that writer
- * thread has acquired and released the write lock.
+ * <em>fairness</em> policy.  
+ * 
+ * <p>When constructed as fair, threads contend for entry using an
+ * approximately arrival-order policy. When the write lock is released
+ * either the longest-waiting single writer thread will be assigned
+ * the write lock, or if there is a reader thread waiting longer than
+ * any writer thread, the set of readers will be assigned the read
+ * lock.  If reader threads are active and a writer thread enters the
+ * lock then no other subsequent (non-reentrant) reader threads will
+ * be granted the read lock until after that writer thread has
+ * acquired and released the write lock.
  *
  * <p>When constructed as non-fair, the order of entry to the read and
- * write lock is unspecified, subject to the following constraints.
+ * write lock is unspecified, subject to reentrancy constraints.
  *
  * <li><b>Reentrancy</b>
+ *
  * <p>This lock allows both readers and writers to reacquire read or
- * write locks in the style of a {@link ReentrantLock}. Readers are not
- * allowed until all write locks held by the writing thread have been
- * released.
- * <p>Additionally, a writer can acquire the read lock - but not vice-versa.
- * Among other applications, reentrancy can be useful when
- * write locks are held during calls or callbacks to methods that
- * perform reads under read locks.
- * If a reader tries to acquire the write lock it will never succeed.
+ * write locks in the style of a {@link ReentrantLock}. Non-reentrant
+ * readers are not allowed until all write locks held by the writing
+ * thread have been released.
+ *
+ * <p>Additionally, a writer can acquire the read lock - but not
+ * vice-versa.  Among other applications, reentrancy can be useful
+ * when write locks are held during calls or callbacks to methods that
+ * perform reads under read locks.  If a reader tries to acquire the
+ * write lock it will never succeed.
  *
  * <li><b>Lock downgrading</b>
  * <p>Reentrancy also allows downgrading from the write lock to a read lock,

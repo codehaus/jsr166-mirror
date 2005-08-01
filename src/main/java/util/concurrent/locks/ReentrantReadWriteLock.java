@@ -293,14 +293,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         protected final boolean tryAcquire(int acquires) {
             Thread current = Thread.currentThread();
             int c = getState();
+            int w = exclusiveCount(c);
             if (c != 0) {
-                int w = exclusiveCount(c);
                 if (w == 0 ||current != getExclusiveOwnerThread())
                     return false;
                 if (w + exclusiveCount(acquires) > MAX_COUNT)
                     throw new Error("Maximum lock count exceeded");
             }
-            if (writerShouldBlock(current) || 
+            if ((w == 0 && writerShouldBlock(current)) || 
                 !compareAndSetState(c, c + acquires)) 
                 return false;
             setExclusiveOwnerThread(current);

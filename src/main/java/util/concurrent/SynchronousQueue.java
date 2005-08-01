@@ -1,11 +1,13 @@
 /*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
+ * Written by Doug Lea, Bill Scherer, and Michael Scott with
+ * assistance from members of JCP JSR-166 Expert Group and released to
+ * the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
  */
 
 package java.util.concurrent;
 import java.util.concurrent.locks.*;
+import java.util.concurrent.atomic.*;
 import java.util.*;
 
 /**
@@ -34,9 +36,7 @@ import java.util.*;
  * <p> This class supports an optional fairness policy for ordering
  * waiting producer and consumer threads.  By default, this ordering
  * is not guaranteed. However, a queue constructed with fairness set
- * to <tt>true</tt> grants threads access in FIFO order. Fairness
- * generally decreases throughput but reduces variability and avoids
- * starvation.
+ * to <tt>true</tt> grants threads access in FIFO order. 
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -51,40 +51,724 @@ import java.util.*;
  * @param <E> the type of elements held in this collection
  */
 public class SynchronousQueue<E> extends AbstractQueue<E>
-        implements BlockingQueue<E>, java.io.Serializable {
+    implements BlockingQueue<E>, java.io.Serializable {
     private static final long serialVersionUID = -3223113410248163686L;
 
     /*
-      This implementation divides actions into two cases for puts:
+     * This class implements extensions of the dual stack and dual
+     * queue algorithms described in "Nonblocking Concurrent Objects
+     * with Condition Synchronization", by W. N. Scherer III and
+     * M. L. Scott.  18th Annual Conf. on Distributed Computing,
+     * Oct. 2004 (see also
+     * http://www.cs.rochester.edu/u/scott/synchronization/pseudocode/duals.html).
+     * The (Lifo) stack is used for non-fair mode, and the (Fifo)
+     * queue for fair mode. The performance of the two is generally
+     * similar. Fifo usually supports higher throughput under
+     * contention but Lifo maintains higher thread locality in common
+     * applications.
+     *
+     * A dual queue (and similarly stack) is one that at any given
+     * time either holds "data" -- items provided by put operations,
+     * or "requests" -- slots representing take operations, or is
+     * empty. A call to "fulfill" (i.e., a call requesting an item
+     * from a queue holding data or vice versa) dequeues a
+     * complementary node.  The most interesting feature of these
+     * queues is that any operation can figure out which mode the
+     * queue is in, and act accordingly without needing locks.
+     *
+     * Both the queue and stack extend abstract class Transferer
+     * defining the single method transfer that does a put or a
+     * take. These are unified into a single method because in dual
+     * data structures, the put and take operations are symmetrical,
+     * so nearly all code can be combined. The resulting transfer
+     * methods are on the long side, but are easier to follow than
+     * they would be if broken up into nearly-duplicated parts.
+     *
+     * The queue and stack data structures share many conceptual
+     * similarities but very few concrete details. For simplicity,
+     * they are kept distinct so that they can later evolve
+     * separately.
+     *
+     * The algorithms here differ from the versions in the above paper
+     * in extending them for use in synchronous queues, as well as
+     * dealing with cancellation. The main differences include:
+     *
+     *  1. The orginal algorithms used bit-marked pointers, but
+     *     the ones here use mode bits in nodes, leading to a number
+     *     of further adaptations.
+     *  2. SynchronousQueues must block threads waiting to become
+     *     fulfilled.
+     *  3. Nodes/threads that have been cancelled due to timeouts
+     *     or interruptions are cleaned out of the lists to
+     *     avoid garbage retention and memory depletion.
+     *
+     * Blocking is mainly accomplished using LockSupport park/unpark,
+     * except that nodes that appear to be the next ones to become
+     * fulfilled first spin a bit (on multiprocessors only). On very
+     * busy synchronous queues, spinning can dramatically improve
+     * throughput. And on less busy ones, the amount of spinning is
+     * small enough not to be noticeable.
+     *
+     * Cleaning is done in different ways in queues vs stacks.  For
+     * queues, we can almost always remove a node immediately in O(1)
+     * time (modulo retries for consistency checks) when it is
+     * cancelled. But if it may be pinned as the current tail, it must
+     * wait until some subsequent cancellation. For stacks, we need a
+     * potentially O(n) traversal to be sure that we can remove the
+     * node, but this can run concurrently with other threads
+     * accessing the stack.
+     *
+     * While garbage collection takes care of most node reclamation
+     * issues that otherwise complicate nonblocking algorithms, care
+     * is made to "forget" references to data, other nodes, and
+     * threads that might be held on to long-term by blocked
+     * threads. In cases where setting to null would otherwise
+     * conflict with main algorithms, this is done by changing a
+     * node's link to now point to the node itself. This doesn't arise
+     * much for Stack nodes (because blocked threads do not hang on to
+     * old head pointers), but references in Queue nodes must be
+     * agressively forgotten to avoid reachability of everything any
+     * node has ever referred to since arrival.
+     */
 
-      * An arriving producer that does not already have a waiting consumer
-        creates a node holding item, and then waits for a consumer to take it.
-      * An arriving producer that does already have a waiting consumer fills
-        the slot node created by the consumer, and notifies it to continue.
+    /**
+     * Shared internal API for dual stacks and queues.
+     */
+    static abstract class Transferer {
+        /**
+         * Perform a put or take.
+         * @param e if non-null, the item to be handed to a consumer;
+         * if null, requests that transfer return an item offered by
+         * producer.
+         * @param timed if this operation should timeout
+         * @param nanos the timeout, in nanoseconds
+         * @return if nonnull, the item provided or received; if null,
+         * the operation failed due to timeout or interrupt -- the
+         * caller can distinguish which of these occurred by checking
+         * Thread.interrupted.
+         */
+        abstract Object transfer(Object e, boolean timed, long nanos);
+    }
 
-      And symmetrically, two for takes:
+    /** The number of CPUs, for spin control */
+    static final int NCPUS = Runtime.getRuntime().availableProcessors();
 
-      * An arriving consumer that does not already have a waiting producer
-        creates an empty slot node, and then waits for a producer to fill it.
-      * An arriving consumer that does already have a waiting producer takes
-        item from the node created by the producer, and notifies it to continue.
+    /**
+     * The number of times to spin before blocking in timed waits.
+     * The value is empirically derived -- it works well across a
+     * variety of processors and OSes. Emprically, the best value
+     * seems not to vary with number of CPUs (beyond 2) so is just
+     * a constant.
+     */
+    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32;
 
-      When a put or take waiting for the actions of its counterpart
-      aborts due to interruption or timeout, it marks the node
-      it created as "CANCELLED", which causes its counterpart to retry
-      the entire put or take sequence.
+    /**
+     * The number of times to spin before blocking in untimed
+     * waits.  This is greater than timed value because untimed
+     * waits spin faster since they don't need to check times on
+     * each spin.
+     */
+    static final int maxUntimedSpins = maxTimedSpins * 16;
 
-      This requires keeping two simple queues, waitingProducers and
-      waitingConsumers. Each of these can be FIFO (preserves fairness)
-      or LIFO (improves throughput).
-    */
+    /**
+     * The number of nanoseconds for which it is faster to spin
+     * rather than to use timed park. A rough estimate suffices.
+     */
+    static final long spinForTimeoutThreshold = 1000L;
 
-    /** Lock protecting both wait queues */
-    private final ReentrantLock qlock;
-    /** Queue holding waiting puts */
-    private final WaitQueue waitingProducers;
-    /** Queue holding waiting takes */
-    private final WaitQueue waitingConsumers;
+    /** Dual stack  */
+    static final class TransferStack extends Transferer {
+        /*
+         * This extends Scherer-Scott dual stack algorithm, differing,
+         * among other ways, by using "covering" nodes rather than
+         * bit-marked pointers: Fulfilling operations push on marker
+         * nodes (with FULFILLING bit set in mode) to reserve a spot
+         * to match a waiting node.
+         */
+
+        /* Modes for SNodes, ORed together in node fields */
+        /** Node represents an unfulfilled consumer */
+        static final int REQUEST    = 0;
+        /** Node represents an unfulfilled producer */
+        static final int DATA       = 1;
+        /** Node is fulfilling another unfulfilled DATA or REQUEST */
+        static final int FULFILLING = 2;
+
+        /** Return true if m has fulfilling bit set */
+        static boolean isFulfilling(int m) { return (m & FULFILLING) != 0; }
+
+        /** Node class for TransferStacks. */
+        static final class SNode {
+            volatile SNode next;        // next node in stack
+            volatile SNode match;       // the node matched to this
+            volatile Thread waiter;     // to control park/unpark
+            Object item;                // data; or null for REQUESTs
+            int mode;
+            // Note: item and mode fields don't need to be volatile
+            // since they are always written before, and read after,
+            // other volatile/atomic operations.
+
+            SNode(Object item) {
+                this.item = item;
+            }
+
+            static final AtomicReferenceFieldUpdater<SNode, SNode>
+                nextUpdater = AtomicReferenceFieldUpdater.newUpdater
+                (SNode.class, SNode.class, "next");
+
+            boolean casNext(SNode cmp, SNode val) {
+                return (cmp == next &&
+                        nextUpdater.compareAndSet(this, cmp, val));
+            }
+
+            static final AtomicReferenceFieldUpdater<SNode, SNode>
+                matchUpdater = AtomicReferenceFieldUpdater.newUpdater
+                (SNode.class, SNode.class, "match");
+
+            /**
+             * Try to match node s to this node, if so, waking up
+             * thread. Fulfillers call tryMatch to identify their
+             * waiters. Waiters block until they have been
+             * matched.
+             * @param s the node to match
+             * @return true if successfully matched to s
+             */
+            boolean tryMatch(SNode s) {
+                if (match == null &&
+                    matchUpdater.compareAndSet(this, null, s)) {
+                    Thread w = waiter;
+                    if (w != null) {    // waiters need at most one unpark
+                        waiter = null;
+                        LockSupport.unpark(w);
+                    }
+                    return true;
+                }
+                return match == s;
+            }
+
+            /**
+             * Try to cancel a wait by matching node to itself. 
+             */
+            void tryCancel() {
+                matchUpdater.compareAndSet(this, null, this);
+            }
+
+            boolean isCancelled() {
+                return match == this;
+            }
+        }
+
+        /** The head (top) of the stack */
+        volatile SNode head;
+
+        static final AtomicReferenceFieldUpdater<TransferStack, SNode>
+            headUpdater = AtomicReferenceFieldUpdater.newUpdater
+            (TransferStack.class,  SNode.class, "head");
+
+        boolean casHead(SNode h, SNode nh) {
+            return h == head && headUpdater.compareAndSet(this, h, nh);
+        }
+
+        /**
+         * Create or reset fields of a node. Called only from transfer
+         * where the node to push on stack is lazily created and
+         * reused when possible to help reduce intervals between reads
+         * and CASes of head and to avoid surges of garbage when CASes
+         * to push nodes fail due to contention.
+         */
+        static SNode snode(SNode s, Object e, SNode next, int mode) {
+            if (s == null) s = new SNode(e);
+            s.mode = mode;
+            s.next = next;
+            return s;
+        }
+
+        /**
+         * Put or take an item.
+         */
+        Object transfer(Object e, boolean timed, long nanos) {
+            /*
+             * Basic algorithm is to loop trying one of three actions:
+             *
+             * 1. If apparently empty or already containing nodes of same
+             *    mode, try to push node on stack and wait for a match,
+             *    returning it, or null if cancelled.
+             *
+             * 2. If apparently containing node of complementary mode,
+             *    try to push a fulfilling node on to stack, match
+             *    with corresponding waiting node, pop both from
+             *    stack, and return matched item. The matching or
+             *    unlinking might not actually be necessary because of
+             *    another threads performing action 3:
+             *
+             * 3. If top of stack already holds another fulfilling node,
+             *    help it out by doing its match and/or pop
+             *    operations, and then continue. The code for helping
+             *    is essentially the same as for fulfilling, except
+             *    that it doesn't return the item.
+             */
+
+            SNode s = null; // constructed/reused as needed
+            int mode = (e == null)? REQUEST : DATA;
+
+            for (;;) {
+                SNode h = head;
+                if (h == null || h.mode == mode) {  // empty or same-mode
+                    if (timed && nanos <= 0) {      // can't wait
+                        if (h != null && h.isCancelled()) 
+                            casHead(h, h.next);     // pop cancelled node
+                        else
+                            return null; 
+                    } else if (casHead(h, s = snode(s, e, h, mode))) {
+                        SNode m = awaitFulfill(s, timed, nanos);
+                        if (m == s) {               // wait was cancelled
+                            clean(s);
+                            return null;
+                        }
+                        if ((h = head) != null && h.next == s)
+                            casHead(h, s.next);     // help s's fulfiller
+                        return mode == REQUEST? m.item : s.item;
+                    }
+                } else if (!isFulfilling(h.mode)) { // try to fulfill
+                    if (h.isCancelled())            // already cancelled
+                        casHead(h, h.next);         // pop and retry
+                    else if (casHead(h, s=snode(s, e, h, FULFILLING|mode))) {
+                        for (;;) { // loop until matched or waiters disappear
+                            SNode m = s.next;       // m is s's match
+                            if (m == null) {        // all waiters are gone
+                                casHead(s, null);   // pop fulfill node
+                                s = null;           // use new node next time
+                                break;              // restart main loop
+                            }
+                            SNode mn = m.next;
+                            if (m.tryMatch(s)) {
+                                casHead(s, mn);     // pop both s and m
+                                return (mode == REQUEST)? m.item : s.item;
+                            } else                  // lost match
+                                s.casNext(m, mn);   // help unlink
+                        }
+                    }
+                } else {                            // help a fulfiller
+                    SNode m = h.next;               // m is h's match
+                    if (m == null)                  // waiter is gone
+                        casHead(h, null);           // pop fulfilling node
+                    else {
+                        SNode mn = m.next;
+                        if (m.tryMatch(h))          // help match
+                            casHead(h, mn);         // pop both h and m
+                        else                        // lost match
+                            h.casNext(m, mn);       // help unlink
+                    }
+                }
+            }
+        }
+
+        /**
+         * Spin/block until node s is matched by a fulfill operation.
+         * @param s the waiting node
+         * @param timed true if timed wait
+         * @param nanos timeout value
+         * @return matched node, or s if cancelled
+         */
+        SNode awaitFulfill(SNode s, boolean timed, long nanos) {
+            /*
+             * When a node/thread is about to block, it sets its waiter
+             * field and then rechecks state at least one more time
+             * before actually parking, thus covering race vs
+             * fulfiller noticing that waiter is nonnull so should be
+             * woken.
+             *
+             * When invoked by nodes that appear at the point of call
+             * to be at the head of the stack, calls to park are
+             * preceded by spins to avoid blocking when producers and
+             * consumers are arriving very close in time.  This can
+             * happen enough to bother only on multiprocessors.
+             *
+             * The order of checks for returning out of main loop
+             * reflects fact that interrupts have precedence over
+             * normal returns, which have precedence over
+             * timeouts. (So, on timeout, one last check for match is
+             * done before giving up.) Except that calls from untimed
+             * SynchronousQueue.{poll/offer} don't check interrupts
+             * and don't wait at all, so are trapped in transfer
+             * method rather than calling awaitFulfill.
+             */
+            long lastTime = (timed)? System.nanoTime() : 0;
+            Thread w = Thread.currentThread();
+            SNode h = head;
+            int spins = (shouldSpin(s)?
+                         (timed? maxTimedSpins : maxUntimedSpins) : 0);
+            for (;;) {
+                if (w.isInterrupted())
+                    s.tryCancel();
+                SNode m = s.match;
+                if (m != null)
+                    return m;
+                if (timed) {
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;                    
+                    lastTime = now;
+                    if (nanos <= 0) {
+                        s.tryCancel();
+                        continue;
+                    }
+                }
+                if (spins > 0)
+                    spins = shouldSpin(s)? (spins-1) : 0;
+                else if (s.waiter == null)
+                    s.waiter = w; // establish waiter so can park next iter
+                else if (!timed)
+                    LockSupport.park(this);
+                else if (nanos > spinForTimeoutThreshold)
+                    LockSupport.parkNanos(this, nanos);
+            }
+        }
+
+        /**
+         * Return true if node s is at head or there is an active
+         * fulfiller.
+         */
+        boolean shouldSpin(SNode s) {
+            SNode h = head;
+            return (h == null || h == s || isFulfilling(h.mode));
+        }
+
+        /**
+         * Unlink s from the stack
+         */
+        void clean(SNode s) {
+            s.item = null;   // forget item 
+            s.waiter = null; // forget thread
+
+            /*
+             * At worst we may need to traverse entire stack to unlink
+             * s. If there are multiple concurrent calls to clean, we
+             * might not see s if another thread has already removed
+             * it. But we can stop when we see any node known to
+             * follow s. We use s.next unless it too is cancelled, in
+             * which case we try the node one past. We don't check any
+             * futher because we don't want to doubly traverse just to
+             * find sentinel.
+             */
+
+            SNode past = s.next;
+            if (past != null && past.isCancelled())
+                past = past.next;
+
+            // Absorb cancelled nodes at head
+            SNode p;
+            while ((p = head) != null && p != past && p.isCancelled())
+                casHead(p, p.next);
+
+            // Unsplice embedded nodes
+            while (p != null && p != past) {
+                SNode n = p.next;
+                if (n != null && n.isCancelled())
+                    p.casNext(n, n.next);
+                else
+                    p = n;
+            }
+        }
+    }
+
+    /** Dual Queue. */
+    static final class TransferQueue extends Transferer {
+        /*
+         * This extends Scherer-Scott dual queue algorithm, differing,
+         * among other ways, by using modes within nodes rather than
+         * marked pointers. The algorithm is a little simpler than
+         * that for stacks because fulfillers do not need explicit
+         * nodes, and matching is done by CAS'ing QNode.item field
+         * from nonnull to null (for put) or vice versa (for take).
+         */
+
+        /** Node class for TransferQueue. */
+        static final class QNode {
+            volatile QNode next;          // next node in queue
+            volatile Object item;         // CAS'ed to or from null
+            volatile Thread waiter;       // to control park/unpark
+            final boolean isData; 
+
+            QNode(Object item, boolean isData) {
+                this.item = item;
+                this.isData = isData;
+            }
+
+            static final AtomicReferenceFieldUpdater<QNode, QNode>
+                nextUpdater = AtomicReferenceFieldUpdater.newUpdater
+                (QNode.class, QNode.class, "next");
+
+            boolean casNext(QNode cmp, QNode val) {
+                return (next == cmp &&
+                        nextUpdater.compareAndSet(this, cmp, val));
+            }
+
+            static final AtomicReferenceFieldUpdater<QNode, Object>
+                itemUpdater = AtomicReferenceFieldUpdater.newUpdater
+                (QNode.class, Object.class, "item");
+
+            boolean casItem(Object cmp, Object val) {
+                return (item == cmp &&
+                        itemUpdater.compareAndSet(this, cmp, val));
+            }
+
+            /**
+             * Try to cancel by CAS'ing ref to this as item.  
+             */
+            void tryCancel(Object cmp) {
+                itemUpdater.compareAndSet(this, cmp, this);
+            }
+
+            boolean isCancelled() {
+                return item == this;
+            }
+        }
+
+        /** Head of queue */
+        transient volatile QNode head;
+        /** Tail of queue */
+        transient volatile QNode tail;
+        /**
+         * Reference to a cancelled node that might not yet have been
+         * unlinked from queue because it was the last inserted node
+         * when it cancelled.
+         */
+        transient volatile QNode cleanMe;
+
+        TransferQueue() {
+            QNode h = new QNode(null, false); // initialize to dummy node.
+            head = h;
+            tail = h;
+        }
+
+        static final AtomicReferenceFieldUpdater<TransferQueue, QNode>
+            headUpdater = AtomicReferenceFieldUpdater.newUpdater
+            (TransferQueue.class,  QNode.class, "head");
+
+        /**
+         * Try to cas nh as new head; if successful unlink
+         * old head's next node to avoid garbage retention.
+         */
+        void advanceHead(QNode h, QNode nh) {
+            if (h == head && headUpdater.compareAndSet(this, h, nh))
+                h.next = h; // forget old next
+        }
+
+        static final AtomicReferenceFieldUpdater<TransferQueue, QNode>
+            tailUpdater = AtomicReferenceFieldUpdater.newUpdater
+            (TransferQueue.class, QNode.class, "tail");
+
+        /**
+         * Try to cas nt as new tail.
+         */
+        void advanceTail(QNode t, QNode nt) {
+            if (tail == t)
+                tailUpdater.compareAndSet(this, t, nt);
+        }
+
+        static final AtomicReferenceFieldUpdater<TransferQueue, QNode>
+            cleanMeUpdater = AtomicReferenceFieldUpdater.newUpdater
+            (TransferQueue.class, QNode.class, "cleanMe");
+
+        /**
+         * Try to CAS cleanMe slot
+         */
+        boolean casCleanMe(QNode cmp, QNode val) {
+            return (cleanMe == cmp &&
+                    cleanMeUpdater.compareAndSet(this, cmp, val));
+        }
+
+        /**
+         * Put or take an item.
+         */
+        Object transfer(Object e, boolean timed, long nanos) {
+            /* Basic algorithm is to loop trying to take either of 
+             * two actions:
+             *
+             * 1. If queue apparently empty or holding same-mode nodes, 
+             *    try to add node to queue of waiters, wait to be
+             *    fulfilled (or cancelled) and return matching item.
+             *
+             * 2. If queue apparently contains waiting items, and this
+             *    call is of complementary mode, try to fulfill by CAS'ing
+             *    item field of waiting node and dequeuing it, and then
+             *    returning matching item.
+             *
+             * In each case, along the way, check for and try to help
+             * advance head and tail on behalf of other stalled/slow
+             * threads.
+             *
+             * The loop starts off with a null check guarding against
+             * seeing uninitialized head or tail values. This never
+             * happens in current SynchronousQueue, but could if
+             * callers held non-volatile/final ref to the
+             * transferer. The check is here anyway because it places
+             * null checks at top of loop, which is usually faster
+             * than having them implicitly interspersed.
+             */
+
+            QNode s = null; // constructed/reused as needed
+            boolean isData = (e != null);
+
+            for (;;) {
+                QNode t = tail;
+                QNode h = head;
+                if (t == null || h == null)         // saw unitialized values
+                    continue;                       // spin
+
+                if (h == t || t.isData == isData) { // empty or same-mode
+                    QNode tn = t.next;
+                    if (t != tail)                  // inconsistent read
+                        continue;
+                    if (tn != null) {               // lagging tail
+                        advanceTail(t, tn);
+                        continue;
+                    }
+                    if (timed && nanos <= 0)        // can't wait
+                        return null;
+                    if (s == null)
+                        s = new QNode(e, isData);
+                    if (!t.casNext(null, s))        // failed to link in
+                        continue;
+
+                    advanceTail(t, s);              // swing tail and wait
+                    Object x = awaitFulfill(s, e, timed, nanos);
+                    if (x == s) {                   // wait was cancelled
+                        clean(t, s);
+                        return null;
+                    }
+
+                    if (s.next != s) {              // not already unlinked
+                        advanceHead(t, s);          // unlink
+                        if (x != null)              // and forget fields
+                            s.item = s;
+                        s.waiter = null;
+                    }
+                    return (x != null)? x : e;
+
+                } else {                            // complementary-mode
+                    QNode m = h.next;               // node to fulfill
+                    if (t != tail || m == null || h != head)
+                        continue;                   // inconsistent read
+
+                    Object x = m.item;
+                    if (isData == (x != null) ||    // m already fulfilled
+                        x == m ||                   // m cancelled
+                        !m.casItem(x, e)) {         // lost CAS
+                        advanceHead(h, m);          // dequeue and retry
+                        continue;
+                    }
+
+                    advanceHead(h, m);              // successfully fulfilled
+                    LockSupport.unpark(m.waiter);
+                    return (x != null)? x : e;
+                }
+            }
+        }
+
+        /**
+         * Spin/block until node s is fulfilled.
+         * @param s the waiting node
+         * @param e the comparison value for checking match
+         * @param timed true if timed wait
+         * @param nanos timeout value
+         * @return matched item, or s if cancelled
+         */
+        Object awaitFulfill(QNode s, Object e, boolean timed, long nanos) {
+            /* Same idea as TransferStack.awaitFulfill */
+            long lastTime = (timed)? System.nanoTime() : 0;
+            Thread w = Thread.currentThread();
+            int spins = ((head.next == s) ?
+                         (timed? maxTimedSpins : maxUntimedSpins) : 0);
+            for (;;) {
+                if (w.isInterrupted())
+                    s.tryCancel(e);
+                Object x = s.item;
+                if (x != e)
+                    return x;
+                if (timed) {
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;                    
+                    lastTime = now;
+                    if (nanos <= 0) {
+                        s.tryCancel(e);
+                        continue;
+                    }
+                }
+                if (spins > 0)
+                    --spins;
+                else if (s.waiter == null)
+                    s.waiter = w;
+                else if (!timed)
+                    LockSupport.park(this);
+                else if (nanos > spinForTimeoutThreshold)
+                    LockSupport.parkNanos(this, nanos);
+            }
+        }
+
+        /**
+         * Get rid of cancelled node s with original predecessor pred.
+         */
+        void clean(QNode pred, QNode s) {
+            s.waiter = null; // forget thread
+            /*
+             * At any given time, exactly one node on list cannot be
+             * deleted -- the last inserted node. To accommodate this,
+             * if we cannot delete s, we save its predecessor as
+             * "cleanMe", deleting the previously saved version
+             * first. At least one of node s or the node previously
+             * saved can always be deleted, so this always terminates.
+             */
+            while (pred.next == s) { // Return early if already unlinked
+                QNode h = head;
+                QNode hn = h.next;   // Absorb cancelled first node as head
+                if (hn != null && hn.isCancelled()) {
+                    advanceHead(h, hn);
+                    continue;
+                }
+		QNode t = tail;      // Ensure consistent read for tail
+                if (t == h)
+                    return;
+		QNode tn = t.next;
+		if (t != tail)
+                    continue;
+                if (tn != null) {
+                    advanceTail(t, tn);
+                    continue;
+                }
+                if (s != t) {        // If not tail, try to unsplice
+                    QNode sn = s.next;
+                    if (sn == s || pred.casNext(s, sn))
+                        return;
+                }
+                QNode dp = cleanMe;
+                if (dp != null) {    // Try unlinking previous cancelled node
+                    QNode d = dp.next;
+                    QNode dn;
+                    if (d == null ||               // d is gone or
+                        d == dp ||                 // d is off list or
+                        !d.isCancelled() ||        // d not cancelled or
+                        (d != t &&                 // d not tail and
+                         (dn = d.next) != null &&  //   has successor
+                         dn != d &&                //   that is on list
+                         dp.casNext(d, dn)))       // d unspliced
+                        casCleanMe(dp, null); 
+                    if (dp == pred)                
+                        return;      // s is already saved node
+                } else if (casCleanMe(null, pred)) 
+                    return;          // Postpone cleaning s
+            }
+        }
+    }
+
+    /**
+     * The transferer. Set only in constructor, but cannot be declared
+     * as final without further complicating serialization.  Since
+     * this is accessed only once per public method, there isn't a
+     * noticeable performance penalty for using volatile instead of
+     * final here.
+     */
+    private transient volatile Transferer transferer;
 
     /**
      * Creates a <tt>SynchronousQueue</tt> with nonfair access policy.
@@ -95,295 +779,11 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a <tt>SynchronousQueue</tt> with specified fairness policy.
-     * @param fair if true, threads contend in FIFO order for access;
+     * @param fair if true, waiting threads contend in FIFO order for access;
      * otherwise the order is unspecified.
      */
     public SynchronousQueue(boolean fair) {
-        if (fair) {
-            qlock = new ReentrantLock(true);
-            waitingProducers = new FifoWaitQueue();
-            waitingConsumers = new FifoWaitQueue();
-        }
-        else {
-            qlock = new ReentrantLock();
-            waitingProducers = new LifoWaitQueue();
-            waitingConsumers = new LifoWaitQueue();
-        }
-    }
-
-    /**
-     * Queue to hold waiting puts/takes; specialized to Fifo/Lifo below.
-     * These queues have all transient fields, but are serializable
-     * in order to recover fairness settings when deserialized.
-     */
-    static abstract class WaitQueue implements java.io.Serializable {
-        /** Creates, adds, and returns node for x. */
-        abstract Node enq(Object x);
-        /** Removes and returns node, or null if empty. */
-        abstract Node deq();
-        /** Removes a cancelled node to avoid garbage retention. */
-        abstract void unlink(Node node);
-        /** Returns true if a cancelled node might be on queue. */
-        abstract boolean shouldUnlink(Node node);
-    }
-
-    /**
-     * FIFO queue to hold waiting puts/takes.
-     */
-    static final class FifoWaitQueue extends WaitQueue implements java.io.Serializable {
-        private static final long serialVersionUID = -3623113410248163686L;
-        private transient Node head;
-        private transient Node last;
-
-        Node enq(Object x) {
-            Node p = new Node(x);
-            if (last == null)
-                last = head = p;
-            else
-                last = last.next = p;
-            return p;
-        }
-
-        Node deq() {
-            Node p = head;
-            if (p != null) {
-                if ((head = p.next) == null)
-                    last = null;
-                p.next = null;
-            }
-            return p;
-        }
-
-        boolean shouldUnlink(Node node) {
-            return (node == last || node.next != null);
-        }
-
-        void unlink(Node node) {
-            Node p = head;
-            Node trail = null;
-            while (p != null) {
-                if (p == node) {
-                    Node next = p.next;
-                    if (trail == null)
-                        head = next;
-                    else
-                        trail.next = next;
-                    if (last == node)
-                        last = trail;
-                    break;
-                }
-                trail = p;
-                p = p.next;
-            }
-        }
-    }
-
-    /**
-     * LIFO queue to hold waiting puts/takes.
-     */
-    static final class LifoWaitQueue extends WaitQueue implements java.io.Serializable {
-        private static final long serialVersionUID = -3633113410248163686L;
-        private transient Node head;
-
-        Node enq(Object x) {
-            return head = new Node(x, head);
-        }
-
-        Node deq() {
-            Node p = head;
-            if (p != null) {
-                head = p.next;
-                p.next = null;
-            }
-            return p;
-        }
-
-        boolean shouldUnlink(Node node) {
-            // Return false if already dequeued or is bottom node (in which
-            // case we might retain at most one garbage node)
-            return (node == head || node.next != null);
-        }
-
-        void unlink(Node node) {
-            Node p = head;
-            Node trail = null;
-            while (p != null) {
-                if (p == node) {
-                    Node next = p.next;
-                    if (trail == null)
-                        head = next;
-                    else
-                        trail.next = next;
-                    break;
-                }
-                trail = p;
-                p = p.next;
-            }
-        }
-    }
-
-    /**
-     * Unlinks the given node from consumer queue.  Called by cancelled
-     * (timeout, interrupt) waiters to avoid garbage retention in the
-     * absence of producers.
-     */
-    private void unlinkCancelledConsumer(Node node) {
-        // Use a form of double-check to avoid unnecessary locking and
-        // traversal. The first check outside lock might
-        // conservatively report true.
-        if (waitingConsumers.shouldUnlink(node)) {
-            qlock.lock();
-            try {
-                if (waitingConsumers.shouldUnlink(node))
-                    waitingConsumers.unlink(node);
-            } finally {
-                qlock.unlock();
-            }
-        }
-    }
-
-    /**
-     * Unlinks the given node from producer queue.  Symmetric
-     * to unlinkCancelledConsumer.
-     */
-    private void unlinkCancelledProducer(Node node) {
-        if (waitingProducers.shouldUnlink(node)) {
-            qlock.lock();
-            try {
-                if (waitingProducers.shouldUnlink(node))
-                    waitingProducers.unlink(node);
-            } finally {
-                qlock.unlock();
-            }
-        }
-    }
-
-    /**
-     * Nodes each maintain an item and handle waits and signals for
-     * getting and setting it. The class extends
-     * AbstractQueuedSynchronizer to manage blocking, using AQS state
-     *  0 for waiting, 1 for ack, -1 for cancelled.
-     */
-    static final class Node extends AbstractQueuedSynchronizer {
-        private static final long serialVersionUID = -2631493897867746127L;
-
-        /** Synchronization state value representing that node acked */
-        private static final int ACK    =  1;
-        /** Synchronization state value representing that node cancelled */
-        private static final int CANCEL = -1;
-
-        /** The item being transferred */
-        Object item;
-        /** Next node in wait queue */
-        Node next;
-
-        /** Creates a node with initial item */
-        Node(Object x) { item = x; }
-
-        /** Creates a node with initial item and next */
-        Node(Object x, Node n) { item = x; next = n; }
-
-        /**
-         * Implements AQS base acquire to succeed if not in WAITING state
-         */
-        protected boolean tryAcquire(int ignore) {
-            return getState() != 0;
-        }
-
-        /**
-         * Implements AQS base release to signal if state changed
-         */
-        protected boolean tryRelease(int newState) {
-            return compareAndSetState(0, newState);
-        }
-
-        /**
-         * Takes item and nulls out field (for sake of GC)
-         */
-        private Object extract() {
-            Object x = item;
-            item = null;
-            return x;
-        }
-
-        /**
-         * Tries to cancel on interrupt; if so rethrowing,
-         * else setting interrupt state
-         */
-        private void checkCancellationOnInterrupt(InterruptedException ie)
-            throws InterruptedException {
-            if (release(CANCEL))
-                throw ie;
-            Thread.currentThread().interrupt();
-        }
-
-        /**
-         * Fills in the slot created by the consumer and signal consumer to
-         * continue.
-         */
-        boolean setItem(Object x) {
-            item = x; // can place in slot even if cancelled
-            return release(ACK);
-        }
-
-        /**
-         * Removes item from slot created by producer and signal producer
-         * to continue.
-         */
-        Object getItem() {
-            return (release(ACK))? extract() : null;
-        }
-
-        /**
-         * Waits for a consumer to take item placed by producer.
-         */
-        void waitForTake() throws InterruptedException {
-            try {
-                acquireInterruptibly(0);
-            } catch (InterruptedException ie) {
-                checkCancellationOnInterrupt(ie);
-            }
-        }
-
-        /**
-         * Waits for a producer to put item placed by consumer.
-         */
-        Object waitForPut() throws InterruptedException {
-            try {
-                acquireInterruptibly(0);
-            } catch (InterruptedException ie) {
-                checkCancellationOnInterrupt(ie);
-            }
-            return extract();
-        }
-
-        /**
-         * Waits for a consumer to take item placed by producer or time out.
-         */
-        boolean waitForTake(long nanos) throws InterruptedException {
-            try {
-                if (!tryAcquireNanos(0, nanos) &&
-                    release(CANCEL))
-                    return false;
-            } catch (InterruptedException ie) {
-                checkCancellationOnInterrupt(ie);
-            }
-            return true;
-        }
-
-        /**
-         * Waits for a producer to put item placed by consumer, or time out.
-         */
-        Object waitForPut(long nanos) throws InterruptedException {
-            try {
-                if (!tryAcquireNanos(0, nanos) &&
-                    release(CANCEL))
-                    return null;
-            } catch (InterruptedException ie) {
-                checkCancellationOnInterrupt(ie);
-            }
-            return extract();
-        }
+        transferer = (fair)? new TransferQueue() : new TransferStack();
     }
 
     /**
@@ -393,38 +793,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
-    public void put(E e) throws InterruptedException {
-        if (e == null) throw new NullPointerException();
-        final ReentrantLock qlock = this.qlock;
-
-        for (;;) {
-            Node node;
-            boolean mustWait;
-            if (Thread.interrupted()) throw new InterruptedException();
-            qlock.lock();
-            try {
-                node = waitingConsumers.deq();
-                if ( (mustWait = (node == null)) )
-                    node = waitingProducers.enq(e);
-            } finally {
-                qlock.unlock();
-            }
-
-            if (mustWait) {
-                try {
-                    node.waitForTake();
-                    return;
-                } catch (InterruptedException ex) {
-                    unlinkCancelledProducer(node);
-                    throw ex;
-                }
-            }
-
-            else if (node.setItem(e))
-                return;
-
-            // else consumer cancelled, so retry
-        }
+    public void put(E o) throws InterruptedException {
+        if (o == null) throw new NullPointerException();
+        if (transferer.transfer(o, false, 0) == null)
+            throw new InterruptedException();
     }
 
     /**
@@ -436,131 +808,15 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
-        if (e == null) throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
-        final ReentrantLock qlock = this.qlock;
-        for (;;) {
-            Node node;
-            boolean mustWait;
-            if (Thread.interrupted()) throw new InterruptedException();
-            qlock.lock();
-            try {
-                node = waitingConsumers.deq();
-                if ( (mustWait = (node == null)) )
-                    node = waitingProducers.enq(e);
-            } finally {
-                qlock.unlock();
-            }
-
-            if (mustWait) {
-                try {
-                    boolean x = node.waitForTake(nanos);
-                    if (!x)
-                        unlinkCancelledProducer(node);
-                    return x;
-                } catch (InterruptedException ex) {
-                    unlinkCancelledProducer(node);
-                    throw ex;
-                }
-            }
-
-            else if (node.setItem(e))
-                return true;
-
-            // else consumer cancelled, so retry
-        }
+    public boolean offer(E o, long timeout, TimeUnit unit) 
+        throws InterruptedException {
+        if (o == null) throw new NullPointerException();
+        if (transferer.transfer(o, true, unit.toNanos(timeout)) != null)
+            return true;
+        if (!Thread.interrupted())
+            return false;
+        throw new InterruptedException();
     }
-
-    /**
-     * Retrieves and removes the head of this queue, waiting if necessary
-     * for another thread to insert it.
-     *
-     * @return the head of this queue
-     * @throws InterruptedException {@inheritDoc}
-     */
-    public E take() throws InterruptedException {
-        final ReentrantLock qlock = this.qlock;
-        for (;;) {
-            Node node;
-            boolean mustWait;
-
-            if (Thread.interrupted()) throw new InterruptedException();
-            qlock.lock();
-            try {
-                node = waitingProducers.deq();
-                if ( (mustWait = (node == null)) )
-                    node = waitingConsumers.enq(null);
-            } finally {
-                qlock.unlock();
-            }
-
-            if (mustWait) {
-                try {
-                    Object x = node.waitForPut();
-                    return (E)x;
-                } catch (InterruptedException ex) {
-                    unlinkCancelledConsumer(node);
-                    throw ex;
-                }
-            }
-            else {
-                Object x = node.getItem();
-                if (x != null)
-                    return (E)x;
-                // else cancelled, so retry
-            }
-        }
-    }
-
-    /**
-     * Retrieves and removes the head of this queue, waiting
-     * if necessary up to the specified wait time, for another thread
-     * to insert it.
-     *
-     * @return the head of this queue, or <tt>null</tt> if the
-     *         specified waiting time elapses before an element is present.
-     * @throws InterruptedException {@inheritDoc}
-     */
-    public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        long nanos = unit.toNanos(timeout);
-        final ReentrantLock qlock = this.qlock;
-
-        for (;;) {
-            Node node;
-            boolean mustWait;
-
-            if (Thread.interrupted()) throw new InterruptedException();
-            qlock.lock();
-            try {
-                node = waitingProducers.deq();
-                if ( (mustWait = (node == null)) )
-                    node = waitingConsumers.enq(null);
-            } finally {
-                qlock.unlock();
-            }
-
-            if (mustWait) {
-                try {
-                    Object x = node.waitForPut(nanos);
-                    if (x == null)
-                        unlinkCancelledConsumer(node);
-                    return (E)x;
-                } catch (InterruptedException ex) {
-                    unlinkCancelledConsumer(node);
-                    throw ex;
-                }
-            }
-            else {
-                Object x = node.getItem();
-                if (x != null)
-                    return (E)x;
-                // else cancelled, so retry
-            }
-        }
-    }
-
-    // Untimed nonblocking versions
 
     /**
      * Inserts the specified element into this queue, if another thread is
@@ -573,23 +829,37 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      */
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
-        final ReentrantLock qlock = this.qlock;
+        return transferer.transfer(e, true, 0) != null;
+    }
 
-        for (;;) {
-            Node node;
-            qlock.lock();
-            try {
-                node = waitingConsumers.deq();
-            } finally {
-                qlock.unlock();
-            }
-            if (node == null)
-                return false;
+    /**
+     * Retrieves and removes the head of this queue, waiting if necessary
+     * for another thread to insert it.
+     *
+     * @return the head of this queue
+     * @throws InterruptedException {@inheritDoc}
+     */
+    public E take() throws InterruptedException {
+        Object e = transferer.transfer(null, false, 0);
+        if (e != null)
+            return (E)e;
+        throw new InterruptedException();
+    }
 
-            else if (node.setItem(e))
-                return true;
-            // else retry
-        }
+    /**
+     * Retrieves and removes the head of this queue, waiting
+     * if necessary up to the specified wait time, for another thread
+     * to insert it.
+     *
+     * @return the head of this queue, or <tt>null</tt> if the
+     *         specified waiting time elapses before an element is present.
+     * @throws InterruptedException {@inheritDoc}
+     */
+    public E poll(long timeout, TimeUnit unit) throws InterruptedException {
+        Object e = transferer.transfer(null, true, unit.toNanos(timeout));
+        if (e != null || !Thread.interrupted())
+            return (E)e;
+        throw new InterruptedException();
     }
 
     /**
@@ -600,31 +870,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *         element is available.
      */
     public E poll() {
-        final ReentrantLock qlock = this.qlock;
-        for (;;) {
-            Node node;
-            qlock.lock();
-            try {
-                node = waitingProducers.deq();
-            } finally {
-                qlock.unlock();
-            }
-            if (node == null)
-                return null;
-
-            else {
-                Object x = node.getItem();
-                if (x != null)
-                    return (E)x;
-                // else retry
-            }
-        }
+        return (E)transferer.transfer(null, true, 0);
     }
 
     /**
      * Always returns <tt>true</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     *
      * @return <tt>true</tt>
      */
     public boolean isEmpty() {
@@ -634,8 +885,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     *
-     * @return zero
+     * @return zero.
      */
     public int size() {
         return 0;
@@ -644,8 +894,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     *
-     * @return zero
+     * @return zero.
      */
     public int remainingCapacity() {
         return 0;
@@ -655,13 +904,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Does nothing.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      */
-    public void clear() {}
+    public void clear() {
+    }
 
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     *
-     * @param o object to be checked for containment in this queue
+     * @param o the element
      * @return <tt>false</tt>
      */
     public boolean contains(Object o) {
@@ -680,12 +929,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns <tt>false</tt> unless the given collection is empty.
+     * Returns <tt>false</tt> unless given collection is empty.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     *
      * @param c the collection
-     * @return <tt>false</tt> unless the given collection is empty
-     * @throws NullPointerException if the specified collection is null
+     * @return <tt>false</tt> unless given collection is empty
      */
     public boolean containsAll(Collection<?> c) {
         return c.isEmpty();
@@ -694,7 +941,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     *
      * @param c the collection
      * @return <tt>false</tt>
      */
@@ -705,7 +951,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
-     *
      * @param c the collection
      * @return <tt>false</tt>
      */
@@ -717,13 +962,11 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Always returns <tt>null</tt>.
      * A <tt>SynchronousQueue</tt> does not return elements
      * unless actively waited on.
-     *
      * @return <tt>null</tt>
      */
     public E peek() {
         return null;
     }
-
 
     static class EmptyIterator<E> implements Iterator<E> {
         public boolean hasNext() {
@@ -746,7 +989,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     public Iterator<E> iterator() {
         return new EmptyIterator<E>();
     }
-
 
     /**
      * Returns a zero-length array.
@@ -809,4 +1051,54 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
         return n;
     }
+
+    /*
+     * To cope with serialization strategy in the 1.5 version of
+     * SynchronousQueue, we declare some unused classes and fields
+     * that exist solely to enable serializability across versions.
+     * These fields are never used, so are initialized only if this
+     * object is ever serialized or deserialized.
+     */
+
+    static class WaitQueue implements java.io.Serializable { }
+    static class LifoWaitQueue extends WaitQueue {
+        private static final long serialVersionUID = -3633113410248163686L;
+    }
+    static class FifoWaitQueue extends WaitQueue {
+        private static final long serialVersionUID = -3623113410248163686L;
+    }
+    private ReentrantLock qlock;
+    private WaitQueue waitingProducers;
+    private WaitQueue waitingConsumers;
+
+    /**
+     * Save the state to a stream (that is, serialize it).
+     *
+     * @param s the stream
+     */
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws java.io.IOException {
+        boolean fair = transferer instanceof TransferQueue;
+        if (fair) {
+            qlock = new ReentrantLock(true);
+            waitingProducers = new FifoWaitQueue();
+            waitingConsumers = new FifoWaitQueue();
+        }
+        else {
+            qlock = new ReentrantLock();
+            waitingProducers = new LifoWaitQueue();
+            waitingConsumers = new LifoWaitQueue();
+        }
+        s.defaultWriteObject();
+    }
+
+    private void readObject(final java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        if (waitingProducers instanceof FifoWaitQueue)
+            transferer = new TransferQueue();
+        else
+            transferer = new TransferStack();
+    }
+
 }

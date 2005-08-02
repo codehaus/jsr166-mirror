@@ -698,6 +698,50 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         }
     } 
 
+
+    /**
+     * Fair Read tryLock succeeds if readlocked but not writelocked
+     */
+    public void testTryLockWhenReadLockedFair() { 
+	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	lock.readLock().lock();
+	Thread t = new Thread(new Runnable() {
+                public void run() {
+                    threadAssertTrue(lock.readLock().tryLock());
+                    lock.readLock().unlock();
+		}
+	    });
+        try {
+            t.start();
+            t.join();
+            lock.readLock().unlock();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
+    
+
+    /**
+     * Fair write tryLock fails when readlocked
+     */
+    public void testWriteTryLockWhenReadLockedFair() { 
+	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	lock.readLock().lock();
+	Thread t = new Thread(new Runnable() {
+                public void run() {
+                    threadAssertFalse(lock.writeLock().tryLock());
+		}
+	    });
+        try {
+            t.start();
+            t.join();
+            lock.readLock().unlock();
+        } catch(Exception e){
+            unexpectedException();
+        }
+    } 
+
     
 
     /**

@@ -25,14 +25,17 @@ import java.util.*;
  * approximately arrival-order policy. When the write lock is released
  * either the longest-waiting single writer thread will be assigned
  * the write lock, or if there is a reader thread waiting longer than
- * any writer thread, the set of readers will be assigned the read
+ * any writer thread, one or more readers will be assigned the read
  * lock.  If reader threads are active and a writer thread enters the
  * lock then no other subsequent (non-reentrant) reader threads will
  * be granted the read lock until after that writer thread has
  * acquired and released the write lock.
  *
- * <p>When constructed as non-fair, the order of entry to the read and
- * write lock is unspecified, subject to reentrancy constraints.
+ * <p>When constructed as non-fair (the default), the order of entry
+ * to the read and write lock is unspecified, subject to reentrancy
+ * constraints.  A nonfair lock that is continously contended may
+ * indefinitely postpone one or more reader or writer threads, but
+ * will normally have higher throughput than a fair lock.
  *
  * <li><b>Reentrancy</b>
  *
@@ -41,7 +44,7 @@ import java.util.*;
  * readers are not allowed until all write locks held by the writing
  * thread have been released.
  *
- * <p>Additionally, a writer can acquire the read lock - but not
+ * <p>Additionally, a writer can acquire the read lock, but not
  * vice-versa.  Among other applications, reentrancy can be useful
  * when write locks are held during calls or callbacks to methods that
  * perform reads under read locks.  If a reader tries to acquire the
@@ -160,7 +163,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Creates a new <tt>ReentrantReadWriteLock</tt> with
-     * default ordering properties.
+     * default (nonfair) ordering properties.
      */
     public ReentrantReadWriteLock() {
         sync = new NonfairSync();
@@ -268,7 +271,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          */
         abstract boolean readerShouldBlock(Thread current);
 
-
         /** 
          * Return true if a writer thread that is otherwise
          * eligible for lock should block because of policy
@@ -307,7 +309,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             return true;
         }
 
-
         protected final boolean tryReleaseShared(int unused) {
             HoldCounter rh = cachedHoldCounter;
             Thread current = Thread.currentThread();
@@ -341,7 +342,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             }
             return fullTryAcquireShared(current);
         }
-
 
         /**
          * Full version of acquire for reads, that handles CAS misses
@@ -387,7 +387,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             setExclusiveOwnerThread(current);
             return true;
         }
-
 
         /**
          * Performs tryLock for read, enabling barging in both modes.
@@ -983,7 +982,6 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         }
 
     }
-
 
     // Instrumentation and status
 

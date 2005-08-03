@@ -47,7 +47,7 @@ import java.util.*;
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
+ * @author Doug Lea and Bill Scherer and Michael Scott
  * @param <E> the type of elements held in this collection
  */
 public class SynchronousQueue<E> extends AbstractQueue<E>
@@ -98,9 +98,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *     of further adaptations.
      *  2. SynchronousQueues must block threads waiting to become
      *     fulfilled.
-     *  3. Nodes/threads that have been cancelled due to timeouts
-     *     or interruptions are cleaned out of the lists to
-     *     avoid garbage retention and memory depletion.
+     *  3. Support for cancellation via timeout and interrupts, 
+     *     including cleaning out cancelled nodes/threads 
+     *     from lists to avoid garbage retention and memory depletion.
      *
      * Blocking is mainly accomplished using LockSupport park/unpark,
      * except that nodes that appear to be the next ones to become
@@ -156,7 +156,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * The number of times to spin before blocking in timed waits.
      * The value is empirically derived -- it works well across a
-     * variety of processors and OSes. Emprically, the best value
+     * variety of processors and OSes. Empirically, the best value
      * seems not to vary with number of CPUs (beyond 2) so is just
      * a constant.
      */
@@ -430,7 +430,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         boolean shouldSpin(SNode s) {
             SNode h = head;
-            return (h == null || h == s || isFulfilling(h.mode));
+            return (h == s || h == null || isFulfilling(h.mode));
         }
 
         /**
@@ -521,6 +521,15 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
             boolean isCancelled() {
                 return item == this;
+            }
+
+            /** 
+             * Return true if this node is known to be off the queue
+             * because its next pointer has been forgotten due to
+             * an advanceHead operation.
+             */
+            boolean isOffList() {
+                return next == this;
             }
         }
 
@@ -638,8 +647,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                         return null;
                     }
 
-                    if (s.next != s) {              // not already unlinked
-                        advanceHead(t, s);          // unlink
+                    if (!s.isOffList()) {           // not already unlinked
+                        advanceHead(t, s);          // unlink if head
                         if (x != null)              // and forget fields
                             s.item = s;
                         s.waiter = null;
@@ -764,9 +773,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * The transferer. Set only in constructor, but cannot be declared
      * as final without further complicating serialization.  Since
-     * this is accessed only once per public method, there isn't a
-     * noticeable performance penalty for using volatile instead of
-     * final here.
+     * this is accessed only at most once per public method, there
+     * isn't a noticeable performance penalty for using volatile
+     * instead of final here.
      */
     private transient volatile Transferer transferer;
 

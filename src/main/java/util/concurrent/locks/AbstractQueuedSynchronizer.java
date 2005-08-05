@@ -526,6 +526,13 @@ public abstract class AbstractQueuedSynchronizer
     // Queuing utilities
 
     /**
+     * The number of nanoseconds for which it is faster to spin
+     * rather than to use timed park. A rough estimate suffices
+     * to improve responsiveness with very short timeouts.
+     */
+    static final long spinForTimeoutThreshold = 1000L;
+
+    /**
      * Inserts node into queue, initializing if necessary. See picture above.
      * @param node the node to insert
      * @return node's predecessor
@@ -602,17 +609,15 @@ public abstract class AbstractQueuedSynchronizer
          * traverse backwards from tail to find the actual
          * non-cancelled successor.
          */
-        Thread thread;
         Node s = node.next;
-        if (s != null && s.waitStatus <= 0)
-            thread = s.thread;
-        else {
-            thread = null;
-            for (s = tail; s != null && s != node; s = s.prev)
-                if (s.waitStatus <= 0)
-                    thread = s.thread;
+        if (s == null || s.waitStatus > 0) {
+            s = null;
+            for (Node t = tail; t != null && t != node; t = t.prev)
+                if (t.waitStatus <= 0)
+                    s = t;
         }
-        LockSupport.unpark(thread);
+        if (s != null) 
+            LockSupport.unpark(s.thread);
     }
 
     /**
@@ -784,14 +789,14 @@ public abstract class AbstractQueuedSynchronizer
                     cancelAcquire(node);
                     return false;
                 }
-                if (shouldParkAfterFailedAcquire(p, node)) {
+                if (nanosTimeout > spinForTimeoutThreshold &&
+                    shouldParkAfterFailedAcquire(p, node)) 
                     LockSupport.parkNanos(this, nanosTimeout);
-                    if (Thread.interrupted())
-                        break;
-                    long now = System.nanoTime();
-                    nanosTimeout -= now - lastTime;
-                    lastTime = now;
-                }
+                long now = System.nanoTime();
+                nanosTimeout -= now - lastTime;
+                lastTime = now;
+                if (Thread.interrupted())
+                    break;
             }
         } catch (RuntimeException ex) {
             cancelAcquire(node);
@@ -889,14 +894,14 @@ public abstract class AbstractQueuedSynchronizer
                     cancelAcquire(node);
                     return false;
                 }
-                if (shouldParkAfterFailedAcquire(p, node)) {
+                if (nanosTimeout > spinForTimeoutThreshold &&
+                    shouldParkAfterFailedAcquire(p, node)) 
                     LockSupport.parkNanos(this, nanosTimeout);
-                    if (Thread.interrupted())
-                        break;
-                    long now = System.nanoTime();
-                    nanosTimeout -= now - lastTime;
-                    lastTime = now;
-                }
+                long now = System.nanoTime();
+                nanosTimeout -= now - lastTime;
+                lastTime = now;
+                if (Thread.interrupted())
+                    break;
             }
         } catch (RuntimeException ex) {
             cancelAcquire(node);
@@ -1213,8 +1218,7 @@ public abstract class AbstractQueuedSynchronizer
      * <p> In this implementation, this operation returns in
      * constant time.
      *
-     * @return true if there may be other threads waiting to acquire
-     * the lock.
+     * @return true if there may be other threads waiting to acquire.
      */
     public final boolean hasQueuedThreads() {
         return head != tail;
@@ -1253,24 +1257,21 @@ public abstract class AbstractQueuedSynchronizer
      * Version of getFirstQueuedThread called when fastpath fails
      */
     private Thread fullGetFirstQueuedThread() {
-        Node h = head;
-        if (h == null)                    // No queue
-            return null;
-
         /*
          * The first node is normally h.next. Try to get its
          * thread field, ensuring consistent reads: If thread
          * field is nulled out or s.prev is no longer head, then
          * some other thread(s) concurrently performed setHead in
-         * between some of our reads.
+         * between some of our reads. We try this twice before 
+         * resorting to traversal.
          */
-        Node s = h.next;
-        if (s != null) {
-            Thread st = s.thread;
-            Node sp = s.prev;
-            if (st != null && sp == head)
-                return st;
-        }
+        Node h, s;
+        Thread st;
+        if (((h = head) != null && (s = h.next) != null && 
+             s.prev == head && (st = s.thread) != null) ||
+            ((h = head) != null && (s = h.next) != null && 
+             s.prev == head && (st = s.thread) != null))
+            return st;
 
         /*
          * Head's next field might not have been set yet, or may have
@@ -1334,8 +1335,8 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     final boolean fullIsFirst(Thread current) {
-        Node h;
-        Node s;
+        // same idea as fullGetFirstQueuedThread
+        Node h, s;
         Thread firstThread = null;
         if (((h = head) != null && (s = h.next) != null &&
              s.prev == head && (firstThread = s.thread) != null))
@@ -1361,7 +1362,7 @@ public abstract class AbstractQueuedSynchronizer
      * monitoring system state, not for synchronization
      * control.
      *
-     * @return the estimated number of threads waiting for this lock
+     * @return the estimated number of threads waiting to acquire.
      */
     public final int getQueueLength() {
         int n = 0;

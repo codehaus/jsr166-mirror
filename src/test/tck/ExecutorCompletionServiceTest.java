@@ -214,8 +214,8 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
              new ExecutorCompletionService<String>(e);
          try {
              assertNull(ecs.poll());
-             Callable<String> c = new StringTask();
-             Future f1 = ecs.submit(c);
+             Runnable r = new NoOpRunnable();
+             Future f1 = ecs.submit(r, null);
              assertTrue("submit must return MyRunnableFuture",
                         f1 instanceof MyRunnableFuture);
              Future f2 = ecs.take();

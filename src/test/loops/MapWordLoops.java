@@ -13,7 +13,7 @@ public class MapWordLoops {
         "class.txt",
         "dir.txt",
         "ids.txt", 
-        "/usr/dict/words", 
+        //        "/usr/dict/words", 
     };
 
     static final int MAX_WORDS = 500000;
@@ -50,7 +50,7 @@ public class MapWordLoops {
             
             for (int i = 0; i < numTests; ++i) {
                 Map<String,String> m = newMap(mapClass);
-                long t = doTest(mapClass.getName(), m, key);
+                long t = doTest(i, mapClass.getName(), m, key);
                 if (t < least) least = t;
                 m.clear();
                 m = null;
@@ -104,12 +104,12 @@ public class MapWordLoops {
         return array;
     }
 
-    static long doTest(String name,
+    static long doTest(int id, String name,
                        final Map<String,String> m, 
                        final String[] key) {
 
         //    System.out.print(name + "\t");
-        Runner runner = new Runner(m, key);
+        Runner runner = new Runner(id, m, key);
         long startTime = System.currentTimeMillis();
         runner.run();
         long afterRun = System.currentTimeMillis();
@@ -128,7 +128,7 @@ public class MapWordLoops {
     static class Runner implements Runnable {
         final Map<String,String> map;
         final String[] key;
-        LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
+        LoopHelpers.SimpleRandom rng;
         final int pctrem;
         final int pctins;
         int nputs = 0;
@@ -138,10 +138,11 @@ public class MapWordLoops {
         volatile int total;
         int maxsz;
 
-        Runner(Map<String,String> m, String[] k) {
+        Runner(int id, Map<String,String> m, String[] k) {
             map = m; key = k; 
             pctrem = (int)(((long)premove * (long)(Integer.MAX_VALUE/2)) / 50);
             pctins = (int)(((long)pinsert * (long)(Integer.MAX_VALUE/2)) / 50);
+            rng = new LoopHelpers.SimpleRandom((id + 1) * 8862213513L);
         }
 
 

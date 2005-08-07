@@ -74,11 +74,11 @@ class LoopHelpers {
     /**
      * Marsaglia xorshift (1, 3, 10)
      */
-    public static int compute6(int y) { 
-        y ^= y << 1; 
-        y ^= y >>> 3; 
-        y ^= (y << 10);
-        return y;
+    public static int compute6(int seed) { 
+        seed ^= seed << 1; 
+        seed ^= seed >>> 3; 
+        seed ^= (seed << 10);
+        return seed;
     }
 
     /**
@@ -91,7 +91,6 @@ class LoopHelpers {
         return y;
     }
 
-    public static final long compute8InitialValue = 88172645463325252L;
 
     /**
      * Marsaglia xorshift for longs
@@ -103,34 +102,59 @@ class LoopHelpers {
         return x;
     }
 
+    public static final class XorShift32Random {
+        static final AtomicInteger seq = new AtomicInteger(8862213);
+        int x = -1831433054;
+        public XorShift32Random(int seed) { x = seed;  }
+        public XorShift32Random() { 
+            this((int)System.nanoTime() + seq.getAndAdd(129)); 
+        }
+        public int next() {
+            x ^= x << 6; 
+            x ^= x >>> 21; 
+            x ^= (x << 7);
+            return x;
+        }
+    }
+
 
     /** Multiplication-free RNG from Marsaglia "Xorshift RNGs" paper */
-    public static class MarsagliaRandom {
+    public static final class MarsagliaRandom {
+        static final AtomicInteger seq = new AtomicInteger(3122688);
         int x;
         int y = 842502087;
-        int z = (int)(3579807591L & 0xffff);
+        int z = -715159705;
         int w = 273326509;
-        public MarsagliaRandom(int seed) { x = seed;  }
-        public MarsagliaRandom() { this((int)System.nanoTime()); }
+        public MarsagliaRandom(int seed) { x = seed; }
+        public MarsagliaRandom() { 
+            this((int)System.nanoTime() + seq.getAndAdd(129)); 
+        }
         public int next() {
             int t = x ^ (x << 11);
             x = y; 
             y = z; 
             z = w;
-            return w = (w ^ (w >>> 19)) ^ (t ^ (t >>> 8));
+            return w = (w ^ (w >>> 19) ^ (t ^ (t >>> 8)));
         }
     }
 
     /**
-     * An actually useful random number generator, but unsynchronized.
-     * Basically same as java.util.Random.
+     * Unsynchronized version of java.util.Random algorithm.
      */
-    public static class SimpleRandom {
+    public static final class SimpleRandom {
         private final static long multiplier = 0x5DEECE66DL;
         private final static long addend = 0xBL;
         private final static long mask = (1L << 48) - 1;
-        static final AtomicLong seq = new AtomicLong(1);
-        private long seed = System.nanoTime() + seq.getAndIncrement();
+        static final AtomicLong seq = new AtomicLong( -715159705);
+        private long seed;
+
+        SimpleRandom(long s) {
+            seed = s;
+        }
+
+        SimpleRandom() {
+            seed = System.nanoTime() + seq.getAndAdd(129);
+        }
 
         public void setSeed(long s) {
             seed = s;

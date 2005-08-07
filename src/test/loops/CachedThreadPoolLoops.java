@@ -16,11 +16,28 @@ public class CachedThreadPoolLoops {
 
         if (args.length > 0) 
             maxThreads = Integer.parseInt(args[0]);
-        
+
+        System.out.print("Warmup:");
+        for (int j = 0; j < 2; ++j) {
+            int k = 1;
+            for (int i = 1; i <= maxThreads;) {
+                System.out.print(" " + i);
+                oneTest(i, 10000, false);
+                Thread.sleep(100);
+                if (i == k) {
+                    k = i << 1;
+                    i = i + (i >>> 1);
+                } 
+                else 
+                    i = k;
+            }
+        }
+        System.out.println();
+
         int k = 1;
         for (int i = 1; i <= maxThreads;) {
             System.out.println("Threads:" + i);
-            oneTest(i);
+            oneTest(i, maxIters, true);
             Thread.sleep(100);
             if (i == k) {
                 k = i << 1;
@@ -31,11 +48,11 @@ public class CachedThreadPoolLoops {
         }
    }
 
-    static void oneTest(int nThreads) throws Exception {
-        System.out.print("SynchronousQueue        ");
-        oneRun(new SynchronousQueue<Runnable>(), nThreads);
-        System.out.print("SynchronousQueue(fair)  ");
-        oneRun(new SynchronousQueue<Runnable>(true), nThreads);
+    static void oneTest(int nThreads, int iters, boolean print) throws Exception {
+        if (print) System.out.print("SynchronousQueue        ");
+        oneRun(new SynchronousQueue<Runnable>(false), nThreads, iters, print);
+        if (print) System.out.print("SynchronousQueue(fair)  ");
+        oneRun(new SynchronousQueue<Runnable>(true), nThreads, iters, print);
     }
 
     static final class Task implements Runnable {
@@ -66,13 +83,13 @@ public class CachedThreadPoolLoops {
         }
     }
     
-    static void oneRun(BlockingQueue<Runnable> q, int nThreads) throws Exception {
+    static void oneRun(BlockingQueue<Runnable> q, int nThreads, int iters, boolean print) throws Exception {
        
         ThreadPoolExecutor pool = 
             new ThreadPoolExecutor(nThreads+1, Integer.MAX_VALUE,
                                    1L, TimeUnit.SECONDS, q);
 
-        CountDownLatch done = new CountDownLatch(maxIters);
+        CountDownLatch done = new CountDownLatch(iters);
         remaining.set(nThreads-1);
         pool.prestartAllCoreThreads();
         Task t = new Task(pool, done);
@@ -80,7 +97,12 @@ public class CachedThreadPoolLoops {
         pool.execute(t);
         done.await();
         long time = System.nanoTime() - start;
-        System.out.println("\t: " + LoopHelpers.rightJustify(time / maxIters) + " ns per task");
+        if (print)
+            System.out.println("\t: " + LoopHelpers.rightJustify(time / iters) + " ns per task");
+        q.clear();
+        Thread.sleep(100);
+        pool.shutdown();
+        Thread.sleep(100);
         pool.shutdownNow();
     }
 

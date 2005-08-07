@@ -17,7 +17,7 @@
 import java.util.*;
 import java.util.concurrent.*;
 
-public class MapLoops {
+public class StringMapLoops {
     static int nkeys       = 1000; 
     static int pinsert     = 60;
     static int premove     = 2;
@@ -68,11 +68,14 @@ public class MapLoops {
         System.out.print(" ops: " + nops);
         System.out.println();
 
+        String[] key = makeKeys(nkeys);
+
         int k = 1;
         int warmups = 2;
         for (int i = 1; i <= maxThreads;) {
             Thread.sleep(100);
-            test(i, nkeys, mapClass);
+            test(i, nkeys, key, mapClass);
+            shuffleKeys(key);
             if (warmups > 0)
                 --warmups;
             else if (i == k) {
@@ -89,32 +92,44 @@ public class MapLoops {
         pool.shutdown();
     }
 
-    static Integer[] makeKeys(int n) {
+    static String[] makeKeys(int n) {
         LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
-        Integer[] key = new Integer[n];
-        for (int i = 0; i < key.length; ++i) 
-            key[i] = new Integer(rng.next());
+        String[] key = new String[n];
+        for (int i = 0; i < key.length; ++i) {
+            int k = 0;
+            int len = 1 + (rng.next() & 0xf);
+            char[] c = new char[len * 4];
+            for (int j = 0; j < len; ++j) {
+                int r = rng.next();
+                c[k++] = (char)(' ' + (r & 0x7f));
+                r >>>= 8;
+                c[k++] = (char)(' ' + (r & 0x7f));
+                r >>>= 8;
+                c[k++] = (char)(' ' + (r & 0x7f));
+                r >>>= 8;
+                c[k++] = (char)(' ' + (r & 0x7f));
+            }
+            key[i] = new String(c);
+        }
         return key;
     }
 
-    static void shuffleKeys(Integer[] key) {
+    static void shuffleKeys(String[] key) {
         Random rng = new Random();
         for (int i = key.length; i > 1; --i) {
             int j = rng.nextInt(i);
-            Integer tmp = key[j];
+            String tmp = key[j];
             key[j] = key[i-1];
             key[i-1] = tmp;
         }
     }
 
-    static void test(int i, int nkeys, Class mapClass) throws Exception {
+    static void test(int i, int nkeys, String[] key, Class mapClass) throws Exception {
         System.out.print("Threads: " + i + "\t:");
-        Map<Integer, Integer> map = (Map<Integer,Integer>)mapClass.newInstance();
-        Integer[] key = makeKeys(nkeys);
+        Map<String, String> map = (Map<String,String>)mapClass.newInstance();
         // Uncomment to start with a non-empty table
         //        for (int j = 0; j < nkeys; j += 4) // start 1/4 occupied
         //            map.put(key[j], key[j]);
-        shuffleKeys(key);
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(i+1, timer);
         for (int t = 0; t < i; ++t) 
@@ -130,14 +145,14 @@ public class MapLoops {
     }
 
     static class Runner implements Runnable {
-        final Map<Integer,Integer> map;
-        final Integer[] key;
+        final Map<String,String> map;
+        final String[] key;
         final LoopHelpers.SimpleRandom rng;
         final CyclicBarrier barrier;
         int position;
         int total;
 
-        Runner(int id, Map<Integer,Integer> map, Integer[] key,  CyclicBarrier barrier) {
+        Runner(int id, Map<String,String> map, String[] key,  CyclicBarrier barrier) {
             this.map = map; 
             this.key = key; 
             this.barrier = barrier;
@@ -153,13 +168,10 @@ public class MapLoops {
             while (position >= key.length) position -= key.length;  
             while (position < 0) position += key.length;
 
-            Integer k = key[position];
-            Integer x = map.get(k);
+            String k = key[position];
+            String x = map.get(k);
 
             if (x != null) {
-                if (x.intValue() != k.intValue()) 
-                    throw new Error("bad mapping: " + x + " to " + k);
-
                 if (r < removesPerMaxRandom) {
                     if (map.remove(k) != null) {
                         position = total % key.length; // move from position
@@ -173,8 +185,6 @@ public class MapLoops {
                 return 2;
             } 
 
-            // Uncomment to add a little computation between accesses
-            //            total += LoopHelpers.compute1(k.intValue());
             total += r;
             return 1;
         }

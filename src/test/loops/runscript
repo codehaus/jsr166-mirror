@@ -74,6 +74,10 @@ echo DequeBash LinkedBlockingdeque
 $RUN DequeBash java.util.concurrent.LinkedBlockingDeque $TRIALS
 echo ExchangeLoops
 $RUN ExchangeLoops $TRIALS
+echo TimeoutExchangerLoops
+$RUN TimeoutExchangerLoops $TRIALS
+echo TSPExchangerTest
+$RUN TSPExchangerTest $TRIALS
 echo CancelledFutureLoops
 $RUN CancelledFutureLoops $TRIALS
 echo MapCheck ConcurrentHashMap
@@ -98,6 +102,12 @@ echo MapLoops ConcurrentSkipListMap
 $RUN MapLoops java.util.concurrent.ConcurrentSkipListMap $TRIALS
 echo MapLoops RWTreeMap
 $RUN MapLoops RWMap $TRIALS
+echo StringMapLoops ConcurrentHashMap
+$RUN StringMapLoops java.util.concurrent.ConcurrentHashMap $TRIALS
+echo StringMapLoops ConcurrentSkipListMap
+$RUN StringMapLoops java.util.concurrent.ConcurrentSkipListMap $TRIALS
+echo StringMapLoops RWTreeMap
+$RUN StringMapLoops RWMap $TRIALS
 echo MapWordLoops ConcurrentHashMap
 $RUN MapWordLoops java.util.concurrent.ConcurrentHashMap $TRIALS
 echo MapWordLoops java.util.TreeMap

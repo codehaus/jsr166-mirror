@@ -26,6 +26,7 @@ public class RWMap implements Map {
 
     public RWMap() { 
         this(new TreeMap()); // use TreeMap by default
+        //        this(new IdentityHashMap()); 
     }
 
     public int size() {

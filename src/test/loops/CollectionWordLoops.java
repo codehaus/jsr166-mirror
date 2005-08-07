@@ -11,9 +11,9 @@ public class CollectionWordLoops {
     static final String[] WORDS_FILES = {
         "kw.txt", 
         "class.txt",
-        "dir.txt",
-        "ids.txt", 
-        "/usr/dict/words", 
+        //        "dir.txt",
+        //        "ids.txt", 
+        //        "/usr/dict/words", 
     };
 
     static final int MAX_WORDS = 500000;

@@ -11,18 +11,25 @@
  * just compare and conditionally store (int) values, so are
  * not intended to measure the "raw" cost of a CAS.
  *
- * Outputs, for runs using 1 ... #cpus threads are, in nanoseconds:
+ * Outputs, in nanoseconds:
  *  "Atomic CAS"      AtomicInteger.compareAndSet
+ *  "Updater CAS"     CAS first comparing args
  *  "Volatile"        pseudo-CAS using volatile store if comparison succeeds
  *  "Mutex"           emulated compare and set done under AQS-based mutex lock
  *  "Synchronized"    emulated compare and set done under a synchronized block.
  *
- * The last two are done only if this program is called with (any) argument
+ * By default, these are printed for 1..#cpus threads, but you can
+ * change the upper bound number of threads by providing the
+ * first argument to this program.
+ *
+ * The last two kinds of runs (mutex and synchronized) are done only
+ * if this program is called with (any) second argument
  */
 
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
@@ -31,27 +38,41 @@ public class CASLoops {
     static final int TRIALS = 2;
     static final long BASE_SECS_PER_RUN = 4;
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
+    static int maxThreads = NCPUS;
 
     static boolean includeLocks = false;
 
     public static void main(String[] args) throws Exception {
-        if (args.length > 0)
+        if (args.length > 0) 
+            maxThreads = Integer.parseInt(args[0]);
+
+        if (args.length > 1)
             includeLocks = true;
 
         System.out.println("Warmup...");
+        for (int i = maxThreads; i > 0; --i) {
+            runCalibration(i, 10);
+            oneRun(i, loopIters[i] / 4, false);
+            System.out.print(".");
+        }
+
+        for (int i = 1; i <= maxThreads; ++i) 
+            loopIters[i] = 0;
+
         for (int j = 0; j < 2; ++j) {
-            for (int i = 1; i <= NCPUS; ++i) {
+            for (int i = 1; i <= maxThreads; ++i) {
                 runCalibration(i, 1000);
                 oneRun(i, loopIters[i] / 8, false);
+                System.out.print(".");
             }
         }
 
-        for (int i = 1; i <= NCPUS; ++i) 
+        for (int i = 1; i <= maxThreads; ++i) 
             loopIters[i] = 0;
 
         for (int j = 0; j < TRIALS; ++j) {
             System.out.println("Trial " + j);
-            for (int i = 1; i <= NCPUS; ++i) {
+            for (int i = 1; i <= maxThreads; ++i) {
                 runCalibration(i, BASE_SECS_PER_RUN * 1000L);
                 oneRun(i, loopIters[i], true);
             }
@@ -64,7 +85,7 @@ public class CASLoops {
 
     static final LoopHelpers.MarsagliaRandom rng = new LoopHelpers.MarsagliaRandom();
 
-    static final long[] loopIters = new long[NCPUS+1];
+    static final long[] loopIters = new long[maxThreads+1];
 
     static final class NonAtomicInteger {
         volatile int readBarrier;
@@ -82,6 +103,25 @@ public class CASLoops {
             }
             return false;
         }
+        void set(int val) { value = val; }
+    }
+
+    static final class UpdaterAtomicInteger {
+        volatile int value;
+
+        static final AtomicIntegerFieldUpdater<UpdaterAtomicInteger> 
+                valueUpdater = AtomicIntegerFieldUpdater.newUpdater
+                (UpdaterAtomicInteger.class, "value");
+
+
+        UpdaterAtomicInteger() {}
+        int get() {
+            return value;
+        }
+        boolean compareAndSet(int cmp, int val) {
+            return valueUpdater.compareAndSet(this, cmp, val);
+        }
+
         void set(int val) { value = val; }
     }
 
@@ -207,6 +247,43 @@ public class CASLoops {
         final AtomicInteger obj;
         final CyclicBarrier barrier;
         AtomicLoop(long iters, AtomicInteger obj, CyclicBarrier b) {
+            this.iters = iters;
+            this.obj = obj;
+            this.barrier = b;
+            obj.set(rng.next());
+        }
+
+        public void run() {
+            try {
+                barrier.await(); 
+                long i = iters;
+                int y = 0;
+                int succ = 0;
+                while (i > 0) {
+                    for (int k = 0; k < innerPerOuter; ++k) {
+                        int x = obj.get();
+                        int z = y + LoopHelpers.compute6(x);
+                        if (obj.compareAndSet(x, z))
+                            ++succ;
+                        y = LoopHelpers.compute7(z);
+                    }
+                    i -= innerPerOuter;
+                }
+                sum.getAndAdd(obj.get());
+                successes.getAndAdd(succ);
+                barrier.await();
+            }
+            catch (Exception ie) { 
+                return; 
+            }
+        }
+    }
+
+    static final class UpdaterAtomicLoop implements Runnable {
+        final long iters;
+        final UpdaterAtomicInteger obj;
+        final CyclicBarrier barrier;
+        UpdaterAtomicLoop(long iters, UpdaterAtomicInteger obj, CyclicBarrier b) {
             this.iters = iters;
             this.obj = obj;
             this.barrier = b;
@@ -422,6 +499,18 @@ public class CASLoops {
         return timer.getTime();
     }
 
+    static long runUpdaterAtomic(int n, long iters) throws Exception {
+        LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
+        CyclicBarrier b = new CyclicBarrier(n+1, timer);
+        UpdaterAtomicInteger a = new UpdaterAtomicInteger();
+        for (int j = 0; j < n; ++j) 
+            new Thread(new UpdaterAtomicLoop(iters, a, b)).start();
+        b.await();
+        b.await();
+        if (sum.get() == 0) System.out.print(" ");
+        return timer.getTime();
+    }
+
     static long runAtomic(int n, long iters) throws Exception {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
@@ -471,39 +560,48 @@ public class CASLoops {
         return timer.getTime();
     }
 
-    static void report(String tag, long runtime, long basetime, long iters) {
+    static void report(String tag, long runtime, long basetime, 
+                       int nthreads, long iters) {
         System.out.print(tag);
-        System.out.print(LoopHelpers.rightJustify((runtime - basetime) / iters) + " ns");
+        long t = (runtime - basetime) / iters;
+        if (nthreads > NCPUS)
+            t = t * NCPUS / nthreads;
+        System.out.print(LoopHelpers.rightJustify(t));
         double secs = (double)(runtime) / 1000000000.0;
         System.out.println("\t " + secs + "s run time");
     }
         
 
     static void oneRun(int i, long iters, boolean print) throws Exception {
-        System.out.println("threads : " + i + 
-                           " base iters per thread per run : " + 
-                           LoopHelpers.rightJustify(loopIters[i]));
+        if (print) 
+            System.out.println("threads : " + i + 
+                               " base iters per thread per run : " + 
+                               LoopHelpers.rightJustify(loopIters[i]));
         long ntime = runNonAtomic(i,  iters);
         if (print)
-            report("Base        : ", ntime, ntime, iters);
+            report("Base        : ", ntime, ntime, i, iters);
         Thread.sleep(100L);
         long atime = runAtomic(i, iters);
         if (print)
-            report("Atomic CAS  : ", atime, ntime, iters);
+            report("Atomic CAS  : ", atime, ntime, i, iters);
+        Thread.sleep(100L);
+        long gtime = runUpdaterAtomic(i, iters);
+        if (print)
+            report("Updater CAS : ", gtime, ntime, i, iters);
         Thread.sleep(100L);
         long vtime = runVolatile(i, iters);
         if (print)
-            report("Volatile    : ", vtime, ntime, iters);
+            report("Volatile    : ", vtime, ntime, i, iters);
 
         Thread.sleep(100L);
         if (!includeLocks) return;
         long mtime = runLocked(i, iters);
         if (print)
-            report("Mutex       : ", mtime, ntime, iters);
+            report("Mutex       : ", mtime, ntime, i, iters);
         Thread.sleep(100L);
         long stime = runSynched(i, iters);
         if (print) 
-            report("Synchronized: ", stime, ntime, iters);
+            report("Synchronized: ", stime, ntime, i, iters);
         Thread.sleep(100L);
     }
 

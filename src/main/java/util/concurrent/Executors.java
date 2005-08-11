@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.*; // for javadoc
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.security.AccessControlContext;
@@ -42,13 +42,13 @@ public class Executors {
 
     /**
      * Creates a thread pool that reuses a fixed number of threads
-     * operating off a shared unbounded queue. At any point, at most
-     * <tt>nThreads</tt> threads will be active processing tasks. If
-     * additional tasks are submitted when all threads are active,
-     * they will wait in the queue until a thread is available.  If
-     * any thread terminates due to a failure during execution prior
-     * to shutdown, a new one will take its place if needed to execute
-     * subsequent tasks.
+     * operating off a shared unbounded queue.  At any point, at most
+     * <tt>nThreads</tt> threads will be active processing tasks.
+     * If additional tasks are submitted when all threads are active,
+     * they will wait in the queue until a thread is available.
+     * If any thread terminates due to a failure during execution
+     * prior to shutdown, a new one will take its place if needed to
+     * execute subsequent tasks.
      *
      * @param nThreads the number of threads in the pool
      * @return the newly created thread pool
@@ -64,9 +64,9 @@ public class Executors {
      * operating off a shared unbounded queue, using the provided
      * ThreadFactory to create new threads when needed.  At any point,
      * at most <tt>nThreads</tt> threads will be active processing
-     * tasks. If additional tasks are submitted when all threads are
+     * tasks.  If additional tasks are submitted when all threads are
      * active, they will wait in the queue until a thread is
-     * available. If any thread terminates due to a failure during
+     * available.  If any thread terminates due to a failure during
      * execution prior to shutdown, a new one will take its place if
      * needed to execute subsequent tasks.
      *

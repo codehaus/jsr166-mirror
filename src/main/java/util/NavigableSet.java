@@ -102,14 +102,16 @@ public interface NavigableSet<E> extends SortedSet<E> {
     E higher(E e);
 
     /**
-     * Retrieves and removes the first (lowest) element.
+     * Retrieves and removes the first (lowest) element,
+     * or returns <tt>null</tt> if this set is empty.
      *
      * @return the first element, or <tt>null</tt> if this set is empty
      */
     E pollFirst();
 
     /**
-     * Retrieves and removes the last (highest) element.
+     * Retrieves and removes the last (highest) element,
+     * or returns <tt>null</tt> if this set is empty.
      *
      * @return the last element, or <tt>null</tt> if this set is empty
      */

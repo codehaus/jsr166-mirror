@@ -510,7 +510,7 @@ public class LinkedList<E>
      * Inserts the specified element at the end of this list.
      *
      * @param e the element to insert
-     * @return <tt>true</tt> (as per the spec for {@link Deque#offerLast})
+     * @return <tt>true</tt> (as specified by {@link Deque#offerLast})
      * @since 1.6
      */
     public boolean offerLast(E e) {
@@ -547,8 +547,8 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves and removes the first element of this list, or
-     * <tt>null</tt> if this list is empty.
+     * Retrieves and removes the first element of this list,
+     * or returns <tt>null</tt> if this list is empty.
      *
      * @return the first element of this list, or <tt>null</tt> if
      *     this list is empty
@@ -561,8 +561,8 @@ public class LinkedList<E>
     }
 
     /**
-     * Retrieves and removes the last element of this list, or
-     * <tt>null</tt> if this list is empty.
+     * Retrieves and removes the last element of this list,
+     * or returns <tt>null</tt> if this list is empty.
      *
      * @return the last element of this list, or <tt>null</tt> if
      *     this list is empty

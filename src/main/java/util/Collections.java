@@ -3558,7 +3558,7 @@ public class Collections {
      * <tt>remove</tt> is mapped to <tt>pop</tt> and so on. This
      * view can be useful when you would like to use a method
      * requiring a <tt>Queue</tt> but you need Lifo ordering.
-     * @param deque the Deque
+     * @param deque the deque
      * @return the queue
      * @since  1.6
      */

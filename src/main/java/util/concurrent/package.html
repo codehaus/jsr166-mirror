@@ -157,12 +157,12 @@ operation <i>happens-before</i> the read operation.  The
 
   <li>An unlock (<tt>synchronized</tt> block or method exit) on a
   monitor happens before every subsequent lock (<tt>synchronized</tt>
-  block or method entry) that same monitor.
+  block or method entry) of that same monitor.
 
   <li>A write to a <tt>volatile</tt> field happens before every
   subsequent read of that same field.
 
-  <li>A call to <tt>start</tt> on a thread happens before any actions in the
+  <li>A call to <tt>start</tt> on a thread happens before any action in the
   started thread.
 
   <li>All actions in a thread happen before any other thread

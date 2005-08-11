@@ -559,6 +559,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             int k = 0;
             for (Node p = head.next; p != null; p = p.next)
                 a[k++] = (T)p.item;
+            if (a.length > k)
+                a[k] = null;
             return a;
         } finally {
             fullyUnlock();

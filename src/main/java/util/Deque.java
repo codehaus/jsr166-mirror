@@ -276,7 +276,7 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Retrieves, but does not remove, the first element of this deque.
-     * 
+     *
      * This method differs from {@link #peekFirst peekFirst} only in that it
      * throws an exception if this deque is empty.
      *

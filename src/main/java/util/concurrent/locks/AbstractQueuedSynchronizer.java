@@ -988,9 +988,11 @@ public abstract class AbstractQueuedSynchronizer
      * or is the value saved on entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return a negative value on failure, zero on exclusive success,
-     * and a positive value if non-exclusively successful, in which
-     * case a subsequent waiting thread must check
+     * @return a negative value on failure; zero if acquisition in
+     * shared mode succeeded but no subsequent shared-mode acquire can
+     * succeed; and a positive value if acquisition in shared mode
+     * succeeded and subsequent shared-mode acquires might also
+     * succeed, in which case a subsequent waiting thread must check
      * availability. (Support for three different return values
      * enables this method to be used in contexts where acquires only
      * sometimes act exclusively.)  Upon success, this object has been
@@ -1015,9 +1017,9 @@ public abstract class AbstractQueuedSynchronizer
      * or the current state value upon entry to a condition wait.
      * The value is otherwise uninterpreted and can represent anything
      * you like.
-     * @return <tt>true</tt> if this object is now in a fully released state,
-     * so that any waiting threads may attempt to acquire; and <tt>false</tt>
-     * otherwise.
+     * @return <tt>true</tt> if this release of shared mode may permit
+     * a waiting acquire (shared or exclusive) to succeed; and
+     * <tt>false</tt> otherwise.
      * @throws IllegalMonitorStateException if releasing would place
      * this synchronizer in an illegal state. This exception must be
      * thrown in a consistent fashion for synchronization to work

@@ -1066,6 +1066,61 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
+     * await after multiple reentrant locking preserves lock count
+     */
+    public void testAwaitLockCount() {
+	final ReentrantLock lock = new ReentrantLock();	
+        final Condition c = lock.newCondition();
+	Thread t1 = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+                        threadAssertEquals(1, lock.getHoldCount());
+                        c.await();
+                        threadAssertEquals(1, lock.getHoldCount());
+                        lock.unlock();
+		    }
+		    catch(InterruptedException e) {
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+
+	Thread t2 = new Thread(new Runnable() { 
+		public void run() {
+		    try {
+			lock.lock();
+			lock.lock();
+                        threadAssertEquals(2, lock.getHoldCount());
+                        c.await();
+                        threadAssertEquals(2, lock.getHoldCount());
+                        lock.unlock();
+                        lock.unlock();
+		    }
+		    catch(InterruptedException e) {
+                        threadUnexpectedException();
+                    }
+		}
+	    });
+
+        try {
+            t1.start();
+            t2.start();
+            Thread.sleep(SHORT_DELAY_MS);
+            lock.lock();
+            c.signalAll();
+            lock.unlock();
+            t1.join(SHORT_DELAY_MS);
+            t2.join(SHORT_DELAY_MS);
+            assertFalse(t1.isAlive());
+            assertFalse(t2.isAlive());
+        }
+        catch (Exception ex) {
+            unexpectedException();
+        }
+    }
+
+    /**
      * A serialized lock deserializes as unlocked
      */
     public void testSerialization() {

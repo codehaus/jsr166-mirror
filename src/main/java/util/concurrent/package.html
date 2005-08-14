@@ -157,10 +157,16 @@ operation <i>happens-before</i> the read operation.  The
 
   <li>An unlock (<tt>synchronized</tt> block or method exit) on a
   monitor happens before every subsequent lock (<tt>synchronized</tt>
-  block or method entry) of that same monitor.
+  block or method entry) of that same monitor. And because
+  the <i>happens-before</i> relation is transitive, all actions
+  of a thread prior to unlocking happen before all actions
+  subsequent to any thread locking that monitor.
 
   <li>A write to a <tt>volatile</tt> field happens before every
-  subsequent read of that same field.
+  subsequent read of that same field. Writes and reads of
+  <tt>volatile</tt> fields have similar memory consistency effects
+  as entering and exiting monitors, but do <em>not</em> entail
+  mutual exclusion locking.
 
   <li>A call to <tt>start</tt> on a thread happens before any action in the
   started thread.
@@ -169,6 +175,7 @@ operation <i>happens-before</i> the read operation.  The
   successfully returns from a <tt>join</tt> on that thread.
 
 </ul>
+
 
 The methods of all classes in <tt>java.util.concurrent</tt> and its
 subpackages extend these guarantees to higher-level

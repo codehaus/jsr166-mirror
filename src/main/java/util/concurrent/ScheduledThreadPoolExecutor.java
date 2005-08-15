@@ -39,18 +39,18 @@ import java.util.*;
  * <pre>
  * public class CustomScheduledExecutor extends ScheduledThreadPoolExecutor {
  *
- *    static class CustomTask&lt;V&gt; implements RunnableScheduledFuture&lt;V&gt; { ... }
+ *   static class CustomTask&lt;V&gt; implements RunnableScheduledFuture&lt;V&gt; { ... }
  *
- *    protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
- *                 Runnable r, RunnableScheduledFuture&lt;V&gt; task) {
- *        return new CustomTask&lt;V&gt;(r, task);
- *     }
+ *   protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
+ *                Runnable r, RunnableScheduledFuture&lt;V&gt; task) {
+ *       return new CustomTask&lt;V&gt;(r, task);
+ *   }
  *
- *    protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
- *                 Callable&lt;V;gt; c, RunnableScheduledFuture&lt;V&gt; task) {
- *        return new CustomTask&lt;V&gt;(c, task);
- *     }
- *     // ... add constructors, etc.
+ *   protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
+ *                Callable&lt;V&gt; c, RunnableScheduledFuture&lt;V&gt; task) {
+ *       return new CustomTask&lt;V&gt;(c, task);
+ *   }
+ *   // ... add constructors, etc.
  * }
  * </pre>
  * @since 1.5

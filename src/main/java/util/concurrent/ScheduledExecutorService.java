@@ -104,9 +104,10 @@ public interface ScheduledExecutorService extends ExecutorService {
      * If any execution of the task
      * encounters an exception, subsequent executions are suppressed.
      * Otherwise, the task will only terminate via cancellation or
-     * termination of the executor. If any execution of this task
+     * termination of the executor.  If any execution of this task
      * takes longer than its period, then subsequent executions
      * may start late, but will not concurrently execute.
+     *
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param period the period between successive executions.
@@ -119,16 +120,20 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if period less than or equal to zero.
      */
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,  long period, TimeUnit unit);
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command,
+						  long initialDelay,
+						  long period,
+						  TimeUnit unit);
 
     /**
      * Creates and executes a periodic action that becomes enabled first
      * after the given initial delay, and subsequently with the
      * given delay between the termination of one execution and the
-     * commencement of the next. If any execution of the task
+     * commencement of the next.  If any execution of the task
      * encounters an exception, subsequent executions are suppressed.
      * Otherwise, the task will only terminate via cancellation or
      * termination of the executor.
+     *
      * @param command the task to execute.
      * @param initialDelay the time to delay first execution.
      * @param delay the delay between the termination of one
@@ -142,6 +147,9 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @throws NullPointerException if command is null
      * @throws IllegalArgumentException if delay less than or equal to zero.
      */
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,  long delay, TimeUnit unit);
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,
+						     long initialDelay,
+						     long delay,
+						     TimeUnit unit);
 
 }

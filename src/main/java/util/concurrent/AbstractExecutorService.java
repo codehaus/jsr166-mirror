@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.*;
 
 /**
@@ -26,15 +26,15 @@ import java.util.*;
  * <pre>
  * public class CustomThreadPoolExecutor extends ThreadPoolExecutor {
  *
- *    static class CustomTask&lt;V&gt; implements RunnableFuture&lt;V&gt; {...}
+ *   static class CustomTask&lt;V&gt; implements RunnableFuture&lt;V&gt; {...}
  *
- *    protected &lt;V&gt; RunnableFuture&lt;V&gt; newTaskFor(Callable&lt;V&gt; c) {
- *         return new CustomTask&lt;V&gt;(c);
- *     }
- *    protected &lt;V&gt; RunnableFuture&lt;V&gt; newTaskFor(Runnable r, V v) {
- *         return new CustomTask&lt;V&gt;(r, v);
- *     }
- *     // ... add constructors, etc.
+ *   protected &lt;V&gt; RunnableFuture&lt;V&gt; newTaskFor(Callable&lt;V&gt; c) {
+ *       return new CustomTask&lt;V&gt;(c);
+ *   }
+ *   protected &lt;V&gt; RunnableFuture&lt;V&gt; newTaskFor(Runnable r, V v) {
+ *       return new CustomTask&lt;V&gt;(r, v);
+ *   }
+ *   // ... add constructors, etc.
  * }
  * </pre>
  * @since 1.5

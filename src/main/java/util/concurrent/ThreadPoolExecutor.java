@@ -475,7 +475,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     Runnable getTask() {
         for (;;) {
             try {
-                switch(runState) {
+                switch (runState) {
                 case RUNNING: {
                     // untimed wait if core and not allowing core timeout
                     if (poolSize <= corePoolSize && !allowCoreThreadTimeOut)
@@ -622,7 +622,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
 
         /**
-         * Interrupt thread if not running a task
+         * Interrupts thread if not running a task.
          */
         void interruptIfIdle() {
             final ReentrantLock runLock = this.runLock;
@@ -636,14 +636,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
 
         /**
-         * Interrupt thread even if running a task.
+         * Interrupts thread even if running a task.
          */
         void interruptNow() {
             thread.interrupt();
         }
 
         /**
-         * Run a single task between before/after methods.
+         * Runs a single task between before/after methods.
          */
         private void runTask(Runnable task) {
             final ReentrantLock runLock = this.runLock;
@@ -1452,10 +1452,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Method invoked prior to executing the given Runnable in the
      * given thread.  This method is invoked by thread <tt>t</tt> that
      * will execute task <tt>r</tt>, and may be used to re-initialize
-     * ThreadLocals, or to perform logging. This implementation does
-     * nothing, but may be customized in subclasses. Note: To properly
-     * nest multiple overridings, subclasses should generally invoke
-     * <tt>super.beforeExecute</tt> at the end of this method.
+     * ThreadLocals, or to perform logging.
+     *
+     * <p>This implementation does nothing, but may be customized in
+     * subclasses. Note: To properly nest multiple overridings, subclasses
+     * should generally invoke <tt>super.beforeExecute</tt> at the end of
+     * this method.
      *
      * @param t the thread that will run task r.
      * @param r the task that will be executed.

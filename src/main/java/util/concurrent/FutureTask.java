@@ -125,6 +125,15 @@ public class FutureTask<V> implements RunnableFuture<V> {
         sync.innerSetException(t);
     }
 
+    // The following (duplicated) doc comment can be removed once
+    //
+    // 6270645: Javadoc comments should be inherited from most derived
+    //          superinterface or superclass
+    // is fixed.
+    /**
+     * Sets this Future to the result of its computation
+     * unless it has been cancelled.
+     */
     public void run() {
         sync.innerRun();
     }

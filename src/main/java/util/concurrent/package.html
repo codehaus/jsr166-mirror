@@ -197,7 +197,7 @@ synchronization. In particular:
 
   <li>Actions prior to "releasing" synchronizer methods such as
   <tt>Lock.unlock</tt>, <tt>Semaphore.release</tt>,
-  <tt>CountDownLatch.countDown<tt> and <tt>Condition.signal</tt>
+  <tt>CountDownLatch.countDown</tt> and <tt>Condition.signal</tt>
   happen before actions subsequent to "acquiring" methods such as
   <tt>Lock.lock</tt>, <tt>Semaphore.acquire</tt>, and
   <tt>CountDownLatch.await</tt> on the same synchronizer object.

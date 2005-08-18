@@ -270,7 +270,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Create or reset fields of a node. Called only from transfer
+         * Creates or resets fields of a node. Called only from transfer
          * where the node to push on stack is lazily created and
          * reused when possible to help reduce intervals between reads
          * and CASes of head and to avoid surges of garbage when CASes
@@ -284,7 +284,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Put or take an item.
+         * Puts or takes an item.
          */
         Object transfer(Object e, boolean timed, long nanos) {
             /*
@@ -364,7 +364,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Spin/block until node s is matched by a fulfill operation.
+         * Spins/blocks until node s is matched by a fulfill operation.
          * @param s the waiting node
          * @param timed true if timed wait
          * @param nanos timeout value
@@ -425,7 +425,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Return true if node s is at head or there is an active
+         * Returns true if node s is at head or there is an active
          * fulfiller.
          */
         boolean shouldSpin(SNode s) {
@@ -434,7 +434,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Unlink s from the stack
+         * Unlinks s from the stack.
          */
         void clean(SNode s) {
             s.item = null;   // forget item 
@@ -524,7 +524,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             /** 
-             * Return true if this node is known to be off the queue
+             * Returns true if this node is known to be off the queue
              * because its next pointer has been forgotten due to
              * an advanceHead operation.
              */
@@ -555,7 +555,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             (TransferQueue.class,  QNode.class, "head");
 
         /**
-         * Try to cas nh as new head; if successful unlink
+         * Tries to cas nh as new head; if successful unlink
          * old head's next node to avoid garbage retention.
          */
         void advanceHead(QNode h, QNode nh) {
@@ -568,7 +568,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             (TransferQueue.class, QNode.class, "tail");
 
         /**
-         * Try to cas nt as new tail.
+         * Tries to cas nt as new tail.
          */
         void advanceTail(QNode t, QNode nt) {
             if (tail == t)
@@ -580,7 +580,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             (TransferQueue.class, QNode.class, "cleanMe");
 
         /**
-         * Try to CAS cleanMe slot
+         * Tries to CAS cleanMe slot.
          */
         boolean casCleanMe(QNode cmp, QNode val) {
             return (cleanMe == cmp &&
@@ -588,7 +588,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Put or take an item.
+         * Puts or takes an item.
          */
         Object transfer(Object e, boolean timed, long nanos) {
             /* Basic algorithm is to loop trying to take either of 
@@ -676,7 +676,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Spin/block until node s is fulfilled.
+         * Spins/blocks until node s is fulfilled.
          * @param s the waiting node
          * @param e the comparison value for checking match
          * @param timed true if timed wait
@@ -716,7 +716,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Get rid of cancelled node s with original predecessor pred.
+         * Gets rid of cancelled node s with original predecessor pred.
          */
         void clean(QNode pred, QNode s) {
             s.waiter = null; // forget thread

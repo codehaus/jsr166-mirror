@@ -93,7 +93,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * in extending them for use in synchronous queues, as well as
      * dealing with cancellation. The main differences include:
      *
-     *  1. The orginal algorithms used bit-marked pointers, but
+     *  1. The original algorithms used bit-marked pointers, but
      *     the ones here use mode bits in nodes, leading to a number
      *     of further adaptations.
      *  2. SynchronousQueues must block threads waiting to become
@@ -120,14 +120,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *
      * While garbage collection takes care of most node reclamation
      * issues that otherwise complicate nonblocking algorithms, care
-     * is made to "forget" references to data, other nodes, and
+     * is taken to "forget" references to data, other nodes, and
      * threads that might be held on to long-term by blocked
      * threads. In cases where setting to null would otherwise
      * conflict with main algorithms, this is done by changing a
      * node's link to now point to the node itself. This doesn't arise
      * much for Stack nodes (because blocked threads do not hang on to
      * old head pointers), but references in Queue nodes must be
-     * agressively forgotten to avoid reachability of everything any
+     * aggressively forgotten to avoid reachability of everything any
      * node has ever referred to since arrival.
      */
 
@@ -136,16 +136,17 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      */
     static abstract class Transferer {
         /**
-         * Perform a put or take.
+         * Performs a put or take.
+         *
          * @param e if non-null, the item to be handed to a consumer;
-         * if null, requests that transfer return an item offered by
-         * producer.
+         *          if null, requests that transfer return an item
+         *          offered by producer.
          * @param timed if this operation should timeout
          * @param nanos the timeout, in nanoseconds
-         * @return if nonnull, the item provided or received; if null,
-         * the operation failed due to timeout or interrupt -- the
-         * caller can distinguish which of these occurred by checking
-         * Thread.interrupted.
+         * @return if non-null, the item provided or received; if null,
+         *         the operation failed due to timeout or interrupt --
+         *         the caller can distinguish which of these occurred
+         *         by checking Thread.interrupted.
          */
         abstract Object transfer(Object e, boolean timed, long nanos);
     }
@@ -226,7 +227,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 (SNode.class, SNode.class, "match");
 
             /**
-             * Try to match node s to this node, if so, waking up
+             * Tries to match node s to this node, if so, waking up
              * thread. Fulfillers call tryMatch to identify their
              * waiters. Waiters block until they have been
              * matched.
@@ -247,7 +248,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             /**
-             * Try to cancel a wait by matching node to itself.
+             * Tries to cancel a wait by matching node to itself.
              */
             void tryCancel() {
                 matchUpdater.compareAndSet(this, null, this);
@@ -375,7 +376,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              * When a node/thread is about to block, it sets its waiter
              * field and then rechecks state at least one more time
              * before actually parking, thus covering race vs
-             * fulfiller noticing that waiter is nonnull so should be
+             * fulfiller noticing that waiter is non-null so should be
              * woken.
              *
              * When invoked by nodes that appear at the point of call
@@ -447,7 +448,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              * it. But we can stop when we see any node known to
              * follow s. We use s.next unless it too is cancelled, in
              * which case we try the node one past. We don't check any
-             * futher because we don't want to doubly traverse just to
+             * further because we don't want to doubly traverse just to
              * find sentinel.
              */
 
@@ -479,7 +480,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * marked pointers. The algorithm is a little simpler than
          * that for stacks because fulfillers do not need explicit
          * nodes, and matching is done by CAS'ing QNode.item field
-         * from nonnull to null (for put) or vice versa (for take).
+         * from non-null to null (for put) or vice versa (for take).
          */
 
         /** Node class for TransferQueue. */
@@ -513,7 +514,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             /**
-             * Try to cancel by CAS'ing ref to this as item.
+             * Tries to cancel by CAS'ing ref to this as item.
              */
             void tryCancel(Object cmp) {
                 itemUpdater.compareAndSet(this, cmp, this);
@@ -555,7 +556,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             (TransferQueue.class,  QNode.class, "head");
 
         /**
-         * Tries to cas nh as new head; if successful unlink
+         * Tries to cas nh as new head; if successful, unlink
          * old head's next node to avoid garbage retention.
          */
         void advanceHead(QNode h, QNode nh) {
@@ -622,7 +623,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             for (;;) {
                 QNode t = tail;
                 QNode h = head;
-                if (t == null || h == null)         // saw unitialized values
+                if (t == null || h == null)         // saw uninitialized values
                     continue;                       // spin
 
                 if (h == t || t.isData == isData) { // empty or same-mode
@@ -938,7 +939,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns <tt>false</tt> unless given collection is empty.
+     * Returns <tt>false</tt> unless the given collection is empty.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      * @param c the collection
      * @return <tt>false</tt> unless given collection is empty

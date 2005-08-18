@@ -36,7 +36,7 @@ import java.util.*;
  * <p> This class supports an optional fairness policy for ordering
  * waiting producer and consumer threads.  By default, this ordering
  * is not guaranteed. However, a queue constructed with fairness set
- * to <tt>true</tt> grants threads access in FIFO order. 
+ * to <tt>true</tt> grants threads access in FIFO order.
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -98,8 +98,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *     of further adaptations.
      *  2. SynchronousQueues must block threads waiting to become
      *     fulfilled.
-     *  3. Support for cancellation via timeout and interrupts, 
-     *     including cleaning out cancelled nodes/threads 
+     *  3. Support for cancellation via timeout and interrupts,
+     *     including cleaning out cancelled nodes/threads
      *     from lists to avoid garbage retention and memory depletion.
      *
      * Blocking is mainly accomplished using LockSupport park/unpark,
@@ -247,7 +247,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             /**
-             * Try to cancel a wait by matching node to itself. 
+             * Try to cancel a wait by matching node to itself.
              */
             void tryCancel() {
                 matchUpdater.compareAndSet(this, null, this);
@@ -315,10 +315,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 SNode h = head;
                 if (h == null || h.mode == mode) {  // empty or same-mode
                     if (timed && nanos <= 0) {      // can't wait
-                        if (h != null && h.isCancelled()) 
+                        if (h != null && h.isCancelled())
                             casHead(h, h.next);     // pop cancelled node
                         else
-                            return null; 
+                            return null;
                     } else if (casHead(h, s = snode(s, e, h, mode))) {
                         SNode m = awaitFulfill(s, timed, nanos);
                         if (m == s) {               // wait was cancelled
@@ -406,7 +406,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     return m;
                 if (timed) {
                     long now = System.nanoTime();
-                    nanos -= now - lastTime;                    
+                    nanos -= now - lastTime;
                     lastTime = now;
                     if (nanos <= 0) {
                         s.tryCancel();
@@ -437,7 +437,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * Unlinks s from the stack.
          */
         void clean(SNode s) {
-            s.item = null;   // forget item 
+            s.item = null;   // forget item
             s.waiter = null; // forget thread
 
             /*
@@ -487,7 +487,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             volatile QNode next;          // next node in queue
             volatile Object item;         // CAS'ed to or from null
             volatile Thread waiter;       // to control park/unpark
-            final boolean isData; 
+            final boolean isData;
 
             QNode(Object item, boolean isData) {
                 this.item = item;
@@ -513,7 +513,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             /**
-             * Try to cancel by CAS'ing ref to this as item.  
+             * Try to cancel by CAS'ing ref to this as item.
              */
             void tryCancel(Object cmp) {
                 itemUpdater.compareAndSet(this, cmp, this);
@@ -523,7 +523,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 return item == this;
             }
 
-            /** 
+            /**
              * Returns true if this node is known to be off the queue
              * because its next pointer has been forgotten due to
              * an advanceHead operation.
@@ -591,10 +591,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * Puts or takes an item.
          */
         Object transfer(Object e, boolean timed, long nanos) {
-            /* Basic algorithm is to loop trying to take either of 
+            /* Basic algorithm is to loop trying to take either of
              * two actions:
              *
-             * 1. If queue apparently empty or holding same-mode nodes, 
+             * 1. If queue apparently empty or holding same-mode nodes,
              *    try to add node to queue of waiters, wait to be
              *    fulfilled (or cancelled) and return matching item.
              *
@@ -697,7 +697,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     return x;
                 if (timed) {
                     long now = System.nanoTime();
-                    nanos -= now - lastTime;                    
+                    nanos -= now - lastTime;
                     lastTime = now;
                     if (nanos <= 0) {
                         s.tryCancel(e);
@@ -761,10 +761,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                          (dn = d.next) != null &&  //   has successor
                          dn != d &&                //   that is on list
                          dp.casNext(d, dn)))       // d unspliced
-                        casCleanMe(dp, null); 
-                    if (dp == pred)                
+                        casCleanMe(dp, null);
+                    if (dp == pred)
                         return;      // s is already saved node
-                } else if (casCleanMe(null, pred)) 
+                } else if (casCleanMe(null, pred))
                     return;          // Postpone cleaning s
             }
         }
@@ -817,7 +817,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E o, long timeout, TimeUnit unit) 
+    public boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (o == null) throw new NullPointerException();
         if (transferer.transfer(o, true, unit.toNanos(timeout)) != null)

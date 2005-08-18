@@ -164,10 +164,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     static final int maxTimedSpins = (NCPUS < 2)? 0 : 32;
 
     /**
-     * The number of times to spin before blocking in untimed
-     * waits.  This is greater than timed value because untimed
-     * waits spin faster since they don't need to check times on
-     * each spin.
+     * The number of times to spin before blocking in untimed waits.
+     * This is greater than timed value because untimed waits spin
+     * faster since they don't need to check times on each spin.
      */
     static final int maxUntimedSpins = maxTimedSpins * 16;
 
@@ -177,7 +176,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      */
     static final long spinForTimeoutThreshold = 1000L;
 
-    /** Dual stack  */
+    /** Dual stack */
     static final class TransferStack extends Transferer {
         /*
          * This extends Scherer-Scott dual stack algorithm, differing,

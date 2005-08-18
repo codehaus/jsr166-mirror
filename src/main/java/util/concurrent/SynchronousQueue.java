@@ -471,7 +471,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /** Dual Queue. */
+    /** Dual Queue */
     static final class TransferQueue extends Transferer {
         /*
          * This extends Scherer-Scott dual queue algorithm, differing,

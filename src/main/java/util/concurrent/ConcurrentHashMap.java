@@ -1050,7 +1050,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /* ---------------- Iterator Support -------------- */
 
-    abstract class HashIterator {
+    class HashIterator {
         int nextSegmentIndex;
         int nextTableIndex;
         HashEntry<K,V>[] currentTable;
@@ -1117,70 +1117,40 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-
     /**
-     * Entry iterator. Exported Entry objects must write-through
-     * changes in setValue, even if the nodes have been cloned. So we
-     * cannot return internal HashEntry objects. Instead, the iterator
-     * itself acts as a forwarding pseudo-entry.
-     */
-    final class EntryIterator extends HashIterator implements Map.Entry<K,V>, Iterator<Entry<K,V>> {
+     * Custom Entry class used by EntryIterator.next(), that relays
+     * setValue changes to the underlying map.
+     */ 
+    static final class WriteThroughEntry<K,V> extends AbstractMap.SimpleEntry<K,V> {
+        private final ConcurrentHashMap<K,V> map;
+        WriteThroughEntry(ConcurrentHashMap map, K k, V v) { 
+            super(k,v); 
+            this.map = map;
+        }
+
+        /**
+         * Set our entry's value and write through to the map. The
+         * value to return is somewhat arbitrary here. Since a
+         * WriteThroughEntry does not necessarily track asynchronous
+         * changes, the most recent "previous" value could be
+         * different than what we return (or could even have been
+         * removed in which case the put will re-establish). We do not
+         * and cannot guarantee more.
+         */
+	public V setValue(V value) {
+            if (value == null) throw new NullPointerException();
+            V v = super.setValue(value);
+            map.put(getKey(), value);
+            return v;
+        }
+    }
+
+    final class EntryIterator extends HashIterator implements Iterator<Entry<K,V>> {
         public Map.Entry<K,V> next() {
-            nextEntry();
-            return this;
+            HashEntry<K,V> e = super.nextEntry();
+            return new WriteThroughEntry<K,V>(ConcurrentHashMap.this, 
+                                              e.key, e.value);
         }
-
-        public K getKey() {
-            if (lastReturned == null)
-                throw new IllegalStateException("Entry was removed");
-            return lastReturned.key;
-        }
-
-        public V getValue() {
-            if (lastReturned == null)
-                throw new IllegalStateException("Entry was removed");
-            return ConcurrentHashMap.this.get(lastReturned.key);
-        }
-
-        public V setValue(V value) {
-            if (lastReturned == null)
-                throw new IllegalStateException("Entry was removed");
-            return ConcurrentHashMap.this.put(lastReturned.key, value);
-        }
-
-        public boolean equals(Object o) {
-            // If not acting as entry, just use default.
-            if (lastReturned == null)
-                return super.equals(o);
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
-            return eq(getKey(), e.getKey()) && eq(getValue(), e.getValue());
-        }
-
-        public int hashCode() {
-            // If not acting as entry, just use default.
-            if (lastReturned == null)
-                return super.hashCode();
-
-            Object k = getKey();
-            Object v = getValue();
-            return ((k == null) ? 0 : k.hashCode()) ^
-                   ((v == null) ? 0 : v.hashCode());
-        }
-
-        public String toString() {
-            // If not acting as entry, just use default.
-            if (lastReturned == null)
-                return super.toString();
-            else
-                return getKey() + "=" + getValue();
-        }
-
-        boolean eq(Object o1, Object o2) {
-            return (o1 == null ? o2 == null : o1.equals(o2));
-        }
-
     }
 
     final class KeySet extends AbstractSet<K> {
@@ -1264,20 +1234,17 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             ConcurrentHashMap.this.clear();
         }
         public Object[] toArray() {
-            // Since we don't ordinarily have distinct Entry objects, we
-            // must pack elements using exportable SimpleEntry
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
             for (Iterator<Map.Entry<K,V>> i = iterator(); i.hasNext(); )
-                c.add(new AbstractMap.SimpleEntry<K,V>(i.next()));
+                c.add(i.next());
             return c.toArray();
         }
         public <T> T[] toArray(T[] a) {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
             for (Iterator<Map.Entry<K,V>> i = iterator(); i.hasNext(); )
-                c.add(new AbstractMap.SimpleEntry<K,V>(i.next()));
+                c.add(i.next());
             return c.toArray(a);
         }
-
     }
 
     /* ---------------- Serialization Support -------------- */

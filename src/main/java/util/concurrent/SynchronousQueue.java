@@ -299,7 +299,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              *    with corresponding waiting node, pop both from
              *    stack, and return matched item. The matching or
              *    unlinking might not actually be necessary because of
-             *    another threads performing action 3:
+             *    other threads performing action 3:
              *
              * 3. If top of stack already holds another fulfilling node,
              *    help it out by doing its match and/or pop
@@ -622,7 +622,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             for (;;) {
                 QNode t = tail;
                 QNode h = head;
-                if (t == null || h == null)         // saw uninitialized values
+                if (t == null || h == null)         // saw uninitialized value
                     continue;                       // spin
 
                 if (h == t || t.isData == isData) { // empty or same-mode

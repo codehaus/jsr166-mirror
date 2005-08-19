@@ -70,8 +70,9 @@ import java.util.concurrent.atomic.*;
  * locks: a deserialized lock is in the unlocked state, regardless of
  * its state when serialized.
  *
- * <p> This lock supports a maximum of 2147483648 recursive locks by
- * the same thread.
+ * <p> This lock supports a maximum of 2147483647 recursive locks by
+ * the same thread. Attempts to exceed this limit result in
+ * {@link Error} throws from locking methods.
  *
  * @since 1.5
  * @author Doug Lea
@@ -111,7 +112,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 }
             }
             else if (current == getExclusiveOwnerThread()) {
-                setState(c+acquires);
+                int nextc = c + acquires;
+                if (nextc < 0) // overflow
+                    throw new Error("Maximum lock count exceeded");
+                setState(nextc);
                 return true;
             }
             return false;
@@ -205,15 +209,17 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                Thread first = getFirstQueuedThread();
-                if ((first == null || first == current) &&
+                if (isFirst(current) &&
                     compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
             else if (current == getExclusiveOwnerThread()) {
-                setState(c+acquires);
+                int nextc = c + acquires;
+                if (nextc < 0)
+                    throw new Error("Maximum lock count exceeded");
+                setState(nextc);
                 return true;
             }
             return false;

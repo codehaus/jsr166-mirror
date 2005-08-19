@@ -226,10 +226,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 (SNode.class, SNode.class, "match");
 
             /**
-             * Tries to match node s to this node, if so, waking up
-             * thread. Fulfillers call tryMatch to identify their
-             * waiters. Waiters block until they have been
-             * matched.
+             * Tries to match node s to this node, if so, waking up thread.
+             * Fulfillers call tryMatch to identify their waiters.
+             * Waiters block until they have been matched.
+             *
              * @param s the node to match
              * @return true if successfully matched to s
              */
@@ -365,6 +365,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
         /**
          * Spins/blocks until node s is matched by a fulfill operation.
+         *
          * @param s the waiting node
          * @param timed true if timed wait
          * @param nanos timeout value
@@ -677,6 +678,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
         /**
          * Spins/blocks until node s is fulfilled.
+         *
          * @param s the waiting node
          * @param e the comparison value for checking match
          * @param timed true if timed wait
@@ -787,9 +789,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>SynchronousQueue</tt> with specified fairness policy.
-     * @param fair if true, waiting threads contend in FIFO order for access;
-     * otherwise the order is unspecified.
+     * Creates a <tt>SynchronousQueue</tt> with the specified fairness policy.
+     *
+     * @param fair if true, waiting threads contend in FIFO order for
+     *        access; otherwise the order is unspecified.
      */
     public SynchronousQueue(boolean fair) {
         transferer = (fair)? new TransferQueue() : new TransferStack();
@@ -885,6 +888,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>true</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @return <tt>true</tt>
      */
     public boolean isEmpty() {
@@ -894,6 +898,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @return zero.
      */
     public int size() {
@@ -903,6 +908,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @return zero.
      */
     public int remainingCapacity() {
@@ -919,6 +925,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param o the element
      * @return <tt>false</tt>
      */
@@ -940,6 +947,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Returns <tt>false</tt> unless the given collection is empty.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param c the collection
      * @return <tt>false</tt> unless given collection is empty
      */
@@ -950,6 +958,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param c the collection
      * @return <tt>false</tt>
      */
@@ -960,6 +969,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Always returns <tt>false</tt>.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
+     *
      * @param c the collection
      * @return <tt>false</tt>
      */
@@ -971,6 +981,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Always returns <tt>null</tt>.
      * A <tt>SynchronousQueue</tt> does not return elements
      * unless actively waited on.
+     *
      * @return <tt>null</tt>
      */
     public E peek() {

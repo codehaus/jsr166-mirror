@@ -22,8 +22,7 @@ import java.util.*;
  * removed using <tt>take</tt> or <tt>poll</tt>, they are otherwise
  * treated as normal elements. For example, the <tt>size</tt> method
  * returns the count of both expired and unexpired elements.
- * This queue does not permit <tt>null</tt>
- * elements.
+ * This queue does not permit null elements.
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link

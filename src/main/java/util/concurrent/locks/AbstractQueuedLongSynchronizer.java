@@ -1092,7 +1092,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * is not waiting in exclusive mode. Used only as
      * a heuristic in ReentrantReadWriteLock.
      */
-    final boolean apparentlyFirstQueuedisExclusive() {
+    final boolean apparentlyFirstQueuedIsExclusive() {
         Node h, s;
         return ((h = head) != null && (s = h.next) != null &&
                 s.nextWaiter != Node.SHARED);

@@ -1126,13 +1126,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Custom Entry class used by EntryIterator.next(), that relays
      * setValue changes to the underlying map.
      */
-    static final class WriteThroughEntry<K,V>
+    final class WriteThroughEntry
 	extends AbstractMap.SimpleEntry<K,V>
     {
-        private final ConcurrentHashMap<K,V> map;
-        WriteThroughEntry(ConcurrentHashMap map, K k, V v) {
+        WriteThroughEntry(K k, V v) {
             super(k,v);
-            this.map = map;
         }
 
         /**
@@ -1147,7 +1145,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	public V setValue(V value) {
             if (value == null) throw new NullPointerException();
             V v = super.setValue(value);
-            map.put(getKey(), value);
+            ConcurrentHashMap.this.put(getKey(), value);
             return v;
         }
     }
@@ -1158,8 +1156,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     {
         public Map.Entry<K,V> next() {
             HashEntry<K,V> e = super.nextEntry();
-            return new WriteThroughEntry<K,V>(ConcurrentHashMap.this,
-                                              e.key, e.value);
+            return new WriteThroughEntry(e.key, e.value);
         }
     }
 

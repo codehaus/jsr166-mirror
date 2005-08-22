@@ -1121,7 +1121,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Custom Entry class used by EntryIterator.next(), that relays
      * setValue changes to the underlying map.
      */
-    static final class WriteThroughEntry<K,V> extends AbstractMap.SimpleEntry<K,V> {
+    static final class WriteThroughEntry<K,V>
+	extends AbstractMap.SimpleEntry<K,V>
+    {
         private final ConcurrentHashMap<K,V> map;
         WriteThroughEntry(ConcurrentHashMap map, K k, V v) {
             super(k,v);
@@ -1133,7 +1135,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * value to return is somewhat arbitrary here. Since a
          * WriteThroughEntry does not necessarily track asynchronous
          * changes, the most recent "previous" value could be
-         * different than what we return (or could even have been
+         * different from what we return (or could even have been
          * removed in which case the put will re-establish). We do not
          * and cannot guarantee more.
          */

@@ -1050,7 +1050,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /* ---------------- Iterator Support -------------- */
 
-    class HashIterator {
+    abstract class HashIterator {
         int nextSegmentIndex;
         int nextTableIndex;
         HashEntry<K,V>[] currentTable;
@@ -1106,16 +1106,21 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    final class KeyIterator extends HashIterator implements Iterator<K>, Enumeration<K> {
-        public K next() { return super.nextEntry().key; }
+    final class KeyIterator
+	extends HashIterator
+	implements Iterator<K>, Enumeration<K>
+    {
+        public K next()        { return super.nextEntry().key; }
         public K nextElement() { return super.nextEntry().key; }
     }
 
-    final class ValueIterator extends HashIterator implements Iterator<V>, Enumeration<V> {
-        public V next() { return super.nextEntry().value; }
+    final class ValueIterator
+	extends HashIterator
+	implements Iterator<V>, Enumeration<V>
+    {
+        public V next()        { return super.nextEntry().value; }
         public V nextElement() { return super.nextEntry().value; }
     }
-
 
     /**
      * Custom Entry class used by EntryIterator.next(), that relays
@@ -1147,7 +1152,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    final class EntryIterator extends HashIterator implements Iterator<Entry<K,V>> {
+    final class EntryIterator
+	extends HashIterator
+	implements Iterator<Entry<K,V>>
+    {
         public Map.Entry<K,V> next() {
             HashEntry<K,V> e = super.nextEntry();
             return new WriteThroughEntry<K,V>(ConcurrentHashMap.this,
@@ -1172,15 +1180,15 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             ConcurrentHashMap.this.clear();
         }
         public Object[] toArray() {
-            Collection<K> c = new ArrayList<K>();
-            for (Iterator<K> i = iterator(); i.hasNext(); )
-                c.add(i.next());
+            Collection<K> c = new ArrayList<K>(size());
+	    for (K k : this)
+		c.add(k);
             return c.toArray();
         }
         public <T> T[] toArray(T[] a) {
             Collection<K> c = new ArrayList<K>();
-            for (Iterator<K> i = iterator(); i.hasNext(); )
-                c.add(i.next());
+	    for (K k : this)
+		c.add(k);
             return c.toArray(a);
         }
     }
@@ -1199,15 +1207,15 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             ConcurrentHashMap.this.clear();
         }
         public Object[] toArray() {
-            Collection<V> c = new ArrayList<V>();
-            for (Iterator<V> i = iterator(); i.hasNext(); )
-                c.add(i.next());
+            Collection<V> c = new ArrayList<V>(size());
+	    for (V v : this)
+		c.add(v);
             return c.toArray();
         }
         public <T> T[] toArray(T[] a) {
-            Collection<V> c = new ArrayList<V>();
-            for (Iterator<V> i = iterator(); i.hasNext(); )
-                c.add(i.next());
+            Collection<V> c = new ArrayList<V>(size());
+	    for (V v : this)
+		c.add(v);
             return c.toArray(a);
         }
     }
@@ -1237,16 +1245,17 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public Object[] toArray() {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
-            for (Iterator<Map.Entry<K,V>> i = iterator(); i.hasNext(); )
-                c.add(i.next());
+            for (Map.Entry<K,V> e : this)
+                c.add(e);
             return c.toArray();
         }
         public <T> T[] toArray(T[] a) {
             Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
-            for (Iterator<Map.Entry<K,V>> i = iterator(); i.hasNext(); )
-                c.add(i.next());
+            for (Map.Entry<K,V> e : this)
+                c.add(e);
             return c.toArray(a);
         }
+
     }
 
     /* ---------------- Serialization Support -------------- */

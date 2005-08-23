@@ -444,27 +444,34 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * next task in queue, or if there is none, the given task.
      * @param firstTask the task the new thread should run first (or
      * null if none)
-     * @return null on failure, else the first task to be run by new thread.
+     * @return 0 if a new thread cannot be created, a positive number
+     * if firstTask will be run in a new thread, or a negative number
+     * if a new thread was created but is running some other task, in
+     * which case the caller must try some other way to run firstTask
+     * (perhaps by calling this method again).
      */
-    private Runnable addIfUnderMaximumPoolSize(Runnable firstTask) {
+    private int addIfUnderMaximumPoolSize(Runnable firstTask) {
         Thread t = null;
-        Runnable next = null;
+        int status = 0;
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             if (poolSize < maximumPoolSize) {
-                next = workQueue.poll();
-                if (next == null)
+                Runnable next = workQueue.poll();
+                if (next == null) {
                     next = firstTask;
+                    status = 1;
+                } else
+                    status = -1;
                 t = addThread(next);
             }
         } finally {
             mainLock.unlock();
         }
         if (t == null)
-            return null;
+            return 0;
         t.start();
-        return next;
+        return status;
     }
 
 
@@ -869,14 +876,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 return;
             if (workQueue.offer(command))
                 return;
-            Runnable r = addIfUnderMaximumPoolSize(command);
-            if (r == command)
+            int status = addIfUnderMaximumPoolSize(command);
+            if (status > 0)      // created new thread
                 return;
-            if (r == null) {
+            if (status == 0) {   // failed to create thread
                 reject(command);
                 return;
             }
-            // else retry
+            // Retry if created a new thread but it is busy with another task
         }
     }
 

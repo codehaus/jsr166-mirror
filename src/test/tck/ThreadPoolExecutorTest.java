@@ -7,6 +7,7 @@
  */
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import junit.framework.*;
 import java.util.*;
 
@@ -1572,4 +1573,39 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * execute allows the same task to be submitted multiple times, even
+     * if rejected
+     */
+    public void testRejectedRecycledTask() {
+        final int nTasks = 1000;
+        final AtomicInteger nRun = new AtomicInteger(0);
+        final Runnable recycledTask = new Runnable() {
+                public void run() {
+                    nRun.getAndIncrement();
+                } };
+        final ThreadPoolExecutor p = 
+            new ThreadPoolExecutor(1, 30, 60, TimeUnit.SECONDS, 
+                                   new ArrayBlockingQueue(30));
+        try {
+            for (int i = 0; i < nTasks; ++i) {
+                for (;;) {
+                    try {
+                        p.execute(recycledTask);
+                        break;
+                    }
+                    catch (RejectedExecutionException ignore) {
+                    }
+                }
+            }
+            Thread.sleep(5000); // enough time to run all tasks
+            assertEquals(nRun.get(), nTasks);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            unexpectedException();
+        } finally {
+            p.shutdown();
+        }
+    }
+            
 }

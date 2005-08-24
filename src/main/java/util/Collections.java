@@ -3196,6 +3196,8 @@ public class Collections {
      * @see    List#addAll(int, Collection)
      */
     public static <T> List<T> nCopies(int n, T o) {
+	if (n < 0)
+	    throw new IllegalArgumentException("List length = " + n);
         return new CopiesList<T>(n, o);
     }
 
@@ -3208,12 +3210,11 @@ public class Collections {
     {
         static final long serialVersionUID = 2739099268398711800L;
 
-        int n;
-        E element;
+        final int n;
+        final E element;
 
         CopiesList(int n, E e) {
-            if (n < 0)
-                throw new IllegalArgumentException("List length = " + n);
+	    assert n >= 0;
             this.n = n;
             element = e;
         }
@@ -3226,12 +3227,53 @@ public class Collections {
             return n != 0 && eq(obj, element);
         }
 
+	public int indexOf(Object o) {
+	    return contains(o) ? 0 : -1;
+	}
+
+	public int lastIndexOf(Object o) {
+	    return contains(o) ? n - 1 : -1;
+	}
+
         public E get(int index) {
-            if (index<0 || index>=n)
+            if (index < 0 || index >= n)
                 throw new IndexOutOfBoundsException("Index: "+index+
                                                     ", Size: "+n);
             return element;
         }
+
+	public Object[] toArray() {
+	    final Object[] a = new Object[n];
+	    if (element != null)
+		Arrays.fill(a, 0, n, element);
+	    return a;
+	}
+
+	public <T> T[] toArray(T[] a) {
+	    final int n = this.n;
+	    if (a.length < n) {
+		a = (T[])java.lang.reflect.Array
+		    .newInstance(a.getClass().getComponentType(), n);
+		if (element != null)
+		    Arrays.fill(a, 0, n, element);
+	    } else {
+		Arrays.fill(a, 0, n, element);
+		if (a.length > n)
+		    a[n] = null;
+	    }
+	    return a;
+	}
+
+	public List<E> subList(int fromIndex, int toIndex) {
+	    if (fromIndex < 0)
+		throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+	    if (toIndex > n)
+		throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+	    if (fromIndex > toIndex)
+		throw new IllegalArgumentException("fromIndex(" + fromIndex +
+						   ") > toIndex(" + toIndex + ")");
+	    return new CopiesList(toIndex - fromIndex, element);
+	}
     }
 
     /**
@@ -3504,17 +3546,17 @@ public class Collections {
      * @throws IllegalArgumentException if <tt>map</tt> is not empty
      * @since 1.6
      */
-    public static <E> Set<E> asSet(Map<E, Boolean> map) {
-        return new MapAsSet<E>(map);
+    public static <E> Set<E> newSetFromMap(Map<E, Boolean> map) {
+        return new SetFromMap<E>(map);
     }
 
-    private static class MapAsSet<E> extends AbstractSet<E>
+    private static class SetFromMap<E> extends AbstractSet<E>
         implements Set<E>, Serializable
     {
         private final Map<E, Boolean> m;  // The backing map
         private transient Set<E> keySet;  // Its keySet
 
-        MapAsSet(Map<E, Boolean> map) {
+        SetFromMap(Map<E, Boolean> map) {
             if (!map.isEmpty())
                 throw new IllegalArgumentException("Map is non-empty");
             m = map;

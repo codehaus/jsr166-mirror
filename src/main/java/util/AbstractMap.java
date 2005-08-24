@@ -531,7 +531,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * Test for equality, checking for nulls.
      */
     private static boolean eq(Object o1, Object o2) {
-        return (o1 == null ? o2 == null : o1.equals(o2));
+        return o1 == null ? o2 == null : o1.equals(o2);
     }
 
     // Implementation Note: SimpleEntry and SimpleImmutableEntry
@@ -548,11 +548,15 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * facilitates the process of building custom map
      * implementations. For example, it may be convenient to return
      * arrays of <tt>SimpleEntry</tt> instances in method
-     * <tt>Map.entrySet().toArray</tt>
+     * <tt>Map.entrySet().toArray</tt>.
      *
      * @since 1.6
      */
-    public static class SimpleEntry<K,V> implements Entry<K,V> {
+    public static class SimpleEntry<K,V>
+	implements Entry<K,V>, java.io.Serializable
+    {
+	private static final long serialVersionUID = -8499721149061103585L;
+
 	private final K key;
 	private V value;
 
@@ -618,8 +622,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	}
 
 	public int hashCode() {
-	    return ((key   == null)   ? 0 :   key.hashCode()) ^
-		   ((value == null)   ? 0 : value.hashCode());
+	    return (key   == null ? 0 :   key.hashCode()) ^
+		   (value == null ? 0 : value.hashCode());
 	}
 
         /**
@@ -637,14 +641,18 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     }
 
     /**
-     * An Entry maintaining an immutable key and value, This class
+     * An Entry maintaining an immutable key and value.  This class
      * does not support method <tt>setValue</tt>.  This class may be
      * convenient in methods that return thread-safe snapshots of
      * key-value mappings.
      *
      * @since 1.6
      */
-    public static class SimpleImmutableEntry<K,V> implements Entry<K,V> {
+    public static class SimpleImmutableEntry<K,V>
+	implements Entry<K,V>, java.io.Serializable
+    {
+	private static final long serialVersionUID = 7138329143949025153L;
+
 	private final K key;
 	private final V value;
 
@@ -711,8 +719,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	}
 
 	public int hashCode() {
-	    return ((key   == null)   ? 0 :   key.hashCode()) ^
-		   ((value == null)   ? 0 : value.hashCode());
+	    return (key   == null ? 0 :   key.hashCode()) ^
+		   (value == null ? 0 : value.hashCode());
 	}
 
         /**

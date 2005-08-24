@@ -102,7 +102,7 @@ public class ScheduledThreadPoolExecutor
         private final long period;
 
         /**
-         * Creates a one-shot action with given nanoTime-based trigger time
+         * Creates a one-shot action with given nanoTime-based trigger time.
          */
         ScheduledFutureTask(Runnable r, V result, long ns) {
             super(r, result);
@@ -112,9 +112,9 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Creates a periodic action with given nano time and period
+         * Creates a periodic action with given nano time and period.
          */
-        ScheduledFutureTask(Runnable r, V result, long ns,  long period) {
+        ScheduledFutureTask(Runnable r, V result, long ns, long period) {
             super(r, result);
             this.time = ns;
             this.period = period;
@@ -122,7 +122,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Creates a one-shot action with given nanoTime-based trigger
+         * Creates a one-shot action with given nanoTime-based trigger.
          */
         ScheduledFutureTask(Callable<V> callable, long ns) {
             super(callable);
@@ -153,6 +153,7 @@ public class ScheduledThreadPoolExecutor
 
         /**
          * Returns true if this is a periodic (not a one-shot) action.
+         *
          * @return true if periodic
          */
         public boolean isPeriodic() {
@@ -160,7 +161,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Run a periodic task
+         * Runs a periodic task.
          */
         private void runPeriodic() {
             boolean ok = ScheduledFutureTask.super.runAndReset();
@@ -241,11 +242,10 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Modify or replace the task used to execute a runnable.
+     * Modifies or replaces the task used to execute a runnable.
      * This method can be used to override the concrete
      * class used for managing internal tasks.
-     * The default implementation simply returns the given
-     * task.
+     * The default implementation simply returns the given task.
      *
      * @param runnable the submitted Runnable
      * @param task the task created to execute the runnable
@@ -258,11 +258,10 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Modify or replace the task used to execute a callable.
+     * Modifies or replaces the task used to execute a callable.
      * This method can be used to override the concrete
      * class used for managing internal tasks.
-     * The default implementation simply returns the given
-     * task.
+     * The default implementation simply returns the given task.
      *
      * @param callable the submitted Callable
      * @param task the task created to execute the callable
@@ -279,7 +278,7 @@ public class ScheduledThreadPoolExecutor
      * pool size.
      *
      * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
+     * even if they are idle
      * @throws IllegalArgumentException if <tt>corePoolSize &lt;= 0</tt>
      */
     public ScheduledThreadPoolExecutor(int corePoolSize) {
@@ -292,9 +291,9 @@ public class ScheduledThreadPoolExecutor
      * initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
+     * even if they are idle
      * @param threadFactory the factory to use when the executor
-     * creates a new thread.
+     * creates a new thread
      * @throws IllegalArgumentException if <tt>corePoolSize &lt;= 0</tt>
      * @throws NullPointerException if threadFactory is null
      */
@@ -309,9 +308,9 @@ public class ScheduledThreadPoolExecutor
      * initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
+     * even if they are idle
      * @param handler the handler to use when execution is blocked
-     * because the thread bounds and queue capacities are reached.
+     * because the thread bounds and queue capacities are reached
      * @throws IllegalArgumentException if <tt>corePoolSize &lt;= 0</tt>
      * @throws NullPointerException if handler is null
      */
@@ -326,9 +325,9 @@ public class ScheduledThreadPoolExecutor
      * initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
+     * even if they are idle
      * @param threadFactory the factory to use when the executor
-     * creates a new thread.
+     * creates a new thread
      * @param handler the handler to use when execution is blocked
      * because the thread bounds and queue capacities are reached.
      * @throws IllegalArgumentException if <tt>corePoolSize &lt;= 0</tt>
@@ -446,6 +445,7 @@ public class ScheduledThreadPoolExecutor
      * <tt>shutdownNow</tt>, or after setting the policy to
      * <tt>false</tt> when already shutdown. This value is by default
      * false.
+     *
      * @param value if true, continue after shutdown, else don't.
      * @see #getContinueExistingPeriodicTasksAfterShutdownPolicy
      */
@@ -462,7 +462,8 @@ public class ScheduledThreadPoolExecutor
      * terminate upon <tt>shutdownNow</tt> or after setting the policy
      * to <tt>false</tt> when already shutdown. This value is by
      * default false.
-     * @return true if will continue after shutdown.
+     *
+     * @return true if will continue after shutdown
      * @see #setContinueExistingPeriodicTasksAfterShutdownPolicy
      */
     public boolean getContinueExistingPeriodicTasksAfterShutdownPolicy() {
@@ -476,6 +477,7 @@ public class ScheduledThreadPoolExecutor
      * <tt>shutdownNow</tt>, or after setting the policy to
      * <tt>false</tt> when already shutdown. This value is by default
      * true.
+     *
      * @param value if true, execute after shutdown, else don't.
      * @see #getExecuteExistingDelayedTasksAfterShutdownPolicy
      */
@@ -492,7 +494,8 @@ public class ScheduledThreadPoolExecutor
      * <tt>shutdownNow</tt>, or after setting the policy to
      * <tt>false</tt> when already shutdown. This value is by default
      * true.
-     * @return true if will execute after shutdown.
+     *
+     * @return true if will execute after shutdown
      * @see #setExecuteExistingDelayedTasksAfterShutdownPolicy
      */
     public boolean getExecuteExistingDelayedTasksAfterShutdownPolicy() {
@@ -517,8 +520,8 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * Attempts to stop all actively executing tasks, halts the
-     * processing of waiting tasks, and returns a list of the tasks that were
-     * awaiting execution.
+     * processing of waiting tasks, and returns a list of the tasks
+     * that were awaiting execution.
      *
      * <p>There are no guarantees beyond best-effort attempts to stop
      * processing actively executing tasks.  This implementation
@@ -572,7 +575,7 @@ public class ScheduledThreadPoolExecutor
         public boolean offer(Runnable x) {
 	    return dq.offer((RunnableScheduledFuture)x);
 	}
-        public void put(Runnable x)  {
+        public void put(Runnable x) {
             dq.put((RunnableScheduledFuture)x);
         }
         public boolean offer(Runnable x, long timeout, TimeUnit unit) {
@@ -599,7 +602,7 @@ public class ScheduledThreadPoolExecutor
                 private Iterator<RunnableScheduledFuture> it = dq.iterator();
                 public boolean hasNext() { return it.hasNext(); }
                 public Runnable next() { return it.next(); }
-                public void remove() {  it.remove(); }
+                public void remove() { it.remove(); }
             };
         }
     }

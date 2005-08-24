@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 

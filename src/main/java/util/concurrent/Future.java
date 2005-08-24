@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A <tt>Future</tt> represents the result of an asynchronous

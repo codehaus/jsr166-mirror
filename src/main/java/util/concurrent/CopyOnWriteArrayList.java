@@ -930,9 +930,10 @@ public class CopyOnWriteArrayList<E>
     /**
      * {@inheritDoc}
      *
-     * <p>The list iterator returned by this implementation will throw an
-     * <tt>UnsupportedOperationException</tt> in its <tt>remove</tt>,
-     * <tt>set</tt> and <tt>add</tt> methods.
+     * <p>The returned iterator provides a snapshot of the state of the list
+     * when the iterator was constructed. No synchronization is needed while
+     * traversing the iterator. The iterator does <em>NOT</em> support the
+     * <tt>remove</tt>, <tt>set</tt> or <tt>add</tt> methods.
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */

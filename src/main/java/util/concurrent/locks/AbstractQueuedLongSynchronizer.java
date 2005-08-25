@@ -390,7 +390,7 @@ public abstract class AbstractQueuedLongSynchronizer
                 if (t.waitStatus <= 0)
                     s = t;
         }
-        if (s != null) 
+        if (s != null)
             LockSupport.unpark(s.thread);
     }
 
@@ -564,7 +564,7 @@ public abstract class AbstractQueuedLongSynchronizer
                     return false;
                 }
                 if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node)) 
+                    shouldParkAfterFailedAcquire(p, node))
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
@@ -669,7 +669,7 @@ public abstract class AbstractQueuedLongSynchronizer
                     return false;
                 }
                 if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node)) 
+                    shouldParkAfterFailedAcquire(p, node))
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
@@ -1038,14 +1038,14 @@ public abstract class AbstractQueuedLongSynchronizer
          * thread field, ensuring consistent reads: If thread
          * field is nulled out or s.prev is no longer head, then
          * some other thread(s) concurrently performed setHead in
-         * between some of our reads. We try this twice before 
+         * between some of our reads. We try this twice before
          * resorting to traversal.
          */
         Node h, s;
         Thread st;
-        if (((h = head) != null && (s = h.next) != null && 
+        if (((h = head) != null && (s = h.next) != null &&
              s.prev == head && (st = s.thread) != null) ||
-            ((h = head) != null && (s = h.next) != null && 
+            ((h = head) != null && (s = h.next) != null &&
              s.prev == head && (st = s.thread) != null))
             return st;
 

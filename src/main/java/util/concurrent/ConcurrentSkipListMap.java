@@ -669,7 +669,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @return a predecessor of key
      */
     private Node<K,V> findPredecessor(Comparable<? super K> key) {
-        if (key == null) 
+        if (key == null)
             throw new NullPointerException(); // don't postpone errors
         for (;;) {
             Index<K,V> q = head;

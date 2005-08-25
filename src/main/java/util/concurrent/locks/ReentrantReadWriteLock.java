@@ -306,7 +306,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
              *     and owner is a different thread, fail.
              * 2. If count would saturate, fail. (This can only
              *    happen if count is already nonzero.)
-             * 3. Otherwise, this thread is eligible for lock if 
+             * 3. Otherwise, this thread is eligible for lock if
              *    it is either a reentrant acquire or
              *    queue policy allows it. If so, update state
              *    and set owner.
@@ -354,7 +354,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
              *    to grant by CASing state and updating count.
              *    Note that step does not check for reentrant
              *    acquires, which is postponed to full version
-             *    to avoid having to check hold count in 
+             *    to avoid having to check hold count in
              *    the more typical non-reentrant case.
              * 4. If step 3 fails either because thread
              *    apparently not eligible or CAS fails,
@@ -529,11 +529,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         private static final long serialVersionUID = -2274990926593161451L;
         final boolean writerShouldBlock(Thread current) {
             // only proceed if queue is empty or current thread at head
-            return !isFirst(current); 
+            return !isFirst(current);
         }
         final boolean readerShouldBlock(Thread current) {
             // only proceed if queue is empty or current thread at head
-            return !isFirst(current); 
+            return !isFirst(current);
         }
     }
 

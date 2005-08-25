@@ -3537,7 +3537,7 @@ public class Collections {
      * to this method, and no reference to the map is retained, as illustrated
      * in the following code fragment:
      * <pre>
-     *    Set&lt;Object&gt; weakHashSet = Collections.asSet(
+     *    Set&lt;Object&gt; weakHashSet = Collections.newSetFromMap(
      *        new WeakHashMap&lt;Object, Boolean&gt;());
      * </pre>
      *
@@ -3553,6 +3553,7 @@ public class Collections {
     private static class SetFromMap<E> extends AbstractSet<E>
         implements Set<E>, Serializable
     {
+        static final long serialVersionUID = 2454657854757543876L;
         private final Map<E, Boolean> m;  // The backing map
         private transient Set<E> keySet;  // Its keySet
 

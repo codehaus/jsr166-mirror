@@ -3553,7 +3553,6 @@ public class Collections {
     private static class SetFromMap<E> extends AbstractSet<E>
         implements Set<E>, Serializable
     {
-        static final long serialVersionUID = 2454657854757543876L;
         private final Map<E, Boolean> m;  // The backing map
         private transient Set<E> keySet;  // Its keySet
 

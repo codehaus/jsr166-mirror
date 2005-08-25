@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent.locks;
+import java.util.concurrent.locks.*; // for javadoc (till 6280605 is fixed)
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -172,57 +173,59 @@ import sun.misc.Unsafe;
  * <pre>
  * class Mutex implements Lock, java.io.Serializable {
  *
- *    // Our internal helper class
- *    private static class Sync extends AbstractQueuedSynchronizer {
- *      // Report whether in locked state
- *      protected boolean isHeldExclusively() {
- *        return getState() == 1;
- *      }
+ *   // Our internal helper class
+ *   private static class Sync extends AbstractQueuedSynchronizer {
+ *     // Report whether in locked state
+ *     protected boolean isHeldExclusively() {
+ *       return getState() == 1;
+ *     }
  *
- *      // Acquire the lock if state is zero
- *      public boolean tryAcquire(int acquires) {
- *        assert acquires == 1; // Otherwise unused
- *        if (compareAndSetState(0, 1)) {
- *          setExclusiveOwnerThread(Thread.currentThread());
- *          return true;
- *        }
- *        return false;
- *      }
+ *     // Acquire the lock if state is zero
+ *     public boolean tryAcquire(int acquires) {
+ *       assert acquires == 1; // Otherwise unused
+ *       if (compareAndSetState(0, 1)) {
+ *         setExclusiveOwnerThread(Thread.currentThread());
+ *         return true;
+ *       }
+ *       return false;
+ *     }
  *
- *      // Release the lock by setting state to zero
- *      protected boolean tryRelease(int releases) {
- *        assert releases == 1; // Otherwise unused
- *        if (getState() == 0) throw new IllegalMonitorStateException();
- *        setExclusiveOwnerThread(null);
- *        setState(0);
- *        return true;
- *      }
+ *     // Release the lock by setting state to zero
+ *     protected boolean tryRelease(int releases) {
+ *       assert releases == 1; // Otherwise unused
+ *       if (getState() == 0) throw new IllegalMonitorStateException();
+ *       setExclusiveOwnerThread(null);
+ *       setState(0);
+ *       return true;
+ *     }
  *
- *      // Provide a Condition
- *      Condition newCondition() { return new ConditionObject(); }
+ *     // Provide a Condition
+ *     Condition newCondition() { return new ConditionObject(); }
  *
- *      // Deserialize properly
- *      private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
- *        s.defaultReadObject();
- *        setState(0); // reset to unlocked state
- *      }
- *    }
+ *     // Deserialize properly
+ *     private void readObject(ObjectInputStream s)
+ *         throws IOException, ClassNotFoundException {
+ *       s.defaultReadObject();
+ *       setState(0); // reset to unlocked state
+ *     }
+ *   }
  *
- *    // The sync object does all the hard work. We just forward to it.
- *    private final Sync sync = new Sync();
+ *   // The sync object does all the hard work. We just forward to it.
+ *   private final Sync sync = new Sync();
  *
- *    public void lock()                { sync.acquire(1); }
- *    public boolean tryLock()          { return sync.tryAcquire(1); }
- *    public void unlock()              { sync.release(1); }
- *    public Condition newCondition()   { return sync.newCondition(); }
- *    public boolean isLocked()         { return sync.isHeldExclusively(); }
- *    public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
- *    public void lockInterruptibly() throws InterruptedException {
- *      sync.acquireInterruptibly(1);
- *    }
- *    public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
- *      return sync.tryAcquireNanos(1, unit.toNanos(timeout));
- *    }
+ *   public void lock()                { sync.acquire(1); }
+ *   public boolean tryLock()          { return sync.tryAcquire(1); }
+ *   public void unlock()              { sync.release(1); }
+ *   public Condition newCondition()   { return sync.newCondition(); }
+ *   public boolean isLocked()         { return sync.isHeldExclusively(); }
+ *   public boolean hasQueuedThreads() { return sync.hasQueuedThreads(); }
+ *   public void lockInterruptibly() throws InterruptedException {
+ *     sync.acquireInterruptibly(1);
+ *   }
+ *   public boolean tryLock(long timeout, TimeUnit unit)
+ *       throws InterruptedException {
+ *     return sync.tryAcquireNanos(1, unit.toNanos(timeout));
+ *   }
  * }
  * </pre>
  *
@@ -234,27 +237,26 @@ import sun.misc.Unsafe;
  * <pre>
  * class BooleanLatch {
  *
- *    private static class Sync extends AbstractQueuedSynchronizer {
- *      boolean isSignalled() { return getState() != 0; }
+ *   private static class Sync extends AbstractQueuedSynchronizer {
+ *     boolean isSignalled() { return getState() != 0; }
  *
- *      protected int tryAcquireShared(int ignore) {
- *        return isSignalled()? 1 : -1;
- *      }
+ *     protected int tryAcquireShared(int ignore) {
+ *       return isSignalled()? 1 : -1;
+ *     }
  *
- *      protected boolean tryReleaseShared(int ignore) {
- *        setState(1);
- *        return true;
- *      }
- *    }
+ *     protected boolean tryReleaseShared(int ignore) {
+ *       setState(1);
+ *       return true;
+ *     }
+ *   }
  *
- *    private final Sync sync = new Sync();
- *    public boolean isSignalled() { return sync.isSignalled(); }
- *    public void signal()         { sync.releaseShared(1); }
- *    public void await() throws InterruptedException {
- *      sync.acquireSharedInterruptibly(1);
- *    }
+ *   private final Sync sync = new Sync();
+ *   public boolean isSignalled() { return sync.isSignalled(); }
+ *   public void signal()         { sync.releaseShared(1); }
+ *   public void await() throws InterruptedException {
+ *     sync.acquireSharedInterruptibly(1);
+ *   }
  * }
- *
  * </pre>
  *
  * @since 1.5
@@ -616,7 +618,7 @@ public abstract class AbstractQueuedSynchronizer
                 if (t.waitStatus <= 0)
                     s = t;
         }
-        if (s != null) 
+        if (s != null)
             LockSupport.unpark(s.thread);
     }
 
@@ -790,7 +792,7 @@ public abstract class AbstractQueuedSynchronizer
                     return false;
                 }
                 if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node)) 
+                    shouldParkAfterFailedAcquire(p, node))
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
@@ -895,7 +897,7 @@ public abstract class AbstractQueuedSynchronizer
                     return false;
                 }
                 if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node)) 
+                    shouldParkAfterFailedAcquire(p, node))
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
@@ -1264,14 +1266,14 @@ public abstract class AbstractQueuedSynchronizer
          * thread field, ensuring consistent reads: If thread
          * field is nulled out or s.prev is no longer head, then
          * some other thread(s) concurrently performed setHead in
-         * between some of our reads. We try this twice before 
+         * between some of our reads. We try this twice before
          * resorting to traversal.
          */
         Node h, s;
         Thread st;
-        if (((h = head) != null && (s = h.next) != null && 
+        if (((h = head) != null && (s = h.next) != null &&
              s.prev == head && (st = s.thread) != null) ||
-            ((h = head) != null && (s = h.next) != null && 
+            ((h = head) != null && (s = h.next) != null &&
              s.prev == head && (st = s.thread) != null))
             return st;
 

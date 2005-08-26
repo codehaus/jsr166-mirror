@@ -581,12 +581,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
     /**
      * Returns the thread that currently owns this lock, or
-     * <tt>null</tt> if not owned. Note that the owner may be
-     * momentarily <tt>null</tt> even if there are threads trying to
-     * acquire the lock but have not yet done so.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive lock monitoring facilities.
-     * @return the owner, or <tt>null</tt> if not owned.
+     * <tt>null</tt> if not owned. When this method is called by a
+     * thread that is not the owner, the return value reflects a
+     * best-effort approximation of current lock status. For example,
+     * the owner may be momentarily <tt>null</tt> even if there are
+     * threads trying to acquire the lock but have not yet done so.
+     * This method is designed to facilitate construction of
+     * subclasses that provide more extensive lock monitoring
+     * facilities.
      */
     protected Thread getOwner() {
         return sync.getOwner();

@@ -22,21 +22,40 @@ import java.util.*;
  * ordering for lock access.  However, it does support an optional
  * <em>fairness</em> policy.
  *
- * <p>When constructed as fair, threads contend for entry using an
- * approximately arrival-order policy. When the write lock is released
- * either the longest-waiting single writer thread will be assigned
- * the write lock, or if there is a group of reader threads waiting
- * longer than any writer thread, that group will be assigned the read
- * lock.  If reader threads are active and a writer thread enters the
- * lock then no other subsequent (non-reentrant) reader threads will
- * be granted the read lock until after that writer thread has
- * acquired and released the write lock.
- *
- * <p>When constructed as non-fair (the default), the order of entry
+ * <dl>
+ * <dt><b><i>Non-fair mode (default)</i></b>
+ * <dd>When constructed as non-fair (the default), the order of entry
  * to the read and write lock is unspecified, subject to reentrancy
  * constraints.  A nonfair lock that is continously contended may
  * indefinitely postpone one or more reader or writer threads, but
  * will normally have higher throughput than a fair lock.
+ * <p>
+ *
+ * <dt><b><i>Fair mode</i></b>
+ * <dd> When constructed as fair, threads contend for entry using an
+ * approximately arrival-order policy. When the currently held lock
+ * is released either the longest-waiting single writer thread will
+ * be assigned the write lock, or if there is a group of reader threads
+ * waiting longer than all waiting writer threads, that group will be
+ * assigned the read lock.
+ *
+ * <p>A thread that tries to acquire a fair read lock (non-reentrantly)
+ * will block if either the write lock is held, or there is a waiting
+ * writer thread. The thread will not acquire the read lock until
+ * after the oldest currently waiting writer thread has acquired and
+ * released the write lock. Of course, if a waiting writer abandons
+ * its wait, leaving one or more reader threads as the longest waiters
+ * in the queue with the write lock free, then those readers will be
+ * assigned the read lock.
+ *
+ * <p>A thread that tries to acquire a fair write lock (non-reentrantly)
+ * will block unless both the read lock and write lock are free (which
+ * implies there are no waiting threads).  (Note that the non-blocking
+ * {@link ReadLock#tryLock()} and {@link WriteLock#tryLock()} methods
+ * do not honor this fair setting and will acquire the lock if it is
+ * possible, regardless of waiting threads.)
+ * <p>
+ * </dl>
  *
  * <li><b>Reentrancy</b>
  *
@@ -1038,11 +1057,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
 
     /**
      * Returns the thread that currently owns the write lock, or
-     * <tt>null</tt> if not owned. Note that the owner may be
-     * momentarily <tt>null</tt> even if there are threads trying to
-     * acquire the lock but have not yet done so.  This method is
-     * designed to facilitate construction of subclasses that provide
-     * more extensive lock monitoring facilities.
+     * <tt>null</tt> if not owned. When this method is called by a
+     * thread that is not the owner, the return value reflects a
+     * best-effort approximation of current lock status. For example,
+     * the owner may be momentarily <tt>null</tt> even if there are
+     * threads trying to acquire the lock but have not yet done so.
+     * This method is designed to facilitate construction of
+     * subclasses that provide more extensive lock monitoring
+     * facilities.
      * @return the owner, or <tt>null</tt> if not owned.
      */
     protected Thread getOwner() {

@@ -1065,7 +1065,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      * This method is designed to facilitate construction of
      * subclasses that provide more extensive lock monitoring
      * facilities.
-     * @return the owner, or <tt>null</tt> if not owned.
+     *
+     * @return the owner, or <tt>null</tt> if not owned
      */
     protected Thread getOwner() {
         return sync.getOwner();

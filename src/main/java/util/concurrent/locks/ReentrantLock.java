@@ -589,6 +589,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * This method is designed to facilitate construction of
      * subclasses that provide more extensive lock monitoring
      * facilities.
+     *
+     * @return the owner, or <tt>null</tt> if not owned
      */
     protected Thread getOwner() {
         return sync.getOwner();

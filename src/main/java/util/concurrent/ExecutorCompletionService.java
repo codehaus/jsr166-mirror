@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A {@link CompletionService} that uses a supplied {@link Executor}
@@ -25,18 +25,20 @@ package java.util.concurrent;
  * could write this as:
  *
  * <pre>
- *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers)
- *      throws InterruptedException, ExecutionException {
- *        CompletionService&lt;Result&gt; ecs = new ExecutorCompletionService&lt;Result&gt;(e);
- *        for (Callable&lt;Result&gt; s : solvers)
- *            ecs.submit(s);
- *        int n = solvers.size();
- *        for (int i = 0; i &lt; n; ++i) {
- *            Result r = ecs.take().get();
- *            if (r != null)
- *                use(r);
- *        }
- *    }
+ *   void solve(Executor e,
+ *              Collection&lt;Callable&lt;Result&gt;&gt; solvers)
+ *     throws InterruptedException, ExecutionException {
+ *       CompletionService&lt;Result&gt; ecs
+ *           = new ExecutorCompletionService&lt;Result&gt;(e);
+ *       for (Callable&lt;Result&gt; s : solvers)
+ *           ecs.submit(s);
+ *       int n = solvers.size();
+ *       for (int i = 0; i &lt; n; ++i) {
+ *           Result r = ecs.take().get();
+ *           if (r != null)
+ *               use(r);
+ *       }
+ *   }
  * </pre>
  *
  * Suppose instead that you would like to use the first non-null result
@@ -44,33 +46,36 @@ package java.util.concurrent;
  * and cancelling all other tasks when the first one is ready:
  *
  * <pre>
- *    void solve(Executor e, Collection&lt;Callable&lt;Result&gt;&gt; solvers)
- *      throws InterruptedException {
- *        CompletionService&lt;Result&gt; ecs = new ExecutorCompletionService&lt;Result&gt;(e);
- *        int n = solvers.size();
- *        List&lt;Future&lt;Result&gt;&gt; futures = new ArrayList&lt;Future&lt;Result&gt;&gt;(n);
- *        Result result = null;
- *        try {
- *            for (Callable&lt;Result&gt; s : solvers)
- *                futures.add(ecs.submit(s));
- *            for (int i = 0; i &lt; n; ++i) {
- *                try {
- *                    Result r = ecs.take().get();
- *                    if (r != null) {
- *                        result = r;
- *                        break;
- *                    }
- *                } catch (ExecutionException ignore) {}
- *            }
- *        }
- *        finally {
- *            for (Future&lt;Result&gt; f : futures)
- *                f.cancel(true);
- *        }
+ *   void solve(Executor e,
+ *              Collection&lt;Callable&lt;Result&gt;&gt; solvers)
+ *     throws InterruptedException {
+ *       CompletionService&lt;Result&gt; ecs
+ *           = new ExecutorCompletionService&lt;Result&gt;(e);
+ *       int n = solvers.size();
+ *       List&lt;Future&lt;Result&gt;&gt; futures
+ *           = new ArrayList&lt;Future&lt;Result&gt;&gt;(n);
+ *       Result result = null;
+ *       try {
+ *           for (Callable&lt;Result&gt; s : solvers)
+ *               futures.add(ecs.submit(s));
+ *           for (int i = 0; i &lt; n; ++i) {
+ *               try {
+ *                   Result r = ecs.take().get();
+ *                   if (r != null) {
+ *                       result = r;
+ *                       break;
+ *                   }
+ *               } catch (ExecutionException ignore) {}
+ *           }
+ *       }
+ *       finally {
+ *           for (Future&lt;Result&gt; f : futures)
+ *               f.cancel(true);
+ *       }
  *
- *        if (result != null)
- *            use(result);
- *    }
+ *       if (result != null)
+ *           use(result);
+ *   }
  * </pre>
  */
 public class ExecutorCompletionService<V> implements CompletionService<V> {
@@ -108,6 +113,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * Creates an ExecutorCompletionService using the supplied
      * executor for base task execution and a
      * {@link LinkedBlockingQueue} as a completion queue.
+     *
      * @param executor the executor to use
      * @throws NullPointerException if executor is <tt>null</tt>
      */
@@ -124,6 +130,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * Creates an ExecutorCompletionService using the supplied
      * executor for base task execution and the supplied queue as its
      * completion queue.
+     *
      * @param executor the executor to use
      * @param completionQueue the queue to use as the completion queue
      * normally one dedicated for use by this service

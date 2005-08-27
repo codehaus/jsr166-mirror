@@ -30,8 +30,10 @@ import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
  * class App {
  *   ExecutorService executor = ...
  *   ArchiveSearcher searcher = ...
- *   void showSearch(final String target) throws InterruptedException {
- *     Future&lt;String&gt; future = executor.submit(new Callable&lt;String&gt;() {
+ *   void showSearch(final String target)
+ *       throws InterruptedException {
+ *     Future&lt;String&gt; future
+ *       = executor.submit(new Callable&lt;String&gt;() {
  *         public String call() { return searcher.search(target); }
  *     });
  *     displayOtherThings(); // do other things while searching
@@ -95,7 +97,7 @@ public interface Future<V> {
      * cancellation -- in all of these cases, this method will return
      * <tt>true</tt>.
      *
-     * @return <tt>true</tt> if this task completed.
+     * @return <tt>true</tt> if this task completed
      */
     boolean isDone();
 

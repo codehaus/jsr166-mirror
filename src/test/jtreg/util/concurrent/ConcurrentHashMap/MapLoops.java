@@ -26,7 +26,7 @@ public class MapLoops {
     static int pinsert     = 60;
     static int premove     = 2;
     static int maxThreads  = 100;
-    static int nops        = 1000000;
+    static int nops        = 100000;
     static int removesPerMaxRandom;
     static int insertsPerMaxRandom;
 
@@ -197,7 +197,7 @@ public class MapLoops {
             }
             catch (Throwable throwable) {
 		synchronized(System.err) {
-		    System.err.println("-------------------------------------");
+		    System.err.println("--------------------------------");
 		    throwable.printStackTrace();
 		}
 		throwables.add(throwable);

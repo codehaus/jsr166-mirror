@@ -95,11 +95,9 @@ public class MapLoops {
         }
         pool.shutdown();
 
-	if (! throwables.isEmpty()) {
-	    for (Throwable throwable : throwables)
-		throwable.printStackTrace();
-	    throw new Error("Some threads terminated abruptly.");
-	}
+	if (! throwables.isEmpty())
+	    throw new Error
+		(throwables.size() + " thread(s) terminated abruptly.");
     }
 
     static Integer[] makeKeys(int n) {
@@ -198,6 +196,10 @@ public class MapLoops {
                 barrier.await();
             }
             catch (Throwable throwable) {
+		synchronized(System.err) {
+		    System.err.println("-------------------------------------");
+		    throwable.printStackTrace();
+		}
 		throwables.add(throwable);
             }
         }

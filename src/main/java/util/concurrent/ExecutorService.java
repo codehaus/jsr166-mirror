@@ -98,8 +98,8 @@ public interface ExecutorService extends Executor {
      *
      * <p>There are no guarantees beyond best-effort attempts to stop
      * processing actively executing tasks.  For example, typical
-     * implementations will cancel via {@link Thread#interrupt}, so if any
-     * tasks mask or fail to respond to interrupts, they may never terminate.
+     * implementations will cancel via {@link Thread#interrupt}, so any
+     * task that fails to respond to interrupts may never terminate.
      *
      * @return list of tasks that never commenced execution
      * @throws SecurityException if a security manager exists and

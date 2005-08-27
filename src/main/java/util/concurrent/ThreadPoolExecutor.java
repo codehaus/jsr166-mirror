@@ -954,12 +954,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Attempts to stop all actively executing tasks, halts the
-     * processing of waiting tasks, and returns a list of the tasks that were
-     * awaiting execution.
+     * processing of waiting tasks, and returns a list of the tasks
+     * that were awaiting execution.
      *
-     * <p>This implementation cancels tasks via {@link
-     * Thread#interrupt}, so if any tasks mask or fail to respond to
-     * interrupts, they may never terminate.
+     * <p>There are no guarantees beyond best-effort attempts to stop
+     * processing actively executing tasks.  This implementation
+     * cancels tasks via {@link Thread#interrupt}, so any task that
+     * fails to respond to interrupts may never terminate.
      *
      * @return list of tasks that never commenced execution
      * @throws SecurityException if a security manager exists and

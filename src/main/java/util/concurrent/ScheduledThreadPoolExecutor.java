@@ -525,14 +525,15 @@ public class ScheduledThreadPoolExecutor
      *
      * <p>There are no guarantees beyond best-effort attempts to stop
      * processing actively executing tasks.  This implementation
-     * cancels tasks via {@link Thread#interrupt}, so if any tasks mask or
-     * fail to respond to interrupts, they may never terminate.
+     * cancels tasks via {@link Thread#interrupt}, so any task that
+     * fails to respond to interrupts may never terminate.
      *
      * @return list of tasks that never commenced execution.  Each
      * element of this list is a {@link ScheduledFuture},
      * including those tasks submitted using <tt>execute</tt>, which
      * are for scheduling purposes used as the basis of a zero-delay
      * <tt>ScheduledFuture</tt>.
+     * @throws SecurityException {@inheritDoc}
      */
     public List<Runnable> shutdownNow() {
         return super.shutdownNow();

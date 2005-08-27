@@ -32,13 +32,16 @@ public class MapLoops {
 
     static final ExecutorService pool = Executors.newCachedThreadPool();
 
+    static final List<Throwable> throwables
+	= new CopyOnWriteArrayList<Throwable>();
+
     public static void main(String[] args) throws Exception {
 
         Class mapClass = null;
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
-            } catch(ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
@@ -91,6 +94,12 @@ public class MapLoops {
                 i = k;
         }
         pool.shutdown();
+
+	if (! throwables.isEmpty()) {
+	    for (Throwable throwable : throwables)
+		throwable.printStackTrace();
+	    throw new Error("Some threads terminated abruptly.");
+	}
     }
 
     static Integer[] makeKeys(int n) {
@@ -188,8 +197,8 @@ public class MapLoops {
                     ops -= step();
                 barrier.await();
             }
-            catch (Exception ex) {
-                ex.printStackTrace();
+            catch (Throwable throwable) {
+		throwables.add(throwable);
             }
         }
     }

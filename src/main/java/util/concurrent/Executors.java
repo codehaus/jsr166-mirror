@@ -570,7 +570,7 @@ public class Executors {
 
     /**
      * A wrapper class that exposes only the ExecutorService methods
-     * of an implementation.
+     * of an ExecutorService implementation.
      */
     static class DelegatedExecutorService extends AbstractExecutorService {
         private final ExecutorService e;
@@ -614,8 +614,8 @@ public class Executors {
     }
 
     /**
-     * A wrapper class that exposes only the ExecutorService and
-     * ScheduleExecutor methods of a ScheduledExecutorService implementation.
+     * A wrapper class that exposes only the ScheduledExecutorService
+     * methods of a ScheduledExecutorService implementation.
      */
     static class DelegatedScheduledExecutorService
             extends DelegatedExecutorService

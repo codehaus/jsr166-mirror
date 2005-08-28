@@ -91,7 +91,7 @@ public interface Future<V> {
      * Returns <tt>true</tt> if this task was cancelled before it completed
      * normally.
      *
-     * @return <tt>true</tt> if task was cancelled before it completed
+     * @return <tt>true</tt> if this task was cancelled before it completed
      */
     boolean isCancelled();
 

@@ -29,14 +29,23 @@ import java.util.*;
  * <tt>corePoolSize</tt> threads and an unbounded queue, adjustments
  * to <tt>maximumPoolSize</tt> have no useful effect.
  *
- * <p>This class supports protected extension method
+ * <p><b>Extension notes:</b> This class overrides {@link
+ * AbstractExecutorService} <tt>submit</tt> methods to generate
+ * internal objects to control per-task delays and scheduling. To
+ * preserve functionality, any further overrides of these methods in
+ * subclasses must invoke superclass versions, which effectively
+ * disables additional task customization. However, this class
+ * provides alternative protected extension method
  * <tt>decorateTask</tt> (one version each for <tt>Runnable</tt> and
  * <tt>Callable</tt>) that can be used to customize the concrete task
- * types used to execute commands. By default,
- * a <tt>ScheduledThreadPoolExecutor</tt> uses
- * a task type extending {@link FutureTask}. However, this may
- * be modified or replaced using subclasses of the form:
- * <pre>
+ * types used to execute commands entered via <tt>execute</tt>,
+ * <tt>submit</tt>, <tt>schedule</tt>, <tt>scheduleAtFixedRate</tt>,
+ * and <tt>scheduleWithFixedDelay</tt>.  By default, a
+ * <tt>ScheduledThreadPoolExecutor</tt> uses a task type extending
+ * {@link FutureTask}. However, this may be modified or replaced using
+ * subclasses of the form:
+ *
+ * <pre> 
  * public class CustomScheduledExecutor extends ScheduledThreadPoolExecutor {
  *
  *   static class CustomTask&lt;V&gt; implements RunnableScheduledFuture&lt;V&gt; { ... }

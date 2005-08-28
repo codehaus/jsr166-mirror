@@ -34,8 +34,9 @@ import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
  *       throws InterruptedException {
  *     Future&lt;String&gt; future
  *       = executor.submit(new Callable&lt;String&gt;() {
- *         public String call() { return searcher.search(target); }
- *     });
+ *         public String call() {
+ *             return searcher.search(target);
+ *         }});
  *     displayOtherThings(); // do other things while searching
  *     try {
  *       displayText(future.get()); // use future
@@ -72,6 +73,10 @@ public interface Future<V> {
      * then the <tt>mayInterruptIfRunning</tt> parameter determines
      * whether the thread executing this task should be interrupted in
      * an attempt to stop the task.
+     *
+     * <p>After this method returns, subsequent calls to {@link #isDone} will
+     * always return <tt>true</tt>.  Subsequent calls to {@link #isCancelled}
+     * will always return <tt>true</tt> if this method returned <tt>true</tt>.
      *
      * @param mayInterruptIfRunning <tt>true</tt> if the thread executing this
      * task should be interrupted; otherwise, in-progress tasks are allowed

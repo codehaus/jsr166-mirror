@@ -160,7 +160,7 @@ operation <i>happens-before</i> the read operation.  The
   monitor <i>happens-before</i> every subsequent lock (<tt>synchronized</tt>
   block or method entry) of that same monitor. And because
   the <i>happens-before</i> relation is transitive, all actions
-  of a thread prior to unlocking happen before all actions
+  of a thread prior to unlocking <i>happen-before</i> all actions
   subsequent to any thread locking that monitor.
 
   <li>A write to a <tt>volatile</tt> field <i>happens-before</i> every
@@ -185,13 +185,15 @@ synchronization. In particular:
 <ul>
 
   <li>State changes to any object made prior to placement into any
-  concurrent collection happen before this element is accessed via or
+  concurrent collection <i>happen-before</i> this element is accessed via or
   removed from that collection.
 
-  <li>State changes to a <tt>Runnable</tt> object made prior to
-  submission to an <tt>Executor</tt> <i>happen-before</i> its execution. And
-  similarly for a <tt>Callable</tt> object submitted to an
-  <tt>ExecutorService</tt>.
+  <li>State changes to a <tt>Runnable</tt> object made by the
+  submitting thread prior to submission to an <tt>Executor</tt>
+  <i>happen-before</i> its execution.  Similarly, state changes to a
+  <tt>Callable</tt> object made by the submitting thread before being
+  submitted to an <tt>ExecutorService</tt> <i>happen-before</i> its
+  execution.
 
   <li>State changes to a <tt>Future</tt> made prior to it becoming
   available <i>happen-before</i> access via <tt>Future.get()</tt>.
@@ -200,17 +202,19 @@ synchronization. In particular:
   <tt>Lock.unlock</tt>, <tt>Semaphore.release</tt>,
   <tt>CountDownLatch.countDown</tt> and <tt>Condition.signal</tt>
   <i>happen-before</i> actions subsequent to a successful "acquiring" method such as
-  <tt>Lock.lock</tt>, <tt>Semaphore.acquire</tt>, and
-  <tt>CountDownLatch.await</tt> on the same synchronizer object.
+  <tt>Lock.lock</tt>, <tt>Semaphore.acquire</tt>, <tt>Condition.await</tt>, and
+  <tt>CountDownLatch.await</tt> on the same synchronizer object.  
 
-  <li>Actions prior to calling <tt>Exchanger.exchange</tt> 
-  <i>happen-before</i> those subsequent to the matching actions in
-  other threads.
+  <li>For each pair of threads that successfully exchange objects via
+  an <tt>Exchanger</tt>, actions prior to to the <tt>exchange()</tt>
+  in each thread <i>happen-before</i> those subsequent to the
+  corresponding <tt>exchange()</tt> in the other thread.
 
   <li>Actions prior to calling <tt>CyclicBarrier.await</tt>
   <i>happen-before</i> actions performed by the barrier action, and
   actions performed by the barrier action <i>happen-before</i> actions
-  subsequent to the return from <tt>await</tt> in other threads.
+  subsequent to a successful return from the corresponding <tt>await</tt> 
+  in other threads.
 
 </ul>
 

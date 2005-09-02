@@ -62,10 +62,13 @@ import java.util.Random;
  * }
  * </pre>
  *
- * <p> Memory visibility effects: Actions in a thread prior to calling
- * <tt>exchange()</tt> <a
- * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * those subsequent to the matching <tt>exchange()</tt> in another thread.
+
+ * <p> Memory visibility effects: For each pair of threads that
+ * successfully exchange objects via an <tt>Exchanger</tt>, 
+ * actions prior to to the <tt>exchange()</tt> 
+ * in each thread <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a> 
+ * those subsequent to the corresponding <tt>exchange()</tt> in the other 
+ * thread.
  *
  * @since 1.5
  * @author Doug Lea and Bill Scherer and Michael Scott

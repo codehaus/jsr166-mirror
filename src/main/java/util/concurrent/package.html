@@ -139,6 +139,7 @@ weakly consistent iterator is thread-safe, but does not necessarily
 freeze the collection while iterating, so it may (or may not) reflect
 any updates since the iterator was created.
 
+<a name="MemoryVisibility">
 <h2> Memory Consistency Properties </h2>
 
 <a href="http://java.sun.com/docs/books/jls/third_edition/html/memory.html">
@@ -152,26 +153,26 @@ operation <i>happens-before</i> the read operation.  The
 <i>happens-before</i> relationships. In particular:
 
 <ul>
-  <li>Each action in a thread happens before every action in that
+  <li>Each action in a thread <i>happens-before</i> every action in that
   thread that comes later in the program's order.
 
   <li>An unlock (<tt>synchronized</tt> block or method exit) of a
-  monitor happens before every subsequent lock (<tt>synchronized</tt>
+  monitor <i>happens-before</i> every subsequent lock (<tt>synchronized</tt>
   block or method entry) of that same monitor. And because
   the <i>happens-before</i> relation is transitive, all actions
   of a thread prior to unlocking happen before all actions
   subsequent to any thread locking that monitor.
 
-  <li>A write to a <tt>volatile</tt> field happens before every
+  <li>A write to a <tt>volatile</tt> field <i>happens-before</i> every
   subsequent read of that same field. Writes and reads of
   <tt>volatile</tt> fields have similar memory consistency effects
   as entering and exiting monitors, but do <em>not</em> entail
   mutual exclusion locking.
 
-  <li>A call to <tt>start</tt> on a thread happens before any action in the
+  <li>A call to <tt>start</tt> on a thread <i>happens-before</i> any action in the
   started thread.
 
-  <li>All actions in a thread happen before any other thread
+  <li>All actions in a thread <i>happen-before</i> any other thread
   successfully returns from a <tt>join</tt> on that thread.
 
 </ul>
@@ -188,23 +189,28 @@ synchronization. In particular:
   removed from that collection.
 
   <li>State changes to a <tt>Runnable</tt> object made prior to
-  submission to an <tt>Executor</tt> happen before its execution. And
+  submission to an <tt>Executor</tt> <i>happen-before</i> its execution. And
   similarly for a <tt>Callable</tt> object submitted to an
   <tt>ExecutorService</tt>.
 
   <li>State changes to a <tt>Future</tt> made prior to it becoming
-  available happen before access via <tt>Future.get()</tt>.
+  available <i>happen-before</i> access via <tt>Future.get()</tt>.
 
   <li>Actions prior to "releasing" synchronizer methods such as
   <tt>Lock.unlock</tt>, <tt>Semaphore.release</tt>,
   <tt>CountDownLatch.countDown</tt> and <tt>Condition.signal</tt>
-  happen before actions subsequent to "acquiring" methods such as
+  <i>happen-before</i> actions subsequent to a successful "acquiring" method such as
   <tt>Lock.lock</tt>, <tt>Semaphore.acquire</tt>, and
   <tt>CountDownLatch.await</tt> on the same synchronizer object.
 
-  <li>Actions prior to symmetric synchronizer methods such as
-  <tt>CyclicBarrier.await</tt> and <tt>Exchanger.exchange</tt> happen
-  before those subsequent to the matching actions in other threads.
+  <li>Actions prior to calling <tt>Exchanger.exchange</tt> 
+  <i>happen-before</i> those subsequent to the matching actions in
+  other threads.
+
+  <li>Actions prior to calling <tt>CyclicBarrier.await</tt>
+  <i>happen-before</i> actions performed by the barrier action, and
+  actions performed by the barrier action <i>happen-before</i> actions
+  subsequent to the return from <tt>await</tt> in other threads.
 
 </ul>
 

@@ -118,6 +118,12 @@ import java.util.concurrent.atomic.*;
  * permits at a time.  Beware of the increased risk of indefinite
  * postponement when these methods are used without fairness set true.
  *
+ * <p> Memory visibility effects: Actions in a thread prior to calling
+ * a "release" method such as <tt>release()</tt> <a
+ * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * actions following a successful "acquire" method such as
+ * <tt>acquire()</tt> in another thread.
+ * 
  * @since 1.5
  * @author Doug Lea
  *

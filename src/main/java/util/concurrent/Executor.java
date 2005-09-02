@@ -88,6 +88,11 @@ package java.util.concurrent;
  * extensible thread pool implementation. The {@link Executors} class
  * provides convenient factory methods for these Executors.
  *
+ * Memory visibility effects: State changes to a <tt>Runnable</tt>
+ * object made prior to submission to an <tt>Executor</tt> <a
+ * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * its execution.
+ *
  * @since 1.5
  * @author Doug Lea
  */

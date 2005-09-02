@@ -71,6 +71,15 @@ import java.security.PrivilegedExceptionAction;
  *   }
  * }
  * </pre>
+ *
+ * Memory visibility effects: State changes to a <tt>Runnable</tt> or
+ * <tt>Callable</tt> object made prior to submission to an
+ * <tt>Executor</tt> <a
+ * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * its execution, and state changes to objects returned from a
+ * <tt>Callable</tt> * <i>happen-before</i> that object is returned to
+ * a thread which calls <tt>Future.get()</tt> to retrieve that result.
+ *
  * @since 1.5
  * @author Doug Lea
  */

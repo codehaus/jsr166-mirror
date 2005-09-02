@@ -138,6 +138,12 @@ import java.util.Queue;
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
  *
+ * <p>
+ * Memory visibility effects: As with other concurrent collections, state
+ * changes to any object made prior to placing it into a <tt>BlockingQueue</tt>
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a> 
+ * that element is accessed via or removed from the <tt>BlockingQueue</tt>.  
+ * 
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection

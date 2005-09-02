@@ -56,6 +56,7 @@ import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
  *       }});
  *     executor.execute(future);
  * </pre>
+ *
  * @see FutureTask
  * @see Executor
  * @since 1.5

@@ -16,9 +16,8 @@ package java.util.concurrent;
  * submitted in one part of a program or system, and then acted upon
  * in a different part of the program when the reads complete,
  * possibly in a different order than they were requested.
-
- * <p>
  *
+ * <p>
  * Typically, a <tt>CompletionService</tt> relies on a separate {@link
  * Executor} to actually execute the tasks, in which case the
  * <tt>CompletionService</tt> only manages an internal completion
@@ -26,9 +25,8 @@ package java.util.concurrent;
  * implementation of this approach.
  *
  * <p> Memory visibility effects: State changes to the value returned from
- * a <tt>Callable</tt> <a
- * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * actions following a successful return from <tt>take()</tt>.
+ * a <tt>Callable</tt> <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * actions following a successful return from the corresponding <tt>take()</tt>.
  *
  */
 public interface CompletionService<V> {

@@ -77,7 +77,7 @@ import java.security.PrivilegedExceptionAction;
  * <tt>Executor</tt> <a
  * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * its execution, and state changes to objects returned from a
- * <tt>Callable</tt> * <i>happen-before</i> that object is returned to
+ * <tt>Callable</tt> <i>happen-before</i> that object is returned to
  * a thread which calls <tt>Future.get()</tt> to retrieve that result.
  *
  * @since 1.5

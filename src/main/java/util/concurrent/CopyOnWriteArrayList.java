@@ -249,7 +249,9 @@ public class CopyOnWriteArrayList<E>
      */
     public Object clone() {
         try {
-	    return super.clone();
+            CopyOnWriteArrayList c = (CopyOnWriteArrayList)(super.clone());
+            c.resetLock();
+            return c;
         } catch (CloneNotSupportedException e) {
             // this shouldn't happen, since we are Cloneable
             throw new InternalError();

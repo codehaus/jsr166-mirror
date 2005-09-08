@@ -44,9 +44,9 @@ import java.util.concurrent.atomic.*;
  * <p>
  * Memory consistency effects: As with other concurrent collections, state
  * changes to any object made prior to placing it into a <tt>ConcurrentLinkedQueue</tt>
- * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a> 
- * that element is accessed via or removed from the <tt>ConcurrentLinkedQueue</tt>.  
- * 
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * that element is accessed via or removed from the <tt>ConcurrentLinkedQueue</tt>.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection

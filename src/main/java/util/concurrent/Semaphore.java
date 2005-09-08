@@ -123,7 +123,7 @@ import java.util.concurrent.atomic.*;
  * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * actions following a successful "acquire" method such as
  * <tt>acquire()</tt> in another thread.
- * 
+ *
  * @since 1.5
  * @author Doug Lea
  *

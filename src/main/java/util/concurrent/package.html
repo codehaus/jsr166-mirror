@@ -204,7 +204,7 @@ synchronization. In particular:
   <tt>CountDownLatch.countDown</tt>
   <i>happen-before</i> actions subsequent to a successful "acquiring" method such as
   <tt>Lock.lock</tt>, <tt>Semaphore.acquire</tt>, <tt>Condition.await</tt>, and
-  <tt>CountDownLatch.await</tt> on the same synchronizer object.  
+  <tt>CountDownLatch.await</tt> on the same synchronizer object.
 
   <li>For each pair of threads that successfully exchange objects via
   an <tt>Exchanger</tt>, actions prior to to the <tt>exchange()</tt>
@@ -214,7 +214,7 @@ synchronization. In particular:
   <li>Actions prior to calling <tt>CyclicBarrier.await</tt>
   <i>happen-before</i> actions performed by the barrier action, and
   actions performed by the barrier action <i>happen-before</i> actions
-  subsequent to a successful return from the corresponding <tt>await</tt> 
+  subsequent to a successful return from the corresponding <tt>await</tt>
   in other threads.
 
 </ul>

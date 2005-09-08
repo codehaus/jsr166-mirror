@@ -18,8 +18,8 @@ import java.util.Map;
  * <p>
  * Memory consistency effects: As with other concurrent collections, state
  * changes to any object made prior to placing it into a <tt>ConcurrentMap</tt> as a key or value
- * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a> 
- * that element is accessed via or removed from the <tt>ConcurrentMap</tt>.  
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * that element is accessed via or removed from the <tt>ConcurrentMap</tt>.
  *
  * @since 1.5
  * @author Doug Lea

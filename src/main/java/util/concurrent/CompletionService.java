@@ -24,7 +24,7 @@ package java.util.concurrent;
  * queue. The {@link ExecutorCompletionService} class provides an
  * implementation of this approach.
  *
- * <p> Memory visibility effects: State changes to the value returned from
+ * <p> Memory consistency effects: State changes to the value returned from
  * a <tt>Callable</tt> <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * actions following a successful return from the corresponding <tt>take()</tt>.
  *

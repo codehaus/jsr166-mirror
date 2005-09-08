@@ -195,12 +195,13 @@ synchronization. In particular:
   submitted to an <tt>ExecutorService</tt> <i>happen-before</i> its
   execution.
 
-  <li>State changes to a <tt>Future</tt> made prior to it becoming
-  available <i>happen-before</i> access via <tt>Future.get()</tt>.
+  <li>State changes to a <tt>Future</tt> that
+  <i>happen-before</i> it is made available
+  <i>happen-before</i> access via <tt>Future.get()</tt>.
 
   <li>Actions prior to "releasing" synchronizer methods such as
-  <tt>Lock.unlock</tt>, <tt>Semaphore.release</tt>,
-  <tt>CountDownLatch.countDown</tt> and <tt>Condition.signal</tt>
+  <tt>Lock.unlock</tt>, <tt>Semaphore.release</tt>, and
+  <tt>CountDownLatch.countDown</tt>
   <i>happen-before</i> actions subsequent to a successful "acquiring" method such as
   <tt>Lock.lock</tt>, <tt>Semaphore.acquire</tt>, <tt>Condition.await</tt>, and
   <tt>CountDownLatch.await</tt> on the same synchronizer object.  

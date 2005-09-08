@@ -46,7 +46,7 @@ import sun.misc.Unsafe;
  * Java Collections Framework</a>.
  *
  * <p>
- * Memory visibility effects: As with other concurrent collections, state
+ * Memory consistency effects: As with other concurrent collections, state
  * changes to any object made prior to placing it into a <tt>CopyOnWriteArrayList</tt>
  * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a> 
  * that element is accessed via or removed from the <tt>CopyOnWriteArrayList</tt>.  

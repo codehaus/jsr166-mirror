@@ -27,10 +27,6 @@ import java.util.concurrent.locks.*;
  * <tt>protected</tt> functionality that may be useful when creating
  * customized task classes.
  *
- * <p> Memory visibility effects: State changes to the resulting value
- * or exception <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * actions following a successful call to <tt>get()</tt>.
- *
  * @since 1.5
  * @author Doug Lea
  * @param <V> The result type returned by this FutureTask's <tt>get</tt> method

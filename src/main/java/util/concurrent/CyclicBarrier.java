@@ -88,7 +88,7 @@ import java.util.concurrent.locks.*;
  * {@link InterruptedException} if they too were interrupted at about
  * the same time).
  *
- * <p> Memory visibility effects: Actions in a thread prior to calling
+ * <p> Memory consistency effects: Actions in a thread prior to calling
  * <tt>await()</tt> <a
  * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * actions that are part of the barrier action, which in turn

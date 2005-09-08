@@ -120,7 +120,7 @@ import java.util.concurrent.atomic.*;
  *
  * </pre>
  *
- * <p> Memory visibility effects: Actions in a thread prior to calling
+ * <p> Memory consistency effects: Actions in a thread prior to calling
  * <tt>countDown()</tt> <a
  * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * actions following a successful return from a corresponding

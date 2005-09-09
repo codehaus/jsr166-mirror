@@ -60,7 +60,6 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
      * exception if the class does not hold field or is the wrong type.
      */
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
-        // Currently rely on standard intrinsics implementation
         return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass,
                                                         vclass,
                                                         fieldName);
@@ -147,23 +146,25 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         }
     }
 
-    /**
-     * Standard hotspot implementation using intrinsics
-     */
-    private static class AtomicReferenceFieldUpdaterImpl<T,V> extends AtomicReferenceFieldUpdater<T,V> {
-        private static final Unsafe unsafe =  Unsafe.getUnsafe();
-        private final long offset;
-        private final Class<T> tclass;
-        private final Class<V> vclass;
+    static final class AtomicReferenceFieldUpdaterImpl<T,V>
+        extends AtomicReferenceFieldUpdater<T,V> {
+        static final Unsafe unsafe =  Unsafe.getUnsafe();
+        final long offset;
+        final Class<T> tclass;
+        final Class<V> vclass;
 
         AtomicReferenceFieldUpdaterImpl(Class<T> tclass, Class<V> vclass, String fieldName) {
             Field field = null;
             Class fieldClass = null;
             try {
+                SecurityManager security = System.getSecurityManager();
+                if (security != null) 
+                    security.checkPackageAccess(tclass.getPackage().toString());
                 field = tclass.getDeclaredField(fieldName);
-                sun.reflect.Reflection.ensureMemberAccess
+                if (!sun.reflect.Reflection.verifyMemberAccess
                     (sun.reflect.Reflection.getCallerClass(3),
-                     tclass, null, field.getModifiers());
+                     tclass, null, field.getModifiers()))
+                    throw new IllegalAccessError();
                 fieldClass = field.getType();
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -176,44 +177,61 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
                 throw new IllegalArgumentException("Must be volatile type");
 
             this.tclass = tclass;
-            this.vclass = vclass;
+            if (vclass == Object.class)
+                this.vclass = null;
+            else
+                this.vclass = vclass;
             offset = unsafe.objectFieldOffset(field);
         }
 
+        void targetCheck(Object obj) {
+            if (tclass != null && !tclass.isInstance(obj))
+                throw new ClassCastException();
+        }
+
+        void updateCheck(Object obj, Object update) {
+            if ((tclass != null && !tclass.isInstance(obj)) ||
+                (update != null && vclass != null && !vclass.isInstance(update)))
+                throw new ClassCastException();
+        }
 
         public boolean compareAndSet(T obj, V expect, V update) {
-            if (!tclass.isInstance(obj) ||
-                (update != null && !vclass.isInstance(update)))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass ||
+                (update != null && vclass != null &&
+                 vclass != update.getClass()))
+                updateCheck(obj, update);
             return unsafe.compareAndSwapObject(obj, offset, expect, update);
         }
 
-        public boolean weakCompareAndSet(T obj, V expect, V update) {
+        public boolean weakCompareAndSet(Object obj, Object expect, Object update) {
             // same implementation as strong form for now
-            if (!tclass.isInstance(obj) ||
-                (update != null && !vclass.isInstance(update)))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass ||
+                (update != null && vclass != null &&
+                 vclass != update.getClass()))
+                updateCheck(obj, update);
             return unsafe.compareAndSwapObject(obj, offset, expect, update);
         }
 
 
-        public void set(T obj, V newValue) {
-            if (!tclass.isInstance(obj) ||
-                (newValue != null && !vclass.isInstance(newValue)))
-                throw new ClassCastException();
-            unsafe.putObjectVolatile(obj, offset, newValue);
+        public void set(Object obj, Object update) {
+            if (obj == null || obj.getClass() != tclass ||
+                (update != null && vclass != null &&
+                 vclass != update.getClass()))
+                updateCheck(obj, update);
+            unsafe.putObjectVolatile(obj, offset, update);
         }
 
-        public void lazySet(T obj, V newValue) {
-            if (!tclass.isInstance(obj) ||
-                (newValue != null && !vclass.isInstance(newValue)))
-                throw new ClassCastException();
-            unsafe.putObject(obj, offset, newValue);
+        public void lazySet(Object obj, Object update) {
+            if (obj == null || obj.getClass() != tclass ||
+                (update != null && vclass != null &&
+                 vclass != update.getClass()))
+                updateCheck(obj, update);
+            unsafe.putOrderedObject(obj, offset, update);
         }
 
-        public V get(T obj) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+        public V get(Object obj) {
+            if (obj == null || obj.getClass() != tclass)
+                targetCheck(obj);
             return (V)unsafe.getObjectVolatile(obj, offset);
         }
     }

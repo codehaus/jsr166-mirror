@@ -100,7 +100,7 @@ public class AtomicLongArray implements java.io.Serializable {
      * @since 1.6
      */
     public final void lazySet(int i, long newValue) {
-        unsafe.putLongVolatile(array, rawIndex(i), newValue);
+        unsafe.putOrderedLong(array, rawIndex(i), newValue);
     }
 
 

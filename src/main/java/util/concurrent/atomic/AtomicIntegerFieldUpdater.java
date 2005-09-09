@@ -239,11 +239,15 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
         AtomicIntegerFieldUpdaterImpl(Class<T> tclass, String fieldName) {
             Field field = null;
             try {
+                SecurityManager security = System.getSecurityManager();
+                if (security != null) 
+                    security.checkPackageAccess(tclass.getPackage().toString());
                 field = tclass.getDeclaredField(fieldName);
-                sun.reflect.Reflection.ensureMemberAccess
+                if (!sun.reflect.Reflection.verifyMemberAccess
                     (sun.reflect.Reflection.getCallerClass(3),
-                     tclass, null, field.getModifiers());
-            } catch (Exception ex) {
+                     tclass, null, field.getModifiers()))
+                    throw new IllegalAccessError();
+            } catch(Exception ex) {
                 throw new RuntimeException(ex);
             }
 
@@ -258,33 +262,33 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
             offset = unsafe.objectFieldOffset(field);
         }
 
-        public boolean compareAndSet(T obj, int expect, int update) {
+        private void fullCheck(T obj) {
             if (!tclass.isInstance(obj))
                 throw new ClassCastException();
+        }
+
+        public boolean compareAndSet(T obj, int expect, int update) {
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             return unsafe.compareAndSwapInt(obj, offset, expect, update);
         }
 
         public boolean weakCompareAndSet(T obj, int expect, int update) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             return unsafe.compareAndSwapInt(obj, offset, expect, update);
         }
 
         public void set(T obj, int newValue) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             unsafe.putIntVolatile(obj, offset, newValue);
         }
 
         public void lazySet(T obj, int newValue) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
-            unsafe.putInt(obj, offset, newValue);
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
+            unsafe.putOrderedInt(obj, offset, newValue);
         }
 
         public final int get(T obj) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             return unsafe.getIntVolatile(obj, offset);
         }
     }

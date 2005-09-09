@@ -70,7 +70,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
      * @since 1.6
      */
     public final void lazySet(V newValue) {
-        unsafe.putObject(this, valueOffset, newValue);
+        unsafe.putOrderedObject(this, valueOffset, newValue);
     }
 
     /**
@@ -82,7 +82,8 @@ public class AtomicReference<V>  implements java.io.Serializable {
      * the actual value was not equal to the expected value.
      */
     public final boolean compareAndSet(V expect, V update) {
-      return unsafe.compareAndSwapObject(this, valueOffset, expect, update);
+      return value == expect &&
+          unsafe.compareAndSwapObject(this, valueOffset, expect, update);
     }
 
     /**
@@ -94,7 +95,8 @@ public class AtomicReference<V>  implements java.io.Serializable {
      * @return true if successful.
      */
     public final boolean weakCompareAndSet(V expect, V update) {
-      return unsafe.compareAndSwapObject(this, valueOffset, expect, update);
+      return value == expect &&
+          unsafe.compareAndSwapObject(this, valueOffset, expect, update);
     }
 
     /**

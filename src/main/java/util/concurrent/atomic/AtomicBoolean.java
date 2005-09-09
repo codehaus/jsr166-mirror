@@ -104,7 +104,7 @@ public class AtomicBoolean implements java.io.Serializable {
      */
     public final void lazySet(boolean newValue) {
         int v = newValue ? 1 : 0;
-        unsafe.putInt(this, valueOffset, v);
+        unsafe.putOrderedInt(this, valueOffset, v);
     }
 
     /**

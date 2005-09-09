@@ -101,7 +101,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @since 1.6
      */
     public final void lazySet(int i, E newValue) {
-        unsafe.putObject(array, rawIndex(i), newValue);
+        unsafe.putOrderedObject(array, rawIndex(i), newValue);
     }
 
 

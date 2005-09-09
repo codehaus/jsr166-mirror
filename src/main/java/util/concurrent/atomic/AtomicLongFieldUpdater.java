@@ -238,11 +238,15 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         CASUpdater(Class<T> tclass, String fieldName) {
             Field field = null;
             try {
+                SecurityManager security = System.getSecurityManager();
+                if (security != null) 
+                    security.checkPackageAccess(tclass.getPackage().toString());
                 field = tclass.getDeclaredField(fieldName);
-                sun.reflect.Reflection.ensureMemberAccess
+                if (!sun.reflect.Reflection.verifyMemberAccess
                     (sun.reflect.Reflection.getCallerClass(3),
-                     tclass, null, field.getModifiers());
-            } catch (Exception ex) {
+                     tclass, null, field.getModifiers()))
+                    throw new IllegalAccessError();
+            } catch(Exception ex) {
                 throw new RuntimeException(ex);
             }
 
@@ -257,33 +261,33 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             offset = unsafe.objectFieldOffset(field);
         }
 
-        public boolean compareAndSet(T obj, long expect, long update) {
+        private void fullCheck(T obj) {
             if (!tclass.isInstance(obj))
                 throw new ClassCastException();
+        }
+
+        public boolean compareAndSet(T obj, long expect, long update) {
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             return unsafe.compareAndSwapLong(obj, offset, expect, update);
         }
 
         public boolean weakCompareAndSet(T obj, long expect, long update) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             return unsafe.compareAndSwapLong(obj, offset, expect, update);
         }
 
         public void set(T obj, long newValue) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             unsafe.putLongVolatile(obj, offset, newValue);
         }
 
         public void lazySet(T obj, long newValue) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
-            unsafe.putLongVolatile(obj, offset, newValue);
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
+            unsafe.putOrderedLong(obj, offset, newValue);
         }
 
         public long get(T obj) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             return unsafe.getLongVolatile(obj, offset);
         }
     }
@@ -313,9 +317,13 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             offset = unsafe.objectFieldOffset(field);
         }
 
-        public boolean compareAndSet(T obj, long expect, long update) {
+        private void fullCheck(T obj) {
             if (!tclass.isInstance(obj))
                 throw new ClassCastException();
+        }
+
+        public boolean compareAndSet(T obj, long expect, long update) {
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             synchronized(this) {
                 long v = unsafe.getLong(obj, offset);
                 if (v != expect)
@@ -330,16 +338,14 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
 
         public void set(T obj, long newValue) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             synchronized(this) {
                 unsafe.putLong(obj, offset, newValue);
             }
         }
 
         public void lazySet(T obj, long newValue) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             synchronized(this) {
                 unsafe.putLong(obj, offset, newValue);
             }

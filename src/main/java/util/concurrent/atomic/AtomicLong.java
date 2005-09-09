@@ -90,7 +90,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @since 1.6
      */
     public final void lazySet(long newValue) {
-        unsafe.putLongVolatile(this, valueOffset, newValue);
+        unsafe.putOrderedLong(this, valueOffset, newValue);
     }
 
     /**

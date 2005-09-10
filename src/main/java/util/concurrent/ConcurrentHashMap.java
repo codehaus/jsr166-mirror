@@ -899,10 +899,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param m mappings to be stored in this map
      */
     public void putAll(Map<? extends K, ? extends V> m) {
-        for (Iterator<? extends Map.Entry<? extends K, ? extends V>> it = (Iterator<? extends Map.Entry<? extends K, ? extends V>>) m.entrySet().iterator(); it.hasNext(); ) {
-            Entry<? extends K, ? extends V> e = it.next();
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
             put(e.getKey(), e.getValue());
-        }
     }
 
     /**
@@ -911,11 +909,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * @param  key the key that needs to be removed
      * @return the previous value associated with <tt>key</tt>, or
-     *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+     *         <tt>null</tt> if there was no mapping for <tt>key</tt>
      * @throws NullPointerException if the specified key is null
      */
     public V remove(Object key) {
-        int hash = hash(key);
+	int hash = hash(key);
         return segmentFor(hash).remove(key, hash, null);
     }
 

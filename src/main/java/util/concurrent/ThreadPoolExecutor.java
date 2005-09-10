@@ -1128,7 +1128,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * However, in such cases, method {@link ThreadPoolExecutor#purge}
      * may be used to remove those Futures that have been cancelled.
      *
-     *
      * @param task the task to remove
      * @return true if the task was removed
      */

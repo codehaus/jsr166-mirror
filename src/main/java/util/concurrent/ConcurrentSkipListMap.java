@@ -1824,12 +1824,15 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Returns the value to which this map maps the specified key, or
-     * <tt>null</tt> if the map contains no mapping for the key.
+     * Returns the value to which the specified key is mapped,
+     * or {@code null} if this map contains no mapping for the key.
      *
-     * @param key key whose associated value is to be returned
-     * @return the value to which this map maps the specified key, or
-     *         <tt>null</tt> if the map contains no mapping for the key
+     * <p>More formally, if this map contains a mapping from a key
+     * {@code k} to a value {@code v} such that {@code key} compares
+     * equal to {@code k} according to the map's ordering, then this
+     * method returns {@code v}; otherwise it returns {@code null}.
+     * (There can be at most one such mapping.)
+     *
      * @throws ClassCastException if the specified key cannot be compared
      *         with the keys currently in the map
      * @throws NullPointerException if the specified key is null

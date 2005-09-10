@@ -253,11 +253,8 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public void putAll(Map<? extends K, ? extends V> m) {
-	Iterator<? extends Entry<? extends K, ? extends V>> i = m.entrySet().iterator();
-	while (i.hasNext()) {
-	    Entry<? extends K, ? extends V> e = i.next();
-	    put(e.getKey(), e.getValue());
-	}
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
+            put(e.getKey(), e.getValue());
     }
 
     /**
@@ -474,43 +471,28 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * <tt>", "</tt> (comma and space).  Each key-value mapping is rendered as
      * the key followed by an equals sign (<tt>"="</tt>) followed by the
      * associated value.  Keys and values are converted to strings as by
-     * <tt>String.valueOf(Object)</tt>.<p>
+     * {@link String#valueOf(Object)}.
      *
-     * This implementation creates an empty string buffer, appends a left
-     * brace, and iterates over the map's <tt>entrySet</tt> view, appending
-     * the string representation of each <tt>map.entry</tt> in turn.  After
-     * appending each entry except the last, the string <tt>", "</tt> is
-     * appended.  Finally a right brace is appended.  A string is obtained
-     * from the stringbuffer, and returned.
-     *
-     * @return a String representation of this map
+     * @return a string representation of this map
      */
     public String toString() {
-	StringBuilder sb = new StringBuilder();
-	sb.append("{");
-
 	Iterator<Entry<K,V>> i = entrySet().iterator();
-        boolean hasNext = i.hasNext();
-        while (hasNext) {
+	if (! i.hasNext())
+	    return "{}";
+
+	StringBuilder sb = new StringBuilder();
+	sb.append('{');
+	for (;;) {
 	    Entry<K,V> e = i.next();
 	    K key = e.getKey();
-            V value = e.getValue();
-	    if (key == this)
-		sb.append("(this Map)");
-	    else
-		sb.append(key);
-	    sb.append("=");
-	    if (value == this)
-		sb.append("(this Map)");
-	    else
-		sb.append(value);
-            hasNext = i.hasNext();
-            if (hasNext)
-                sb.append(", ");
-        }
-
-	sb.append("}");
-	return sb.toString();
+	    V value = e.getValue();
+	    sb.append(key   == this ? "(this Map)" : key);
+	    sb.append('=');
+	    sb.append(value == this ? "(this Map)" : value);
+	    if (! i.hasNext())
+		return sb.append('}').toString();
+	    sb.append(", ");
+	}
     }
 
     /**

@@ -239,14 +239,14 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             Field field = null;
             try {
                 SecurityManager security = System.getSecurityManager();
-                if (security != null) 
+                if (security != null)
                     security.checkPackageAccess(tclass.getPackage().toString());
                 field = tclass.getDeclaredField(fieldName);
                 if (!sun.reflect.Reflection.verifyMemberAccess
                     (sun.reflect.Reflection.getCallerClass(3),
                      tclass, null, field.getModifiers()))
                     throw new IllegalAccessError();
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
 

@@ -158,7 +158,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             Class fieldClass = null;
             try {
                 SecurityManager security = System.getSecurityManager();
-                if (security != null) 
+                if (security != null)
                     security.checkPackageAccess(tclass.getPackage().toString());
                 field = tclass.getDeclaredField(fieldName);
                 if (!sun.reflect.Reflection.verifyMemberAccess
@@ -184,12 +184,12 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             offset = unsafe.objectFieldOffset(field);
         }
 
-        void targetCheck(Object obj) {
+        void targetCheck(T obj) {
             if (tclass != null && !tclass.isInstance(obj))
                 throw new ClassCastException();
         }
 
-        void updateCheck(Object obj, Object update) {
+        void updateCheck(T obj, V update) {
             if ((tclass != null && !tclass.isInstance(obj)) ||
                 (update != null && vclass != null && !vclass.isInstance(update)))
                 throw new ClassCastException();
@@ -203,7 +203,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             return unsafe.compareAndSwapObject(obj, offset, expect, update);
         }
 
-        public boolean weakCompareAndSet(Object obj, Object expect, Object update) {
+        public boolean weakCompareAndSet(T obj, V expect, V update) {
             // same implementation as strong form for now
             if (obj == null || obj.getClass() != tclass ||
                 (update != null && vclass != null &&
@@ -212,8 +212,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             return unsafe.compareAndSwapObject(obj, offset, expect, update);
         }
 
-
-        public void set(Object obj, Object update) {
+        public void set(T obj, V update) {
             if (obj == null || obj.getClass() != tclass ||
                 (update != null && vclass != null &&
                  vclass != update.getClass()))
@@ -221,7 +220,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             unsafe.putObjectVolatile(obj, offset, update);
         }
 
-        public void lazySet(Object obj, Object update) {
+        public void lazySet(T obj, V update) {
             if (obj == null || obj.getClass() != tclass ||
                 (update != null && vclass != null &&
                  vclass != update.getClass()))
@@ -229,7 +228,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             unsafe.putOrderedObject(obj, offset, update);
         }
 
-        public V get(Object obj) {
+        public V get(T obj) {
             if (obj == null || obj.getClass() != tclass)
                 targetCheck(obj);
             return (V)unsafe.getObjectVolatile(obj, offset);

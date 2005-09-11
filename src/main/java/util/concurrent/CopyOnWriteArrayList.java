@@ -842,21 +842,17 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns a string representation of this list, containing
-     * the String representation of each element.
+     * Returns a string representation of this list.  The string
+     * representation consists of the string representations of the list's
+     * elements in the order they are returned by its iterator, enclosed in
+     * square brackets (<tt>"[]"</tt>).  Adjacent elements are separated by
+     * the characters <tt>", "</tt> (comma and space).  Elements are
+     * converted to strings as by {@link String#valueOf(Object)}.
+     *
+     * @return a string representation of this list
      */
     public String toString() {
-	Object[] elements = getArray();
-	int maxIndex = elements.length - 1;
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (int i = 0; i <= maxIndex; i++) {
-            sb.append(String.valueOf(elements[i]));
-            if (i < maxIndex)
-                sb.append(", ");
-        }
-        sb.append("]");
-        return sb.toString();
+	return Arrays.toString(getArray());
     }
 
     /**
@@ -878,16 +874,15 @@ public class CopyOnWriteArrayList<E>
         if (!(o instanceof List))
             return false;
 
-        List<?> l2 = (List<?>)(o);
-        if (size() != l2.size())
+	Object[] elements = getArray();
+        List<?> list = (List<?>)(o);
+        if (elements.length != list.size())
             return false;
 
-        ListIterator<?> e1 = listIterator();
-        ListIterator<?> e2 = l2.listIterator();
-        while (e1.hasNext()) {
-            if (!eq(e1.next(), e2.next()))
-                return false;
-        }
+	Iterator<?> it = list.listIterator();
+	for (Object element : elements)
+	    if (! eq(element, it.next()))
+		return false;
         return true;
     }
 

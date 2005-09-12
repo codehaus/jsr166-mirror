@@ -185,12 +185,12 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         }
 
         void targetCheck(T obj) {
-            if (tclass != null && !tclass.isInstance(obj))
+            if (!tclass.isInstance(obj))
                 throw new ClassCastException();
         }
 
         void updateCheck(T obj, V update) {
-            if ((tclass != null && !tclass.isInstance(obj)) ||
+            if (!tclass.isInstance(obj) ||
                 (update != null && vclass != null && !vclass.isInstance(update)))
                 throw new ClassCastException();
         }

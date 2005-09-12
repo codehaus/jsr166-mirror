@@ -65,7 +65,7 @@ import java.util.Random;
 
  * <p> Memory consistency effects: For each pair of threads that
  * successfully exchange objects via an <tt>Exchanger</tt>,
- * actions prior to to the <tt>exchange()</tt>
+ * actions prior to the <tt>exchange()</tt>
  * in each thread <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * those subsequent to the corresponding <tt>exchange()</tt> in the other
  * thread.

@@ -155,8 +155,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
         /*
          * Internal type checks within all update methods contain
-         * internal inlined optimizations checking for for the common
-         * cases where the class is final (in which case case a simple
+         * internal inlined optimizations checking for the common
+         * cases where the class is final (in which case a simple
          * getClass comparison suffices) or is of type Object (in
          * which case no check is needed because all objects are
          * instances of Object). The Object case is handled simply by

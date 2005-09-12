@@ -146,12 +146,12 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         }
     }
 
-    static final class AtomicReferenceFieldUpdaterImpl<T,V>
+    private static final class AtomicReferenceFieldUpdaterImpl<T,V>
         extends AtomicReferenceFieldUpdater<T,V> {
-        static final Unsafe unsafe =  Unsafe.getUnsafe();
-        final long offset;
-        final Class<T> tclass;
-        final Class<V> vclass;
+        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private final long offset;
+        private final Class<T> tclass;
+        private final Class<V> vclass;
 
         /*
          * Internal type checks within all update methods contain
@@ -165,7 +165,9 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
          * screenings fail.
          */
 
-        AtomicReferenceFieldUpdaterImpl(Class<T> tclass, Class<V> vclass, String fieldName) {
+        AtomicReferenceFieldUpdaterImpl(Class<T> tclass,
+					Class<V> vclass,
+					String fieldName) {
             Field field = null;
             Class fieldClass = null;
             try {

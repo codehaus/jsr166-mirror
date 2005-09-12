@@ -345,15 +345,11 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
 
         public void lazySet(T obj, long newValue) {
-            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
-            synchronized(this) {
-                unsafe.putLong(obj, offset, newValue);
-            }
+	    return set(obj, newValue);
         }
 
         public long get(T obj) {
-            if (!tclass.isInstance(obj))
-                throw new ClassCastException();
+            if (obj == null || obj.getClass() != tclass) fullCheck(obj);
             synchronized(this) {
                 return unsafe.getLong(obj, offset);
             }

@@ -153,6 +153,18 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         final Class<T> tclass;
         final Class<V> vclass;
 
+        /*
+         * Internal type checks within all update methods contain
+         * internal inlined optimizations checking for for the common
+         * cases where the class is final (in which case case a simple
+         * getClass comparison suffices) or is of type Object (in
+         * which case no check is needed because all objects are
+         * instances of Object). The Object case is handled simply by
+         * setting vclass to null in constructor.  The targetCheck and
+         * updateCheck methods are invoked when these faster
+         * screenings fail.
+         */
+
         AtomicReferenceFieldUpdaterImpl(Class<T> tclass, Class<V> vclass, String fieldName) {
             Field field = null;
             Class fieldClass = null;

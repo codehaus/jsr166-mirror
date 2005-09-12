@@ -345,7 +345,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         }
 
         public void lazySet(T obj, long newValue) {
-	    return set(obj, newValue);
+	    set(obj, newValue);
         }
 
         public long get(T obj) {

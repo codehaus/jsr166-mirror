@@ -212,20 +212,20 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             return unsafe.compareAndSwapObject(obj, offset, expect, update);
         }
 
-        public void set(T obj, V update) {
+        public void set(T obj, V newValue) {
             if (obj == null || obj.getClass() != tclass ||
-                (update != null && vclass != null &&
-                 vclass != update.getClass()))
-                updateCheck(obj, update);
-            unsafe.putObjectVolatile(obj, offset, update);
+                (newValue != null && vclass != null &&
+                 vclass != newValue.getClass()))
+                updateCheck(obj, newValue);
+            unsafe.putObjectVolatile(obj, offset, newValue);
         }
 
-        public void lazySet(T obj, V update) {
+        public void lazySet(T obj, V newValue) {
             if (obj == null || obj.getClass() != tclass ||
-                (update != null && vclass != null &&
-                 vclass != update.getClass()))
-                updateCheck(obj, update);
-            unsafe.putOrderedObject(obj, offset, update);
+                (newValue != null && vclass != null &&
+                 vclass != newValue.getClass()))
+                updateCheck(obj, newValue);
+            unsafe.putOrderedObject(obj, offset, newValue);
         }
 
         public V get(T obj) {

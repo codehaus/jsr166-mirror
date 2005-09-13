@@ -88,7 +88,7 @@ package java.util.concurrent;
  * extensible thread pool implementation. The {@link Executors} class
  * provides convenient factory methods for these Executors.
  *
- * Memory consistency effects: State changes to a <tt>Runnable</tt>
+ * <p>Memory consistency effects: State changes to a <tt>Runnable</tt>
  * object made prior to submission to an <tt>Executor</tt> <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * its execution.
  *

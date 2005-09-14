@@ -148,8 +148,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
     }
 
     private static final class AtomicReferenceFieldUpdaterImpl<T,V>
-        extends AtomicReferenceFieldUpdater<T,V> {
-        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+	extends AtomicReferenceFieldUpdater<T,V> {
+        private static final Unsafe unsafe = Unsafe.getUnsafe();
         private final long offset;
         private final Class<T> tclass;
         private final Class<V> vclass;

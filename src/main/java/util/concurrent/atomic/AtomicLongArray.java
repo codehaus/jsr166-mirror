@@ -19,7 +19,7 @@ public class AtomicLongArray implements java.io.Serializable {
     private static final long serialVersionUID = -2308431214976778248L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final Unsafe unsafe = Unsafe.getUnsafe();
     private static final int base = unsafe.arrayBaseOffset(long[].class);
     private static final int scale = unsafe.arrayIndexScale(long[].class);
     private final long[] array;

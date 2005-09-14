@@ -231,7 +231,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     }
 
     private static class CASUpdater<T> extends AtomicLongFieldUpdater<T> {
-        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private static final Unsafe unsafe = Unsafe.getUnsafe();
         private final long offset;
         private final Class<T> tclass;
 
@@ -294,7 +294,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 
 
     private static class LockedUpdater<T> extends AtomicLongFieldUpdater<T> {
-        private static final Unsafe unsafe =  Unsafe.getUnsafe();
+        private static final Unsafe unsafe = Unsafe.getUnsafe();
         private final long offset;
         private final Class<T> tclass;
 

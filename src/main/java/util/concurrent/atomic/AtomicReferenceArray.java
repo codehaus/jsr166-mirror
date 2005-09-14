@@ -20,7 +20,7 @@ import java.util.*;
 public class AtomicReferenceArray<E> implements java.io.Serializable {
     private static final long serialVersionUID = -6209656149925076980L;
 
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final Unsafe unsafe = Unsafe.getUnsafe();
     private static final int base = unsafe.arrayBaseOffset(Object[].class);
     private static final int scale = unsafe.arrayIndexScale(Object[].class);
     private final Object[] array;

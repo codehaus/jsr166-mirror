@@ -148,73 +148,71 @@ Chapter 17 of the Java Language Specification</a> defines the
 writes of shared variables.  The results of a write by one thread are
 guaranteed to be visible to a read by another thread only if the write
 operation <i>happens-before</i> the read operation.  The
-<tt>synchronized</tt> and <tt>volatile</tt> constructs, as well as the
-<tt>Thread.start()</tt> and <tt>Thread.join()</tt> methods, can form
+{@code synchronized} and {@code volatile} constructs, as well as the
+{@code Thread.start()} and {@code Thread.join()} methods, can form
 <i>happens-before</i> relationships. In particular:
 
 <ul>
   <li>Each action in a thread <i>happens-before</i> every action in that
   thread that comes later in the program's order.
 
-  <li>An unlock (<tt>synchronized</tt> block or method exit) of a
-  monitor <i>happens-before</i> every subsequent lock (<tt>synchronized</tt>
+  <li>An unlock ({@code synchronized} block or method exit) of a
+  monitor <i>happens-before</i> every subsequent lock ({@code synchronized}
   block or method entry) of that same monitor. And because
   the <i>happens-before</i> relation is transitive, all actions
   of a thread prior to unlocking <i>happen-before</i> all actions
   subsequent to any thread locking that monitor.
 
-  <li>A write to a <tt>volatile</tt> field <i>happens-before</i> every
+  <li>A write to a {@code volatile} field <i>happens-before</i> every
   subsequent read of that same field. Writes and reads of
-  <tt>volatile</tt> fields have similar memory consistency effects
+  {@code volatile} fields have similar memory consistency effects
   as entering and exiting monitors, but do <em>not</em> entail
   mutual exclusion locking.
 
-  <li>A call to <tt>start</tt> on a thread <i>happens-before</i> any action in the
+  <li>A call to {@code start} on a thread <i>happens-before</i> any action in the
   started thread.
 
   <li>All actions in a thread <i>happen-before</i> any other thread
-  successfully returns from a <tt>join</tt> on that thread.
+  successfully returns from a {@code join} on that thread.
 
 </ul>
 
 
-The methods of all classes in <tt>java.util.concurrent</tt> and its
+The methods of all classes in {@code java.util.concurrent} and its
 subpackages extend these guarantees to higher-level
 synchronization. In particular:
 
 <ul>
 
-  <li>State changes to any object made prior to placement into any
-  concurrent collection <i>happen-before</i> this element is accessed via or
-  removed from that collection.
+  <li>Actions in a thread prior to placing an object into any concurrent
+  collection <i>happen-before</i> actions subsequent to the access or
+  removal of that element from the collection in another thread.
 
-  <li>State changes to a <tt>Runnable</tt> object made by the
-  submitting thread prior to submission to an <tt>Executor</tt>
-  <i>happen-before</i> its execution.  Similarly, state changes to a
-  <tt>Callable</tt> object made by the submitting thread before being
-  submitted to an <tt>ExecutorService</tt> <i>happen-before</i> its
-  execution.
+  <li>Actions in a thread prior to the submission of a {@code Runnable}
+  to an {@code Executor} <i>happen-before</i> its execution begins.
+  Similarly for {@code Callables} submitted to an {@code ExecutorService}.
 
-  <li>State changes to a <tt>Future</tt> that
-  <i>happen-before</i> it is made available
-  <i>happen-before</i> access via <tt>Future.get()</tt>.
+  <li>Actions taken by the asynchronous computation represented by a
+  {@code Future} <i>happen-before</i> actions subsequent to the
+  retrieval of the result via {@code Future.get()} in another thread.
 
   <li>Actions prior to "releasing" synchronizer methods such as
-  <tt>Lock.unlock</tt>, <tt>Semaphore.release</tt>, and
-  <tt>CountDownLatch.countDown</tt>
-  <i>happen-before</i> actions subsequent to a successful "acquiring" method such as
-  <tt>Lock.lock</tt>, <tt>Semaphore.acquire</tt>, <tt>Condition.await</tt>, and
-  <tt>CountDownLatch.await</tt> on the same synchronizer object.
+  {@code Lock.unlock}, {@code Semaphore.release}, and
+  {@code CountDownLatch.countDown} <i>happen-before</i> actions
+  subsequent to a successful "acquiring" method such as
+  {@code Lock.lock}, {@code Semaphore.acquire},
+  {@code Condition.await}, and {@code CountDownLatch.await} on the
+  same synchronizer object in another thread.
 
   <li>For each pair of threads that successfully exchange objects via
-  an <tt>Exchanger</tt>, actions prior to the <tt>exchange()</tt>
+  an {@code Exchanger}, actions prior to the {@code exchange()}
   in each thread <i>happen-before</i> those subsequent to the
-  corresponding <tt>exchange()</tt> in the other thread.
+  corresponding {@code exchange()} in another thread.
 
-  <li>Actions prior to calling <tt>CyclicBarrier.await</tt>
+  <li>Actions prior to calling {@code CyclicBarrier.await}
   <i>happen-before</i> actions performed by the barrier action, and
   actions performed by the barrier action <i>happen-before</i> actions
-  subsequent to a successful return from the corresponding <tt>await</tt>
+  subsequent to a successful return from the corresponding {@code await}
   in other threads.
 
 </ul>

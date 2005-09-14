@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A service that decouples the production of new asynchronous tasks
@@ -17,16 +18,17 @@ package java.util.concurrent;
  * in a different part of the program when the reads complete,
  * possibly in a different order than they were requested.
  *
- * <p>
- * Typically, a <tt>CompletionService</tt> relies on a separate {@link
- * Executor} to actually execute the tasks, in which case the
+ * <p>Typically, a <tt>CompletionService</tt> relies on a separate
+ * {@link Executor} to actually execute the tasks, in which case the
  * <tt>CompletionService</tt> only manages an internal completion
  * queue. The {@link ExecutorCompletionService} class provides an
  * implementation of this approach.
  *
- * <p> Memory consistency effects: State changes to the value returned from
- * a <tt>Callable</tt> <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * actions following a successful return from the corresponding <tt>take()</tt>.
+ * <p>Memory consistency effects: Actions in a thread prior to
+ * submitting a task to a {@code CompletionService}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * actions taken by that task, which in turn <i>happen-before</i>
+ * actions following a successful return from the corresponding {@code take()}.
  *
  */
 public interface CompletionService<V> {
@@ -42,7 +44,6 @@ public interface CompletionService<V> {
      * @throws NullPointerException if the task is null
      */
     Future<V> submit(Callable<V> task);
-
 
     /**
      * Submits a Runnable task for execution and returns a Future

@@ -72,13 +72,12 @@ import java.security.PrivilegedExceptionAction;
  * }
  * </pre>
  *
- * Memory consistency effects: State changes to a <tt>Runnable</tt> or
- * <tt>Callable</tt> object made prior to submission to an
- * <tt>ExecutorService</tt> <a
- * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * its execution, and state changes to objects returned from a
- * <tt>Callable</tt> <i>happen-before</i> that object is accessed
- * via <tt>Future.get()</tt>.
+ * <p>Memory consistency effects: Actions in a thread prior to the
+ * submission of a {@code Runnable} or {@code Callable} task to an
+ * {@code ExecutorService}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * any actions taken by that task, which in turn <i>happen-before</i> the
+ * result is retrieved via {@code Future.get()}.
  *
  * @since 1.5
  * @author Doug Lea

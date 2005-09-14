@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * An object that executes submitted {@link Runnable} tasks. This
@@ -88,9 +89,10 @@ package java.util.concurrent;
  * extensible thread pool implementation. The {@link Executors} class
  * provides convenient factory methods for these Executors.
  *
- * <p>Memory consistency effects: State changes to a <tt>Runnable</tt>
- * object made prior to submission to an <tt>Executor</tt> <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * its execution.
+ * <p>Memory consistency effects: Actions in a thread prior to
+ * submitting a {@code Runnable} object to an {@code Executor}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * its execution begins, perhaps in another thread.
  *
  * @since 1.5
  * @author Doug Lea

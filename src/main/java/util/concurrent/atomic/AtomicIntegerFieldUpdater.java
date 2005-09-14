@@ -33,12 +33,12 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * generic types match.
      *
      * @param tclass the class of the objects holding the field
-     * @param fieldName the name of the field to be updated.
+     * @param fieldName the name of the field to be updated
      * @return the updater
      * @throws IllegalArgumentException if the field is not a
-     * volatile integer type.
+     * volatile integer type
      * @throws RuntimeException with a nested reflection-based
-     * exception if the class does not hold field or is the wrong type.
+     * exception if the class does not hold field or is the wrong type
      */
     public static <U> AtomicIntegerFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
         return new AtomicIntegerFieldUpdaterImpl<U>(tclass, fieldName);
@@ -60,9 +60,9 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return true if successful
      * @throws ClassCastException if <tt>obj</tt> is not an instance
-     * of the class possessing the field established in the constructor.
+     * of the class possessing the field established in the constructor
      */
     public abstract boolean compareAndSet(T obj, int expect, int update);
 
@@ -77,9 +77,9 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return true if successful
      * @throws ClassCastException if <tt>obj</tt> is not an instance
-     * of the class possessing the field established in the constructor.
+     * of the class possessing the field established in the constructor
      */
     public abstract boolean weakCompareAndSet(T obj, int expect, int update);
 

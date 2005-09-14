@@ -534,4 +534,15 @@ public interface Deque<E> extends Queue<E> {
      * @return an iterator over the elements in this deque in proper sequence
      */
     Iterator<E> iterator();
+
+    /**
+     * Returns an iterator over the elements in this deque in reverse
+     * sequential order.  The elements will be returned in order from
+     * last (tail) to first (head).
+     *
+     * @return an iterator over the elements in this deque in reverse
+     * sequence
+     */
+    Iterator<E> descendingIterator();
+
 }

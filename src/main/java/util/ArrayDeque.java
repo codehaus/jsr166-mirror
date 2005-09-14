@@ -544,6 +544,18 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         return new DeqIterator();
     }
 
+    /**
+     * Returns an iterator over the elements in this deque in reverse
+     * sequential order.  The elements will be returned in order from
+     * last (tail) to first (head).
+     *
+     * @return an iterator over the elements in this deque in reverse
+     * sequence
+     */
+    public Iterator<E> descendingIterator() {
+        return new DescendingIterator();
+    }
+
     private class DeqIterator implements Iterator<E> {
         /**
          * Index of element to be returned by subsequent call to next.
@@ -586,6 +598,45 @@ public class ArrayDeque<E> extends AbstractCollection<E>
                 cursor--;
             lastRet = -1;
             fence = tail;
+        }
+    }
+
+
+    private class DescendingIterator implements Iterator<E> {
+        /* 
+         * This class is nearly a mirror-image of DeqIterator. It
+         * shares the same structure, but not many actual lines of
+         * code. The only asymmetric part is that to simplify some
+         * checks, indices are anded with length mask only on array
+         * access rather than on each update.
+         */
+        private int cursor = tail - 1;
+        private int fence = head - 1;
+        private int lastRet = elements.length;
+
+        public boolean hasNext() {
+            return cursor != fence;
+        }
+
+        public E next() {
+            E result;
+            if (cursor == fence)
+                throw new NoSuchElementException();
+            if ((head - 1) != fence || 
+                (result = elements[cursor & (elements.length-1)]) == null)
+                throw new ConcurrentModificationException();
+            lastRet = cursor;
+            cursor--;
+            return result;
+        }
+
+        public void remove() {
+            if (lastRet >= elements.length)
+                throw new IllegalStateException();
+            if (delete(lastRet & (elements.length-1)))
+                cursor++;
+            lastRet = elements.length;
+            fence = head - 1;
         }
     }
 

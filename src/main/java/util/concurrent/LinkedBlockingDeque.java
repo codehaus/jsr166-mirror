@@ -874,10 +874,30 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Iterator for LinkedBlockingDeque
+     * Returns an iterator over the elements in this deque in reverse
+     * sequential order.  The elements will be returned in order from
+     * last (tail) to first (head).
+     * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
+     * will never throw {@link ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed to)
+     * reflect any modifications subsequent to construction.
+     *
+     * @return an iterator over the elements in this deque in reverse
+     * sequence
      */
-    private class Itr implements Iterator<E> {
-        private Node<E> next;
+    public Iterator<E> descendingIterator() {
+        return new DescendingItr();
+    }
+
+    /**
+     * Base class for Iterators for LinkedBlockingDeque
+     */
+    abstract class AbstractItr implements Iterator<E> {
+        /** 
+         * The next node to return in next 
+         */
+         Node<E> next;
 
         /**
          * nextItem holds on to item fields because once we claim that
@@ -885,22 +905,52 @@ public class LinkedBlockingDeque<E>
          * under lock (in advance()) even if it was in the process of
          * being removed when hasNext() was called.
          */
-        private E nextItem;
+        E nextItem;
 
         /**
          * Node returned by most recent call to next. Needed by remove.
          * Reset to null if this element is deleted by a call to remove.
          */
-        private Node<E> last;
+        Node<E> lastRet;
 
+        /**
+         * Advances next, or if not yet initialized, sets to first node.
+         * Implemented to move forward vs backward in the two subclasses.
+         */
+        abstract void advance();
+
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        public E next() {
+            if (next == null)
+                throw new NoSuchElementException();
+            lastRet = next;
+            E x = nextItem;
+            advance();
+            return x;
+        }
+
+        public void remove() {
+            Node<E> n = lastRet;
+            if (n == null)
+                throw new IllegalStateException();
+            lastRet = null;
+            // Note: removeNode rescans looking for this node to make
+            // sure it was not already removed. Otherwise, trying to
+            // re-remove could corrupt list.
+            removeNode(n);
+        }
+    }
+
+    /** Forward iterator */
+    class Itr extends AbstractItr {
         Itr() {
             advance();
         }
 
-        /**
-         * Advances next, or if not yet initialized, sets to first node.
-         */
-        private void advance() {
+        void advance() {
             final ReentrantLock lock = LinkedBlockingDeque.this.lock;
             lock.lock();
             try {
@@ -910,29 +960,24 @@ public class LinkedBlockingDeque<E>
                 lock.unlock();
             }
         }
+    }
 
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        public E next() {
-            if (next == null)
-                throw new NoSuchElementException();
-            last = next;
-            E x = nextItem;
+    /**
+     * Descending iterator for LinkedBlockingDeque
+     */
+    class DescendingItr extends AbstractItr {
+        DescendingItr() {
             advance();
-            return x;
         }
-
-        public void remove() {
-            Node<E> n = last;
-            if (n == null)
-                throw new IllegalStateException();
-            last = null;
-            // Note: removeNode rescans looking for this node to make
-            // sure it was not already removed. Otherwise, trying to
-            // re-remove could corrupt list.
-            removeNode(n);
+        void advance() {
+            final ReentrantLock lock = LinkedBlockingDeque.this.lock;
+            lock.lock();
+            try {
+                next = (next == null)? last : next.prev;
+                nextItem = (next == null)? null : next.item;
+            } finally {
+                lock.unlock();
+            }
         }
     }
 

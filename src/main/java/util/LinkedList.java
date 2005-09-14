@@ -799,6 +799,32 @@ public class LinkedList<E>
     }
 
     /**
+     * Returns an iterator over the elements in this list in reverse
+     * sequential order.  The elements will be returned in order from
+     * last (tail) to first (head).
+     *
+     * @return an iterator over the elements in this list in reverse
+     * sequence
+     */
+    public Iterator<E> descendingIterator() {
+        return new DescendingIterator();
+    }
+
+    /** Adapter to provide descending iterators via ListItr.previous */
+    private class DescendingIterator implements Iterator {
+        final ListItr itr = new ListItr(size());
+	public boolean hasNext() {
+	    return itr.hasPrevious();
+	}
+	public E next() {
+            return itr.previous();
+        }
+	public void remove() {
+            itr.remove();
+        }
+    }
+
+    /**
      * Returns a shallow copy of this <tt>LinkedList</tt>. (The elements
      * themselves are not cloned.)
      *

@@ -41,15 +41,16 @@ import sun.misc.Unsafe;
  *
  * <p>All elements are permitted, including <tt>null</tt>.
  *
+ * <p>Memory consistency effects: As with other concurrent
+ * collections, actions in a thread prior to placing an object into a
+ * {@code CopyOnWriteArrayList}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * actions subsequent to the access or removal of that element from
+ * the {@code CopyOnWriteArrayList} in another thread.
+ *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
- *
- * <p>
- * Memory consistency effects: As with other concurrent collections, state
- * changes to any object made prior to placing it into a <tt>CopyOnWriteArrayList</tt>
- * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * that element is accessed via or removed from the <tt>CopyOnWriteArrayList</tt>.
  *
  * @since 1.5
  * @author Doug Lea
@@ -350,13 +351,16 @@ public class CopyOnWriteArrayList<E>
 	lock.lock();
 	try {
 	    Object[] elements = getArray();
-	    int len = elements.length;
 	    Object oldValue = elements[index];
 
 	    if (oldValue != element) {
+		int len = elements.length;
 		Object[] newElements = Arrays.copyOf(elements, len);
 		newElements[index] = element;
 		setArray(newElements);
+	    } else {
+		// Not quite a no-op; ensures volatile write semantics
+		setArray(elements);
 	    }
 	    return (E)oldValue;
 	} finally {
@@ -1276,7 +1280,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     // Support for resetting lock while deserializing
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final Unsafe unsafe = Unsafe.getUnsafe();
     private static final long lockOffset;
     static {
         try {

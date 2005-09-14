@@ -12,10 +12,10 @@ import java.util.concurrent.atomic.*;
 import java.util.Random;
 
 /**
- * A synchronization point at which two threads can exchange objects.
- * Each thread presents some object on entry to the {@link #exchange
- * exchange} method, and receives the object presented by the other
- * thread on return.
+ * A synchronization point at which threads can pair and swap elements
+ * within pairs.  Each thread presents some object on entry to the
+ * {@link #exchange exchange} method, matches with a partner thread,
+ * and receives its partner's object on return.
  *
  * <p><b>Sample Usage:</b>
  * Here are the highlights of a class that uses an <tt>Exchanger</tt> to

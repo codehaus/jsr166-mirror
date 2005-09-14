@@ -540,6 +540,59 @@ public class ArrayDequeTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
+    /**
+     *  Descending iterator iterates through all elements
+     */
+    public void testDescendingIterator() {
+        ArrayDeque q = populatedDeque(SIZE);
+        int i = 0;
+	Iterator it = q.descendingIterator();
+        while(it.hasNext()) {
+            assertTrue(q.contains(it.next()));
+            ++i;
+        }
+        assertEquals(i, SIZE);
+        assertFalse(it.hasNext());
+        try {
+            it.next();
+        } catch(NoSuchElementException success) {
+        }
+    }
+
+    /**
+     *  Descending iterator ordering is reverse FIFO
+     */
+    public void testDescendingIteratorOrdering() {
+        final ArrayDeque q = new ArrayDeque();
+        q.add(new Integer(3));
+        q.add(new Integer(2));
+        q.add(new Integer(1));
+        int k = 0;
+        for (Iterator it = q.descendingIterator(); it.hasNext();) {
+            int i = ((Integer)(it.next())).intValue();
+            assertEquals(++k, i);
+        }
+
+        assertEquals(3, k);
+    }
+
+    /**
+     * descendingIterator.remove removes current element
+     */
+    public void testDescendingIteratorRemove () {
+        final ArrayDeque q = new ArrayDeque();
+        q.add(new Integer(3));
+        q.add(new Integer(2));
+        q.add(new Integer(1));
+        Iterator it = q.descendingIterator();
+        it.next();
+        it.remove();
+        it = q.descendingIterator();
+        assertEquals(it.next(), new Integer(2));
+        assertEquals(it.next(), new Integer(3));
+        assertFalse(it.hasNext());
+    }
+
 
     /**
      * toString contains toStrings of elements

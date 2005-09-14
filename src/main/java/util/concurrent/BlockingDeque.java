@@ -154,15 +154,16 @@ import java.util.*;
  *  </tr>
  * </table>
  *
+ * <p>Memory consistency effects: As with other concurrent
+ * collections, actions in a thread prior to placing an object into a
+ * {@code BlockingDeque}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * actions subsequent to the access or removal of that element from
+ * the {@code BlockingDeque} in another thread.
+ *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
- *
- * <p>
- * Memory consistency effects: As with other concurrent collections, state
- * changes to any object made prior to placing it into a <tt>BlockingDeque</tt>
- * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * that element is accessed via or removed from the <tt>BlockingDeque</tt>.
  *
  * @since 1.6
  * @author Doug Lea

@@ -33,12 +33,13 @@ import java.lang.reflect.*;
  * }
  * </pre>
  *
- * <p> Note that the guarantees of the <tt>compareAndSet</tt>
- * method in this class are weaker than in other atomic classes. Because this
- * class cannot ensure that all uses of the field are appropriate for
- * purposes of atomic access, it can guarantee atomicity and volatile
- * semantics only with respect to other invocations of
- * <tt>compareAndSet</tt> and <tt>set</tt>.
+ * <p>Note that the guarantees of the {@code compareAndSet}
+ * method in this class are weaker than in other atomic classes.
+ * Because this class cannot ensure that all uses of the field
+ * are appropriate for purposes of atomic access, it can
+ * guarantee atomicity only with respect to other invocations of
+ * {@code compareAndSet} and {@code set} on the same updater.
+ *
  * @since 1.5
  * @author Doug Lea
  * @param <T> The type of the object holding the updatable field

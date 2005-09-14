@@ -57,10 +57,9 @@ import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
  *     executor.execute(future);
  * </pre>
  *
- * <p> Memory consistency effects: State changes to a <tt>Future</tt>
- * that <a href="package-summary.html#MemoryVisibility">
- * <i>happen-before</i></a> it is made available
- * <i>happen-before</i> access via <tt>Future.get()</tt>.
+ * <p>Memory consistency effects: Actions taken by the asynchronous computation
+ * <a href="package-summary.html#MemoryVisibility"> <i>happen-before</i></a>
+ * actions following the corresponding {@code Future.get()} in another thread.
  *
  * @see FutureTask
  * @see Executor

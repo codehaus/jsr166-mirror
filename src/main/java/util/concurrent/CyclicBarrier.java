@@ -88,12 +88,12 @@ import java.util.concurrent.locks.*;
  * {@link InterruptedException} if they too were interrupted at about
  * the same time).
  *
- * <p> Memory consistency effects: Actions in a thread prior to calling
- * <tt>await()</tt> <a
- * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * <p>Memory consistency effects: Actions in a thread prior to calling
+ * {@code await()}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * actions that are part of the barrier action, which in turn
- * <i>happen-before</I> actions following a successful return from the
- * corresponding <tt>await()</tt> in other threads.
+ * <i>happen-before</i> actions following a successful return from the
+ * corresponding {@code await()} in other threads.
  *
  * @since 1.5
  * @see CountDownLatch
@@ -154,7 +154,7 @@ public class CyclicBarrier {
      */
     private void breakBarrier() {
         generation.broken = true;
-        count = parties;
+	count = parties;
         trip.signalAll();
     }
 

@@ -62,13 +62,12 @@ import java.util.Random;
  * }
  * </pre>
  *
-
- * <p> Memory consistency effects: For each pair of threads that
- * successfully exchange objects via an <tt>Exchanger</tt>,
- * actions prior to the <tt>exchange()</tt>
- * in each thread <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * those subsequent to the corresponding <tt>exchange()</tt> in the other
- * thread.
+ * <p>Memory consistency effects: For each pair of threads that
+ * successfully exchange objects via an {@code Exchanger}, actions
+ * prior to the {@code exchange()} in each thread
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * those subsequent to a return from the corresponding {@code exchange()}
+ * in the other thread.
  *
  * @since 1.5
  * @author Doug Lea and Bill Scherer and Michael Scott

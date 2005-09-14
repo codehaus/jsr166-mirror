@@ -120,11 +120,11 @@ import java.util.concurrent.atomic.*;
  *
  * </pre>
  *
- * <p> Memory consistency effects: Actions in a thread prior to calling
- * <tt>countDown()</tt> <a
- * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * <p>Memory consistency effects: Actions in a thread prior to calling
+ * {@code countDown()}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * actions following a successful return from a corresponding
- * <tt>await()</tt> in another thread.
+ * {@code await()} in another thread.
  *
  * @since 1.5
  * @author Doug Lea

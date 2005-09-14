@@ -134,15 +134,16 @@ import java.util.Queue;
  * }
  * </pre>
  *
+ * <p>Memory consistency effects: As with other concurrent
+ * collections, actions in a thread prior to placing an object into a
+ * {@code BlockingQueue}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * actions subsequent to the access or removal of that element from
+ * the {@code BlockingQueue} in another thread.
+ *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../guide/collections/index.html">
  * Java Collections Framework</a>.
- *
- * <p>
- * Memory consistency effects: As with other concurrent collections, state
- * changes to any object made prior to placing it into a <tt>BlockingQueue</tt>
- * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
- * that element is accessed via or removed from the <tt>BlockingQueue</tt>.
  *
  * @since 1.5
  * @author Doug Lea

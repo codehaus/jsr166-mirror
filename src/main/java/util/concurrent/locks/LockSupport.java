@@ -86,7 +86,7 @@ public class LockSupport {
     private LockSupport() {} // Cannot be instantiated.
 
     // Hotspot implementation via intrinsics API
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
+    private static final Unsafe unsafe = Unsafe.getUnsafe();
     private static final long parkBlockerOffset;
 
     static {

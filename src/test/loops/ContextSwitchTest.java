@@ -13,6 +13,12 @@ public final class ContextSwitchTest {
     final static int iters = 1000000;
     static AtomicReference turn = new AtomicReference();
     public static void main(String[] args) throws Exception {
+        test();
+        test();
+        test();
+    }
+
+    static void test() throws Exception {
         MyThread a = new MyThread();
         MyThread b = new MyThread();
         a.other = b;
@@ -25,33 +31,30 @@ public final class ContextSwitchTest {
         b.join();
         long endTime = System.nanoTime();
         int np = a.nparks + b.nparks;
-        System.out.println((endTime - startTime) / np);
-    }
-
-    private static int nextRandom(int x) { 
-        int t = (x % 127773) * 16807 - (x / 127773) * 2836;
-        return (t > 0)? t : t + 0x7fffffff;
+        System.out.println("Average time: " + 
+                           ((endTime - startTime) / np) +
+                           "ns");
     }
 
     static final class MyThread extends Thread {
         volatile Thread other;
         volatile int nparks;
-        volatile int result;
 
         public void run() {
-            int x = 17;
+            final AtomicReference t = turn;
+            final Thread other = this.other;
+            if (turn == null || other == null) 
+                throw new NullPointerException();
             int p = 0;
             for (int i = 0; i < iters; ++i) {
-                while (!turn.compareAndSet(other, this)) {
+                while (!t.compareAndSet(other, this)) {
                     LockSupport.park();
                     ++p;
                 }
-                x = nextRandom(x);
                 LockSupport.unpark(other);
             }
             LockSupport.unpark(other);
             nparks = p;
-            result = x;
             System.out.println("parks: " + p);
             
         }

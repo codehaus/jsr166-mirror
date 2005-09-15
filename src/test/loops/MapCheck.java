@@ -230,12 +230,19 @@ public class MapCheck {
     }
     static void ittest3(Map s, int size) {
         int sum = 0;
+        int hsum = 0;
         timer.start("Iter Entry             ", size);
         for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
-            if(it.next() != MISSING)
+            Map.Entry e = (Map.Entry)it.next();
+            if(e != MISSING) {
+                hsum += System.identityHashCode(e.getKey());
+                hsum += System.identityHashCode(e.getValue());
+                hsum >>>= 1;
                 ++sum;
+            }
         }
         timer.finish(); 
+        reallyAssert(size == 0 || hsum >= 0);
         reallyAssert (sum == size);
     }
 

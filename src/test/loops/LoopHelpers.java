@@ -168,18 +168,19 @@ class LoopHelpers {
     }
 
     public static class BarrierTimer implements Runnable {
-        public volatile long startTime;
-        public volatile long endTime;
+        volatile boolean started;
+        volatile long startTime;
+        volatile long endTime;
         public void run() {
             long t = System.nanoTime();
-            if (startTime == 0)
+            if (!started) {
+                started = true;
                 startTime = t;
-            else
+            } else
                 endTime = t;
         }
         public void clear() {
-            startTime = 0;
-            endTime = 0;
+            started = false;
         }
         public long getTime() {
             return endTime - startTime;

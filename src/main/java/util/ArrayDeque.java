@@ -594,8 +594,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         public void remove() {
             if (lastRet < 0)
                 throw new IllegalStateException();
-            if (delete(lastRet))
-                cursor--;
+            if (delete(lastRet)) // if left-shifted, undo increment in next()
+                cursor = (cursor - 1) & (elements.length - 1);
             lastRet = -1;
             fence = tail;
         }
@@ -604,14 +604,14 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     private class DescendingIterator implements Iterator<E> {
         /* 
-         * This class is nearly a mirror-image of DeqIterator. It
-         * shares the same structure, but not many actual lines of
-         * code. The only asymmetric part is that to simplify some
-         * checks, indices are anded with length mask only on array
-         * access rather than on each update.
+         * This class is nearly a mirror-image of DeqIterator, using
+         * (tail-1) instead of head for initial cursor, (head-1)
+         * instead of tail for fence, and elements.length instead of -1
+         * for sentinel. It shares the same structure, but not many
+         * actual lines of code.
          */
-        private int cursor = tail - 1;
-        private int fence = head - 1;
+        private int cursor = (tail - 1) & (elements.length - 1);
+        private int fence =  (head - 1) & (elements.length - 1);
         private int lastRet = elements.length;
 
         public boolean hasNext() {
@@ -622,21 +622,21 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             E result;
             if (cursor == fence)
                 throw new NoSuchElementException();
-            if ((head - 1) != fence || 
-                (result = elements[cursor & (elements.length-1)]) == null)
+            if (((head - 1) & (elements.length - 1)) != fence || 
+                (result = elements[cursor]) == null)
                 throw new ConcurrentModificationException();
             lastRet = cursor;
-            cursor--;
+            cursor = (cursor - 1) & (elements.length - 1);
             return result;
         }
 
         public void remove() {
             if (lastRet >= elements.length)
                 throw new IllegalStateException();
-            if (delete(lastRet & (elements.length-1)))
-                cursor++;
+            if (!delete(lastRet)) 
+                cursor = (cursor + 1) & (elements.length - 1);
             lastRet = elements.length;
-            fence = head - 1;
+            fence = (head - 1) & (elements.length - 1);
         }
     }
 

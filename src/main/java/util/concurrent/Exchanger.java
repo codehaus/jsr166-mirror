@@ -18,14 +18,13 @@ import java.util.Random;
  * and receives its partner's object on return.
  *
  * <p><b>Sample Usage:</b>
- * Here are the highlights of a class that uses an <tt>Exchanger</tt> to
- * swap buffers between threads so that the thread filling the
- * buffer gets a freshly
- * emptied one when it needs it, handing off the filled one to
- * the thread emptying the buffer.
- * <pre>
+ * Here are the highlights of a class that uses an {@code Exchanger}
+ * to swap buffers between threads so that the thread filling the
+ * buffer gets a freshly emptied one when it needs it, handing off the
+ * filled one to the thread emptying the buffer.
+ * <pre>{@code
  * class FillAndEmpty {
- *   Exchanger&lt;DataBuffer&gt; exchanger = new Exchanger();
+ *   Exchanger<DataBuffer> exchanger = new Exchanger<DataBuffer>();
  *   DataBuffer initialEmptyBuffer = ... a made-up type
  *   DataBuffer initialFullBuffer = ...
  *
@@ -60,7 +59,7 @@ import java.util.Random;
  *     new Thread(new EmptyingLoop()).start();
  *   }
  * }
- * </pre>
+ * }</pre>
  *
  * <p>Memory consistency effects: For each pair of threads that
  * successfully exchange objects via an {@code Exchanger}, actions

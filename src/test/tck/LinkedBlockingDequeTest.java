@@ -1651,16 +1651,21 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testDescendingIteratorOrdering() {
         final LinkedBlockingDeque q = new LinkedBlockingDeque();
-        q.add(new Integer(3));
-        q.add(new Integer(2));
-        q.add(new Integer(1));
-        int k = 0;
-        for (Iterator it = q.descendingIterator(); it.hasNext();) {
-            int i = ((Integer)(it.next())).intValue();
-            assertEquals(++k, i);
+        for (int iters = 0; iters < 100; ++iters) {
+            q.add(new Integer(3));
+            q.add(new Integer(2));
+            q.add(new Integer(1));
+            int k = 0;
+            for (Iterator it = q.descendingIterator(); it.hasNext();) {
+                int i = ((Integer)(it.next())).intValue();
+                assertEquals(++k, i);
+            }
+            
+            assertEquals(3, k);
+            q.remove();
+            q.remove();
+            q.remove();
         }
-
-        assertEquals(3, k);
     }
 
     /**
@@ -1668,16 +1673,21 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testDescendingIteratorRemove () {
         final LinkedBlockingDeque q = new LinkedBlockingDeque();
-        q.add(new Integer(3));
-        q.add(new Integer(2));
-        q.add(new Integer(1));
-        Iterator it = q.descendingIterator();
-        it.next();
-        it.remove();
-        it = q.descendingIterator();
-        assertEquals(it.next(), new Integer(2));
-        assertEquals(it.next(), new Integer(3));
-        assertFalse(it.hasNext());
+        for (int iters = 0; iters < 100; ++iters) {
+            q.add(new Integer(3));
+            q.add(new Integer(2));
+            q.add(new Integer(1));
+            Iterator it = q.descendingIterator();
+            assertEquals(it.next(), new Integer(1));
+            it.remove();
+            assertEquals(it.next(), new Integer(2));
+            it = q.descendingIterator();
+            assertEquals(it.next(), new Integer(2));
+            assertEquals(it.next(), new Integer(3));
+            it.remove();
+            assertFalse(it.hasNext());
+            q.remove();
+        }
     }
 
 

@@ -64,8 +64,10 @@ public class DequeBash {
             randomOp(deque);
 
             // Test iterator occasionally
-            if ((i & 1023) == 0) 
+            if ((i & 1023) == 0) {
                 testIter(deque);
+                testDescendingIter(deque);
+            }
 
             // Test serialization and copying
             if ((i & 4095) == 0) {
@@ -94,6 +96,19 @@ public class DequeBash {
         int count = 0;
         for (int j : deque) {
             if (j != next++)
+                throw new Exception("Element "+ j + " != " + (next-1));
+            count++;
+        }
+        if (count != size())
+            throw new Exception("Count " + count + " != " + size());
+    }
+
+    static void testDescendingIter(Deque<Integer> deque) throws Exception {                
+        int next = deque.size() + nextHead;
+        int count = 0;
+        for (Iterator<Integer> it = deque.descendingIterator(); it.hasNext();) {
+            int j = it.next();
+            if (j != next--)
                 throw new Exception("Element "+ j + " != " + (next-1));
             count++;
         }

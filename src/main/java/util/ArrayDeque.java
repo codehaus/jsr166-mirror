@@ -491,25 +491,37 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      */
     private boolean delete(int i) {
 	int mask = elements.length - 1;
+	int front = (i - head) & mask;
+	int back  = (tail - i) & mask;
 
 	// Invariant: head <= i < tail mod circularity
-	if (((i - head) & mask) >= ((tail - head) & mask))
+	if (front >= ((tail - head) & mask))
 	    throw new ConcurrentModificationException();
 
-        // Case 1: Deque doesn't wrap
-        // Case 2: Deque does wrap and removed element is in the head portion
-        if (i >= head) {
-            System.arraycopy(elements, head, elements, head + 1, i - head);
-            elements[head] = null;
-            head = (head + 1) & mask;
+	// Optimize for least element motion
+	if (front < back) {
+	    if (head <= i) {
+		System.arraycopy(elements, head, elements, head + 1, front);
+	    } else { // Wrap around
+		elements[0] = elements[mask];
+		System.arraycopy(elements, 0, elements, 1, i);
+		System.arraycopy(elements, head, elements, head + 1, mask - head);
+	    }
+	    elements[head] = null;
+	    head = (head + 1) & mask;
             return false;
-        }
-
-        // Case 3: Deque wraps and removed element is in the tail portion
-        tail--;
-        System.arraycopy(elements, i + 1, elements, i, tail - i);
-        elements[tail] = null;
-        return true;
+	} else {
+            int t = tail;
+            tail = (tail - 1) & mask;
+	    if (i < t) { // Copy the null tail as well
+		System.arraycopy(elements, i + 1, elements, i, back);
+	    } else {    // Wrap around
+		elements[mask] = elements[0];
+		System.arraycopy(elements, i + 1, elements, i, mask - i);
+		System.arraycopy(elements, 1, elements, 0, tail);
+	    }
+            return true;
+	}
     }
 
     // *** Collection Methods ***

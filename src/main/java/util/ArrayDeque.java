@@ -790,16 +790,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         s.defaultWriteObject();
 
         // Write out size
-        int size = size();
-        s.writeInt(size);
+        s.writeInt(size());
 
         // Write out elements in order.
-        int i = head;
         int mask = elements.length - 1;
-        for (int j = 0; j < size; j++) {
+        for (int i = head; i != tail; i = (i + 1) & mask)
             s.writeObject(elements[i]);
-            i = (i + 1) & mask;
-        }
     }
 
     /**

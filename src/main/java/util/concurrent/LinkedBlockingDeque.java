@@ -890,7 +890,7 @@ public class LinkedBlockingDeque<E>
     /**
      * Base class for Iterators for LinkedBlockingDeque
      */
-    abstract class AbstractItr implements Iterator<E> {
+    private abstract class AbstractItr implements Iterator<E> {
         /**
          * The next node to return in next
          */
@@ -908,7 +908,11 @@ public class LinkedBlockingDeque<E>
          * Node returned by most recent call to next. Needed by remove.
          * Reset to null if this element is deleted by a call to remove.
          */
-        Node<E> lastRet;
+        private Node<E> lastRet;
+
+        AbstractItr() {
+            advance(); // set to initial position
+        }
 
         /**
          * Advances next, or if not yet initialized, sets to first node.
@@ -942,11 +946,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /** Forward iterator */
-    class Itr extends AbstractItr {
-        Itr() {
-            advance();
-        }
-
+    private class Itr extends AbstractItr {
         void advance() {
             final ReentrantLock lock = LinkedBlockingDeque.this.lock;
             lock.lock();
@@ -962,10 +962,7 @@ public class LinkedBlockingDeque<E>
     /**
      * Descending iterator for LinkedBlockingDeque
      */
-    class DescendingItr extends AbstractItr {
-        DescendingItr() {
-            advance();
-        }
+    private class DescendingItr extends AbstractItr {
         void advance() {
             final ReentrantLock lock = LinkedBlockingDeque.this.lock;
             lock.lock();

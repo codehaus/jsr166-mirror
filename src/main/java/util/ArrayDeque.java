@@ -503,8 +503,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 	    if (head <= i) {
 		System.arraycopy(elements, head, elements, head + 1, front);
 	    } else { // Wrap around
-		elements[0] = elements[mask];
 		System.arraycopy(elements, 0, elements, 1, i);
+		elements[0] = elements[mask];
 		System.arraycopy(elements, head, elements, head + 1, mask - head);
 	    }
 	    elements[head] = null;
@@ -516,8 +516,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 	    if (i < t) { // Copy the null tail as well
 		System.arraycopy(elements, i + 1, elements, i, back);
 	    } else {     // Wrap around
-		elements[mask] = elements[0];
 		System.arraycopy(elements, i + 1, elements, i, mask - i);
+		elements[mask] = elements[0];
 		System.arraycopy(elements, 1, elements, 0, t);
 	    }
             return true;

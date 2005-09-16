@@ -882,9 +882,6 @@ public class LinkedBlockingDeque<E>
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
-     *
-     * @return an iterator over the elements in this deque in reverse
-     * sequence
      */
     public Iterator<E> descendingIterator() {
         return new DescendingItr();
@@ -894,8 +891,8 @@ public class LinkedBlockingDeque<E>
      * Base class for Iterators for LinkedBlockingDeque
      */
     abstract class AbstractItr implements Iterator<E> {
-        /** 
-         * The next node to return in next 
+        /**
+         * The next node to return in next
          */
          Node<E> next;
 

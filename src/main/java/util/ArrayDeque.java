@@ -538,20 +538,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * order that elements would be dequeued (via successive calls to
      * {@link #remove} or popped (via successive calls to {@link #pop}).
      *
-     * @return an <tt>Iterator</tt> over the elements in this deque
+     * @return an iterator over the elements in this deque
      */
     public Iterator<E> iterator() {
         return new DeqIterator();
     }
 
-    /**
-     * Returns an iterator over the elements in this deque in reverse
-     * sequential order.  The elements will be returned in order from
-     * last (tail) to first (head).
-     *
-     * @return an iterator over the elements in this deque in reverse
-     * sequence
-     */
     public Iterator<E> descendingIterator() {
         return new DescendingIterator();
     }
@@ -603,7 +595,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
 
     private class DescendingIterator implements Iterator<E> {
-        /* 
+        /*
          * This class is nearly a mirror-image of DeqIterator, using
          * (tail-1) instead of head for initial cursor, (head-1)
          * instead of tail for fence, and elements.length instead of -1
@@ -622,7 +614,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             E result;
             if (cursor == fence)
                 throw new NoSuchElementException();
-            if (((head - 1) & (elements.length - 1)) != fence || 
+            if (((head - 1) & (elements.length - 1)) != fence ||
                 (result = elements[cursor]) == null)
                 throw new ConcurrentModificationException();
             lastRet = cursor;
@@ -633,7 +625,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         public void remove() {
             if (lastRet >= elements.length)
                 throw new IllegalStateException();
-            if (!delete(lastRet)) 
+            if (!delete(lastRet))
                 cursor = (cursor + 1) & (elements.length - 1);
             lastRet = elements.length;
             fence = (head - 1) & (elements.length - 1);

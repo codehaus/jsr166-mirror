@@ -798,14 +798,6 @@ public class LinkedList<E>
         return result;
     }
 
-    /**
-     * Returns an iterator over the elements in this list in reverse
-     * sequential order.  The elements will be returned in order from
-     * last (tail) to first (head).
-     *
-     * @return an iterator over the elements in this list in reverse
-     * sequence
-     */
     public Iterator<E> descendingIterator() {
         return new DescendingIterator();
     }

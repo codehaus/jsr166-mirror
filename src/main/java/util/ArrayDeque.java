@@ -515,10 +515,10 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             tail = (tail - 1) & mask;
 	    if (i < t) { // Copy the null tail as well
 		System.arraycopy(elements, i + 1, elements, i, back);
-	    } else {    // Wrap around
+	    } else {     // Wrap around
 		elements[mask] = elements[0];
 		System.arraycopy(elements, i + 1, elements, i, mask - i);
-		System.arraycopy(elements, 1, elements, 0, tail);
+		System.arraycopy(elements, 1, elements, 0, t);
 	    }
             return true;
 	}

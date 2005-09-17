@@ -479,6 +479,14 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         return removeFirst();
     }
 
+    private void checkInvariants() {
+	assert elements[tail] == null;
+	assert head == tail ? elements[head] == null :
+	    (elements[head] != null &&
+	     elements[(tail - 1) & (elements.length - 1)] != null);
+	assert elements[(head - 1) & (elements.length - 1)] == null;
+    }
+
     /**
      * Removes the element at the specified position in the elements array,
      * adjusting head and tail as necessary.  This can result in motion of
@@ -490,6 +498,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return true if elements moved backwards
      */
     private boolean delete(int i) {
+ 	checkInvariants();
 	final E[] elements = this.elements;
 	final int mask = elements.length - 1;
 	final int h = head;
@@ -607,7 +616,6 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             fence = tail;
         }
     }
-
 
     private class DescendingIterator implements Iterator<E> {
         /*
@@ -829,6 +837,5 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         // Read in all elements in the proper order.
         for (int i = 0; i < size; i++)
             elements[i] = (E)s.readObject();
-
     }
 }

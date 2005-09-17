@@ -527,41 +527,6 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 	}
     }
 
-    private boolean xdelete(int i) {
-	int mask = elements.length - 1;
-	int front = (i - head) & mask;
-	int back  = (tail - i) & mask;
-
-	// Invariant: head <= i < tail mod circularity
-	if (front >= ((tail - head) & mask))
-	    throw new ConcurrentModificationException();
-
-	// Optimize for least element motion
-	if (front < back) {
-	    if (head <= i) {
-		System.arraycopy(elements, head, elements, head + 1, front);
-	    } else { // Wrap around
-		System.arraycopy(elements, 0, elements, 1, i);
-		elements[0] = elements[mask];
-		System.arraycopy(elements, head, elements, head + 1, mask - head);
-	    }
-	    elements[head] = null;
-	    head = (head + 1) & mask;
-            return false;
-	} else {
-            int t = tail;
-            tail = (tail - 1) & mask;
-	    if (i < t) { // Copy the null tail as well
-		System.arraycopy(elements, i + 1, elements, i, back);
-	    } else {     // Wrap around
-		System.arraycopy(elements, i + 1, elements, i, mask - i);
-		elements[mask] = elements[0];
-		System.arraycopy(elements, 1, elements, 0, t);
-	    }
-            return true;
-	}
-    }
-
     // *** Collection Methods ***
 
     /**

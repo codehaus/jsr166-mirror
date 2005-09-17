@@ -528,20 +528,26 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testIteratorRemove () {
         final ArrayDeque q = new ArrayDeque();
+        final Random rng = new Random();
         for (int iters = 0; iters < 100; ++iters) {
-            q.add(new Integer(1));
-            q.add(new Integer(2));
-            q.add(new Integer(3));
+            int max = rng.nextInt(5) + 2;
+            int split = rng.nextInt(max-1) + 1;
+            for (int j = 1; j <= max; ++j)
+                q.add(new Integer(j));
             Iterator it = q.iterator();
-            assertEquals(it.next(), new Integer(1));
+            for (int j = 1; j <= split; ++j) 
+                assertEquals(it.next(), new Integer(j));
             it.remove();
-            assertEquals(it.next(), new Integer(2));
+            assertEquals(it.next(), new Integer(split+1));
+            for (int j = 1; j <= split; ++j) 
+                q.remove(new Integer(j));
             it = q.iterator();
-            assertEquals(it.next(), new Integer(2));
-            assertEquals(it.next(), new Integer(3));
-            it.remove();
+            for (int j = split+1; j <= max; ++j) {
+                assertEquals(it.next(), new Integer(j));
+                it.remove();
+            }
             assertFalse(it.hasNext());
-            q.remove();
+            assertTrue(q.isEmpty());
         }
     }
 
@@ -591,20 +597,26 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testDescendingIteratorRemove () {
         final ArrayDeque q = new ArrayDeque();
+        final Random rng = new Random();
         for (int iters = 0; iters < 100; ++iters) {
-            q.add(new Integer(3));
-            q.add(new Integer(2));
-            q.add(new Integer(1));
+            int max = rng.nextInt(5) + 2;
+            int split = rng.nextInt(max-1) + 1;
+            for (int j = max; j >= 1; --j)
+                q.add(new Integer(j));
             Iterator it = q.descendingIterator();
-            assertEquals(it.next(), new Integer(1));
+            for (int j = 1; j <= split; ++j) 
+                assertEquals(it.next(), new Integer(j));
             it.remove();
-            assertEquals(it.next(), new Integer(2));
+            assertEquals(it.next(), new Integer(split+1));
+            for (int j = 1; j <= split; ++j) 
+                q.remove(new Integer(j));
             it = q.descendingIterator();
-            assertEquals(it.next(), new Integer(2));
-            assertEquals(it.next(), new Integer(3));
-            it.remove();
+            for (int j = split+1; j <= max; ++j) {
+                assertEquals(it.next(), new Integer(j));
+                it.remove();
+            }
             assertFalse(it.hasNext());
-            q.remove();
+            assertTrue(q.isEmpty());
         }
     }
 

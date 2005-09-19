@@ -595,12 +595,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         }
 
         public E next() {
-            E result;
             if (cursor == fence)
                 throw new NoSuchElementException();
+            E result = elements[cursor];
             // This check doesn't catch all possible comodifications,
             // but does catch the ones that corrupt traversal
-            if (tail != fence || (result = elements[cursor]) == null)
+            if (tail != fence || result == null)
                 throw new ConcurrentModificationException();
             lastRet = cursor;
             cursor = (cursor + 1) & (elements.length - 1);
@@ -610,48 +610,47 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         public void remove() {
             if (lastRet < 0)
                 throw new IllegalStateException();
-            if (delete(lastRet)) // if left-shifted, undo increment in next()
+            if (delete(lastRet)) { // if left-shifted, undo increment in next()
                 cursor = (cursor - 1) & (elements.length - 1);
+		fence = tail;
+	    }
             lastRet = -1;
-            fence = tail;
         }
     }
 
     private class DescendingIterator implements Iterator<E> {
         /*
          * This class is nearly a mirror-image of DeqIterator, using
-         * (tail-1) instead of head for initial cursor, (head-1)
-         * instead of tail for fence, and elements.length instead of -1
-         * for sentinel. It shares the same structure, but not many
-         * actual lines of code.
+         * tail instead of head for initial cursor, and head instead of
+         * tail for fence.
          */
-        private int cursor = (tail - 1) & (elements.length - 1);
-        private int fence =  (head - 1) & (elements.length - 1);
-        private int lastRet = elements.length;
+        private int cursor = tail;
+        private int fence = head;
+        private int lastRet = -1;
 
         public boolean hasNext() {
             return cursor != fence;
         }
 
         public E next() {
-            E result;
             if (cursor == fence)
                 throw new NoSuchElementException();
-            if (((head - 1) & (elements.length - 1)) != fence ||
-                (result = elements[cursor]) == null)
+            cursor = (cursor - 1) & (elements.length - 1);
+	    E result = elements[cursor];
+            if (head != fence || result == null)
                 throw new ConcurrentModificationException();
             lastRet = cursor;
-            cursor = (cursor - 1) & (elements.length - 1);
             return result;
         }
 
         public void remove() {
-            if (lastRet >= elements.length)
+            if (lastRet < 0)
                 throw new IllegalStateException();
-            if (!delete(lastRet))
+            if (!delete(lastRet)) {
                 cursor = (cursor + 1) & (elements.length - 1);
-            lastRet = elements.length;
-            fence = (head - 1) & (elements.length - 1);
+		fence = head;
+	    }
+            lastRet = -1;
         }
     }
 

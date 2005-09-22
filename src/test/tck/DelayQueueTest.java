@@ -894,6 +894,7 @@ public class DelayQueueTest extends JSR166TestCase {
         assert(q.peek() != null);
     }
 
+
     /**
      * poll of a non-empty queue returns null if no expired elements.
      */
@@ -901,6 +902,19 @@ public class DelayQueueTest extends JSR166TestCase {
         DelayQueue q = new DelayQueue();
         q.add(new NanoDelay(Long.MAX_VALUE));
         assertNull(q.poll());
+    }
+
+    /**
+     * timed poll of a non-empty queue returns null if no expired elements.
+     */
+    public void testTimedPollDelayed() {
+        DelayQueue q = new DelayQueue();
+        q.add(new NanoDelay(Long.MAX_VALUE));
+        try {
+            assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        } catch (Exception ex) {
+            unexpectedException();
+        }
     }
 
     /**

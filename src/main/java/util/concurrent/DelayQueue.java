@@ -203,6 +203,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                 } else {
                     long delay =  first.getDelay(TimeUnit.NANOSECONDS);
                     if (delay > 0) {
+                        if (nanos <= 0)
+                            return null;
                         if (delay > nanos)
                             delay = nanos;
                         long timeLeft = available.awaitNanos(delay);

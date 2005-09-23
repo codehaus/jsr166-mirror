@@ -299,9 +299,9 @@ public class LinkedBlockingDeque<E>
     public boolean offerFirst(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (e == null) throw new NullPointerException();
+	long nanos = unit.toNanos(timeout);
         lock.lockInterruptibly();
         try {
-            long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (linkFirst(e))
                     return true;
@@ -321,9 +321,9 @@ public class LinkedBlockingDeque<E>
     public boolean offerLast(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (e == null) throw new NullPointerException();
+	long nanos = unit.toNanos(timeout);
         lock.lockInterruptibly();
         try {
-            long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (linkLast(e))
                     return true;
@@ -398,9 +398,9 @@ public class LinkedBlockingDeque<E>
 
     public E pollFirst(long timeout, TimeUnit unit)
         throws InterruptedException {
+	long nanos = unit.toNanos(timeout);
         lock.lockInterruptibly();
         try {
-            long nanos = unit.toNanos(timeout);
             for (;;) {
                 E x = unlinkFirst();
                 if (x != null)
@@ -416,9 +416,9 @@ public class LinkedBlockingDeque<E>
 
     public E pollLast(long timeout, TimeUnit unit)
         throws InterruptedException {
+	long nanos = unit.toNanos(timeout);
         lock.lockInterruptibly();
         try {
-            long nanos = unit.toNanos(timeout);
             for (;;) {
                 E x = unlinkLast();
                 if (x != null)

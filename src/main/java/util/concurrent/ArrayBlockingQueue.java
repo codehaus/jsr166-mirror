@@ -271,10 +271,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         throws InterruptedException {
 
         if (e == null) throw new NullPointerException();
+	long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (count != items.length) {
                     insert(e);
@@ -326,10 +326,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
+	long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            long nanos = unit.toNanos(timeout);
             for (;;) {
                 if (count != 0) {
                     E x = extract();

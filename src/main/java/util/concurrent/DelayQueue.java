@@ -189,9 +189,9 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
+        long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
-        long nanos = unit.toNanos(timeout);
         try {
             for (;;) {
                 E first = q.peek();
@@ -201,7 +201,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                     else
                         nanos = available.awaitNanos(nanos);
                 } else {
-                    long delay =  first.getDelay(TimeUnit.NANOSECONDS);
+                    long delay = first.getDelay(TimeUnit.NANOSECONDS);
                     if (delay > 0) {
                         if (nanos <= 0)
                             return null;

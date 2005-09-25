@@ -909,7 +909,7 @@ public class DelayQueueTest extends JSR166TestCase {
      */
     public void testTimedPollDelayed() {
         DelayQueue q = new DelayQueue();
-        q.add(new NanoDelay(Long.MAX_VALUE));
+        q.add(new NanoDelay(LONG_DELAY_MS * 1000000L));
         try {
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch (Exception ex) {

@@ -309,11 +309,12 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
 
     /**
      * Compares the specified object with this set for equality.
-     * Returns <tt>true</tt> if the specified object is also a set,
-     * and every element of the specified set, as revealed by a single
-     * traversal of its <tt>iterator()</tt>, is also contained in this
-     * set at the point of call of this method, and no other elements
-     * not present in the given set are contained in this set.
+     * Returns <tt>true</tt> if the specified object is the same
+     * object as this object, or if it is also a set, and every
+     * element of the specified set, as revealed by a single traversal
+     * of its <tt>iterator()</tt>, is also contained in this set at
+     * the point of call of this method, and no other elements not
+     * present in the given set are contained in this set.
      *
      * @param o object to be compared for equality with this set
      * @return <tt>true</tt> if the specified object is equal to this set

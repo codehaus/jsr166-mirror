@@ -873,12 +873,13 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Compares the specified object with this list for equality.
-     * Returns true if and only if the specified object is also a
-     * {@link List}, and every element of the specified list, as
-     * revealed by a single traversal of its <tt>iterator()</tt>, is
-     * also present in the same position of this list at the point of
-     * call of this method, and no other elements not present in the
-     * given list are contained in this list.
+     * Returns true if the specified object is the same object as this
+     * object, or if it is also a {@link List}, and every element of
+     * the specified list, as revealed by a single traversal of its
+     * <tt>iterator()</tt>, is also present in the same position of
+     * this list at the point of call of this method, and no other
+     * elements not present in the given list are contained in this
+     * list.
      *
      * @param o the object to be compared for equality with this list
      * @return <tt>true</tt> if the specified object is equal to this list

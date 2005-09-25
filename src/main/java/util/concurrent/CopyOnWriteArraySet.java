@@ -307,4 +307,57 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
 	return al.iterator();
     }
 
+    /**
+     * Compares the specified object with this set for equality.
+     * Returns <tt>true</tt> if the specified object is also a set,
+     * and every element of the specified set, as revealed by a single
+     * traversal of its <tt>iterator()</tt>, is also contained in this
+     * set at the point of call of this method, and no other elements
+     * not present in the given set are contained in this set.
+     *
+     * @param o object to be compared for equality with this set
+     * @return <tt>true</tt> if the specified object is equal to this set
+     */
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Set))
+            return false;
+        Set<?> set = (Set<?>)(o);
+	Iterator<?> setIt = set.iterator();
+
+        // Uses O(n^2) algorithm that is only appropriate
+        // for small sets, which CopyOnWriteArraySets should be.
+
+        //  Use a single snapshot of underlying array
+	Object[] elements = al.getArray();
+	int len = elements.length;
+        // Mark matched elements to avoid re-checking
+        boolean[] matched = new boolean[len];
+        int k = 0;
+        while (setIt.hasNext()) {
+            if (++k > len)
+                return false;
+            Object x = setIt.next();
+            boolean found = false;
+            for (int i = 0; i < len; ++i) {
+                if (!matched[i] && eq(x, elements[i])) {
+                    matched[i] = true;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return false;
+        }
+        return k == len;
+    }
+        
+    /**
+     * Test for equality, coping with nulls.
+     */
+    private static boolean eq(Object o1, Object o2) {
+        return (o1 == null ? o2 == null : o1.equals(o2));
+    }
+
 }

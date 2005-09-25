@@ -66,8 +66,20 @@ public class CopyOnWriteArrayList<E>
     /** The array, accessed only via getArray/setArray. */
     private volatile transient Object[] array;
 
-    Object[]  getArray()           { return array; }
-    void      setArray(Object[] a) { array = a; }
+    /**
+     * Get the array. Non-private so as to also be accessible
+     * from CopyOnWriteArraySet class
+     */
+    final Object[]  getArray() { 
+        return array; 
+    }
+
+    /**
+     * Set the array
+     */
+    final void setArray(Object[] a) { 
+        array = a; 
+    }
 
     /**
      * Creates an empty list.
@@ -861,13 +873,12 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Compares the specified object with this list for equality.
-     * Returns true if and only if the specified object is also a {@link
-     * List}, both lists have the same size, and all corresponding pairs
-     * of elements in the two lists are <em>equal</em>.  (Two elements
-     * <tt>e1</tt> and <tt>e2</tt> are <em>equal</em> if <tt>(e1==null ?
-     * e2==null : e1.equals(e2))</tt>.)  In other words, two lists are
-     * defined to be equal if they contain the same elements in the same
-     * order.
+     * Returns true if and only if the specified object is also a
+     * {@link List}, and every element of the specified list, as
+     * revealed by a single traversal of its <tt>iterator()</tt>, is
+     * also present in the same position of this list at the point of
+     * call of this method, and no other elements not present in the
+     * given list are contained in this list.
      *
      * @param o the object to be compared for equality with this list
      * @return <tt>true</tt> if the specified object is equal to this list
@@ -878,15 +889,16 @@ public class CopyOnWriteArrayList<E>
         if (!(o instanceof List))
             return false;
 
-	Object[] elements = getArray();
         List<?> list = (List<?>)(o);
-        if (elements.length != list.size())
+	Iterator<?> listIt = list.listIterator();
+	Object[] elements = getArray();
+	int len = elements.length;
+        for (int i = 0; i < len; ++i) {
+            if (!listIt.hasNext() || !eq(elements[i], listIt.next()))
+                return false;
+        }
+        if (listIt.hasNext())
             return false;
-
-	Iterator<?> it = list.listIterator();
-	for (Object element : elements)
-	    if (! eq(element, it.next()))
-		return false;
         return true;
     }
 

@@ -353,7 +353,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         }
         return k == len;
     }
-        
+
     /**
      * Test for equality, coping with nulls.
      */

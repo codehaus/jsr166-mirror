@@ -70,15 +70,15 @@ public class CopyOnWriteArrayList<E>
      * Get the array. Non-private so as to also be accessible
      * from CopyOnWriteArraySet class
      */
-    final Object[]  getArray() { 
-        return array; 
+    final Object[]  getArray() {
+        return array;
     }
 
     /**
      * Set the array
      */
-    final void setArray(Object[] a) { 
-        array = a; 
+    final void setArray(Object[] a) {
+        array = a;
     }
 
     /**

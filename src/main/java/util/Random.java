@@ -1,7 +1,7 @@
 /*
- * @(#)Random.java	1.44 05/02/01
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * class <code>Math</code> simpler to use.
  *
  * @author  Frank Yellin
- * @version 1.44, 02/01/05
+ * @version %I%, %G%
  * @see     java.lang.Math#random()
  * @since   JDK1.0
  */

@@ -596,6 +596,27 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	    return oldValue;
 	}
 
+	/**
+	 * Compares the specified object with this entry for equality.
+	 * Returns {@code true} if the given object is also a map entry and
+	 * the two entries represent the same mapping.	More formally, two
+	 * entries {@code e1} and {@code e2} represent the same mapping
+	 * if<pre>
+	 *   (e1.getKey()==null ?
+	 *    e2.getKey()==null :
+	 *    e1.getKey().equals(e2.getKey()))
+	 *   &amp;&amp;
+	 *   (e1.getValue()==null ?
+	 *    e2.getValue()==null :
+	 *    e1.getValue().equals(e2.getValue()))</pre>
+	 * This ensures that the {@code equals} method works properly across
+	 * different implementations of the {@code Map.Entry} interface.
+	 *
+	 * @param o object to be compared for equality with this map entry
+	 * @return {@code true} if the specified object is equal to this map
+	 *	   entry
+	 * @see    #hashCode
+	 */
 	public boolean equals(Object o) {
 	    if (!(o instanceof Map.Entry))
 		return false;
@@ -603,6 +624,19 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	    return eq(key, e.getKey()) && eq(value, e.getValue());
 	}
 
+	/**
+	 * Returns the hash code value for this map entry.  The hash code
+	 * of a map entry {@code e} is defined to be: <pre>
+	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
+	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
+	 * This ensures that {@code e1.equals(e2)} implies that
+	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
+	 * {@code e1} and {@code e2}, as required by the general
+	 * contract of {@link Object#hashCode}.
+	 *
+	 * @return the hash code value for this map entry
+	 * @see    #equals
+	 */
 	public int hashCode() {
 	    return (key   == null ? 0 :   key.hashCode()) ^
 		   (value == null ? 0 : value.hashCode());
@@ -693,6 +727,27 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
             throw new UnsupportedOperationException();
         }
 
+	/**
+	 * Compares the specified object with this entry for equality.
+	 * Returns {@code true} if the given object is also a map entry and
+	 * the two entries represent the same mapping.	More formally, two
+	 * entries {@code e1} and {@code e2} represent the same mapping
+	 * if<pre>
+	 *   (e1.getKey()==null ?
+	 *    e2.getKey()==null :
+	 *    e1.getKey().equals(e2.getKey()))
+	 *   &amp;&amp;
+	 *   (e1.getValue()==null ?
+	 *    e2.getValue()==null :
+	 *    e1.getValue().equals(e2.getValue()))</pre>
+	 * This ensures that the {@code equals} method works properly across
+	 * different implementations of the {@code Map.Entry} interface.
+	 *
+	 * @param o object to be compared for equality with this map entry
+	 * @return {@code true} if the specified object is equal to this map
+	 *	   entry
+	 * @see    #hashCode
+	 */
 	public boolean equals(Object o) {
 	    if (!(o instanceof Map.Entry))
 		return false;
@@ -700,6 +755,19 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	    return eq(key, e.getKey()) && eq(value, e.getValue());
 	}
 
+	/**
+	 * Returns the hash code value for this map entry.  The hash code
+	 * of a map entry {@code e} is defined to be: <pre>
+	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
+	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
+	 * This ensures that {@code e1.equals(e2)} implies that
+	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
+	 * {@code e1} and {@code e2}, as required by the general
+	 * contract of {@link Object#hashCode}.
+	 *
+	 * @return the hash code value for this map entry
+	 * @see    #equals
+	 */
 	public int hashCode() {
 	    return (key   == null ? 0 :   key.hashCode()) ^
 		   (value == null ? 0 : value.hashCode());

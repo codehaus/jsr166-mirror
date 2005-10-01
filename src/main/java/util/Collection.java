@@ -1,5 +1,5 @@
 /*
- * @(#)Collection.java	1.52 05/08/27
+ * %W% %E%
  *
  * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -87,7 +87,7 @@ package java.util;
  *
  * @author  Josh Bloch
  * @author  Neal Gafter
- * @version 1.52, 08/27/05
+ * @version %I%, %G%
  * @see	    Set
  * @see	    List
  * @see	    Map

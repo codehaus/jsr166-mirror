@@ -1,7 +1,7 @@
 /*
- * @(#)Stack.java	1.28 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
@@ -26,7 +26,7 @@ package java.util;
  * </pre>
  *
  * @author  Jonathan Payne
- * @version 1.28, 12/19/03
+ * @version %I%, %G%
  * @since   JDK1.0
  */
 public

@@ -309,15 +309,19 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
 
     /**
      * Compares the specified object with this set for equality.
-     * Returns <tt>true</tt> if the specified object is the same
-     * object as this object, or if it is also a set, and every
-     * element of the specified set, as revealed by a single traversal
-     * of its <tt>iterator()</tt>, is also contained in this set at
-     * the point of call of this method, and no other elements not
-     * present in the given set are contained in this set.
+     * Returns {@code true} if the specified object is the same object
+     * as this object, or if it is also a {@link Set} and the elements
+     * returned by an {@linkplain List#iterator() iterator} over the
+     * specified set are the same as the elements returned by an
+     * iterator over this set.  More formally, the two iterators are
+     * considered to return the same elements if they return the same
+     * number of elements and for every element {@code e1} returned by
+     * the iterator over the specified set, there is an element
+     * {@code e2} returned by the iterator over this set such that
+     * {@code (e1==null ? e2==null : e1.equals(e2))}.
      *
      * @param o object to be compared for equality with this set
-     * @return <tt>true</tt> if the specified object is equal to this set
+     * @return {@code true} if the specified object is equal to this set
      */
     public boolean equals(Object o) {
         if (o == this)
@@ -325,7 +329,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         if (!(o instanceof Set))
             return false;
         Set<?> set = (Set<?>)(o);
-	Iterator<?> setIt = set.iterator();
+	Iterator<?> it = set.iterator();
 
         // Uses O(n^2) algorithm that is only appropriate
         // for small sets, which CopyOnWriteArraySets should be.
@@ -336,20 +340,17 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         // Mark matched elements to avoid re-checking
         boolean[] matched = new boolean[len];
         int k = 0;
-        while (setIt.hasNext()) {
+        outer: while (it.hasNext()) {
             if (++k > len)
                 return false;
-            Object x = setIt.next();
-            boolean found = false;
+            Object x = it.next();
             for (int i = 0; i < len; ++i) {
                 if (!matched[i] && eq(x, elements[i])) {
                     matched[i] = true;
-                    found = true;
-                    break;
+		    continue outer;
                 }
             }
-            if (!found)
-                return false;
+	    return false;
         }
         return k == len;
     }
@@ -360,5 +361,4 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     private static boolean eq(Object o1, Object o2) {
         return (o1 == null ? o2 == null : o1.equals(o2));
     }
-
 }

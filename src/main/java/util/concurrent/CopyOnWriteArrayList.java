@@ -67,15 +67,15 @@ public class CopyOnWriteArrayList<E>
     private volatile transient Object[] array;
 
     /**
-     * Get the array. Non-private so as to also be accessible
-     * from CopyOnWriteArraySet class
+     * Gets the array.  Non-private so as to also be accessible
+     * from CopyOnWriteArraySet class.
      */
     final Object[]  getArray() {
         return array;
     }
 
     /**
-     * Set the array
+     * Sets the array.
      */
     final void setArray(Object[] a) {
         array = a;
@@ -873,16 +873,18 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Compares the specified object with this list for equality.
-     * Returns true if the specified object is the same object as this
-     * object, or if it is also a {@link List}, and every element of
-     * the specified list, as revealed by a single traversal of its
-     * <tt>iterator()</tt>, is also present in the same position of
-     * this list at the point of call of this method, and no other
-     * elements not present in the given list are contained in this
-     * list.
+     * Returns {@code true} if the specified object is the same object
+     * as this object, or if it is also a {@link List} and the sequence
+     * of elements returned by an {@linkplain List#iterator() iterator}
+     * over the specified list is the same as the sequence returned by
+     * an iterator over this list.  The two sequences are considered to
+     * be the same if they have the same length and corresponding
+     * elements at the same position in the sequence are <em>equal</em>.
+     * Two elements {@code e1} and {@code e2} are considered
+     * <em>equal</em> if {@code (e1==null ? e2==null : e1.equals(e2))}.
      *
      * @param o the object to be compared for equality with this list
-     * @return <tt>true</tt> if the specified object is equal to this list
+     * @return {@code true} if the specified object is equal to this list
      */
     public boolean equals(Object o) {
         if (o == this)
@@ -891,14 +893,13 @@ public class CopyOnWriteArrayList<E>
             return false;
 
         List<?> list = (List<?>)(o);
-	Iterator<?> listIt = list.listIterator();
+	Iterator<?> it = list.iterator();
 	Object[] elements = getArray();
 	int len = elements.length;
-        for (int i = 0; i < len; ++i) {
-            if (!listIt.hasNext() || !eq(elements[i], listIt.next()))
+        for (int i = 0; i < len; ++i)
+            if (!it.hasNext() || !eq(elements[i], it.next()))
                 return false;
-        }
-        if (listIt.hasNext())
+        if (it.hasNext())
             return false;
         return true;
     }

@@ -463,6 +463,39 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
 
     }
 
+    /**
+     * lowerEntry, higherEntry, ceilingEntry, and floorEntry return
+     * imutable entries
+     */
+    public void testEntryImmutablity() {
+        ConcurrentSkipListMap map = map5();
+        Map.Entry e = map.lowerEntry(three);
+        assertEquals(two, e.getKey());
+        try {
+            e.setValue("X");
+            fail();
+        } catch(UnsupportedOperationException success) {}
+        e = map.higherEntry(zero);
+        assertEquals(one, e.getKey());
+        try {
+            e.setValue("X");
+            fail();
+        } catch(UnsupportedOperationException success) {}
+        e = map.floorEntry(one);
+        assertEquals(one, e.getKey());
+        try {
+            e.setValue("X");
+            fail();
+        } catch(UnsupportedOperationException success) {}
+        e = map.ceilingEntry(five);
+        assertEquals(five, e.getKey());
+        try {
+            e.setValue("X");
+            fail();
+        } catch(UnsupportedOperationException success) {}
+    }
+
+
 
     /**
      * lowerKey returns preceding element

@@ -137,6 +137,7 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(CountDownLatchTest.class));
         suite.addTest(new TestSuite(CyclicBarrierTest.class));
         suite.addTest(new TestSuite(DelayQueueTest.class));
+        suite.addTest(new TestSuite(EntryTest.class));
         suite.addTest(new TestSuite(ExchangerTest.class));
         suite.addTest(new TestSuite(ExecutorsTest.class));
         suite.addTest(new TestSuite(ExecutorCompletionServiceTest.class));

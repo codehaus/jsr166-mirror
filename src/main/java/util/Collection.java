@@ -58,7 +58,7 @@ package java.util;
  *
  * <p>It is up to each collection to determine its own synchronization
  * policy.  In the absence of a stronger guarantee by the
- * implementation, undefined bahavior may result from the invocation
+ * implementation, undefined behavior may result from the invocation
  * of any method on a collection that is being mutated by another
  * thread; this includes direct invocations, passing the collection to
  * a method that might perform invocations, and using an existing

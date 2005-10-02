@@ -10,26 +10,26 @@ import java.io.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * An instance of this class is used to generate a stream of 
- * pseudorandom numbers. The class uses a 48-bit seed, which is 
- * modified using a linear congruential formula. (See Donald Knuth, 
- * <i>The Art of Computer Programming, Volume 2</i>, Section 3.2.1.) 
+ * An instance of this class is used to generate a stream of
+ * pseudorandom numbers. The class uses a 48-bit seed, which is
+ * modified using a linear congruential formula. (See Donald Knuth,
+ * <i>The Art of Computer Programming, Volume 2</i>, Section 3.2.1.)
  * <p>
- * If two instances of <code>Random</code> are created with the same 
- * seed, and the same sequence of method calls is made for each, they 
- * will generate and return identical sequences of numbers. In order to 
- * guarantee this property, particular algorithms are specified for the 
- * class <tt>Random</tt>. Java implementations must use all the algorithms 
- * shown here for the class <tt>Random</tt>, for the sake of absolute 
- * portability of Java code. However, subclasses of class <tt>Random</tt> 
- * are permitted to use other algorithms, so long as they adhere to the 
+ * If two instances of <code>Random</code> are created with the same
+ * seed, and the same sequence of method calls is made for each, they
+ * will generate and return identical sequences of numbers. In order to
+ * guarantee this property, particular algorithms are specified for the
+ * class <tt>Random</tt>. Java implementations must use all the algorithms
+ * shown here for the class <tt>Random</tt>, for the sake of absolute
+ * portability of Java code. However, subclasses of class <tt>Random</tt>
+ * are permitted to use other algorithms, so long as they adhere to the
  * general contracts for all the methods.
  * <p>
- * The algorithms implemented by class <tt>Random</tt> use a 
- * <tt>protected</tt> utility method that on each invocation can supply 
+ * The algorithms implemented by class <tt>Random</tt> use a
+ * <tt>protected</tt> utility method that on each invocation can supply
  * up to 32 pseudorandomly generated bits.
  * <p>
- * Many applications will find the <code>random</code> method in 
+ * Many applications will find the <code>random</code> method in
  * class <code>Math</code> simpler to use.
  *
  * @author  Frank Yellin
@@ -63,12 +63,12 @@ class Random implements java.io.Serializable {
     public Random() { this(++seedUniquifier + System.nanoTime()); }
     private static volatile long seedUniquifier = 8682522807148012L;
 
-    /** 
-     * Creates a new random number generator using a single 
+    /**
+     * Creates a new random number generator using a single
      * <code>long</code> seed:
      * <blockquote><pre>
      * public Random(long seed) { setSeed(seed); }</pre></blockquote>
-     * Used by method <tt>next</tt> to hold 
+     * Used by method <tt>next</tt> to hold
      * the state of the pseudorandom number generator.
      *
      * @param   seed   the initial seed.
@@ -138,11 +138,11 @@ class Random implements java.io.Serializable {
     private static final int BYTES_PER_INT = 4;
 
     /**
-     * Generates random bytes and places them into a user-supplied 
-     * byte array.  The number of random bytes produced is equal to 
+     * Generates random bytes and places them into a user-supplied
+     * byte array.  The number of random bytes produced is equal to
      * the length of the byte array.
-     * 
-     * @param bytes  the non-null byte array in which to put the 
+     *
+     * @param bytes  the non-null byte array in which to put the
      *               random bytes.
      * @since   JDK1.1
      */
@@ -165,11 +165,11 @@ class Random implements java.io.Serializable {
 
     /**
      * Returns the next pseudorandom, uniformly distributed <code>int</code>
-     * value from this random number generator's sequence. The general 
-     * contract of <tt>nextInt</tt> is that one <tt>int</tt> value is 
+     * value from this random number generator's sequence. The general
+     * contract of <tt>nextInt</tt> is that one <tt>int</tt> value is
      * pseudorandomly generated and returned. All 2<font size="-1"><sup>32
-     * </sup></font> possible <tt>int</tt> values are produced with 
-     * (approximately) equal probability. The method <tt>nextInt</tt> is 
+     * </sup></font> possible <tt>int</tt> values are produced with
+     * (approximately) equal probability. The method <tt>nextInt</tt> is
      * implemented by class <tt>Random</tt> as follows:
      * <blockquote><pre>
      * public int nextInt() {  return next(32); }</pre></blockquote>
@@ -205,10 +205,10 @@ class Random implements java.io.Serializable {
      * }
      * </pre></blockquote>
      * <p>
-     * The hedge "approximately" is used in the foregoing description only 
+     * The hedge "approximately" is used in the foregoing description only
      * because the next method is only approximately an unbiased source of
-     * independently chosen bits.  If it were a perfect source of randomly 
-     * chosen bits, then the algorithm shown would choose <tt>int</tt> 
+     * independently chosen bits.  If it were a perfect source of randomly
+     * chosen bits, then the algorithm shown would choose <tt>int</tt>
      * values from the stated range with perfect uniformity.
      * <p>
      * The algorithm is slightly tricky.  It rejects values that would result
@@ -252,11 +252,11 @@ class Random implements java.io.Serializable {
 
     /**
      * Returns the next pseudorandom, uniformly distributed <code>long</code>
-     * value from this random number generator's sequence. The general 
-     * contract of <tt>nextLong</tt> is that one long value is pseudorandomly 
-     * generated and returned. All 2<font size="-1"><sup>64</sup></font> 
-     * possible <tt>long</tt> values are produced with (approximately) equal 
-     * probability. The method <tt>nextLong</tt> is implemented by class 
+     * value from this random number generator's sequence. The general
+     * contract of <tt>nextLong</tt> is that one long value is pseudorandomly
+     * generated and returned. All 2<font size="-1"><sup>64</sup></font>
+     * possible <tt>long</tt> values are produced with (approximately) equal
+     * probability. The method <tt>nextLong</tt> is implemented by class
      * <tt>Random</tt> as follows:
      * <blockquote><pre>
      * public long nextLong() {
@@ -293,32 +293,32 @@ class Random implements java.io.Serializable {
      * Returns the next pseudorandom, uniformly distributed <code>float</code>
      * value between <code>0.0</code> and <code>1.0</code> from this random
      * number generator's sequence. <p>
-     * The general contract of <tt>nextFloat</tt> is that one <tt>float</tt> 
-     * value, chosen (approximately) uniformly from the range <tt>0.0f</tt> 
+     * The general contract of <tt>nextFloat</tt> is that one <tt>float</tt>
+     * value, chosen (approximately) uniformly from the range <tt>0.0f</tt>
      * (inclusive) to <tt>1.0f</tt> (exclusive), is pseudorandomly
-     * generated and returned. All 2<font size="-1"><sup>24</sup></font> 
-     * possible <tt>float</tt> values of the form 
-     * <i>m&nbsp;x&nbsp</i>2<font size="-1"><sup>-24</sup></font>, where 
+     * generated and returned. All 2<font size="-1"><sup>24</sup></font>
+     * possible <tt>float</tt> values of the form
+     * <i>m&nbsp;x&nbsp</i>2<font size="-1"><sup>-24</sup></font>, where
      * <i>m</i> is a positive integer less than 2<font size="-1"><sup>24</sup>
-     * </font>, are produced with (approximately) equal probability. The 
-     * method <tt>nextFloat</tt> is implemented by class <tt>Random</tt> as 
+     * </font>, are produced with (approximately) equal probability. The
+     * method <tt>nextFloat</tt> is implemented by class <tt>Random</tt> as
      * follows:
      * <blockquote><pre>
      * public float nextFloat() {
      *      return next(24) / ((float)(1 << 24));
      * }</pre></blockquote>
-     * The hedge "approximately" is used in the foregoing description only 
-     * because the next method is only approximately an unbiased source of 
-     * independently chosen bits. If it were a perfect source or randomly 
-     * chosen bits, then the algorithm shown would choose <tt>float</tt> 
+     * The hedge "approximately" is used in the foregoing description only
+     * because the next method is only approximately an unbiased source of
+     * independently chosen bits. If it were a perfect source or randomly
+     * chosen bits, then the algorithm shown would choose <tt>float</tt>
      * values from the stated range with perfect uniformity.<p>
      * [In early versions of Java, the result was incorrectly calculated as:
      * <blockquote><pre>
      * return next(30) / ((float)(1 << 30));</pre></blockquote>
-     * This might seem to be equivalent, if not better, but in fact it 
-     * introduced a slight nonuniformity because of the bias in the rounding 
-     * of floating-point numbers: it was slightly more likely that the 
-     * low-order bit of the significand would be 0 than that it would be 1.] 
+     * This might seem to be equivalent, if not better, but in fact it
+     * introduced a slight nonuniformity because of the bias in the rounding
+     * of floating-point numbers: it was slightly more likely that the
+     * low-order bit of the significand would be 0 than that it would be 1.]
      *
      * @return  the next pseudorandom, uniformly distributed <code>float</code>
      *          value between <code>0.0</code> and <code>1.0</code> from this
@@ -330,41 +330,41 @@ class Random implements java.io.Serializable {
     }
 
     /**
-     * Returns the next pseudorandom, uniformly distributed 
+     * Returns the next pseudorandom, uniformly distributed
      * <code>double</code> value between <code>0.0</code> and
      * <code>1.0</code> from this random number generator's sequence. <p>
-     * The general contract of <tt>nextDouble</tt> is that one 
-     * <tt>double</tt> value, chosen (approximately) uniformly from the 
-     * range <tt>0.0d</tt> (inclusive) to <tt>1.0d</tt> (exclusive), is 
-     * pseudorandomly generated and returned. All 
-     * 2<font size="-1"><sup>53</sup></font> possible <tt>float</tt> 
+     * The general contract of <tt>nextDouble</tt> is that one
+     * <tt>double</tt> value, chosen (approximately) uniformly from the
+     * range <tt>0.0d</tt> (inclusive) to <tt>1.0d</tt> (exclusive), is
+     * pseudorandomly generated and returned. All
+     * 2<font size="-1"><sup>53</sup></font> possible <tt>float</tt>
      * values of the form <i>m&nbsp;x&nbsp;</i>2<font size="-1"><sup>-53</sup>
-     * </font>, where <i>m</i> is a positive integer less than 
-     * 2<font size="-1"><sup>53</sup></font>, are produced with 
-     * (approximately) equal probability. The method <tt>nextDouble</tt> is 
+     * </font>, where <i>m</i> is a positive integer less than
+     * 2<font size="-1"><sup>53</sup></font>, are produced with
+     * (approximately) equal probability. The method <tt>nextDouble</tt> is
      * implemented by class <tt>Random</tt> as follows:
      * <blockquote><pre>
      * public double nextDouble() {
      *       return (((long)next(26) << 27) + next(27))
      *           / (double)(1L << 53);
      * }</pre></blockquote><p>
-     * The hedge "approximately" is used in the foregoing description only 
-     * because the <tt>next</tt> method is only approximately an unbiased 
-     * source of independently chosen bits. If it were a perfect source or 
-     * randomly chosen bits, then the algorithm shown would choose 
-     * <tt>double</tt> values from the stated range with perfect uniformity. 
+     * The hedge "approximately" is used in the foregoing description only
+     * because the <tt>next</tt> method is only approximately an unbiased
+     * source of independently chosen bits. If it were a perfect source or
+     * randomly chosen bits, then the algorithm shown would choose
+     * <tt>double</tt> values from the stated range with perfect uniformity.
      * <p>[In early versions of Java, the result was incorrectly calculated as:
      * <blockquote><pre>
      *  return (((long)next(27) << 27) + next(27))
      *      / (double)(1L << 54);</pre></blockquote>
-     * This might seem to be equivalent, if not better, but in fact it 
-     * introduced a large nonuniformity because of the bias in the rounding 
-     * of floating-point numbers: it was three times as likely that the 
+     * This might seem to be equivalent, if not better, but in fact it
+     * introduced a large nonuniformity because of the bias in the rounding
+     * of floating-point numbers: it was three times as likely that the
      * low-order bit of the significand would be 0 than that it would be
-     * 1! This nonuniformity probably doesn't matter much in practice, but 
-     * we strive for perfection.] 
+     * 1! This nonuniformity probably doesn't matter much in practice, but
+     * we strive for perfection.]
      *
-     * @return  the next pseudorandom, uniformly distributed 
+     * @return  the next pseudorandom, uniformly distributed
      *          <code>double</code> value between <code>0.0</code> and
      *          <code>1.0</code> from this random number generator's sequence.
      */
@@ -381,11 +381,11 @@ class Random implements java.io.Serializable {
      * <code>double</code> value with mean <code>0.0</code> and standard
      * deviation <code>1.0</code> from this random number generator's sequence.
      * <p>
-     * The general contract of <tt>nextGaussian</tt> is that one 
-     * <tt>double</tt> value, chosen from (approximately) the usual 
-     * normal distribution with mean <tt>0.0</tt> and standard deviation 
-     * <tt>1.0</tt>, is pseudorandomly generated and returned. The method 
-     * <tt>nextGaussian</tt> is implemented by class <tt>Random</tt> as if 
+     * The general contract of <tt>nextGaussian</tt> is that one
+     * <tt>double</tt> value, chosen from (approximately) the usual
+     * normal distribution with mean <tt>0.0</tt> and standard deviation
+     * <tt>1.0</tt>, is pseudorandomly generated and returned. The method
+     * <tt>nextGaussian</tt> is implemented by class <tt>Random</tt> as if
      * by a threadsafe version of the following:
      * <blockquote><pre>
      * public double nextGaussian() {
@@ -394,7 +394,7 @@ class Random implements java.io.Serializable {
      *            return nextNextGaussian;
      *    } else {
      *            double v1, v2, s;
-     *            do { 
+     *            do {
      *                    v1 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
      *                    v2 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
      *                    s = v1 * v1 + v2 * v2;
@@ -405,12 +405,12 @@ class Random implements java.io.Serializable {
      *            return v1 * multiplier;
      *    }
      * }</pre></blockquote>
-     * This uses the <i>polar method</i> of G. E. P. Box, M. E. Muller, and 
-     * G. Marsaglia, as described by Donald E. Knuth in <i>The Art of 
-     * Computer Programming</i>, Volume 2: <i>Seminumerical Algorithms</i>, 
+     * This uses the <i>polar method</i> of G. E. P. Box, M. E. Muller, and
+     * G. Marsaglia, as described by Donald E. Knuth in <i>The Art of
+     * Computer Programming</i>, Volume 2: <i>Seminumerical Algorithms</i>,
      * section 3.4.1, subsection C, algorithm P. Note that it generates two
-     * independent values at the cost of only one call to <tt>StrictMath.log</tt> 
-     * and one call to <tt>StrictMath.sqrt</tt>. 
+     * independent values at the cost of only one call to <tt>StrictMath.log</tt>
+     * and one call to <tt>StrictMath.sqrt</tt>.
      *
      * @return  the next pseudorandom, Gaussian ("normally") distributed
      *          <code>double</code> value with mean <code>0.0</code> and
@@ -424,9 +424,9 @@ class Random implements java.io.Serializable {
     	    return nextNextGaussian;
     	} else {
             double v1, v2, s;
-    	    do { 
+    	    do {
                 v1 = 2 * nextDouble() - 1; // between -1 and 1
-            	v2 = 2 * nextDouble() - 1; // between -1 and 1 
+            	v2 = 2 * nextDouble() - 1; // between -1 and 1
                 s = v1 * v1 + v2 * v2;
     	    } while (s >= 1 || s == 0);
     	    double multiplier = StrictMath.sqrt(-2 * StrictMath.log(s)/s);
@@ -491,4 +491,4 @@ class Random implements java.io.Serializable {
 
     }
 
-}     
+}

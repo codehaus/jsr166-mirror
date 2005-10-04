@@ -30,21 +30,26 @@ public class RWMap implements Map {
     }
 
     public int size() {
-        rwl.readLock().lock(); try {return m.size();} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.size();} finally { l.unlock(); }
     }
     public boolean isEmpty(){
-        rwl.readLock().lock(); try {return m.isEmpty();} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.isEmpty();} finally { l.unlock(); }
     }
 
     public Object get(Object key) {
-        rwl.readLock().lock(); try {return m.get(key);} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.get(key);} finally { l.unlock(); }
     }
 
     public boolean containsKey(Object key) {
-        rwl.readLock().lock(); try {return m.containsKey(key);} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.containsKey(key);} finally { l.unlock(); }
     }
     public boolean containsValue(Object value){
-        rwl.readLock().lock(); try {return m.containsValue(value);} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.containsValue(value);} finally { l.unlock(); }
     }
 
 
@@ -61,28 +66,35 @@ public class RWMap implements Map {
     }
     
     public boolean equals(Object o) {
-        rwl.readLock().lock(); try {return m.equals(o);} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.equals(o);} finally { l.unlock(); }
     }
     public int hashCode() {
-        rwl.readLock().lock(); try {return m.hashCode();} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.hashCode();} finally { l.unlock(); }
     }
     public String toString() {
-        rwl.readLock().lock(); try {return m.toString();} finally { rwl.readLock().unlock(); }
+        ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
+        l.lock(); try {return m.toString();} finally { l.unlock(); }
     }
 
 
 
     public Object put(Object key, Object value) {
-        rwl.writeLock().lock(); try {return m.put(key, value);} finally { rwl.writeLock().unlock(); }
+        ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
+        l.lock(); try {return m.put(key, value);} finally { l.unlock(); }
     }
     public Object remove(Object key) {
-        rwl.writeLock().lock(); try {return m.remove(key);} finally { rwl.writeLock().unlock(); }
+        ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
+        l.lock(); try {return m.remove(key);} finally { l.unlock(); }
     }
     public void putAll(Map map) {
-        rwl.writeLock().lock(); try {m.putAll(map);} finally { rwl.writeLock().unlock(); }
+        ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
+        l.lock(); try {m.putAll(map);} finally { l.unlock(); }
     }
     public void clear() {
-        rwl.writeLock().lock(); try {m.clear();} finally { rwl.writeLock().unlock(); }
+        ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
+        l.lock(); try {m.clear();} finally { l.unlock(); }
     }
     
 }

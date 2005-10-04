@@ -13,17 +13,20 @@
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 
 public class ConcurrentQueueLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
-    static AtomicInteger totalItems;
     static boolean print = false;
+    static final Integer even = new Integer(42);
+    static final Integer odd = new Integer(17);
+    static int workMask;
+    static final long RUN_TIME_NANOS = 5 * 1000L * 1000L * 1000L;
 
     public static void main(String[] args) throws Exception {
-        int maxStages = 8;
-        int items = 100000;
-
+        int maxStages = 48;
+        int work = 32;
         Class klass = null;
         if (args.length > 0) {
             try {
@@ -32,68 +35,89 @@ public class ConcurrentQueueLoops {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
-        else 
-            klass = java.util.concurrent.ConcurrentLinkedQueue.class;
 
         if (args.length > 1) 
             maxStages = Integer.parseInt(args[1]);
 
+        if (args.length > 2) 
+            work = Integer.parseInt(args[2]);
+
+        workMask = work - 1;
         System.out.print("Class: " + klass.getName());
-        System.out.println(" stages: " + maxStages);
+        System.out.print(" stages: " + maxStages);
+        System.out.println(" work: " + work);
 
         print = false;
         System.out.println("Warmup...");
-        oneRun(klass, 1, items);
+        oneRun(klass, 4);
         Thread.sleep(100);
-        oneRun(klass, 1, items);
+        oneRun(klass, 1);
         Thread.sleep(100);
         print = true;
 
-        for (int i = 1; i <= maxStages; i += (i+1) >>> 1) {
-            oneRun(klass, i, items);
+        int k = 1;
+        for (int i = 1; i <= maxStages;) {
+            oneRun(klass, i);
+            if (i == k) {
+                k = i << 1;
+                i = i + (i >>> 1);
+            } 
+            else 
+                i = k;
         }
         pool.shutdown();
    }
 
-    static class Stage implements Callable<Integer> {
+    static final class Stage implements Callable<Integer> {
         final Queue<Integer> queue;
         final CyclicBarrier barrier;
-        int items;
-        Stage (Queue<Integer> q, CyclicBarrier b, int items) {
+        Stage (Queue<Integer> q, CyclicBarrier b) {
             queue = q; 
             barrier = b;
-            this.items = items;
+        }
+
+        static int compute127(int l) {
+            l = LoopHelpers.compute1(l);
+            l = LoopHelpers.compute2(l);
+            l = LoopHelpers.compute3(l);
+            l = LoopHelpers.compute4(l);
+            l = LoopHelpers.compute5(l);
+            l = LoopHelpers.compute6(l);
+            return l;
+        }
+
+        static int compute(int l) {
+            if (l == 0) 
+                return (int)System.nanoTime();
+            int nn =  l & workMask;
+            while (nn-- > 0) 
+                l = compute127(l);
+            return l;
         }
 
         public Integer call() {
-            // Repeatedly take something from queue if possible,
-            // transform it, and put back in.
             try {
                 barrier.await();
-                int l = (int)System.nanoTime();
+                long now = System.nanoTime();
+                long stopTime = now + RUN_TIME_NANOS;
+                int l = (int)now;
                 int takes = 0;
-                int seq = l;
+                int misses = 0;
                 for (;;) {
+                    l = compute(l);
                     Integer item = queue.poll();
                     if (item != null) {
+                        l += item.intValue();
                         ++takes;
-                        l = LoopHelpers.compute2(item.intValue());
-                    }
-                    else if (takes != 0) {
-                        totalItems.getAndAdd(-takes);
-                        takes = 0;
-                    }
-                    else if (totalItems.get() <= 0)
+                    } else if ((misses++ & 255) == 0 &&
+                               System.nanoTime() >= stopTime) {
                         break;
-                    l = LoopHelpers.compute1(l);
-                    if (items > 0) {
-                        --items;
-                        while (!queue.offer(new Integer(l^seq++))) ;
+                    } else {
+                        Integer a = ((l++ & 4)== 0)? even : odd;
+                        queue.add(a);
                     }
-                    else if ( (l & (3 << 5)) == 0) // spinwait
-                        Thread.sleep(1);
                 }
-                return new Integer(l);
+                return new Integer(takes);
             }
             catch (Exception ie) { 
                 ie.printStackTrace();
@@ -102,14 +126,13 @@ public class ConcurrentQueueLoops {
         }
     }
 
-    static void oneRun(Class klass, int n, int items) throws Exception {
+    static void oneRun(Class klass, int n) throws Exception {
         Queue<Integer> q = (Queue<Integer>)klass.newInstance();
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);
-        totalItems = new AtomicInteger(n * items);
         ArrayList<Future<Integer>> results = new ArrayList<Future<Integer>>(n);
         for (int i = 0; i < n; ++i) 
-            results.add(pool.submit(new Stage(q, barrier, items)));
+            results.add(pool.submit(new Stage(q, barrier)));
 
         if (print)
             System.out.print("Threads: " + n + "\t:");
@@ -122,10 +145,10 @@ public class ConcurrentQueueLoops {
         }
         long endTime = System.nanoTime();
         long time = endTime - timer.startTime;
+        long tpi = time / total;
         if (print)
-            System.out.println(LoopHelpers.rightJustify(time / (items * n)) + " ns per item");
-        if (total == 0) // avoid overoptimization
-            System.out.println("useless result: " + total);
+            System.out.println(LoopHelpers.rightJustify(tpi) + " ns per item");
         
     }
+
 }

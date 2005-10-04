@@ -62,8 +62,10 @@ echo ExecutorCompletionServiceLoops
 $RUN ExecutorCompletionServiceLoops $TRIALS
 echo CachedThreadPoolLoops
 $RUN CachedThreadPoolLoops $TRIALS
-echo ConcurrentQueueLoops
+echo ConcurrentQueueLoops ConcurrentLinkedQueue
 $RUN ConcurrentQueueLoops java.util.concurrent.ConcurrentLinkedQueue $TRIALS
+echo ConcurrentQueueLoops SynchronizedLinkedListQueue
+$RUN ConcurrentQueueLoops SynchronizedLinkedListQueue $TRIALS
 echo ConcurrentDequeLoops
 $RUN ConcurrentDequeLoops java.util.concurrent.LinkedBlockingDeque $TRIALS
 echo DequeBash ArrayDeque
@@ -116,6 +118,12 @@ echo MapWordLoops RWTreeMap
 $RUN MapWordLoops RWMap $TRIALS
 echo MapWordLoops ConcurrentSkipListMap
 $RUN MapWordLoops java.util.concurrent.ConcurrentSkipListMap $TRIALS
+echo CollectionLoops RWCollection
+$RUN CollectionLoops RWCollection $TRIALS
+echo CollectionLoops SCollection
+$RUN CollectionLoops SCollection $TRIALS
+echo CollectionLoops SynchronizedCollection
+$RUN CollectionLoops SynchronizedCollection $TRIALS
 echo CollectionWordLoops ConcurrentSkipListSet
 $RUN CollectionWordLoops java.util.concurrent.ConcurrentSkipListSet
 echo CollectionWordLoops ConcurrentLinkedQueue

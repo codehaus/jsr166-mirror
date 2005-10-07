@@ -19,14 +19,15 @@ import java.util.concurrent.atomic.*;
 public class ConcurrentQueueLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
     static boolean print = false;
-    static final Integer even = new Integer(42);
-    static final Integer odd = new Integer(17);
+    static final Integer zero = new Integer(0);
+    static final Integer one = new Integer(1);
     static int workMask;
     static final long RUN_TIME_NANOS = 5 * 1000L * 1000L * 1000L;
+    static final int BATCH_SIZE = 8;
 
     public static void main(String[] args) throws Exception {
-        int maxStages = 48;
-        int work = 32;
+        int maxStages = 100;
+        int work = 1024;
         Class klass = null;
         if (args.length > 0) {
             try {
@@ -71,27 +72,19 @@ public class ConcurrentQueueLoops {
     static final class Stage implements Callable<Integer> {
         final Queue<Integer> queue;
         final CyclicBarrier barrier;
-        Stage (Queue<Integer> q, CyclicBarrier b) {
+        final int nthreads;
+        Stage (Queue<Integer> q, CyclicBarrier b, int nthreads) {
             queue = q; 
             barrier = b;
-        }
-
-        static int compute127(int l) {
-            l = LoopHelpers.compute1(l);
-            l = LoopHelpers.compute2(l);
-            l = LoopHelpers.compute3(l);
-            l = LoopHelpers.compute4(l);
-            l = LoopHelpers.compute5(l);
-            l = LoopHelpers.compute6(l);
-            return l;
+            this.nthreads = nthreads;
         }
 
         static int compute(int l) {
             if (l == 0) 
                 return (int)System.nanoTime();
-            int nn =  l & workMask;
+            int nn =  (l >>> 7) & workMask;
             while (nn-- > 0) 
-                l = compute127(l);
+                l = LoopHelpers.compute6(l);
             return l;
         }
 
@@ -103,21 +96,25 @@ public class ConcurrentQueueLoops {
                 int l = (int)now;
                 int takes = 0;
                 int misses = 0;
+                int lmask = 1;
                 for (;;) {
                     l = compute(l);
                     Integer item = queue.poll();
                     if (item != null) {
-                        l += item.intValue();
                         ++takes;
+                        if (item == one)
+                            l = LoopHelpers.compute6(l);
                     } else if ((misses++ & 255) == 0 &&
                                System.nanoTime() >= stopTime) {
-                        break;
+                        return new Integer(takes);
                     } else {
-                        Integer a = ((l++ & 4)== 0)? even : odd;
-                        queue.add(a);
+                        for (int i = 0; i < BATCH_SIZE; ++i) {
+                            queue.offer(((l & lmask)== 0)? zero : one);
+                            if ((lmask <<= 1) == 0) lmask = 1;
+                            if (i != 0) l = compute(l);
+                        }
                     }
                 }
-                return new Integer(takes);
             }
             catch (Exception ie) { 
                 ie.printStackTrace();
@@ -132,7 +129,7 @@ public class ConcurrentQueueLoops {
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);
         ArrayList<Future<Integer>> results = new ArrayList<Future<Integer>>(n);
         for (int i = 0; i < n; ++i) 
-            results.add(pool.submit(new Stage(q, barrier)));
+            results.add(pool.submit(new Stage(q, barrier, n)));
 
         if (print)
             System.out.print("Threads: " + n + "\t:");
@@ -145,10 +142,12 @@ public class ConcurrentQueueLoops {
         }
         long endTime = System.nanoTime();
         long time = endTime - timer.startTime;
-        long tpi = time / total;
-        if (print)
-            System.out.println(LoopHelpers.rightJustify(tpi) + " ns per item");
+        long ips = 1000000000L * total / time;
         
+        if (print) 
+            System.out.print(LoopHelpers.rightJustify(ips) + " items per sec");
+        if (print)
+            System.out.println();
     }
 
 }

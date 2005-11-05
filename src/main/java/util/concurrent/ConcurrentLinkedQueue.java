@@ -64,7 +64,14 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * internal nodes (method remove(Object)) -- remove CAS'es item
      * fields to null. The normal queue operations unlink but then
      * pass over nodes with null item fields. Similarly, iteration
-     * methods ignore those with nulls.
+     * methods ignore those with nulls. 
+     *
+     * Also note that like most non-blocking algorithms in this
+     * package, this implementation relies on the fact that in garbage
+     * collected systems, there is no possibility of ABA problems due
+     * to recycled nodes, so there is no need to use "counted
+     * pointers" or related techniques seen in versions used in
+     * non-GC'ed settings.
      */
 
     private static class Node<E> {

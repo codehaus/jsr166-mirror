@@ -138,8 +138,6 @@ public class Exchanger<V> {
     /**
      * The collision arena. arena[0] is used as the top of the stack.
      * The remainder is used as the collision elimination space.
-     * Each slot holds an AtomicReference<Node>, but this cannot be
-     * expressed for arrays, so elements are casted on each use.
      */
     private final AtomicReference<Node>[] arena;
 
@@ -217,7 +215,7 @@ public class Exchanger<V> {
     }
 
     /**
-     * Returns a random delay less than (base times (2 raised to backoff))
+     * Returns a random delay less than (base times (2 raised to backoff)).
      */
     private long randomDelay(int backoff) {
         return ((BACKOFF_BASE << backoff) - 1) & random.nextInt();
@@ -235,12 +233,14 @@ public class Exchanger<V> {
 
         /** The element offered by the Thread creating this node. */
 	final Object item;
+
         /** The Thread creating this node. */
         final Thread waiter;
 
         /**
          * Creates node with given item and empty hole.
-         * @param item the item.
+         *
+         * @param item the item
          */
 	Node(Object item) {
             this.item = item;
@@ -249,8 +249,9 @@ public class Exchanger<V> {
 
         /**
          * Tries to fill in hole. On success, wakes up the waiter.
-         * @param val the value to place in hole.
-         * @return on success, the item; on failure, FAIL.
+         *
+         * @param val the value to place in hole
+         * @return on success, the item; on failure, FAIL
          */
 	Object fillHole(Object val) {
             if (compareAndSet(null, val)) {
@@ -294,7 +295,7 @@ public class Exchanger<V> {
 
     /**
      * Waits for another thread to arrive at this exchange point (unless
-     * it is {@link Thread#interrupt interrupted}),
+     * the current thread is {@link Thread#interrupt interrupted}),
      * and then transfers the given object to it, receiving its object
      * in return.
      *
@@ -335,10 +336,9 @@ public class Exchanger<V> {
 
     /**
      * Waits for another thread to arrive at this exchange point (unless
-     * it is {@link Thread#interrupt interrupted}, or the specified waiting
-     * time elapses),
-     * and then transfers the given object to it, receiving its object
-     * in return.
+     * the current thread is {@link Thread#interrupt interrupted} or
+     * the specified waiting time elapses), and then transfers the given
+     * object to it, receiving its object in return.
      *
      * <p>If another thread is already waiting at the exchange point then
      * it is resumed for thread scheduling purposes and receives the object

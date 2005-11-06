@@ -34,7 +34,7 @@ import java.util.Random;
  *       try {
  *         while (currentBuffer != null) {
  *           addToBuffer(currentBuffer);
- *           if (currentBuffer.full())
+ *           if (currentBuffer.isFull())
  *             currentBuffer = exchanger.exchange(currentBuffer);
  *         }
  *       } catch (InterruptedException ex) { ... handle ... }
@@ -47,7 +47,7 @@ import java.util.Random;
  *       try {
  *         while (currentBuffer != null) {
  *           takeFromBuffer(currentBuffer);
- *           if (currentBuffer.empty())
+ *           if (currentBuffer.isEmpty())
  *             currentBuffer = exchanger.exchange(currentBuffer);
  *         }
  *       } catch (InterruptedException ex) { ... handle ...}
@@ -104,6 +104,11 @@ public class Exchanger<V> {
      * common usages where only two threads ever meet to exchange
      * items, but they prevent contention bottlenecks when an
      * exchanger is used by a large number of threads.
+     *
+     * For more details, see the paper "A Scalable Elimination-based
+     * Exchange Channel" by William Scherer, Doug Lea, and Michael
+     * Scott in Proceedings of SCOOL05 workshop. Available at:
+     * http://hdl.handle.net/1802/2104
      */
 
     /**
@@ -136,7 +141,7 @@ public class Exchanger<V> {
      * Each slot holds an AtomicReference<Node>, but this cannot be
      * expressed for arrays, so elements are casted on each use.
      */
-    private final AtomicReference[] arena;
+    private final AtomicReference<Node>[] arena;
 
     /** Generator for random backoffs and delays. */
     private final Random random = new Random();
@@ -145,9 +150,9 @@ public class Exchanger<V> {
      * Creates a new Exchanger.
      */
     public Exchanger() {
-	arena = new AtomicReference[SIZE + 1];
+	arena = (AtomicReference<Node>[]) new AtomicReference[SIZE + 1];
         for (int i = 0; i < arena.length; ++i)
-            arena[i] = new AtomicReference();
+            arena[i] = new AtomicReference<Node>();
     }
 
     /**
@@ -155,20 +160,21 @@ public class Exchanger<V> {
      * Uses Object, not "V" as argument and return value to simplify
      * handling of internal sentinel values. Callers from public
      * methods cast accordingly.
-     * @param item the item to exchange.
-     * @param timed true if the wait is timed.
-     * @param nanos if timed, the maximum wait time.
-     * @return the other thread's item.
+     *
+     * @param item the item to exchange
+     * @param timed true if the wait is timed
+     * @param nanos if timed, the maximum wait time
+     * @return the other thread's item
      */
     private Object doExchange(Object item, boolean timed, long nanos)
 	throws InterruptedException, TimeoutException {
 	Node me = new Node(item);
-	long lastTime = (timed)? System.nanoTime() : 0;
+	long lastTime = timed ? System.nanoTime() : 0;
         int idx = 0;     // start out at slot representing top
 	int backoff = 0; // increases on failure to occupy a slot
 
 	for (;;) {
-            AtomicReference<Node> slot = (AtomicReference<Node>)arena[idx];
+            AtomicReference<Node> slot = arena[idx];
 
             // If this slot is already occupied, there is a waiting item...
             Node you = slot.get();
@@ -257,19 +263,22 @@ public class Exchanger<V> {
         /**
          * Waits for and gets the hole filled in by another thread.
          * Fails if timed out or interrupted before hole filled.
-         * @param timed true if the wait is timed.
-         * @param nanos if timed, the maximum wait time.
-         * @return on success, the hole; on failure, FAIL.
+         *
+         * @param timed true if the wait is timed
+         * @param nanos if timed, the maximum wait time
+         * @return on success, the hole; on failure, FAIL
          */
         Object waitForHole(boolean timed, long nanos) {
-            long lastTime = (timed)? System.nanoTime() : 0;
+            long lastTime = timed ? System.nanoTime() : 0;
             Object h;
             while ((h = get()) == null) {
                 // If interrupted or timed out, try to cancel by
                 // CASing FAIL as hole value.
                 if (Thread.currentThread().isInterrupted() ||
-                    (timed && nanos <= 0))
-                    compareAndSet(null, FAIL);
+                    (timed && nanos <= 0)) {
+                    if (compareAndSet(null, FAIL))
+			return FAIL;
+		}
                 else if (!timed)
                     LockSupport.park();
                 else {
@@ -312,9 +321,9 @@ public class Exchanger<V> {
      * interrupted status is cleared.
      *
      * @param x the object to exchange
-     * @return the object provided by the other thread.
-     * @throws InterruptedException if current thread was interrupted
-     * while waiting
+     * @return the object provided by the other thread
+     * @throws InterruptedException if the current thread was
+     *         interrupted while waiting
      */
     public V exchange(V x) throws InterruptedException {
         try {
@@ -361,12 +370,12 @@ public class Exchanger<V> {
      *
      * @param x the object to exchange
      * @param timeout the maximum time to wait
-     * @param unit the time unit of the <tt>timeout</tt> argument.
-     * @return the object provided by the other thread.
-     * @throws InterruptedException if current thread was interrupted
-     * while waiting
-     * @throws TimeoutException if the specified waiting time elapses before
-     * another thread enters the exchange.
+     * @param unit the time unit of the <tt>timeout</tt> argument
+     * @return the object provided by the other thread
+     * @throws InterruptedException if the current thread was
+     *         interrupted while waiting
+     * @throws TimeoutException if the specified waiting time elapses
+     *         before another thread enters the exchange
      */
     public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {

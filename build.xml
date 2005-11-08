@@ -113,8 +113,9 @@
       <include name="**/*.java"/>
 <!--
       <exclude name="java/lang/**"/>
--->
       <compilerarg line="${build.args}"/>
+      <compilerarg line="-Xlint -Xmaxwarns 1000"/>
+-->
 
     </javac>
 
@@ -151,7 +152,7 @@
     <javadoc destdir="${build.javadocs.dir}"
                 link="http://java.sun.com/j2se/1.5.0/docs/api"
             overview="${src.dir}/intro.html"
-            sourcepath="${src.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${src.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
     >           
 
       <packageset dir="${src.dir}"/>
@@ -260,7 +261,7 @@
               link="http://java.sun.com/j2se/1.5.0/docs/api"
             overview="${src.dir}/intro.html"
 
-            sourcepath="${src.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${src.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
      >
       <packageset dir="${src.dir}" defaultexcludes="yes">
       <include name="java/util/concurrent"/>
@@ -269,6 +270,7 @@
       </packageset>
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="main/java/util/*.java"/>
+      <include name="main/java/util/*.html"/>
 <!--      <include name="jsr166x/*.java"/> -->
       </fileset>
     </javadoc>

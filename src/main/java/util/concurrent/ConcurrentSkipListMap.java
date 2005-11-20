@@ -2599,6 +2599,23 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     }
 
+    /**
+     * Custom Entry class used by Entry iterators that relays
+     * setValue changes to the underlying map. For explanation,
+     * see similar construction in ConcurrentHashMap.
+     */
+    final class WriteThroughEntry extends AbstractMap.SimpleEntry<K,V> {
+        WriteThroughEntry(K k, Object v) {
+            super(k, (V)v);
+        }
+	public V setValue(V value) {
+            if (value == null) throw new NullPointerException();
+            V v = super.setValue(value);
+            ConcurrentSkipListMap.this.put(getKey(), value);
+            return v;
+        }
+    }
+
     final class ValueIterator extends Iter implements Iterator<V> {
         ValueIterator() {
             initAscending();
@@ -2674,76 +2691,18 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
-    /**
-     * Entry iterators use the same trick as in ConcurrentHashMap and
-     * elsewhere of using the iterator itself to represent entries,
-     * thus avoiding having to create entry objects in next().
-     */
-    abstract class EntryIter extends Iter implements Map.Entry<K,V> {
-        /** Cache of last value returned */
-        Object lastValue;
-
-        EntryIter() {
-        }
-
-        public K getKey() {
-            Node<K,V> l = last;
-            if (l == null)
-                throw new IllegalStateException();
-            return l.key;
-        }
-
-        public V getValue() {
-            Object v = lastValue;
-            if (last == null || v == null)
-                throw new IllegalStateException();
-	    return (V)v;
-        }
-
-        public V setValue(V value) {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean equals(Object o) {
-            // If not acting as entry, just use default.
-            if (last == null)
-                return super.equals(o);
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry e = (Map.Entry)o;
-            return (getKey().equals(e.getKey()) &&
-                    getValue().equals(e.getValue()));
-        }
-
-        public int hashCode() {
-            // If not acting as entry, just use default.
-            if (last == null)
-                return super.hashCode();
-            return getKey().hashCode() ^ getValue().hashCode();
-        }
-
-        public String toString() {
-            // If not acting as entry, just use default.
-            if (last == null)
-                return super.toString();
-	    return getKey() + "=" + getValue();
-        }
-    }
-
-    final class EntryIterator extends EntryIter
-        implements Iterator<Map.Entry<K,V>> {
+    final class EntryIterator extends Iter implements Iterator<Map.Entry<K,V>> {
         EntryIterator() {
             initAscending();
         }
         public Map.Entry<K,V> next() {
-            lastValue = nextValue;
+            Node<K,V> n = next;
             ascend();
-            return this;
+            return new WriteThroughEntry(n.key, n.value);
         }
     }
 
-    final class SubMapEntryIterator extends EntryIter
-        implements Iterator<Map.Entry<K,V>> {
+    final class SubMapEntryIterator extends Iter implements Iterator<Map.Entry<K,V>> {
         final K fence;
         SubMapEntryIterator(K least, K fence) {
             initAscending(least, fence);
@@ -2751,26 +2710,24 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public Map.Entry<K,V> next() {
-            lastValue = nextValue;
+            Node<K,V> n = next;
             ascend(fence);
-            return this;
+            return new WriteThroughEntry(n.key, n.value);
         }
     }
 
-    final class DescendingEntryIterator extends EntryIter
-        implements Iterator<Map.Entry<K,V>>  {
+    final class DescendingEntryIterator extends Iter implements Iterator<Map.Entry<K,V>>  {
         DescendingEntryIterator() {
             initDescending();
         }
         public Map.Entry<K,V> next() {
-            lastValue = nextValue;
+            Node<K,V> n = next;
             descend();
-            return this;
+            return new WriteThroughEntry(n.key, n.value);
         }
     }
 
-    final class DescendingSubMapEntryIterator extends EntryIter
-        implements Iterator<Map.Entry<K,V>>  {
+    final class DescendingSubMapEntryIterator extends Iter implements Iterator<Map.Entry<K,V>>  {
         final K least;
         DescendingSubMapEntryIterator(K least, K fence) {
             initDescending(least, fence);
@@ -2778,9 +2735,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public Map.Entry<K,V> next() {
-            lastValue = nextValue;
+            Node<K,V> n = next;
             descend(least);
-            return this;
+            return new WriteThroughEntry(n.key, n.value);
         }
     }
 
@@ -2836,18 +2793,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public void clear() {
             ConcurrentSkipListMap.this.clear();
         }
-        public Object[] toArray() {
-            Collection<K> c = new ArrayList<K>();
-            for (Iterator<K> i = iterator(); i.hasNext(); )
-                c.add(i.next());
-            return c.toArray();
-        }
-        public <T> T[] toArray(T[] a) {
-            Collection<K> c = new ArrayList<K>();
-            for (Iterator<K> i = iterator(); i.hasNext(); )
-                c.add(i.next());
-            return c.toArray(a);
-        }
     }
 
     class DescendingKeySet extends KeySet {
@@ -2871,18 +2816,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
         public void clear() {
             ConcurrentSkipListMap.this.clear();
-        }
-        public Object[] toArray() {
-            Collection<V> c = new ArrayList<V>();
-            for (Iterator<V> i = iterator(); i.hasNext(); )
-                c.add(i.next());
-            return c.toArray();
-        }
-        public <T> T[] toArray(T[] a) {
-            Collection<V> c = new ArrayList<V>();
-            for (Iterator<V> i = iterator(); i.hasNext(); )
-                c.add(i.next());
-            return c.toArray(a);
         }
     }
 
@@ -2912,20 +2845,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
         public void clear() {
             ConcurrentSkipListMap.this.clear();
-        }
-        public Object[] toArray() {
-            Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-            for (Map.Entry<K,V> e : this)
-                c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
-                                                       e.getValue()));
-            return c.toArray();
-        }
-        public <T> T[] toArray(T[] a) {
-            Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-            for (Map.Entry<K,V> e : this)
-                c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
-                                                       e.getValue()));
-            return c.toArray(a);
         }
     }
 
@@ -3261,18 +3180,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             public boolean contains(Object k) {
                 return ConcurrentSkipListSubMap.this.containsKey(k);
             }
-            public Object[] toArray() {
-                Collection<K> c = new ArrayList<K>();
-                for (Iterator<K> i = iterator(); i.hasNext(); )
-                    c.add(i.next());
-                return c.toArray();
-            }
-            public <T> T[] toArray(T[] a) {
-                Collection<K> c = new ArrayList<K>();
-                for (Iterator<K> i = iterator(); i.hasNext(); )
-                    c.add(i.next());
-                return c.toArray(a);
-            }
         }
 
         public Set<K> descendingKeySet() {
@@ -3303,18 +3210,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
             public boolean contains(Object v) {
                 return ConcurrentSkipListSubMap.this.containsValue(v);
-            }
-            public Object[] toArray() {
-                Collection<V> c = new ArrayList<V>();
-                for (Iterator<V> i = iterator(); i.hasNext(); )
-                    c.add(i.next());
-                return c.toArray();
-            }
-            public <T> T[] toArray(T[] a) {
-                Collection<V> c = new ArrayList<V>();
-                for (Iterator<V> i = iterator(); i.hasNext(); )
-                    c.add(i.next());
-                return c.toArray(a);
             }
         }
 
@@ -3351,20 +3246,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 if (!inHalfOpenRange(key))
                     return false;
                 return m.remove(key, e.getValue());
-            }
-            public Object[] toArray() {
-                Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-                for (Map.Entry<K,V> e : this)
-                    c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
-                                                           e.getValue()));
-                return c.toArray();
-            }
-            public <T> T[] toArray(T[] a) {
-                Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>();
-                for (Map.Entry<K,V> e : this)
-                    c.add(new AbstractMap.SimpleEntry<K,V>(e.getKey(),
-                                                           e.getValue()));
-                return c.toArray(a);
             }
         }
 

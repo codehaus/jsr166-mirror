@@ -97,11 +97,11 @@ public class CopyOnWriteArrayList<E>
      * @throws NullPointerException if the specified collection is null
      */
     public CopyOnWriteArrayList(Collection<? extends E> c) {
-        Object[] elements = new Object[c.size()];
-	int size = 0;
-	for (E e : c)
-	    elements[size++] = e;
-	setArray(elements);
+        Object[] a = c.toArray();
+        // If c.toArray incorrectly doesn't return Object[], copy it.
+        if (a.getClass() != Object[].class)
+            a = Arrays.copyOf(a, a.length, Object[].class); 
+        setArray(a);
     }
 
     /**

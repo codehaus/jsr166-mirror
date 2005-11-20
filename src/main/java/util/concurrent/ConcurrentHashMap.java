@@ -1176,18 +1176,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         public void clear() {
             ConcurrentHashMap.this.clear();
         }
-        public Object[] toArray() {
-            Collection<K> c = new ArrayList<K>(size());
-	    for (K k : this)
-		c.add(k);
-            return c.toArray();
-        }
-        public <T> T[] toArray(T[] a) {
-            Collection<K> c = new ArrayList<K>();
-	    for (K k : this)
-		c.add(k);
-            return c.toArray(a);
-        }
     }
 
     final class Values extends AbstractCollection<V> {
@@ -1202,18 +1190,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public void clear() {
             ConcurrentHashMap.this.clear();
-        }
-        public Object[] toArray() {
-            Collection<V> c = new ArrayList<V>(size());
-	    for (V v : this)
-		c.add(v);
-            return c.toArray();
-        }
-        public <T> T[] toArray(T[] a) {
-            Collection<V> c = new ArrayList<V>(size());
-	    for (V v : this)
-		c.add(v);
-            return c.toArray(a);
         }
     }
 
@@ -1240,19 +1216,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         public void clear() {
             ConcurrentHashMap.this.clear();
         }
-        public Object[] toArray() {
-            Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
-            for (Map.Entry<K,V> e : this)
-                c.add(e);
-            return c.toArray();
-        }
-        public <T> T[] toArray(T[] a) {
-            Collection<Map.Entry<K,V>> c = new ArrayList<Map.Entry<K,V>>(size());
-            for (Map.Entry<K,V> e : this)
-                c.add(e);
-            return c.toArray(a);
-        }
-
     }
 
     /* ---------------- Serialization Support -------------- */

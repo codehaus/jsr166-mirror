@@ -427,48 +427,53 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Returns an iterator over all the elements (both expired and
      * unexpired) in this queue. The iterator does not
-     * return the elements in any particular order. The returned
-     * iterator is a thread-safe "fast-fail" iterator that will throw
-     * {@link ConcurrentModificationException} upon detected
-     * interference.
+     * return the elements in any particular order. 
      *
      * @return an iterator over the elements in this queue
      */
     public Iterator<E> iterator() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            return new Itr<E>(q.iterator());
-        } finally {
-            lock.unlock();
-        }
+        return new Itr<E>(toArray());
     }
 
+    /**
+     * Snapshot iterator that works off copy of underlying q array.
+     */
     private class Itr<E> implements Iterator<E> {
-        private final Iterator<E> iter;
-        Itr(Iterator<E> i) {
-            iter = i;
+        final Object[] array; // Array of all elements
+	int cursor;           // index of next element to return;
+	int lastRet;          // index of last element, or -1 if no such
+        
+        Itr(Object[] array) {
+            lastRet = -1;
+            this.array = array;
         }
 
         public boolean hasNext() {
-            return iter.hasNext();
+            return cursor < array.length;
         }
 
         public E next() {
-            final ReentrantLock lock = DelayQueue.this.lock;
-            lock.lock();
-            try {
-                return iter.next();
-            } finally {
-                lock.unlock();
-            }
+            if (cursor >= array.length)
+                throw new NoSuchElementException();
+            lastRet = cursor;
+            return (E)array[cursor++];
         }
 
         public void remove() {
-            final ReentrantLock lock = DelayQueue.this.lock;
+            if (lastRet < 0) 
+		throw new IllegalStateException();
+            Object x = array[lastRet];
+            lastRet = -1;
+            // Traverse underlying queue to find == element,
+            // not just a .equals element.
             lock.lock();
             try {
-                iter.remove();
+                for (Iterator it = q.iterator(); it.hasNext(); ) {
+                    if (it.next() == x) {
+                        it.remove();
+                        return;
+                    }
+                }
             } finally {
                 lock.unlock();
             }

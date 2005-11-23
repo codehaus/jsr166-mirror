@@ -104,7 +104,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
 	Object[] r = new Object[size()];
         int i = 0;
         Iterator it = iterator();
-        while (i < r.length && it.hasNext()) 
+        while (i < r.length && it.hasNext())
             r[i++] = it.next();
         // Trim if overallocated; expand if underallocated
         if (i < r.length || it.hasNext())
@@ -134,12 +134,12 @@ public abstract class AbstractCollection<E> implements Collection<E> {
                   .newInstance(a.getClass().getComponentType(), size);
         int i = 0;
         Iterator it = iterator();
-        while (i < r.length && it.hasNext()) 
+        while (i < r.length && it.hasNext())
             r[i++] = (T)it.next();
         // Trim if overallocated; expand if underallocated
         if (it.hasNext() || (r != a && i < r.length))
             return resizeAndFinishToArray(r, i, it);
-        if (i < r.length) 
+        if (i < r.length)
             r[i] = null; // null-terminate if provided array is too big
         return r;
     }
@@ -154,7 +154,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @return larger array containing same elements
      */
     private static <T> T[] resizeAndFinishToArray(T[] r, int i, Iterator it) {
-        while (it.hasNext()) { 
+        while (it.hasNext()) {
             int cap = r.length;
             if (i < cap)
                 r[i++] = (T)it.next();
@@ -167,7 +167,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
                 throw new OutOfMemoryError("Required array size too large");
         }
         // trim if overallocated
-        return i == r.length? r : Arrays.copyOf(r, i); 
+        return i == r.length? r : Arrays.copyOf(r, i);
     }
 
     // Modification Operations

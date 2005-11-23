@@ -162,7 +162,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     private void fillFromSorted(Collection<? extends E> c) {
         for (Iterator<? extends E> i = c.iterator(); i.hasNext(); ) {
             int k = ++size;
-            if (k >= queue.length) 
+            if (k >= queue.length)
                 grow(k);
             queue[k] = i.next();
         }
@@ -176,7 +176,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     private void fillFromUnsorted(Collection<? extends E> c) {
         for (Iterator<? extends E> i = c.iterator(); i.hasNext(); ) {
             int k = ++size;
-            if (k >= queue.length) 
+            if (k >= queue.length)
                 grow(k);
             queue[k] = i.next();
         }

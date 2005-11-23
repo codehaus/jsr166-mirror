@@ -427,7 +427,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     /**
      * Returns an iterator over all the elements (both expired and
      * unexpired) in this queue. The iterator does not
-     * return the elements in any particular order. 
+     * return the elements in any particular order.
      *
      * @return an iterator over the elements in this queue
      */
@@ -442,7 +442,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         final Object[] array; // Array of all elements
 	int cursor;           // index of next element to return;
 	int lastRet;          // index of last element, or -1 if no such
-        
+
         Itr(Object[] array) {
             lastRet = -1;
             this.array = array;
@@ -460,7 +460,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         }
 
         public void remove() {
-            if (lastRet < 0) 
+            if (lastRet < 0)
 		throw new IllegalStateException();
             Object x = array[lastRet];
             lastRet = -1;

@@ -273,7 +273,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             if (newlen >= Integer.MAX_VALUE / 2)  // avoid overflow
                 newlen = Integer.MAX_VALUE;
             else
-                newlen <<= 2;
+                newlen <<= 1;
         }
         queue = Arrays.copyOf(queue, newlen);
     }

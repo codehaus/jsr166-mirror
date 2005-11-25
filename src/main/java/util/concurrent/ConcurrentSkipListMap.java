@@ -2599,23 +2599,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     }
 
-    /**
-     * Custom Entry class used by Entry iterators that relays
-     * setValue changes to the underlying map. For explanation,
-     * see similar construction in ConcurrentHashMap.
-     */
-    final class WriteThroughEntry extends AbstractMap.SimpleEntry<K,V> {
-        WriteThroughEntry(K k, Object v) {
-            super(k, (V)v);
-        }
-	public V setValue(V value) {
-            if (value == null) throw new NullPointerException();
-            V v = super.setValue(value);
-            ConcurrentSkipListMap.this.put(getKey(), value);
-            return v;
-        }
-    }
-
     final class ValueIterator extends Iter implements Iterator<V> {
         ValueIterator() {
             initAscending();
@@ -2697,8 +2680,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
         public Map.Entry<K,V> next() {
             Node<K,V> n = next;
+            V v = (V)nextValue;
             ascend();
-            return new WriteThroughEntry(n.key, n.value);
+            return new AbstractMap.SimpleImmutableEntry<K,V>(n.key, v);
         }
     }
 
@@ -2711,8 +2695,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public Map.Entry<K,V> next() {
             Node<K,V> n = next;
+            V v = (V)nextValue;
             ascend(fence);
-            return new WriteThroughEntry(n.key, n.value);
+            return new AbstractMap.SimpleImmutableEntry<K,V>(n.key, v);
         }
     }
 
@@ -2722,8 +2707,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
         public Map.Entry<K,V> next() {
             Node<K,V> n = next;
+            V v = (V)nextValue;
             descend();
-            return new WriteThroughEntry(n.key, n.value);
+            return new AbstractMap.SimpleImmutableEntry<K,V>(n.key, v);
         }
     }
 
@@ -2736,8 +2722,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public Map.Entry<K,V> next() {
             Node<K,V> n = next;
+            V v = (V)nextValue;
             descend(least);
-            return new WriteThroughEntry(n.key, n.value);
+            return new AbstractMap.SimpleImmutableEntry<K,V>(n.key, v);
         }
     }
 

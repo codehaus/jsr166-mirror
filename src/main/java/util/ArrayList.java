@@ -343,7 +343,7 @@ public class ArrayList<E> extends AbstractList<E>
     // Positional Access Operations
 
     /**
-     * Create and return an appropriate exception for indexing errors
+     * Creates and returns an appropriate exception for indexing errors.
      */
     private static IndexOutOfBoundsException rangeException(int i, int s) {
         return new IndexOutOfBoundsException("Index: " + i + ", Size: " + s);

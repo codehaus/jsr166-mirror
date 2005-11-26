@@ -189,11 +189,12 @@ public class ArrayList<E> extends AbstractList<E>
      * @param minCapacity the desired minimum capacity
      */
     private void growArray(int minCapacity) {
+        if (minCapacity < 0) throw new OutOfMemoryError(); // int overflow
 	int oldCapacity = elementData.length;
         // Double size if small; else grow by 50%
         int newCapacity = ((oldCapacity < 64)?
                            (oldCapacity * 2):
-                           ((oldCapacity * 3)/2 + 1));
+                           ((oldCapacity * 3)/2));
         if (newCapacity < minCapacity)
             newCapacity = minCapacity;
         elementData = Arrays.copyOf(elementData, newCapacity);
@@ -343,10 +344,10 @@ public class ArrayList<E> extends AbstractList<E>
     // Positional Access Operations
 
     /**
-     * Creates and returns an appropriate exception for indexing errors.
+     * Throws an appropriate exception for indexing errors.
      */
-    private static IndexOutOfBoundsException rangeException(int i, int s) {
-        return new IndexOutOfBoundsException("Index: " + i + ", Size: " + s);
+    private static void rangeException(int i, int s) {
+        throw new IndexOutOfBoundsException("Index: " + i + ", Size: " + s);
     }
 
     /**
@@ -358,7 +359,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public E get(int index) {
 	if (index >= size)
-            throw rangeException(index, size);
+            rangeException(index, size);
         return (E)elementData[index];
     }
 
@@ -373,7 +374,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public E set(int index, E element) {
  	if (index >= size)
-             throw rangeException(index, size);
+            rangeException(index, size);
 
 	E oldValue = (E) elementData[index];
 	elementData[index] = element;
@@ -388,10 +389,11 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public boolean add(E e) {
         ++modCount;
-        int s = size++;
+        int s = size;
         if (s >= elementData.length)
             growArray(s + 1);
  	elementData[s] = e;
+        size = s + 1;
  	return true;
     }
 
@@ -407,14 +409,14 @@ public class ArrayList<E> extends AbstractList<E>
     public void add(int index, E element) {
         int s = size;
 	if (index > s || index < 0)
-	    throw rangeException(index, s);
+            rangeException(index, s);
         ++modCount;
-        size = s + 1;
         if (s >= elementData.length)
             growArray(s + 1);
-	System.arraycopy(elementData, index, elementData, index + 1,
-			 s - index);
+	System.arraycopy(elementData, index, 
+                         elementData, index + 1, s - index);
 	elementData[index] = element;
+        size = s + 1;
     }
 
     /**
@@ -428,17 +430,17 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public E remove(int index) {
         int s = size - 1;
-	if (index > s)
-	    throw rangeException(index, size);
-        size = s;
+	if (index < 0 || index > s)
+            rangeException(index, size);
 	modCount++;
-	Object oldValue = elementData[index];
+	E oldValue = (E)elementData[index];
 	int numMoved = s - index;
 	if (numMoved > 0)
-	    System.arraycopy(elementData, index+1, elementData, index,
-                             numMoved);
+	    System.arraycopy(elementData, index + 1, 
+                             elementData, index, numMoved);
 	elementData[s] = null; // forget removed element
-	return (E)oldValue;
+        size = s;
+	return oldValue;
     }
 
     /**

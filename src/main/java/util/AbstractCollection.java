@@ -1,5 +1,5 @@
 /*
- * @(#)AbstractCollection.java	1.33 05/09/09
+ * %W% %E%
  *
  * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -103,7 +103,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
         // Estimate size of array; be prepared to see more or fewer elements
 	Object[] r = new Object[size()];
         int i = 0;
-        Iterator it = iterator();
+        Iterator<E> it = iterator();
         while (i < r.length && it.hasNext())
             r[i++] = it.next();
         // Trim if overallocated; expand if underallocated
@@ -129,11 +129,11 @@ public abstract class AbstractCollection<E> implements Collection<E> {
     public <T> T[] toArray(T[] a) {
         // Estimate size of array; be prepared to see more or fewer elements
         int size = size();
-        T[] r = a.length >= size? a :
+        T[] r = a.length >= size ? a :
                   (T[])java.lang.reflect.Array
                   .newInstance(a.getClass().getComponentType(), size);
         int i = 0;
-        Iterator it = iterator();
+        Iterator<E> it = iterator();
         while (i < r.length && it.hasNext())
             r[i++] = (T)it.next();
         // Trim if overallocated; expand if underallocated
@@ -145,15 +145,17 @@ public abstract class AbstractCollection<E> implements Collection<E> {
     }
 
     /**
-     * Reallocate the array being used within toArray that has a
-     * different number of elements than expected, and finish filling
-     * it if necessary
+     * Reallocates the array being used within toArray that has a
+     * different number of elements than expected, and finishes
+     * filling it from the given iterator, if necessary.
+     *
      * @param r the array
      * @param i the next array index to fill
      * @param it the in-progress iterator over the collection
-     * @return larger array containing same elements
+     * @return array containing the elements in the given array, plus any
+     *         further elements returned by the iterator, trimmed to size
      */
-    private static <T> T[] resizeAndFinishToArray(T[] r, int i, Iterator it) {
+    private static <T> T[] resizeAndFinishToArray(T[] r, int i, Iterator<?> it) {
         while (it.hasNext()) {
             int cap = r.length;
             if (i < cap)
@@ -167,7 +169,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
                 throw new OutOfMemoryError("Required array size too large");
         }
         // trim if overallocated
-        return i == r.length? r : Arrays.copyOf(r, i);
+        return i == r.length ? r : Arrays.copyOf(r, i);
     }
 
     // Modification Operations

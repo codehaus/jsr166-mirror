@@ -1054,7 +1054,7 @@ public class Vector<E>
             throw new IndexOutOfBoundsException("Index: "+index);
 	return new VectorIterator(index);
     }
- 
+
     /**
      * Returns an iterator over the elements in this list in proper sequence.
      *
@@ -1105,7 +1105,7 @@ public class Vector<E>
                             lastRet = i;
                             cursor = i + 1;
                             return e;
-                        } catch (IndexOutOfBoundsException fallthrough) { 
+                        } catch (IndexOutOfBoundsException fallthrough) {
                         }
                     }
                 }
@@ -1126,7 +1126,7 @@ public class Vector<E>
                             lastRet = i;
                             cursor = i;
                             return e;
-                        } catch (IndexOutOfBoundsException fallthrough) { 
+                        } catch (IndexOutOfBoundsException fallthrough) {
                         }
                     }
                 }
@@ -1140,7 +1140,7 @@ public class Vector<E>
 	    if (lastRet < 0)
 		throw new IllegalStateException();
             synchronized(Vector.this) {
-                if (modCount != expectedModCount) 
+                if (modCount != expectedModCount)
                     throw new ConcurrentModificationException();
                 Vector.this.remove(lastRet);
                 if (lastRet < cursor)
@@ -1154,7 +1154,7 @@ public class Vector<E>
 	    if (lastRet < 0)
 		throw new IllegalStateException();
             synchronized(Vector.this) {
-                if (modCount != expectedModCount) 
+                if (modCount != expectedModCount)
                     throw new ConcurrentModificationException();
                 Vector.this.set(lastRet, e);
                 expectedModCount = modCount;
@@ -1163,7 +1163,7 @@ public class Vector<E>
 
 	public void add(E e) {
             synchronized(Vector.this) {
-                if (modCount != expectedModCount) 
+                if (modCount != expectedModCount)
                     throw new ConcurrentModificationException();
                 Vector.this.add(cursor++, e);
                 lastRet = -1;

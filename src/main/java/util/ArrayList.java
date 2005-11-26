@@ -388,7 +388,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
-        ++modCount;
+        modCount++;
         int s = size;
         if (s >= elementData.length)
             growArray(s + 1);
@@ -410,7 +410,7 @@ public class ArrayList<E> extends AbstractList<E>
         int s = size;
 	if (index > s || index < 0)
             rangeException(index, s);
-        ++modCount;
+        modCount++;
         if (s >= elementData.length)
             growArray(s + 1);
 	System.arraycopy(elementData, index, 
@@ -430,7 +430,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public E remove(int index) {
         int s = size - 1;
-	if (index < 0 || index > s)
+	if (index > s)
             rangeException(index, size);
 	modCount++;
 	E oldValue = (E)elementData[index];
@@ -438,7 +438,7 @@ public class ArrayList<E> extends AbstractList<E>
 	if (numMoved > 0)
 	    System.arraycopy(elementData, index + 1, 
                              elementData, index, numMoved);
-	elementData[s] = null; // forget removed element
+	elementData[s] = null;
         size = s;
 	return oldValue;
     }

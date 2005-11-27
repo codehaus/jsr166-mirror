@@ -189,12 +189,13 @@ public class ArrayList<E> extends AbstractList<E>
      * @param minCapacity the desired minimum capacity
      */
     private void growArray(int minCapacity) {
-        if (minCapacity < 0) throw new OutOfMemoryError(); // int overflow
+        if (minCapacity < 0) 
+            throw new OutOfMemoryError(); // int overflow
 	int oldCapacity = elementData.length;
         // Double size if small; else grow by 50%
         int newCapacity = ((oldCapacity < 64)?
-                           (oldCapacity * 2):
-                           ((oldCapacity * 3)/2));
+                           ((oldCapacity + 1) * 2):
+                           ((oldCapacity * 3) / 2));
         if (newCapacity < minCapacity)
             newCapacity = minCapacity;
         elementData = Arrays.copyOf(elementData, newCapacity);
@@ -344,10 +345,10 @@ public class ArrayList<E> extends AbstractList<E>
     // Positional Access Operations
 
     /**
-     * Throws an appropriate exception for indexing errors.
+     * Returns error message string for IndexOutOfBoundsExceptions
      */
-    private static void rangeException(int i, int s) {
-        throw new IndexOutOfBoundsException("Index: " + i + ", Size: " + s);
+    private String ioobe(int index) {
+        return "Index: " + index + ", Size: " + size;
     }
 
     /**
@@ -359,7 +360,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public E get(int index) {
 	if (index >= size)
-            rangeException(index, size);
+            throw new IndexOutOfBoundsException(ioobe(index));
         return (E)elementData[index];
     }
 
@@ -374,7 +375,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public E set(int index, E element) {
  	if (index >= size)
-            rangeException(index, size);
+            throw new IndexOutOfBoundsException(ioobe(index));
 
 	E oldValue = (E) elementData[index];
 	elementData[index] = element;
@@ -409,7 +410,7 @@ public class ArrayList<E> extends AbstractList<E>
     public void add(int index, E element) {
         int s = size;
 	if (index > s || index < 0)
-            rangeException(index, s);
+            throw new IndexOutOfBoundsException(ioobe(index));
         modCount++;
         if (s >= elementData.length)
             growArray(s + 1);
@@ -431,7 +432,7 @@ public class ArrayList<E> extends AbstractList<E>
     public E remove(int index) {
         int s = size - 1;
 	if (index > s)
-            rangeException(index, size);
+            throw new IndexOutOfBoundsException(ioobe(index));
 	modCount++;
 	E oldValue = (E)elementData[index];
 	int numMoved = s - index;
@@ -539,8 +540,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public boolean addAll(int index, Collection<? extends E> c) {
 	if (index > size || index < 0)
-	    throw new IndexOutOfBoundsException(
-		"Index: " + index + ", Size: " + size);
+	    throw new IndexOutOfBoundsException(ioobe(index));
 
 	Object[] a = c.toArray();
 	int numNew = a.length;
@@ -650,8 +650,15 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public ListIterator<E> listIterator(int index) {
 	if (index < 0 || index > size)
-            throw new IndexOutOfBoundsException("Index: "+index);
+            throw new IndexOutOfBoundsException(ioobe(index));
 	return new ArrayListIterator(index);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ListIterator<E> listIterator() {
+    	return new ArrayListIterator(0);
     }
 
     /**
@@ -664,7 +671,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * A streamlined version of AbstractList.Itr
+     * A streamlined version of AbstractList.ListItr
      */
     final class ArrayListIterator implements ListIterator<E> {
 	int cursor;           // index of next element to return;
@@ -694,40 +701,32 @@ public class ArrayList<E> extends AbstractList<E>
 	}
 
 	public E next() {
-            if (expectedModCount == modCount) {
+            try {
                 int i = cursor;
-                if (i < size) {
-                    try {
-                        E e = (E)elementData[i];
-                        lastRet = i;
-                        cursor = i + 1;
-                        return e;
-                    } catch (IndexOutOfBoundsException fallthrough) {
-                    }
-                }
-            }
-            // Prefer reporting CME if applicable on failures
-            if (expectedModCount == modCount)
+                E next = get(i);
+                lastRet = i;
+                cursor = i + 1;
+                return next;
+            } catch (IndexOutOfBoundsException ex) {
                 throw new NoSuchElementException();
-            throw new ConcurrentModificationException();
+            } finally {
+                if (expectedModCount != modCount)
+                    throw new ConcurrentModificationException();
+            }
 	}
-
         public E previous() {
-            if (expectedModCount == modCount) {
+            try {
                 int i = cursor - 1;
-                if (i < size) {
-                    try {
-                        E e = (E)elementData[i];
-                        lastRet = i;
-                        cursor = i;
-                        return e;
-                    } catch (IndexOutOfBoundsException fallthrough) {
-                    }
-                }
-            }
-            if (expectedModCount == modCount)
+                E next = get(i);
+                lastRet = i;
+                cursor = i;
+                return next;
+            } catch (IndexOutOfBoundsException ex) {
                 throw new NoSuchElementException();
-            throw new ConcurrentModificationException();
+            } finally {
+                if (modCount != expectedModCount)
+                    throw new ConcurrentModificationException();
+            }
         }
 
 	public void remove() {

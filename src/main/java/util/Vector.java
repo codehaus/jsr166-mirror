@@ -1056,6 +1056,13 @@ public class Vector<E>
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public synchronized ListIterator<E> listIterator() {
+    	return new VectorIterator(0);
+    }
+
+    /**
      * Returns an iterator over the elements in this list in proper sequence.
      *
      * @return an iterator over the elements in this list in proper sequence
@@ -1065,22 +1072,23 @@ public class Vector<E>
     }
 
     /**
-     * A streamlined version of AbstractList.Itr.
+     * A streamlined version of AbstractList.ListItr.
      */
-    final class VectorIterator implements ListIterator<E> {
-	int cursor;           // index of next element to return;
-	int lastRet;          // index of last element, or -1 if no such
-	int expectedModCount; // to check for CME
+    private final class VectorIterator implements ListIterator<E> {
+	int cursor;                // current position
+	int lastRet;               // index of last returned element
+	int expectedModCount;      // to check for CME
 
 	VectorIterator(int index) {
 	    cursor = index;
-            lastRet = -1;
             expectedModCount = modCount;
+            lastRet = -1;
 	}
 
 	public boolean hasNext() {
-            // Racy but within spec and backwards-compatible
-            return cursor < elementCount;
+            // Racy but within spec, since modifications are checked
+            // within or after synchronization in next/previous
+            return cursor < Vector.this.elementCount;
 	}
 
 	public boolean hasPrevious() {
@@ -1096,80 +1104,75 @@ public class Vector<E>
 	}
 
 	public E next() {
-            synchronized(Vector.this) {
-                if (expectedModCount == modCount) {
-                    int i = cursor;
-                    if (i < elementCount) {
-                        try {
-                            E e = (E)elementData[i];
-                            lastRet = i;
-                            cursor = i + 1;
-                            return e;
-                        } catch (IndexOutOfBoundsException fallthrough) {
-                        }
-                    }
-                }
-                // Prefer reporting CME if applicable on failures
-                if (expectedModCount == modCount)
-                    throw new NoSuchElementException();
-                throw new ConcurrentModificationException();
+            try {
+                int i = cursor;
+                E next = get(i);
+                lastRet = i;
+                cursor = i + 1;
+                return next;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new NoSuchElementException();
+            } finally {
+                if (expectedModCount != modCount)
+                    throw new ConcurrentModificationException();
             }
 	}
-
         public E previous() {
-            synchronized(Vector.this) {
-                if (expectedModCount == modCount) {
-                    int i = cursor - 1;
-                    if (i < elementCount) {
-                        try {
-                            E e = (E)elementData[i];
-                            lastRet = i;
-                            cursor = i;
-                            return e;
-                        } catch (IndexOutOfBoundsException fallthrough) {
-                        }
-                    }
-                }
-                if (expectedModCount == modCount)
-                    throw new NoSuchElementException();
-                throw new ConcurrentModificationException();
+            try {
+                int i = cursor - 1;
+                E prev = get(i);
+                lastRet = i;
+                cursor = i;
+                return prev;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new NoSuchElementException();
+            } finally {
+                if (expectedModCount != modCount)
+                    throw new ConcurrentModificationException();
             }
         }
 
 	public void remove() {
-	    if (lastRet < 0)
+	    if (lastRet == -1)
 		throw new IllegalStateException();
-            synchronized(Vector.this) {
-                if (modCount != expectedModCount)
-                    throw new ConcurrentModificationException();
-                Vector.this.remove(lastRet);
-                if (lastRet < cursor)
-                    cursor--;
-                lastRet = -1;
-                expectedModCount = modCount;
-            }
+	    if (expectedModCount != modCount)
+		throw new ConcurrentModificationException();
+	    try {
+		Vector.this.remove(lastRet);
+		if (lastRet < cursor)
+		    cursor--;
+		lastRet = -1;
+		expectedModCount = modCount;
+	    } catch (IndexOutOfBoundsException e) {
+		throw new ConcurrentModificationException();
+	    }
 	}
 
 	public void set(E e) {
-	    if (lastRet < 0)
+	    if (lastRet == -1)
 		throw new IllegalStateException();
-            synchronized(Vector.this) {
-                if (modCount != expectedModCount)
-                    throw new ConcurrentModificationException();
-                Vector.this.set(lastRet, e);
-                expectedModCount = modCount;
-            }
+            if (expectedModCount != modCount)
+                throw new ConcurrentModificationException();
+	    try {
+		Vector.this.set(lastRet, e);
+		expectedModCount = modCount;
+	    } catch (IndexOutOfBoundsException ex) {
+		throw new ConcurrentModificationException();
+	    }
 	}
 
 	public void add(E e) {
-            synchronized(Vector.this) {
-                if (modCount != expectedModCount)
-                    throw new ConcurrentModificationException();
-                Vector.this.add(cursor++, e);
-                lastRet = -1;
-                expectedModCount = modCount;
-            }
+            if (expectedModCount != modCount)
+                throw new ConcurrentModificationException();
+	    try {
+                int i = cursor;
+		Vector.this.add(i, e);
+                cursor = i + 1;
+		lastRet = -1;
+		expectedModCount = modCount;
+	    } catch (IndexOutOfBoundsException ex) {
+		throw new ConcurrentModificationException();
+	    }
 	}
     }
-
 }

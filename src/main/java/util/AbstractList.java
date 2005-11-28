@@ -1,5 +1,5 @@
 /*
- * @(#)AbstractList.java	1.48 05/08/27
+ * %W% %E%
  *
  * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.

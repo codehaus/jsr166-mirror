@@ -160,14 +160,17 @@ public abstract class AbstractCollection<E> implements Collection<E> {
             int cap = r.length;
             if (i < cap)
                 r[i++] = (T)it.next();
-            else if (cap < Integer.MAX_VALUE) { // expand
-                int newCap = (cap * 3) / 2 + 1;
-                if (newCap <= cap) // integer overflow
+            else {
+                int newCap = ((cap / 2) + 1) * 3;
+                if (newCap <= cap) { // integer overflow
+		    if (cap == Integer.MAX_VALUE)
+			throw new OutOfMemoryError
+			    ("Required array size too large");
                     newCap = Integer.MAX_VALUE;
+		}
                 r = Arrays.copyOf(r, newCap);
-            } else // can't expand
-                throw new OutOfMemoryError("Required array size too large");
-        }
+            }
+         }
         // trim if overallocated
         return i == r.length ? r : Arrays.copyOf(r, i);
     }

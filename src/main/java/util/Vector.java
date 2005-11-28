@@ -1088,11 +1088,11 @@ public class Vector<E>
 	public boolean hasNext() {
             // Racy but within spec, since modifications are checked
             // within or after synchronization in next/previous
-            return cursor < Vector.this.elementCount;
+            return cursor != elementCount;
 	}
 
 	public boolean hasPrevious() {
-	    return cursor > 0;
+	    return cursor != 0;
 	}
 
 	public int nextIndex() {

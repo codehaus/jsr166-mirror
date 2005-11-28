@@ -337,11 +337,11 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 	 */
 	int expectedModCount = modCount;
 
-	public final boolean hasNext() {
-            return cursor < size();
+	public boolean hasNext() {
+            return cursor != size();
 	}
 
-	public final E next() {
+	public E next() {
             try {
                 int i = cursor;
                 E next = get(i);
@@ -356,7 +356,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
             }
 	}
 
-	public final void remove() {
+	public void remove() {
 	    if (lastRet == -1)
 		throw new IllegalStateException();
 	    if (expectedModCount != modCount)
@@ -372,14 +372,14 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 	    }
 	}
     }
-
-    private final class ListItr extends Itr implements ListIterator<E> {
+    
+    private class ListItr extends Itr implements ListIterator<E> {
 	ListItr(int index) {
 	    cursor = index;
 	}
 
 	public boolean hasPrevious() {
-	    return cursor > 0;
+	    return cursor != 0;
 	}
 
 	public int nextIndex() {

@@ -189,13 +189,15 @@ public class ArrayList<E> extends AbstractList<E>
      * @param minCapacity the desired minimum capacity
      */
     private void growArray(int minCapacity) {
-        if (minCapacity < 0)
-            throw new OutOfMemoryError(); // int overflow
+        if (minCapacity < 0) // overflow
+            throw new OutOfMemoryError(); 
 	int oldCapacity = elementData.length;
         // Double size if small; else grow by 50%
         int newCapacity = ((oldCapacity < 64)?
                            ((oldCapacity + 1) * 2):
-                           ((oldCapacity * 3) / 2));
+                           ((oldCapacity / 2) * 3));
+        if (newCapacity < 0) // overflow
+            newCapacity = Integer.MAX_VALUE;
         if (newCapacity < minCapacity)
             newCapacity = minCapacity;
         elementData = Arrays.copyOf(elementData, newCapacity);
@@ -685,11 +687,11 @@ public class ArrayList<E> extends AbstractList<E>
 	}
 
 	public boolean hasNext() {
-            return cursor < size;
+            return cursor != size;
 	}
 
 	public boolean hasPrevious() {
-	    return cursor > 0;
+	    return cursor != 0;
 	}
 
 	public int nextIndex() {
@@ -754,9 +756,13 @@ public class ArrayList<E> extends AbstractList<E>
 	public void add(E e) {
             if (expectedModCount != modCount)
                 throw new ConcurrentModificationException();
-            ArrayList.this.add(cursor++, e);
-            lastRet = -1;
-            expectedModCount = modCount;
+	    try {
+                ArrayList.this.add(cursor++, e);
+                lastRet = -1;
+                expectedModCount = modCount;
+	    } catch (IndexOutOfBoundsException ex) {
+		throw new ConcurrentModificationException();
+	    }
 	}
     }
 }

@@ -602,7 +602,7 @@ public class ArrayList<E> extends AbstractList<E>
 	for (int i=0; i<size; i++)
             s.writeObject(elementData[i]);
 
-	if (modCount != expectedModCount) {
+	if (expectedModCount != modCount) {
             throw new ConcurrentModificationException();
         }
 
@@ -725,7 +725,7 @@ public class ArrayList<E> extends AbstractList<E>
             } catch (IndexOutOfBoundsException ex) {
                 throw new NoSuchElementException();
             } finally {
-                if (modCount != expectedModCount)
+                if (expectedModCount != modCount)
                     throw new ConcurrentModificationException();
             }
         }
@@ -733,7 +733,7 @@ public class ArrayList<E> extends AbstractList<E>
 	public void remove() {
 	    if (lastRet < 0)
 		throw new IllegalStateException();
-            if (modCount != expectedModCount)
+            if (expectedModCount != modCount)
                 throw new ConcurrentModificationException();
             ArrayList.this.remove(lastRet);
             if (lastRet < cursor)
@@ -745,14 +745,14 @@ public class ArrayList<E> extends AbstractList<E>
 	public void set(E e) {
 	    if (lastRet < 0)
 		throw new IllegalStateException();
-            if (modCount != expectedModCount)
+            if (expectedModCount != modCount)
                 throw new ConcurrentModificationException();
             ArrayList.this.set(lastRet, e);
             expectedModCount = modCount;
 	}
 
 	public void add(E e) {
-            if (modCount != expectedModCount)
+            if (expectedModCount != modCount)
                 throw new ConcurrentModificationException();
             ArrayList.this.add(cursor++, e);
             lastRet = -1;

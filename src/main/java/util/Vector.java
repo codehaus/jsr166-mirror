@@ -1117,7 +1117,8 @@ public class Vector<E>
                     throw new ConcurrentModificationException();
             }
 	}
-        public E previous() {
+
+	public E previous() {
             try {
                 int i = cursor - 1;
                 E prev = get(i);
@@ -1143,7 +1144,7 @@ public class Vector<E>
 		    cursor--;
 		lastRet = -1;
 		expectedModCount = modCount;
-	    } catch (IndexOutOfBoundsException e) {
+	    } catch (IndexOutOfBoundsException ex) {
 		throw new ConcurrentModificationException();
 	    }
 	}

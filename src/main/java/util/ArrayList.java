@@ -714,13 +714,14 @@ public class ArrayList<E> extends AbstractList<E>
                     throw new ConcurrentModificationException();
             }
 	}
+
         public E previous() {
             try {
                 int i = cursor - 1;
-                E next = get(i);
+                E prev = get(i);
                 lastRet = i;
                 cursor = i;
-                return next;
+                return prev;
             } catch (IndexOutOfBoundsException ex) {
                 throw new NoSuchElementException();
             } finally {
@@ -758,5 +759,4 @@ public class ArrayList<E> extends AbstractList<E>
             expectedModCount = modCount;
 	}
     }
-
 }

@@ -29,8 +29,6 @@ public class ListBash {
         oneRun();
         oneRun();
         oneRun();
-        oneRun();
-        oneRun();
     }
 
     static void oneRun() {

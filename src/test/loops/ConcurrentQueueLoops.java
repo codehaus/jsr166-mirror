@@ -50,7 +50,8 @@ public class ConcurrentQueueLoops {
 
         print = false;
         System.out.println("Warmup...");
-        oneRun(klass, 4);
+        //        oneRun(klass, 4);
+        //
         Thread.sleep(100);
         oneRun(klass, 1);
         Thread.sleep(100);

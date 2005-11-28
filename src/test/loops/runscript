@@ -72,7 +72,7 @@ echo DequeBash ArrayDeque
 $RUN DequeBash java.util.ArrayDeque $TRIALS
 echo DequeBash LinkedList
 $RUN DequeBash java.util.LinkedList $TRIALS
-echo DequeBash LinkedBlockingdeque
+echo DequeBash LinkedBlockingDeque
 $RUN DequeBash java.util.concurrent.LinkedBlockingDeque $TRIALS
 echo ExchangeLoops
 $RUN ExchangeLoops $TRIALS
@@ -96,6 +96,8 @@ echo NavigableSetCheck TreeSet
 $RUN NavigableSetCheck java.util.TreeSet $TRIALS
 echo SetBash ConcurrentSkipListSet
 $RUN SetBash java.util.concurrent.ConcurrentSkipListSet $TRIALS 100
+echo SetBash ConcurrentHashSet
+$RUN SetBash ConcurrentHashSet $TRIALS 100
 echo NavigableSetCheck ConcurrentSkipListSet
 $RUN NavigableSetCheck java.util.concurrent.ConcurrentSkipListSet $TRIALS
 echo MapLoops ConcurrentHashMap
@@ -152,3 +154,26 @@ echo RLIBar
 $RUN RLIBar -np $TRIALS
 echo RLIBar -batch 10 
 $RUN RLIBar -batch 10 -np $TRIALS
+echo UnboundedQueueFillEmptyLoops 
+$RUN UnboundedQueueFillEmptyLoops java.util.ArrayDeque
+$RUN UnboundedQueueFillEmptyLoops java.util.PriorityQueue
+$RUN UnboundedQueueFillEmptyLoops java.util.concurrent.PriorityBlockingQueue
+$RUN UnboundedQueueFillEmptyLoops java.util.LinkedList
+$RUN UnboundedQueueFillEmptyLoops java.util.concurrent.ConcurrentLinkedQueue
+$RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingQueue
+$RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingDeque
+echo IteratorLoops 
+$RUN IteratorLoops java.util.ArrayList
+$RUN IteratorLoops java.util.Vector
+$RUN IteratorLoops java.util.concurrent.CopyOnWriteArrayList
+$RUN IteratorLoops java.util.LinkedList
+$RUN IteratorLoops java.util.concurrent.ConcurrentLinkedQueue
+$RUN IteratorLoops java.util.concurrent.LinkedBlockingQueue
+$RUN IteratorLoops java.util.ArrayDeque
+$RUN IteratorLoops java.util.concurrent.LinkedBlockingDeque
+$RUN IteratorLoops java.util.PriorityQueue
+$RUN IteratorLoops java.util.concurrent.PriorityBlockingQueue
+$RUN IteratorLoops java.util.TreeSet
+$RUN IteratorLoops java.util.concurrent.ConcurrentSkipListSet
+$RUN IteratorLoops java.util.HashSet
+$RUN IteratorLoops ConcurrentHashSet

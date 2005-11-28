@@ -23,7 +23,7 @@ public class PriorityQueueSort {
     }
 
     public static void main(String[] args) {
-        int n = 10000;
+        int n = 100000;
         if (args.length > 0)
             n = Integer.parseInt(args[0]);
         

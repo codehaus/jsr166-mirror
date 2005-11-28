@@ -372,7 +372,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 	    }
 	}
     }
-    
+
     private final class ListItr extends Itr implements ListIterator<E> {
 	ListItr(int index) {
 	    cursor = index;

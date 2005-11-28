@@ -136,7 +136,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         this.queue = new Object[initialCapacity];
         this.comparator = comparator;
     }
-    
+
     /**
      * Creates a <tt>PriorityQueue</tt> containing the elements in the
      * specified collection.   If the specified collection is an
@@ -155,10 +155,10 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      */
     public PriorityQueue(Collection<? extends E> c) {
         initFromCollection(c);
-        if (c instanceof SortedSet) 
+        if (c instanceof SortedSet)
             comparator = (Comparator<? super E>)
                 ((SortedSet<? extends E>)c).comparator();
-        else if (c instanceof PriorityQueue) 
+        else if (c instanceof PriorityQueue)
             comparator = (Comparator<? super E>)
                 ((PriorityQueue<? extends E>)c).comparator();
         else {
@@ -215,7 +215,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             a = Arrays.copyOf(a, a.length, Object[].class);
         queue = a;
         size = a.length;
-    }        
+    }
 
     /**
      * Increases the capacity of the array.
@@ -307,10 +307,10 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 	}
     }
 
-    /** 
+    /**
      * Version of remove using reference equality, not equals.
      * Needed by iterator.remove
-     * 
+     *
      * @param o element to be removed from this queue, if present
      * @return <tt>true</tt> if removed.
      */
@@ -435,19 +435,19 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         private int expectedModCount = modCount;
 
         public boolean hasNext() {
-            return cursor < size || 
+            return cursor < size ||
                 (forgetMeNot != null && !forgetMeNot.isEmpty());
         }
 
         public E next() {
             if (expectedModCount != modCount)
                 throw new ConcurrentModificationException();
-            if (cursor < size) 
+            if (cursor < size)
                 return (E) queue[lastRet = cursor++];
             if (forgetMeNot != null) {
                 lastRet = -1;
                 lastRetElt = forgetMeNot.poll();
-                if (lastRetElt != null) 
+                if (lastRetElt != null)
                     return lastRetElt;
             }
             throw new NoSuchElementException();
@@ -461,17 +461,17 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             if (lastRet != -1) {
                 E moved = PriorityQueue.this.removeAt(lastRet);
                 lastRet = -1;
-                if (moved == null) 
+                if (moved == null)
                     cursor--;
                 else {
                     if (forgetMeNot == null)
                         forgetMeNot = new ArrayDeque<E>();
                     forgetMeNot.add(moved);
-                }            
+                }
             } else {
                 PriorityQueue.this.removeEq(lastRetElt);
                 lastRetElt = null;
-            } 
+            }
             expectedModCount = modCount;
         }
 
@@ -525,7 +525,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             queue[i] = null;
         else {
             E moved = (E) queue[s];
-            queue[s] = null;  
+            queue[s] = null;
             siftDown(i, moved);
             if (queue[i] == moved) {
                 siftUp(i, moved);
@@ -544,12 +544,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * To simplify and speed up coercions and comparisons. the
      * Comparable and Comparator versions are separated into different
      * methods that are otherwise identical. (Similarly for siftDown.)
-     * 
+     *
      * @param k the position to fill
      * @param x the item to insert
      */
     private void siftUp(int k, E x) {
-        if (comparator != null) 
+        if (comparator != null)
             siftUpUsingComparator(k, x);
         else
             siftUpComparable(k, x);
@@ -560,7 +560,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         while (k > 0) {
             int parent = (k - 1) >>> 1;
             Object e = queue[parent];
-            if (key.compareTo((E)e) >= 0) 
+            if (key.compareTo((E)e) >= 0)
                 break;
             queue[k] = e;
             k = parent;
@@ -572,7 +572,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         while (k > 0) {
             int parent = (k - 1) >>> 1;
             Object e = queue[parent];
-            if (comparator.compare(x, (E)e) >= 0) 
+            if (comparator.compare(x, (E)e) >= 0)
                 break;
             queue[k] = e;
             k = parent;
@@ -589,7 +589,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @param x the item to insert
      */
     private void siftDown(int k, E x) {
-        if (comparator != null) 
+        if (comparator != null)
             siftDownUsingComparator(k, x);
         else
             siftDownComparable(k, x);
@@ -621,8 +621,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             int right = child + 1;
             if (right < size &&
                 comparator.compare((E)c, (E)queue[right]) > 0)
-                c = queue[child = right]; 
-            if (comparator.compare(x, (E)c) <= 0) 
+                c = queue[child = right];
+            if (comparator.compare(x, (E)c) <= 0)
                 break;
             queue[k] = c;
             k = child;
@@ -635,7 +635,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * assuming nothing about the order of the elements prior to the call.
      */
     private void heapify() {
-        for (int i = (size >>> 1) - 1; i >= 0; i--) 
+        for (int i = (size >>> 1) - 1; i >= 0; i--)
             siftDown(i, (E)queue[i]);
     }
 

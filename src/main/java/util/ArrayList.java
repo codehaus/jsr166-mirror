@@ -189,7 +189,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @param minCapacity the desired minimum capacity
      */
     private void growArray(int minCapacity) {
-        if (minCapacity < 0) 
+        if (minCapacity < 0)
             throw new OutOfMemoryError(); // int overflow
 	int oldCapacity = elementData.length;
         // Double size if small; else grow by 50%
@@ -414,7 +414,7 @@ public class ArrayList<E> extends AbstractList<E>
         modCount++;
         if (s >= elementData.length)
             growArray(s + 1);
-	System.arraycopy(elementData, index, 
+	System.arraycopy(elementData, index,
                          elementData, index + 1, s - index);
 	elementData[index] = element;
         size = s + 1;
@@ -437,7 +437,7 @@ public class ArrayList<E> extends AbstractList<E>
 	E oldValue = (E)elementData[index];
 	int numMoved = s - index;
 	if (numMoved > 0)
-	    System.arraycopy(elementData, index + 1, 
+	    System.arraycopy(elementData, index + 1,
                              elementData, index, numMoved);
 	elementData[s] = null;
         size = s;

@@ -10,7 +10,7 @@ import java.util.*;
  * Estimates time per iteration of collection iterators.  Preloads
  * most elements, but adds about 1/8 of them dynamically to preclude
  * overly clever optimizations. The array of collections has
- * approximately exponentially different lengths, so chek both short
+ * approximately exponentially different lengths, so check both short
  * and long iterators.  Reports include times for adds and other
  * checks, so overestimate times per iteration.
  */
@@ -35,21 +35,21 @@ public final class IteratorLoops {
         Collection<Integer>[] colls =
             (Collection<Integer>[])new Collection[NC];
 
-        for (int k = 0; k < colls.length; ++k) 
+        for (int k = 0; k < colls.length; ++k)
             colls[k] = (Collection<Integer>)klass.newInstance();
 
-        for (int i = 0; i < t; ++i) 
+        for (int i = 0; i < t; ++i)
             new IteratorLoops(colls).oneRun(n);
 
-        if (mismatches != 0) 
+        if (mismatches != 0)
             throw new Error("Bad checksum :" + mismatches);
     }
 
     private int elementCount;
     private final Collection<Integer>[] cs;
 
-    IteratorLoops(Collection<Integer>[] colls) { 
-        cs = colls; 
+    IteratorLoops(Collection<Integer>[] colls) {
+        cs = colls;
         elementCount = 0;
     }
 
@@ -85,26 +85,26 @@ public final class IteratorLoops {
             }
         }
         return count;
-    }    
+    }
 
     void maybeAdd() {
         int r = randomSeed;
-        r ^= r << 6; 
-        r ^= r >>> 21; 
+        r ^= r << 6;
+        r ^= r >>> 21;
         r ^= r << 7;
         randomSeed = r;
-        if ((r >>> 29) == 0) 
+        if ((r >>> 29) == 0)
             cs[r & (cs.length-1)].add(new Integer(elementCount++));
-    }    
+    }
 
     void preload(int n) {
-        for (int i = 0; i < cs.length; ++i) 
+        for (int i = 0; i < cs.length; ++i)
             cs[i].clear();
         int k = (n - n / 8) / 2;
         ArrayList<Integer> al = new ArrayList<Integer>(k+1);
         for (int i = 0; i < cs.length; ++i) {
             if (k > 0) {
-                for (int j = 0; j < k; ++j) 
+                for (int j = 0; j < k; ++j)
                     al.add(new Integer(elementCount++));
                 cs[i].addAll(al);
                 al.clear();
@@ -113,7 +113,7 @@ public final class IteratorLoops {
         }
         // let GC settle down
         try { Thread.sleep(500); } catch(Exception ex) { return; }
-    }    
+    }
 
 
 }

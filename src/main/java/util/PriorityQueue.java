@@ -311,10 +311,10 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
     /**
      * Version of remove using reference equality, not equals.
-     * Needed by iterator.remove
+     * Needed by iterator.remove.
      *
      * @param o element to be removed from this queue, if present
-     * @return <tt>true</tt> if removed.
+     * @return <tt>true</tt> if removed
      */
     boolean removeEq(Object o) {
 	for (int i = 0; i < size; i++) {
@@ -346,7 +346,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * maintained by this list.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
      *
-     * @return an array containing all of the elements in this queue.
+     * @return an array containing all of the elements in this queue
      */
     public Object[] toArray() {
         return Arrays.copyOf(queue, size);

@@ -3,7 +3,7 @@
  * @bug 4486658
  * @compile -source 1.5 CancelledProducerConsumerLoops.java
  * @run main/timeout=7000 CancelledProducerConsumerLoops
- * @summary Checks for responsiveness of blocking queues to cancellation. 
+ * @summary Checks for responsiveness of blocking queues to cancellation.
  * Runs under the assumption that ITERS computations require more than
  * TIMEOUT msecs to complete.
  */
@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 
 public class CancelledProducerConsumerLoops {
     static final int CAPACITY =      100;
-    static final long TIMEOUT = 100; 
+    static final long TIMEOUT = 100;
 
     static final ExecutorService pool = Executors.newCachedThreadPool();
     static boolean print = false;
@@ -26,17 +26,17 @@ public class CancelledProducerConsumerLoops {
         int maxPairs = 8;
         int iters = 1000000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxPairs = Integer.parseInt(args[0]);
 
         print = true;
-        
+
         for (int i = 1; i <= maxPairs; i += (i+1) >>> 1) {
             System.out.println("Pairs:" + i);
             try {
                 oneTest(i, iters);
             }
-            catch(BrokenBarrierException bb) {
+            catch (BrokenBarrierException bb) {
                 // OK, ignore
             }
             Thread.sleep(100);
@@ -49,7 +49,7 @@ public class CancelledProducerConsumerLoops {
         CyclicBarrier barrier = new CyclicBarrier(npairs * 2 + 1, timer);
         Future[] prods = new Future[npairs];
         Future[] cons = new Future[npairs];
-        
+
         for (int i = 0; i < npairs; ++i) {
             prods[i] = pool.submit(new Producer(q, barrier, iters));
             cons[i] = pool.submit(new Consumer(q, barrier, iters));
@@ -97,24 +97,23 @@ public class CancelledProducerConsumerLoops {
             System.out.print("LinkedBlockingQueue     ");
         oneRun(new LinkedBlockingQueue<Integer>(CAPACITY), pairs, iters);
 
-
         if (print)
             System.out.print("SynchronousQueue        ");
         oneRun(new SynchronousQueue<Integer>(), pairs, iters / 8);
 
-        /*
+        /* PriorityBlockingQueue is unbounded
         if (print)
             System.out.print("PriorityBlockingQueue   ");
-        oneRun(new PriorityBlockingQueue<Integer>(ITERS / 2 * pairs), pairs, iters / 4);
+        oneRun(new PriorityBlockingQueue<Integer>(iters / 2 * pairs), pairs, iters / 4);
         */
     }
-    
-    static abstract class Stage implements Callable {
+
+    static abstract class Stage implements Callable<Integer> {
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         final int iters;
         Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.iters = iters;
         }
@@ -125,7 +124,7 @@ public class CancelledProducerConsumerLoops {
             super(q, b, iters);
         }
 
-        public Object call() throws Exception {
+        public Integer call() throws Exception {
             barrier.await();
             int s = 0;
             int l = 4321;
@@ -140,11 +139,11 @@ public class CancelledProducerConsumerLoops {
     }
 
     static class Consumer extends Stage {
-        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) { 
+        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             super(q, b, iters);
         }
 
-        public Object call() throws Exception {
+        public Integer call() throws Exception {
             barrier.await();
             int l = 0;
             int s = 0;
@@ -158,6 +157,4 @@ public class CancelledProducerConsumerLoops {
             return new Integer(s);
         }
     }
-
-
 }

@@ -107,9 +107,11 @@ public class CancelledProducerConsumerLoops {
             System.out.print("SynchronousQueue(fair)  ");
         oneRun(new SynchronousQueue<Integer>(true), pairs, iters / 8);
 
+        /* Can legitimately run out of memory before cancellation
         if (print)
             System.out.print("PriorityBlockingQueue   ");
         oneRun(new PriorityBlockingQueue<Integer>(ITERS / 2 * pairs), pairs, iters / 4);
+        */
     }
     
     static abstract class Stage implements Callable {

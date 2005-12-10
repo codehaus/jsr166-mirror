@@ -111,6 +111,9 @@ public class Exchanger<V> {
      * http://hdl.handle.net/1802/2104
      */
 
+    /** The number of CPUs, for sizing and spin control */
+    static final int NCPUS = Runtime.getRuntime().availableProcessors();
+
     /**
      * Size of collision space. Using a size of half the number of
      * CPUs provides enough space for threads to find each other but
@@ -118,8 +121,29 @@ public class Exchanger<V> {
      * out to become unstuck. Note that the arena array holds SIZE+1
      * elements, to include the top-of-stack slot.
      */
-    private static final int SIZE =
-        (Runtime.getRuntime().availableProcessors() + 1) / 2;
+    private static final int SIZE = (NCPUS + 1) / 2;
+
+    /**
+     * The number of times to spin before blocking in timed waits.
+     * The value is empirically derived -- it works well across a
+     * variety of processors and OSes. Empirically, the best value
+     * seems not to vary with number of CPUs (beyond 2) so is just
+     * a constant.
+     */
+    static final int maxTimedSpins = (NCPUS < 2)? 0 : 16;
+
+    /**
+     * The number of times to spin before blocking in untimed waits.
+     * This is greater than timed value because untimed waits spin
+     * faster since they don't need to check times on each spin.
+     */
+    static final int maxUntimedSpins = maxTimedSpins * 32;
+
+    /**
+     * The number of nanoseconds for which it is faster to spin
+     * rather than to use timed park. A rough estimate suffices.
+     */
+    static final long spinForTimeoutThreshold = 1000L;
 
     /**
      * Base unit in nanoseconds for backoffs. Must be a power of two.
@@ -271,6 +295,7 @@ public class Exchanger<V> {
          */
         Object waitForHole(boolean timed, long nanos) {
             long lastTime = timed ? System.nanoTime() : 0;
+            int spins = timed? maxTimedSpins : maxUntimedSpins;
             Object h;
             while ((h = get()) == null) {
                 // If interrupted or timed out, try to cancel by
@@ -279,14 +304,18 @@ public class Exchanger<V> {
                     (timed && nanos <= 0)) {
                     if (compareAndSet(null, FAIL))
 			return FAIL;
-		}
-                else if (!timed)
-                    LockSupport.park();
-                else {
-                    LockSupport.parkNanos(nanos);
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
+		} else {
+                    if (timed) {
+                        long now = System.nanoTime();
+                        nanos -= now - lastTime;
+                        lastTime = now;
+                    }
+                    if (spins > 0)
+                        --spins;
+                    else if (!timed) 
+                        LockSupport.park();
+                    else if (nanos > spinForTimeoutThreshold)
+                        LockSupport.parkNanos(nanos);
                 }
             }
             return h;

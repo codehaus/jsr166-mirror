@@ -190,7 +190,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     private void growArray(int minCapacity) {
         if (minCapacity < 0) // overflow
-            throw new OutOfMemoryError(); 
+            throw new OutOfMemoryError();
 	int oldCapacity = elementData.length;
         // Double size if small; else grow by 50%
         int newCapacity = ((oldCapacity < 64)?

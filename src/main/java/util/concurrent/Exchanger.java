@@ -118,10 +118,31 @@ public class Exchanger<V> {
      * Size of collision space. Using a size of half the number of
      * CPUs provides enough space for threads to find each other but
      * not so much that it would always require one or more to time
-     * out to become unstuck. Note that the arena array holds SIZE+1
-     * elements, to include the top-of-stack slot.
+     * out to become unstuck.  Note that the arena array holds SIZE+1
+     * elements, to include the top-of-stack slot.  Imposing a ceiling
+     * is suboptimal for huge machines, but bounds backoff times to
+     * acceptable values. To ensure max times less than 2.4seconds,
+     * the ceiling value plus the shift value of backoff base (below)
+     * should be less than or equal to 31.
      */
-    private static final int SIZE = (NCPUS + 1) / 2;
+    private static final int SIZE = Math.min(25, (NCPUS + 1) / 2);
+
+    /**
+     * Base unit in nanoseconds for backoffs. Must be a power of two.
+     * Should be small because backoffs exponentially increase from
+     * base. The value should be close to the round-trip time of a
+     * call to LockSupport.park in the case where some other thread
+     * has already called unpark. On multiprocessors, timed waits less
+     * than this value are implemented by spinning.
+     */
+    static final long BACKOFF_BASE = (1L << 6);
+
+    /**
+     * The number of nanoseconds for which it is faster to spin rather
+     * than to use timed park. Should normally be zero on
+     * uniprocessors and BACKOFF_BASE on multiprocessors.
+     */
+    static final long spinForTimeoutThreshold = (NCPUS < 2)? 0 : BACKOFF_BASE;
 
     /**
      * The number of times to spin before blocking in timed waits.
@@ -140,19 +161,6 @@ public class Exchanger<V> {
     static final int maxUntimedSpins = maxTimedSpins * 32;
 
     /**
-     * The number of nanoseconds for which it is faster to spin
-     * rather than to use timed park. A rough estimate suffices.
-     */
-    static final long spinForTimeoutThreshold = 1000L;
-
-    /**
-     * Base unit in nanoseconds for backoffs. Must be a power of two.
-     * Should be small because backoffs exponentially increase from
-     * base.
-     */
-    private static final long BACKOFF_BASE = 128L;
-
-    /**
      * Sentinel item representing cancellation.  This value is placed
      * in holes on cancellation, and used as a return value from Node
      * methods to indicate failure to set or get hole.
@@ -165,8 +173,16 @@ public class Exchanger<V> {
      */
     private final AtomicReference<Node>[] arena;
 
-    /** Generator for random backoffs and delays. */
-    private final Random random = new Random();
+    /**
+     * Per-thread random number generator. Because random numbers are
+     * used to choose slots and delays to reduce contention, the
+     * random number generator itself cannot introduce contention.
+     * And the statistical quality of the generator is not too
+     * important. So we use a custom cheap generator, and maintain it
+     * as a thread local.
+     */
+    private static final ThreadLocal<RNG> random = new ThreadLocal<RNG>() {
+        public RNG initialValue() { return new RNG(); } };
 
     /**
      * Creates a new Exchanger.
@@ -190,30 +206,23 @@ public class Exchanger<V> {
      */
     private Object doExchange(Object item, boolean timed, long nanos)
 	throws InterruptedException, TimeoutException {
-	Node me = new Node(item);
 	long lastTime = timed ? System.nanoTime() : 0;
         int idx = 0;     // start out at slot representing top
 	int backoff = 0; // increases on failure to occupy a slot
+	Node me = new Node(item);
 
 	for (;;) {
             AtomicReference<Node> slot = arena[idx];
-
-            // If this slot is already occupied, there is a waiting item...
             Node you = slot.get();
-            if (you != null) {
-                Object v = you.fillHole(item);
-                slot.compareAndSet(you, null);
-                if (v != FAIL)       // ... unless it was cancelled
-                    return v;
-            }
 
             // Try to occupy this slot
-            if (slot.compareAndSet(null, me)) {
+            if (you == null && slot.compareAndSet(null, me)) {
                 // If this is top slot, use regular wait, else backoff-wait
                 Object v = ((idx == 0)?
                             me.waitForHole(timed, nanos) :
                             me.waitForHole(true, randomDelay(backoff)));
-                slot.compareAndSet(me, null);
+                if (slot.get() == me)
+                    slot.compareAndSet(me, null);
                 if (v != FAIL)
                     return v;
                 if (Thread.interrupted())
@@ -226,15 +235,27 @@ public class Exchanger<V> {
                         throw new TimeoutException();
                 }
 
-                me = new Node(item);      // Throw away nodes on failure
+                me = new Node(me.item);   // Throw away nodes on failure
                 if (backoff < SIZE - 1)   // Increase or stay saturated
                     ++backoff;
                 idx = 0;                  // Restart at top
+                continue;
             }
 
-            else // Retry with a random non-top slot <= backoff
-                idx = 1 + random.nextInt(backoff + 1);
+            // Try to release waiter from apparently non-empty slot
+            if (you != null || (you = slot.get()) != null) {
+                boolean success = (you.get() == null &&
+                                   you.compareAndSet(null, me.item));
+                if (slot.get() == you)
+                    slot.compareAndSet(you, null);
+                if (success) {
+                    you.signal();
+                    return you.item;
+                }
+            }
 
+            // Retry with a random non-top slot <= backoff
+            idx = backoff == 0? 1 : 1 + random.get().next() % (backoff + 1);
         }
     }
 
@@ -242,7 +263,7 @@ public class Exchanger<V> {
      * Returns a random delay less than (base times (2 raised to backoff)).
      */
     private long randomDelay(int backoff) {
-        return ((BACKOFF_BASE << backoff) - 1) & random.nextInt();
+        return ((BACKOFF_BASE << backoff) - 1) & random.get().next();
     }
 
     /**
@@ -258,8 +279,8 @@ public class Exchanger<V> {
         /** The element offered by the Thread creating this node. */
 	final Object item;
 
-        /** The Thread creating this node. */
-        final Thread waiter;
+        /** The Thread waiting to be signalled; null until waiting. */
+        volatile Thread waiter;
 
         /**
          * Creates node with given item and empty hole.
@@ -268,22 +289,14 @@ public class Exchanger<V> {
          */
 	Node(Object item) {
             this.item = item;
-            waiter = Thread.currentThread();
         }
 
         /**
-         * Tries to fill in hole. On success, wakes up the waiter.
-         *
-         * @param val the value to place in hole
-         * @return on success, the item; on failure, FAIL
+         * Unparks thread if it is waiting
          */
-	Object fillHole(Object val) {
-            if (compareAndSet(null, val)) {
-                LockSupport.unpark(waiter);
-                return item;
-            }
-            return FAIL;
-	}
+        void signal() {
+            LockSupport.unpark(waiter);
+        }
 
         /**
          * Waits for and gets the hole filled in by another thread.
@@ -296,29 +309,31 @@ public class Exchanger<V> {
         Object waitForHole(boolean timed, long nanos) {
             long lastTime = timed ? System.nanoTime() : 0;
             int spins = timed? maxTimedSpins : maxUntimedSpins;
-            Object h;
-            while ((h = get()) == null) {
-                // If interrupted or timed out, try to cancel by
-                // CASing FAIL as hole value.
-                if (Thread.currentThread().isInterrupted() ||
-                    (timed && nanos <= 0)) {
-                    if (compareAndSet(null, FAIL))
-			return FAIL;
-		} else {
-                    if (timed) {
-                        long now = System.nanoTime();
-                        nanos -= now - lastTime;
-                        lastTime = now;
+            Thread w = Thread.currentThread();
+            for (;;) {
+                if (w.isInterrupted())
+                    compareAndSet(null, FAIL);
+                Object h = get();
+                if (h != null)
+                    return h;
+                if (timed) {
+                    long now = System.nanoTime();
+                    nanos -= now - lastTime;
+                    lastTime = now;
+                    if (nanos <= 0) {
+                        compareAndSet(null, FAIL);
+                        continue;
                     }
-                    if (spins > 0)
-                        --spins;
-                    else if (!timed)
-                        LockSupport.park();
-                    else if (nanos > spinForTimeoutThreshold)
-                        LockSupport.parkNanos(nanos);
                 }
+                if (spins > 0)
+                    --spins;
+                else if (waiter == null)
+                    waiter = w;
+                else if (!timed)
+                    LockSupport.park(this);
+                else if (nanos > spinForTimeoutThreshold)
+                    LockSupport.parkNanos(this, nanos);
             }
-            return h;
         }
     }
 
@@ -410,4 +425,29 @@ public class Exchanger<V> {
         throws InterruptedException, TimeoutException {
         return (V)doExchange(x, true, unit.toNanos(timeout));
     }
+
+    /**
+     * Cheap XorShift random number generator used for determining
+     * elimination array slots and backoff delays.  This uses the
+     * simplest of the generators described in George Marsaglia's
+     * "Xorshift RNGs" paper.  This is not a high-quality generator
+     * but is acceptable here.
+     */
+    static final class RNG {
+        /** Use java.util.Random as seed generator for new RNGs. */
+        private static final Random seedGenerator = new Random();
+        private int seed = seedGenerator.nextInt() | 1;
+
+        /**
+         * Returns random nonnegative integer.
+         */
+        int next() {
+            int x = seed;
+            x ^= x << 6;
+            x ^= x >>> 21;
+            seed = x ^= x << 7;
+            return x & 0x7FFFFFFF;
+        }
+    }
+
 }

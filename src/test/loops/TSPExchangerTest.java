@@ -13,11 +13,9 @@ import java.util.concurrent.locks.*;
  * A parallel Traveling Salesperson Problem (TSP) program based on a
  * genetic algorithm using an Exchanger.  A population of chromosomes
  * is distributed among "pools".  The chromosomes represent tours, and
- * their fitness is the total tour length. Each chromosome is
- * initialized as a random tour.  A Task is associated with each pool.
- * Each task repeatedly does, for a fixed number of iterations
- * (generations):
- *
+ * their fitness is the total tour length. A Task is associated with
+ * each pool.  Each task repeatedly does, for a fixed number of
+ * iterations (generations):
  * <ol>
  *   <li> Select a breeder b from the pool
  *   <li> Create a strand of its tour with a random starting point and length
@@ -33,8 +31,9 @@ import java.util.concurrent.locks.*;
  * 
  */
 public class TSPExchangerTest {
-    static final int DEFAULT_MAX_THREADS  =
-        (Runtime.getRuntime().availableProcessors() + 2);
+    static final int NCPUS = Runtime.getRuntime().availableProcessors();
+
+    static final int DEFAULT_MAX_THREADS  = NCPUS + 6;
 
     /**
      * The problem size. Each city is a random point. The goal is to
@@ -103,18 +102,7 @@ public class TSPExchangerTest {
      */
     static final int DYER_DECAY = 1;
 
-    /**
-     * The probability mask for a task to give up running and
-     * resubmit itself. On each iteration, a task stops iterating
-     * and resubmits itself with probability 1 / (RESUBMIT_MASK+1).
-     * This avoids some tasks running to completion before others
-     * even start when there are more pools than threads.
-     *
-     * Must be 1 less than a power of two.
-     */
-    static final int RESUBMIT_MASK = 63;
-
-    static final boolean verbose = true;
+    static final boolean verbose = false;
     static final long SNAPSHOT_RATE = 10000; // in milliseconds
 
     /**
@@ -181,9 +169,10 @@ public class TSPExchangerTest {
 
     /**
      * Perform one run with the given parameters.  Each run completes
-     * when all but one of the tasks has finished.  The last remaining
-     * task may have no one left to exchange with, so the pool is
-     * abruptly terminated.
+     * when there are fewer than nThreads-2 tasks remaining.  This
+     * avoids measuring termination effects, as well as cases where
+     * the one last remaining task has no one left to exchange with,
+     * so the pool is abruptly terminated.
      */
     static void oneRun(int nThreads, int nPools, int poolSize, int nGen) 
         throws InterruptedException {
@@ -229,7 +218,7 @@ public class TSPExchangerTest {
             this.nGen = nGen;
             this.poolSize = poolSize;
             this.exchanger = new Exchanger<Strand>();
-            this.done = new CountDownLatch(nPools-1);
+            this.done = new CountDownLatch(Math.max(1, nPools - nThreads - 2));
             this.tasks = new Task[nPools];
             for (int i = 0; i < nPools; i++) 
                 tasks[i] = new Task(this);
@@ -267,39 +256,32 @@ public class TSPExchangerTest {
          * fewer than nGen iterations.
          */
         void resubmit(Task task) {
-            exec.execute(task);
+            try {
+                exec.execute(task);
+            } catch(RejectedExecutionException ignore) {}
         }
 
         void printSnapshot(double secs) {
             int gens = 0;
-            double best = Double.MAX_VALUE;
-            double worst = 0;
+            Chromosome bestc = tasks[0].chromosomes[0];
+            Chromosome worstc = bestc;
             for (int k = 0; k < tasks.length; ++k) {
                 gens += tasks[k].gen;
                 Chromosome[] cs = tasks[k].chromosomes;
-                float b = cs[0].fitness;
-                if (b < best)
-                    best = b;
-                float w = cs[cs.length-1].fitness;
-                if (w > worst)
-                    worst = w;
+                if (cs[0].fitness < bestc.fitness)
+                    bestc = cs[0];
+                int w = cs[cs.length-1].fitness;
+                if (cs[cs.length-1].fitness > worstc.fitness)
+                    worstc = cs[cs.length-1];
             }
+            double sqrtn = Math.sqrt(cities.length);
+            double best = bestc.unitTourLength() / sqrtn;
+            double worst = worstc.unitTourLength() / sqrtn;
             int avegen = (done.getCount() == 0)? nGen : gens / tasks.length;
-            System.out.printf("Time:%9.3f Best:%9.3f Worst:%9.3f Gen:%6d Threads:%4d\n",
+            System.out.printf("Time:%9.3f Best:%7.3f Worst:%7.3f Gen:%6d Threads:%4d\n",
                               secs, best, worst, avegen, nThreads);
         }
         
-        float averageFitness() { // currently unused
-            float total = 0;
-            int count = 0;
-            for (int k = 0; k < tasks.length; ++k) {
-                Chromosome[] cs = tasks[k].chromosomes;
-                for (int i = 0; i < cs.length; i++)
-                    total += cs[i].fitness;
-                count += cs.length;
-            }
-            return total/(float)count;
-        }
     }
 
     /**
@@ -318,6 +300,7 @@ public class TSPExchangerTest {
         final RNG rng;
         final int poolSize;
         final int nGen;
+        final int genPerRun;
         int gen;
 
         Task(Population pop) {
@@ -325,6 +308,7 @@ public class TSPExchangerTest {
             this.nGen = pop.nGen;
             this.gen = 0;
             this.poolSize = pop.poolSize;
+            this.genPerRun = 4 * poolSize * Math.min(NCPUS, pop.nThreads);
             this.exchanger = pop.exchanger;
             this.rng = new RNG();
             int length = cities.length;
@@ -337,21 +321,24 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Run one or more update cycles. 
+         * Run one or more update cycles.  An average of genPerRun
+         * iterations are performed per run, and then the task is
+         * resubmitted. The rate is proportional to both pool size and
+         * number of threads.  This keeps average rate of breeding
+         * across pools approximately constant across different test
+         * runs.
          */
         public void run() {
             try {
-                for (;;) {
+                int maxGen = gen + 1 + rng.next() % genPerRun;
+                if (maxGen > nGen) 
+                    maxGen = nGen;
+                while (gen++ < maxGen)
                     update();
-                    if (++gen >= nGen) {
-                        pop.taskDone();
-                        return;
-                    }
-                    if ((rng.next() & RESUBMIT_MASK) == 1) {
-                        pop.resubmit(this);
-                        return;
-                    } 
-                }
+                if (maxGen < nGen) 
+                    pop.resubmit(this);
+                else
+                    pop.taskDone();
             } catch (InterruptedException ie) {
                 pop.taskDone();
             }
@@ -470,9 +457,9 @@ public class TSPExchangerTest {
          */
         void fixOrder(Chromosome c, int k) {
             Chromosome[] cs = chromosomes;
-            float oldFitness = c.fitness;
+            int oldFitness = c.fitness;
             c.recalcFitness();
-            float newFitness = c.fitness;
+            int newFitness = c.fitness;
             if (newFitness < oldFitness) {
                 int j = k;
                 int p = j - 1;
@@ -500,7 +487,7 @@ public class TSPExchangerTest {
         /** Index of cities in tour order */
         final int[] alleles;
         /** Total tour length */
-        float fitness;
+        int fitness;
 
         /** 
          * Initialize to random tour
@@ -519,8 +506,8 @@ public class TSPExchangerTest {
         }
 
         public int compareTo(Object x) { // to enable sorting
-            float xf = ((Chromosome)x).fitness;
-            float f = fitness;
+            int xf = ((Chromosome)x).fitness;
+            int f = fitness;
             return ((f == xf)? 0 :((f < xf)? -1 : 1));
         }
 
@@ -528,13 +515,26 @@ public class TSPExchangerTest {
             int[] a = alleles;
             int len = a.length;
             int p = a[0];
-            float f = cities.distanceBetween(a[len-1], p);
+            long f = cities.distanceBetween(a[len-1], p);
             for (int i = 1; i < len; i++) {
                 int n = a[i];
                 f += cities.distanceBetween(p, n);
                 p = n;
             }
-            fitness = f;
+            fitness = (int)(f / len);
+        }
+
+        double unitTourLength() {
+            int[] a = alleles;
+            int len = a.length;
+            int p = a[0];
+            double f = cities.unitDistanceBetween(a[len-1], p);
+            for (int i = 1; i < len; i++) {
+                int n = a[i];
+                f += cities.unitDistanceBetween(p, n);
+                p = n;
+            }
+            return f;
         }
 
         void validate() { // Ensure that this is a valid tour.
@@ -561,26 +561,20 @@ public class TSPExchangerTest {
     }
 
     /**
-     * A collection of (x,y) points that represent cities.  Distances
-     * are scaled in [0,1) to simply checking results.  The expected
-     * optimal TSP for random points is believed to be around 0.76 *
-     * sqrt(N). For papers discussing this, see
-     * http://www.densis.fee.unicamp.br/~moscato/TSPBIB_home.html for
+     * A collection of (x,y) points that represent cities. 
      */
     static final class CitySet {
-        // Scale ints to doubles in [0,1)
-        static final double PSCALE = (double)0x80000000L;
 
         final int length;
         final int[] xPts;
         final int[] yPts;
-        final float[][] distances;
+        final int[][] distances;
 
         CitySet(int n) {
             this.length = n;
             this.xPts = new int[n];
             this.yPts = new int[n];
-            this.distances = new float[n][n];
+            this.distances = new int[n][n];
 
             RNG random = new RNG();
             for (int i = 0; i < n; i++) {
@@ -590,17 +584,39 @@ public class TSPExchangerTest {
 
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    double dX = (xPts[i] - xPts[j]) / PSCALE;
-                    double dY = (yPts[i] - yPts[j]) / PSCALE;
-                    distances[i][j] = (float)Math.hypot(dX, dY);
+                    double dx = (double)xPts[i] - (double)xPts[j];
+                    double dy = (double)yPts[i] - (double)yPts[j];
+                    double dd = Math.hypot(dx, dy) / 2.0;
+                    long ld = Math.round(dd);
+                    distances[i][j] = (ld >= Integer.MAX_VALUE)? 
+                        Integer.MAX_VALUE : (int)ld;
                 }
             }
         }
 
-        // Retrieve the cached distance between a pair of cities
-        float distanceBetween(int i, int j) {
+        /**
+         *  Returns the cached distance between a pair of cities
+         */
+        int distanceBetween(int i, int j) {
             return distances[i][j];
         }
+
+        // Scale ints to doubles in [0,1)
+        static final double PSCALE = (double)0x80000000L;
+
+        /**
+         * Return distance for points scaled in [0,1). This simplifies
+         * checking results.  The expected optimal TSP for random
+         * points is believed to be around 0.76 * sqrt(N). For papers
+         * discussing this, see
+         * http://www.densis.fee.unicamp.br/~moscato/TSPBIB_home.html
+         */
+        double unitDistanceBetween(int i, int j) {
+            double dx = ((double)xPts[i] - (double)xPts[j]) / PSCALE;
+            double dy = ((double)yPts[i] - (double)yPts[j]) / PSCALE;
+            return Math.hypot(dx, dy);
+        }
+            
     }
 
     /**
@@ -612,7 +628,7 @@ public class TSPExchangerTest {
 
         int seed;
         RNG(int seed) { this.seed = seed; }
-        RNG()         { this.seed = seedGenerator.nextInt(); }
+        RNG()         { this.seed = seedGenerator.nextInt() | 1;  }
 
         int next() {
             int x = seed;

@@ -121,19 +121,19 @@ public class Exchanger<V> {
      * out to become unstuck.  Note that the arena array holds SIZE+1
      * elements, to include the top-of-stack slot.  Imposing a ceiling
      * is suboptimal for huge machines, but bounds backoff times to
-     * acceptable values. To ensure max times less than 2.4seconds,
+     * acceptable values. To ensure max times less than 2.4 seconds,
      * the ceiling value plus the shift value of backoff base (below)
      * should be less than or equal to 31.
      */
     private static final int SIZE = Math.min(25, (NCPUS + 1) / 2);
 
     /**
-     * Base unit in nanoseconds for backoffs. Must be a power of two.
-     * Should be small because backoffs exponentially increase from
-     * base. The value should be close to the round-trip time of a
-     * call to LockSupport.park in the case where some other thread
-     * has already called unpark. On multiprocessors, timed waits less
-     * than this value are implemented by spinning.
+     * Base unit in nanoseconds for backoffs.  Must be a power of two.
+     * Should be small because backoffs exponentially increase from base.
+     * The value should be close to the round-trip time of a call to
+     * LockSupport.park in the case where some other thread has already
+     * called unpark.  On multiprocessors, timed waits less than this value
+     * are implemented by spinning.
      */
     static final long BACKOFF_BASE = (1L << 6);
 
@@ -142,16 +142,16 @@ public class Exchanger<V> {
      * than to use timed park. Should normally be zero on
      * uniprocessors and BACKOFF_BASE on multiprocessors.
      */
-    static final long spinForTimeoutThreshold = (NCPUS < 2)? 0 : BACKOFF_BASE;
+    static final long spinForTimeoutThreshold = (NCPUS < 2) ? 0 : BACKOFF_BASE;
 
     /**
      * The number of times to spin before blocking in timed waits.
      * The value is empirically derived -- it works well across a
-     * variety of processors and OSes. Empirically, the best value
+     * variety of processors and OSes.  Empirically, the best value
      * seems not to vary with number of CPUs (beyond 2) so is just
      * a constant.
      */
-    static final int maxTimedSpins = (NCPUS < 2)? 0 : 16;
+    static final int maxTimedSpins = (NCPUS < 2) ? 0 : 16;
 
     /**
      * The number of times to spin before blocking in untimed waits.
@@ -174,12 +174,12 @@ public class Exchanger<V> {
     private final AtomicReference<Node>[] arena;
 
     /**
-     * Per-thread random number generator. Because random numbers are
-     * used to choose slots and delays to reduce contention, the
+     * Per-thread random number generator.  Because random numbers
+     * are used to choose slots and delays to reduce contention, the
      * random number generator itself cannot introduce contention.
      * And the statistical quality of the generator is not too
-     * important. So we use a custom cheap generator, and maintain it
-     * as a thread local.
+     * important.  So we use a custom cheap generator, and maintain
+     * it as a thread local.
      */
     private static final ThreadLocal<RNG> random = new ThreadLocal<RNG>() {
         public RNG initialValue() { return new RNG(); } };
@@ -255,7 +255,7 @@ public class Exchanger<V> {
             }
 
             // Retry with a random non-top slot <= backoff
-            idx = backoff == 0? 1 : 1 + random.get().next() % (backoff + 1);
+            idx = backoff == 0 ? 1 : 1 + random.get().next() % (backoff + 1);
         }
     }
 
@@ -292,7 +292,7 @@ public class Exchanger<V> {
         }
 
         /**
-         * Unparks thread if it is waiting
+         * Unparks thread if it is waiting.
          */
         void signal() {
             LockSupport.unpark(waiter);
@@ -308,7 +308,7 @@ public class Exchanger<V> {
          */
         Object waitForHole(boolean timed, long nanos) {
             long lastTime = timed ? System.nanoTime() : 0;
-            int spins = timed? maxTimedSpins : maxUntimedSpins;
+            int spins = timed ? maxTimedSpins : maxUntimedSpins;
             Thread w = Thread.currentThread();
             for (;;) {
                 if (w.isInterrupted())

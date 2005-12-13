@@ -148,16 +148,21 @@ public class ScheduledThreadPoolExecutor
         public int compareTo(Delayed other) {
             if (other == this) // compare zero ONLY if same object
                 return 0;
-            ScheduledFutureTask<?> x = (ScheduledFutureTask<?>)other;
-            long diff = time - x.time;
-            if (diff < 0)
-                return -1;
-            else if (diff > 0)
-                return 1;
-            else if (sequenceNumber < x.sequenceNumber)
-                return -1;
-            else
-                return 1;
+            if (other instanceof ScheduledFutureTask) {
+                ScheduledFutureTask<?> x = (ScheduledFutureTask<?>)other;
+                long diff = time - x.time;
+                if (diff < 0)
+                    return -1;
+                else if (diff > 0)
+                    return 1;
+                else if (sequenceNumber < x.sequenceNumber)
+                    return -1;
+                else
+                    return 1;
+            }
+            long d = (getDelay(TimeUnit.NANOSECONDS) -
+                      other.getDelay(TimeUnit.NANOSECONDS));
+            return (d == 0)? 0 : ((d < 0)? -1 : 1);
         }
 
         /**

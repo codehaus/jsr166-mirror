@@ -3498,10 +3498,10 @@ public class Collections {
      * </pre>
      *
      * @param c the collection into which <tt>elements</tt> are to be inserted
-     * @param a the elements to insert into <tt>c</tt>
+     * @param elements the elements to insert into <tt>c</tt>
      * @return <tt>true</tt> if the collection changed as a result of the call
      * @throws UnsupportedOperationException if <tt>c</tt> does not support
-     *         the <tt>add</tt> operation.
+     *         the <tt>add</tt> operation
      * @throws NullPointerException if <tt>elements</tt> contains one or more
      *         null values and <tt>c</tt> does not permit null elements, or
      *         if <tt>c</tt> or <tt>elements</tt> are <tt>null</tt>
@@ -3510,10 +3510,10 @@ public class Collections {
      * @see Collection#addAll(Collection)
      * @since 1.5
      */
-    public static <T> boolean addAll(Collection<? super T> c, T... a) {
+    public static <T> boolean addAll(Collection<? super T> c, T... elements) {
         boolean result = false;
-        for (T e : a)
-            result |= c.add(e);
+        for (T element : elements)
+            result |= c.add(element);
         return result;
     }
 

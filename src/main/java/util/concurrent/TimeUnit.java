@@ -40,7 +40,7 @@ package java.util.concurrent;
  * @author Doug Lea
  */
 public enum TimeUnit {
-    NANOSECONDS (0) {
+    NANOSECONDS {
         public long toNanos(long d)   { return d; }
         public long toMicros(long d)  { return d/(C1/C0); }
         public long toMillis(long d)  { return d/(C2/C0); }
@@ -51,7 +51,7 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toNanos(d); }
         int excessNanos(long d, long m) { return (int)(d - (m*C2)); }
     },
-    MICROSECONDS (1) {
+    MICROSECONDS {
         public long toNanos(long d)   { return x(d, C1/C0, MAX/(C1/C0)); }
         public long toMicros(long d)  { return d; }
         public long toMillis(long d)  { return d/(C2/C1); }
@@ -62,7 +62,7 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toMicros(d); }
         int excessNanos(long d, long m) { return (int)((d*C1) - (m*C2)); }
     },
-    MILLISECONDS (2) {
+    MILLISECONDS {
         public long toNanos(long d)   { return x(d, C2/C0, MAX/(C2/C0)); }
         public long toMicros(long d)  { return x(d, C2/C1, MAX/(C2/C1)); }
         public long toMillis(long d)  { return d; }
@@ -73,7 +73,7 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toMillis(d); }
         int excessNanos(long d, long m) { return 0; }
     },
-    SECONDS (3) {
+    SECONDS {
         public long toNanos(long d)   { return x(d, C3/C0, MAX/(C3/C0)); }
         public long toMicros(long d)  { return x(d, C3/C1, MAX/(C3/C1)); }
         public long toMillis(long d)  { return x(d, C3/C2, MAX/(C3/C2)); }
@@ -84,7 +84,7 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toSeconds(d); }
         int excessNanos(long d, long m) { return 0; }
     },
-    MINUTES (4) {
+    MINUTES {
         public long toNanos(long d)   { return x(d, C4/C0, MAX/(C4/C0)); }
         public long toMicros(long d)  { return x(d, C4/C1, MAX/(C4/C1)); }
         public long toMillis(long d)  { return x(d, C4/C2, MAX/(C4/C2)); }
@@ -95,7 +95,7 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toMinutes(d); }
         int excessNanos(long d, long m) { return 0; }
     },
-    HOURS (5) {
+    HOURS {
         public long toNanos(long d)   { return x(d, C5/C0, MAX/(C5/C0)); }
         public long toMicros(long d)  { return x(d, C5/C1, MAX/(C5/C1)); }
         public long toMillis(long d)  { return x(d, C5/C2, MAX/(C5/C2)); }
@@ -106,7 +106,7 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toHours(d); }
         int excessNanos(long d, long m) { return 0; }
     },
-    DAYS (6) {
+    DAYS {
         public long toNanos(long d)   { return x(d, C6/C0, MAX/(C6/C0)); }
         public long toMicros(long d)  { return x(d, C6/C1, MAX/(C6/C1)); }
         public long toMillis(long d)  { return x(d, C6/C2, MAX/(C6/C2)); }
@@ -117,18 +117,6 @@ public enum TimeUnit {
         public long convert(long d, TimeUnit u) { return u.toDays(d); }
         int excessNanos(long d, long m) { return 0; }
     };
-
-    /**
-     * The index of this unit. This value is no longer used in this
-     * version of this class, but is retained for serialization
-     * compatibility with previous version.
-     */
-    private final int index;
-
-    /** Internal constructor */
-    TimeUnit(int index) {
-        this.index = index;
-    }
 
     // Handy constants for conversion methods
     static final long C0 = 1L;

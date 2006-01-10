@@ -114,7 +114,6 @@ public class CyclicBarrier {
      */
     private static class Generation {
         boolean broken = false;
-        boolean tripped = false;
     }
 
     /** The lock for guarding barrier entry */
@@ -141,7 +140,6 @@ public class CyclicBarrier {
      */
     private void nextGeneration() {
         // signal completion of last generation
-        generation.tripped = true;
         trip.signalAll();
         // set up next generation
         count = parties;
@@ -201,14 +199,21 @@ public class CyclicBarrier {
                     else if (nanos > 0L)
                         nanos = trip.awaitNanos(nanos);
                 } catch (InterruptedException ie) {
-                    breakBarrier();
-                    throw ie;
+                    if (g == generation && ! g.broken) {
+                        breakBarrier();
+			throw ie;
+		    } else {
+			// We're about to finish waiting even if we had not
+			// been interrupted, so this interrupt is deemed to
+			// "belong" to subsequent execution.
+			Thread.currentThread().interrupt();
+		    }
                 }
 
                 if (g.broken)
                     throw new BrokenBarrierException();
 
-                if (g.tripped)
+                if (g != generation)
                     return index;
 
                 if (timed && nanos <= 0L) {
@@ -269,7 +274,7 @@ public class CyclicBarrier {
      *
      * <p>If the current thread is not the last to arrive then it is
      * disabled for thread scheduling purposes and lies dormant until
-     * one of following things happens:
+     * one of the following things happens:
      * <ul>
      * <li>The last thread arrives; or
      * <li>Some other thread {@link Thread#interrupt interrupts} the current

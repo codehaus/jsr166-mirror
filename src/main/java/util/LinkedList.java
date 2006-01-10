@@ -798,6 +798,9 @@ public class LinkedList<E>
         return result;
     }
 
+    /**
+     * @since 1.6
+     */
     public Iterator<E> descendingIterator() {
         return new DescendingIterator();
     }

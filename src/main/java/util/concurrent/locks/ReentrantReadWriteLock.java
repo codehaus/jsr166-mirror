@@ -1121,6 +1121,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      *
      * @return the number of holds on the read lock by the current thread,
      * or zero if the read lock is not held by the current thread.
+     * @since 1.6
      */
     public int getReadHoldCount() {
         return sync.getReadHoldCount();

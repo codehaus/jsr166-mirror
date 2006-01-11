@@ -82,8 +82,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
      * the actual value was not equal to the expected value.
      */
     public final boolean compareAndSet(V expect, V update) {
-      return value == expect &&
-          unsafe.compareAndSwapObject(this, valueOffset, expect, update);
+        return unsafe.compareAndSwapObject(this, valueOffset, expect, update);
     }
 
     /**
@@ -95,8 +94,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
      * @return true if successful.
      */
     public final boolean weakCompareAndSet(V expect, V update) {
-      return value == expect &&
-          unsafe.compareAndSwapObject(this, valueOffset, expect, update);
+        return unsafe.compareAndSwapObject(this, valueOffset, expect, update);
     }
 
     /**

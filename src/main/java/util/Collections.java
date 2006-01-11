@@ -2221,7 +2221,6 @@ public class Collections {
         public Object[] toArray()           { return c.toArray(); }
         public <T> T[] toArray(T[] a)       { return c.toArray(a); }
         public String toString()            { return c.toString(); }
-        public Iterator<E> iterator()       { return c.iterator(); }
         public boolean remove(Object o)     { return c.remove(o); }
         public boolean containsAll(Collection<?> coll) {
             return c.containsAll(coll);
@@ -2236,7 +2235,15 @@ public class Collections {
             c.clear();
         }
 
-        public boolean add(E e){
+        public Iterator<E> iterator() {
+	    return new Iterator<E>() {
+		private final Iterator<E> it = c.iterator();
+		public boolean hasNext() { return it.hasNext(); }
+		public E next()          { return it.next(); }
+		public void remove()     {        it.remove(); }};
+	}
+
+	public boolean add(E e){
             typeCheck(e);
             return c.add(e);
         }
@@ -3614,6 +3621,7 @@ public class Collections {
 	private static final long serialVersionUID = 1802017725587941708L;
         private final Deque<E> q;
         AsLIFOQueue(Deque<E> q)            { this.q = q; }
+        public boolean add(E e)            { q.addFirst(e); return true; }
         public boolean offer(E e)          { return q.offerFirst(e); }
         public E poll()                    { return q.pollFirst(); }
         public E remove()                  { return q.removeFirst(); }
@@ -3625,7 +3633,6 @@ public class Collections {
         public Iterator<E> iterator()      { return q.iterator(); }
         public Object[] toArray()          { return q.toArray(); }
         public <T> T[] toArray(T[] a)      { return q.toArray(a); }
-        public boolean add(E e)            { return q.offerFirst(e); }
         public boolean remove(Object o)    { return q.remove(o); }
         public void clear()                { q.clear(); }
     }

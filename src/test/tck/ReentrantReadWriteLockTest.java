@@ -84,10 +84,12 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         rl.writeLock().lock();
         assertTrue(rl.isWriteLocked());
         assertTrue(rl.isWriteLockedByCurrentThread());
+        assertTrue(rl.writeLock().isHeldByCurrentThread());
         assertEquals(0, rl.getReadLockCount());
         rl.writeLock().unlock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
+        assertFalse(rl.writeLock().isHeldByCurrentThread());
         assertEquals(0, rl.getReadLockCount());
         rl.readLock().lock();
         assertFalse(rl.isWriteLocked());
@@ -108,10 +110,12 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         rl.writeLock().lock();
         assertTrue(rl.isWriteLocked());
         assertTrue(rl.isWriteLockedByCurrentThread());
+        assertTrue(rl.writeLock().isHeldByCurrentThread());
         assertEquals(0, rl.getReadLockCount());
         rl.writeLock().unlock();
         assertFalse(rl.isWriteLocked());
         assertFalse(rl.isWriteLockedByCurrentThread());
+        assertFalse(rl.writeLock().isHeldByCurrentThread());
         assertEquals(0, rl.getReadLockCount());
         rl.readLock().lock();
         assertFalse(rl.isWriteLocked());
@@ -135,6 +139,21 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 	for(int i = SIZE; i > 0; i--) {
 	    lock.writeLock().unlock();
 	    assertEquals(i-1,lock.getWriteHoldCount());
+	}
+    }
+
+    /**
+     * WriteLock.getHoldCount returns number of recursive holds
+     */
+    public void testGetHoldCount() {
+	ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	for(int i = 1; i <= SIZE; i++) {
+	    lock.writeLock().lock();
+	    assertEquals(i,lock.writeLock().getHoldCount());
+	}
+	for(int i = SIZE; i > 0; i--) {
+	    lock.writeLock().unlock();
+	    assertEquals(i-1,lock.writeLock().getHoldCount());
 	}
     }
 

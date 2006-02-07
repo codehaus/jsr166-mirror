@@ -5,7 +5,6 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A {@link Future} that is {@link Runnable}. Successful execution of

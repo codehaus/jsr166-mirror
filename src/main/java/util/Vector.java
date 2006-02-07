@@ -6,7 +6,6 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * The <code>Vector</code> class implements a growable array of

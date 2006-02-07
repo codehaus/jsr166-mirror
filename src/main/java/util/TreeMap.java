@@ -6,7 +6,6 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A Red-Black tree based {@link NavigableMap} implementation.

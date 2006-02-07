@@ -6,7 +6,6 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * A {@link NavigableSet} implementation based on a {@link TreeMap}.

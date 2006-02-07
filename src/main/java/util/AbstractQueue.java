@@ -5,7 +5,6 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * This class provides skeletal implementations of some {@link Queue}

@@ -6,7 +6,6 @@
  */
 
 package java.util;
-import java.util.*; // for javadoc (till 6280605 is fixed)
 
 /**
  * An unbounded priority {@linkplain Queue queue} based on a priority

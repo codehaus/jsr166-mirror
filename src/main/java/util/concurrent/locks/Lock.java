@@ -5,7 +5,6 @@
  */
 
 package java.util.concurrent.locks;
-import java.util.concurrent.locks.*; // for javadoc (till 6280605 is fixed)
 import java.util.concurrent.TimeUnit;
 
 /**

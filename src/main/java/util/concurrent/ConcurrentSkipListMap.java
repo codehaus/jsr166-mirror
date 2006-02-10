@@ -2141,6 +2141,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if the specified key is null
      */
     public boolean remove(Object key, Object value) {
+        if (key == null)
+            throw new NullPointerException();
         if (value == null)
             return false;
         return doRemove(key, value) != null;
@@ -2780,6 +2782,20 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public void clear() {
             ConcurrentSkipListMap.this.clear();
         }
+        public boolean equals(Object o) {
+            if (o == this)
+                return true;
+            if (!(o instanceof Set))
+                return false;
+            Collection<?> c = (Collection<?>) o;
+            try {
+                return containsAll(c) && c.containsAll(this);
+            } catch (ClassCastException unused)   {
+                return false;
+            } catch (NullPointerException unused) {
+                return false;
+            }
+        }
     }
 
     class DescendingKeySet extends KeySet {
@@ -2832,6 +2848,20 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
         public void clear() {
             ConcurrentSkipListMap.this.clear();
+        }
+        public boolean equals(Object o) {
+            if (o == this)
+                return true;
+            if (!(o instanceof Set))
+                return false;
+            Collection<?> c = (Collection<?>) o;
+            try {
+                return containsAll(c) && c.containsAll(this);
+            } catch (ClassCastException unused)   {
+                return false;
+            } catch (NullPointerException unused) {
+                return false;
+            }
         }
     }
 
@@ -3167,6 +3197,21 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             public boolean contains(Object k) {
                 return ConcurrentSkipListSubMap.this.containsKey(k);
             }
+            public boolean equals(Object o) {
+                if (o == this)
+                    return true;
+                if (!(o instanceof Set))
+                    return false;
+                Collection<?> c = (Collection<?>) o;
+                try {
+                    return containsAll(c) && c.containsAll(this);
+                } catch (ClassCastException unused)   {
+                    return false;
+                } catch (NullPointerException unused) {
+                    return false;
+                }
+            }
+
         }
 
         public Set<K> descendingKeySet() {
@@ -3233,6 +3278,20 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 if (!inHalfOpenRange(key))
                     return false;
                 return m.remove(key, e.getValue());
+            }
+            public boolean equals(Object o) {
+                if (o == this)
+                    return true;
+                if (!(o instanceof Set))
+                    return false;
+                Collection<?> c = (Collection<?>) o;
+                try {
+                    return containsAll(c) && c.containsAll(this);
+                } catch (ClassCastException unused)   {
+                    return false;
+                } catch (NullPointerException unused) {
+                    return false;
+                }
             }
         }
 

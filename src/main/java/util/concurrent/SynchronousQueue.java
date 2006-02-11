@@ -807,8 +807,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      */
     public void put(E o) throws InterruptedException {
         if (o == null) throw new NullPointerException();
-        if (transferer.transfer(o, false, 0) == null)
+        if (transferer.transfer(o, false, 0) == null) {
+            Thread.interrupted();
             throw new InterruptedException();
+        }
     }
 
     /**
@@ -855,6 +857,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         Object e = transferer.transfer(null, false, 0);
         if (e != null)
             return (E)e;
+        Thread.interrupted();
         throw new InterruptedException();
     }
 

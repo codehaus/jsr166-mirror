@@ -6,15 +6,16 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
-import java.util.Random;
 
 /**
  * A synchronization point at which threads can pair and swap elements
- * within pairs.  Each thread presents some object on entry to the
+ * within pairs. Each thread presents some object on entry to the
  * {@link #exchange exchange} method, matches with a partner thread,
- * and receives its partner's object on return.
+ * and receives its partner's object on return. An Exchanger may be
+ * viewed as a bidirectional form of a {@link
+ * SynchronousQueue}. Exchangers may be useful in applications such as
+ * genetic algorithms and pipeline designs.
  *
  * <p><b>Sample Usage:</b>
  * Here are the highlights of a class that uses an {@code Exchanger}
@@ -73,267 +74,479 @@ import java.util.Random;
  */
 public class Exchanger<V> {
     /*
-     * The underlying idea is to use a stack to hold nodes containing
-     * pairs of items to be exchanged. Except that:
+     * Algorithm Description:
      *
-     *  *  Only one element of the pair is known on creation by a
-     *     first-arriving thread; the other is a "hole" waiting to be
-     *     filled in. This is a degenerate form of the dual stacks
-     *     described in "Nonblocking Concurrent Objects with Condition
-     *     Synchronization",  by W. N. Scherer III and M. L. Scott.
-     *     18th Annual Conf. on  Distributed Computing, Oct. 2004.
-     *     It is "degenerate" in that both the items and the holes
-     *     are shared in the same nodes.
+     * The basic idea is to maintain a "slot", which is a reference to
+     * a Node containing both an Item to offer and a "hole" waiting to
+     * get filled in.. If an incoming "occupying" thread sees that the
+     * slot is null, it CAS'es (compareAndSets) a Node there and waits
+     * for another to invoke exchange. That second "fulfilling" thread
+     * sees that the slot is non-null, and so CASes it back to null,
+     * also exchanging items by CASing the hole, plus waking up the
+     * occupying thread if it is blocked.  In each case CAS'es may
+     * fail because a slot at first appears non-null but is null upon
+     * CAS, or vice-versa.  So threads may need to retry these
+     * actions.
      *
-     *  *  There isn't really a stack here! There can't be -- if two
-     *     nodes were both in the stack, they should cancel themselves
-     *     out by combining. So that's what we do. The 0th element of
-     *     the "arena" array serves only as the top of stack.  The
-     *     remainder of the array is a form of the elimination backoff
-     *     collision array described in "A Scalable Lock-free Stack
-     *     Algorithm", by D. Hendler, N. Shavit, and L. Yerushalmi.
-     *     16th ACM Symposium on Parallelism in Algorithms and
-     *     Architectures, June 2004. Here, threads spin (using short
-     *     timed waits with exponential backoff) looking for each
-     *     other.  If they fail to find others waiting, they try the
-     *     top spot again.  As shown in that paper, this always
-     *     converges.
+     * This simple approach works great when there are only a few
+     * threads using an Exchanger, but performance rapidly
+     * deteriorates due to CAS contention on the single slot when
+     * there are lots of threads using an exchanger. So instead we use
+     * an "arena"; basically a kind of hash table with a dynamically
+     * varying number of of slots, any one of which can be used by
+     * threads performing an exchange. Incoming threads pick slots
+     * based on a hash of their Thread ids. If an incoming thread
+     * fails to CAS in its chosen slot, it picks an alternative slot
+     * instead.  And similarly from there. If a thread successfully
+     * CASes into a slot but no other thread arrives, it tries
+     * another, heading toward the zero slot, which always exists even
+     * if the table shrinks. The particular mechanics controlling this
+     * are as follows:
      *
-     * The backoff elimination mechanics never come into play in
-     * common usages where only two threads ever meet to exchange
-     * items, but they prevent contention bottlenecks when an
-     * exchanger is used by a large number of threads.
+     * Waiting: Slot zero is special in that it is the only slot that
+     * exists when there is no contention. A thread occupying slot
+     * zero will block if no thread fulfills it after a short spin. In
+     * other cases, occupying threads eventually give up and try
+     * another slot. Waiting threads spin for a while (a period that
+     * should be a little less than a typical context-switch time)
+     * before either blocking (if slot zero) or giving up (if other
+     * slots) and restarting. There is no reason for threads to block
+     * unless there are unlikely to be any other threads
+     * present. Occupants are mainly avoiding memory contention so sit
+     * there quietly polling for a shorter period than it would take
+     * to block and then unblock them. Non-slot-zero waits that elapse
+     * because of lack of other threads waste around one extra
+     * context-switch time per try, which is still on average much
+     * faster than alternative approaches.
      *
-     * For more details, see the paper "A Scalable Elimination-based
-     * Exchange Channel" by William Scherer, Doug Lea, and Michael
-     * Scott in Proceedings of SCOOL05 workshop. Available at:
-     * http://hdl.handle.net/1802/2104
+     * Sizing: Usually, using only a few slots suffices to reduce
+     * contention.  Especially with small numbers of threads, using
+     * too many slots can lead to just as poor performance as using
+     * too few of them, and there's not much room for error. The
+     * variable "max" maintains the number of slots actually in
+     * use. It is increased when a thread sees too many CAS
+     * failures. (This is analogous to resizing a regular hash table
+     * based on a target load factor, except here, growth steps are
+     * just one-by one rather than proportional.) Growth requires
+     * contention failures in each of three tried slots.  Requiring
+     * multiple failures for expansion copes with the fact that some
+     * failed CASes are not due to contention but instead to simple
+     * races between two threads or thread pre-emptions occurring
+     * between reading and CASing. Also, very transient peak
+     * contention can be much higher than the average sustainable
+     * levels.  The max limit is decreased on average 50% of the times
+     * that a non-slot-zero wait elapses without being fulfilled.
+     * Threads experiencing elapsed waits move closer to zero, so
+     * eventually find existing (or future) threads even if the table
+     * has been shrunk due to inactivity. The chosen mechanics and
+     * thresholds for growing and shrinking are intrinsically
+     * entangled with indexing and hashing inside the exchange code,
+     * and can't be nicely abstracted out.
+     *
+     * Hashing: Each thread picks its initial slot to use in accord
+     * with a simple hashcode. The sequence is the same on each
+     * encounter by any given thread, but effectively random across
+     * threads.  Using arenas encounters the classic cost vs quality
+     * tradeoffs of all hash tables. Here, we use a one-step FNV-1a
+     * hash code based on the current thread's Thread.getId(), along
+     * with a cheap approximation to a mod operation to select an
+     * index.  The downside of optimizing index selection in this way
+     * is that the code is hardwired to use a maximum table size of
+     * 32. But this value more than suffices for known platforms and
+     * applications.
+     *
+     * Probing: On sensed contention of a selected slot, we probe
+     * sequentially through the table, analogously to linear probing
+     * after collision in a hash table.  (We move circularly, in
+     * reverse order to mesh best with table growth and shrinkage
+     * rules.)  Except that to minimize the effects of false-alarms
+     * and cache thrashing, we try the first selected slot twice
+     * before moving.
+     *
+     * Padding: Even with contention management, slots are heavily
+     * contended, so use cache-padding to avoid poor memory
+     * performance. Because of this, slots are lazily constructed only
+     * when used, to avoid wasting this space unnecessarily. While
+     * isolation of locations is not much of an issue at first in an
+     * application, as time goes on and garbage-collectors perform
+     * compaction, slots are very likely to be moved adjacent to each
+     * other, which can cause much thrashing of cache lines on MPs
+     * unless padding is employed.
+     *
+     * This is an improvement of the algorithm described in the paper
+     * "A Scalable Elimination-based Exchange Channel" by William
+     * Scherer, Doug Lea, and Michael Scott in Proceedings of SCOOL05
+     * workshop. Available at: http://hdl.handle.net/1802/2104
      */
 
     /** The number of CPUs, for sizing and spin control */
-    static final int NCPUS = Runtime.getRuntime().availableProcessors();
+    private static final int NCPU = Runtime.getRuntime().availableProcessors();
 
     /**
-     * Size of collision space. Using a size of half the number of
-     * CPUs provides enough space for threads to find each other but
-     * not so much that it would always require one or more to time
-     * out to become unstuck.  Note that the arena array holds SIZE+1
-     * elements, to include the top-of-stack slot.  Imposing a ceiling
-     * is suboptimal for huge machines, but bounds backoff times to
-     * acceptable values. To ensure max times less than 2.4 seconds,
-     * the ceiling value plus the shift value of backoff base (below)
-     * should be less than or equal to 31.
+     * The capacity of the arena. Set to a value that provides more
+     * than enough space to handle contention.  On small machines most
+     * slots won't be used, but it is still not wasted because the
+     * extra space provides some machine-level address padding to
+     * minimize interference with heavily CAS'ed Slot locations. And
+     * on very large machines, performance eventually becomes bounded
+     * by memory bandwidth, not numbers of threads/CPUs.  This
+     * constant cannot be changed without also modifying indexing and
+     * hashing algorithms.
      */
-    private static final int SIZE = Math.min(25, (NCPUS + 1) / 2);
+    private static final int CAPACITY = 32;
 
     /**
-     * Base unit in nanoseconds for backoffs.  Must be a power of two.
-     * Should be small because backoffs exponentially increase from base.
-     * The value should be close to the round-trip time of a call to
-     * LockSupport.park in the case where some other thread has already
-     * called unpark.  On multiprocessors, timed waits less than this value
-     * are implemented by spinning.
+     * The value of "max" that will hold all threads without
+     * contention. When this value is less than CAPACITY, some
+     * otherwise wasted expansion can be avoided.
      */
-    static final long BACKOFF_BASE = (1L << 6);
+    private static final int FULL =
+        Math.max(0, Math.min(CAPACITY, NCPU / 2) - 1);
 
     /**
-     * The number of nanoseconds for which it is faster to spin rather
-     * than to use timed park. Should normally be zero on
-     * uniprocessors and BACKOFF_BASE on multiprocessors.
+     * The number of times to spin (doing nothing except polling a
+     * memory location) before blocking or giving up while waiting to
+     * be fulfilled.  Should be zero on uniprocessors. On
+     * multiprocessors, this value should be large enough so that two
+     * threads exchanging items as fast as possible block only when
+     * one of them is stalled (due to GC or preemption), but not much
+     * longer, to avoid wasting CPU resources. Seen differently, this
+     * value is a little over half the number of cycles of an average
+     * context switch time on most systems. The value here is
+     * approximately the average of those across a range of tested
+     * systems.
      */
-    static final long spinForTimeoutThreshold = (NCPUS < 2) ? 0 : BACKOFF_BASE;
+    private static final int SPINS = (NCPU == 1) ? 0 : 2000;
 
     /**
      * The number of times to spin before blocking in timed waits.
-     * The value is empirically derived -- it works well across a
-     * variety of processors and OSes.  Empirically, the best value
-     * seems not to vary with number of CPUs (beyond 2) so is just
-     * a constant.
+     * Timed waits spin more slowly because checking the time takes
+     * time.  The best value relies mainly on the relative rate of
+     * System.nanoTime vs memory accesses.  The value is empirically
+     * derived to work well across a variety of systems.
      */
-    static final int maxTimedSpins = (NCPUS < 2) ? 0 : 16;
+    private static final int TIMED_SPINS = SPINS / 20;
 
     /**
-     * The number of times to spin before blocking in untimed waits.
-     * This is greater than timed value because untimed waits spin
-     * faster since they don't need to check times on each spin.
+     * Sentinel item representing cancellation of a wait due to
+     * interruption, timeout, or elapsed spin-waits.  This value is
+     * placed in holes on cancellation, and used as a return value
+     * from waiting methods to indicate failure to set or get hole.
      */
-    static final int maxUntimedSpins = maxTimedSpins * 32;
+    private static final Object CANCEL = new Object();
 
     /**
-     * Sentinel item representing cancellation.  This value is placed
-     * in holes on cancellation, and used as a return value from Node
-     * methods to indicate failure to set or get hole.
+     * Value representing null arguments/returns from public
+     * methods. This disambiguates from internal requirement that
+     * holes start out as null to mean they are not yet set.
      */
-    static final Object FAIL = new Object();
-
-    /**
-     * The collision arena. arena[0] is used as the top of the stack.
-     * The remainder is used as the collision elimination space.
-     */
-    private final AtomicReference<Node>[] arena;
-
-    /**
-     * Per-thread random number generator.  Because random numbers
-     * are used to choose slots and delays to reduce contention, the
-     * random number generator itself cannot introduce contention.
-     * And the statistical quality of the generator is not too
-     * important.  So we use a custom cheap generator, and maintain
-     * it as a thread local.
-     */
-    private static final ThreadLocal<RNG> random = new ThreadLocal<RNG>() {
-        public RNG initialValue() { return new RNG(); } };
-
-    /**
-     * Creates a new Exchanger.
-     */
-    public Exchanger() {
-	arena = (AtomicReference<Node>[]) new AtomicReference[SIZE + 1];
-        for (int i = 0; i < arena.length; ++i)
-            arena[i] = new AtomicReference<Node>();
-    }
-
-    /**
-     * Main exchange function, handling the different policy variants.
-     * Uses Object, not "V" as argument and return value to simplify
-     * handling of internal sentinel values. Callers from public
-     * methods cast accordingly.
-     *
-     * @param item the item to exchange
-     * @param timed true if the wait is timed
-     * @param nanos if timed, the maximum wait time
-     * @return the other thread's item
-     */
-    private Object doExchange(Object item, boolean timed, long nanos)
-	throws InterruptedException, TimeoutException {
-	long lastTime = timed ? System.nanoTime() : 0;
-        int idx = 0;     // start out at slot representing top
-	int backoff = 0; // increases on failure to occupy a slot
-	Node me = new Node(item);
-
-	for (;;) {
-            AtomicReference<Node> slot = arena[idx];
-            Node you = slot.get();
-
-            // Try to occupy this slot
-            if (you == null && slot.compareAndSet(null, me)) {
-                // If this is top slot, use regular wait, else backoff-wait
-                Object v = ((idx == 0)?
-                            me.waitForHole(timed, nanos) :
-                            me.waitForHole(true, randomDelay(backoff)));
-                if (slot.get() == me)
-                    slot.compareAndSet(me, null);
-                if (v != FAIL)
-                    return v;
-                if (Thread.interrupted())
-                    throw new InterruptedException();
-                if (timed) {
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
-                    if (nanos <= 0)
-                        throw new TimeoutException();
-                }
-
-                me = new Node(me.item);   // Throw away nodes on failure
-                if (backoff < SIZE - 1)   // Increase or stay saturated
-                    ++backoff;
-                idx = 0;                  // Restart at top
-                continue;
-            }
-
-            // Try to release waiter from apparently non-empty slot
-            if (you != null || (you = slot.get()) != null) {
-                boolean success = (you.get() == null &&
-                                   you.compareAndSet(null, me.item));
-                if (slot.get() == you)
-                    slot.compareAndSet(you, null);
-                if (success) {
-                    you.signal();
-                    return you.item;
-                }
-            }
-
-            // Retry with a random non-top slot <= backoff
-            idx = backoff == 0 ? 1 : 1 + random.get().next() % (backoff + 1);
-        }
-    }
-
-    /**
-     * Returns a random delay less than (base times (2 raised to backoff)).
-     */
-    private long randomDelay(int backoff) {
-        return ((BACKOFF_BASE << backoff) - 1) & random.get().next();
-    }
+    private static final Object NULL_ITEM = new Object();
 
     /**
      * Nodes hold partially exchanged data. This class
      * opportunistically subclasses AtomicReference to represent the
      * hole. So get() returns hole, and compareAndSet CAS'es value
-     * into hole.  Note that this class cannot be parameterized as V
-     * because the sentinel value FAIL is only of type Object.
+     * into hole. This class cannot be parameterized as "V" because of
+     * the use of non-V CANCEL sentinels.
      */
-    static final class Node extends AtomicReference<Object> {
-        private static final long serialVersionUID = -3221313401284163686L;
-
+    private static final class Node extends AtomicReference<Object> {
         /** The element offered by the Thread creating this node. */
-	final Object item;
+        public final Object item;
 
         /** The Thread waiting to be signalled; null until waiting. */
-        volatile Thread waiter;
+        public volatile Thread waiter;
 
         /**
          * Creates node with given item and empty hole.
-         *
          * @param item the item
          */
-	Node(Object item) {
+        public Node(Object item) {
             this.item = item;
         }
+    }
 
-        /**
-         * Unparks thread if it is waiting.
-         */
-        void signal() {
-            LockSupport.unpark(waiter);
-        }
+    /**
+     * A Slot is an AtomicReference with heuristic padding to lessen
+     * cache effects of this heavily CAS'ed location. While the
+     * padding adds noticeable space, all slots are created only on
+     * demand, and there will be more than one of them only when it
+     * would improve throughput more than enough to outweigh using
+     * extra space.
+     */
+    private static final class Slot extends AtomicReference<Object> {
+        // Improve likelihood of isolation on <= 64 byte cache lines
+        long q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, qa, qb, qc, qd, qe;
+    }
 
-        /**
-         * Waits for and gets the hole filled in by another thread.
-         * Fails if timed out or interrupted before hole filled.
-         *
-         * @param timed true if the wait is timed
-         * @param nanos if timed, the maximum wait time
-         * @return on success, the hole; on failure, FAIL
-         */
-        Object waitForHole(boolean timed, long nanos) {
-            long lastTime = timed ? System.nanoTime() : 0;
-            int spins = timed ? maxTimedSpins : maxUntimedSpins;
-            Thread w = Thread.currentThread();
-            for (;;) {
-                if (w.isInterrupted())
-                    compareAndSet(null, FAIL);
-                Object h = get();
-                if (h != null)
-                    return h;
-                if (timed) {
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
-                    if (nanos <= 0) {
-                        compareAndSet(null, FAIL);
-                        continue;
-                    }
-                }
-                if (spins > 0)
-                    --spins;
-                else if (waiter == null)
-                    waiter = w;
-                else if (!timed)
-                    LockSupport.park(this);
-                else if (nanos > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(this, nanos);
+    /**
+     * Slot array.  Elements are lazily initialized when needed.
+     * Declared volatile to enable double-checked lazy construction.
+     */
+    private volatile Slot[] arena = new Slot[CAPACITY];
+
+    /**
+     * The maximum slot index being used. The value sometimes
+     * increases when a thread experiences too many CAS contentions,
+     * and sometimes decreases when a backoff wait elapses. Changes
+     * are performed only via compareAndSet, to avoid stale values
+     * when a thread happens to stall right before setting.
+     */
+    private final AtomicInteger max = new AtomicInteger();
+
+    /**
+     * Main exchange function, handling the different policy variants.
+     * Uses Object, not "V" as argument and return value to simplify
+     * handling of sentinel values. Callers from public methods decode
+     * and cast accordingly.
+     *
+     * @param item the (nonnull) item to exchange
+     * @param timed true if the wait is timed
+     * @param nanos if timed, the maximum wait time
+     * @return the other thread's item, or CANCEL if interrupted or timed out.
+     */
+    private Object doExchange(Object item, boolean timed, long nanos) {
+        Node me = new Node(item);                 // Create in case occupying
+        int index = hashIndex();                  // Index of current slot
+        int fails = 0;                            // Number of CAS failures
+
+        for (;;) {
+            Object y;                             // Contents of current slot
+            Slot slot = arena[index];
+            if (slot == null)                     // Lazily initialize slots
+                createSlot(index);                // Continue loop to reread
+            else if ((y = slot.get()) != null &&  // Try to fulfill
+                     slot.compareAndSet(y, null)) {
+                Node you = (Node)y;               // Transfer item
+                if (you.compareAndSet(null, me.item)) {
+                    LockSupport.unpark(you.waiter);
+                    return you.item;
+                }                                 // Else cancelled; continue
+            }
+            else if (y == null &&                 // Try to occupy
+                     slot.compareAndSet(null, me)) {
+                if (index == 0)                   // Blocking wait for slot 0
+                    return timed? awaitNanos(me, slot, nanos): await(me, slot);
+                Object v = spinWait(me, slot);    // Spin wait for non-0
+                if (v != CANCEL)
+                    return v;
+                me = new Node(me.item);           // Throw away cancelled node
+                int m = max.get();
+                if (m > (index >>>= 1))           // Decrease index
+                    max.compareAndSet(m, m - 1);  // Maybe shrink table
+            }
+            else if (++fails > 1) {               // Allow 2 fails on 1st slot
+                int m = max.get();
+                if (fails > 3 && m < FULL && max.compareAndSet(m, m + 1))
+                    index = m + 1;                // Grow on 3rd failed slot
+                else if (--index < 0)
+                    index = m;                    // Circularly traverse
             }
         }
+    }
+
+    /**
+     * Returns a hash index for current thread.  Uses a one-step
+     * FNV-1a hash code (http://www.isthe.com/chongo/tech/comp/fnv/)
+     * based on the current thread's Thread.getId(). These hash codes
+     * have more uniform distribution properties with respect to small
+     * moduli (here 1-31) than do other simple hashing functions. To
+     * return an index between 0 and max, we use a cheap approximation
+     * to a mod operation, that also corrects for bias due to
+     * non-power-of-2 remaindering (see {@link
+     * java.util.Random#nextInt}). Bits of the hashcode are masked
+     * with "nbits", the ceiling power of two of table size (looked up
+     * in a table packed into three ints). If too large, this is
+     * retried after rotating the hash by nbits bits, while forcing
+     * new top bit to 0, which guarantees eventual termination
+     * (although with a non-random-bias). This requires an average of
+     * less than 2 tries for all table sizes, and has a maximum 2%
+     * difference from perfectly uniform slot probabilities when
+     * applied to all possible hash codes for sizes less than 32.
+     *
+     * @return a per-thread-random index, 0 <= index < max
+     */
+    private final int hashIndex() {
+        long id = Thread.currentThread().getId();
+        int hash = (((int)(id ^ (id >>> 32))) ^ 0x811c9dc5) * 0x01000193;
+
+        int m = max.get();
+        int nbits = (((0xfffffc00  >> m) & 4) | // Compute ceil(log2(m+1))
+                     ((0x000001f8 >>> m) & 2) | // The constants hold
+                     ((0xffff00f2 >>> m) & 1)); // a lookup table
+        int index;
+        while ((index = hash & ((1 << nbits) - 1)) > m)       // May retry on
+            hash = (hash >>> nbits) | (hash << (33 - nbits)); // non-power-2 m
+        return index;
+    }
+
+    /**
+     * Creates a new slot at given index. Called only when the slot
+     * appears to be null. Relies on double-check using builtin locks,
+     * since they rarely contend.
+     *
+     * @param index the index to add slot at
+     */
+    private void createSlot(int index) {
+        // Create slot outside of lock to narrow sync region
+        Slot newSlot = new Slot();
+        Slot[] a = arena;
+        synchronized(a) {
+            if (a[index] == null)
+                a[index] = newSlot;
+        }
+    }
+
+    /**
+     * Try to cancel a wait for the given node waiting in the given
+     * slot, if so, helping clear the node from its slot to avoid
+     * garbage retention.
+     *
+     * @param node the waiting node
+     * @param the slot it is waiting in
+     * @return true if successfully cancelled
+     */
+    private static boolean tryCancel(Node node, Slot slot) {
+        if (!node.compareAndSet(null, CANCEL))
+            return false;
+        if (slot.get() == node)
+            slot.compareAndSet(node, null);
+        return true;
+    }
+
+    // Three forms of waiting. Each just different enough not to merge
+    // code with others.
+
+    /**
+     * Spin-waits for hole for a non-0 slot.  Fails if spin elapses
+     * before hole filled. Does not check interrupt, relying on check
+     * in public exchange method to abort if interrupted on entry.
+     *
+     * @param node the waiting node
+     * @return on success, the hole; on failure, CANCEL
+     */
+    private static Object spinWait(Node node, Slot slot) {
+        int spins = SPINS;
+        for (;;) {
+            Object v = node.get();
+            if (v != null)
+                return v;
+            else if (spins > 0)
+                --spins;
+            else
+                tryCancel(node, slot);
+        }
+    }
+
+    /**
+     * Waits for (by spinning and/or blocking) and gets the hole
+     * filled in by another thread.  Fails if or interrupted before
+     * hole filled.
+     *
+     * When a node/thread is about to block, it sets its waiter field
+     * and then rechecks state at least one more time before actually
+     * parking, thus covering race vs fulfiller noticing that waiter
+     * is non-null so should be woken.
+     *
+     * Thread interruption status is checked only surrounding calls to
+     * park. The caller is assumed to have checked interrupt status
+     * on entry.
+     *
+     * @param node the waiting node
+     * @return on success, the hole; on failure, CANCEL
+     */
+    private static Object await(Node node, Slot slot) {
+        Thread w = Thread.currentThread();
+        int spins = SPINS;
+        for (;;) {
+            Object v = node.get();
+            if (v != null)
+                return v;
+            else if (spins > 0)                 // Spin-wait phase
+                --spins;
+            else if (node.waiter == null)       // Set up to block next
+                node.waiter = w;
+            else if (w.isInterrupted())         // Abort on interrupt
+                tryCancel(node, slot);
+            else                                // Block
+                LockSupport.park(node);
+        }
+    }
+
+    /**
+     * Waits for (at index 0) and gets the hole filled in by another
+     * thread.  Fails if timed out or interrupted before hole filled.
+     * Same basic logic as untimed version, but a bit messier.
+     *
+     * @param node the waiting node
+     * @param nanos the wait time
+     * @return on success, the hole; on failure, CANCEL
+     */
+    private Object awaitNanos(Node node, Slot slot, long nanos) {
+        int spins = TIMED_SPINS;
+        long lastTime = 0;
+        Thread w = null;
+        for (;;) {
+            Object v = node.get();
+            if (v != null)
+                return v;
+            long now = System.nanoTime();
+            if (w == null)
+                w = Thread.currentThread();
+            else
+                nanos -= now - lastTime;
+            lastTime = now;
+            if (nanos > 0) {
+                if (spins > 0)
+                    --spins;
+                else if (node.waiter == null)
+                    node.waiter = w;
+                else if (w.isInterrupted())
+                    tryCancel(node, slot);
+                else
+                    LockSupport.parkNanos(node, nanos);
+            }
+            else if (tryCancel(node, slot) && !w.isInterrupted())
+                return scanOnTimeout(node);
+        }
+    }
+
+    /**
+     * Sweeps through arena checking for any waiting threads.  Called
+     * only upon return from timeout while waiting in slot 0.  When a
+     * thread gives up on a timed wait, it is possible that a
+     * previously-entered thread is still waiting in some other
+     * slot. So we scan to check for any.  This is almost always
+     * overkill, but decreases the likelihood of timeouts when there
+     * are other threads present to far less than that in lock-based
+     * exchangers in which earlier-arriving threads may still be
+     * waiting on entry locks.
+     *
+     * @param node the waiting node
+     * @return another thread's item, or CANCEL
+     */
+    private Object scanOnTimeout(Node node) {
+        Object y;
+        for (int j = arena.length - 1; j >= 0; --j) {
+            Slot slot = arena[j];
+            if (slot != null) {
+                while ((y = slot.get()) != null) {
+                    if (slot.compareAndSet(y, null)) {
+                        Node you = (Node)y;
+                        if (you.compareAndSet(null, node.item)) {
+                            LockSupport.unpark(you.waiter);
+                            return you.item;
+                        }
+                    }
+                }
+            }
+        }
+        return CANCEL;
+    }
+
+    /**
+     * Creates a new Exchanger.
+     */
+    public Exchanger() {
     }
 
     /**
@@ -370,11 +583,15 @@ public class Exchanger<V> {
      *         interrupted while waiting
      */
     public V exchange(V x) throws InterruptedException {
-        try {
-            return (V)doExchange(x, false, 0);
-        } catch (TimeoutException cannotHappen) {
-            throw new Error(cannotHappen);
+        if (!Thread.interrupted()) {
+            Object v = doExchange(x == null? NULL_ITEM : x, false, 0);
+            if (v == NULL_ITEM)
+                return null;
+            if (v != CANCEL)
+                return (V)v;
+            Thread.interrupted(); // Clear interrupt status on IE throw
         }
+        throw new InterruptedException();
     }
 
     /**
@@ -406,10 +623,9 @@ public class Exchanger<V> {
      * then {@link InterruptedException} is thrown and the current thread's
      * interrupted status is cleared.
      *
-     * <p>If the specified waiting time elapses then {@link TimeoutException}
-     * is thrown.
-     * If the time is
-     * less than or equal to zero, the method will not wait at all.
+     * <p>If the specified waiting time elapses then {@link
+     * TimeoutException} is thrown.  If the time is less than or equal
+     * to zero, the method will not wait at all.
      *
      * @param x the object to exchange
      * @param timeout the maximum time to wait
@@ -422,31 +638,16 @@ public class Exchanger<V> {
      */
     public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
-        return (V)doExchange(x, true, unit.toNanos(timeout));
-    }
-
-    /**
-     * Cheap XorShift random number generator used for determining
-     * elimination array slots and backoff delays.  This uses the
-     * simplest of the generators described in George Marsaglia's
-     * "Xorshift RNGs" paper.  This is not a high-quality generator
-     * but is acceptable here.
-     */
-    static final class RNG {
-        /** Use java.util.Random as seed generator for new RNGs. */
-        private static final Random seedGenerator = new Random();
-        private int seed = seedGenerator.nextInt() | 1;
-
-        /**
-         * Returns random nonnegative integer.
-         */
-        int next() {
-            int x = seed;
-            x ^= x << 6;
-            x ^= x >>> 21;
-            seed = x ^= x << 7;
-            return x & 0x7FFFFFFF;
+        if (!Thread.interrupted()) {
+            Object v = doExchange(x == null? NULL_ITEM : x,
+                                  true, unit.toNanos(timeout));
+            if (v == NULL_ITEM)
+                return null;
+            if (v != CANCEL)
+                return (V)v;
+            if (!Thread.interrupted())
+                throw new TimeoutException();
         }
+        throw new InterruptedException();
     }
-
 }

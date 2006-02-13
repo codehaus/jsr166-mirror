@@ -399,7 +399,7 @@ public class Exchanger<V> {
     }
 
     /**
-     * Trie to cancel a wait for the given node waiting in the given
+     * Tries to cancel a wait for the given node waiting in the given
      * slot, if so, helping clear the node from its slot to avoid
      * garbage retention.
      *

@@ -17,7 +17,7 @@ import java.util.*;
 
 public final class IteratorLoops {
     static final int DEFAULT_SIZE = 16384;
-    static final int DEFAULT_TRIALS = 2;
+    static final int DEFAULT_TRIALS = 4;
     static final int NC = 16; // number of collections must be power of 2
     static volatile long mismatches = 0;
     static int randomSeed = 3122688;

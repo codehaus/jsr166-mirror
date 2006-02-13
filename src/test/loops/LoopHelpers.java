@@ -91,6 +91,7 @@ class LoopHelpers {
         return y;
     }
 
+    // FNV: (x ^ 0x811c9dc5) * 0x01000193;  15485863;
 
     /**
      * Marsaglia xorshift for longs

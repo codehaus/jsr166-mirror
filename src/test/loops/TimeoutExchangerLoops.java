@@ -10,141 +10,146 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
 
 public class TimeoutExchangerLoops {
-    static final int  DEFAULT_THREADS        = 32;
-    static final long DEFAULT_TRIAL_MILLIS   = 5000;
-    static final long DEFAULT_PATIENCE_NANOS = 500000;
+    static final int NCPUS = Runtime.getRuntime().availableProcessors();
 
-    static final ExecutorService pool = Executors.newCachedThreadPool();
-    
+    static final int  DEFAULT_THREADS = NCPUS + 2;
+    static final long DEFAULT_PATIENCE_NANOS = 500000;
+    static final long DEFAULT_TRIAL_MILLIS   = 10000;
+
     public static void main(String[] args) throws Exception {
         int maxThreads = DEFAULT_THREADS;
         long trialMillis = DEFAULT_TRIAL_MILLIS;
         long patienceNanos = DEFAULT_PATIENCE_NANOS;
+        int nReps = 3;
 
         // Parse and check args
         int argc = 0;
-        try {
-            while (argc < args.length) {
-                String option = args[argc++];
-		if (option.equals("-t"))
-		    trialMillis = Integer.parseInt(args[argc]);
-		else if (option.equals("-p"))
-		    patienceNanos = Long.parseLong(args[argc]);
-                else 
-                    maxThreads = Integer.parseInt(option);
-                argc++;
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.exit(0);
+        while (argc < args.length) {
+            String option = args[argc++];
+            if (option.equals("-t"))
+                trialMillis = Integer.parseInt(args[argc]);
+            else if (option.equals("-p"))
+                patienceNanos = Long.parseLong(args[argc]);
+            else if (option.equals("-r"))
+                nReps = Integer.parseInt(args[argc]);
+            else 
+                maxThreads = Integer.parseInt(option);
+            argc++;
         }
 
 	// Display runtime parameters
 	System.out.print("TimeoutExchangerTest");
 	System.out.print(" -t " + trialMillis);
 	System.out.print(" -p " + patienceNanos);
+        System.out.print(" -r " + nReps);
 	System.out.print(" max threads " + maxThreads);
 	System.out.println();
 
-        // warmup
-        System.out.print("Threads: " + 2 + "\t");
-        oneRun(2, trialMillis, patienceNanos);
-        Thread.sleep(100);
-
-        int k = 4;
-        for (int i = 2; i <= maxThreads;) {
-            System.out.print("Threads: " + i + "\t");
-            oneRun(i, trialMillis, patienceNanos);
-            Thread.sleep(100);
-            if (i == k) {
-                k = i << 1;
-                i = i + (i >>> 1);
-            } 
-            else 
-                i = k;
+        System.out.println("Warmups..");
+        long warmupTime = 1000;
+        long sleepTime = 500;
+        if (false) {
+            for (int k = 0; k < 10; ++k) {
+                for (int j = 0; j < 10; ++j) {
+                    oneRun(2, (j + 1) * 1000, patienceNanos);
+                    Thread.sleep(sleepTime);
+                }
+            }
         }
-        pool.shutdown();
+
+        oneRun(3, warmupTime, patienceNanos);
+        Thread.sleep(sleepTime);
+
+        for (int i = maxThreads; i >= 2; i -= 1) {
+            oneRun(i, warmupTime, patienceNanos);
+            Thread.sleep(sleepTime);
+        }
+
+        for (int j = 0; j < nReps; ++j) {
+            System.out.println("Replication " + j);
+            for (int i = 2; i <= maxThreads; i += 2) {
+                oneRun(i, trialMillis, patienceNanos);
+                Thread.sleep(sleepTime);
+            }
+        }
     }
 
     static void oneRun(int nThreads, long trialMillis, long patienceNanos) 
         throws Exception {
-        CyclicBarrier barrier = new CyclicBarrier(nThreads+1);
-        long stopTime = System.currentTimeMillis() + trialMillis;
-        Exchanger<MutableInt> x = new Exchanger<MutableInt>();
+        System.out.printf("%4d threads", nThreads);
+        System.out.printf("%9dms", trialMillis);
+        final CountDownLatch start = new CountDownLatch(1);
+        Exchanger x = new Exchanger();
         Runner[] runners = new Runner[nThreads];
-        for (int i = 0; i < nThreads; ++i) 
-            runners[i] = new Runner(x, stopTime, patienceNanos, barrier);
-        for (int i = 0; i < nThreads; ++i) 
-            pool.execute(runners[i]);
-        barrier.await();
-        barrier.await();
-        long iters = 0;
-        long fails = 0;
-        long check = 0;
+        Thread[] threads = new Thread[nThreads];
         for (int i = 0; i < nThreads; ++i) {
-            iters += runners[i].iterations;
-            fails += runners[i].failures;
-            check += runners[i].mine.value;
+            runners[i] = new Runner(x, patienceNanos, start);
+            threads[i] = new Thread(runners[i]);
+            threads[i].start();
         }
-        if (check != iters) 
-            throw new Error("bad checksum " + iters + "/" + check);
-        long rate = (iters * 1000) / trialMillis;
+        long startTime = System.nanoTime();
+        start.countDown();
+        Thread.sleep(trialMillis);
+        for (int i = 0; i < nThreads; ++i) 
+            threads[i].interrupt();
+        long elapsed = System.nanoTime() - startTime;
+        for (int i = 0; i < nThreads; ++i) 
+            threads[i].join();
+        int iters = 0;
+        long fails = 0;
+        for (int i = 0; i < nThreads; ++i) {
+            iters += runners[i].iters;
+            fails += runners[i].failures;
+        }
+        if (iters <= 0) iters = 1;
+        long rate = iters * 1000L * 1000L * 1000L / elapsed;
+        long npt = elapsed / iters;
         double failRate = (fails * 100.0) / (double)iters;
-        System.out.print(LoopHelpers.rightJustify(rate) + " iterations/s ");
-        System.out.printf("%9.5f", failRate);
-        System.out.print("% timeouts");
+        System.out.printf("%9d it/s ", rate);
+        System.out.printf("%9d ns/it", npt);
+        System.out.printf("%9.5f%% fails", failRate);
         System.out.println();
+        //        x.printStats();
     }
 
-    static final class MutableInt {
-	int value;
-    }
-       
+
     static final class Runner implements Runnable {
-        final Exchanger<MutableInt> x;
-        volatile long iterations;
-        volatile long failures;
-        volatile MutableInt mine;
-        final long stopTime;
+        final Exchanger exchanger;
+        final CountDownLatch start;
         final long patience;
-        final CyclicBarrier barrier;
-        Runner(Exchanger<MutableInt> x, long stopTime, 
-               long patience, CyclicBarrier b) {
-            this.x = x;
-            this.stopTime = stopTime;
+        volatile int iters;
+        volatile int failures;
+        Runner(Exchanger x, long patience, CountDownLatch start) {
+            this.exchanger = x;
             this.patience = patience;
-            this.barrier = b;
-            mine = new MutableInt();
+            this.start = start;
         }
 
         public void run() {
+            int i = 0;
             try {
-                barrier.await();
-                MutableInt m = mine;
-                int i = 0;
-                int fails = 0;
-                do {
+                Exchanger x = exchanger;
+                Object m = new Integer(17);
+                long p = patience;
+                start.await();
+                for (;;) {
                     try {
+                        Object e = x.exchange(m, p, TimeUnit.NANOSECONDS);
+                        if (e == null || e == m)
+                            throw new Error();
+                        m = e;
                         ++i;
-                        m.value++;
-                        m = x.exchange(m, patience, TimeUnit.NANOSECONDS);
                     } catch (TimeoutException to) {
-                        if (System.currentTimeMillis() >= stopTime) 
-                            break;
-                        else
-                            ++fails;
+                        if (Thread.interrupted()) {
+                            iters = i;
+                            return;
+                        }
+                        ++i;
+                        ++failures;
                     }
-                } while ((i & 127) != 0 || // only check time periodically
-                         System.currentTimeMillis() < stopTime);
-                
-                mine = m;
-                iterations = i;
-                failures = fails;
-                barrier.await();
-            } catch(Exception e) {
-                e.printStackTrace();
-                return;
+                }
+            } catch (InterruptedException ie) {
+                iters = i;
             }
         }
     }

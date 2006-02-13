@@ -300,7 +300,7 @@ public class Exchanger<V> {
      * handling of sentinel values.  Callers from public methods decode
      * and cast accordingly.
      *
-     * @param item the (nonnull) item to exchange
+     * @param item the (non-null) item to exchange
      * @param timed true if the wait is timed
      * @param nanos if timed, the maximum wait time
      * @return the other thread's item, or CANCEL if interrupted or timed out
@@ -318,7 +318,7 @@ public class Exchanger<V> {
             else if ((y = slot.get()) != null &&  // Try to fulfill
                      slot.compareAndSet(y, null)) {
                 Node you = (Node)y;               // Transfer item
-                if (you.compareAndSet(null, me.item)) {
+                if (you.compareAndSet(null, item)) {
                     LockSupport.unpark(you.waiter);
                     return you.item;
                 }                                 // Else cancelled; continue
@@ -330,7 +330,7 @@ public class Exchanger<V> {
                 Object v = spinWait(me, slot);    // Spin wait for non-0
                 if (v != CANCEL)
                     return v;
-                me = new Node(me.item);           // Throw away cancelled node
+                me = new Node(item);              // Throw away cancelled node
                 int m = max.get();
                 if (m > (index >>>= 1))           // Decrease index
                     max.compareAndSet(m, m - 1);  // Maybe shrink table
@@ -391,7 +391,7 @@ public class Exchanger<V> {
         // Create slot outside of lock to narrow sync region
         Slot newSlot = new Slot();
         Slot[] a = arena;
-        synchronized(a) {
+        synchronized (a) {
             if (a[index] == null)
                 a[index] = newSlot;
         }

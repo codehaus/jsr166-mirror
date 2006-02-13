@@ -288,7 +288,7 @@ public class Exchanger<V> {
     /**
      * The maximum slot index being used.  The value sometimes
      * increases when a thread experiences too many CAS contentions,
-     * and sometimes decreases when a backoff wait elapses.  Changes
+     * and sometimes decreases when a spin-wait elapses.  Changes
      * are performed only via compareAndSet, to avoid stale values
      * when a thread happens to stall right before setting.
      */
@@ -382,8 +382,9 @@ public class Exchanger<V> {
 
     /**
      * Creates a new slot at given index.  Called only when the slot
-     * appears to be null.  Relies on double-check using builtin locks,
-     * since they rarely contend.
+     * appears to be null.  Relies on double-check using builtin
+     * locks, since they rarely contend. This in turn relies on the
+     * arena array being declared volatile.
      *
      * @param index the index to add slot at
      */
@@ -398,7 +399,7 @@ public class Exchanger<V> {
     }
 
     /**
-     * Try to cancel a wait for the given node waiting in the given
+     * Trie to cancel a wait for the given node waiting in the given
      * slot, if so, helping clear the node from its slot to avoid
      * garbage retention.
      *
@@ -409,7 +410,7 @@ public class Exchanger<V> {
     private static boolean tryCancel(Node node, Slot slot) {
         if (!node.compareAndSet(null, CANCEL))
             return false;
-        if (slot.get() == node)
+        if (slot.get() == node) // pre-check to minimize contention
             slot.compareAndSet(node, null);
         return true;
     }

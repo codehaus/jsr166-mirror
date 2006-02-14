@@ -351,18 +351,19 @@ public class Exchanger<V> {
      * based on the current thread's Thread.getId().  These hash codes
      * have more uniform distribution properties with respect to small
      * moduli (here 1-31) than do other simple hashing functions.
-     * To return an index between 0 and max, we use a cheap
+     *
+     * <p>To return an index between 0 and max, we use a cheap
      * approximation to a mod operation, that also corrects for bias
-     * due to non-power-of-2 remaindering (see {@link Random#nextInt}).
-     * Bits of the hashcode are masked with "nbits", the ceiling power
-     * of two of table size (looked up in a table packed into three
-     * ints).  If too large, this is retried after rotating the hash by
-     * nbits bits, while forcing new top bit to 0, which guarantees
-     * eventual termination (although with a non-random-bias).  This
-     * requires an average of less than 2 tries for all table sizes,
-     * and has a maximum 2% difference from perfectly uniform slot
-     * probabilities when applied to all possible hash codes for sizes
-     * less than 32.
+     * due to non-power-of-2 remaindering (see {@link
+     * java.util.Random#nextInt}).  Bits of the hashcode are masked
+     * with "nbits", the ceiling power of two of table size (looked up
+     * in a table packed into three ints).  If too large, this is
+     * retried after rotating the hash by nbits bits, while forcing new
+     * top bit to 0, which guarantees eventual termination (although
+     * with a non-random-bias).  This requires an average of less than
+     * 2 tries for all table sizes, and has a maximum 2% difference
+     * from perfectly uniform slot probabilities when applied to all
+     * possible hash codes for sizes less than 32.
      *
      * @return a per-thread-random index, 0 <= index < max
      */
@@ -383,7 +384,7 @@ public class Exchanger<V> {
     /**
      * Creates a new slot at given index.  Called only when the slot
      * appears to be null.  Relies on double-check using builtin
-     * locks, since they rarely contend. This in turn relies on the
+     * locks, since they rarely contend.  This in turn relies on the
      * arena array being declared volatile.
      *
      * @param index the index to add slot at

@@ -1,5 +1,5 @@
 /*
- * @(#)Random.java	1.46 05/11/30
+ * %W% %E%
  *
  * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -33,7 +33,7 @@ import sun.misc.Unsafe;
  * Many applications will find the method {@link Math#random} simpler to use.
  *
  * @author  Frank Yellin
- * @version 1.46, 11/30/05
+ * @version %I%, %G%
  * @since   1.0
  */
 public

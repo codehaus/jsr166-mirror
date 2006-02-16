@@ -36,7 +36,7 @@ package java.util;
  *
  * @author  Josh Bloch
  * @author  Neal Gafter
- * @version 1.24, 01/18/03
+ * @version %I%, %G%
  * @see Collection
  * @since 1.2
  */

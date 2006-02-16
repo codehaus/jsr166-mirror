@@ -898,14 +898,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * or the security manager's <tt>checkAccess</tt> method denies access.
      */
     public void shutdown() {
-        // Fail if caller doesn't have modifyThread permission. We
-        // explicitly check permissions directly because we can't trust
-        // implementations of SecurityManager to correctly override
-        // the "check access" methods such that our documented
-        // security policy is implemented.
+        // Fail if caller doesn't have modifyThread permission. 
 	SecurityManager security = System.getSecurityManager();
 	if (security != null)
-            java.security.AccessController.checkPermission(shutdownPerm);
+            security.checkPermission(shutdownPerm);
 
         boolean fullyTerminated = false;
         final ReentrantLock mainLock = this.mainLock;
@@ -972,7 +968,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         // Almost the same code as shutdown()
 	SecurityManager security = System.getSecurityManager();
 	if (security != null)
-            java.security.AccessController.checkPermission(shutdownPerm);
+            security.checkPermission(shutdownPerm);
 
         boolean fullyTerminated = false;
         final ReentrantLock mainLock = this.mainLock;

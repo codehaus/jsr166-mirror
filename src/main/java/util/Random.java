@@ -523,10 +523,9 @@ class Random implements java.io.Serializable {
         try {
             seedOffset = unsafe.objectFieldOffset
                 (Random.class.getDeclaredField("seed"));
-            } catch (Exception ex) { throw new Error(ex); }
+	} catch (Exception ex) { throw new Error(ex); }
     }
     private void resetSeed(long seedVal) {
         unsafe.putObjectVolatile(this, seedOffset, new AtomicLong(seedVal));
     }
-
 }

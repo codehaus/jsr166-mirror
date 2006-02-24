@@ -461,6 +461,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 	Thread t = new Thread(new InterruptedSyncRunnable(sync));
         try {
             t.start();
+            Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             sync.release(1);
             t.join();

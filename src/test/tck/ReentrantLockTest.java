@@ -409,6 +409,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 	Thread t = new Thread(new InterruptedLockRunnable(lock));
         try {
             t.start();
+            Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             lock.unlock();
             t.join();

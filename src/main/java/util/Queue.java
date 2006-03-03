@@ -126,7 +126,7 @@ public interface Queue<E> extends Collection<E> {
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this queue
      * @throws NullPointerException if the specified element is null and
-     *         this queue not permit null elements
+     *         this queue does not permit null elements
      * @throws IllegalArgumentException if some property of this element
      *         prevents it from being added to this queue
      */

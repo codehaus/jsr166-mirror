@@ -3319,6 +3319,8 @@ public class Collections {
         public int compare(Comparable<Object> c1, Comparable<Object> c2) {
             return c2.compareTo(c1);
         }
+
+        private Object readResolve() { return reverseOrder(); }
     }
 
     /**
@@ -3337,7 +3339,7 @@ public class Collections {
      */
     public static <T> Comparator<T> reverseOrder(Comparator<T> cmp) {
         if (cmp == null)
-            return new ReverseComparator();  // Unchecked warning!!
+            return reverseOrder();
 
         return new ReverseComparator2<T>(cmp);
     }

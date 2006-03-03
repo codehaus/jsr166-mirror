@@ -785,9 +785,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     public ArrayDeque<E> clone() {
         try {
             ArrayDeque<E> result = (ArrayDeque<E>) super.clone();
-            // These two lines are currently faster than cloning the array:
-            result.elements = (E[]) new Object[elements.length];
-            System.arraycopy(elements, 0, result.elements, 0, elements.length);
+            result.elements = Arrays.copyOf(elements, elements.length);
             return result;
 
         } catch (CloneNotSupportedException e) {

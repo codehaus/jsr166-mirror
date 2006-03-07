@@ -89,7 +89,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      *
      * @param initialCapacity the initial capacity for this priority queue
      * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
-     * than 1
+     *         than 1
      */
     public PriorityBlockingQueue(int initialCapacity) {
         q = new PriorityQueue<E>(initialCapacity, null);
@@ -101,11 +101,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * comparator.
      *
      * @param initialCapacity the initial capacity for this priority queue
-     * @param comparator the comparator used to order this priority queue.
-     * If <tt>null</tt> then the order depends on the elements' natural
-     * ordering.
+     * @param  comparator the comparator that will be used to order this
+     *         priority queue.  If {@code null}, the {@linkplain Comparable
+     *         natural ordering} of the elements will be used.
      * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
-     * than 1
+     *         than 1
      */
     public PriorityBlockingQueue(int initialCapacity,
                                  Comparator<? super E> comparator) {
@@ -114,20 +114,17 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Creates a <tt>PriorityBlockingQueue</tt> containing the elements
-     * in the specified collection.  The priority queue has an initial
-     * capacity of 110% of the size of the specified collection.  If
-     * the specified collection is a {@link SortedSet} or a {@link
-     * PriorityQueue}, this priority queue will be sorted according to
-     * the same comparator, or according to the natural ordering of its
-     * elements if the collection is sorted according to the natural
-     * ordering of its elements.  Otherwise, this priority queue is
-     * ordered according to the natural ordering of its elements.
+     * in the specified collection.  If the specified collection is a
+     * {@link SortedSet} or a {@link PriorityQueue},  this
+     * priority queue will be ordered according to the same ordering.
+     * Otherwise, this priority queue will be ordered according to the
+     * {@linkplain Comparable natural ordering} of its elements.
      *
-     * @param c the collection whose elements are to be placed
-     *        into this priority queue.
+     * @param  c the collection whose elements are to be placed
+     *         into this priority queue
      * @throws ClassCastException if elements of the specified collection
      *         cannot be compared to one another according to the priority
-     *         queue's ordering.
+     *         queue's ordering
      * @throws NullPointerException if the specified collection or any
      *         of its elements are null
      */
@@ -272,7 +269,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      *
      * @return the comparator used to order the elements in this queue,
      *         or <tt>null</tt> if this queue uses the natural
-     *         ordering of its elements.
+     *         ordering of its elements
      */
     public Comparator<? super E> comparator() {
         return q.comparator();
@@ -299,11 +296,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Removes a single instance of the specified element from this queue,
-     * if it is present.  More formally, removes an element <tt>e</tt> such
-     * that <tt>o.equals(e)</tt>, if this queue contains one or more such
-     * elements.
-     * Returns <tt>true</tt> if this queue contained the specified element
-     * (or equivalently, if this queue changed as a result of the call).
+     * if it is present.  More formally, removes an element {@code e} such
+     * that {@code o.equals(e)}, if this queue contains one or more such
+     * elements.  Returns {@code true} if and only if this queue contained
+     * the specified element (or equivalently, if this queue changed as a
+     * result of the call).
      *
      * @param o element to be removed from this queue, if present
      * @return <tt>true</tt> if this queue changed as a result of the call
@@ -319,9 +316,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this queue contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this queue contains
-     * at least one element <tt>e</tt> such that <tt>o.equals(e)</tt>.
+     * Returns {@code true} if this queue contains the specified element.
+     * More formally, returns {@code true} if and only if this queue contains
+     * at least one element {@code e} such that {@code o.equals(e)}.
      *
      * @param o object to be checked for containment in this queue
      * @return <tt>true</tt> if this queue contains the specified element
@@ -358,6 +355,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
+
 
     public String toString() {
         final ReentrantLock lock = this.lock;
@@ -546,7 +544,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Save the state to a stream (that is, serialize it).  This
+     * Saves the state to a stream (that is, serializes it).  This
      * merely wraps default serialization within lock.  The
      * serialization strategy for items is left to underlying
      * Queue. Note that locking is not needed on deserialization, so

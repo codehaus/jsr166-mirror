@@ -170,7 +170,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
 		}
                 r = Arrays.copyOf(r, newCap);
             }
-         }
+        }
         // trim if overallocated
         return i == r.length ? r : Arrays.copyOf(r, i);
     }

@@ -12,22 +12,18 @@ package java.util;
  * objects. Like an array, it contains components that can be
  * accessed using an integer index. However, the size of a
  * <code>Vector</code> can grow or shrink as needed to accommodate
- * adding and removing items after the <code>Vector</code> has been created.<p>
+ * adding and removing items after the <code>Vector</code> has been created.
  *
- * Each vector tries to optimize storage management by maintaining a
+ * <p>Each vector tries to optimize storage management by maintaining a
  * <code>capacity</code> and a <code>capacityIncrement</code>. The
  * <code>capacity</code> is always at least as large as the vector
  * size; it is usually larger because as components are added to the
  * vector, the vector's storage increases in chunks the size of
  * <code>capacityIncrement</code>. An application can increase the
  * capacity of a vector before inserting a large number of
- * components; this reduces the amount of incremental reallocation. <p>
+ * components; this reduces the amount of incremental reallocation.
  *
- * As of the Java 2 platform v1.2, this class has been retrofitted to
- * implement List, so that it becomes a part of Java's collection framework.
- * Unlike the new collection implementations, Vector is synchronized.<p>
- *
- * The Iterators returned by Vector's iterator and listIterator
+ * <p>The Iterators returned by Vector's iterator and listIterator
  * methods are <em>fail-fast</em>: if the Vector is structurally modified
  * at any time after the Iterator is created, in any way except through the
  * Iterator's own remove or add methods, the Iterator will throw a
@@ -43,11 +39,13 @@ package java.util;
  * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
  * exception for its correctness:  <i>the fail-fast behavior of iterators
- * should be used only to detect bugs.</i><p>
+ * should be used only to detect bugs.</i>
  *
- * This class is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
- * Java Collections Framework</a>.
+ * <p>As of the Java 2 platform v1.2, this class was retrofitted to
+ * implement the {@link List} interface, making it a member of the
+ * <a href="{@docRoot}/../guide/collections/index.html"> Java
+ * Collections Framework</a>.  Unlike the new collection
+ * implementations, {@code Vector} is synchronized.
  *
  * @author  Lee Boynton
  * @author  Jonathan Payne

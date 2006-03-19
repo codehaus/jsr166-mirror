@@ -2020,20 +2020,18 @@ public class TreeMap<K,V>
      * @throws ClassNotFoundException propagated from readObject.
      *         This cannot occur if str is null.
      */
-    private
-    void buildFromSorted(int size, Iterator it,
-			 java.io.ObjectInputStream str,
-			 V defaultVal)
+    private void buildFromSorted(int size, Iterator it,
+				 java.io.ObjectInputStream str,
+				 V defaultVal)
         throws  java.io.IOException, ClassNotFoundException {
         this.size = size;
-        root =
-	    buildFromSorted(0, 0, size-1, computeRedLevel(size),
-			    it, str, defaultVal);
+        root = buildFromSorted(0, 0, size-1, computeRedLevel(size),
+			       it, str, defaultVal);
     }
 
     /**
      * Recursive "helper method" that does the real work of the
-     * of the previous method.  Identically named parameters have
+     * previous method.  Identically named parameters have
      * identical definitions.  Additional parameters are documented below.
      * It is assumed that the comparator and size fields of the TreeMap are
      * already set prior to calling this method.  (It ignores both fields.)

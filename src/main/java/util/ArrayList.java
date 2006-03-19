@@ -122,39 +122,18 @@ public class ArrayList<E> extends AbstractList<E>
     /**
      * Constructs a list containing the elements of the specified
      * collection, in the order they are returned by the collection's
-     * iterator.  The <tt>ArrayList</tt> instance has an initial capacity of
-     * 110% the size of the specified collection.
+     * iterator.
      *
      * @param c the collection whose elements are to be placed into this list
      * @throws NullPointerException if the specified collection is null
      */
     public ArrayList(Collection<? extends E> c) {
-	int size = c.size();
-	// 10% for growth
-	int cap = ((size/10)+1)*11;
-	if (cap > 0) {
-	    Object[] a = new Object[cap];
-	    a[size] = a[size+1] = UNALLOCATED;
-	    Object[] b = c.toArray(a);
-	    if (b[size] == null && b[size+1] == UNALLOCATED) {
-		b[size+1] = null;
-		elementData = b;
-		this.size = size;
-		return;
-	    }
-	}
-	initFromConcurrentlyMutating(c);
-    }
-
-    private void initFromConcurrentlyMutating(Collection<? extends E> c) {
 	elementData = c.toArray();
 	size = elementData.length;
 	// c.toArray might (incorrectly) not return Object[] (see 6260652)
 	if (elementData.getClass() != Object[].class)
 	    elementData = Arrays.copyOf(elementData, size, Object[].class);
     }
-
-    private final static Object UNALLOCATED = new Object();
 
     /**
      * Trims the capacity of this <tt>ArrayList</tt> instance to be the

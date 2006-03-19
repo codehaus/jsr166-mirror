@@ -1066,7 +1066,7 @@ public class Collections {
 	private static final long serialVersionUID = -9215047833775013803L;
 
 	UnmodifiableSet(Set<? extends E> s)	{super(s);}
-	public boolean equals(Object o) {return c.equals(o);}
+	public boolean equals(Object o) {return o == this || c.equals(o);}
 	public int hashCode() 		{return c.hashCode();}
     }
 
@@ -1151,7 +1151,7 @@ public class Collections {
 	    this.list = list;
 	}
 
-	public boolean equals(Object o) {return list.equals(o);}
+	public boolean equals(Object o) {return o == this || list.equals(o);}
 	public int hashCode() 		{return list.hashCode();}
 
 	public E get(int index) {return list.get(index);}
@@ -1319,7 +1319,7 @@ public class Collections {
 	    return values;
 	}
 
-	public boolean equals(Object o) {return m.equals(o);}
+	public boolean equals(Object o) {return o == this || m.equals(o);}
 	public int hashCode()           {return m.hashCode();}
         public String toString()        {return m.toString();}
 
@@ -1542,8 +1542,8 @@ public class Collections {
 	// use serialVersionUID from JDK 1.2.2 for interoperability
 	private static final long serialVersionUID = 3053995032091335093L;
 
-	final Collection<E> c;	   // Backing Collection
-	final Object	   mutex;  // Object on which to synchronize
+	final Collection<E> c;  // Backing Collection
+	final Object mutex;     // Object on which to synchronize
 
 	SynchronizedCollection(Collection<E> c) {
             if (c==null)
@@ -2317,7 +2317,7 @@ public class Collections {
 
         CheckedSet(Set<E> s, Class<E> elementType) { super(s, elementType); }
 
-        public boolean equals(Object o) { return c.equals(o); }
+        public boolean equals(Object o) { return o == this || c.equals(o); }
         public int hashCode()           { return c.hashCode(); }
     }
 
@@ -2420,7 +2420,7 @@ public class Collections {
             this.list = list;
         }
 
-        public boolean equals(Object o)  { return list.equals(o); }
+        public boolean equals(Object o)  { return o == this || list.equals(o); }
         public int hashCode()            { return list.hashCode(); }
         public E get(int index)          { return list.get(index); }
         public E remove(int index)       { return list.remove(index); }
@@ -2574,7 +2574,7 @@ public class Collections {
         public void clear()                    { m.clear(); }
         public Set<K> keySet()                 { return m.keySet(); }
         public Collection<V> values()          { return m.values(); }
-        public boolean equals(Object o)        { return m.equals(o);  }
+        public boolean equals(Object o)        { return o == this || m.equals(o); }
         public int hashCode()                  { return m.hashCode(); }
         public String toString()               { return m.toString(); }
 
@@ -3562,43 +3562,39 @@ public class Collections {
         implements Set<E>, Serializable
     {
         private final Map<E, Boolean> m;  // The backing map
-        private transient Set<E> keySet;  // Its keySet
+        private transient Set<E> s;       // Its keySet
 
         SetFromMap(Map<E, Boolean> map) {
             if (!map.isEmpty())
                 throw new IllegalArgumentException("Map is non-empty");
             m = map;
-            keySet = map.keySet();
+            s = map.keySet();
         }
 
+        public void clear()               {        m.clear(); }
         public int size()                 { return m.size(); }
         public boolean isEmpty()          { return m.isEmpty(); }
         public boolean contains(Object o) { return m.containsKey(o); }
-        public Iterator<E> iterator()     { return keySet.iterator(); }
-        public Object[] toArray()         { return keySet.toArray(); }
-        public <T> T[] toArray(T[] a)     { return keySet.toArray(a); }
-        public boolean add(E e) {
-            return m.put(e, Boolean.TRUE) == null;
-        }
         public boolean remove(Object o)   { return m.remove(o) != null; }
-
-        public boolean removeAll(Collection<?> c) {
-            return keySet.removeAll(c);
-        }
-        public boolean retainAll(Collection<?> c) {
-            return keySet.retainAll(c);
-        }
-        public void clear()               { m.clear(); }
-        public boolean equals(Object o)   { return keySet.equals(o); }
-        public int hashCode()             { return keySet.hashCode(); }
+        public boolean add(E e) { return m.put(e, Boolean.TRUE) == null; }
+        public Iterator<E> iterator()     { return s.iterator(); }
+        public Object[] toArray()         { return s.toArray(); }
+        public <T> T[] toArray(T[] a)     { return s.toArray(a); }
+        public String toString()          { return s.toString(); }
+        public int hashCode()             { return s.hashCode(); }
+        public boolean equals(Object o)   { return o == this || s.equals(o); }
+        public boolean containsAll(Collection<?> c) {return s.containsAll(c);}
+        public boolean removeAll(Collection<?> c)   {return s.removeAll(c);}
+        public boolean retainAll(Collection<?> c)   {return s.retainAll(c);}
+	// addAll is the only inherited implementation
 
         private static final long serialVersionUID = 2454657854757543876L;
 
-        private void readObject(java.io.ObjectInputStream s)
+        private void readObject(java.io.ObjectInputStream stream)
             throws IOException, ClassNotFoundException
         {
-            s.defaultReadObject();
-            keySet = m.keySet();
+            stream.defaultReadObject();
+            s = m.keySet();
         }
     }
 
@@ -3621,20 +3617,25 @@ public class Collections {
         implements Queue<E>, Serializable {
 	private static final long serialVersionUID = 1802017725587941708L;
         private final Deque<E> q;
-        AsLIFOQueue(Deque<E> q)            { this.q = q; }
-        public boolean add(E e)            { q.addFirst(e); return true; }
-        public boolean offer(E e)          { return q.offerFirst(e); }
-        public E poll()                    { return q.pollFirst(); }
-        public E remove()                  { return q.removeFirst(); }
-        public E peek()                    { return q.peekFirst(); }
-        public E element()                 { return q.getFirst(); }
-        public int size()                  { return q.size(); }
-        public boolean isEmpty()           { return q.isEmpty(); }
-        public boolean contains(Object o)  { return q.contains(o); }
-        public Iterator<E> iterator()      { return q.iterator(); }
-        public Object[] toArray()          { return q.toArray(); }
-        public <T> T[] toArray(T[] a)      { return q.toArray(a); }
-        public boolean remove(Object o)    { return q.remove(o); }
-        public void clear()                { q.clear(); }
+        AsLIFOQueue(Deque<E> q)           { this.q = q; }
+        public boolean add(E e)           { q.addFirst(e); return true; }
+        public boolean offer(E e)         { return q.offerFirst(e); }
+        public E poll()                   { return q.pollFirst(); }
+        public E remove()                 { return q.removeFirst(); }
+        public E peek()                   { return q.peekFirst(); }
+        public E element()                { return q.getFirst(); }
+        public void clear()               {        q.clear(); }
+        public int size()                 { return q.size(); }
+        public boolean isEmpty()          { return q.isEmpty(); }
+        public boolean contains(Object o) { return q.contains(o); }
+        public boolean remove(Object o)   { return q.remove(o); }
+        public Iterator<E> iterator()     { return q.iterator(); }
+        public Object[] toArray()         { return q.toArray(); }
+        public <T> T[] toArray(T[] a)     { return q.toArray(a); }
+        public String toString()          { return q.toString(); }
+	public boolean containsAll(Collection<?> c) {return q.containsAll(c);}
+	public boolean removeAll(Collection<?> c)   {return q.removeAll(c);}
+	public boolean retainAll(Collection<?> c)   {return q.retainAll(c);}
+	// We use inherited addAll; forwarding addAll would be wrong
     }
 }

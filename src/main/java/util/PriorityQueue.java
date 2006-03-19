@@ -688,7 +688,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         // Write out array length, for compatibility with 1.5 version
         s.writeInt(Math.max(2, size + 1));
 
-        // Write out all elements in the proper order.
+        // Write out all elements in the "proper order".
         for (int i = 0; i < size; i++)
             s.writeObject(queue[i]);
     }
@@ -709,8 +709,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
 	queue = new Object[size];
 
-        // Read in all elements in the proper order.
+        // Read in all elements.
         for (int i = 0; i < size; i++)
             queue[i] = s.readObject();
+
+	// Elements are guaranteed to be in "proper order", but the
+	// spec has never explained what that might be.
+	heapify();
     }
 }

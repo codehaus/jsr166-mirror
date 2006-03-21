@@ -229,7 +229,18 @@ import java.util.*;
  * supplied methods, {@link ThreadPoolExecutor#remove} and {@link
  * ThreadPoolExecutor#purge} are available to assist in storage
  * reclamation when large numbers of queued tasks become
- * cancelled.</dd> </dl>
+ * cancelled.</dd> 
+ *
+ * <dt>Finalization</dt>
+ *
+ * <dd> A pool that is no longer referenced in a program <em>AND</em>
+ * has no remaining threads will be <tt>shutdown</tt>
+ * automatically. If you would like to ensure that unreferenced pools
+ * are reclaimed even if users forget to call {@link
+ * ThreadPoolExecutor#shutdown}, then you must arrange that unused
+ * threads eventually die, by setting appropriate keep-alive times,
+ * using a lower bound of zero core threads and/or setting {@link
+ * ThreadPoolExecutor#allowCoreThreadTimeOut}.  </dd> </dl>
  *
  * <p> <b>Extension example</b>. Most extensions of this class
  * override one or more of the protected hook methods. For example,

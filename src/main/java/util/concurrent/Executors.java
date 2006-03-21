@@ -610,6 +610,10 @@ public class Executors {
             throws InterruptedException, ExecutionException, TimeoutException {
             return e.invokeAny(tasks, timeout, unit);
         }
+        protected void finalize()  {
+            e.shutdown();
+        }
+
     }
 
     /**

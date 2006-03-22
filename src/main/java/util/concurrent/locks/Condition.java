@@ -309,10 +309,11 @@ public interface Condition {
      * there is one.
      *
      * @param nanosTimeout the maximum time to wait, in nanoseconds
-     * @return A value less than or equal to zero if the wait has
-     * timed out; otherwise an estimate, that
-     * is strictly less than the <tt>nanosTimeout</tt> argument,
-     * of the time still remaining when this method returned.
+     * @return An estimate of the <tt>nanosTimeout</tt> value minus
+     * the time spent waiting upon return from this method.  A
+     * positive value may be used as the argument to a subsequent call
+     * to this method to finish waiting out the desired time. A value
+     * less than or equal to zero indicates that no time remains.
      *
      * @throws InterruptedException if the current thread is interrupted (and
      * interruption of thread suspension is supported).

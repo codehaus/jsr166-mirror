@@ -97,7 +97,7 @@ public class Executors {
      * @return the newly created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor() {
-        return new DelegatedExecutorService
+        return new FinalizableDelegatedExecutorService
             (new ThreadPoolExecutor(1, 1,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>()));
@@ -117,7 +117,7 @@ public class Executors {
      * @return the newly created single-threaded Executor
      */
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-        return new DelegatedExecutorService
+        return new FinalizableDelegatedExecutorService
             (new ThreadPoolExecutor(1, 1,
                                     0L, TimeUnit.MILLISECONDS,
                                     new LinkedBlockingQueue<Runnable>(),
@@ -613,11 +613,18 @@ public class Executors {
             throws InterruptedException, ExecutionException, TimeoutException {
             return e.invokeAny(tasks, timeout, unit);
         }
-        protected void finalize()  {
-            e.shutdown();
-        }
-
     }
+
+    static class FinalizableDelegatedExecutorService
+        extends DelegatedExecutorService {
+        FinalizableDelegatedExecutorService(ExecutorService executor) {
+            super(executor);
+        }
+        protected void finalize()  {
+            super.shutdown();
+        }
+    }
+        
 
     /**
      * A wrapper class that exposes only the ScheduledExecutorService

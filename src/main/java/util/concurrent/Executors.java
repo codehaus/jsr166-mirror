@@ -42,12 +42,13 @@ public class Executors {
     /**
      * Creates a thread pool that reuses a fixed number of threads
      * operating off a shared unbounded queue.  At any point, at most
-     * <tt>nThreads</tt> threads will be active processing tasks.
-     * If additional tasks are submitted when all threads are active,
-     * they will wait in the queue until a thread is available.
-     * If any thread terminates due to a failure during execution
-     * prior to shutdown, a new one will take its place if needed to
-     * execute subsequent tasks.
+     * <tt>nThreads</tt> threads will be active processing tasks.  If
+     * additional tasks are submitted when all threads are active,
+     * they will wait in the queue until a thread is available.  If
+     * any thread terminates due to a failure during execution prior
+     * to shutdown, a new one will take its place if needed to execute
+     * subsequent tasks. The threads in the pool will exist until it
+     * is explicitly {@link ExecutorService#shutdown shutdown}.
      *
      * @param nThreads the number of threads in the pool
      * @return the newly created thread pool
@@ -67,7 +68,9 @@ public class Executors {
      * active, they will wait in the queue until a thread is
      * available.  If any thread terminates due to a failure during
      * execution prior to shutdown, a new one will take its place if
-     * needed to execute subsequent tasks.
+     * needed to execute subsequent tasks.  The threads in the pool
+     * will exist until it is explicitly {@link
+     * ExecutorService#shutdown shutdown}.
      *
      * @param nThreads the number of threads in the pool
      * @param threadFactory the factory to use when creating new threads

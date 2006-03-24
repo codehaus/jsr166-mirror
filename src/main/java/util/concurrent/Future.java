@@ -70,7 +70,7 @@ public interface Future<V> {
 
     /**
      * Attempts to cancel execution of this task.  This attempt will
-     * fail if the task has already completed, already been cancelled,
+     * fail if the task has already completed, has already been cancelled,
      * or could not be cancelled for some other reason. If successful,
      * and this task has not started when <tt>cancel</tt> is called,
      * this task should never run.  If the task has already started,

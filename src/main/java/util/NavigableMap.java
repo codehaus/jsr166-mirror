@@ -29,7 +29,7 @@ package java.util;
  * Methods <tt>navigableSubMap</tt>, <tt>navigableHeadMap</tt>, and
  * <tt>navigableTailMap</tt> differ from the similarly named
  * <tt>SortedMap</tt> methods only in their declared return types.
- * Submaps of any <tt>NavigableMap<tt> must implement the
+ * Submaps of any <tt>NavigableMap</tt> must implement the
  * <tt>NavigableMap</tt> interface.
  *
  * <p>This interface additionally defines methods <tt>firstEntry</tt>,

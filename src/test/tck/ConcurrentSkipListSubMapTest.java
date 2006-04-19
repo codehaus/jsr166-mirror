@@ -32,13 +32,13 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 	map.put(seven, "F");
         assertFalse(map.isEmpty());
         assertEquals(7, map.size());
-        return map.navigableSubMap(one, seven);
+        return map.navigableSubMap(one, true, seven, false);
     }
 
     private static ConcurrentNavigableMap map0() {   
 	ConcurrentSkipListMap map = new ConcurrentSkipListMap();
         assertTrue(map.isEmpty());
-        return map.navigableTailMap(one);
+        return map.navigableTailMap(one, true);
     }
 
     /**

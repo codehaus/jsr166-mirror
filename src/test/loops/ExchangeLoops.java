@@ -79,7 +79,6 @@ public class ExchangeLoops {
 
     static void oneRun(int nThreads, long trialMillis) throws Exception {
         System.out.printf("%4d threads", nThreads);
-        System.out.printf("%9dms", trialMillis);
         Exchanger x = new Exchanger();
         Runner[] runners = new Runner[nThreads];
         Thread[] threads = new Thread[nThreads];
@@ -112,6 +111,7 @@ public class ExchangeLoops {
         }
         long rate = iters * 1000L * 1000L * 1000L / elapsed;
         long npt = elapsed / iters;
+        System.out.printf("%9dms", elapsed / (1000L * 1000L));
         System.out.printf("%9d it/s ", rate);
         System.out.printf("%9d ns/it", npt);
         System.out.println();

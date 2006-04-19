@@ -32,13 +32,13 @@ public class TreeSubMapTest extends JSR166TestCase {
 	map.put(seven, "F");
         assertFalse(map.isEmpty());
         assertEquals(7, map.size());
-        return map.navigableSubMap(one, seven);
+        return map.navigableSubMap(one, true, seven, false);
     }
 
     private static NavigableMap map0() {   
 	TreeMap map = new TreeMap();
         assertTrue(map.isEmpty());
-        return map.navigableTailMap(one);
+        return map.navigableTailMap(one, true);
     }
 
     /**

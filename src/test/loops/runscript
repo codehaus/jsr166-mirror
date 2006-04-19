@@ -22,8 +22,8 @@ fi
 echo "Java is " $RUN
 echo "Trials per test: "  $TRIALS
 
-echo CASLoops
-$RUN CASLoops
+echo CASLoops 4 #$TRIALS
+$RUN CASLoops 4 #$TRIALS
 echo SimpleReentrantLockLoops
 $RUN SimpleReentrantLockLoops $TRIALS
 echo SimpleMutexLoops

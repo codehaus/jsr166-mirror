@@ -299,20 +299,10 @@ public class NavigableMapCheck {
         reallyAssert (sum == size);
     }
 
-    static void rittest2(NavigableMap s, int size) {
-        int sum = 0;
-        timer.start("Desc Iter Entry        ", size);
-        for (Iterator it = s.descendingEntrySet().iterator(); it.hasNext(); ) {
-            if(it.next() != MISSING)
-                ++sum;
-        }
-        timer.finish(); 
-        reallyAssert (sum == size);
-    }
 
     static void rittest(NavigableMap s, int size) {
         rittest1(s, size);
-        rittest2(s, size);
+        //        rittest2(s, size);
     }
 
 

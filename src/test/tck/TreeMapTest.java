@@ -230,7 +230,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testDescendingEntrySet() {
         TreeMap map = map5();
-	Set s = map.descendingEntrySet();
+	Set s = map.descendingMap().entrySet();
 	assertEquals(5, s.size());
         Iterator it = s.iterator();
         while (it.hasNext()) {
@@ -263,7 +263,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testDescendingEntrySetToArray() {
         TreeMap map = map5();
-	Set s = map.descendingEntrySet();
+	Set s = map.descendingMap().entrySet();
         Object[] ar = s.toArray();
         assertEquals(5, ar.length);
         for (int i = 0; i < 5; ++i) {
@@ -592,7 +592,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testSubMapContents() {
         TreeMap map = map5();
-        NavigableMap sm = map.navigableSubMap(two, four);
+        NavigableMap sm = map.navigableSubMap(two, true, four, false);
         assertEquals(two, sm.firstKey());
         assertEquals(three, sm.lastKey());
         assertEquals(2, sm.size());
@@ -630,7 +630,7 @@ public class TreeMapTest extends JSR166TestCase {
 
     public void testSubMapContents2() {
         TreeMap map = map5();
-        NavigableMap sm = map.navigableSubMap(two, three);
+        NavigableMap sm = map.navigableSubMap(two, true, three, false);
         assertEquals(1, sm.size());
         assertEquals(two, sm.firstKey());
         assertEquals(two, sm.lastKey());
@@ -665,7 +665,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testHeadMapContents() {
         TreeMap map = map5();
-        NavigableMap sm = map.navigableHeadMap(four);
+        NavigableMap sm = map.navigableHeadMap(four, false);
         assertTrue(sm.containsKey(one));
         assertTrue(sm.containsKey(two));
         assertTrue(sm.containsKey(three));
@@ -691,7 +691,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testTailMapContents() {
         TreeMap map = map5();
-        NavigableMap sm = map.navigableTailMap(two);
+        NavigableMap sm = map.navigableTailMap(two, true);
         assertFalse(sm.containsKey(one));
         assertTrue(sm.containsKey(two));
         assertTrue(sm.containsKey(three));
@@ -735,13 +735,328 @@ public class TreeMapTest extends JSR166TestCase {
         assertEquals("E", e.getValue());
         assertFalse(i.hasNext());
 
-        NavigableMap ssm = sm.navigableTailMap(four);
+        NavigableMap ssm = sm.navigableTailMap(four, true);
         assertEquals(four, ssm.firstKey());
         assertEquals(five, ssm.lastKey());
         assertTrue(ssm.remove(four) != null);
         assertEquals(1, ssm.size());
         assertEquals(3, sm.size());
         assertEquals(4, map.size());
+    }
+
+    Random rnd = new Random(666);
+    BitSet bs;
+
+    /**
+     * Submaps of submaps subdivide correctly
+     */
+    public void testRecursiveSubMaps() {
+	int mapSize = 1000;
+	Class cl = TreeMap.class;
+        NavigableMap<Integer, Integer> map = newMap(cl);
+        bs = new BitSet(mapSize);
+
+        populate(map, mapSize);
+        check(map,                 0, mapSize - 1, true);
+        check(map.descendingMap(), 0, mapSize - 1, false);
+
+        mutateMap(map, 0, mapSize - 1);
+        check(map,                 0, mapSize - 1, true);
+        check(map.descendingMap(), 0, mapSize - 1, false);
+
+        bashSubMap(map.navigableSubMap(0, true, mapSize, false),
+                   0, mapSize - 1, true);
+    }
+
+    static NavigableMap<Integer, Integer> newMap(Class cl) {
+        NavigableMap<Integer, Integer> result = null;
+	try {
+            result = (NavigableMap<Integer, Integer>) cl.newInstance();
+	} catch(Exception e) {
+            fail();
+	}
+        assertEquals(result.size(), 0);
+        assertFalse(result.keySet().iterator().hasNext());
+        return result;
+    }
+
+    void populate(NavigableMap<Integer, Integer> map, int limit) {
+        for (int i = 0, n = 2 * limit / 3; i < n; i++) {
+            int key = rnd.nextInt(limit);
+            put(map, key);
+        }
+    }
+
+    void mutateMap(NavigableMap<Integer, Integer> map, int min, int max) {
+        int size = map.size();
+        int rangeSize = max - min + 1;
+
+        // Remove a bunch of entries directly
+        for (int i = 0, n = rangeSize / 2; i < n; i++) {
+            remove(map, min - 5 + rnd.nextInt(rangeSize + 10));
+        }
+
+        // Remove a bunch of entries with iterator
+        for(Iterator<Integer> it = map.keySet().iterator(); it.hasNext(); ) {
+            if (rnd.nextBoolean()) {
+                bs.clear(it.next());
+                it.remove();
+            }
+        }
+
+        // Add entries till we're back to original size
+        while (map.size() < size) {
+            int key = min + rnd.nextInt(rangeSize);
+            assertTrue(key >= min && key<= max);
+            put(map, key);
+        }
+    }
+
+    void mutateSubMap(NavigableMap<Integer, Integer> map, int min, int max) {
+        int size = map.size();
+        int rangeSize = max - min + 1;
+
+        // Remove a bunch of entries directly
+        for (int i = 0, n = rangeSize / 2; i < n; i++) {
+            remove(map, min - 5 + rnd.nextInt(rangeSize + 10));
+        }
+
+        // Remove a bunch of entries with iterator
+        for(Iterator<Integer> it = map.keySet().iterator(); it.hasNext(); ) {
+            if (rnd.nextBoolean()) {
+                bs.clear(it.next());
+                it.remove();
+            }
+        }
+
+        // Add entries till we're back to original size
+        while (map.size() < size) {
+            int key = min - 5 + rnd.nextInt(rangeSize + 10);
+            if (key >= min && key<= max) {
+                put(map, key);
+            } else {
+                try {
+                    map.put(key, 2 * key);
+                    fail();
+                } catch(IllegalArgumentException e) {
+                    // expected
+                }
+            }
+        }
+    }
+
+    void put(NavigableMap<Integer, Integer> map, int key) {
+        if (map.put(key, 2 * key) == null)
+            bs.set(key);
+    }
+
+    void remove(NavigableMap<Integer, Integer> map, int key) {
+        if (map.remove(key) != null)
+            bs.clear(key);
+    }
+
+    void bashSubMap(NavigableMap<Integer, Integer> map,
+                    int min, int max, boolean ascending) {
+        check(map, min, max, ascending);
+        check(map.descendingMap(), min, max, !ascending);
+
+        mutateSubMap(map, min, max);
+        check(map, min, max, ascending);
+        check(map.descendingMap(), min, max, !ascending);
+
+        // Recurse
+        if (max - min < 2)
+            return;
+        int midPoint = (min + max) / 2;
+
+        // headMap - pick direction and endpoint inclusion randomly
+        boolean incl = rnd.nextBoolean();
+        NavigableMap<Integer,Integer> hm = map.navigableHeadMap(midPoint, incl);
+        if (ascending) {
+            if (rnd.nextBoolean())
+                bashSubMap(hm, min, midPoint - (incl ? 0 : 1), true);
+            else
+                bashSubMap(hm.descendingMap(), min, midPoint - (incl ? 0 : 1),
+                           false);
+        } else {
+            if (rnd.nextBoolean())
+                bashSubMap(hm, midPoint + (incl ? 0 : 1), max, false);
+            else
+                bashSubMap(hm.descendingMap(), midPoint + (incl ? 0 : 1), max,
+                           true);
+        }
+
+        // tailMap - pick direction and endpoint inclusion randomly
+        incl = rnd.nextBoolean();
+        NavigableMap<Integer,Integer> tm = map.navigableTailMap(midPoint,incl);
+        if (ascending) {
+            if (rnd.nextBoolean())
+                bashSubMap(tm, midPoint + (incl ? 0 : 1), max, true);
+            else
+                bashSubMap(tm.descendingMap(), midPoint + (incl ? 0 : 1), max,
+                           false);
+        } else {
+            if (rnd.nextBoolean()) {
+                bashSubMap(tm, min, midPoint - (incl ? 0 : 1), false);
+            } else {
+                bashSubMap(tm.descendingMap(), min, midPoint - (incl ? 0 : 1),
+                           true);
+            }
+        }
+
+        // subMap - pick direction and endpoint inclusion randomly
+        int rangeSize = max - min + 1;
+        int[] endpoints = new int[2];
+        endpoints[0] = min + rnd.nextInt(rangeSize);
+        endpoints[1] = min + rnd.nextInt(rangeSize);
+        Arrays.sort(endpoints);
+        boolean lowIncl = rnd.nextBoolean();
+        boolean highIncl = rnd.nextBoolean();
+        if (ascending) {
+            NavigableMap<Integer,Integer> sm = map.navigableSubMap(
+                endpoints[0], lowIncl, endpoints[1], highIncl);
+            if (rnd.nextBoolean())
+                bashSubMap(sm, endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), true);
+            else
+                bashSubMap(sm.descendingMap(), endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), false);
+        } else {
+            NavigableMap<Integer,Integer> sm = map.navigableSubMap(
+                endpoints[1], highIncl, endpoints[0], lowIncl);
+            if (rnd.nextBoolean())
+                bashSubMap(sm, endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), false);
+            else
+                bashSubMap(sm.descendingMap(), endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), true);
+        }
+    }
+
+    /**
+     * min and max are both inclusive.  If max < min, interval is empty.
+     */
+    void check(NavigableMap<Integer, Integer> map,
+                      final int min, final int max, final boolean ascending) {
+       class ReferenceSet {
+            int lower(int key) {
+                return ascending ? lowerAscending(key) : higherAscending(key);
+            }
+            int floor(int key) {
+                return ascending ? floorAscending(key) : ceilingAscending(key);
+            }
+            int ceiling(int key) {
+                return ascending ? ceilingAscending(key) : floorAscending(key);
+            }
+            int higher(int key) {
+                return ascending ? higherAscending(key) : lowerAscending(key);
+            }
+            int first() {
+                return ascending ? firstAscending() : lastAscending();
+            }
+            int last() {
+                return ascending ? lastAscending() : firstAscending();
+            }
+            int lowerAscending(int key) {
+                return floorAscending(key - 1);
+            }
+            int floorAscending(int key) {
+                if (key < min)
+                    return -1;
+                else if (key > max)
+                    key = max;
+
+                // BitSet should support this! Test would run much faster
+                while (key >= min) {
+                    if (bs.get(key))
+                        return(key);
+                    key--;
+                }
+                return -1;
+            }
+            int ceilingAscending(int key) {
+                if (key < min)
+                    key = min;
+                else if (key > max)
+                    return -1;
+                int result = bs.nextSetBit(key);
+                return result > max ? -1 : result;
+            }
+            int higherAscending(int key) {
+                return ceilingAscending(key + 1);
+            }
+            private int firstAscending() {
+                int result = ceilingAscending(min);
+                return result > max ? -1 : result;
+            }
+            private int lastAscending() {
+                int result = floorAscending(max);
+                return result < min ? -1 : result;
+            }
+        }
+        ReferenceSet rs = new ReferenceSet();
+
+        // Test contents using containsKey
+        int size = 0;
+        for (int i = min; i <= max; i++) {
+            boolean bsContainsI = bs.get(i);
+            assertEquals(bsContainsI, map.containsKey(i));
+            if (bsContainsI)
+                size++;
+        }
+        assertEquals(map.size(), size);
+
+        // Test contents using contains keySet iterator
+        int size2 = 0;
+        int previousKey = -1;
+        for (int key : map.keySet()) {
+            assertTrue(bs.get(key));
+            size2++;
+            assertTrue(previousKey < 0 ||
+                (ascending ? key - previousKey > 0 : key - previousKey < 0));
+            previousKey = key;
+        }
+        assertEquals(size2, size);
+
+        // Test navigation ops
+        for (int key = min - 1; key <= max + 1; key++) {
+            assertEq(map.lowerKey(key), rs.lower(key));
+            assertEq(map.floorKey(key), rs.floor(key));
+            assertEq(map.higherKey(key), rs.higher(key));
+            assertEq(map.ceilingKey(key), rs.ceiling(key));
+        }
+
+        // Test extrema
+        if (map.size() != 0) {
+            assertEq(map.firstKey(), rs.first());
+            assertEq(map.lastKey(), rs.last());
+        } else {
+            assertEq(rs.first(), -1);
+            assertEq(rs.last(),  -1);
+            try {
+                map.firstKey();
+                fail();
+            } catch(NoSuchElementException e) {
+                // expected
+            }
+            try {
+                map.lastKey();
+                fail();
+            } catch(NoSuchElementException e) {
+                // expected
+            }
+        }
+    }
+
+    static void assertEq(Integer i, int j) {
+        if (i == null)
+            assertEquals(j, -1);
+        else
+            assertEquals((int) i, j);
+    }
+
+    static boolean eq(Integer i, int j) {
+        return i == null ? j == -1 : i == j;
     }
     
 }

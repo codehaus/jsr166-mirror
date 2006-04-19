@@ -679,4 +679,324 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         assertEquals(4, set.size());
     }
 
+    Random rnd = new Random(666);
+    BitSet bs;
+
+    /**
+     * Subsets of subsets subdivide correctly
+     */
+    public void testRecursiveSubSets() {
+	int setSize = 1000;
+	Class cl = ConcurrentSkipListSet.class;
+
+        NavigableSet<Integer> set = newSet(cl);
+        bs = new BitSet(setSize);
+
+        populate(set, setSize);
+        check(set,                 0, setSize - 1, true);
+        check(set.descendingSet(), 0, setSize - 1, false);
+
+        mutateSet(set, 0, setSize - 1);
+        check(set,                 0, setSize - 1, true);
+        check(set.descendingSet(), 0, setSize - 1, false);
+
+        bashSubSet(set.navigableSubSet(0, true, setSize, false),
+                   0, setSize - 1, true);
+    }
+
+    static NavigableSet<Integer> newSet(Class cl) {
+        NavigableSet<Integer> result = null;
+	try {
+            result = (NavigableSet<Integer>) cl.newInstance();
+	} catch(Exception e) {
+            fail();
+	}
+        assertEquals(result.size(), 0);
+        assertFalse(result.iterator().hasNext());
+        return result;
+    }
+
+    void populate(NavigableSet<Integer> set, int limit) {
+        for (int i = 0, n = 2 * limit / 3; i < n; i++) {
+            int element = rnd.nextInt(limit);
+            put(set, element);
+        }
+    }
+
+    void mutateSet(NavigableSet<Integer> set, int min, int max) {
+        int size = set.size();
+        int rangeSize = max - min + 1;
+
+        // Remove a bunch of entries directly
+        for (int i = 0, n = rangeSize / 2; i < n; i++) {
+            remove(set, min - 5 + rnd.nextInt(rangeSize + 10));
+        }
+
+        // Remove a bunch of entries with iterator
+        for(Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
+            if (rnd.nextBoolean()) {
+                bs.clear(it.next());
+                it.remove();
+            }
+        }
+
+        // Add entries till we're back to original size
+        while (set.size() < size) {
+            int element = min + rnd.nextInt(rangeSize);
+            assertTrue(element >= min && element<= max);
+            put(set, element);
+        }
+    }
+
+    void mutateSubSet(NavigableSet<Integer> set, int min, int max) {
+        int size = set.size();
+        int rangeSize = max - min + 1;
+
+        // Remove a bunch of entries directly
+        for (int i = 0, n = rangeSize / 2; i < n; i++) {
+            remove(set, min - 5 + rnd.nextInt(rangeSize + 10));
+        }
+
+        // Remove a bunch of entries with iterator
+        for(Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
+            if (rnd.nextBoolean()) {
+                bs.clear(it.next());
+                it.remove();
+            }
+        }
+
+        // Add entries till we're back to original size
+        while (set.size() < size) {
+            int element = min - 5 + rnd.nextInt(rangeSize + 10);
+            if (element >= min && element<= max) {
+                put(set, element);
+            } else {
+                try {
+                    set.add(element);
+                    fail();
+                } catch(IllegalArgumentException e) {
+                    // expected
+                }
+            }
+        }
+    }
+
+    void put(NavigableSet<Integer> set, int element) {
+        if (set.add(element))
+            bs.set(element);
+    }
+
+    void remove(NavigableSet<Integer> set, int element) {
+        if (set.remove(element))
+            bs.clear(element);
+    }
+
+    void bashSubSet(NavigableSet<Integer> set,
+                    int min, int max, boolean ascending) {
+        check(set, min, max, ascending);
+        check(set.descendingSet(), min, max, !ascending);
+
+        mutateSubSet(set, min, max);
+        check(set, min, max, ascending);
+        check(set.descendingSet(), min, max, !ascending);
+
+        // Recurse
+        if (max - min < 2)
+            return;
+        int midPoint = (min + max) / 2;
+
+        // headSet - pick direction and endpoint inclusion randomly
+        boolean incl = rnd.nextBoolean();
+        NavigableSet<Integer> hm = set.navigableHeadSet(midPoint, incl);
+        if (ascending) {
+            if (rnd.nextBoolean())
+                bashSubSet(hm, min, midPoint - (incl ? 0 : 1), true);
+            else
+                bashSubSet(hm.descendingSet(), min, midPoint - (incl ? 0 : 1),
+                           false);
+        } else {
+            if (rnd.nextBoolean())
+                bashSubSet(hm, midPoint + (incl ? 0 : 1), max, false);
+            else
+                bashSubSet(hm.descendingSet(), midPoint + (incl ? 0 : 1), max,
+                           true);
+        }
+
+        // tailSet - pick direction and endpoint inclusion randomly
+        incl = rnd.nextBoolean();
+        NavigableSet<Integer> tm = set.navigableTailSet(midPoint,incl);
+        if (ascending) {
+            if (rnd.nextBoolean())
+                bashSubSet(tm, midPoint + (incl ? 0 : 1), max, true);
+            else
+                bashSubSet(tm.descendingSet(), midPoint + (incl ? 0 : 1), max,
+                           false);
+        } else {
+            if (rnd.nextBoolean()) {
+                bashSubSet(tm, min, midPoint - (incl ? 0 : 1), false);
+            } else {
+                bashSubSet(tm.descendingSet(), min, midPoint - (incl ? 0 : 1),
+                           true);
+            }
+        }
+
+        // subSet - pick direction and endpoint inclusion randomly
+        int rangeSize = max - min + 1;
+        int[] endpoints = new int[2];
+        endpoints[0] = min + rnd.nextInt(rangeSize);
+        endpoints[1] = min + rnd.nextInt(rangeSize);
+        Arrays.sort(endpoints);
+        boolean lowIncl = rnd.nextBoolean();
+        boolean highIncl = rnd.nextBoolean();
+        if (ascending) {
+            NavigableSet<Integer> sm = set.navigableSubSet(
+                endpoints[0], lowIncl, endpoints[1], highIncl);
+            if (rnd.nextBoolean())
+                bashSubSet(sm, endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), true);
+            else
+                bashSubSet(sm.descendingSet(), endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), false);
+        } else {
+            NavigableSet<Integer> sm = set.navigableSubSet(
+                endpoints[1], highIncl, endpoints[0], lowIncl);
+            if (rnd.nextBoolean())
+                bashSubSet(sm, endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), false);
+            else
+                bashSubSet(sm.descendingSet(), endpoints[0] + (lowIncl ? 0 : 1),
+                           endpoints[1] - (highIncl ? 0 : 1), true);
+        }
+    }
+
+    /**
+     * min and max are both inclusive.  If max < min, interval is empty.
+     */
+    void check(NavigableSet<Integer> set,
+                      final int min, final int max, final boolean ascending) {
+       class ReferenceSet {
+            int lower(int element) {
+                return ascending ?
+                    lowerAscending(element) : higherAscending(element);
+            }
+            int floor(int element) {
+                return ascending ?
+                    floorAscending(element) : ceilingAscending(element);
+            }
+            int ceiling(int element) {
+                return ascending ?
+                    ceilingAscending(element) : floorAscending(element);
+            }
+            int higher(int element) {
+                return ascending ?
+                    higherAscending(element) : lowerAscending(element);
+            }
+            int first() {
+                return ascending ? firstAscending() : lastAscending();
+            }
+            int last() {
+                return ascending ? lastAscending() : firstAscending();
+            }
+            int lowerAscending(int element) {
+                return floorAscending(element - 1);
+            }
+            int floorAscending(int element) {
+                if (element < min)
+                    return -1;
+                else if (element > max)
+                    element = max;
+
+                // BitSet should support this! Test would run much faster
+                while (element >= min) {
+                    if (bs.get(element))
+                        return(element);
+                    element--;
+                }
+                return -1;
+            }
+            int ceilingAscending(int element) {
+                if (element < min)
+                    element = min;
+                else if (element > max)
+                    return -1;
+                int result = bs.nextSetBit(element);
+                return result > max ? -1 : result;
+            }
+            int higherAscending(int element) {
+                return ceilingAscending(element + 1);
+            }
+            private int firstAscending() {
+                int result = ceilingAscending(min);
+                return result > max ? -1 : result;
+            }
+            private int lastAscending() {
+                int result = floorAscending(max);
+                return result < min ? -1 : result;
+            }
+        }
+        ReferenceSet rs = new ReferenceSet();
+
+        // Test contents using containsElement
+        int size = 0;
+        for (int i = min; i <= max; i++) {
+            boolean bsContainsI = bs.get(i);
+            assertEquals(bsContainsI, set.contains(i));
+            if (bsContainsI)
+                size++;
+        }
+        assertEquals(set.size(), size);
+
+        // Test contents using contains elementSet iterator
+        int size2 = 0;
+        int previousElement = -1;
+        for (int element : set) {
+            assertTrue(bs.get(element));
+            size2++;
+            assertTrue(previousElement < 0 || (ascending ?
+                element - previousElement > 0 : element - previousElement < 0));
+            previousElement = element;
+        }
+        assertEquals(size2, size);
+
+        // Test navigation ops
+        for (int element = min - 1; element <= max + 1; element++) {
+            assertEq(set.lower(element), rs.lower(element));
+            assertEq(set.floor(element), rs.floor(element));
+            assertEq(set.higher(element), rs.higher(element));
+            assertEq(set.ceiling(element), rs.ceiling(element));
+        }
+
+        // Test extrema
+        if (set.size() != 0) {
+            assertEq(set.first(), rs.first());
+            assertEq(set.last(), rs.last());
+        } else {
+            assertEq(rs.first(), -1);
+            assertEq(rs.last(),  -1);
+            try {
+                set.first();
+                fail();
+            } catch(NoSuchElementException e) {
+                // expected
+            }
+            try {
+                set.last();
+                fail();
+            } catch(NoSuchElementException e) {
+                // expected
+            }
+        }
+    }
+
+    static void assertEq(Integer i, int j) {
+        if (i == null)
+            assertEquals(j, -1);
+        else
+            assertEquals((int) i, j);
+    }
+
+    static boolean eq(Integer i, int j) {
+        return i == null ? j == -1 : i == j;
+    }
+
 }

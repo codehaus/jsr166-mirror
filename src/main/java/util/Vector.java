@@ -1,5 +1,5 @@
 /*
- * %W% %E%
+ * @(#)Vector.java	1.103 05/12/06
  *
  * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -49,7 +49,7 @@ package java.util;
  *
  * @author  Lee Boynton
  * @author  Jonathan Payne
- * @version %I%, %G%
+ * @version 1.103, 12/06/05
  * @see Collection
  * @see List
  * @see ArrayList
@@ -952,6 +952,198 @@ public class Vector<E>
     }
 
     /**
+     * Removes from this List all of the elements whose index is between
+     * fromIndex, inclusive and toIndex, exclusive.  Shifts any succeeding
+     * elements to the left (reduces their index).
+     * This call shortens the Vector by (toIndex - fromIndex) elements.  (If
+     * toIndex==fromIndex, this operation has no effect.)
+     *
+     * @param fromIndex index of first element to be removed
+     * @param toIndex index after last element to be removed
+     */
+    protected synchronized void removeRange(int fromIndex, int toIndex) {
+	modCount++;
+	int numMoved = elementCount - toIndex;
+        System.arraycopy(elementData, toIndex, elementData, fromIndex,
+                         numMoved);
+
+	// Let gc do its work
+	int newElementCount = elementCount - (toIndex-fromIndex);
+	while (elementCount != newElementCount)
+	    elementData[--elementCount] = null;
+    }
+
+    /**
+     * Save the state of the <tt>Vector</tt> instance to a stream (that
+     * is, serialize it).  This method is present merely for synchronization.
+     * It just calls the default writeObject method.
+     */
+    private synchronized void writeObject(java.io.ObjectOutputStream s)
+        throws java.io.IOException
+    {
+	s.defaultWriteObject();
+    }
+
+    /**
+     * Returns a list-iterator of the elements in this list (in proper
+     * sequence), starting at the specified position in the list.
+     * Obeys the general contract of {@link List#listIterator(int)}.
+     *
+     * <p>The list-iterator is <i>fail-fast</i>: if the list is structurally
+     * modified at any time after the Iterator is created, in any way except
+     * through the list-iterator's own {@code remove} or {@code add}
+     * methods, the list-iterator will throw a
+     * {@code ConcurrentModificationException}.  Thus, in the face of
+     * concurrent modification, the iterator fails quickly and cleanly, rather
+     * than risking arbitrary, non-deterministic behavior at an undetermined
+     * time in the future.
+     *
+     * @param index index of the first element to be returned from the
+     *        list-iterator (by a call to {@link ListIterator#next})
+     * @return a list-iterator of the elements in this list (in proper
+     *         sequence), starting at the specified position in the list
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     */
+    public synchronized ListIterator<E> listIterator(int index) {
+	if (index < 0 || index > elementCount)
+            throw new IndexOutOfBoundsException("Index: "+index);
+	return new VectorIterator(index, elementCount);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public synchronized ListIterator<E> listIterator() {
+    	return new VectorIterator(0, elementCount);
+    }
+
+    /**
+     * Returns an iterator over the elements in this list in proper sequence.
+     *
+     * @return an iterator over the elements in this list in proper sequence
+     */
+    public synchronized Iterator<E> iterator() {
+        return new VectorIterator(0, elementCount);
+    }
+
+    /**
+     * Helper method to access array elements under synchronization by
+     * iterators. The caller performs index check with respect to
+     * expected bounds, so errors accessing the element are reported
+     * as ConcurrentModificationExceptions.
+     */
+    final synchronized Object iteratorGet(int index, int expectedModCount) {
+        if (modCount == expectedModCount) {
+            try {
+                return elementData[index];
+            } catch(IndexOutOfBoundsException fallThrough) {
+            }
+        }
+        throw new ConcurrentModificationException();
+    }
+
+    /**
+     * Streamlined specialization of AbstractList version of iterator.
+     * Locally perfroms bounds checks, but relies on outer Vector
+     * to access elements under synchronization.
+     */
+    private final class VectorIterator implements ListIterator<E> {
+	int cursor;              // Index of next element to return;
+        int fence;               // Upper bound on cursor (cache of size())
+	int lastRet;             // Index of last element, or -1 if no such
+	int expectedModCount;    // To check for CME
+
+	VectorIterator(int index, int fence) {
+	    this.cursor = index;
+            this.fence = fence;
+            this.lastRet = -1;
+            this.expectedModCount = Vector.this.modCount;
+	}
+
+	public boolean hasNext() {
+            return cursor < fence;
+	}
+
+	public boolean hasPrevious() {
+	    return cursor > 0;
+	}
+
+	public int nextIndex() {
+	    return cursor;
+	}
+
+	public int previousIndex() {
+	    return cursor - 1;
+	}
+
+	public E next() {
+            int i = cursor;
+            if (i >= fence)
+                throw new NoSuchElementException();
+            Object next = Vector.this.iteratorGet(i, expectedModCount);
+            lastRet = i;
+            cursor = i + 1;
+            return (E)next;
+	}
+
+        public E previous() {
+            int i = cursor - 1;
+            if (i < 0)
+                throw new NoSuchElementException();
+            Object prev = Vector.this.iteratorGet(i, expectedModCount);
+            lastRet = i;
+            cursor = i;
+            return (E)prev;
+        }
+
+	public void set(E e) {
+	    if (lastRet < 0)
+		throw new IllegalStateException();
+            if (Vector.this.modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            try {
+                Vector.this.set(lastRet, e);
+                expectedModCount = Vector.this.modCount;
+	    } catch (IndexOutOfBoundsException ex) {
+		throw new ConcurrentModificationException();
+	    }
+	}
+
+	public void remove() {
+            int i = lastRet;
+	    if (i < 0)
+		throw new IllegalStateException();
+            if (Vector.this.modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            try {
+                Vector.this.remove(i);
+                if (i < cursor)
+                    cursor--;
+                lastRet = -1;
+                fence = Vector.this.size();
+                expectedModCount = Vector.this.modCount;
+	    } catch (IndexOutOfBoundsException ex) {
+		throw new ConcurrentModificationException();
+	    }
+	}
+
+	public void add(E e) {
+            if (Vector.this.modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+	    try {
+                int i = cursor;
+                Vector.this.add(i, e);
+                cursor = i + 1;
+                lastRet = -1;
+                fence = Vector.this.size();
+                expectedModCount = Vector.this.modCount;
+	    } catch (IndexOutOfBoundsException ex) {
+		throw new ConcurrentModificationException();
+	    }
+	}
+    }
+
+    /**
      * Returns a view of the portion of this List between fromIndex,
      * inclusive, and toIndex, exclusive.  (If fromIndex and toIndex are
      * equal, the returned List is empty.)  The returned List is backed by this
@@ -986,189 +1178,281 @@ public class Vector<E>
      *	       <code>(fromIndex &gt; toIndex)</code>
      */
     public synchronized List<E> subList(int fromIndex, int toIndex) {
-        return Collections.synchronizedList(super.subList(fromIndex, toIndex),
-                                            this);
+        return new VectorSubList(this, this, fromIndex, fromIndex, toIndex);
     }
 
     /**
-     * Removes from this List all of the elements whose index is between
-     * fromIndex, inclusive and toIndex, exclusive.  Shifts any succeeding
-     * elements to the left (reduces their index).
-     * This call shortens the ArrayList by (toIndex - fromIndex) elements.  (If
-     * toIndex==fromIndex, this operation has no effect.)
-     *
-     * @param fromIndex index of first element to be removed
-     * @param toIndex index after last element to be removed
+     * This class specializes the AbstractList version of SubList to
+     * avoid the double-indirection penalty that would arise using a
+     * synchronized wrapper, as well as to avoid some unnecessary
+     * checks in sublist iterators.
      */
-    protected synchronized void removeRange(int fromIndex, int toIndex) {
-	modCount++;
-	int numMoved = elementCount - toIndex;
-        System.arraycopy(elementData, toIndex, elementData, fromIndex,
-                         numMoved);
+    private static final class VectorSubList<E> extends AbstractList<E> implements RandomAccess {
+        final Vector<E> base;             // base list
+        final AbstractList<E> parent;     // Creating list
+        final int baseOffset;             // index wrt Vector
+        final int parentOffset;           // index wrt parent
+        int length;                       // length of sublist
 
-	// Let gc do its work
-	int newElementCount = elementCount - (toIndex-fromIndex);
-	while (elementCount != newElementCount)
-	    elementData[--elementCount] = null;
-    }
+        VectorSubList(Vector<E> base, AbstractList<E> parent, int baseOffset, 
+                     int fromIndex, int toIndex) {
+            if (fromIndex < 0)
+                throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+            if (toIndex > parent.size())
+                throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+            if (fromIndex > toIndex)
+                throw new IllegalArgumentException("fromIndex(" + fromIndex +
+                                                   ") > toIndex(" + toIndex + ")");
 
-    /**
-     * Save the state of the <tt>Vector</tt> instance to a stream (that
-     * is, serialize it).  This method is present merely for synchronization.
-     * It just calls the default writeObject method.
-     */
-    private synchronized void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException
-    {
-	s.defaultWriteObject();
-    }
+            this.base = base;
+            this.parent = parent;
+            this.baseOffset = baseOffset;
+            this.parentOffset = fromIndex;
+            this.length = toIndex - fromIndex;
+            modCount = base.modCount;
+        }
 
-    /**
-     * Returns a list-iterator of the elements in this list (in proper
-     * sequence), starting at the specified position in the list.
-     * Obeys the general contract of <tt>List.listIterator(int)</tt>.<p>
-     *
-     * The list-iterator is <i>fail-fast</i>: if the list is structurally
-     * modified at any time after the Iterator is created, in any way except
-     * through the list-iterator's own <tt>remove</tt> or <tt>add</tt>
-     * methods, the list-iterator will throw a
-     * <tt>ConcurrentModificationException</tt>.  Thus, in the face of
-     * concurrent modification, the iterator fails quickly and cleanly, rather
-     * than risking arbitrary, non-deterministic behavior at an undetermined
-     * time in the future.
-     *
-     * @param index index of the first element to be returned from the
-     *              list-iterator (by a call to <tt>next</tt>)
-     * @return a ListIterator of the elements in this list (in proper
-     *         sequence), starting at the specified position in the list
-     * @throws IndexOutOfBoundsException {@inheritDoc}
-     * @see List#listIterator(int)
-     */
-    public synchronized ListIterator<E> listIterator(int index) {
-	if (index < 0 || index > elementCount)
-            throw new IndexOutOfBoundsException("Index: "+index);
-	return new VectorIterator(index);
-    }
+        /**
+         * Returns an IndexOutOfBoundsException with nicer message
+         */
+        private IndexOutOfBoundsException indexError(int index) {
+            return new IndexOutOfBoundsException("Index: " + index + 
+                                                 ", Size: " + length);
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized ListIterator<E> listIterator() {
-    	return new VectorIterator(0);
-    }
-
-    /**
-     * Returns an iterator over the elements in this list in proper sequence.
-     *
-     * @return an iterator over the elements in this list in proper sequence
-     */
-    public synchronized Iterator<E> iterator() {
-    	return new VectorIterator(0);
-    }
-
-    /**
-     * A streamlined version of AbstractList.ListItr.
-     */
-    private final class VectorIterator implements ListIterator<E> {
-	int cursor;                // current position
-	int lastRet;               // index of last returned element
-	int expectedModCount;      // to check for CME
-
-	VectorIterator(int index) {
-	    cursor = index;
-            expectedModCount = modCount;
-            lastRet = -1;
-	}
-
-	public boolean hasNext() {
-            // Racy but within spec, since modifications are checked
-            // within or after synchronization in next/previous
-            return cursor != elementCount;
-	}
-
-	public boolean hasPrevious() {
-	    return cursor != 0;
-	}
-
-	public int nextIndex() {
-	    return cursor;
-	}
-
-	public int previousIndex() {
-	    return cursor - 1;
-	}
-
-	public E next() {
-            try {
-                int i = cursor;
-                E next = get(i);
-                lastRet = i;
-                cursor = i + 1;
-                return next;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new NoSuchElementException();
-            } finally {
-                if (expectedModCount != modCount)
+        public E set(int index, E element) {
+            synchronized(base) {
+                if (index < 0 || index >= length)
+                    throw indexError(index);
+                if (base.modCount != modCount)
                     throw new ConcurrentModificationException();
-            }
-	}
-
-	public E previous() {
-            try {
-                int i = cursor - 1;
-                E prev = get(i);
-                lastRet = i;
-                cursor = i;
-                return prev;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new NoSuchElementException();
-            } finally {
-                if (expectedModCount != modCount)
-                    throw new ConcurrentModificationException();
+                return base.set(index + baseOffset, element);
             }
         }
 
-	public void remove() {
-	    if (lastRet == -1)
-		throw new IllegalStateException();
-	    if (expectedModCount != modCount)
-		throw new ConcurrentModificationException();
-	    try {
-		Vector.this.remove(lastRet);
-		if (lastRet < cursor)
-		    cursor--;
-		lastRet = -1;
-		expectedModCount = modCount;
-	    } catch (IndexOutOfBoundsException ex) {
-		throw new ConcurrentModificationException();
-	    }
-	}
+        public E get(int index) {
+            synchronized(base) {
+                if (index < 0 || index >= length)
+                    throw indexError(index);
+                if (base.modCount != modCount)
+                    throw new ConcurrentModificationException();
+                return base.get(index + baseOffset);
+            }
+        }
 
-	public void set(E e) {
-	    if (lastRet == -1)
-		throw new IllegalStateException();
-            if (expectedModCount != modCount)
-                throw new ConcurrentModificationException();
-	    try {
-		Vector.this.set(lastRet, e);
-		expectedModCount = modCount;
-	    } catch (IndexOutOfBoundsException ex) {
-		throw new ConcurrentModificationException();
-	    }
-	}
+        public int size() {
+            synchronized(base) {
+                if (base.modCount != modCount)
+                    throw new ConcurrentModificationException();
+                return length;
+            }
+        }
 
-	public void add(E e) {
-            if (expectedModCount != modCount)
-                throw new ConcurrentModificationException();
-	    try {
+        public void add(int index, E element) {
+            synchronized(base) {
+                if (index < 0 || index > length)
+                    throw indexError(index);
+                if (base.modCount != modCount)
+                    throw new ConcurrentModificationException();
+                parent.add(index + parentOffset, element);
+                length++;
+                modCount = base.modCount;
+            }
+        }
+
+        public E remove(int index) {
+            synchronized(base) {
+                if (index < 0 || index >= length)
+                    throw indexError(index);
+                if (base.modCount != modCount)
+                    throw new ConcurrentModificationException();
+                E result = parent.remove(index + parentOffset);
+                length--;
+                modCount = base.modCount;
+                return result;
+            }
+        }
+
+        protected void removeRange(int fromIndex, int toIndex) {
+            synchronized(base) {
+                if (base.modCount != modCount)
+                    throw new ConcurrentModificationException();
+                parent.removeRange(fromIndex + parentOffset, 
+                                   toIndex + parentOffset);
+                length -= (toIndex-fromIndex);
+                modCount = base.modCount;
+            }
+        }
+
+        public boolean addAll(Collection<? extends E> c) {
+            return addAll(length, c);
+        }
+
+        public boolean addAll(int index, Collection<? extends E> c) {
+            synchronized(base) {
+                if (index < 0 || index > length)
+                    throw indexError(index);
+                int cSize = c.size();
+                if (cSize==0)
+                    return false;
+                
+                if (base.modCount != modCount)
+                    throw new ConcurrentModificationException();
+                parent.addAll(parentOffset + index, c);
+                modCount = base.modCount;
+                length += cSize;
+                return true;
+            }
+        }
+
+	public boolean equals(Object o) {
+	    synchronized(base) {return super.equals(o);}
+        }
+
+	public int hashCode() {
+	    synchronized(base) {return super.hashCode();}
+        }
+
+	public int indexOf(Object o) {
+	    synchronized(base) {return super.indexOf(o);}
+        }
+
+	public int lastIndexOf(Object o) {
+	    synchronized(base) {return super.lastIndexOf(o);}
+        }
+
+        public List<E> subList(int fromIndex, int toIndex) {
+            return new VectorSubList(base, this, fromIndex + baseOffset, 
+                                     fromIndex, toIndex);
+        }
+
+        public Iterator<E> iterator() {
+            synchronized(base) {
+                return new VectorSubListIterator(this, 0);
+            }
+        }
+        
+        public synchronized ListIterator<E> listIterator() {
+            synchronized(base) {
+                return new VectorSubListIterator(this, 0);
+            }
+        }
+
+        public ListIterator<E> listIterator(int index) {
+            synchronized(base) {
+                if (index < 0 || index > length)
+                    throw indexError(index);
+                return new VectorSubListIterator(this, index);
+            }
+        }
+
+        /**
+         * Same idea as VectorIterator, except routing structural
+         * change operations through the sublist.
+         */
+        private static final class VectorSubListIterator<E> implements ListIterator<E> {
+            final Vector<E> base;         // base list
+            final VectorSubList<E> outer; // Sublist creating this iteraor
+            final int offset;             // cursor offset wrt base
+            int cursor;                   // Current index
+            int fence;                    // Upper bound on cursor
+            int lastRet;                  // Index of returned element, or -1
+            int expectedModCount;         // Expected modCount of base Vector
+        
+            VectorSubListIterator(VectorSubList<E> list, int index) {
+                this.lastRet = -1;
+                this.cursor = index;
+                this.outer = list;
+                this.offset = list.baseOffset;
+                this.fence = list.length;
+                this.base = list.base;
+                this.expectedModCount = base.modCount;
+            }
+        
+            public boolean hasNext() {
+                return cursor < fence;
+            }
+        
+            public boolean hasPrevious() {
+                return cursor > 0;
+            }
+        
+            public int nextIndex() {
+                return cursor;
+            }
+        
+            public int previousIndex() {
+                return cursor - 1;
+            }
+        
+            public E next() {
                 int i = cursor;
-		Vector.this.add(i, e);
+                if (cursor >= fence)
+                    throw new NoSuchElementException();
+                Object next = base.iteratorGet(i + offset, expectedModCount);
+                lastRet = i;
                 cursor = i + 1;
-		lastRet = -1;
-		expectedModCount = modCount;
-	    } catch (IndexOutOfBoundsException ex) {
-		throw new ConcurrentModificationException();
-	    }
-	}
+                return (E)next;
+            }
+        
+            public E previous() {
+                int i = cursor - 1;
+                if (i < 0)
+                    throw new NoSuchElementException();
+                Object prev = base.iteratorGet(i + offset, expectedModCount);
+                lastRet = i;
+                cursor = i;
+                return (E)prev;
+            }
+        
+            public void set(E e) {
+                if (lastRet < 0)
+                    throw new IllegalStateException();
+                if (base.modCount != expectedModCount)
+                    throw new ConcurrentModificationException();
+                try {
+                    outer.set(lastRet, e);
+                    expectedModCount = base.modCount;
+                } catch (IndexOutOfBoundsException ex) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        
+            public void remove() {
+                int i = lastRet;
+                if (i < 0)
+                    throw new IllegalStateException();
+                if (base.modCount != expectedModCount)
+                    throw new ConcurrentModificationException();
+                try {
+                    outer.remove(i);
+                    if (i < cursor)
+                        cursor--;
+                    lastRet = -1;
+                    fence = outer.length;
+                    expectedModCount = base.modCount;
+                } catch (IndexOutOfBoundsException ex) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        
+            public void add(E e) {
+                if (base.modCount != expectedModCount)
+                    throw new ConcurrentModificationException();
+                try {
+                    int i = cursor;
+                    outer.add(i, e);
+                    cursor = i + 1;
+                    lastRet = -1;
+                    fence = outer.length;
+                    expectedModCount = base.modCount;
+                } catch (IndexOutOfBoundsException ex) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        }
     }
 }
+
+
+    

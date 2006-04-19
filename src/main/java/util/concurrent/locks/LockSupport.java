@@ -47,7 +47,13 @@ import sun.misc.Unsafe;
  *
  * <p>These methods are designed to be used as tools for creating
  * higher-level synchronization utilities, and are not in themselves
- * useful for most concurrency control applications.
+ * useful for most concurrency control applications. The <tt>park</tt> method
+ * is designed for use only in constructions of the form:
+ * <pre>while (!canProceed()) { ... LockSupport.park(this); }</pre>
+ * where neither <tt>canProceed</tt> nor any other actions prior to
+ * the call to <tt>park</tt> entail locking or blocking. Because only
+ * one permit is associated with each thread, any intermediary uses of
+ * <tt>park</tt>  could interfere with its intended effects.
  *
  * <p><b>Sample Usage.</b> Here is a sketch of a First-in-first-out
  * non-reentrant lock class.

@@ -28,28 +28,25 @@ public interface ConcurrentNavigableMap<K,V>
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, K toKey);
+    ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, boolean fromInclusive,
+                                                K toKey,   boolean toInclusive);
 
     /**
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey);
+    ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey, boolean inclusive);
+
 
     /**
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey);
-
+    ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey, boolean inclusive);
 
     /**
-     * Equivalent to {@link #navigableSubMap}.
-     *
-     * <p>{@inheritDoc}
-     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
@@ -57,10 +54,6 @@ public interface ConcurrentNavigableMap<K,V>
     ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey);
 
     /**
-     * Equivalent to {@link #navigableHeadMap}.
-     *
-     * <p>{@inheritDoc}
-     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
@@ -68,14 +61,11 @@ public interface ConcurrentNavigableMap<K,V>
     ConcurrentNavigableMap<K,V> headMap(K toKey);
 
     /**
-     * Equivalent to {@link #navigableTailMap}.
-     *
-     * <p>{@inheritDoc}
-     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
     ConcurrentNavigableMap<K,V> tailMap(K fromKey);
 
+    ConcurrentNavigableMap<K,V> descendingMap();
 }

@@ -554,7 +554,7 @@ public class Exchanger<V> {
 
     /**
      * Waits for another thread to arrive at this exchange point (unless
-     * the current thread is {@link Thread#interrupt interrupted}),
+     * the current thread is {@linkplain Thread#interrupt interrupted}),
      * and then transfers the given object to it, receiving its object
      * in return.
      *
@@ -568,13 +568,13 @@ public class Exchanger<V> {
      * dormant until one of two things happens:
      * <ul>
      * <li>Some other thread enters the exchange; or
-     * <li>Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>Some other thread {@linkplain Thread#interrupt interrupts} the current
      * thread.
      * </ul>
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or
-     * <li>is {@link Thread#interrupt interrupted} while waiting
+     * <li>is {@linkplain Thread#interrupt interrupted} while waiting
      * for the exchange,
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's
@@ -599,7 +599,7 @@ public class Exchanger<V> {
 
     /**
      * Waits for another thread to arrive at this exchange point (unless
-     * the current thread is {@link Thread#interrupt interrupted} or
+     * the current thread is {@linkplain Thread#interrupt interrupted} or
      * the specified waiting time elapses), and then transfers the given
      * object to it, receiving its object in return.
      *
@@ -613,14 +613,14 @@ public class Exchanger<V> {
      * dormant until one of three things happens:
      * <ul>
      * <li>Some other thread enters the exchange; or
-     * <li>Some other thread {@link Thread#interrupt interrupts} the current
-     * thread; or
+     * <li>Some other thread {@linkplain Thread#interrupt interrupts}
+     * the current thread; or
      * <li>The specified waiting time elapses.
      * </ul>
      * <p>If the current thread:
      * <ul>
      * <li>has its interrupted status set on entry to this method; or
-     * <li>is {@link Thread#interrupt interrupted} while waiting
+     * <li>is {@linkplain Thread#interrupt interrupted} while waiting
      * for the exchange,
      * </ul>
      * then {@link InterruptedException} is thrown and the current thread's

@@ -42,16 +42,17 @@ public class Executors {
     /**
      * Creates a thread pool that reuses a fixed number of threads
      * operating off a shared unbounded queue.  At any point, at most
-     * <tt>nThreads</tt> threads will be active processing tasks.  If
-     * additional tasks are submitted when all threads are active,
-     * they will wait in the queue until a thread is available.  If
-     * any thread terminates due to a failure during execution prior
-     * to shutdown, a new one will take its place if needed to execute
-     * subsequent tasks. The threads in the pool will exist until it
-     * is explicitly {@link ExecutorService#shutdown shutdown}.
+     * <tt>nThreads</tt> threads will be active processing tasks.
+     * If additional tasks are submitted when all threads are active,
+     * they will wait in the queue until a thread is available.
+     * If any thread terminates due to a failure during execution
+     * prior to shutdown, a new one will take its place if needed to
+     * execute subsequent tasks.  The threads in the pool will exist
+     * until it is explicitly {@link ExecutorService#shutdown shutdown}.
      *
      * @param nThreads the number of threads in the pool
      * @return the newly created thread pool
+     * @throws IllegalArgumentException if <tt>nThreads &lt;= 0</tt>
      */
     public static ExecutorService newFixedThreadPool(int nThreads) {
         return new ThreadPoolExecutor(nThreads, nThreads,
@@ -68,13 +69,15 @@ public class Executors {
      * active, they will wait in the queue until a thread is
      * available.  If any thread terminates due to a failure during
      * execution prior to shutdown, a new one will take its place if
-     * needed to execute subsequent tasks.  The threads in the pool
-     * will exist until it is explicitly {@link
-     * ExecutorService#shutdown shutdown}.
+     * needed to execute subsequent tasks.  The threads in the pool will
+     * exist until it is explicitly {@link ExecutorService#shutdown
+     * shutdown}.
      *
      * @param nThreads the number of threads in the pool
      * @param threadFactory the factory to use when creating new threads
      * @return the newly created thread pool
+     * @throws NullPointerException if threadFactory is null
+     * @throws IllegalArgumentException if <tt>nThreads &lt;= 0</tt>
      */
     public static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
         return new ThreadPoolExecutor(nThreads, nThreads,
@@ -115,6 +118,7 @@ public class Executors {
      * threads
      *
      * @return the newly created single-threaded Executor
+     * @throws NullPointerException if threadFactory is null
      */
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
         return new FinalizableDelegatedExecutorService
@@ -153,6 +157,7 @@ public class Executors {
      * ThreadFactory to create new threads when needed.
      * @param threadFactory the factory to use when creating new threads
      * @return the newly created thread pool
+     * @throws NullPointerException if threadFactory is null
      */
     public static ExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
         return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
@@ -193,6 +198,7 @@ public class Executors {
      * @param threadFactory the factory to use when creating new
      * threads
      * @return a newly created scheduled executor
+     * @throws NullPointerException if threadFactory is null
      */
     public static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory) {
         return new DelegatedScheduledExecutorService
@@ -205,6 +211,7 @@ public class Executors {
      * @param corePoolSize the number of threads to keep in the pool,
      * even if they are idle.
      * @return a newly created scheduled thread pool
+     * @throws IllegalArgumentException if <tt>corePoolSize &lt; 0</tt>
      */
     public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
         return new ScheduledThreadPoolExecutor(corePoolSize);
@@ -218,6 +225,8 @@ public class Executors {
      * @param threadFactory the factory to use when the executor
      * creates a new thread.
      * @return a newly created scheduled thread pool
+     * @throws IllegalArgumentException if <tt>corePoolSize &lt; 0</tt>
+     * @throws NullPointerException if threadFactory is null
      */
     public static ScheduledExecutorService newScheduledThreadPool(
             int corePoolSize, ThreadFactory threadFactory) {
@@ -320,8 +329,8 @@ public class Executors {
      * <tt>Callable</tt> to an otherwise resultless action.
      * @param task the task to run
      * @param result the result to return
-     * @throws NullPointerException if task null
      * @return a callable object
+     * @throws NullPointerException if task null
      */
     public static <T> Callable<T> callable(Runnable task, T result) {
         if (task == null)
@@ -616,15 +625,14 @@ public class Executors {
     }
 
     static class FinalizableDelegatedExecutorService
-        extends DelegatedExecutorService {
-        FinalizableDelegatedExecutorService(ExecutorService executor) {
-            super(executor);
-        }
-        protected void finalize()  {
-            super.shutdown();
-        }
+	extends DelegatedExecutorService {
+	FinalizableDelegatedExecutorService(ExecutorService executor) {
+	    super(executor);
+	}
+	protected void finalize()  {
+	    super.shutdown();
+	}
     }
-        
 
     /**
      * A wrapper class that exposes only the ScheduledExecutorService

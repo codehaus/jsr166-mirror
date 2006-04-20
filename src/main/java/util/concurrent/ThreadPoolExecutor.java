@@ -229,7 +229,7 @@ import java.util.*;
  * supplied methods, {@link ThreadPoolExecutor#remove} and {@link
  * ThreadPoolExecutor#purge} are available to assist in storage
  * reclamation when large numbers of queued tasks become
- * cancelled.</dd> 
+ * cancelled.</dd>
  *
  * <dt>Finalization</dt>
  *
@@ -909,7 +909,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * or the security manager's <tt>checkAccess</tt> method denies access.
      */
     public void shutdown() {
-        // Fail if caller doesn't have modifyThread permission. 
+        // Fail if caller doesn't have modifyThread permission.
 	SecurityManager security = System.getSecurityManager();
 	if (security != null)
             security.checkPermission(shutdownPerm);

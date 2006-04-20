@@ -617,9 +617,9 @@ class SubList<E> extends AbstractList<E> {
     int length;                   // Number of elements in this sublist
 
     SubList(AbstractList<E> base,
-            AbstractList<E> parent, 
-            int baseIndex, 
-            int fromIndex, 
+            AbstractList<E> parent,
+            int baseIndex,
+            int fromIndex,
             int toIndex) {
         if (fromIndex < 0)
             throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
@@ -640,7 +640,7 @@ class SubList<E> extends AbstractList<E> {
      * Returns an IndexOutOfBoundsException with nicer message
      */
     private IndexOutOfBoundsException indexError(int index) {
-        return new IndexOutOfBoundsException("Index: " + index + 
+        return new IndexOutOfBoundsException("Index: " + index +
                                              ", Size: " + length);
     }
 
@@ -715,7 +715,7 @@ class SubList<E> extends AbstractList<E> {
     }
 
     public List<E> subList(int fromIndex, int toIndex) {
-        return new SubList(base, this, fromIndex + baseOffset, 
+        return new SubList(base, this, fromIndex + baseOffset,
                            fromIndex, toIndex);
     }
 
@@ -750,7 +750,7 @@ class SubList<E> extends AbstractList<E> {
         int cursor;                   // Current index
         int fence;                    // Upper bound on cursor
         int lastRet;                  // Index of returned element, or -1
-        int expectedModCount;         // Expected modCount of base 
+        int expectedModCount;         // Expected modCount of base
 
         SubListIterator(SubList<E> list, int index) {
             this.lastRet = -1;
@@ -861,7 +861,7 @@ class SubList<E> extends AbstractList<E> {
 
 class RandomAccessSubList<E> extends SubList<E> implements RandomAccess {
     RandomAccessSubList(AbstractList<E> base,
-                        AbstractList<E> parent, int baseIndex, 
+                        AbstractList<E> parent, int baseIndex,
                         int fromIndex, int toIndex) {
         super(base, parent, baseIndex, fromIndex, toIndex);
     }

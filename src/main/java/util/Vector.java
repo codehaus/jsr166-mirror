@@ -1194,7 +1194,7 @@ public class Vector<E>
         final int parentOffset;           // index wrt parent
         int length;                       // length of sublist
 
-        VectorSubList(Vector<E> base, AbstractList<E> parent, int baseOffset, 
+        VectorSubList(Vector<E> base, AbstractList<E> parent, int baseOffset,
                      int fromIndex, int toIndex) {
             if (fromIndex < 0)
                 throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
@@ -1216,7 +1216,7 @@ public class Vector<E>
          * Returns an IndexOutOfBoundsException with nicer message
          */
         private IndexOutOfBoundsException indexError(int index) {
-            return new IndexOutOfBoundsException("Index: " + index + 
+            return new IndexOutOfBoundsException("Index: " + index +
                                                  ", Size: " + length);
         }
 
@@ -1277,7 +1277,7 @@ public class Vector<E>
             synchronized(base) {
                 if (base.modCount != modCount)
                     throw new ConcurrentModificationException();
-                parent.removeRange(fromIndex + parentOffset, 
+                parent.removeRange(fromIndex + parentOffset,
                                    toIndex + parentOffset);
                 length -= (toIndex-fromIndex);
                 modCount = base.modCount;
@@ -1295,7 +1295,7 @@ public class Vector<E>
                 int cSize = c.size();
                 if (cSize==0)
                     return false;
-                
+
                 if (base.modCount != modCount)
                     throw new ConcurrentModificationException();
                 parent.addAll(parentOffset + index, c);
@@ -1322,7 +1322,7 @@ public class Vector<E>
         }
 
         public List<E> subList(int fromIndex, int toIndex) {
-            return new VectorSubList(base, this, fromIndex + baseOffset, 
+            return new VectorSubList(base, this, fromIndex + baseOffset,
                                      fromIndex, toIndex);
         }
 
@@ -1331,7 +1331,7 @@ public class Vector<E>
                 return new VectorSubListIterator(this, 0);
             }
         }
-        
+
         public synchronized ListIterator<E> listIterator() {
             synchronized(base) {
                 return new VectorSubListIterator(this, 0);
@@ -1358,7 +1358,7 @@ public class Vector<E>
             int fence;                    // Upper bound on cursor
             int lastRet;                  // Index of returned element, or -1
             int expectedModCount;         // Expected modCount of base Vector
-        
+
             VectorSubListIterator(VectorSubList<E> list, int index) {
                 this.lastRet = -1;
                 this.cursor = index;
@@ -1368,23 +1368,23 @@ public class Vector<E>
                 this.base = list.base;
                 this.expectedModCount = base.modCount;
             }
-        
+
             public boolean hasNext() {
                 return cursor < fence;
             }
-        
+
             public boolean hasPrevious() {
                 return cursor > 0;
             }
-        
+
             public int nextIndex() {
                 return cursor;
             }
-        
+
             public int previousIndex() {
                 return cursor - 1;
             }
-        
+
             public E next() {
                 int i = cursor;
                 if (cursor >= fence)
@@ -1394,7 +1394,7 @@ public class Vector<E>
                 cursor = i + 1;
                 return (E)next;
             }
-        
+
             public E previous() {
                 int i = cursor - 1;
                 if (i < 0)
@@ -1404,7 +1404,7 @@ public class Vector<E>
                 cursor = i;
                 return (E)prev;
             }
-        
+
             public void set(E e) {
                 if (lastRet < 0)
                     throw new IllegalStateException();
@@ -1417,7 +1417,7 @@ public class Vector<E>
                     throw new ConcurrentModificationException();
                 }
             }
-        
+
             public void remove() {
                 int i = lastRet;
                 if (i < 0)
@@ -1435,7 +1435,7 @@ public class Vector<E>
                     throw new ConcurrentModificationException();
                 }
             }
-        
+
             public void add(E e) {
                 if (base.modCount != expectedModCount)
                     throw new ConcurrentModificationException();
@@ -1455,4 +1455,4 @@ public class Vector<E>
 }
 
 
-    
+

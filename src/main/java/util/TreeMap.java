@@ -877,7 +877,7 @@ public class TreeMap<K,V>
     public NavigableMap<K, V> descendingMap() {
         NavigableMap<K, V> km = descendingMap;
         return (km != null) ? km :
-            (descendingMap = new DescendingSubMap(this, 
+            (descendingMap = new DescendingSubMap(this,
                                                   true, null, 0,
                                                   true, null, 0));
     }
@@ -892,7 +892,7 @@ public class TreeMap<K,V>
      */
     public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
                                     K toKey,   boolean toInclusive) {
-        return new AscendingSubMap(this, 
+        return new AscendingSubMap(this,
                                    false, fromKey, excluded(fromInclusive),
                                    false, toKey,   excluded(toInclusive));
     }
@@ -906,8 +906,8 @@ public class TreeMap<K,V>
      * @since 1.6
      */
     public NavigableMap<K,V> headMap(K toKey, boolean inclusive) {
-        return new AscendingSubMap(this, 
-                                   true, null, 0, 
+        return new AscendingSubMap(this,
+                                   true, null, 0,
                                    false, toKey, excluded(inclusive));
     }
 
@@ -920,8 +920,8 @@ public class TreeMap<K,V>
      * @since 1.6
      */
     public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive) {
-        return new AscendingSubMap(this, 
-                                   false, fromKey, excluded(inclusive), 
+        return new AscendingSubMap(this,
+                                   false, fromKey, excluded(inclusive),
                                    true, null, 0);
     }
 
@@ -1214,12 +1214,12 @@ public class TreeMap<K,V>
         /*
          * The backing map.
          */
-        final TreeMap<K,V> m; 
+        final TreeMap<K,V> m;
 
         /** True if low point is from start of backing map */
         boolean fromStart;
 
-        /** 
+        /**
          * The low endpoint of this submap in absolute terms, or null
          * if fromStart.
          */
@@ -1234,7 +1234,7 @@ public class TreeMap<K,V>
         /** True if high point is to End of backing map */
         boolean toEnd;
 
-        /** 
+        /**
          * The high endpoint of this submap in absolute terms, or null
          * if toEnd.
          */
@@ -1246,8 +1246,8 @@ public class TreeMap<K,V>
          */
         int hiExcluded;
 
-        NavigableSubMap(TreeMap<K,V> m, 
-                        boolean fromStart, K lo, int loExcluded, 
+        NavigableSubMap(TreeMap<K,V> m,
+                        boolean fromStart, K lo, int loExcluded,
                         boolean toEnd, K hi, int hiExcluded) {
             if (!fromStart && !toEnd && m.compare(lo, hi) > 0)
                 throw new IllegalArgumentException("fromKey > toKey");
@@ -1287,7 +1287,7 @@ public class TreeMap<K,V>
 
         /** Returns the lowest entry in this submap (absolute ordering) */
         final TreeMap.Entry<K,V> loEntry() {
-	    TreeMap.Entry<K,V> result = 
+	    TreeMap.Entry<K,V> result =
                 (fromStart ?  m.getFirstEntry() :
                  (loExcluded == 0 ? m.getCeilingEntry(lo) :
                                     m.getHigherEntry(lo)));
@@ -1434,7 +1434,7 @@ public class TreeMap<K,V>
                     return m.size();
                 if (size == -1 || sizeModCount != m.modCount) {
                     sizeModCount = m.modCount;
-                    size = 0;  
+                    size = 0;
                     Iterator i = iterator();
                     while (i.hasNext()) {
                         size++;
@@ -1499,7 +1499,7 @@ public class TreeMap<K,V>
             return tailMap(fromKey, true);
         }
 
- 
+
         // The following four definitions are correct only for
         // ascending submaps. They are overridden in DescendingSubMap.
         // They are defined in the base class because the definitions
@@ -1562,7 +1562,7 @@ public class TreeMap<K,V>
             TreeMap.Entry<K,V> next;
             final K firstExcludedKey;
 
-            SubMapIterator(TreeMap.Entry<K,V> first, 
+            SubMapIterator(TreeMap.Entry<K,V> first,
                            TreeMap.Entry<K,V> firstExcluded) {
                 next = first;
                 firstExcludedKey = (firstExcluded == null ? null
@@ -1607,7 +1607,7 @@ public class TreeMap<K,V>
         }
 
         final class SubMapEntryIterator extends SubMapIterator<Map.Entry<K,V>> {
-            SubMapEntryIterator(TreeMap.Entry<K,V> first, 
+            SubMapEntryIterator(TreeMap.Entry<K,V> first,
                                 TreeMap.Entry<K,V> firstExcluded) {
                 super(first, firstExcluded);
             }
@@ -1617,7 +1617,7 @@ public class TreeMap<K,V>
         }
 
         final class SubMapKeyIterator extends SubMapIterator<K> {
-            SubMapKeyIterator(TreeMap.Entry<K,V> first, 
+            SubMapKeyIterator(TreeMap.Entry<K,V> first,
                               TreeMap.Entry<K,V> firstExcluded) {
                 super(first, firstExcluded);
             }
@@ -1627,7 +1627,7 @@ public class TreeMap<K,V>
         }
 
         final class DescendingSubMapEntryIterator extends SubMapIterator<Map.Entry<K,V>> {
-            DescendingSubMapEntryIterator(TreeMap.Entry<K,V> last, 
+            DescendingSubMapEntryIterator(TreeMap.Entry<K,V> last,
                                           TreeMap.Entry<K,V> lastExcluded) {
                 super(last, lastExcluded);
             }
@@ -1638,7 +1638,7 @@ public class TreeMap<K,V>
         }
 
         final class DescendingSubMapKeyIterator extends SubMapIterator<K> {
-            DescendingSubMapKeyIterator(TreeMap.Entry<K,V> last, 
+            DescendingSubMapKeyIterator(TreeMap.Entry<K,V> last,
                                         TreeMap.Entry<K,V> lastExcluded) {
                 super(last, lastExcluded);
             }
@@ -1651,8 +1651,8 @@ public class TreeMap<K,V>
     static class AscendingSubMap<K,V> extends NavigableSubMap<K,V> {
         private static final long serialVersionUID = 912986545866124060L;
 
-        AscendingSubMap(TreeMap<K,V> m, 
-                        boolean fromStart, K lo, int loExcluded, 
+        AscendingSubMap(TreeMap<K,V> m,
+                        boolean fromStart, K lo, int loExcluded,
                         boolean toEnd, K hi, int hiExcluded) {
             super(m, fromStart, lo, loExcluded, toEnd, hi, hiExcluded);
         }
@@ -1661,13 +1661,13 @@ public class TreeMap<K,V>
             return m.comparator();
         }
 
-        public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive, 
+        public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
                                         K toKey, boolean toInclusive) {
             if (!inRange(fromKey, fromInclusive))
                 throw new IllegalArgumentException("fromKey out of range");
             if (!inRange(toKey, toInclusive))
                 throw new IllegalArgumentException("toKey out of range");
-            return new AscendingSubMap(m, 
+            return new AscendingSubMap(m,
                                        false, fromKey, excluded(fromInclusive),
                                        false, toKey,   excluded(toInclusive));
         }
@@ -1675,7 +1675,7 @@ public class TreeMap<K,V>
         public NavigableMap<K,V> headMap(K toKey, boolean inclusive) {
             if (!inClosedRange(toKey))
                 throw new IllegalArgumentException("toKey out of range");
-            return new AscendingSubMap(m, 
+            return new AscendingSubMap(m,
                                        fromStart, lo,    loExcluded,
                                        false, toKey, excluded(inclusive));
         }
@@ -1683,7 +1683,7 @@ public class TreeMap<K,V>
         public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive){
             if (!inRange(fromKey, inclusive))
                 throw new IllegalArgumentException("fromKey out of range");
-            return new AscendingSubMap(m, 
+            return new AscendingSubMap(m,
                                        false, fromKey, excluded(inclusive),
                                        toEnd, hi,      hiExcluded);
         }
@@ -1735,16 +1735,16 @@ public class TreeMap<K,V>
             NavigableMap<K,V> mv = descendingMapView;
             return (mv != null) ? mv :
                 (descendingMapView =
-                 new DescendingSubMap(m, 
-                                      fromStart, lo, loExcluded, 
+                 new DescendingSubMap(m,
+                                      fromStart, lo, loExcluded,
                                       toEnd, hi, hiExcluded));
         }
     }
 
     static class DescendingSubMap<K,V> extends NavigableSubMap<K,V> {
         private static final long serialVersionUID = 912986545866120460L;
-        DescendingSubMap(TreeMap<K,V> m, 
-                        boolean fromStart, K lo, int loExcluded, 
+        DescendingSubMap(TreeMap<K,V> m,
+                        boolean fromStart, K lo, int loExcluded,
                         boolean toEnd, K hi, int hiExcluded) {
             super(m, fromStart, lo, loExcluded, toEnd, hi, hiExcluded);
         }
@@ -1756,13 +1756,13 @@ public class TreeMap<K,V>
             return reverseComparator;
         }
 
-        public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive, 
+        public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
                                         K toKey, boolean toInclusive) {
             if (!inRange(fromKey, fromInclusive))
                 throw new IllegalArgumentException("fromKey out of range");
             if (!inRange(toKey, toInclusive))
                 throw new IllegalArgumentException("toKey out of range");
-            return new DescendingSubMap(m, 
+            return new DescendingSubMap(m,
                                         false, toKey,   excluded(toInclusive),
                                         false, fromKey, excluded(fromInclusive));
         }
@@ -1770,15 +1770,15 @@ public class TreeMap<K,V>
         public NavigableMap<K,V> headMap(K toKey, boolean inclusive) {
             if (!inRange(toKey, inclusive))
                 throw new IllegalArgumentException("toKey out of range");
-            return new DescendingSubMap(m, 
-                                        false, toKey, excluded(inclusive), 
+            return new DescendingSubMap(m,
+                                        false, toKey, excluded(inclusive),
                                         toEnd, hi, hiExcluded);
         }
 
         public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive){
             if (!inRange(fromKey, inclusive))
                 throw new IllegalArgumentException("fromKey out of range");
-            return new DescendingSubMap(m, 
+            return new DescendingSubMap(m,
                                         fromStart, lo,      loExcluded,
                                         false, fromKey, excluded(inclusive));
         }
@@ -1830,8 +1830,8 @@ public class TreeMap<K,V>
             NavigableMap<K,V> mv = descendingMapView;
             return (mv != null) ? mv :
                 (descendingMapView =
-                 new AscendingSubMap(m, 
-                                     fromStart, lo, loExcluded, 
+                 new AscendingSubMap(m,
+                                     fromStart, lo, loExcluded,
                                      toEnd, hi, hiExcluded));
         }
 
@@ -1881,8 +1881,8 @@ public class TreeMap<K,V>
         private boolean fromStart = false, toEnd = false;
         private K fromKey, toKey;
         private Object readResolve() {
-            return new AscendingSubMap(TreeMap.this, 
-                                       fromStart, fromKey, 0, 
+            return new AscendingSubMap(TreeMap.this,
+                                       fromStart, fromKey, 0,
                                        toEnd, toKey, 1);
         }
         public Set<Map.Entry<K,V>> entrySet() { throw new InternalError(); }

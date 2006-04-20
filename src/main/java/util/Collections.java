@@ -3605,6 +3605,12 @@ public class Collections {
      * view can be useful when you would like to use a method
      * requiring a <tt>Queue</tt> but you need Lifo ordering.
      *
+     * <p>Each method invocation on the queue returned by this method
+     * results in exactly one method invocation on the backing deque, with
+     * one exception.  The {@link Queue#addAll addAll} method is
+     * implemented as a sequence of {@link Deque#addFirst addFirst}
+     * invocations on the backing deque.
+     *
      * @param deque the deque
      * @return the queue
      * @since  1.6

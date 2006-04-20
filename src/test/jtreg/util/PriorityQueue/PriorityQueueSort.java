@@ -1,8 +1,6 @@
 /*
  * @test %I% %E%
  * @bug 4486658
- * @compile -source 1.5 PriorityQueueSort.java
- * @run main PriorityQueueSort
  * @summary Checks that a priority queue returns elements in sorted order across various operations
  */
 
@@ -12,8 +10,8 @@ public class PriorityQueueSort {
 
     static class MyComparator implements Comparator<Integer> { 
         public int compare(Integer x, Integer y) {
-            int i = ((Integer)x).intValue();
-            int j = ((Integer)y).intValue();
+            int i = x.intValue();
+            int j = y.intValue();
             if (i < j) return -1;
             if (i > j) return 1;
             return 0;

@@ -168,13 +168,13 @@ public class Collections {
     /**
      * Searches the specified list for the specified object using the binary
      * search algorithm.  The list must be sorted into ascending order
-     * according to the <i>natural ordering</i> of its elements (as by the
-     * <tt>sort(List)</tt> method, above) prior to making this call.  If it is
-     * not sorted, the results are undefined.  If the list contains multiple
-     * elements equal to the specified object, there is no guarantee which one
-     * will be found.<p>
+     * according to the {@linkplain Comparable natural ordering} of its
+     * elements (as by the {@link #sort(List)} method) prior to making this
+     * call.  If it is not sorted, the results are undefined.  If the list
+     * contains multiple elements equal to the specified object, there is no
+     * guarantee which one will be found.
      *
-     * This method runs in log(n) time for a "random access" list (which
+     * <p>This method runs in log(n) time for a "random access" list (which
      * provides near-constant-time positional access).  If the specified list
      * does not implement the {@link RandomAccess} interface and is large,
      * this method will do an iterator-based binary search that performs
@@ -186,16 +186,14 @@ public class Collections {
      *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
      *	       <i>insertion point</i> is defined as the point at which the
      *	       key would be inserted into the list: the index of the first
-     *	       element greater than the key, or <tt>list.size()</tt>, if all
+     *	       element greater than the key, or <tt>list.size()</tt> if all
      *	       elements in the list are less than the specified key.  Note
      *	       that this guarantees that the return value will be &gt;= 0 if
      *	       and only if the key is found.
      * @throws ClassCastException if the list contains elements that are not
      *	       <i>mutually comparable</i> (for example, strings and
-     *	       integers), or the search key in not mutually comparable
+     *	       integers), or the search key is not mutually comparable
      *	       with the elements of the list.
-     * @see    Comparable
-     * @see #sort(List)
      */
     public static <T>
     int binarySearch(List<? extends Comparable<? super T>> list, T key) {
@@ -212,7 +210,7 @@ public class Collections {
 	int high = list.size()-1;
 
 	while (low <= high) {
-	    int mid = (low + high) >> 1;
+	    int mid = (low + high) >>> 1;
 	    Comparable<? super T> midVal = list.get(mid);
 	    int cmp = midVal.compareTo(key);
 
@@ -234,7 +232,7 @@ public class Collections {
         ListIterator<? extends Comparable<? super T>> i = list.listIterator();
 
         while (low <= high) {
-            int mid = (low + high) >> 1;
+            int mid = (low + high) >>> 1;
             Comparable<? super T> midVal = get(i, mid);
             int cmp = midVal.compareTo(key);
 
@@ -270,13 +268,14 @@ public class Collections {
     /**
      * Searches the specified list for the specified object using the binary
      * search algorithm.  The list must be sorted into ascending order
-     * according to the specified comparator (as by the <tt>Sort(List,
-     * Comparator)</tt> method, above), prior to making this call.  If it is
+     * according to the specified comparator (as by the
+     * {@link #sort(List, Comparator) sort(List, Comparator)}
+     * method), prior to making this call.  If it is
      * not sorted, the results are undefined.  If the list contains multiple
      * elements equal to the specified object, there is no guarantee which one
-     * will be found.<p>
+     * will be found.
      *
-     * This method runs in log(n) time for a "random access" list (which
+     * <p>This method runs in log(n) time for a "random access" list (which
      * provides near-constant-time positional access).  If the specified list
      * does not implement the {@link RandomAccess} interface and is large,
      * this method will do an iterator-based binary search that performs
@@ -284,23 +283,21 @@ public class Collections {
      *
      * @param  list the list to be searched.
      * @param  key the key to be searched for.
-     * @param  c the comparator by which the list is ordered.  A
-     *        <tt>null</tt> value indicates that the elements' <i>natural
-     *        ordering</i> should be used.
+     * @param  c the comparator by which the list is ordered.
+     *         A <tt>null</tt> value indicates that the elements'
+     *	       {@linkplain Comparable natural ordering} should be used.
      * @return the index of the search key, if it is contained in the list;
      *	       otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
      *	       <i>insertion point</i> is defined as the point at which the
      *	       key would be inserted into the list: the index of the first
-     *	       element greater than the key, or <tt>list.size()</tt>, if all
+     *	       element greater than the key, or <tt>list.size()</tt> if all
      *	       elements in the list are less than the specified key.  Note
      *	       that this guarantees that the return value will be &gt;= 0 if
      *	       and only if the key is found.
      * @throws ClassCastException if the list contains elements that are not
      *	       <i>mutually comparable</i> using the specified comparator,
-     *	       or the search key in not mutually comparable with the
+     *	       or the search key is not mutually comparable with the
      *	       elements of the list using this comparator.
-     * @see    Comparable
-     * @see #sort(List, Comparator)
      */
     public static <T> int binarySearch(List<? extends T> list, T key, Comparator<? super T> c) {
         if (c==null)
@@ -317,7 +314,7 @@ public class Collections {
 	int high = l.size()-1;
 
 	while (low <= high) {
-	    int mid = (low + high) >> 1;
+	    int mid = (low + high) >>> 1;
 	    T midVal = l.get(mid);
 	    int cmp = c.compare(midVal, key);
 
@@ -337,7 +334,7 @@ public class Collections {
         ListIterator<? extends T> i = l.listIterator();
 
         while (low <= high) {
-            int mid = (low + high) >> 1;
+            int mid = (low + high) >>> 1;
             T midVal = get(i, mid);
             int cmp = c.compare(midVal, key);
 

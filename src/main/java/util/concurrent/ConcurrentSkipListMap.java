@@ -2692,7 +2692,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        // Almost the the same as getNearEntry, except for keys
+        // Almost the same as getNearEntry, except for keys
         private K getNearKey(K key, int rel) {
             if (isDescending) { // adjust relation for direction
                 if ((rel & m.LT) == 0)

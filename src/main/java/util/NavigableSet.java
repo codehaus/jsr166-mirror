@@ -159,10 +159,10 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *
      * @param fromElement low endpoint of the returned set
      * @param fromInclusive true if the low endpoint ({@code fromElement}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @param toElement high endpoint of the returned set
      * @param toInclusive true if the high endpoint ({@code toElement}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @return a view of the portion of this set whose elements range from
      *         {@code fromElement}, inclusive, to {@code toElement}, exclusive
      * @throws ClassCastException if {@code fromElement} and
@@ -195,7 +195,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *
      * @param toElement high endpoint of the returned set
      * @param inclusive true if the high endpoint ({@code toElement}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @return a view of the portion of this set whose elements are less than
      *         (or equal to, if {@code inclusive} is true) {@code toElement}
      * @throws ClassCastException if {@code toElement} is not compatible
@@ -224,7 +224,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *
      * @param fromElement low endpoint of the returned set
      * @param inclusive true if the low endpoint ({@code fromElement}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @return a view of the portion of this set whose elements are greater
      *         than or equal to {@code fromElement}
      * @throws ClassCastException if {@code fromElement} is not compatible

@@ -268,10 +268,10 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *
      * @param fromKey low endpoint of the keys in the returned map
      * @param fromInclusive true if the low endpoint ({@code fromKey}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @param toKey high endpoint of the keys in the returned map
      * @param toInclusive true if the high endpoint ({@code toKey}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @return a view of the portion of this map whose keys range from
      *         {@code fromKey} to {@code toKey}
      * @throws ClassCastException if {@code fromKey} and {@code toKey}
@@ -302,7 +302,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *
      * @param toKey high endpoint of the keys in the returned map
      * @param inclusive true if the high endpoint ({@code toKey}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @return a view of the portion of this map whose keys are less than
      *         (or equal to, if {@code inclusive} is true) {@code toKey}
      * @throws ClassCastException if {@code toKey} is not compatible
@@ -331,7 +331,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *
      * @param fromKey low endpoint of the keys in the returned map
      * @param inclusive true if the low endpoint ({@code fromKey}) is
-     *        to be included in the the returned view
+     *        to be included in the returned view
      * @return a view of the portion of this map whose keys are greater than
      *         (or equal to, if {@code inclusive} is true) {@code fromKey}
      * @throws ClassCastException if {@code fromKey} is not compatible

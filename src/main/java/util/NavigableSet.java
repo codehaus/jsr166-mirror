@@ -20,8 +20,8 @@ package java.util;
  * descending ones.  This interface additionally defines methods
  * {@code pollFirst} and {@code pollLast} that return and remove the
  * lowest and highest element, if one exists, else returning {@code
- * null}.  Methods {@code navigableSubSet}, {@code navigableHeadSet},
- * and {@code navigableTailSet} differ from the similarly named {@code
+ * null}.  Methods {@code subSet}, {@code headSet},
+ * and {@code tailSet} differ from the like-named {@code
  * SortedSet} methods in accepting additional arguments describing
  * whether lower and upper bounds are inclusive versus exclusive.
  * Subsets of any {@code NavigableSet} must implement the {@code
@@ -180,8 +180,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *         has a restricted range, and {@code fromElement} or
      *         {@code toElement} lies outside the bounds of the range.
      */
-    NavigableSet<E> navigableSubSet(E fromElement, boolean fromInclusive,
-                                    E toElement,   boolean toInclusive);
+    NavigableSet<E> subSet(E fromElement, boolean fromInclusive,
+                           E toElement,   boolean toInclusive);
 
     /**
      * Returns a view of the portion of this set whose elements are less than
@@ -210,7 +210,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *         restricted range, and {@code toElement} lies outside the
      *         bounds of the range
      */
-    NavigableSet<E> navigableHeadSet(E toElement, boolean inclusive);
+    NavigableSet<E> headSet(E toElement, boolean inclusive);
 
     /**
      * Returns a view of the portion of this set whose elements are greater
@@ -239,5 +239,5 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *         restricted range, and {@code fromElement} lies outside the
      *         bounds of the range
      */
-    NavigableSet<E> navigableTailSet(E fromElement, boolean inclusive);
+    NavigableSet<E> tailSet(E fromElement, boolean inclusive);
 }

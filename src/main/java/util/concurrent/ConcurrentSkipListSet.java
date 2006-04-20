@@ -369,13 +369,13 @@ public class ConcurrentSkipListSet<E>
      *         <tt>toElement</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public NavigableSet<E> navigableSubSet(E fromElement, 
-                                           boolean fromInclusive,
-                                           E toElement,   
-                                           boolean toInclusive) {
+    public NavigableSet<E> subSet(E fromElement,
+                                  boolean fromInclusive,
+                                  E toElement,
+                                  boolean toInclusive) {
 	return new ConcurrentSkipListSet<E>
-            (m.navigableSubMap(fromElement, fromInclusive,
-                               toElement,   toInclusive));
+            (m.subMap(fromElement, fromInclusive,
+                      toElement,   toInclusive));
     }
 
     /**
@@ -383,8 +383,8 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if <tt>toElement</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public NavigableSet<E> navigableHeadSet(E toElement, boolean inclusive) {
-	return new ConcurrentSkipListSet<E>(m.navigableHeadMap(toElement, inclusive));
+    public NavigableSet<E> headSet(E toElement, boolean inclusive) {
+	return new ConcurrentSkipListSet<E>(m.headMap(toElement, inclusive));
     }
 
     /**
@@ -392,12 +392,12 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if <tt>fromElement</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public NavigableSet<E> navigableTailSet(E fromElement, boolean inclusive) {
-	return new ConcurrentSkipListSet<E>(m.navigableTailMap(fromElement, inclusive));
+    public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
+	return new ConcurrentSkipListSet<E>(m.tailMap(fromElement, inclusive));
     }
 
     /**
-     * Equivalent to {@link #navigableSubSet} but with a return type
+     * Equivalent to {@link #subSet} but with a return type
      * conforming to the <tt>SortedSet</tt> interface.
      *
      * <p>{@inheritDoc}
@@ -408,11 +408,11 @@ public class ConcurrentSkipListSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> subSet(E fromElement, E toElement) {
-	return navigableSubSet(fromElement, true, toElement, false);
+	return subSet(fromElement, true, toElement, false);
     }
 
     /**
-     * Equivalent to {@link #navigableHeadSet} but with a return type
+     * Equivalent to {@link #headSet} but with a return type
      * conforming to the <tt>SortedSet</tt> interface.
      *
      * <p>{@inheritDoc}
@@ -422,12 +422,12 @@ public class ConcurrentSkipListSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> headSet(E toElement) {
-	return navigableHeadSet(toElement, false);
+	return headSet(toElement, false);
     }
 
 
     /**
-     * Equivalent to {@link #navigableTailSet} but with a return type
+     * Equivalent to {@link #tailSet} but with a return type
      * conforming to the <tt>SortedSet</tt> interface.
      *
      * <p>{@inheritDoc}
@@ -437,7 +437,7 @@ public class ConcurrentSkipListSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> tailSet(E fromElement) {
-	return navigableTailSet(fromElement, true);
+	return tailSet(fromElement, true);
     }
 
     /**
@@ -454,7 +454,7 @@ public class ConcurrentSkipListSet<E>
         try {
             mapOffset = unsafe.objectFieldOffset
                 (ConcurrentSkipListSet.class.getDeclaredField("m"));
-            } catch (Exception ex) { throw new Error(ex); }
+        } catch (Exception ex) { throw new Error(ex); }
     }
     private void setMap(ConcurrentNavigableMap<E,Object> map) {
         unsafe.putObjectVolatile(this, mapOffset, map);

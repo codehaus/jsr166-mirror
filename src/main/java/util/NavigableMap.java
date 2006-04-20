@@ -23,8 +23,8 @@ package java.util;
  * method returns a view of the map with the senses of all relational
  * and directional methods inverted. The performance of ascending
  * operations and views is likely to be faster than that of descending
- * ones.  Methods {@code navigableSubMap}, {@code navigableHeadMap},
- * and {@code navigableTailMap} differ from the similarly named {@code
+ * ones.  Methods {@code subMap}, {@code headMap},
+ * and {@code tailMap} differ from the like-named {@code
  * SortedMap} methods in accepting additional arguments describing
  * whether lower and upper bounds are inclusive versus exclusive.
  * Submaps of any {@code NavigableMap} must implement the {@code
@@ -287,8 +287,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *         range, and {@code fromKey} or {@code toKey} lies
      *         outside the bounds of the range
      */
-    NavigableMap<K,V> navigableSubMap(K fromKey, boolean fromInclusive,
-                                      K toKey,   boolean toInclusive);
+    NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
+                             K toKey,   boolean toInclusive);
 
     /**
      * Returns a view of the portion of this map whose keys are less than (or
@@ -317,7 +317,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *         restricted range, and {@code toKey} lies outside the
      *         bounds of the range
      */
-    NavigableMap<K,V> navigableHeadMap(K toKey, boolean inclusive);
+    NavigableMap<K,V> headMap(K toKey, boolean inclusive);
 
     /**
      * Returns a view of the portion of this map whose keys are greater than (or
@@ -346,5 +346,5 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *         restricted range, and {@code fromKey} lies outside the
      *         bounds of the range
      */
-    NavigableMap<K,V> navigableTailMap(K fromKey, boolean inclusive);
+    NavigableMap<K,V> tailMap(K fromKey, boolean inclusive);
 }

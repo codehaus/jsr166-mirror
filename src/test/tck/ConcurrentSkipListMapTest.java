@@ -798,7 +798,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      */
     public void testSubMapContents() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.navigableSubMap(two, true, four, false);
+        NavigableMap sm = map.subMap(two, true, four, false);
         assertEquals(two, sm.firstKey());
         assertEquals(three, sm.lastKey());
         assertEquals(2, sm.size());
@@ -836,7 +836,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
 
     public void testSubMapContents2() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.navigableSubMap(two, true, three, false);
+        NavigableMap sm = map.subMap(two, true, three, false);
         assertEquals(1, sm.size());
         assertEquals(two, sm.firstKey());
         assertEquals(two, sm.lastKey());
@@ -871,7 +871,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      */
     public void testHeadMapContents() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.navigableHeadMap(four, false);
+        NavigableMap sm = map.headMap(four, false);
         assertTrue(sm.containsKey(one));
         assertTrue(sm.containsKey(two));
         assertTrue(sm.containsKey(three));
@@ -897,7 +897,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      */
     public void testTailMapContents() {
         ConcurrentSkipListMap map = map5();
-        NavigableMap sm = map.navigableTailMap(two, true);
+        NavigableMap sm = map.tailMap(two, true);
         assertFalse(sm.containsKey(one));
         assertTrue(sm.containsKey(two));
         assertTrue(sm.containsKey(three));
@@ -941,7 +941,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         assertEquals("E", e.getValue());
         assertFalse(i.hasNext());
 
-        NavigableMap ssm = sm.navigableTailMap(four, true);
+        NavigableMap ssm = sm.tailMap(four, true);
         assertEquals(four, ssm.firstKey());
         assertEquals(five, ssm.lastKey());
         assertTrue(ssm.remove(four) != null);
@@ -970,7 +970,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         check(map,                 0, mapSize - 1, true);
         check(map.descendingMap(), 0, mapSize - 1, false);
 
-        bashSubMap(map.navigableSubMap(0, true, mapSize, false),
+        bashSubMap(map.subMap(0, true, mapSize, false),
                    0, mapSize - 1, true);
     }
 
@@ -1077,7 +1077,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
 
         // headMap - pick direction and endpoint inclusion randomly
         boolean incl = rnd.nextBoolean();
-        NavigableMap<Integer,Integer> hm = map.navigableHeadMap(midPoint, incl);
+        NavigableMap<Integer,Integer> hm = map.headMap(midPoint, incl);
         if (ascending) {
             if (rnd.nextBoolean())
                 bashSubMap(hm, min, midPoint - (incl ? 0 : 1), true);
@@ -1094,7 +1094,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
 
         // tailMap - pick direction and endpoint inclusion randomly
         incl = rnd.nextBoolean();
-        NavigableMap<Integer,Integer> tm = map.navigableTailMap(midPoint,incl);
+        NavigableMap<Integer,Integer> tm = map.tailMap(midPoint,incl);
         if (ascending) {
             if (rnd.nextBoolean())
                 bashSubMap(tm, midPoint + (incl ? 0 : 1), max, true);
@@ -1119,7 +1119,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         boolean lowIncl = rnd.nextBoolean();
         boolean highIncl = rnd.nextBoolean();
         if (ascending) {
-            NavigableMap<Integer,Integer> sm = map.navigableSubMap(
+            NavigableMap<Integer,Integer> sm = map.subMap(
                 endpoints[0], lowIncl, endpoints[1], highIncl);
             if (rnd.nextBoolean())
                 bashSubMap(sm, endpoints[0] + (lowIncl ? 0 : 1),
@@ -1128,7 +1128,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
                 bashSubMap(sm.descendingMap(), endpoints[0] + (lowIncl ? 0 : 1),
                            endpoints[1] - (highIncl ? 0 : 1), false);
         } else {
-            NavigableMap<Integer,Integer> sm = map.navigableSubMap(
+            NavigableMap<Integer,Integer> sm = map.subMap(
                 endpoints[1], highIncl, endpoints[0], lowIncl);
             if (rnd.nextBoolean())
                 bashSubMap(sm, endpoints[0] + (lowIncl ? 0 : 1),

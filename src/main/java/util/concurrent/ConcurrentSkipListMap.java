@@ -2004,10 +2004,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, 
-                                                       boolean fromInclusive,
-                                                       K toKey,   
-                                                       boolean toInclusive) {
+    public ConcurrentNavigableMap<K,V> subMap(K fromKey,
+                                              boolean fromInclusive,
+                                              K toKey,
+                                              boolean toInclusive) {
         if (fromKey == null || toKey == null)
             throw new NullPointerException();
         return new SubMap<K,V>
@@ -2019,8 +2019,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if <tt>toKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey, 
-                                                        boolean inclusive) {
+    public ConcurrentNavigableMap<K,V> headMap(K toKey,
+                                               boolean inclusive) {
         if (toKey == null)
             throw new NullPointerException();
         return new SubMap<K,V>
@@ -2032,8 +2032,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws NullPointerException if <tt>fromKey</tt> is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey,
-                                                        boolean inclusive) {
+    public ConcurrentNavigableMap<K,V> tailMap(K fromKey,
+                                               boolean inclusive) {
         if (fromKey == null)
             throw new NullPointerException();
         return new SubMap<K,V>
@@ -2046,7 +2046,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey) {
-        return navigableSubMap(fromKey, true, toKey, false);
+        return subMap(fromKey, true, toKey, false);
     }
 
     /**
@@ -2055,7 +2055,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> headMap(K toKey) {
-        return navigableHeadMap(toKey, false);
+        return headMap(toKey, false);
     }
 
     /**
@@ -2064,7 +2064,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
-        return navigableTailMap(fromKey, true);
+        return tailMap(fromKey, true);
     }
 
     /* ---------------- Relational operations -------------- */
@@ -2363,28 +2363,28 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public Iterator<E> descendingIterator() {
             return descendingSet().iterator();
         }
-        public NavigableSet<E> navigableSubSet(E fromElement, 
-                                               boolean fromInclusive,
-                                               E toElement,   
-                                               boolean toInclusive) {
+        public NavigableSet<E> subSet(E fromElement,
+                                      boolean fromInclusive,
+                                      E toElement,
+                                      boolean toInclusive) {
             return new ConcurrentSkipListSet<E>
-                (m.navigableSubMap(fromElement, fromInclusive,
-                                   toElement,   toInclusive));
+                (m.subMap(fromElement, fromInclusive,
+                          toElement,   toInclusive));
         }
-        public NavigableSet<E> navigableHeadSet(E toElement, boolean inclusive) {
-            return new ConcurrentSkipListSet<E>(m.navigableHeadMap(toElement, inclusive));
+        public NavigableSet<E> headSet(E toElement, boolean inclusive) {
+            return new ConcurrentSkipListSet<E>(m.headMap(toElement, inclusive));
         }
-        public NavigableSet<E> navigableTailSet(E fromElement, boolean inclusive) {
-            return new ConcurrentSkipListSet<E>(m.navigableTailMap(fromElement, inclusive));
+        public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
+            return new ConcurrentSkipListSet<E>(m.tailMap(fromElement, inclusive));
         }
         public SortedSet<E> subSet(E fromElement, E toElement) {
-            return navigableSubSet(fromElement, true, toElement, false);
+            return subSet(fromElement, true, toElement, false);
         }
         public SortedSet<E> headSet(E toElement) {
-            return navigableHeadSet(toElement, false);
+            return headSet(toElement, false);
         }
         public SortedSet<E> tailSet(E fromElement) {
-            return navigableTailSet(fromElement, true);
+            return tailSet(fromElement, true);
         }
         public NavigableSet<E> descendingSet() {
             return new ConcurrentSkipListSet(m.descendingMap());
@@ -2428,7 +2428,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             else
                 return ((SubMap<K1,V1>)m).entryIterator();
         }
-        
+
         public boolean contains(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
@@ -2441,7 +2441,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return false;
             Map.Entry<K1,V1> e = (Map.Entry<K1,V1>)o;
             return m.remove(e.getKey(),
-                                                     e.getValue());
+                            e.getValue());
         }
         public boolean isEmpty() {
             return m.isEmpty();
@@ -2508,7 +2508,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                K fromKey, boolean fromInclusive,
                K toKey, boolean toInclusive,
                boolean isDescending) {
-            if (fromKey != null && toKey != null && 
+            if (fromKey != null && toKey != null &&
                 map.compare(fromKey, toKey) > 0)
                 throw new IllegalArgumentException("inconsistent range");
             this.m = map;
@@ -2602,7 +2602,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return n.key;
             else
                 throw new NoSuchElementException();
-        }            
+        }
 
         /**
          * Returns highest absolute key (ignoring directonality)
@@ -2822,21 +2822,21 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             else
                 return Collections.reverseOrder(cmp);
         }
-        
+
         /**
          * Utility to create submaps, where given bounds override
          * unbounded(null) ones and/or are checked against bounded ones.
          */
-        private SubMap<K,V> newSubMap(K fromKey, 
-                                      boolean fromInclusive, 
-                                      K toKey, 
+        private SubMap<K,V> newSubMap(K fromKey,
+                                      boolean fromInclusive,
+                                      K toKey,
                                       boolean toInclusive) {
             if (isDescending) { // flip senses
-                K tk = fromKey; 
-                fromKey = toKey; 
+                K tk = fromKey;
+                fromKey = toKey;
                 toKey = tk;
-                boolean ti = fromInclusive; 
-                fromInclusive = toInclusive; 
+                boolean ti = fromInclusive;
+                fromInclusive = toInclusive;
                 toInclusive = ti;
             }
             if (lo != null) {
@@ -2861,47 +2861,47 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                         throw new IllegalArgumentException("key out of range");
                 }
             }
-            return new SubMap<K,V>(m, fromKey, fromInclusive, 
+            return new SubMap<K,V>(m, fromKey, fromInclusive,
                                    toKey, toInclusive, isDescending);
         }
 
-        public SubMap<K,V> navigableSubMap(K fromKey, 
-                                           boolean fromInclusive,
-                                           K toKey,   
-                                           boolean toInclusive) {
+        public SubMap<K,V> subMap(K fromKey,
+                                  boolean fromInclusive,
+                                  K toKey,
+                                  boolean toInclusive) {
             if (fromKey == null || toKey == null)
                 throw new NullPointerException();
             return newSubMap(fromKey, fromInclusive, toKey, toInclusive);
         }
-        
-        public SubMap<K,V> navigableHeadMap(K toKey, 
-                                            boolean inclusive) {
+
+        public SubMap<K,V> headMap(K toKey,
+                                   boolean inclusive) {
             if (toKey == null)
                 throw new NullPointerException();
             return newSubMap(null, false, toKey, inclusive);
         }
-        
-        public SubMap<K,V> navigableTailMap(K fromKey,
-                                            boolean inclusive) {
+
+        public SubMap<K,V> tailMap(K fromKey,
+                                   boolean inclusive) {
             if (fromKey == null)
                 throw new NullPointerException();
             return newSubMap(fromKey, inclusive, null, false);
         }
 
         public SubMap<K,V> subMap(K fromKey, K toKey) {
-            return navigableSubMap(fromKey, true, toKey, false);
+            return subMap(fromKey, true, toKey, false);
         }
 
         public SubMap<K,V> headMap(K toKey) {
-            return navigableHeadMap(toKey, false);
+            return headMap(toKey, false);
         }
 
         public SubMap<K,V> tailMap(K fromKey) {
-            return navigableTailMap(fromKey, true);
+            return tailMap(fromKey, true);
         }
 
         public SubMap<K,V> descendingMap() {
-            return new SubMap<K,V>(m, lo, loInclusive, 
+            return new SubMap<K,V>(m, lo, loInclusive,
                                    hi, hiInclusive, !isDescending);
         }
 
@@ -3012,7 +3012,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             /** Cache of next value field to maintain weak consistency */
             Object nextValue;
 
-            SubMapIter() { 
+            SubMapIter() {
                 for (;;) {
                     next = isDescending? hiNode() : loNode();
                     if (next == null)

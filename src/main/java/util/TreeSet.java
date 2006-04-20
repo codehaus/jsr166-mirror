@@ -75,10 +75,10 @@ package java.util;
 public class TreeSet<E> extends AbstractSet<E>
     implements NavigableSet<E>, Cloneable, java.io.Serializable
 {
-    /** 
+    /**
      * The backing map.
      */
-    private transient NavigableMap<E,Object> m; 
+    private transient NavigableMap<E,Object> m;
 
     // Dummy value to associate with an Object in the backing Map
     private static final Object PRESENT = new Object();
@@ -303,10 +303,10 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      * @since 1.6
      */
-    public NavigableSet<E> navigableSubSet(E fromElement, boolean fromInclusive,
-                                           E toElement,   boolean toInclusive) {
-	return new TreeSet<E>(m.navigableSubMap(fromElement, fromInclusive,
-                                                toElement,   toInclusive));
+    public NavigableSet<E> subSet(E fromElement, boolean fromInclusive,
+                                  E toElement,   boolean toInclusive) {
+	return new TreeSet<E>(m.subMap(fromElement, fromInclusive,
+                                       toElement,   toInclusive));
     }
 
     /**
@@ -317,8 +317,8 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      * @since 1.6
      */
-    public NavigableSet<E> navigableHeadSet(E toElement, boolean inclusive) {
-	return new TreeSet<E>(m.navigableHeadMap(toElement, inclusive));
+    public NavigableSet<E> headSet(E toElement, boolean inclusive) {
+	return new TreeSet<E>(m.headMap(toElement, inclusive));
     }
 
     /**
@@ -329,8 +329,8 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      * @since 1.6
      */
-    public NavigableSet<E> navigableTailSet(E fromElement, boolean inclusive) {
-	return new TreeSet<E>(m.navigableTailMap(fromElement, inclusive));
+    public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
+	return new TreeSet<E>(m.tailMap(fromElement, inclusive));
     }
 
     /**
@@ -341,7 +341,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> subSet(E fromElement, E toElement) {
-	return navigableSubSet(fromElement, true, toElement, false);
+	return subSet(fromElement, true, toElement, false);
     }
 
     /**
@@ -352,7 +352,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> headSet(E toElement) {
-	return navigableHeadSet(toElement, false);
+	return headSet(toElement, false);
     }
 
     /**
@@ -363,7 +363,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> tailSet(E fromElement) {
-	return navigableTailSet(fromElement, true);
+	return tailSet(fromElement, true);
     }
 
     public Comparator<? super E> comparator() {

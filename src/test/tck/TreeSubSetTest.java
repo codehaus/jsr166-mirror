@@ -41,7 +41,7 @@ public class TreeSubSetTest extends JSR166TestCase {
 	    assertTrue(q.add(new Integer(i)));
         assertTrue(q.add(new Integer(-n)));
         assertTrue(q.add(new Integer(n)));
-        NavigableSet s = q.navigableSubSet(new Integer(0), true, new Integer(n), false);
+        NavigableSet s = q.subSet(new Integer(0), true, new Integer(n), false);
         assertFalse(s.isEmpty());
 	assertEquals(n, s.size());
         return s;
@@ -60,7 +60,20 @@ public class TreeSubSetTest extends JSR166TestCase {
         q.add(five);
         q.add(zero);
         q.add(seven);
-        NavigableSet s = q.navigableSubSet(one, true, seven, false);
+        NavigableSet s = q.subSet(one, true, seven, false);
+	assertEquals(5, s.size());
+        return s;
+    }
+
+    private NavigableSet dset5() {
+        TreeSet q = new TreeSet();
+        assertTrue(q.isEmpty());
+        q.add(m1);
+        q.add(m2);
+        q.add(m3);
+        q.add(m4);
+        q.add(m5);
+        NavigableSet s = q.descendingSet();
 	assertEquals(5, s.size());
         return s;
     }
@@ -68,7 +81,13 @@ public class TreeSubSetTest extends JSR166TestCase {
     private static NavigableSet set0() {   
 	TreeSet set = new TreeSet();
         assertTrue(set.isEmpty());
-        return set.navigableTailSet(m1, false);
+        return set.tailSet(m1, false);
+    }
+
+    private static NavigableSet dset0() {   
+	TreeSet set = new TreeSet();
+        assertTrue(set.isEmpty());
+        return set;
     }
  
     /**
@@ -606,6 +625,513 @@ public class TreeSubSetTest extends JSR166TestCase {
         assertEquals(four, ssm.first());
         assertEquals(five, ssm.last());
         assertTrue(ssm.remove(four));
+        assertEquals(1, ssm.size());
+        assertEquals(3, sm.size());
+        assertEquals(4, set.size());
+    }
+
+    /**
+     * size changes when elements added and removed
+     */
+    public void testDescendingSize() {
+        NavigableSet q = populatedSet(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(SIZE-i, q.size());
+            q.pollFirst();
+        }
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, q.size());
+            q.add(new Integer(i));
+        }
+    }
+
+    /**
+     * Add of comparable element succeeds
+     */
+    public void testDescendingAdd() {
+        NavigableSet q = dset0();
+        assertTrue(q.add(m6));
+    }
+
+    /**
+     * Add of duplicate element fails
+     */
+    public void testDescendingAddDup() {
+        NavigableSet q = dset0();
+        assertTrue(q.add(m6));
+        assertFalse(q.add(m6));
+    }
+
+    /**
+     * Add of non-Comparable throws CCE
+     */
+    public void testDescendingAddNonComparable() {
+        try {
+            NavigableSet q = dset0();
+            q.add(new Object());
+            q.add(new Object());
+            q.add(new Object());
+            shouldThrow();
+        }
+        catch(ClassCastException success) {}
+    }
+
+
+    /**
+     * addAll(null) throws NPE
+     */
+    public void testDescendingAddAll1() {
+        try {
+            NavigableSet q = dset0();
+            q.addAll(null);
+            shouldThrow();
+        }
+        catch (NullPointerException success) {}
+    }
+    /**
+     * addAll of a collection with null elements throws NPE
+     */
+    public void testDescendingAddAll2() {
+        try {
+            NavigableSet q = dset0();
+            Integer[] ints = new Integer[SIZE];
+            q.addAll(Arrays.asList(ints));
+            shouldThrow();
+        }
+        catch (NullPointerException success) {}
+    }
+    /**
+     * addAll of a collection with any null elements throws NPE after
+     * possibly adding some elements
+     */
+    public void testDescendingAddAll3() {
+        try {
+            NavigableSet q = dset0();
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
+                ints[i] = new Integer(i+SIZE);
+            q.addAll(Arrays.asList(ints));
+            shouldThrow();
+        }
+        catch (NullPointerException success) {}
+    }
+
+    /**
+     * Set contains all elements of successful addAll
+     */
+    public void testDescendingAddAll5() {
+        try {
+            Integer[] empty = new Integer[0];
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE; ++i)
+                ints[i] = new Integer(SIZE-1- i);
+            NavigableSet q = dset0();
+            assertFalse(q.addAll(Arrays.asList(empty)));
+            assertTrue(q.addAll(Arrays.asList(ints)));
+            for (int i = 0; i < SIZE; ++i)
+                assertEquals(new Integer(i), q.pollFirst());
+        }
+        finally {}
+    }
+
+    /**
+     * poll succeeds unless empty
+     */
+    public void testDescendingPoll() {
+        NavigableSet q = populatedSet(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, ((Integer)q.pollFirst()).intValue());
+        }
+	assertNull(q.pollFirst());
+    }
+
+    /**
+     * remove(x) removes x and returns true if present
+     */
+    public void testDescendingRemoveElement() {
+        NavigableSet q = populatedSet(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
+            assertTrue(q.remove(new Integer(i)));
+        }
+        for (int i = 0; i < SIZE; i+=2) {
+            assertTrue(q.remove(new Integer(i)));
+            assertFalse(q.remove(new Integer(i+1)));
+        }
+        assertTrue(q.isEmpty());
+    }
+	
+    /**
+     * contains(x) reports true when elements added but not yet removed
+     */
+    public void testDescendingContains() {
+        NavigableSet q = populatedSet(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertTrue(q.contains(new Integer(i)));
+            q.pollFirst();
+            assertFalse(q.contains(new Integer(i)));
+        }
+    }
+
+    /**
+     * clear removes all elements
+     */
+    public void testDescendingClear() {
+        NavigableSet q = populatedSet(SIZE);
+        q.clear();
+        assertTrue(q.isEmpty());
+        assertEquals(0, q.size());
+        q.add(new Integer(1));
+        assertFalse(q.isEmpty());
+        q.clear();
+        assertTrue(q.isEmpty());
+    }
+
+    /**
+     * containsAll(c) is true when c contains a subset of elements
+     */
+    public void testDescendingContainsAll() {
+        NavigableSet q = populatedSet(SIZE);
+        NavigableSet p = dset0();
+        for (int i = 0; i < SIZE; ++i) {
+            assertTrue(q.containsAll(p));
+            assertFalse(p.containsAll(q));
+            p.add(new Integer(i));
+        }
+        assertTrue(p.containsAll(q));
+    }
+
+    /**
+     * retainAll(c) retains only those elements of c and reports true if changed
+     */
+    public void testDescendingRetainAll() {
+        NavigableSet q = populatedSet(SIZE);
+        NavigableSet p = populatedSet(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            boolean changed = q.retainAll(p);
+            if (i == 0)
+                assertFalse(changed);
+            else
+                assertTrue(changed);
+
+            assertTrue(q.containsAll(p));
+            assertEquals(SIZE-i, q.size());
+            p.pollFirst();
+        }
+    }
+
+    /**
+     * removeAll(c) removes only those elements of c and reports true if changed
+     */
+    public void testDescendingRemoveAll() {
+        for (int i = 1; i < SIZE; ++i) {
+            NavigableSet q = populatedSet(SIZE);
+            NavigableSet p = populatedSet(i);
+            assertTrue(q.removeAll(p));
+            assertEquals(SIZE-i, q.size());
+            for (int j = 0; j < i; ++j) {
+                Integer I = (Integer)(p.pollFirst());
+                assertFalse(q.contains(I));
+            }
+        }
+    }
+
+    
+
+    /**
+     * lower returns preceding element
+     */
+    public void testDescendingLower() {
+        NavigableSet q = dset5();
+        Object e1 = q.lower(m3);
+        assertEquals(m2, e1);
+
+        Object e2 = q.lower(m6);
+        assertEquals(m5, e2);
+
+        Object e3 = q.lower(m1);
+        assertNull(e3);
+
+        Object e4 = q.lower(zero);
+        assertNull(e4);
+
+    }
+
+    /**
+     * higher returns next element
+     */
+    public void testDescendingHigher() {
+        NavigableSet q = dset5();
+        Object e1 = q.higher(m3);
+        assertEquals(m4, e1);
+
+        Object e2 = q.higher(zero);
+        assertEquals(m1, e2);
+
+        Object e3 = q.higher(m5);
+        assertNull(e3);
+
+        Object e4 = q.higher(m6);
+        assertNull(e4);
+
+    }
+
+    /**
+     * floor returns preceding element
+     */
+    public void testDescendingFloor() {
+        NavigableSet q = dset5();
+        Object e1 = q.floor(m3);
+        assertEquals(m3, e1);
+
+        Object e2 = q.floor(m6);
+        assertEquals(m5, e2);
+
+        Object e3 = q.floor(m1);
+        assertEquals(m1, e3);
+
+        Object e4 = q.floor(zero);
+        assertNull(e4);
+
+    }
+
+    /**
+     * ceiling returns next element
+     */
+    public void testDescendingCeiling() {
+        NavigableSet q = dset5();
+        Object e1 = q.ceiling(m3);
+        assertEquals(m3, e1);
+
+        Object e2 = q.ceiling(zero);
+        assertEquals(m1, e2);
+
+        Object e3 = q.ceiling(m5);
+        assertEquals(m5, e3);
+
+        Object e4 = q.ceiling(m6);
+        assertNull(e4);
+
+    }
+
+    /**
+     * toArray contains all elements
+     */
+    public void testDescendingToArray() {
+        NavigableSet q = populatedSet(SIZE);
+	Object[] o = q.toArray();
+        Arrays.sort(o);
+	for(int i = 0; i < o.length; i++)
+	    assertEquals(o[i], q.pollFirst());
+    }
+
+    /**
+     * toArray(a) contains all elements
+     */
+    public void testDescendingToArray2() {
+        NavigableSet q = populatedSet(SIZE);
+	Integer[] ints = new Integer[SIZE];
+	ints = (Integer[])q.toArray(ints);
+        Arrays.sort(ints);
+        for(int i = 0; i < ints.length; i++)
+            assertEquals(ints[i], q.pollFirst());
+    }
+    
+    /**
+     * iterator iterates through all elements
+     */
+    public void testDescendingIterator() {
+        NavigableSet q = populatedSet(SIZE);
+        int i = 0;
+	Iterator it = q.iterator();
+        while(it.hasNext()) {
+            assertTrue(q.contains(it.next()));
+            ++i;
+        }
+        assertEquals(i, SIZE);
+    }
+
+    /**
+     * iterator of empty set has no elements
+     */
+    public void testDescendingEmptyIterator() {
+        NavigableSet q = dset0();
+        int i = 0;
+	Iterator it = q.iterator();
+        while(it.hasNext()) {
+            assertTrue(q.contains(it.next()));
+            ++i;
+        }
+        assertEquals(i, 0);
+    }
+
+    /**
+     * iterator.remove removes current element
+     */
+    public void testDescendingIteratorRemove () {
+        final NavigableSet q = dset0();
+        q.add(new Integer(2));
+        q.add(new Integer(1));
+        q.add(new Integer(3));
+
+        Iterator it = q.iterator();
+        it.next();
+        it.remove();
+
+        it = q.iterator();
+        assertEquals(it.next(), new Integer(2));
+        assertEquals(it.next(), new Integer(3));
+        assertFalse(it.hasNext());
+    }
+
+
+    /**
+     * toString contains toStrings of elements
+     */
+    public void testDescendingToString() {
+        NavigableSet q = populatedSet(SIZE);
+        String s = q.toString();
+        for (int i = 0; i < SIZE; ++i) {
+            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+        }
+    }        
+
+    /**
+     * A deserialized serialized set has same elements 
+     */
+    public void testDescendingSerialization() {
+        NavigableSet q = populatedSet(SIZE);
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(q);
+            out.close();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            NavigableSet r = (NavigableSet)in.readObject();
+            assertEquals(q.size(), r.size());
+            while (!q.isEmpty()) 
+                assertEquals(q.pollFirst(), r.pollFirst());
+        } catch(Exception e){
+            e.printStackTrace();
+            unexpectedException();
+        }
+    }
+
+    /**
+     * subSet returns set with keys in requested range
+     */
+    public void testDescendingSubSetContents() {
+        NavigableSet set = dset5();
+        SortedSet sm = set.subSet(m2, m4);
+        assertEquals(m2, sm.first());
+        assertEquals(m3, sm.last());
+        assertEquals(2, sm.size());
+        assertFalse(sm.contains(m1));
+        assertTrue(sm.contains(m2));
+        assertTrue(sm.contains(m3));
+        assertFalse(sm.contains(m4));
+        assertFalse(sm.contains(m5));
+        Iterator i = sm.iterator();
+        Object k;
+        k = (Integer)(i.next());
+        assertEquals(m2, k);
+        k = (Integer)(i.next());
+        assertEquals(m3, k);
+        assertFalse(i.hasNext());
+        Iterator j = sm.iterator();
+        j.next();
+        j.remove();
+        assertFalse(set.contains(m2));
+        assertEquals(4, set.size());
+        assertEquals(1, sm.size());
+        assertEquals(m3, sm.first());
+        assertEquals(m3, sm.last());
+        assertTrue(sm.remove(m3));
+        assertTrue(sm.isEmpty());
+        assertEquals(3, set.size());
+    }
+
+    public void testDescendingSubSetContents2() {
+        NavigableSet set = dset5();
+        SortedSet sm = set.subSet(m2, m3);
+        assertEquals(1, sm.size());
+        assertEquals(m2, sm.first());
+        assertEquals(m2, sm.last());
+        assertFalse(sm.contains(m1));
+        assertTrue(sm.contains(m2));
+        assertFalse(sm.contains(m3));
+        assertFalse(sm.contains(m4));
+        assertFalse(sm.contains(m5));
+        Iterator i = sm.iterator();
+        Object k;
+        k = (Integer)(i.next());
+        assertEquals(m2, k);
+        assertFalse(i.hasNext());
+        Iterator j = sm.iterator();
+        j.next();
+        j.remove();
+        assertFalse(set.contains(m2));
+        assertEquals(4, set.size());
+        assertEquals(0, sm.size());
+        assertTrue(sm.isEmpty());
+        assertFalse(sm.remove(m3));
+        assertEquals(4, set.size());
+    }
+
+    /**
+     * headSet returns set with keys in requested range
+     */
+    public void testDescendingHeadSetContents() {
+        NavigableSet set = dset5();
+        SortedSet sm = set.headSet(m4);
+        assertTrue(sm.contains(m1));
+        assertTrue(sm.contains(m2));
+        assertTrue(sm.contains(m3));
+        assertFalse(sm.contains(m4));
+        assertFalse(sm.contains(m5));
+        Iterator i = sm.iterator();
+        Object k;
+        k = (Integer)(i.next());
+        assertEquals(m1, k);
+        k = (Integer)(i.next());
+        assertEquals(m2, k);
+        k = (Integer)(i.next());
+        assertEquals(m3, k);
+        assertFalse(i.hasNext());
+        sm.clear();
+        assertTrue(sm.isEmpty());
+        assertEquals(2, set.size());
+        assertEquals(m4, set.first());
+    }
+
+    /**
+     * tailSet returns set with keys in requested range
+     */
+    public void testDescendingTailSetContents() {
+        NavigableSet set = dset5();
+        SortedSet sm = set.tailSet(m2);
+        assertFalse(sm.contains(m1));
+        assertTrue(sm.contains(m2));
+        assertTrue(sm.contains(m3));
+        assertTrue(sm.contains(m4));
+        assertTrue(sm.contains(m5));
+        Iterator i = sm.iterator();
+        Object k;
+        k = (Integer)(i.next());
+        assertEquals(m2, k);
+        k = (Integer)(i.next());
+        assertEquals(m3, k);
+        k = (Integer)(i.next());
+        assertEquals(m4, k);
+        k = (Integer)(i.next());
+        assertEquals(m5, k);
+        assertFalse(i.hasNext());
+
+        SortedSet ssm = sm.tailSet(m4);
+        assertEquals(m4, ssm.first());
+        assertEquals(m5, ssm.last());
+        assertTrue(ssm.remove(m4));
         assertEquals(1, ssm.size());
         assertEquals(3, sm.size());
         assertEquals(4, set.size());

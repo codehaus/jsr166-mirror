@@ -28,15 +28,15 @@ public interface ConcurrentNavigableMap<K,V>
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    ConcurrentNavigableMap<K,V> navigableSubMap(K fromKey, boolean fromInclusive,
-                                                K toKey,   boolean toInclusive);
+    ConcurrentNavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
+                                       K toKey,   boolean toInclusive);
 
     /**
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    ConcurrentNavigableMap<K,V> navigableHeadMap(K toKey, boolean inclusive);
+    ConcurrentNavigableMap<K,V> headMap(K toKey, boolean inclusive);
 
 
     /**
@@ -44,7 +44,7 @@ public interface ConcurrentNavigableMap<K,V>
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    ConcurrentNavigableMap<K,V> navigableTailMap(K fromKey, boolean inclusive);
+    ConcurrentNavigableMap<K,V> tailMap(K fromKey, boolean inclusive);
 
     /**
      * @throws ClassCastException       {@inheritDoc}

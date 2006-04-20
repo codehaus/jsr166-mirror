@@ -705,7 +705,7 @@ public class TreeSetTest extends JSR166TestCase {
         check(set,                 0, setSize - 1, true);
         check(set.descendingSet(), 0, setSize - 1, false);
 
-        bashSubSet(set.navigableSubSet(0, true, setSize, false),
+        bashSubSet(set.subSet(0, true, setSize, false),
                    0, setSize - 1, true);
     }
 
@@ -812,7 +812,7 @@ public class TreeSetTest extends JSR166TestCase {
 
         // headSet - pick direction and endpoint inclusion randomly
         boolean incl = rnd.nextBoolean();
-        NavigableSet<Integer> hm = set.navigableHeadSet(midPoint, incl);
+        NavigableSet<Integer> hm = set.headSet(midPoint, incl);
         if (ascending) {
             if (rnd.nextBoolean())
                 bashSubSet(hm, min, midPoint - (incl ? 0 : 1), true);
@@ -829,7 +829,7 @@ public class TreeSetTest extends JSR166TestCase {
 
         // tailSet - pick direction and endpoint inclusion randomly
         incl = rnd.nextBoolean();
-        NavigableSet<Integer> tm = set.navigableTailSet(midPoint,incl);
+        NavigableSet<Integer> tm = set.tailSet(midPoint,incl);
         if (ascending) {
             if (rnd.nextBoolean())
                 bashSubSet(tm, midPoint + (incl ? 0 : 1), max, true);
@@ -854,7 +854,7 @@ public class TreeSetTest extends JSR166TestCase {
         boolean lowIncl = rnd.nextBoolean();
         boolean highIncl = rnd.nextBoolean();
         if (ascending) {
-            NavigableSet<Integer> sm = set.navigableSubSet(
+            NavigableSet<Integer> sm = set.subSet(
                 endpoints[0], lowIncl, endpoints[1], highIncl);
             if (rnd.nextBoolean())
                 bashSubSet(sm, endpoints[0] + (lowIncl ? 0 : 1),
@@ -863,7 +863,7 @@ public class TreeSetTest extends JSR166TestCase {
                 bashSubSet(sm.descendingSet(), endpoints[0] + (lowIncl ? 0 : 1),
                            endpoints[1] - (highIncl ? 0 : 1), false);
         } else {
-            NavigableSet<Integer> sm = set.navigableSubSet(
+            NavigableSet<Integer> sm = set.subSet(
                 endpoints[1], highIncl, endpoints[0], lowIncl);
             if (rnd.nextBoolean())
                 bashSubSet(sm, endpoints[0] + (lowIncl ? 0 : 1),

@@ -346,6 +346,7 @@ public class JSR166TestCase extends TestCase {
     static final Integer m3  = new Integer(-3);
     static final Integer m4 = new Integer(-4);
     static final Integer m5 = new Integer(-5);
+    static final Integer m6 = new Integer(-6);
     static final Integer m10 = new Integer(-10);
 
 

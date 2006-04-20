@@ -43,7 +43,7 @@ import java.lang.reflect.Array;
  *
  * @author  Josh Bloch
  * @author  Neal Gafter
- * @version %I%, %G%
+ * @version 1.104, 03/21/06
  * @see	    Collection
  * @see	    Set
  * @see	    List

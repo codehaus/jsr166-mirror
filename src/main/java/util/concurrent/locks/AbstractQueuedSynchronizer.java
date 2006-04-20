@@ -60,13 +60,13 @@ import sun.misc.Unsafe;
  * behavior of {@link ConditionObject} depends of course on the
  * semantics of its synchronizer implementation.
  *
- * <p> This class provides inspection, instrumentation, and monitoring
+ * <p>This class provides inspection, instrumentation, and monitoring
  * methods for the internal queue, as well as similar methods for
  * condition objects. These can be exported as desired into classes
  * using an <tt>AbstractQueuedSynchronizer</tt> for their
  * synchronization mechanics.
  *
- * <p> Serialization of this class stores only the underlying atomic
+ * <p>Serialization of this class stores only the underlying atomic
  * integer maintaining state, so deserialized objects have empty
  * thread queues. Typical subclasses requiring serializability will
  * define a <tt>readObject</tt> method that restores this to a known
@@ -74,7 +74,7 @@ import sun.misc.Unsafe;
  *
  * <h3>Usage</h3>
  *
- * <p> To use this class as the basis of a synchronizer, redefine the
+ * <p>To use this class as the basis of a synchronizer, redefine the
  * following methods, as applicable, by inspecting and/or modifying
  * the synchronization state using {@link #getState}, {@link
  * #setState} and/or {@link #compareAndSetState}:
@@ -100,7 +100,7 @@ import sun.misc.Unsafe;
  * -- this enables monitoring and diagnostic tools to assist users in
  * determining which threads hold locks.
  *
- * <p> Even though this class is based on an internal FIFO queue, it
+ * <p>Even though this class is based on an internal FIFO queue, it
  * does not automatically enforce FIFO acquisition policies.  The core
  * of exclusive synchronization takes the form:
  *
@@ -118,7 +118,7 @@ import sun.misc.Unsafe;
  *
  * (Shared mode is similar but may involve cascading signals.)
  *
- * <p> Because checks in acquire are invoked before enqueuing, a newly
+ * <p>Because checks in acquire are invoked before enqueuing, a newly
  * acquiring thread may <em>barge</em> ahead of others that are
  * blocked and queued. However, you can, if desired, define
  * <tt>tryAcquire</tt> and/or <tt>tryAcquireShared</tt> to disable
@@ -133,7 +133,7 @@ import sun.misc.Unsafe;
  * non-null and not the current thread.  Further variations are
  * possible.
  *
- * <p> Throughput and scalability are generally highest for the
+ * <p>Throughput and scalability are generally highest for the
  * default barging (also known as <em>greedy</em>,
  * <em>renouncement</em>, and <em>convoy-avoidance</em>) strategy.
  * While this is not guaranteed to be fair or starvation-free, earlier
@@ -150,7 +150,7 @@ import sun.misc.Unsafe;
  * and/or {@link #hasQueuedThreads} to only do so if the synchronizer
  * is likely not to be contended.
  *
- * <p> This class provides an efficient and scalable basis for
+ * <p>This class provides an efficient and scalable basis for
  * synchronization in part by specializing its range of use to
  * synchronizers that can rely on <tt>int</tt> state, acquire, and
  * release parameters, and an internal FIFO wait queue. When this does
@@ -228,7 +228,7 @@ import sun.misc.Unsafe;
  * }
  * </pre>
  *
- * <p> Here is a latch class that is like a {@link CountDownLatch}
+ * <p>Here is a latch class that is like a {@link CountDownLatch}
  * except that it only requires a single <tt>signal</tt> to
  * fire. Because a latch is non-exclusive, it uses the <tt>shared</tt>
  * acquire and release methods.
@@ -276,7 +276,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Wait queue node class.
      *
-     * <p> The wait queue is a variant of a "CLH" (Craig, Landin, and
+     * <p>The wait queue is a variant of a "CLH" (Craig, Landin, and
      * Hagersten) lock queue. CLH locks are normally used for
      * spinlocks.  We instead use them for blocking synchronizers, but
      * use the same basic tactic of holding some of the control
@@ -514,10 +514,11 @@ public abstract class AbstractQueuedSynchronizer
      * value if the current state value equals the expected value.
      * This operation has memory semantics of a <tt>volatile</tt> read
      * and write.
+     *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful. False return indicates that
-     * the actual value was not equal to the expected value.
+     * @return true if successful. False return indicates that the actual
+     *         value was not equal to the expected value.
      */
     protected final boolean compareAndSetState(int expect, int update) {
         // See below for intrinsics setup to support this
@@ -562,6 +563,7 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Creates and enqueues node for given thread and mode.
+     *
      * @param current the thread
      * @param mode Node.EXCLUSIVE for exclusive, Node.SHARED for shared
      * @return the new node
@@ -585,6 +587,7 @@ public abstract class AbstractQueuedSynchronizer
      * Sets head of queue to be node, thus dequeuing. Called only by
      * acquire methods.  Also nulls out unused fields for sake of GC
      * and to suppress unnecessary signals and traversals.
+     *
      * @param node the node
      */
     private void setHead(Node node) {
@@ -595,6 +598,7 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Wakes up node's successor, if one exists.
+     *
      * @param node the node
      */
     private void unparkSuccessor(Node node) {
@@ -624,6 +628,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Sets head of queue, and checks if successor may be waiting
      * in shared mode, if so propagating if propagate > 0.
+     *
      * @param pred the node holding waitStatus for node
      * @param node the node
      * @param propagate the return value from a tryAcquireShared
@@ -645,6 +650,7 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Cancels an ongoing attempt to acquire.
+     *
      * @param node the node
      */
     private void cancelAcquire(Node node) {
@@ -660,9 +666,10 @@ public abstract class AbstractQueuedSynchronizer
      * Checks and updates status for a node that failed to acquire.
      * Returns true if thread should block. This is the main signal
      * control in all acquire loops.  Requires that pred == node.prev
+     *
      * @param pred node's predecessor holding status
      * @param node the node
-     * @return true if thread should block
+     * @return {@code true} if thread should block
      */
     private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
         int s = pred.waitStatus;
@@ -697,7 +704,8 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Convenience method to park and then check if interrupted
-     * @return true if interrupted
+     *
+     * @return {@code true} if interrupted
      */
     private final boolean parkAndCheckInterrupt() {
         LockSupport.park(this);
@@ -716,9 +724,10 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Acquires in exclusive uninterruptible mode for thread already in
      * queue. Used by condition wait methods as well as acquire.
+     *
      * @param node the node
      * @param arg the acquire argument
-     * @return true if interrupted while waiting
+     * @return {@code true} if interrupted while waiting
      */
     final boolean acquireQueued(final Node node, int arg) {
         try {
@@ -770,9 +779,10 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Acquires in exclusive timed mode.
+     *
      * @param arg the acquire argument
      * @param nanosTimeout max wait time
-     * @return true if acquired
+     * @return {@code true} if acquired
      */
     private boolean doAcquireNanos(int arg, long nanosTimeout)
         throws InterruptedException {
@@ -871,9 +881,10 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Acquires in shared timed mode.
+     *
      * @param arg the acquire argument
      * @param nanosTimeout max wait time
-     * @return true if acquired
+     * @return {@code true} if acquired
      */
     private boolean doAcquireSharedNanos(int arg, long nanosTimeout)
         throws InterruptedException {
@@ -929,17 +940,16 @@ public abstract class AbstractQueuedSynchronizer
      * <p>The default
      * implementation throws {@link UnsupportedOperationException}.
      *
-     * @param arg the acquire argument. This value
-     * is always the one passed to an acquire method,
-     * or is the value saved on entry to a condition wait.
-     * The value is otherwise uninterpreted and can represent anything
-     * you like.
-     * @return true if successful. Upon success, this object has been
-     * acquired.
-     * @throws IllegalMonitorStateException if acquiring would place
-     * this synchronizer in an illegal state. This exception must be
-     * thrown in a consistent fashion for synchronization to work
-     * correctly.
+     * @param arg the acquire argument. This value is always the one
+     *        passed to an acquire method, or is the value saved on entry
+     *        to a condition wait.  The value is otherwise uninterpreted
+     *        and can represent anything you like.
+     * @return {@code true} if successful. Upon success, this object has
+     *         been acquired.
+     * @throws IllegalMonitorStateException if acquiring would place this
+     *         synchronizer in an illegal state. This exception must be
+     *         thrown in a consistent fashion for synchronization to work
+     *         correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
     protected boolean tryAcquire(int arg) {
@@ -948,23 +958,24 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Attempts to set the state to reflect a release in exclusive
-     * mode.  <p>This method is always invoked by the thread
-     * performing release.
+     * mode.
+     *
+     * <p>This method is always invoked by the thread performing release.
      *
      * <p>The default implementation throws
      * {@link UnsupportedOperationException}.
-     * @param arg the release argument. This value
-     * is always the one passed to a release method,
-     * or the current state value upon entry to a condition wait.
-     * The value is otherwise uninterpreted and can represent anything
-     * you like.
-     * @return <tt>true</tt> if this object is now in a fully released state,
-     * so that any waiting threads may attempt to acquire; and <tt>false</tt>
-     * otherwise.
-     * @throws IllegalMonitorStateException if releasing would place
-     * this synchronizer in an illegal state. This exception must be
-     * thrown in a consistent fashion for synchronization to work
-     * correctly.
+     *
+     * @param arg the release argument. This value is always the one
+     *        passed to a release method, or the current state value upon
+     *        entry to a condition wait.  The value is otherwise
+     *        uninterpreted and can represent anything you like.
+     * @return {@code true} if this object is now in a fully released
+     *         state, so that any waiting threads may attempt to acquire;
+     *         and {@code false} otherwise.
+     * @throws IllegalMonitorStateException if releasing would place this
+     *         synchronizer in an illegal state. This exception must be
+     *         thrown in a consistent fashion for synchronization to work
+     *         correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
     protected boolean tryRelease(int arg) {
@@ -984,24 +995,23 @@ public abstract class AbstractQueuedSynchronizer
      * <p>The default implementation throws {@link
      * UnsupportedOperationException}.
      *
-     * @param arg the acquire argument. This value
-     * is always the one passed to an acquire method,
-     * or is the value saved on entry to a condition wait.
-     * The value is otherwise uninterpreted and can represent anything
-     * you like.
-     * @return a negative value on failure; zero if acquisition in
-     * shared mode succeeded but no subsequent shared-mode acquire can
-     * succeed; and a positive value if acquisition in shared mode
-     * succeeded and subsequent shared-mode acquires might also
-     * succeed, in which case a subsequent waiting thread must check
-     * availability. (Support for three different return values
-     * enables this method to be used in contexts where acquires only
-     * sometimes act exclusively.)  Upon success, this object has been
-     * acquired.
-     * @throws IllegalMonitorStateException if acquiring would place
-     * this synchronizer in an illegal state. This exception must be
-     * thrown in a consistent fashion for synchronization to work
-     * correctly.
+     * @param arg the acquire argument. This value is always the one
+     *        passed to an acquire method, or is the value saved on entry
+     *        to a condition wait.  The value is otherwise uninterpreted
+     *        and can represent anything you like.
+     * @return a negative value on failure; zero if acquisition in shared
+     *         mode succeeded but no subsequent shared-mode acquire can
+     *         succeed; and a positive value if acquisition in shared
+     *         mode succeeded and subsequent shared-mode acquires might
+     *         also succeed, in which case a subsequent waiting thread
+     *         must check availability. (Support for three different
+     *         return values enables this method to be used in contexts
+     *         where acquires only sometimes act exclusively.)  Upon
+     *         success, this object has been acquired.
+     * @throws IllegalMonitorStateException if acquiring would place this
+     *         synchronizer in an illegal state. This exception must be
+     *         thrown in a consistent fashion for synchronization to work
+     *         correctly.
      * @throws UnsupportedOperationException if shared mode is not supported
      */
     protected int tryAcquireShared(int arg) {
@@ -1010,21 +1020,23 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Attempts to set the state to reflect a release in shared mode.
+     *
      * <p>This method is always invoked by the thread performing release.
-     * <p> The default implementation throws
+     *
+     * <p>The default implementation throws
      * {@link UnsupportedOperationException}.
-     * @param arg the release argument. This value
-     * is always the one passed to a release method,
-     * or the current state value upon entry to a condition wait.
-     * The value is otherwise uninterpreted and can represent anything
-     * you like.
-     * @return <tt>true</tt> if this release of shared mode may permit
-     * a waiting acquire (shared or exclusive) to succeed; and
-     * <tt>false</tt> otherwise.
-     * @throws IllegalMonitorStateException if releasing would place
-     * this synchronizer in an illegal state. This exception must be
-     * thrown in a consistent fashion for synchronization to work
-     * correctly.
+     *
+     * @param arg the release argument. This value is always the one
+     *        passed to a release method, or the current state value upon
+     *        entry to a condition wait.  The value is otherwise
+     *        uninterpreted and can represent anything you like.
+     * @return {@code true} if this release of shared mode may permit a
+     *         waiting acquire (shared or exclusive) to succeed; and
+     *         {@code false} otherwise
+     * @throws IllegalMonitorStateException if releasing would place this
+     *         synchronizer in an illegal state. This exception must be
+     *         thrown in a consistent fashion for synchronization to work
+     *         correctly.
      * @throws UnsupportedOperationException if shared mode is not supported
      */
     protected boolean tryReleaseShared(int arg) {
@@ -1032,17 +1044,18 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Returns true if synchronization is held exclusively with respect
-     * to the current (calling) thread.  This method is invoked
+     * Returns {@code true} if synchronization is held exclusively with
+     * respect to the current (calling) thread.  This method is invoked
      * upon each call to a non-waiting {@link ConditionObject} method.
      * (Waiting methods instead invoke {@link #release}.)
+     *
      * <p>The default implementation throws {@link
      * UnsupportedOperationException}. This method is invoked
      * internally only within {@link ConditionObject} methods, so need
      * not be defined if conditions are not used.
      *
-     * @return true if synchronization is held exclusively;
-     * else false
+     * @return {@code true} if synchronization is held exclusively;
+     *         {@code false} otherwise
      * @throws UnsupportedOperationException if conditions are not supported
      */
     protected boolean isHeldExclusively() {
@@ -1056,10 +1069,10 @@ public abstract class AbstractQueuedSynchronizer
      * repeatedly blocking and unblocking, invoking {@link
      * #tryAcquire} until success.  This method can be used
      * to implement method {@link Lock#lock}.
-     * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquire} but is
-     * otherwise uninterpreted and can represent anything
-     * you like.
+     *
+     * @param arg the acquire argument.  This value is conveyed to
+     *        {@link #tryAcquire} but is otherwise uninterpreted and
+     *        can represent anything you like.
      */
     public final void acquire(int arg) {
         if (!tryAcquire(arg) &&
@@ -1075,10 +1088,10 @@ public abstract class AbstractQueuedSynchronizer
      * blocking and unblocking, invoking {@link #tryAcquire}
      * until success or the thread is interrupted.  This method can be
      * used to implement method {@link Lock#lockInterruptibly}.
-     * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquire} but is
-     * otherwise uninterpreted and can represent anything
-     * you like.
+     *
+     * @param arg the acquire argument.  This value is conveyed to
+     *        {@link #tryAcquire} but is otherwise uninterpreted and
+     *        can represent anything you like.
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireInterruptibly(int arg) throws InterruptedException {
@@ -1097,12 +1110,12 @@ public abstract class AbstractQueuedSynchronizer
      * {@link #tryAcquire} until success or the thread is interrupted
      * or the timeout elapses.  This method can be used to implement
      * method {@link Lock#tryLock(long, TimeUnit)}.
-     * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquire} but is
-     * otherwise uninterpreted and can represent anything
-     * you like.
+     *
+     * @param arg the acquire argument.  This value is conveyed to
+     *        {@link #tryAcquire} but is otherwise uninterpreted and
+     *        can represent anything you like.
      * @param nanosTimeout the maximum number of nanoseconds to wait
-     * @return true if acquired; false if timed out
+     * @return {@code true} if acquired; {@code false} if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
     public final boolean tryAcquireNanos(int arg, long nanosTimeout) throws InterruptedException {
@@ -1116,10 +1129,10 @@ public abstract class AbstractQueuedSynchronizer
      * Releases in exclusive mode.  Implemented by unblocking one or
      * more threads if {@link #tryRelease} returns true.
      * This method can be used to implement method {@link Lock#unlock}.
-     * @param arg the release argument.
-     * This value is conveyed to {@link #tryRelease} but is
-     * otherwise uninterpreted and can represent anything
-     * you like.
+     *
+     * @param arg the release argument.  This value is conveyed to
+     *        {@link #tryRelease} but is otherwise uninterpreted and
+     *        can represent anything you like.
      * @return the value returned from {@link #tryRelease}
      */
     public final boolean release(int arg) {
@@ -1138,10 +1151,10 @@ public abstract class AbstractQueuedSynchronizer
      * returning on success.  Otherwise the thread is queued, possibly
      * repeatedly blocking and unblocking, invoking {@link
      * #tryAcquireShared} until success.
-     * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireShared} but is
-     * otherwise uninterpreted and can represent anything
-     * you like.
+     *
+     * @param arg the acquire argument.  This value is conveyed to
+     *        {@link #tryAcquireShared} but is otherwise uninterpreted
+     *        and can represent anything you like.
      */
     public final void acquireShared(int arg) {
         if (tryAcquireShared(arg) < 0)
@@ -1176,12 +1189,12 @@ public abstract class AbstractQueuedSynchronizer
      * thread is queued, possibly repeatedly blocking and unblocking,
      * invoking {@link #tryAcquireShared} until success or the thread
      * is interrupted or the timeout elapses.
-     * @param arg the acquire argument.
-     * This value is conveyed to {@link #tryAcquireShared} but is
-     * otherwise uninterpreted and can represent anything
-     * you like.
+     *
+     * @param arg the acquire argument.  This value is conveyed to
+     *        {@link #tryAcquireShared} but is otherwise uninterpreted
+     *        and can represent anything you like.
      * @param nanosTimeout the maximum number of nanoseconds to wait
-     * @return true if acquired; false if timed out
+     * @return {@code true} if acquired; {@code false} if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
     public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
@@ -1194,10 +1207,10 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Releases in shared mode.  Implemented by unblocking one or more
      * threads if {@link #tryReleaseShared} returns true.
-     * @param arg the release argument.
-     * This value is conveyed to {@link #tryReleaseShared} but is
-     * otherwise uninterpreted and can represent anything
-     * you like.
+     *
+     * @param arg the release argument.  This value is conveyed to
+     *        {@link #tryReleaseShared} but is otherwise uninterpreted
+     *        and can represent anything you like.
      * @return the value returned from {@link #tryReleaseShared}
      */
     public final boolean releaseShared(int arg) {
@@ -1215,13 +1228,13 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Queries whether any threads are waiting to acquire. Note that
      * because cancellations due to interrupts and timeouts may occur
-     * at any time, a <tt>true</tt> return does not guarantee that any
+     * at any time, a {@code true} return does not guarantee that any
      * other thread will ever acquire.
      *
-     * <p> In this implementation, this operation returns in
+     * <p>In this implementation, this operation returns in
      * constant time.
      *
-     * @return true if there may be other threads waiting to acquire.
+     * @return {@code true} if there may be other threads waiting to acquire
      */
     public final boolean hasQueuedThreads() {
         return head != tail;
@@ -1231,10 +1244,10 @@ public abstract class AbstractQueuedSynchronizer
      * Queries whether any threads have ever contended to acquire this
      * synchronizer; that is if an acquire method has ever blocked.
      *
-     * <p> In this implementation, this operation returns in
+     * <p>In this implementation, this operation returns in
      * constant time.
      *
-     * @return true if there has ever been contention
+     * @return {@code true} if there has ever been contention
      */
     public final boolean hasContended() {
         return head != null;
@@ -1242,14 +1255,14 @@ public abstract class AbstractQueuedSynchronizer
 
     /**
      * Returns the first (longest-waiting) thread in the queue, or
-     * <tt>null</tt> if no threads are currently queued.
+     * {@code null} if no threads are currently queued.
      *
-     * <p> In this implementation, this operation normally returns in
+     * <p>In this implementation, this operation normally returns in
      * constant time, but may iterate upon contention if other threads are
      * concurrently modifying the queue.
      *
      * @return the first (longest-waiting) thread in the queue, or
-     * <tt>null</tt> if no threads are currently queued.
+     *         {@code null} if no threads are currently queued
      */
     public final Thread getFirstQueuedThread() {
         // handle only fast path, else relay
@@ -1298,12 +1311,12 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Returns true if the given thread is currently queued.
      *
-     * <p> This implementation traverses the queue to determine
+     * <p>This implementation traverses the queue to determine
      * presence of the given thread.
      *
      * @param thread the thread
-     * @return true if the given thread in on the queue
-     * @throws NullPointerException if thread null
+     * @return {@code true} if the given thread is on the queue
+     * @throws NullPointerException if the thread is null
      */
     public final boolean isQueued(Thread thread) {
         if (thread == null)
@@ -1315,9 +1328,9 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Return true if the apparent first queued thread, if one exists,
-     * is not waiting in exclusive mode. Used only as
-     * a heuristic in ReentrantReadWriteLock.
+     * Return {@code true} if the apparent first queued thread, if one
+     * exists, is not waiting in exclusive mode. Used only as a heuristic
+     * in ReentrantReadWriteLock.
      */
     final boolean apparentlyFirstQueuedIsExclusive() {
         Node h, s;
@@ -1326,7 +1339,7 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Return true if the queue is empty or if the given thread
+     * Return {@code true} if the queue is empty or if the given thread
      * is at the head of the queue. This is reliable only if
      * <tt>current</tt> is actually Thread.currentThread() of caller.
      */
@@ -1365,7 +1378,7 @@ public abstract class AbstractQueuedSynchronizer
      * monitoring system state, not for synchronization
      * control.
      *
-     * @return the estimated number of threads waiting to acquire.
+     * @return the estimated number of threads waiting to acquire
      */
     public final int getQueueLength() {
         int n = 0;
@@ -1384,6 +1397,7 @@ public abstract class AbstractQueuedSynchronizer
      * returned collection are in no particular order.  This method is
      * designed to facilitate construction of subclasses that provide
      * more extensive monitoring facilities.
+     *
      * @return the collection of threads
      */
     public final Collection<Thread> getQueuedThreads() {
@@ -1401,6 +1415,7 @@ public abstract class AbstractQueuedSynchronizer
      * acquire in exclusive mode. This has the same properties
      * as {@link #getQueuedThreads} except that it only returns
      * those threads waiting due to an exclusive acquire.
+     *
      * @return the collection of threads
      */
     public final Collection<Thread> getExclusiveQueuedThreads() {
@@ -1420,6 +1435,7 @@ public abstract class AbstractQueuedSynchronizer
      * acquire in shared mode. This has the same properties
      * as {@link #getQueuedThreads} except that it only returns
      * those threads waiting due to a shared acquire.
+     *
      * @return the collection of threads
      */
     public final Collection<Thread> getSharedQueuedThreads() {
@@ -1435,13 +1451,13 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Returns a string identifying this synchronizer, as well as its
-     * state.  The state, in brackets, includes the String &quot;State
-     * =&quot; followed by the current value of {@link #getState}, and
-     * either &quot;nonempty&quot; or &quot;empty&quot; depending on
-     * whether the queue is empty.
+     * Returns a string identifying this synchronizer, as well as its state.
+     * The state, in brackets, includes the String {@code "State ="}
+     * followed by the current value of {@link #getState}, and either
+     * {@code "nonempty"} or {@code "empty"} depending on whether the
+     * queue is empty.
      *
-     * @return a string identifying this synchronizer, as well as its state.
+     * @return a string identifying this synchronizer, as well as its state
      */
     public String toString() {
         int s = getState();
@@ -1567,9 +1583,10 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Queries whether the given ConditionObject
      * uses this synchronizer as its lock.
+     *
      * @param condition the condition
      * @return <tt>true</tt> if owned
-     * @throws NullPointerException if condition null
+     * @throws NullPointerException if the condition is null
      */
     public final boolean owns(ConditionObject condition) {
         if (condition == null)
@@ -1584,13 +1601,14 @@ public abstract class AbstractQueuedSynchronizer
      * does not guarantee that a future <tt>signal</tt> will awaken
      * any threads.  This method is designed primarily for use in
      * monitoring of the system state.
+     *
      * @param condition the condition
-     * @return <tt>true</tt> if there are any waiting threads.
+     * @return <tt>true</tt> if there are any waiting threads
      * @throws IllegalMonitorStateException if exclusive synchronization
-     * is not held
+     *         is not held
      * @throws IllegalArgumentException if the given condition is
-     * not associated with this synchronizer
-     * @throws NullPointerException if condition null
+     *         not associated with this synchronizer
+     * @throws NullPointerException if the condition is null
      */
     public final boolean hasWaiters(ConditionObject condition) {
         if (!owns(condition))
@@ -1605,13 +1623,14 @@ public abstract class AbstractQueuedSynchronizer
      * estimate serves only as an upper bound on the actual number of
      * waiters.  This method is designed for use in monitoring of the
      * system state, not for synchronization control.
+     *
      * @param condition the condition
-     * @return the estimated number of waiting threads.
+     * @return the estimated number of waiting threads
      * @throws IllegalMonitorStateException if exclusive synchronization
-     * is not held
+     *         is not held
      * @throws IllegalArgumentException if the given condition is
-     * not associated with this synchronizer
-     * @throws NullPointerException if condition null
+     *         not associated with this synchronizer
+     * @throws NullPointerException if the condition is null
      */
     public final int getWaitQueueLength(ConditionObject condition) {
         if (!owns(condition))
@@ -1626,13 +1645,14 @@ public abstract class AbstractQueuedSynchronizer
      * dynamically while constructing this result, the returned
      * collection is only a best-effort estimate. The elements of the
      * returned collection are in no particular order.
+     *
      * @param condition the condition
      * @return the collection of threads
      * @throws IllegalMonitorStateException if exclusive synchronization
-     * is not held
+     *         is not held
      * @throws IllegalArgumentException if the given condition is
-     * not associated with this synchronizer
-     * @throws NullPointerException if condition null
+     *         not associated with this synchronizer
+     * @throws NullPointerException if the condition is null
      */
     public final Collection<Thread> getWaitingThreads(ConditionObject condition) {
         if (!owns(condition))
@@ -1645,14 +1665,14 @@ public abstract class AbstractQueuedSynchronizer
      * AbstractQueuedSynchronizer} serving as the basis of a {@link
      * Lock} implementation.
      *
-     * <p> Method documentation for this class describes mechanics,
+     * <p>Method documentation for this class describes mechanics,
      * not behavioral specifications from the point of view of Lock
      * and Condition users. Exported versions of this class will in
      * general need to be accompanied by documentation describing
      * condition semantics that rely on those of the associated
      * <tt>AbstractQueuedSynchronizer</tt>.
      *
-     * <p> This class is Serializable, but all fields are transient,
+     * <p>This class is Serializable, but all fields are transient,
      * so deserialized conditions have no waiters.
      */
     public class ConditionObject implements Condition, java.io.Serializable {
@@ -1757,8 +1777,9 @@ public abstract class AbstractQueuedSynchronizer
          * Moves the longest-waiting thread, if one exists, from the
          * wait queue for this condition to the wait queue for the
          * owning lock.
+         *
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         * returns false
+         *         returns {@code false}
          */
         public final void signal() {
             if (!isHeldExclusively())
@@ -1771,8 +1792,9 @@ public abstract class AbstractQueuedSynchronizer
         /**
          * Moves all threads from the wait queue for this condition to
          * the wait queue for the owning lock.
+         *
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         * returns false
+         *         returns {@code false}
          */
         public final void signalAll() {
             if (!isHeldExclusively())
@@ -2012,8 +2034,9 @@ public abstract class AbstractQueuedSynchronizer
 
         /**
          * Returns true if this condition was created by the given
-         * synchronization object
-         * @return true if owned
+         * synchronization object.
+         *
+         * @return {@code true} if owned
          */
         final boolean isOwnedBy(AbstractQueuedSynchronizer sync) {
             return sync == AbstractQueuedSynchronizer.this;
@@ -2022,9 +2045,10 @@ public abstract class AbstractQueuedSynchronizer
         /**
          * Queries whether any threads are waiting on this condition.
          * Implements {@link AbstractQueuedSynchronizer#hasWaiters}.
-         * @return <tt>true</tt> if there are any waiting threads.
+         *
+         * @return {@code true} if there are any waiting threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         * returns false
+         *         returns {@code false}
          */
         protected final boolean hasWaiters() {
             if (!isHeldExclusively())
@@ -2040,9 +2064,10 @@ public abstract class AbstractQueuedSynchronizer
          * Returns an estimate of the number of threads waiting on
          * this condition.
          * Implements {@link AbstractQueuedSynchronizer#getWaitQueueLength}.
-         * @return the estimated number of waiting threads.
+         *
+         * @return the estimated number of waiting threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         * returns false
+         *         returns {@code false}
          */
         protected final int getWaitQueueLength() {
             if (!isHeldExclusively())
@@ -2059,9 +2084,10 @@ public abstract class AbstractQueuedSynchronizer
          * Returns a collection containing those threads that may be
          * waiting on this Condition.
          * Implements {@link AbstractQueuedSynchronizer#getWaitingThreads}.
+         *
          * @return the collection of threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         * returns false
+         *         returns {@code false}
          */
         protected final Collection<Thread> getWaitingThreads() {
             if (!isHeldExclusively())
@@ -2130,5 +2156,4 @@ public abstract class AbstractQueuedSynchronizer
         return unsafe.compareAndSwapInt(node, waitStatusOffset,
                                         expect, update);
     }
-
 }

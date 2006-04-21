@@ -226,7 +226,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * {@code remove} operation), the results of the iteration are undefined.
      * The set supports element removal, which removes the corresponding
      * mapping from the map, via the {@code Iterator.remove},
-     * {@code Set.remove}, {@code removeAll} {@code retainAll}, and
+     * {@code Set.remove}, {@code removeAll}, {@code retainAll}, and
      * {@code clear} operations.  It does not support the {@code add} or
      * {@code addAll} operations.
      *

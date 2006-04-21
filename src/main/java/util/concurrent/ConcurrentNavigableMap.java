@@ -47,6 +47,19 @@ public interface ConcurrentNavigableMap<K,V>
     ConcurrentNavigableMap<K,V> tailMap(K fromKey, boolean inclusive);
 
     /**
+     * Returns a view of the portion of this map whose keys range from
+     * {@code fromKey}, inclusive, to {@code toKey}, exclusive.  (If
+     * {@code fromKey} and {@code toKey} are equal, the returned map
+     * is empty.)  The returned map is backed by this map, so changes
+     * in the returned map are reflected in this map, and vice-versa.
+     * The returned map supports all optional map operations that this
+     * map supports.
+     *
+     * <p>The returned map will throw an {@code IllegalArgumentException}
+     * on an attempt to insert a key outside its range.
+     *
+     * <p>Equivalent to {@code subMap(fromKey, true, toKey, false)}.
+     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
@@ -54,6 +67,17 @@ public interface ConcurrentNavigableMap<K,V>
     ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey);
 
     /**
+     * Returns a view of the portion of this map whose keys are
+     * strictly less than {@code toKey}.  The returned map is backed
+     * by this map, so changes in the returned map are reflected in
+     * this map, and vice-versa.  The returned map supports all
+     * optional map operations that this map supports.
+     *
+     * <p>The returned map will throw an {@code IllegalArgumentException}
+     * on an attempt to insert a key outside its range.
+     *
+     * <p>Equivalent to {@code headMap(toKey, false)}.
+     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
@@ -61,6 +85,17 @@ public interface ConcurrentNavigableMap<K,V>
     ConcurrentNavigableMap<K,V> headMap(K toKey);
 
     /**
+     * Returns a view of the portion of this map whose keys are
+     * greater than or equal to {@code fromKey}.  The returned map is
+     * backed by this map, so changes in the returned map are
+     * reflected in this map, and vice-versa.  The returned map
+     * supports all optional map operations that this map supports.
+     *
+     * <p>The returned map will throw an {@code IllegalArgumentException}
+     * on an attempt to insert a key outside its range.
+     *
+     * <p>Equivalent to {@code tailMap(fromKey, true)}.
+     *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}

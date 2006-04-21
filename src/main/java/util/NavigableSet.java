@@ -129,7 +129,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * set in descending order.  The descending set is backed by this set, so
      * changes to the set are reflected in the descending set, and vice-versa.
      * If either set is modified while an iteration over the other set is in
-     * in progress (except through the iterator's own {@code remove} operation),
+     * progress (except through the iterator's own {@code remove} operation),
      * the results of the iteration are undefined.
      *
      * @return a navigable set view of the mappings contained in this set,

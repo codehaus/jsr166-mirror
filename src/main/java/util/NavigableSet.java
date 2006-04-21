@@ -132,8 +132,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * progress (except through the iterator's own {@code remove} operation),
      * the results of the iteration are undefined.
      *
-     * @return a navigable set view of the mappings contained in this set,
-     *     sorted in descending order
+     * @return a navigable set view of the elements contained in this set,
+     *         sorted in descending order
      */
     NavigableSet<E> descendingSet();
 

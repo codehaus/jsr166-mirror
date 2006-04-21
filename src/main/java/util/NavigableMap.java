@@ -208,7 +208,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     /**
      * Returns a {@link NavigableMap} view of the mappings contained in this
      * map in descending order.  The descending map is backed by this map, so
-     * changes to the map are reflected in the descending set, and vice-versa.
+     * changes to the map are reflected in the descending map, and vice-versa.
      * If either map is modified while an iteration over a collection view of
      * the other map is in progress (except through the iterator's own
      * {@code remove} operation), the results of the iteration are undefined.

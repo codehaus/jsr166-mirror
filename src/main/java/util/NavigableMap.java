@@ -214,7 +214,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * {@code remove} operation), the results of the iteration are undefined.
      *
      * @return a navigable map view of the mappings contained in this map,
-     *     sorted in descending order
+     *         sorted in descending order
      */
     NavigableMap<K,V> descendingMap();
 

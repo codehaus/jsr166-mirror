@@ -158,11 +158,11 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * on an attempt to insert an element outside its range.
      *
      * @param fromElement low endpoint of the returned set
-     * @param fromInclusive true if the low endpoint ({@code fromElement}) is
-     *        to be included in the returned view
+     * @param fromInclusive {@code true} if the low endpoint
+     *        is to be included in the returned view
      * @param toElement high endpoint of the returned set
-     * @param toInclusive true if the high endpoint ({@code toElement}) is
-     *        to be included in the returned view
+     * @param toInclusive {@code true} if the high endpoint
+     *        is to be included in the returned view
      * @return a view of the portion of this set whose elements range from
      *         {@code fromElement}, inclusive, to {@code toElement}, exclusive
      * @throws ClassCastException if {@code fromElement} and
@@ -194,8 +194,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * on an attempt to insert an element outside its range.
      *
      * @param toElement high endpoint of the returned set
-     * @param inclusive true if the high endpoint ({@code toElement}) is
-     *        to be included in the returned view
+     * @param inclusive {@code true} if the high endpoint
+     *        is to be included in the returned view
      * @return a view of the portion of this set whose elements are less than
      *         (or equal to, if {@code inclusive} is true) {@code toElement}
      * @throws ClassCastException if {@code toElement} is not compatible
@@ -223,8 +223,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * on an attempt to insert an element outside its range.
      *
      * @param fromElement low endpoint of the returned set
-     * @param inclusive true if the low endpoint ({@code fromElement}) is
-     *        to be included in the returned view
+     * @param inclusive {@code true} if the low endpoint
+     *        is to be included in the returned view
      * @return a view of the portion of this set whose elements are greater
      *         than or equal to {@code fromElement}
      * @throws ClassCastException if {@code fromElement} is not compatible
@@ -240,4 +240,40 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *         bounds of the range
      */
     NavigableSet<E> tailSet(E fromElement, boolean inclusive);
+
+    /**
+     * Equivalent to {@code subSet(fromElement, true, toElement, false)}
+     * but with a return type conforming to the {@code SortedSet} interface.
+     *
+     * <p>{@inheritDoc}
+     *
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    SortedSet<E> subSet(E fromElement, E toElement);
+
+    /**
+     * Equivalent to {@code headSet(toElement, false)}
+     * but with a return type conforming to the {@code SortedSet} interface.
+     *
+     * <p>{@inheritDoc}
+     *
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    SortedSet<E> headSet(E toElement);
+
+    /**
+     * Equivalent to {@code tailSet(fromElement, true)}
+     * but with a return type conforming to the {@code SortedSet} interface.
+     *
+     * <p>{@inheritDoc}
+     *
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    SortedSet<E> tailSet(E fromElement);
 }

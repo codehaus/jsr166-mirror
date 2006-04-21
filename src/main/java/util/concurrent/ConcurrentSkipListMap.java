@@ -2000,8 +2000,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code fromKey} or {@code toKey} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> subMap(K fromKey,
@@ -2015,8 +2015,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>toKey</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code toKey} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> headMap(K toKey,
@@ -2028,8 +2028,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>fromKey</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code fromKey} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> tailMap(K fromKey,
@@ -2041,8 +2041,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>fromKey</tt> or <tt>toKey</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code fromKey} or {@code toKey} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey) {
@@ -2050,8 +2050,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>toKey</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code toKey} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> headMap(K toKey) {
@@ -2059,8 +2059,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>fromKey</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code fromKey} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public ConcurrentNavigableMap<K,V> tailMap(K fromKey) {

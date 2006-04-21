@@ -267,11 +267,11 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * submap either of whose endpoints lie outside its range.
      *
      * @param fromKey low endpoint of the keys in the returned map
-     * @param fromInclusive true if the low endpoint ({@code fromKey}) is
-     *        to be included in the returned view
+     * @param fromInclusive {@code true} if the low endpoint
+     *        is to be included in the returned view
      * @param toKey high endpoint of the keys in the returned map
-     * @param toInclusive true if the high endpoint ({@code toKey}) is
-     *        to be included in the returned view
+     * @param toInclusive {@code true} if the high endpoint
+     *        is to be included in the returned view
      * @return a view of the portion of this map whose keys range from
      *         {@code fromKey} to {@code toKey}
      * @throws ClassCastException if {@code fromKey} and {@code toKey}
@@ -301,8 +301,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * on an attempt to insert a key outside its range.
      *
      * @param toKey high endpoint of the keys in the returned map
-     * @param inclusive true if the high endpoint ({@code toKey}) is
-     *        to be included in the returned view
+     * @param inclusive {@code true} if the high endpoint
+     *        is to be included in the returned view
      * @return a view of the portion of this map whose keys are less than
      *         (or equal to, if {@code inclusive} is true) {@code toKey}
      * @throws ClassCastException if {@code toKey} is not compatible
@@ -330,8 +330,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * on an attempt to insert a key outside its range.
      *
      * @param fromKey low endpoint of the keys in the returned map
-     * @param inclusive true if the low endpoint ({@code fromKey}) is
-     *        to be included in the returned view
+     * @param inclusive {@code true} if the low endpoint
+     *        is to be included in the returned view
      * @return a view of the portion of this map whose keys are greater than
      *         (or equal to, if {@code inclusive} is true) {@code fromKey}
      * @throws ClassCastException if {@code fromKey} is not compatible
@@ -347,4 +347,40 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *         bounds of the range
      */
     NavigableMap<K,V> tailMap(K fromKey, boolean inclusive);
+
+    /**
+     * Equivalent to {@code subMap(fromKey, true, toKey, false)}
+     * but with a return type conforming to the {@code SortedMap} interface.
+     *
+     * <p>{@inheritDoc}
+     *
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    SortedMap<K,V> subMap(K fromKey, K toKey);
+
+    /**
+     * Equivalent to {@code headMap(toKey, false)}
+     * but with a return type conforming to the {@code SortedMap} interface.
+     *
+     * <p>{@inheritDoc}
+     *
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    SortedMap<K,V> headMap(K toKey);
+
+    /**
+     * Equivalent to {@code tailMap(fromKey, true)}
+     * but with a return type conforming to the {@code SortedMap} interface.
+     *
+     * <p>{@inheritDoc}
+     *
+     * @throws ClassCastException       {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
+    SortedMap<K,V> tailMap(K fromKey);
 }

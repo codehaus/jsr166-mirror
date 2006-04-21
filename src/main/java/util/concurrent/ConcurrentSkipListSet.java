@@ -365,8 +365,8 @@ public class ConcurrentSkipListSet<E>
 
     /**
      * @throws ClassCastException {@inheritDoc}
-     * @throws NullPointerException if <tt>fromElement</tt> or
-     *         <tt>toElement</tt> is null
+     * @throws NullPointerException if {@code fromElement} or
+     *         {@code toElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public NavigableSet<E> subSet(E fromElement,
@@ -380,7 +380,7 @@ public class ConcurrentSkipListSet<E>
 
     /**
      * @throws ClassCastException {@inheritDoc}
-     * @throws NullPointerException if <tt>toElement</tt> is null
+     * @throws NullPointerException if {@code toElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public NavigableSet<E> headSet(E toElement, boolean inclusive) {
@@ -389,7 +389,7 @@ public class ConcurrentSkipListSet<E>
 
     /**
      * @throws ClassCastException {@inheritDoc}
-     * @throws NullPointerException if <tt>fromElement</tt> is null
+     * @throws NullPointerException if {@code fromElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
@@ -397,14 +397,9 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Equivalent to {@link #subSet} but with a return type
-     * conforming to the <tt>SortedSet</tt> interface.
-     *
-     * <p>{@inheritDoc}
-     *
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>fromElement</tt> or
-     *         <tt>toElement</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code fromElement} or
+     *         {@code toElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> subSet(E fromElement, E toElement) {
@@ -412,28 +407,17 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * Equivalent to {@link #headSet} but with a return type
-     * conforming to the <tt>SortedSet</tt> interface.
-     *
-     * <p>{@inheritDoc}
-     *
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>toElement</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code toElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> headSet(E toElement) {
 	return headSet(toElement, false);
     }
 
-
     /**
-     * Equivalent to {@link #tailSet} but with a return type
-     * conforming to the <tt>SortedSet</tt> interface.
-     *
-     * <p>{@inheritDoc}
-     *
-     * @throws ClassCastException       {@inheritDoc}
-     * @throws NullPointerException if <tt>fromElement</tt> is null
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException if {@code fromElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
     public SortedSet<E> tailSet(E fromElement) {

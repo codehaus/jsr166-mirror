@@ -1,5 +1,5 @@
 /*
- * @(#)ArrayList.java	1.56 06/03/14
+ * %W% %E%
  *
  * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -71,7 +71,7 @@ package java.util;
  *
  * @author  Josh Bloch
  * @author  Neal Gafter
- * @version 1.56, 03/14/06
+ * @version %I%, %G%
  * @see	    Collection
  * @see	    List
  * @see	    LinkedList

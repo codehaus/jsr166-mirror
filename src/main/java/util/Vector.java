@@ -1,5 +1,5 @@
 /*
- * @(#)Vector.java	1.103 05/12/06
+ * %W% %E%
  *
  * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -49,7 +49,7 @@ package java.util;
  *
  * @author  Lee Boynton
  * @author  Jonathan Payne
- * @version 1.103, 12/06/05
+ * @version %I%, %G%
  * @see Collection
  * @see List
  * @see ArrayList

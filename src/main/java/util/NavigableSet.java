@@ -139,7 +139,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
 
     /**
      * Returns an iterator over the elements in this set, in descending order.
-     * Equivalent in effect to <tt>descendingSet().iterator()</tt>.
+     * Equivalent in effect to {@code descendingSet().iterator()}.
      *
      * @return an iterator over the elements in this set, in descending order
      */

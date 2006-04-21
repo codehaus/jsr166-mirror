@@ -8,7 +8,7 @@ package java.util;
 
 /**
  * A {@link SortedSet} extended with navigation methods reporting
- * closest matches for given search targets. Methods <tt>lower},
+ * closest matches for given search targets. Methods {@code lower},
  * {@code floor}, {@code ceiling}, and {@code higher} return elements
  * respectively less than, less than or equal, greater than or equal,
  * and greater than a given element, returning {@code null} if there

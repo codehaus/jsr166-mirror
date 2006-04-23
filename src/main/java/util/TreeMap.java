@@ -223,28 +223,10 @@ public class TreeMap<K,V>
      * @since 1.2
      */
     public boolean containsValue(Object value) {
-        return (root==null ? false :
-                (value==null ? valueSearchNull(root)
-                 : valueSearchNonNull(root, value)));
-    }
-
-    private boolean valueSearchNull(Entry n) {
-        if (n.value == null)
-            return true;
-
-        // Check left and right subtrees for value
-        return (n.left  != null && valueSearchNull(n.left)) ||
-            (n.right != null && valueSearchNull(n.right));
-    }
-
-    private boolean valueSearchNonNull(Entry n, Object value) {
-        // Check this node for the value
-        if (value.equals(n.value))
-            return true;
-
-        // Check left and right subtrees for value
-        return (n.left  != null && valueSearchNonNull(n.left, value)) ||
-            (n.right != null && valueSearchNonNull(n.right, value));
+        for (Entry<K,V> e = getFirstEntry(); e != null; e = successor(e))
+            if (valEquals(value, e.value))
+                return true;
+        return false;
     }
 
     /**
@@ -358,20 +340,22 @@ public class TreeMap<K,V>
      * Version of getEntry using comparator. Split off from getEntry
      * for performance. (This is not worth doing for most methods,
      * that are less dependent on comparator performance, but is
-     * worthwhile for get and put.)
+     * worthwhile here.)
      */
     final Entry<K,V> getEntryUsingComparator(Object key) {
 	K k = (K) key;
         Comparator<? super K> cpr = comparator;
-        Entry<K,V> p = root;
-        while (p != null) {
-            int cmp = cpr.compare(k, p.key);
-            if (cmp < 0)
-                p = p.left;
-            else if (cmp > 0)
-                p = p.right;
-            else
-                return p;
+        if (cpr != null) {
+            Entry<K,V> p = root;
+            while (p != null) {
+                int cmp = cpr.compare(k, p.key);
+                if (cmp < 0)
+                    p = p.left;
+                else if (cmp > 0)
+                    p = p.right;
+                else
+                    return p;
+            }
         }
         return null;
     }
@@ -524,73 +508,53 @@ public class TreeMap<K,V>
      *         does not permit null keys
      */
     public V put(K key, V value) {
-        // Offload comparator-based version for sake of performance
-        if (comparator != null)
-            return putUsingComparator(key, value);
-        if (key == null)
-            throw new NullPointerException();
-	Comparable<? super K> k = (Comparable<? super K>) key;
-        int cmp = 0;
-        Entry<K,V> parent = null;
         Entry<K,V> t = root;
-        while (t != null) {
-            parent = t;
-            cmp = k.compareTo(t.key);
-            if (cmp < 0)
-                t = t.left;
-            else if (cmp > 0)
-                t = t.right;
-            else
-                return t.setValue(value);
+        if (t == null) {
+            compare(key, key); // type check
+            root = new Entry<K,V>(key, value, null);
+            size = 1;
+            modCount++;
+            return null;
         }
-        Entry<K,V> e = new Entry<K,V>((K)k, value, parent);
-        size++;
-        modCount++;
-        if (parent != null) {
-            if (cmp < 0)
-                parent.left = e;
-            else
-                parent.right = e;
-            fixAfterInsertion(e);
-        }
-        else
-            root = e;
-        return null;
-    }
-
-    /**
-     * Version of put using comparator. Split off from put for
-     * performance.
-     */
-    final V putUsingComparator(K key, V value) {
+        int cmp;
+        Entry<K,V> parent;
+        // split comparator and comparable paths
         Comparator<? super K> cpr = comparator;
-        int cmp = 0;
-        Entry<K,V> parent = null;
-        Entry<K,V> t = root;
-        if (t == null)
-            cpr.compare(key, key); // type check
-        while (t != null) {
-            parent = t;
-            cmp = cpr.compare(key, t.key);
-            if (cmp < 0)
-                t = t.left;
-            else if (cmp > 0)
-                t = t.right;
-            else
-                return t.setValue(value);
+        if (cpr != null) {
+            do {
+                parent = t;
+                cmp = cpr.compare(key, t.key);
+                if (cmp < 0)
+                    t = t.left;
+                else if (cmp > 0)
+                    t = t.right;
+                else
+                    return t.setValue(value);
+            } while (t != null);
+        }
+        else {
+            if (key == null)
+                throw new NullPointerException();
+            Comparable<? super K> k = (Comparable<? super K>) key;
+            do {
+                parent = t;
+                cmp = k.compareTo(t.key);
+                if (cmp < 0)
+                    t = t.left;
+                else if (cmp > 0)
+                    t = t.right;
+                else
+                    return t.setValue(value);
+            } while (t != null);
         }
         Entry<K,V> e = new Entry<K,V>(key, value, parent);
+        if (cmp < 0)
+            parent.left = e;
+        else
+            parent.right = e;
+        fixAfterInsertion(e);
         size++;
         modCount++;
-        if (parent != null) {
-            if (cmp < 0)
-                parent.left = e;
-            else
-                parent.right = e;
-            fixAfterInsertion(e);
-        }
-        else
-            root = e;
         return null;
     }
 
@@ -969,10 +933,7 @@ public class TreeMap<K,V>
         }
 
         public boolean contains(Object o) {
-            for (Entry<K,V> e = getFirstEntry(); e != null; e = successor(e))
-                if (valEquals(e.getValue(), o))
-                    return true;
-            return false;
+            return TreeMap.this.containsValue(o);
         }
 
         public boolean remove(Object o) {
@@ -2029,36 +1990,39 @@ public class TreeMap<K,V>
 
     /** From CLR */
     private void rotateLeft(Entry<K,V> p) {
-        Entry<K,V> r = p.right;
-        p.right = r.left;
-        if (r.left != null)
-            r.left.parent = p;
-        r.parent = p.parent;
-        if (p.parent == null)
-            root = r;
-        else if (p.parent.left == p)
-            p.parent.left = r;
-        else
-            p.parent.right = r;
-        r.left = p;
-        p.parent = r;
+        if (p != null) {
+            Entry<K,V> r = p.right;
+            p.right = r.left;
+            if (r.left != null)
+                r.left.parent = p;
+            r.parent = p.parent;
+            if (p.parent == null)
+                root = r;
+            else if (p.parent.left == p)
+                p.parent.left = r;
+            else
+                p.parent.right = r;
+            r.left = p;
+            p.parent = r;
+        }
     }
 
     /** From CLR */
     private void rotateRight(Entry<K,V> p) {
-        Entry<K,V> l = p.left;
-        p.left = l.right;
-        if (l.right != null) l.right.parent = p;
-        l.parent = p.parent;
-        if (p.parent == null)
-            root = l;
-        else if (p.parent.right == p)
-            p.parent.right = l;
-        else p.parent.left = l;
-        l.right = p;
-        p.parent = l;
+        if (p != null) {
+            Entry<K,V> l = p.left;
+            p.left = l.right;
+            if (l.right != null) l.right.parent = p;
+            l.parent = p.parent;
+            if (p.parent == null)
+                root = l;
+            else if (p.parent.right == p)
+                p.parent.right = l;
+            else p.parent.left = l;
+            l.right = p;
+            p.parent = l;
+        }
     }
-
 
     /** From CLR */
     private void fixAfterInsertion(Entry<K,V> x) {
@@ -2079,8 +2043,7 @@ public class TreeMap<K,V>
                     }
                     setColor(parentOf(x), BLACK);
                     setColor(parentOf(parentOf(x)), RED);
-                    if (parentOf(parentOf(x)) != null)
-                        rotateRight(parentOf(parentOf(x)));
+                    rotateRight(parentOf(parentOf(x)));
                 }
             } else {
                 Entry<K,V> y = leftOf(parentOf(parentOf(x)));
@@ -2096,8 +2059,7 @@ public class TreeMap<K,V>
                     }
                     setColor(parentOf(x), BLACK);
                     setColor(parentOf(parentOf(x)), RED);
-                    if (parentOf(parentOf(x)) != null)
-                        rotateLeft(parentOf(parentOf(x)));
+                    rotateLeft(parentOf(parentOf(x)));
                 }
             }
         }
@@ -2107,7 +2069,6 @@ public class TreeMap<K,V>
     /**
      * Delete node p, and then rebalance the tree.
      */
-
     private void deleteEntry(Entry<K,V> p) {
         modCount++;
         size--;

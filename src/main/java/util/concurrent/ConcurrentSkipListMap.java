@@ -608,7 +608,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * If using comparator, return a ComparableUsingComparator, else
-     * cast key as Comparator, which may cause ClassCastException,
+     * cast key as Comparable, which may cause ClassCastException,
      * which is propagated back to caller.
      */
     private Comparable<? super K> comparable(Object key) throws ClassCastException {

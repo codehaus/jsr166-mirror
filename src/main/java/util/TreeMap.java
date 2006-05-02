@@ -68,7 +68,7 @@ package java.util;
  * associated map using <tt>put</tt>.)
  *
  * <p>This class is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
  * @param <K> the type of keys maintained by this map
@@ -510,7 +510,11 @@ public class TreeMap<K,V>
     public V put(K key, V value) {
         Entry<K,V> t = root;
         if (t == null) {
-            compare(key, key); // type check
+	    // TBD:
+	    // 5045147: (coll) Adding null to an empty TreeSet should
+	    // throw NullPointerException
+	    //
+	    // compare(key, key); // type check
             root = new Entry<K,V>(key, value, null);
             size = 1;
             modCount++;

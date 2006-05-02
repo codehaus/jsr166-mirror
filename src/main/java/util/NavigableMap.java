@@ -35,15 +35,26 @@ package java.util;
  * {@code pollLastEntry} that return and/or remove the least and
  * greatest mappings, if any exist, else returning {@code null}.
  *
- * <p> Implementations of entry-returning methods are expected to
+ * <p>Implementations of entry-returning methods are expected to
  * return {@code Map.Entry} pairs representing snapshots of mappings
  * at the time they were produced, and thus generally do <em>not</em>
  * support the optional {@code Entry.setValue} method. Note however
  * that it is possible to change mappings in the associated map using
  * method {@code put}.
  *
+ * <p>Methods
+ * {@link #subMap(Object, Object) subMap(K, K)},
+ * {@link #headMap(Object) headMap(K)}, and
+ * {@link #tailMap(Object) tailMap(K)}
+ * are specified to return {@code SortedMap} to allow existing
+ * implementations of {@code SortedMap} to be compatibly retrofitted to
+ * implement {@code NavigableMap}, but extensions and implementations
+ * of this interface are encouraged to override these methods to return
+ * {@code NavigableMap}.  Similarly,
+ * {@link #keySet()} can be overriden to return {@code NavigableSet}.
+ * 
  * <p>This interface is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
  * @author Doug Lea
@@ -206,50 +217,51 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     Map.Entry<K,V> pollLastEntry();
 
     /**
-     * Returns a {@link NavigableMap} view of the mappings contained in this
-     * map in descending order.  The descending map is backed by this map, so
-     * changes to the map are reflected in the descending map, and vice-versa.
-     * If either map is modified while an iteration over a collection view of
-     * the other map is in progress (except through the iterator's own
-     * {@code remove} operation), the results of the iteration are undefined.
+     * Returns a reverse order view of the mappings contained in this map.
+     * The descending map is backed by this map, so changes to the map are
+     * reflected in the descending map, and vice-versa.  If either map is
+     * modified while an iteration over a collection view of either map
+     * is in progress (except through the iterator's own {@code remove}
+     * operation), the results of the iteration are undefined.
      *
-     * @return a navigable map view of the mappings contained in this map,
-     *         sorted in descending order
+     * <p>The returned map has an ordering equivalent to
+     * <tt>{@link Collections#reverseOrder(Comparator) Collections.reverseOrder}(comparator())</tt>.
+     * The expression {@code m.descendingMap().descendingMap()} returns a
+     * view of {@code m} essentially equivalent to {@code m}.
+     *
+     * @return a reverse order view of this map
      */
     NavigableMap<K,V> descendingMap();
 
     /**
-     * Returns a navigable set view of the keys contained in this navigable
-     * map.  The set is backed by the map, so changes to the map are reflected
-     * in the set, and vice-versa.  If the map is modified while an iteration
-     * over the set is in progress (except through the iterator's own
-     * {@code remove} operation), the results of the iteration are undefined.
-     * The set supports element removal, which removes the corresponding
-     * mapping from the map, via the {@code Iterator.remove},
-     * {@code Set.remove}, {@code removeAll}, {@code retainAll}, and
-     * {@code clear} operations.  It does not support the {@code add} or
-     * {@code addAll} operations.
+     * Returns a {@link NavigableSet} view of the keys contained in this map.
+     * The set's iterator returns the keys in ascending order.
+     * The set is backed by the map, so changes to the map are reflected in
+     * the set, and vice-versa.  If the map is modified while an iteration
+     * over the set is in progress (except through the iterator's own {@code
+     * remove} operation), the results of the iteration are undefined.  The
+     * set supports element removal, which removes the corresponding mapping
+     * from the map, via the {@code Iterator.remove}, {@code Set.remove},
+     * {@code removeAll}, {@code retainAll}, and {@code clear} operations.
+     * It does not support the {@code add} or {@code addAll} operations.
      *
-     * @return a navigable set view of the keys contained in this navigable map
+     * @return a navigable set view of the keys in this map
      */
     NavigableSet<K> navigableKeySet();
 
     /**
-     * Returns a {@link NavigableSet} view of the keys contained in this map.
+     * Returns a reverse order {@link NavigableSet} view of the keys contained in this map.
      * The set's iterator returns the keys in descending order.
-     * The set is backed by the map, so changes to the map are
-     * reflected in the set, and vice-versa.  If the map is modified
-     * while an iteration over the set is in progress (except through
-     * the iterator's own {@code remove} operation), the results of
-     * the iteration are undefined.  The set supports element removal,
-     * which removes the corresponding mapping from the map, via the
-     * {@code Iterator.remove}, {@code Set.remove},
-     * {@code removeAll}, {@code retainAll}, and {@code clear}
-     * operations.  It does not support the {@code add} or {@code addAll}
-     * operations.
+     * The set is backed by the map, so changes to the map are reflected in
+     * the set, and vice-versa.  If the map is modified while an iteration
+     * over the set is in progress (except through the iterator's own {@code
+     * remove} operation), the results of the iteration are undefined.  The
+     * set supports element removal, which removes the corresponding mapping
+     * from the map, via the {@code Iterator.remove}, {@code Set.remove},
+     * {@code removeAll}, {@code retainAll}, and {@code clear} operations.
+     * It does not support the {@code add} or {@code addAll} operations.
      *
-     * @return a set view of the keys contained in this map, sorted in
-     *         descending order
+     * @return a reverse order navigable set view of the keys in this map
      */
     NavigableSet<K> descendingKeySet();
 
@@ -349,10 +361,9 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     NavigableMap<K,V> tailMap(K fromKey, boolean inclusive);
 
     /**
-     * Equivalent to {@code subMap(fromKey, true, toKey, false)}
-     * but with a return type conforming to the {@code SortedMap} interface.
+     * {@inheritDoc}
      *
-     * <p>{@inheritDoc}
+     * <p>Equivalent to {@code subMap(fromKey, true, toKey, false)}.
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
@@ -361,10 +372,9 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     SortedMap<K,V> subMap(K fromKey, K toKey);
 
     /**
-     * Equivalent to {@code headMap(toKey, false)}
-     * but with a return type conforming to the {@code SortedMap} interface.
+     * {@inheritDoc}
      *
-     * <p>{@inheritDoc}
+     * <p>Equivalent to {@code headMap(toKey, false)}.
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
@@ -373,10 +383,9 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
     SortedMap<K,V> headMap(K toKey);
 
     /**
-     * Equivalent to {@code tailMap(fromKey, true)}
-     * but with a return type conforming to the {@code SortedMap} interface.
+     * {@inheritDoc}
      *
-     * <p>{@inheritDoc}
+     * <p>Equivalent to {@code tailMap(fromKey, true)}.
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}

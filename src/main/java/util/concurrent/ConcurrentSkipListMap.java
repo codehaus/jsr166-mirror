@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.*;
  * <tt>containsKey</tt>, <tt>get</tt>, <tt>put</tt> and
  * <tt>remove</tt> operations and their variants.  Insertion, removal,
  * update, and access operations safely execute concurrently by
- * multiple threads. Iterators are <i>weakly consistent</i>, returning
+ * multiple threads.  Iterators are <i>weakly consistent</i>, returning
  * elements reflecting the state of the map at some point at or since
  * the creation of the iterator.  They do <em>not</em> throw {@link
  * ConcurrentModificationException}, and may proceed concurrently with
@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.*;
  * elements.
  *
  * <p>This class is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
  * @author Doug Lea
@@ -1744,50 +1744,31 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
 
     /**
-     * Returns a {@link Set} view of the keys contained in this map.
-     * The set's iterator returns the keys in ascending order.
-     * The set is backed by the map, so changes to the map are
-     * reflected in the set, and vice-versa.  The set supports element
-     * removal, which removes the corresponding mapping from the map,
-     * via the <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
-     * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
-     * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
-     * operations.
-     *
-     * <p>The view's <tt>iterator</tt> is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
-     *
-     * @return a set view of the keys contained in this map, sorted in
-     *         ascending order
-     */
-    public Set<K> keySet() {
-        KeySet ks = keySet;
-        return (ks != null) ? ks : (keySet = new KeySet(this));
-    }
-
-    /**
      * Returns a {@link NavigableSet} view of the keys contained in this map.
      * The set's iterator returns the keys in ascending order.
      * The set is backed by the map, so changes to the map are
      * reflected in the set, and vice-versa.  The set supports element
      * removal, which removes the corresponding mapping from the map,
-     * via the <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
-     * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
-     * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
+     * via the {@code Iterator.remove}, {@code Set.remove},
+     * {@code removeAll}, {@code retainAll}, and {@code clear}
+     * operations.  It does not support the {@code add} or {@code addAll}
      * operations.
      *
-     * <p>The view's <tt>iterator</tt> is a "weakly consistent" iterator
+     * <p>The view's {@code iterator} is a "weakly consistent" iterator
      * that will never throw {@link ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
      *
-     * @return a set view of the keys contained in this map, sorted in
-     *         ascending order
+     * <p>This method is equivalent to method {@code navigableKeySet}.
+     *
+     * @return a navigable set view of the keys in this map
      */
+     public NavigableSet<K> keySet() {
+        KeySet ks = keySet;
+        return (ks != null) ? ks : (keySet = new KeySet(this));
+    }
+
     public NavigableSet<K> navigableKeySet() {
         KeySet ks = keySet;
         return (ks != null) ? ks : (keySet = new KeySet(this));
@@ -2377,13 +2358,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
             return new ConcurrentSkipListSet<E>(m.tailMap(fromElement, inclusive));
         }
-        public SortedSet<E> subSet(E fromElement, E toElement) {
+        public NavigableSet<E> subSet(E fromElement, E toElement) {
             return subSet(fromElement, true, toElement, false);
         }
-        public SortedSet<E> headSet(E toElement) {
+        public NavigableSet<E> headSet(E toElement) {
             return headSet(toElement, false);
         }
-        public SortedSet<E> tailSet(E fromElement) {
+        public NavigableSet<E> tailSet(E fromElement) {
             return tailSet(fromElement, true);
         }
         public NavigableSet<E> descendingSet() {
@@ -2965,7 +2946,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /* ---------------- Submap Views -------------- */
 
-        public Set<K> keySet() {
+        public NavigableSet<K> keySet() {
             KeySet<K> ks = keySetView;
             return (ks != null) ? ks : (keySetView = new KeySet(this));
         }

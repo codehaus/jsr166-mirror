@@ -44,7 +44,7 @@ import sun.misc.Unsafe;
  * distinguished from the absence of elements.
  *
  * <p>This class is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
  * @author Doug Lea
@@ -402,7 +402,7 @@ public class ConcurrentSkipListSet<E>
      *         {@code toElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public SortedSet<E> subSet(E fromElement, E toElement) {
+    public NavigableSet<E> subSet(E fromElement, E toElement) {
 	return subSet(fromElement, true, toElement, false);
     }
 
@@ -411,7 +411,7 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if {@code toElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public SortedSet<E> headSet(E toElement) {
+    public NavigableSet<E> headSet(E toElement) {
 	return headSet(toElement, false);
     }
 
@@ -420,12 +420,21 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if {@code fromElement} is null
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public SortedSet<E> tailSet(E fromElement) {
+    public NavigableSet<E> tailSet(E fromElement) {
 	return tailSet(fromElement, true);
     }
 
     /**
-     * @since 1.6
+     * Returns a reverse order view of the elements contained in this set.
+     * The descending set is backed by this set, so changes to the set are
+     * reflected in the descending set, and vice-versa.
+     *
+     * <p>The returned set has an ordering equivalent to
+     * <tt>{@link Collections#reverseOrder(Comparator) Collections.reverseOrder}(comparator())</tt>.
+     * The expression {@code s.descendingSet().descendingSet()} returns a
+     * view of {@code s} essentially equivalent to {@code s}.
+     *
+     * @return a reverse order view of this set
      */
     public NavigableSet<E> descendingSet() {
 	return new ConcurrentSkipListSet(m.descendingMap());

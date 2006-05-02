@@ -35,8 +35,18 @@ package java.util;
  * {@code null} elements. (Note that sorted sets of {@link
  * Comparable} elements intrinsically do not permit {@code null}.)
  *
+ * <p>Methods
+ * {@link #subSet(Object, Object) subSet(E, E)},
+ * {@link #headSet(Object) headSet(E)}, and
+ * {@link #tailSet(Object) tailSet(E)}
+ * are specified to return {@code SortedSet} to allow existing
+ * implementations of {@code SortedSet} to be compatibly retrofitted to
+ * implement {@code NavigableSet}, but extensions and implementations
+ * of this interface are encouraged to override these methods to return
+ * {@code NavigableSet}.
+ * 
  * <p>This interface is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
  * @author Doug Lea
@@ -125,15 +135,19 @@ public interface NavigableSet<E> extends SortedSet<E> {
     Iterator<E> iterator();
 
     /**
-     * Returns a {@link NavigableSet} view of the elements contained in this
-     * set in descending order.  The descending set is backed by this set, so
-     * changes to the set are reflected in the descending set, and vice-versa.
-     * If either set is modified while an iteration over the other set is in
-     * progress (except through the iterator's own {@code remove} operation),
-     * the results of the iteration are undefined.
+     * Returns a reverse order view of the elements contained in this set.
+     * The descending set is backed by this set, so changes to the set are
+     * reflected in the descending set, and vice-versa.  If either set is
+     * modified while an iteration over either set is in progress (except
+     * through the iterator's own {@code remove} operation), the results of
+     * the iteration are undefined.
      *
-     * @return a navigable set view of the elements contained in this set,
-     *         sorted in descending order
+     * <p>The returned set has an ordering equivalent to
+     * <tt>{@link Collections#reverseOrder(Comparator) Collections.reverseOrder}(comparator())</tt>.
+     * The expression {@code s.descendingSet().descendingSet()} returns a
+     * view of {@code s} essentially equivalent to {@code s}.
+     *
+     * @return a reverse order view of this set
      */
     NavigableSet<E> descendingSet();
 
@@ -242,10 +256,9 @@ public interface NavigableSet<E> extends SortedSet<E> {
     NavigableSet<E> tailSet(E fromElement, boolean inclusive);
 
     /**
-     * Equivalent to {@code subSet(fromElement, true, toElement, false)}
-     * but with a return type conforming to the {@code SortedSet} interface.
+     * {@inheritDoc}
      *
-     * <p>{@inheritDoc}
+     * <p>Equivalent to {@code subSet(fromElement, true, toElement, false)}.
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
@@ -254,22 +267,20 @@ public interface NavigableSet<E> extends SortedSet<E> {
     SortedSet<E> subSet(E fromElement, E toElement);
 
     /**
-     * Equivalent to {@code headSet(toElement, false)}
-     * but with a return type conforming to the {@code SortedSet} interface.
+     * {@inheritDoc}
      *
-     * <p>{@inheritDoc}
+     * <p>Equivalent to {@code headSet(toElement, false)}.
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
-     */
+na     */
     SortedSet<E> headSet(E toElement);
 
     /**
-     * Equivalent to {@code tailSet(fromElement, true)}
-     * but with a return type conforming to the {@code SortedSet} interface.
+     * {@inheritDoc}
      *
-     * <p>{@inheritDoc}
+     * <p>Equivalent to {@code tailSet(fromElement, true)}.
      *
      * @throws ClassCastException       {@inheritDoc}
      * @throws NullPointerException     {@inheritDoc}

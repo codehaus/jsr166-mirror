@@ -52,7 +52,7 @@ package java.util;
  * of this interface are encouraged to override these methods to return
  * {@code NavigableMap}.  Similarly,
  * {@link #keySet()} can be overriden to return {@code NavigableSet}.
- * 
+ *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.

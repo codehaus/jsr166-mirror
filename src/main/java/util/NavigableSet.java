@@ -44,7 +44,7 @@ package java.util;
  * implement {@code NavigableSet}, but extensions and implementations
  * of this interface are encouraged to override these methods to return
  * {@code NavigableSet}.
- * 
+ *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.

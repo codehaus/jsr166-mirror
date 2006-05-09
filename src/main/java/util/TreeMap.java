@@ -1117,6 +1117,7 @@ public class TreeMap<K,V>
                 throw new IllegalStateException();
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
+            // deleted entries are replaced by their successors
             if (lastReturned.left != null && lastReturned.right != null)
                 next = lastReturned;
             deleteEntry(lastReturned);
@@ -1581,17 +1582,29 @@ public class TreeMap<K,V>
                 return e;
             }
 
-            public void remove() {
+            final void removeAscending() {
                 if (lastReturned == null)
                     throw new IllegalStateException();
                 if (m.modCount != expectedModCount)
                     throw new ConcurrentModificationException();
+                // deleted entries are replaced by their successors
                 if (lastReturned.left != null && lastReturned.right != null)
                     next = lastReturned;
                 m.deleteEntry(lastReturned);
-                expectedModCount++;
                 lastReturned = null;
+                expectedModCount = m.modCount;
             }
+
+            final void removeDescending() {
+                if (lastReturned == null)
+                    throw new IllegalStateException();
+                if (m.modCount != expectedModCount)
+                    throw new ConcurrentModificationException();
+                m.deleteEntry(lastReturned);
+                lastReturned = null;
+                expectedModCount = m.modCount;
+            }
+
         }
 
         final class SubMapEntryIterator extends SubMapIterator<Map.Entry<K,V>> {
@@ -1602,6 +1615,9 @@ public class TreeMap<K,V>
             public Map.Entry<K,V> next() {
                 return nextEntry();
             }
+            public void remove() {
+                removeAscending();
+            }
         }
 
         final class SubMapKeyIterator extends SubMapIterator<K> {
@@ -1611,6 +1627,9 @@ public class TreeMap<K,V>
             }
             public K next() {
                 return nextEntry().key;
+            }
+            public void remove() {
+                removeAscending();
             }
         }
 
@@ -1623,6 +1642,9 @@ public class TreeMap<K,V>
             public Map.Entry<K,V> next() {
                 return prevEntry();
             }
+            public void remove() {
+                removeDescending();
+            }
         }
 
         final class DescendingSubMapKeyIterator extends SubMapIterator<K> {
@@ -1632,6 +1654,9 @@ public class TreeMap<K,V>
             }
             public K next() {
                 return prevEntry().key;
+            }
+            public void remove() {
+                removeDescending();
             }
         }
     }

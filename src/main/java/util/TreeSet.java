@@ -56,7 +56,7 @@ package java.util;
  * should be used only to detect bugs.</i>
  *
  * <p>This class is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
  * @param <E> the type of elements maintained by this set
@@ -100,7 +100,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * {@code e2} in the set.  If the user attempts to add an element
      * to the set that violates this constraint (for example, the user
      * attempts to add a string element to a set whose elements are
-     * integers), the {@code add(Object)} call will throw a
+     * integers), the {@code add} call will throw a
      * {@code ClassCastException}.
      */
     public TreeSet() {
@@ -114,7 +114,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * e2)} must not throw a {@code ClassCastException} for any elements
      * {@code e1} and {@code e2} in the set.  If the user attempts to add
      * an element to the set that violates this constraint, the
-     * {@code add(Object)} call will throw a {@code ClassCastException}.
+     * {@code add} call will throw a {@code ClassCastException}.
      *
      * @param comparator the comparator that will be used to order this set.
      *        If {@code null}, the {@linkplain Comparable natural

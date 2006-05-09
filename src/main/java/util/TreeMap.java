@@ -1050,7 +1050,7 @@ public class TreeMap<K,V>
             return size() != oldSize;
         }
         public NavigableSet<E> subSet(E fromElement, boolean fromInclusive,
-                                      E toElement, boolean toInclusive) {
+                                      E toElement,   boolean toInclusive) {
             return new TreeSet<E>(m.subMap(fromElement, fromInclusive,
                                            toElement,   toInclusive));
         }
@@ -1207,14 +1207,17 @@ public class TreeMap<K,V>
 
     // SubMaps
 
+    /**
+     * @serial include
+     */
     static abstract class NavigableSubMap<K,V> extends AbstractMap<K,V>
         implements NavigableMap<K,V>, java.io.Serializable {
-        /*
+        /**
          * The backing map.
          */
         final TreeMap<K,V> m;
 
-        /*
+        /**
          * Endpoints are represented as triples (fromStart, lo,
          * loInclusive) and (toEnd, hi, hiInclusive). If fromStart is
          * true, then the low (absolute) bound is the start of the
@@ -1222,7 +1225,6 @@ public class TreeMap<K,V>
          * if loInclusive is true, lo is the inclusive bound, else lo
          * is the exclusive bound. Similarly for the upper bound.
          */
-
         final K lo, hi;
         final boolean fromStart, toEnd;
         final boolean loInclusive, hiInclusive;
@@ -1347,7 +1349,7 @@ public class TreeMap<K,V>
         }
 
         // Abstract methods defined in ascending vs descending classes
-        // These relay to the appropriate  absolute versions
+        // These relay to the appropriate absolute versions
 
         abstract TreeMap.Entry<K,V> subLowest();
         abstract TreeMap.Entry<K,V> subHighest();
@@ -1634,12 +1636,15 @@ public class TreeMap<K,V>
         }
     }
 
+    /**
+     * @serial include
+     */
     static final class AscendingSubMap<K,V> extends NavigableSubMap<K,V> {
         private static final long serialVersionUID = 912986545866124060L;
 
         AscendingSubMap(TreeMap<K,V> m,
                         boolean fromStart, K lo, boolean loInclusive,
-                        boolean toEnd, K hi, boolean hiInclusive) {
+                        boolean toEnd,     K hi, boolean hiInclusive) {
             super(m, fromStart, lo, loInclusive, toEnd, hi, hiInclusive);
         }
 
@@ -1648,7 +1653,7 @@ public class TreeMap<K,V>
         }
 
         public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
-                                        K toKey, boolean toInclusive) {
+                                        K toKey,   boolean toInclusive) {
             if (!inRange(fromKey, fromInclusive))
                 throw new IllegalArgumentException("fromKey out of range");
             if (!inRange(toKey, toInclusive))
@@ -1710,11 +1715,14 @@ public class TreeMap<K,V>
         TreeMap.Entry<K,V> subLower(K key)   { return absLower(key); }
     }
 
+    /**
+     * @serial include
+     */
     static final class DescendingSubMap<K,V>  extends NavigableSubMap<K,V> {
         private static final long serialVersionUID = 912986545866120460L;
         DescendingSubMap(TreeMap<K,V> m,
                         boolean fromStart, K lo, boolean loInclusive,
-                        boolean toEnd, K hi, boolean hiInclusive) {
+                        boolean toEnd,     K hi, boolean hiInclusive) {
             super(m, fromStart, lo, loInclusive, toEnd, hi, hiInclusive);
         }
 
@@ -1726,7 +1734,7 @@ public class TreeMap<K,V>
         }
 
         public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
-                                        K toKey, boolean toInclusive) {
+                                        K toKey,   boolean toInclusive) {
             if (!inRange(fromKey, fromInclusive))
                 throw new IllegalArgumentException("fromKey out of range");
             if (!inRange(toKey, toInclusive))
@@ -1794,6 +1802,8 @@ public class TreeMap<K,V>
      * support NavigableMap.  It translates an old-version SubMap into
      * a new-version AscendingSubMap. This class is never otherwise
      * used.
+     *
+     * @serial include
      */
     private class SubMap extends AbstractMap<K,V>
 	implements SortedMap<K,V>, java.io.Serializable {
@@ -1877,7 +1887,7 @@ public class TreeMap<K,V>
         public boolean equals(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
-            Map.Entry e = (Map.Entry)o;
+            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 
             return valEquals(key,e.getKey()) && valEquals(value,e.getValue());
         }

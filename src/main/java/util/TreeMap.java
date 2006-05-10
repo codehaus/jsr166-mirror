@@ -1121,7 +1121,7 @@ public class TreeMap<K,V>
             if (lastReturned.left != null && lastReturned.right != null)
                 next = lastReturned;
             deleteEntry(lastReturned);
-            expectedModCount++;
+            expectedModCount = modCount;
             lastReturned = null;
         }
     }

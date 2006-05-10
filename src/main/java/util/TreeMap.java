@@ -1689,7 +1689,7 @@ public class TreeMap<K,V>
         }
 
         public NavigableMap<K,V> headMap(K toKey, boolean inclusive) {
-            if (!inClosedRange(toKey))
+            if (!inRange(toKey, inclusive))
                 throw new IllegalArgumentException("toKey out of range");
             return new AscendingSubMap(m,
                                        fromStart, lo,    loInclusive,

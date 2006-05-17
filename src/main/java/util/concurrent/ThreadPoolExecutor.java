@@ -666,12 +666,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             final ReentrantLock runLock = this.runLock;
             runLock.lock();
             try {
-                Thread.interrupted(); // clear interrupt status on entry
-                // Abort now if immediate cancel.  Otherwise, we have
-                // committed to run this task.
-                if (runState == STOP)
-                    return;
-
+                // If not shutting down then clear an outstanding interrupt.
+                if (runState != STOP && 
+                    Thread.interrupted() && 
+                    runState == STOP) // Re-interrupt if stopped after clearing
+                    thread.interrupt();
                 boolean ran = false;
                 beforeExecute(thread, task);
                 try {

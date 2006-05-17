@@ -269,8 +269,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
 	    }
             if (mayInterruptIfRunning) {
                 Thread r = runner;
-                if (r != null)
-                    r.interrupt();
+                if (r != null) {
+                    Thread.yield(); // Heuristic to avoid stall on next lines
+                    if (r == runner)
+                        r.interrupt();
+                }
             }
             releaseShared(0);
             done();

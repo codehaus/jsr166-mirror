@@ -466,6 +466,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
             sync.release(1);
             t.join();
         } catch(Exception e){

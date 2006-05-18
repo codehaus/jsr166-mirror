@@ -205,6 +205,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
             lock.writeLock().unlock();
             t.join();
         } catch(Exception e){
@@ -252,6 +253,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
             lock.writeLock().unlock();
             t.join();
         } catch(Exception e){
@@ -838,6 +840,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
+            Thread.sleep(SHORT_DELAY_MS);
             t.join();
             lock.writeLock().unlock();
         } catch(Exception e){

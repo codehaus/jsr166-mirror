@@ -153,7 +153,7 @@ package java.util;
  * <tt>Object</tt>.
  *
  * <p>This interface is a member of the <a
- * href="{@docRoot}/../guide/collections/index.html"> Java Collections
+ * href="{@docRoot}/../technotes/guides/collections/index.html"> Java Collections
  * Framework</a>.
  *
  * @author Doug Lea

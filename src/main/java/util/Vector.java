@@ -43,7 +43,7 @@ package java.util;
  *
  * <p>As of the Java 2 platform v1.2, this class was retrofitted to
  * implement the {@link List} interface, making it a member of the
- * <a href="{@docRoot}/../guide/collections/index.html"> Java
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html"> Java
  * Collections Framework</a>.  Unlike the new collection
  * implementations, {@code Vector} is synchronized.
  *

@@ -71,8 +71,9 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * to the given updated value if the current value <tt>==</tt> the
      * expected value. This method is guaranteed to be atomic with respect to
      * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
-     * necessarily with respect to other changes in the field, and may fail
-     * spuriously.
+     * necessarily with respect to other changes in the field.
+     * May fail spuriously and does not provide ordering guarantees,
+     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
      *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value

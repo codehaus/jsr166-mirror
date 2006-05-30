@@ -138,7 +138,8 @@ public class AtomicLongArray implements java.io.Serializable {
     /**
      * Atomically sets the value to the given updated value
      * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously.
+     * May fail spuriously and does not provide ordering guarantees,
+     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
      *
      * @param i the index
      * @param expect the expected value

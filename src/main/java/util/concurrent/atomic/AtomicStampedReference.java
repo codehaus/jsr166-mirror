@@ -78,11 +78,9 @@ public class AtomicStampedReference<V>  {
      * Atomically sets the value of both the reference and stamp
      * to the given update values if the
      * current reference is <tt>==</tt> to the expected reference
-     * and the current stamp is equal to the expected stamp.  Any given
-     * invocation of this operation may fail (return
-     * <tt>false</tt>) spuriously, but repeated invocation when
-     * the current value holds the expected value and no other thread
-     * is also attempting to set the value will eventually succeed.
+     * and the current stamp is equal to the expected stamp.
+     * May fail spuriously and does not provide ordering guarantees,
+     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
      *
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference

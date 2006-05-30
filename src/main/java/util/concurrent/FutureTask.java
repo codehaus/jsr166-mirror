@@ -238,6 +238,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
 		if (s == RAN)
 		    return;
                 if (s == CANCELLED) {
+                    // aggressively release to set runner to null,
+                    // in case we are racing with a cancel request
+                    // that will try to interrupt runner 
                     releaseShared(0);
                     return;
                 }
@@ -256,6 +259,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
 		if (s == RAN)
 		    return;
                 if (s == CANCELLED) {
+                    // aggressively release to set runner to null,
+                    // in case we are racing with a cancel request
+                    // that will try to interrupt runner 
                     releaseShared(0);
                     return;
                 }

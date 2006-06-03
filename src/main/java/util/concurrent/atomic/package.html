@@ -69,10 +69,10 @@ Specification, Third Edition (17.4 Memory Model)</a>:
   never accessed again.
 
   <li><tt>weakCompareAndSet</tt> atomically reads and conditionally
-  writes a variable, is ordered with respect to other
-  memory operations on that variable, but otherwise acts as an
-  ordinary non-volatile memory operation in that it does <em>not</em>
-  create any happens-before orderings: 
+  writes a variable but does <em>not</em>
+  create any happens-before orderings, so provides no guarantees
+  with respect to previous or subsequent reads and writes of any
+  variables other than the target of the <tt>weakCompareAndSet</tt>.
 
   <li> <tt>compareAndSet</tt>
   and all other read-and-update operations such as <tt>getAndIncrement</tt>

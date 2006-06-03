@@ -57,9 +57,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /** The queued items  */
     private final E[] items;
     /** items index for next take, poll or remove */
-    private transient int takeIndex;
+    private int takeIndex;
     /** items index for next put, offer, or add. */
-    private transient int putIndex;
+    private int putIndex;
     /** Number of items in the queue */
     private int count;
 

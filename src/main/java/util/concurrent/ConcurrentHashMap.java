@@ -146,18 +146,18 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Small Utilities -------------- */
 
     /**
-     * Returns a hash code for non-null Object x.
-     * Uses the same hash code spreader as most other java.util hash tables.
-     * @param x the object serving as a key
-     * @return the hash code
+     * Applies a supplemental hash function to a given hashCode, which
+     * defends against poor quality hash functions.  This is critical
+     * because HashMap uses power-of two length hash tables, that
+     * otherwise encounter collisions for hashCodes that do not differ
+     * in lower bits. 
      */
-    static int hash(Object x) {
-        int h = x.hashCode();
-        h += ~(h << 9);
-        h ^=  (h >>> 14);
-        h +=  (h << 4);
-        h ^=  (h >>> 10);
-        return h;
+    static int hash(int h) {
+        // This function ensures that hashCodes that differ only by
+        // constant multiples at each bit position have a bounded
+        // number of collisions (approximately 8 at default load factor).
+        h ^= (h >>> 20) ^ (h >>> 12);
+        return h ^ (h >>> 7) ^ (h >>> 4);
     }
 
     /**
@@ -761,7 +761,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified key is null
      */
     public V get(Object key) {
-        int hash = hash(key); // throws NullPointerException if key null
+        int hash = hash(key.hashCode());
         return segmentFor(hash).get(key, hash);
     }
 
@@ -775,7 +775,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified key is null
      */
     public boolean containsKey(Object key) {
-        int hash = hash(key); // throws NullPointerException if key null
+        int hash = hash(key.hashCode()); 
         return segmentFor(hash).containsKey(key, hash);
     }
 
@@ -875,7 +875,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public V put(K key, V value) {
         if (value == null)
             throw new NullPointerException();
-        int hash = hash(key);
+        int hash = hash(key.hashCode());
         return segmentFor(hash).put(key, hash, value, false);
     }
 
@@ -889,7 +889,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public V putIfAbsent(K key, V value) {
         if (value == null)
             throw new NullPointerException();
-        int hash = hash(key);
+        int hash = hash(key.hashCode());
         return segmentFor(hash).put(key, hash, value, true);
     }
 
@@ -915,7 +915,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified key is null
      */
     public V remove(Object key) {
-	int hash = hash(key);
+	int hash = hash(key.hashCode());
         return segmentFor(hash).remove(key, hash, null);
     }
 
@@ -925,7 +925,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified key is null
      */
     public boolean remove(Object key, Object value) {
-        int hash = hash(key); // throws NullPointerException if key null
+        int hash = hash(key.hashCode());
         if (value == null)
             return false;
         return segmentFor(hash).remove(key, hash, value) != null;
@@ -939,7 +939,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public boolean replace(K key, V oldValue, V newValue) {
         if (oldValue == null || newValue == null)
             throw new NullPointerException();
-        int hash = hash(key);
+        int hash = hash(key.hashCode());
         return segmentFor(hash).replace(key, hash, oldValue, newValue);
     }
 
@@ -953,7 +953,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     public V replace(K key, V value) {
         if (value == null)
             throw new NullPointerException();
-        int hash = hash(key);
+        int hash = hash(key.hashCode());
         return segmentFor(hash).replace(key, hash, value);
     }
 

@@ -1385,6 +1385,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
+
     /* ---------------- Constructors -------------- */
 
     /**
@@ -2303,6 +2304,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * needing type-tests for Iterator methods.
      */
 
+    static final <E> List<E> toList(Collection<E> c) {
+	// Using size() here would be a pessimization.
+	List<E> list = new ArrayList<E>();
+	for (E e : c)
+	    list.add(e);
+	return list;
+    }
+
     static final class KeySet<E> extends AbstractSet<E> implements NavigableSet<E> {
         private final ConcurrentNavigableMap<E,Object> m;
         KeySet(ConcurrentNavigableMap<E,Object> map) { m = map; }
@@ -2346,6 +2355,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return false;
             }
         }
+	public Object[] toArray()     { return toList(this).toArray();  }
+	public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
         public Iterator<E> descendingIterator() {
             return descendingSet().iterator();
         }
@@ -2400,6 +2411,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public void clear() {
             m.clear();
         }
+	public Object[] toArray()     { return toList(this).toArray();  }
+	public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
     }
 
     static final class EntrySet<K1,V1> extends AbstractSet<Map.Entry<K1,V1>> {
@@ -2452,6 +2465,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return false;
             }
         }
+	public Object[] toArray()     { return toList(this).toArray();  }
+	public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
     }
 
     /**

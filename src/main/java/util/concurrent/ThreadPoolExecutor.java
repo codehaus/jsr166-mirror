@@ -333,7 +333,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * If false (default) core threads stay alive even when idle.
      * If true, core threads use keepAliveTime to time out waiting for work.
      */
-    private boolean allowCoreThreadTimeOut;
+    private volatile boolean allowCoreThreadTimeOut;
 
     /**
      * Core pool size, updated only while holding mainLock,

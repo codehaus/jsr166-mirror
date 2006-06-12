@@ -2353,7 +2353,7 @@ public class TreeMap<K,V>
 
         if (hi < lo) return null;
 
-        int mid = (lo + hi) / 2;
+        int mid = (lo + hi) >>> 1;
 
         Entry<K,V> left  = null;
         if (lo < mid)

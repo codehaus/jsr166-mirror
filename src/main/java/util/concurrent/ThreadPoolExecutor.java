@@ -413,6 +413,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return the new thread, or null if threadFactory fails to create thread
      */
     private Thread addThread(Runnable firstTask) {
+        if (runState == TERMINATED) // Don't create thread if terminated
+            return null;
         Worker w = new Worker(firstTask);
         Thread t = threadFactory.newThread(w);
         if (t != null) {

@@ -1297,8 +1297,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * terminated when they next become idle.
      *
      * @param maximumPoolSize the new maximum
-     * @throws IllegalArgumentException if maximumPoolSize less than zero or
-     * the {@link #getCorePoolSize core pool size}
+     * @throws IllegalArgumentException if the new maximum is
+     *         less than or equal to zero, or
+     *         less than the {@linkplain #getCorePoolSize core pool size}
      * @see #getMaximumPoolSize
      */
     public void setMaximumPoolSize(int maximumPoolSize) {

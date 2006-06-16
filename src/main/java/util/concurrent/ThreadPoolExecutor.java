@@ -290,10 +290,40 @@ import java.util.*;
  * @author Doug Lea
  */
 public class ThreadPoolExecutor extends AbstractExecutorService {
-    /**
-     * Only used to force toArray() to produce a Runnable[].
+
+    /*
+     * A TPE manages a largish set of control fields, mainly runState,
+     * poolSize, corePoolSize, maximumPoolSize.  In general, state
+     * changes only occur within mainLock regions, but nearly all
+     * fields are volatile, so can be read outside of locked
+     * regions. This enables the most performance-critical actions,
+     * such as enqueuing and dequeing tasks in workQueue, to normally
+     * proceed without holding this lock when they see that the state
+     * allows actions. This sometimes requires a form of double-check.
+     * For example when it appears that poolSize is less than
+     * corePoolSize, addIfUnderCorePoolSize is called, which checks
+     * sizes and runState under the lock before actually creating a
+     * new thread.
+     * 
+     * The main lifecyle control is via runState, taking on values:
+     *   RUNNING:  Accept new tasks and process queued tasks
+     *   SHUTDOWN: Don't accept new tasks, but process queued tasks
+     *   STOP:     Don't accept new tasks,  don't process queued tasks,
+     *             and interrupt in-progress tasks
+     *   TERMINATED: Same as stop, plus all threads have terminated
+     * with transitions:
+     * 
+     * RUNNING -> SHUTDOWN 
+     *    On invocation of shutdown() when pool or queue nonempty
+     * {RUNNING or SHUTDOWN}  -> STOP   
+     *    On invocation of shutdownNow() when pool or queue nonempty
+     * {SHUTDOWN or STOP} -> TERMINATED
+     *    When both queue and pool become empty
+     * RUNNING -> TERMINATED
+     *    On invocation of shutdown when both queue and pool empty
+     *    (This bypasses creating a new thread just to cause termination)
+     * 
      */
-    private static final Runnable[] EMPTY_RUNNABLE_ARRAY = new Runnable[0];
 
     /**
      * Permission for checking shutdown
@@ -307,8 +337,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private final BlockingQueue<Runnable> workQueue;
 
     /**
-     * Lock held on updates to poolSize, corePoolSize, maximumPoolSize, and
-     * workers set.
+     * Lock held on updates to poolSize, corePoolSize,
+     * maximumPoolSize, runState, and workers set.
      */
     private final ReentrantLock mainLock = new ReentrantLock();
 
@@ -361,7 +391,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      */
     volatile int runState;
 
-    // Special values for runState
+    /* 
+     * Special values for runState. The numerical order among values
+     * matters. The runState monotonically increases over time, but
+     * need not hit each state. 
+     */
     /** Normal, not-shutdown mode */
     static final int RUNNING    = 0;
     /** Controlled shutdown mode */
@@ -413,8 +447,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return the new thread, or null if threadFactory fails to create thread
      */
     private Thread addThread(Runnable firstTask) {
-        if (runState == TERMINATED) // Don't create thread if terminated
-            return null;
         Worker w = new Worker(firstTask);
         Thread t = threadFactory.newThread(w);
         if (t != null) {
@@ -439,7 +471,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
-            if (poolSize < corePoolSize)
+            if (poolSize < corePoolSize && runState == RUNNING)
                 t = addThread(firstTask);
         } finally {
             mainLock.unlock();
@@ -468,7 +500,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
-            if (poolSize < maximumPoolSize) {
+            if (poolSize < maximumPoolSize && runState == RUNNING) {
                 Runnable next = workQueue.poll();
                 if (next == null) {
                     next = firstTask;
@@ -485,7 +517,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         t.start();
         return status;
     }
-
 
     /**
      * Gets the next task for a worker thread to run.
@@ -528,15 +559,33 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     return workQueue.take();
                 }
 
-                case STOP:
+                default: // stopping/stopped
                     return null;
-                default:
-                    assert false;
                 }
             } catch (InterruptedException ie) {
                 // On interruption, re-check runstate
             }
         }
+    }
+
+
+    /**
+     * Rejects a task that was queued concurrently with a call to
+     * shutdownNow. If still present in the queue, this task must be
+     * removed and rejected to preserve shutdownNow guarantees.
+     * @param command the task
+     */
+    private void rejectIfQueued(Runnable command) {
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        boolean present;
+        try {
+            present = workQueue.remove(command);
+        } finally {
+            mainLock.unlock();
+        }
+        if (present)
+            reject(command);
     }
 
     /**
@@ -563,49 +612,34 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         try {
             completedTaskCount += w.completedTasks;
             workers.remove(w);
-            if (--poolSize > 0)
-                return;
-
-            // Else, this is the last thread. Deal with potential shutdown.
-
-            int state = runState;
-            assert state != TERMINATED;
-
-            if (state != STOP) {
-                // If there are queued tasks but no threads, create
-                // replacement thread. We must create it initially
-                // idle to avoid orphaned tasks in case addThread
-                // fails.  This also handles case of delayed tasks
-                // that will sometime later become runnable.
-                if (!workQueue.isEmpty()) {
+            if (--poolSize == 0) { // Deal with potential shutdown.
+                int state = runState;
+                // If not stopping and there are queued tasks but no
+                // threads, create replacement thread. We must create
+                // it initially idle to avoid orphaned tasks in case
+                // addThread fails.  This also handles case of delayed
+                // tasks that will sometime later become runnable.
+                if (state < STOP && !workQueue.isEmpty()) {
                     Thread t = addThread(null);
                     if (t != null)
                         t.start();
-                    return;
+                    state = RUNNING; // to cause termination check to fail
                 }
-
-                // Otherwise, we can exit without replacement
-                if (state == RUNNING)
-                    return;
+                if (state == STOP || state == SHUTDOWN) { // can terminate
+                    runState = TERMINATED;
+                    termination.signalAll();
+                    terminated();
+                }
             }
-
-            // Either state is STOP, or state is SHUTDOWN and there is
-            // no work to do. So we can terminate.
-            termination.signalAll();
-            runState = TERMINATED;
-            // fall through to call terminate() outside of lock.
         } finally {
             mainLock.unlock();
         }
-
-        assert runState == TERMINATED;
-        terminated();
     }
 
     /**
      *  Worker threads
      */
-    private class Worker implements Runnable {
+    private final class Worker implements Runnable {
 
         /**
          * The runLock is acquired and released surrounding each task
@@ -669,9 +703,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             runLock.lock();
             try {
                 // If not shutting down then clear an outstanding interrupt.
-                if (runState != STOP && 
+                if (runState < STOP && 
                     Thread.interrupted() && 
-                    runState == STOP) // Re-interrupt if stopped after clearing
+                    runState >= STOP) // Re-interrupt if stopped after clearing
                     thread.interrupt();
                 boolean ran = false;
                 beforeExecute(thread, task);
@@ -702,7 +736,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 firstTask = null;
                 while (task != null || (task = getTask()) != null) {
                     runTask(task);
-                    task = null; // unnecessary but can help GC
+                    task = null;
                 }
             } finally {
                 workerDone(this);
@@ -860,7 +894,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         this.handler = handler;
     }
 
-
     /**
      * Executes the given task sometime in the future.  The task
      * may execute in a new thread or in an existing pooled thread.
@@ -878,24 +911,26 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     public void execute(Runnable command) {
         if (command == null)
             throw new NullPointerException();
-        for (;;) {
-            if (runState != RUNNING) {
-                reject(command);
-                return;
-            }
+        while (runState == RUNNING) {
             if (poolSize < corePoolSize && addIfUnderCorePoolSize(command))
                 return;
-            if (workQueue.offer(command))
-                return;
-            int status = addIfUnderMaximumPoolSize(command);
-            if (status > 0)      // created new thread
-                return;
-            if (status == 0) {   // failed to create thread
-                reject(command);
+            if (workQueue.offer(command)) {// recheck state after queuing
+                if (runState != RUNNING) 
+                    rejectIfQueued(command);
+                else if (poolSize < corePoolSize)
+                    addIfUnderCorePoolSize(null);
                 return;
             }
-            // Retry if created a new thread but it is busy with another task
+            int status = addIfUnderMaximumPoolSize(command);
+            if (status > 0)   // Created new thread to handle task
+                return;
+            if (status == 0)  // Cannot create thread 
+                break; 
+            // Retry if created thread but it is busy with another task
         }
+
+        reject(command); // is shutdown or can't create thread or queue task
+        return;
     }
 
     /**
@@ -915,54 +950,55 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	if (security != null)
             security.checkPermission(shutdownPerm);
 
-        boolean fullyTerminated = false;
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
-            if (workers.size() > 0) {
+            if (security != null) {
                 // Check if caller can modify worker threads.  This
                 // might not be true even if passed above check, if
                 // the SecurityManager treats some threads specially.
-                if (security != null) {
-                    for (Worker w: workers)
-                        security.checkAccess(w.thread);
-                }
-
-                int state = runState;
-                if (state == RUNNING) // don't override shutdownNow
-                    runState = SHUTDOWN;
-
-                try {
-                    for (Worker w: workers)
-                        w.interruptIfIdle();
-                } catch (SecurityException se) {
-                    // If SecurityManager allows above checks, but
-                    // then unexpectedly throws exception when
-                    // interrupting threads (which it ought not do),
-                    // back out as cleanly as we can. Some threads may
-                    // have been killed but we remain in non-shutdown
-                    // state.
-                    runState = state;
-                    throw se;
-                }
+                for (Worker w: workers)
+                    security.checkAccess(w.thread);
             }
-            else { // If no workers, trigger full termination now
-                fullyTerminated = true;
+
+            int state = runState;
+            if (state == RUNNING) // don't override shutdownNow
+                runState = SHUTDOWN;
+            int nworkers = 0;
+
+            try {
+                for (Worker w: workers) {
+                    w.interruptIfIdle();
+                    ++nworkers;
+                }
+            } catch (SecurityException se) {
+                // If SecurityManager allows above checks, but
+                // then unexpectedly throws exception when
+                // interrupting threads (which it ought not do),
+                // back out as cleanly as we can. Some threads may
+                // have been killed but we remain in non-shutdown
+                // state.
+                runState = state;
+                throw se;
+            }
+
+            // If no live workers, act on one's behalf to terminate
+            if (nworkers == 0 && state != TERMINATED) { 
                 runState = TERMINATED;
                 termination.signalAll();
+                terminated();
             }
         } finally {
             mainLock.unlock();
         }
-        if (fullyTerminated)
-            terminated();
     }
 
 
     /**
      * Attempts to stop all actively executing tasks, halts the
      * processing of waiting tasks, and returns a list of the tasks
-     * that were awaiting execution.
+     * that were awaiting execution. These tasks are drained (removed)
+     * from the task queue upon return from this method.
      *
      * <p>There are no guarantees beyond best-effort attempts to stop
      * processing actively executing tasks.  This implementation
@@ -982,38 +1018,40 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	if (security != null)
             security.checkPermission(shutdownPerm);
 
-        boolean fullyTerminated = false;
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
-            if (workers.size() > 0) {
-                if (security != null) {
-                    for (Worker w: workers)
-                        security.checkAccess(w.thread);
-                }
-
-                int state = runState;
-                if (state != TERMINATED)
-                    runState = STOP;
-                try {
-                    for (Worker w : workers)
-                        w.interruptNow();
-                } catch (SecurityException se) {
-                    runState = state; // back out;
-                    throw se;
-                }
+            if (security != null) {
+                for (Worker w: workers)
+                    security.checkAccess(w.thread);
             }
-            else { // If no workers, trigger full termination now
-                fullyTerminated = true;
+
+            int state = runState;
+            if (state != TERMINATED)
+                runState = STOP;
+            int nworkers = 0;
+            try {
+                for (Worker w : workers) {
+                    w.interruptNow();
+                    ++nworkers;
+                }
+            } catch (SecurityException se) {
+                runState = state; // back out;
+                throw se;
+            }
+
+            if (nworkers == 0 && state != TERMINATED) { 
                 runState = TERMINATED;
                 termination.signalAll();
+                terminated();
             }
+
+            List<Runnable> taskList = new ArrayList<Runnable>();
+            workQueue.drainTo(taskList);
+            return taskList;
         } finally {
             mainLock.unlock();
         }
-        if (fullyTerminated)
-            terminated();
-        return Arrays.asList(workQueue.toArray(EMPTY_RUNNABLE_ARRAY));
     }
 
     public boolean isShutdown() {
@@ -1196,7 +1234,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 // We have to create initially-idle threads here
                 // because we otherwise have no recourse about
                 // what to do with a dequeued task if addThread fails.
-                while (extra++ < 0 && n-- > 0 && poolSize < corePoolSize ) {
+                while (extra++ < 0 && n-- > 0 && poolSize < corePoolSize &&
+                       runState < STOP) {
                     Thread t = addThread(null);
                     if (t != null)
                         t.start();
@@ -1417,7 +1456,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Returns the approximate total number of tasks that have been
+     * Returns the approximate total number of tasks that have ever been
      * scheduled for execution. Because the states of tasks and
      * threads may change dynamically during computation, the returned
      * value is only an approximation, but one that does not ever

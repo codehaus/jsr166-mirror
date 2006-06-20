@@ -333,10 +333,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * The numerical order among these values matters, to allow
      * ordered comparisons. The runState monotonically increases over
      * time, but need not hit each state. The transitions are:
-     * 
-     * RUNNING -> SHUTDOWN 
+     *
+     * RUNNING -> SHUTDOWN
      *    On invocation of shutdown(), perhaps implicity in finalize()
-     * (RUNNING or SHUTDOWN) -> STOP   
+     * (RUNNING or SHUTDOWN) -> STOP
      *    On invocation of shutdownNow()
      * SHUTDOWN -> TERMINATED
      *    When both queue and pool are empty
@@ -597,7 +597,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /*
-     * Support for execute(). 
+     * Support for execute().
      *
      * Method execute() and its helper methods handle the various
      * cases encountered when new tasks are submitted.  The main
@@ -660,7 +660,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Creates and returns a new thread running firstTask as its first
-     * task. Call only while holding mainLock. 
+     * task. Call only while holding mainLock.
      *
      * @param firstTask the task the new thread should run first (or
      * null if none)
@@ -747,7 +747,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             if (state != RUNNING && workQueue.remove(command))
                 reject = true;
             else if (state < STOP &&
-                     poolSize < Math.max(corePoolSize, 1) && 
+                     poolSize < Math.max(corePoolSize, 1) &&
                      !workQueue.isEmpty())
                 t = addThread(null);
         } finally {
@@ -793,7 +793,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * both tasks and workers. However, this shielding does not
      * necessarily protect the workers from lagging interrupts from
      * other user threads directed towards tasks that have already
-     * been completed. Thus, a worker thread may be interrupted 
+     * been completed. Thus, a worker thread may be interrupted
      * needlessly (for example in getTask), in which case it rechecks
      * pool state to see it it should exit.
      *
@@ -867,9 +867,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                  * cleared concurrently with a shutdownNow -- if so,
                  * the interrupt is re-enabled.
                  */
-                if (runState < STOP && 
-                    Thread.interrupted() && 
-                    runState >= STOP) 
+                if (runState < STOP &&
+                    Thread.interrupted() &&
+                    runState >= STOP)
                     thread.interrupt();
                 /*
                  * Track execution state to ensure that afterExecute
@@ -969,9 +969,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         boolean canExit;
         try {
-            canExit = runState >= STOP || 
-                workQueue.isEmpty() || 
-                (allowCoreThreadTimeOut && 
+            canExit = runState >= STOP ||
+                workQueue.isEmpty() ||
+                (allowCoreThreadTimeOut &&
                  poolSize > Math.max(1, corePoolSize));
         } finally {
             mainLock.unlock();
@@ -1005,7 +1005,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         try {
             completedTaskCount += w.completedTasks;
             workers.remove(w);
-            if (--poolSize == 0) 
+            if (--poolSize == 0)
                 tryTerminate();
         } finally {
             mainLock.unlock();
@@ -1140,7 +1140,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         /*
          * shutdownNow differs from shutdown only in that
          * (1) runState is set to STOP, (2) All worker threads
-         * are interrupted, not just the idle ones, and (3) 
+         * are interrupted, not just the idle ones, and (3)
          * the queue is drained and returned.
          */
 	SecurityManager security = System.getSecurityManager();
@@ -1164,7 +1164,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     w.interruptNow();
                 }
             } catch (SecurityException se) { // Try to back out
-                runState = state; 
+                runState = state;
                 tryTerminate();
                 throw se;
             }

@@ -58,9 +58,9 @@ import java.util.*;
  * core and maximum pool sizes are set only upon construction, but they
  * may also be changed dynamically using {@link
  * ThreadPoolExecutor#setCorePoolSize} and {@link
- * ThreadPoolExecutor#setMaximumPoolSize}. <dd>
+ * ThreadPoolExecutor#setMaximumPoolSize}. </dd>
  *
- * <dt> On-demand construction
+ * <dt>On-demand construction</dt>
  *
  * <dd> By default, even core threads are initially created and
  * started only when new tasks arrive, but this can be overridden
@@ -466,7 +466,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @param workQueue the queue to use for holding tasks before they
      * are executed. This queue will hold only the <tt>Runnable</tt>
      * tasks submitted by the <tt>execute</tt> method.
-     * @throws IllegalArgumentException if corePoolSize, or
+     * @throws IllegalArgumentException if corePoolSize or
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
      * @throws NullPointerException if <tt>workQueue</tt> is null
@@ -498,7 +498,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * tasks submitted by the <tt>execute</tt> method.
      * @param threadFactory the factory to use when the executor
      * creates a new thread.
-     * @throws IllegalArgumentException if corePoolSize, or
+     * @throws IllegalArgumentException if corePoolSize or
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
      * @throws NullPointerException if <tt>workQueue</tt>
@@ -532,7 +532,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * tasks submitted by the <tt>execute</tt> method.
      * @param handler the handler to use when execution is blocked
      * because the thread bounds and queue capacities are reached.
-     * @throws IllegalArgumentException if corePoolSize, or
+     * @throws IllegalArgumentException if corePoolSize or
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
      * @throws NullPointerException if <tt>workQueue</tt>
@@ -568,7 +568,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * creates a new thread.
      * @param handler the handler to use when execution is blocked
      * because the thread bounds and queue capacities are reached.
-     * @throws IllegalArgumentException if corePoolSize, or
+     * @throws IllegalArgumentException if corePoolSize or
      * keepAliveTime less than zero, or if maximumPoolSize less than or
      * equal to zero, or if corePoolSize greater than maximumPoolSize.
      * @throws NullPointerException if <tt>workQueue</tt>
@@ -1218,7 +1218,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * period after shutdown may indicate that submitted tasks have
      * ignored or suppressed interruption, causing this executor not
      * to properly terminate.
-     * @return true if terminating but not yet terminated.
+     * @return true if terminating but not yet terminated
      */
     public boolean isTerminating() {
         return runState == STOP;
@@ -1493,7 +1493,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Returns the thread keep-alive time, which is the amount of time
-     * which threads in excess of the core pool size may remain
+     * that threads in excess of the core pool size may remain
      * idle before being terminated.
      *
      * @param unit the desired time unit of the result

@@ -21,7 +21,7 @@ public interface RejectedExecutionHandler {
      * more threads or queue slots are available because their bounds
      * would be exceeded, or upon shutdown of the Executor.
      *
-     * In the absence other alternatives, the method may throw an
+     * In the absence of other alternatives, the method may throw an
      * unchecked {@link RejectedExecutionException}, which will be
      * propagated to the caller of <tt>execute</tt>.
      *

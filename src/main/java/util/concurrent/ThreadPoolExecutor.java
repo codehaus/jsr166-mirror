@@ -1024,7 +1024,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * This method is called from the three places in which
      * termination can occur: in workerDone on exit of the last thread
      * after pool has been shut down, or directly within calls to
-     * shutdown or shutdownNow, if there are no live thread.,
+     * shutdown or shutdownNow, if there are no live threads.
      */
     private void tryTerminate() {
         if (poolSize == 0) {

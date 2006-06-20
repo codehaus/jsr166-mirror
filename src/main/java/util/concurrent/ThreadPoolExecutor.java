@@ -314,7 +314,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * updated within locks.
      *
      * The extensive use of volatiles here enables the most
-     * performance-critical actions, such as enqueuing and dequeing
+     * performance-critical actions, such as enqueuing and dequeuing
      * tasks in the workQueue, to normally proceed without holding the
      * mainLock when they see that the state allows actions, although,
      * as described below, sometimes at the expense of re-checks
@@ -326,9 +326,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *
      *   RUNNING:  Accept new tasks and process queued tasks
      *   SHUTDOWN: Don't accept new tasks, but process queued tasks
-     *   STOP:     Don't accept new tasks,  don't process queued tasks,
+     *   STOP:     Don't accept new tasks, don't process queued tasks,
      *             and interrupt in-progress tasks
-     *   TERMINATED: Same as stop, plus all threads have terminated
+     *   TERMINATED: Same as STOP, plus all threads have terminated
      *
      * The numerical order among these values matters, to allow
      * ordered comparisons. The runState monotonically increases over

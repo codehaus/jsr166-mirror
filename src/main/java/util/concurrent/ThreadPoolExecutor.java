@@ -1221,7 +1221,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return true if terminating but not yet terminated
      */
     public boolean isTerminating() {
-        return runState == STOP;
+        int state = runState;
+        return state == SHUTDOWN || state == STOP;
     }
 
     public boolean isTerminated() {

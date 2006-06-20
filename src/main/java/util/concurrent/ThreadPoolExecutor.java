@@ -309,9 +309,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * The other fields representing user control parameters do not
      * affect execution invariants, so are declared volatile and
      * allowed to change (via user methods) asynchronously with
-     * execution. These fields include: allowCoreThreadTimeOut,
-     * keepAliveTime, the rejected execution handler, and
-     * threadFactory are not updated within locks.
+     * execution. These fields: allowCoreThreadTimeOut, keepAliveTime,
+     * the rejected execution handler, and threadFactory, are not
+     * updated within locks.
      *
      * The extensive use of volatiles here enables the most
      * performance-critical actions, such as enqueuing and dequeing
@@ -781,7 +781,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * is not empty but there are no active threads to handle them.
      *
      * After completing a task, workers try to get another one,
-     * via method getTask.
+     * via method getTask. If they cannot (i.e., getTask returns
+     * null), they exit, calling workerDone to update pool state.
      *
      * When starting to run a task, unless the pool is stopped, each
      * worker thread ensures that it is not interrupted, and uses
@@ -795,7 +796,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * other user threads directed towards tasks that have already
      * been completed. Thus, a worker thread may be interrupted
      * needlessly (for example in getTask), in which case it rechecks
-     * pool state to see it it should exit.
+     * pool state to see if it should exit.
      *
      */
     private final class Worker implements Runnable {
@@ -920,7 +921,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * to get a task to run do so on the basis of prevailing state
      * accessed outside of locks.  This may cause them to choose the
      * "wrong" action, such as or trying to exit because no tasks
-     * appear to a available, or entering a take when the pool is in
+     * appear to be available, or entering a take when the pool is in
      * the process of being shut down. These potential problems are
      * countered by (1) rechecking pool state (in workerCanExit)
      * before giving up, and (2) interrupting other workers upon
@@ -1023,7 +1024,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * This method is called from the three places in which
      * termination can occur: in workerDone on exit of the last thread
      * after pool has been shut down, or directly within calls to
-     * shutdown or shutdownNow, if there are no live threads,
+     * shutdown or shutdownNow, if there are no live thread.,
      */
     private void tryTerminate() {
         if (poolSize == 0) {
@@ -1340,7 +1341,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                            workQueue.remainingCapacity() == 0)
                         it.next().interruptIfIdle();
                 } catch(SecurityException ignore) {
-                    // Not an error; it is OK if the threads can stay live
+                    // Not an error; it is OK if the threads stay live
                 }
             }
         } finally {
@@ -1451,7 +1452,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                         --extra;
                     }
                 } catch(SecurityException ignore) {
-                    // Not an error; it is OK if the threads can stay live
+                    // Not an error; it is OK if the threads stay live
                 }
             }
         } finally {

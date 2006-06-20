@@ -306,12 +306,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * read outside of locked regions. (Also, the workers Set is
      * accessed only under lock).
      *
-     * The other fields representng user control parameters do not
+     * The other fields representing user control parameters do not
      * affect execution invariants, so are declared volatile and
      * allowed to change (via user methods) asynchronously with
      * execution. These fields include: allowCoreThreadTimeOut,
      * keepAliveTime, the rejected execution handler, and
-     * threadfactory are not updated within locks
+     * threadFactory are not updated within locks.
      *
      * The extensive use of volatiles here enables the most
      * performance-critical actions, such as enqueuing and dequeing
@@ -335,7 +335,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * time, but need not hit each state. The transitions are:
      *
      * RUNNING -> SHUTDOWN
-     *    On invocation of shutdown(), perhaps implicity in finalize()
+     *    On invocation of shutdown(), perhaps implicitly in finalize()
      * (RUNNING or SHUTDOWN) -> STOP
      *    On invocation of shutdownNow()
      * SHUTDOWN -> TERMINATED
@@ -372,7 +372,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private final Condition termination = mainLock.newCondition();
 
     /**
-     * Set containing all worker threads in pool. Accessed onl when
+     * Set containing all worker threads in pool. Accessed only when
      * holding mainLock.
      */
     private final HashSet<Worker> workers = new HashSet<Worker>();
@@ -615,7 +615,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * 2. If a task can be successfully queued, then we are done, but
      * still need to compensate for missing the fact that we should
      * have added a thread (because existing ones died) or that
-     * shutdown occured since entry into this method. So we recheck
+     * shutdown occurred since entry into this method. So we recheck
      * state to and if necessary (in ensureQueuedTaskHandled) roll
      * back the enqueuing if shut down, or start a new thread if there
      * are none.
@@ -685,7 +685,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * and the pool is not shut down.
      * @param firstTask the task the new thread should run first (or
      * null if none)
-     * @return true if successful.
+     * @return true if successful
      */
     private boolean addIfUnderCorePoolSize(Runnable firstTask) {
         Thread t = null;
@@ -709,7 +709,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * and pool is not shut down.
      * @param firstTask the task the new thread should run first (or
      * null if none)
-     * @return true if successful.
+     * @return true if successful
      */
     private boolean addIfUnderMaximumPoolSize(Runnable firstTask) {
         Thread t = null;
@@ -771,7 +771,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Worker threads.
      *
      * Worker threads can start out life either with an initial first
-     * task, oo without one. Normally, they are started with a first
+     * task, or without one. Normally, they are started with a first
      * task. This enables execute(), etc to bypass queuing when there
      * are fewer than corePoolSize threads (in which case we always
      * start one), or when the queue is full.(in which case we must
@@ -926,7 +926,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * before giving up, and (2) interrupting other workers upon
      * shutdown, so they can recheck state. All other user-based state
      * changes (to allowCoreThreadTimeOut etc) are OK even when
-     * perfromed asynchronously wrt getTask.
+     * performed asynchronously wrt getTask.
      *
      * @return the task
      */
@@ -952,7 +952,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 }
                 // Else retry
             } catch (InterruptedException ie) {
-                // On interruption, re-check runstate
+                // On interruption, re-check runState
             }
         }
     }
@@ -1016,7 +1016,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Transitions to TERMINATED state if either (SHUTDOWN and pool
-     * and queue empty) or (STOP and pool empty), otherwisem unless
+     * and queue empty) or (STOP and pool empty), otherwise unless
      * stopped, ensuring that there is at least one live thread to
      * handle queued tasks.
      *
@@ -1056,7 +1056,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     public void shutdown() {
         /*
          * Conceptually, shutdown is just a matter of changing the
-         * runsState to SHUTDOWN, and then interrupting any worker
+         * runState to SHUTDOWN, and then interrupting any worker
          * threads that might be blocked in getTask() to wake them up
          * so they can exit. Then, if there happen not to be any
          * threads or tasks, we can directly terminate pool via
@@ -1373,7 +1373,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Starts all core threads, causing them to idly wait for work. This
      * overrides the default policy of starting core threads only when
      * new tasks are executed.
-     * @return the number of threads started.
+     * @return the number of threads started
      */
     public int prestartAllCoreThreads() {
         int n = 0;

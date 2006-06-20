@@ -1200,7 +1200,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     if (workQueue.remove(r))
                         taskList.add(r);
                 }
-            } catch(ConcurrentModificationException ignore) {
+            } catch (ConcurrentModificationException ignore) {
             }
         }
         return taskList;
@@ -1340,7 +1340,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                            poolSize > corePoolSize &&
                            workQueue.remainingCapacity() == 0)
                         it.next().interruptIfIdle();
-                } catch(SecurityException ignore) {
+                } catch (SecurityException ignore) {
                     // Not an error; it is OK if the threads stay live
                 }
             }
@@ -1451,7 +1451,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                         it.next().interruptIfIdle();
                         --extra;
                     }
-                } catch(SecurityException ignore) {
+                } catch (SecurityException ignore) {
                     // Not an error; it is OK if the threads stay live
                 }
             }

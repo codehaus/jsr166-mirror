@@ -775,7 +775,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified key is null
      */
     public boolean containsKey(Object key) {
-        int hash = hash(key.hashCode()); 
+        int hash = hash(key.hashCode());
         return segmentFor(hash).containsKey(key, hash);
     }
 

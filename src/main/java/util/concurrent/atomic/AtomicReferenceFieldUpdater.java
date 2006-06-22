@@ -180,7 +180,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
 		caller = sun.reflect.Reflection.getCallerClass(3);
 		modifiers = field.getModifiers();
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
-                    caller, tclass, null, modifiers); 
+                    caller, tclass, null, modifiers);
 		sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
                 fieldClass = field.getType();
             } catch (Exception ex) {
@@ -189,7 +189,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
             if (vclass != fieldClass)
                 throw new ClassCastException();
-            
+
             if (!Modifier.isVolatile(modifiers))
                 throw new IllegalArgumentException("Must be volatile type");
 

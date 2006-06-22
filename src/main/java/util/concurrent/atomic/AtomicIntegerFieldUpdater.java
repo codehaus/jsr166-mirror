@@ -247,7 +247,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
 		caller = sun.reflect.Reflection.getCallerClass(3);
 		modifiers = field.getModifiers();
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
-                    caller, tclass, null, modifiers); 
+                    caller, tclass, null, modifiers);
 		sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
             } catch(Exception ex) {
                 throw new RuntimeException(ex);
@@ -256,10 +256,10 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
             Class fieldt = field.getType();
             if (fieldt != int.class)
                 throw new IllegalArgumentException("Must be integer type");
-            
+
             if (!Modifier.isVolatile(modifiers))
                 throw new IllegalArgumentException("Must be volatile type");
-         
+
 	    this.cclass = (Modifier.isProtected(modifiers) &&
 			   caller != tclass) ? caller : null;
             this.tclass = tclass;

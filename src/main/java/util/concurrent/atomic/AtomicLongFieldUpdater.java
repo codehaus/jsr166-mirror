@@ -246,7 +246,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 		caller = sun.reflect.Reflection.getCallerClass(3);
 		modifiers = field.getModifiers();
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
-                    caller, tclass, null, modifiers); 
+                    caller, tclass, null, modifiers);
 		sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
             } catch(Exception ex) {
                 throw new RuntimeException(ex);
@@ -329,7 +329,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 		caller = sun.reflect.Reflection.getCallerClass(3);
 		modifiers = field.getModifiers();
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
-                    caller, tclass, null, modifiers); 
+                    caller, tclass, null, modifiers);
 		sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
             } catch(Exception ex) {
                 throw new RuntimeException(ex);

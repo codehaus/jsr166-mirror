@@ -8,18 +8,18 @@
 package java.util;
 
 /**
- * The <code>Vector</code> class implements a growable array of
+ * The {@code Vector} class implements a growable array of
  * objects. Like an array, it contains components that can be
  * accessed using an integer index. However, the size of a
- * <code>Vector</code> can grow or shrink as needed to accommodate
- * adding and removing items after the <code>Vector</code> has been created.
+ * {@code Vector} can grow or shrink as needed to accommodate
+ * adding and removing items after the {@code Vector} has been created.
  *
  * <p>Each vector tries to optimize storage management by maintaining a
- * <code>capacity</code> and a <code>capacityIncrement</code>. The
- * <code>capacity</code> is always at least as large as the vector
+ * {@code capacity} and a {@code capacityIncrement}. The
+ * {@code capacity} is always at least as large as the vector
  * size; it is usually larger because as components are added to the
  * vector, the vector's storage increases in chunks the size of
- * <code>capacityIncrement</code>. An application can increase the
+ * {@code capacityIncrement}. An application can increase the
  * capacity of a vector before inserting a large number of
  * components; this reduces the amount of incremental reallocation.
  *
@@ -36,7 +36,7 @@ package java.util;
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification.  Fail-fast iterators
- * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
+ * throw {@code ConcurrentModificationException} on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
  * exception for its correctness:  <i>the fail-fast behavior of iterators
  * should be used only to detect bugs.</i>
@@ -72,9 +72,9 @@ public class Vector<E>
     protected Object[] elementData;
 
     /**
-     * The number of valid components in this <tt>Vector</tt> object.
-     * Components <tt>elementData[0]</tt> through
-     * <tt>elementData[elementCount-1]</tt> are the actual items.
+     * The number of valid components in this {@code Vector} object.
+     * Components {@code elementData[0]} through
+     * {@code elementData[elementCount-1]} are the actual items.
      *
      * @serial
      */
@@ -126,7 +126,7 @@ public class Vector<E>
 
     /**
      * Constructs an empty vector so that its internal data array
-     * has size <tt>10</tt> and its standard capacity increment is
+     * has size {@code 10} and its standard capacity increment is
      * zero.
      */
     public Vector() {
@@ -153,8 +153,8 @@ public class Vector<E>
 
     /**
      * Copies the components of this vector into the specified array.
-     * The item at index <tt>k</tt> in this vector is copied into
-     * component <tt>k</tt> of <tt>anArray</tt>.
+     * The item at index {@code k} in this vector is copied into
+     * component {@code k} of {@code anArray}.
      *
      * @param  anArray the array into which the components get copied
      * @throws NullPointerException if the given array is null
@@ -172,7 +172,7 @@ public class Vector<E>
      * Trims the capacity of this vector to be the vector's current
      * size. If the capacity of this vector is larger than its current
      * size, then the capacity is changed to equal the size by replacing
-     * its internal data array, kept in the field <tt>elementData</tt>,
+     * its internal data array, kept in the field {@code elementData},
      * with a smaller one. An application can use this operation to
      * minimize the storage of a vector.
      */
@@ -190,14 +190,14 @@ public class Vector<E>
      * the minimum capacity argument.
      *
      * <p>If the current capacity of this vector is less than
-     * <tt>minCapacity</tt>, then its capacity is increased by replacing its
-     * internal data array, kept in the field <tt>elementData</tt>, with a
+     * {@code minCapacity}, then its capacity is increased by replacing its
+     * internal data array, kept in the field {@code elementData}, with a
      * larger one.  The size of the new data array will be the old size plus
-     * <tt>capacityIncrement</tt>, unless the value of
-     * <tt>capacityIncrement</tt> is less than or equal to zero, in which case
+     * {@code capacityIncrement}, unless the value of
+     * {@code capacityIncrement} is less than or equal to zero, in which case
      * the new capacity will be twice the old capacity; but if this new size
-     * is still smaller than <tt>minCapacity</tt>, then the new capacity will
-     * be <tt>minCapacity</tt>.
+     * is still smaller than {@code minCapacity}, then the new capacity will
+     * be {@code minCapacity}.
      *
      * @param minCapacity the desired minimum capacity
      */
@@ -229,9 +229,9 @@ public class Vector<E>
 
     /**
      * Sets the size of this vector. If the new size is greater than the
-     * current size, new <code>null</code> items are added to the end of
+     * current size, new {@code null} items are added to the end of
      * the vector. If the new size is less than the current size, all
-     * components at index <code>newSize</code> and greater are discarded.
+     * components at index {@code newSize} and greater are discarded.
      *
      * @param   newSize   the new size of this vector
      * @throws  ArrayIndexOutOfBoundsException if new size is negative
@@ -252,7 +252,7 @@ public class Vector<E>
      * Returns the current capacity of this vector.
      *
      * @return  the current capacity (the length of its internal
-     *          data array, kept in the field <tt>elementData</tt>
+     *          data array, kept in the field {@code elementData}
      *          of this vector)
      */
     public synchronized int capacity() {
@@ -271,9 +271,9 @@ public class Vector<E>
     /**
      * Tests if this vector has no components.
      *
-     * @return  <code>true</code> if and only if this vector has
+     * @return  {@code true} if and only if this vector has
      *          no components, that is, its size is zero;
-     *          <code>false</code> otherwise.
+     *          {@code false} otherwise.
      */
     public synchronized boolean isEmpty() {
 	return elementCount == 0;
@@ -281,9 +281,9 @@ public class Vector<E>
 
     /**
      * Returns an enumeration of the components of this vector. The
-     * returned <tt>Enumeration</tt> object will generate all items in
-     * this vector. The first item generated is the item at index <tt>0</tt>,
-     * then the item at index <tt>1</tt>, and so on.
+     * returned {@code Enumeration} object will generate all items in
+     * this vector. The first item generated is the item at index {@code 0},
+     * then the item at index {@code 1}, and so on.
      *
      * @return  an enumeration of the components of this vector
      * @see     Enumeration
@@ -309,13 +309,13 @@ public class Vector<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this vector contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this vector
-     * contains at least one element <tt>e</tt> such that
+     * Returns {@code true} if this vector contains the specified element.
+     * More formally, returns {@code true} if and only if this vector
+     * contains at least one element {@code e} such that
      * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
      *
      * @param o element whose presence in this vector is to be tested
-     * @return <tt>true</tt> if this vector contains the specified element
+     * @return {@code true} if this vector contains the specified element
      */
     public boolean contains(Object o) {
 	return indexOf(o, 0) >= 0;
@@ -324,7 +324,7 @@ public class Vector<E>
     /**
      * Returns the index of the first occurrence of the specified element
      * in this vector, or -1 if this vector does not contain the element.
-     * More formally, returns the lowest index <tt>i</tt> such that
+     * More formally, returns the lowest index {@code i} such that
      * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
      * or -1 if there is no such index.
      *
@@ -338,17 +338,17 @@ public class Vector<E>
 
     /**
      * Returns the index of the first occurrence of the specified element in
-     * this vector, searching forwards from <tt>index</tt>, or returns -1 if
+     * this vector, searching forwards from {@code index}, or returns -1 if
      * the element is not found.
-     * More formally, returns the lowest index <tt>i</tt> such that
+     * More formally, returns the lowest index {@code i} such that
      * <tt>(i&nbsp;&gt;=&nbsp;index&nbsp;&amp;&amp;&nbsp;(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i))))</tt>,
      * or -1 if there is no such index.
      *
      * @param o element to search for
      * @param index index to start searching from
      * @return the index of the first occurrence of the element in
-     *         this vector at position <tt>index</tt> or later in the vector;
-     *         <tt>-1</tt> if the element is not found.
+     *         this vector at position {@code index} or later in the vector;
+     *         {@code -1} if the element is not found.
      * @throws IndexOutOfBoundsException if the specified index is negative
      * @see     Object#equals(Object)
      */
@@ -368,7 +368,7 @@ public class Vector<E>
     /**
      * Returns the index of the last occurrence of the specified element
      * in this vector, or -1 if this vector does not contain the element.
-     * More formally, returns the highest index <tt>i</tt> such that
+     * More formally, returns the highest index {@code i} such that
      * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
      * or -1 if there is no such index.
      *
@@ -382,16 +382,16 @@ public class Vector<E>
 
     /**
      * Returns the index of the last occurrence of the specified element in
-     * this vector, searching backwards from <tt>index</tt>, or returns -1 if
+     * this vector, searching backwards from {@code index}, or returns -1 if
      * the element is not found.
-     * More formally, returns the highest index <tt>i</tt> such that
+     * More formally, returns the highest index {@code i} such that
      * <tt>(i&nbsp;&lt;=&nbsp;index&nbsp;&amp;&amp;&nbsp;(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i))))</tt>,
      * or -1 if there is no such index.
      *
      * @param o element to search for
      * @param index index to start searching backwards from
      * @return the index of the last occurrence of the element at position
-     *         less than or equal to <tt>index</tt> in this vector;
+     *         less than or equal to {@code index} in this vector;
      *         -1 if the element is not found.
      * @throws IndexOutOfBoundsException if the specified index is greater
      *         than or equal to the current size of this vector
@@ -420,9 +420,9 @@ public class Vector<E>
      *
      * @param      index   an index into this vector
      * @return     the component at the specified index
-     * @exception  ArrayIndexOutOfBoundsException  if the <tt>index</tt>
+     * @exception  ArrayIndexOutOfBoundsException  if the {@code index}
      *             is negative or not less than the current size of this
-     *             <tt>Vector</tt> object.
+     *             {@code Vector} object.
      * @see	   #get(int)
      * @see	   List
      */
@@ -435,7 +435,7 @@ public class Vector<E>
     }
 
     /**
-     * Returns the first component (the item at index <tt>0</tt>) of
+     * Returns the first component (the item at index {@code 0}) of
      * this vector.
      *
      * @return     the first component of this vector
@@ -463,11 +463,11 @@ public class Vector<E>
     }
 
     /**
-     * Sets the component at the specified <code>index</code> of this
+     * Sets the component at the specified {@code index} of this
      * vector to be the specified object. The previous component at that
      * position is discarded.<p>
      *
-     * The index must be a value greater than or equal to <code>0</code>
+     * The index must be a value greater than or equal to {@code 0}
      * and less than the current size of the vector. <p>
      *
      * This method is identical in functionality to the set method
@@ -494,11 +494,11 @@ public class Vector<E>
     /**
      * Deletes the component at the specified index. Each component in
      * this vector with an index greater or equal to the specified
-     * <code>index</code> is shifted downward to have an index one
+     * {@code index} is shifted downward to have an index one
      * smaller than the value it had previously. The size of this vector
-     * is decreased by <tt>1</tt>.<p>
+     * is decreased by {@code 1}.<p>
      *
-     * The index must be a value greater than or equal to <code>0</code>
+     * The index must be a value greater than or equal to {@code 0}
      * and less than the current size of the vector. <p>
      *
      * This method is identical in functionality to the remove method
@@ -530,12 +530,12 @@ public class Vector<E>
 
     /**
      * Inserts the specified object as a component in this vector at the
-     * specified <code>index</code>. Each component in this vector with
-     * an index greater or equal to the specified <code>index</code> is
+     * specified {@code index}. Each component in this vector with
+     * an index greater or equal to the specified {@code index} is
      * shifted upward to have an index one greater than the value it had
      * previously. <p>
      *
-     * The index must be a value greater than or equal to <code>0</code>
+     * The index must be a value greater than or equal to {@code 0}
      * and less than or equal to the current size of the vector. (If the
      * index is equal to the current size of the vector, the new element
      * is appended to the Vector.)<p>
@@ -592,8 +592,8 @@ public class Vector<E>
      * method (which is part of the List interface).
      *
      * @param   obj   the component to be removed
-     * @return  <code>true</code> if the argument was a component of this
-     *          vector; <code>false</code> otherwise.
+     * @return  {@code true} if the argument was a component of this
+     *          vector; {@code false} otherwise.
      * @see	List#remove(Object)
      * @see	List
      */
@@ -628,7 +628,7 @@ public class Vector<E>
     /**
      * Returns a clone of this vector. The copy will contain a
      * reference to a clone of the internal data array, not a reference
-     * to the original internal data array of this <tt>Vector</tt> object.
+     * to the original internal data array of this {@code Vector} object.
      *
      * @return  a clone of this vector
      */
@@ -731,7 +731,7 @@ public class Vector<E>
      * Appends the specified element to the end of this Vector.
      *
      * @param e element to be appended to this Vector
-     * @return <tt>true</tt> (as specified by {@link Collection#add})
+     * @return {@code true} (as specified by {@link Collection#add})
      * @since 1.2
      */
     public synchronized boolean add(E e) {
@@ -745,7 +745,7 @@ public class Vector<E>
      * Removes the first occurrence of the specified element in this Vector
      * If the Vector does not contain the element, it is unchanged.  More
      * formally, removes the element with the lowest index i such that
-     * <code>(o==null ? get(i)==null : o.equals(get(i)))</code> (if such
+     * {@code (o==null ? get(i)==null : o.equals(get(i)))} (if such
      * an element exists).
      *
      * @param o element to be removed from this Vector, if present
@@ -832,7 +832,7 @@ public class Vector<E>
      * specified Collection is this Vector, and this Vector is nonempty.)
      *
      * @param c elements to be inserted into this Vector
-     * @return <tt>true</tt> if this Vector changed as a result of the call
+     * @return {@code true} if this Vector changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      * @since 1.2
      */
@@ -895,7 +895,7 @@ public class Vector<E>
      * @param index index at which to insert the first element from the
      *              specified collection
      * @param c elements to be inserted into this Vector
-     * @return <tt>true</tt> if this Vector changed as a result of the call
+     * @return {@code true} if this Vector changed as a result of the call
      * @exception ArrayIndexOutOfBoundsException index out of range (index
      *		  &lt; 0 || index &gt; size())
      * @throws NullPointerException if the specified collection is null
@@ -924,9 +924,9 @@ public class Vector<E>
      * Compares the specified Object with this Vector for equality.  Returns
      * true if and only if the specified Object is also a List, both Lists
      * have the same size, and all corresponding pairs of elements in the two
-     * Lists are <em>equal</em>.  (Two elements <code>e1</code> and
-     * <code>e2</code> are <em>equal</em> if <code>(e1==null ? e2==null :
-     * e1.equals(e2))</code>.)  In other words, two Lists are defined to be
+     * Lists are <em>equal</em>.  (Two elements {@code e1} and
+     * {@code e2} are <em>equal</em> if {@code (e1==null ? e2==null :
+     * e1.equals(e2))}.)  In other words, two Lists are defined to be
      * equal if they contain the same elements in the same order.
      *
      * @param o the Object to be compared for equality with this Vector
@@ -974,7 +974,7 @@ public class Vector<E>
     }
 
     /**
-     * Save the state of the <tt>Vector</tt> instance to a stream (that
+     * Save the state of the {@code Vector} instance to a stream (that
      * is, serialize it).  This method is present merely for synchronization.
      * It just calls the default writeObject method.
      */

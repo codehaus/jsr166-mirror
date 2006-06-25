@@ -26,7 +26,7 @@ package java.util;
  * <tt>Collection</tt> constructor, as per the recommendation in the
  * <tt>Collection</tt> interface specification.<p>
  *
- * The documentation for each non-abstract methods in this class describes its
+ * The documentation for each non-abstract method in this class describes its
  * implementation in detail.  Each of these methods may be overridden if
  * the collection being implemented admits a more efficient implementation.<p>
  *
@@ -95,33 +95,60 @@ public abstract class AbstractCollection<E> implements Collection<E> {
     /**
      * {@inheritDoc}
      *
-     * <p>This implementation allocates the array to be returned, and iterates
-     * over the elements in the collection, storing each object reference in
-     * the next consecutive element of the array, starting with element 0.
+     * <p>This implementation returns an array containing all the elements
+     * returned by this collection's iterator, in the same order, stored in
+     * consecutive elements of the array, starting with index {@code 0}.
+     * The length of the returned array is equal to the number of elements
+     * returned by the iterator, even if the size of this collection changes
+     * during iteration, as might happen if the collection permits
+     * concurrent modification during iteration.  The {@code size} method is
+     * called only as an optimization hint; the correct result is returned
+     * even if the iterator returns a different number of elements.
+     *
+     * <p>This method is equivalent to:
+     *
+     *  <pre> {@code
+     * List<E> list = new ArrayList<E>(size());
+     * for (E e : this)
+     *     list.add(e);
+     * return list.toArray();
+     * }</pre>
      */
     public Object[] toArray() {
         // Estimate size of array; be prepared to see more or fewer elements
 	Object[] r = new Object[size()];
-        int i = 0;
         Iterator<E> it = iterator();
-        while (i < r.length && it.hasNext())
-            r[i++] = it.next();
-        // Trim if overallocated; expand if underallocated
-        if (i < r.length || it.hasNext())
-            return resizeAndFinishToArray(r, i, it);
-        return r;
+	for (int i = 0; i < r.length; i++) {
+	    if (! it.hasNext())	// fewer elements than expected
+		return Arrays.copyOf(r, i);
+	    r[i] = it.next();
+	}
+	return it.hasNext() ? finishToArray(r, it) : r;
     }
 
     /**
      * {@inheritDoc}
      *
-     * <p>This implementation checks if the array is large enough to contain the
-     * collection; if not, it allocates a new array of the correct size and
-     * type (using reflection).  Then, it iterates over the collection,
-     * storing each object reference in the next consecutive element of the
-     * array, starting with element 0.  If the array is larger than the
-     * collection, a <tt>null</tt> is stored in the first location after the
-     * end of the collection.
+     * <p>This implementation returns an array containing all the elements
+     * returned by this collection's iterator in the same order, stored in
+     * consecutive elements of the array, starting with index {@code 0}.
+     * If the number of elements returned by the iterator is too large to
+     * fit into the specified array, then the elements are returned in a
+     * newly allocated array with length equal to the number of elements
+     * returned by the iterator, even if the size of this collection
+     * changes during iteration, as might happen if the collection permits
+     * concurrent modification during iteration.  The {@code size} method is
+     * called only as an optimization hint; the correct result is returned
+     * even if the iterator returns a different number of elements.
+     *
+     * <p>This method is equivalent to:
+     *
+     *  <pre> {@code
+     * List<E> list = new ArrayList<E>(size());
+     * for (E e : this)
+     *     list.add(e);
+     * return list.toArray(a);
+     * }</pre>
      *
      * @throws ArrayStoreException  {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
@@ -132,47 +159,48 @@ public abstract class AbstractCollection<E> implements Collection<E> {
         T[] r = a.length >= size ? a :
                   (T[])java.lang.reflect.Array
                   .newInstance(a.getClass().getComponentType(), size);
-        int i = 0;
         Iterator<E> it = iterator();
-        while (i < r.length && it.hasNext())
-            r[i++] = (T)it.next();
-        // Trim if overallocated; expand if underallocated
-        if (it.hasNext() || (r != a && i < r.length))
-            return resizeAndFinishToArray(r, i, it);
-        if (i < r.length)
-            r[i] = null; // null-terminate if provided array is too big
-        return r;
+
+	for (int i = 0; i < r.length; i++) {
+	    if (! it.hasNext()) { // fewer elements than expected
+		if (a != r)
+		    return Arrays.copyOf(r, i);
+		r[i] = null; // null-terminate
+		return r;
+	    }
+	    r[i] = (T)it.next();
+	}
+	return it.hasNext() ? finishToArray(r, it) : r;
     }
 
     /**
-     * Reallocates the array being used within toArray that has a
-     * different number of elements than expected, and finishes
-     * filling it from the given iterator, if necessary.
+     * Reallocates the array being used within toArray when the iterator
+     * returned more elements than expected, and finishes filling it from
+     * the iterator.
      *
-     * @param r the array
-     * @param i the next array index to fill
-     * @param it the in-progress iterator over the collection
+     * @param r the array, replete with previously stored elements
+     * @param it the in-progress iterator over this collection
      * @return array containing the elements in the given array, plus any
      *         further elements returned by the iterator, trimmed to size
      */
-    private static <T> T[] resizeAndFinishToArray(T[] r, int i, Iterator<?> it) {
+    private static <T> T[] finishToArray(T[] r, Iterator<?> it) {
+	int i = r.length;
         while (it.hasNext()) {
             int cap = r.length;
-            if (i < cap)
-                r[i++] = (T)it.next();
-            else {
+            if (i == cap) {
                 int newCap = ((cap / 2) + 1) * 3;
                 if (newCap <= cap) { // integer overflow
 		    if (cap == Integer.MAX_VALUE)
 			throw new OutOfMemoryError
 			    ("Required array size too large");
-                    newCap = Integer.MAX_VALUE;
+		    newCap = Integer.MAX_VALUE;
 		}
-                r = Arrays.copyOf(r, newCap);
-            }
+		r = Arrays.copyOf(r, newCap);
+	    }
+	    r[i++] = (T)it.next();
         }
         // trim if overallocated
-        return i == r.length ? r : Arrays.copyOf(r, i);
+        return (i == r.length) ? r : Arrays.copyOf(r, i);
     }
 
     // Modification Operations

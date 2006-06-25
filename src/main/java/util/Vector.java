@@ -233,8 +233,8 @@ public class Vector<E>
      * the vector. If the new size is less than the current size, all
      * components at index {@code newSize} and greater are discarded.
      *
-     * @param   newSize   the new size of this vector
-     * @throws  ArrayIndexOutOfBoundsException if new size is negative
+     * @param  newSize   the new size of this vector
+     * @throws ArrayIndexOutOfBoundsException if the new size is negative
      */
     public synchronized void setSize(int newSize) {
 	modCount++;
@@ -461,12 +461,12 @@ public class Vector<E>
     /**
      * Sets the component at the specified {@code index} of this
      * vector to be the specified object. The previous component at that
-     * position is discarded.<p>
+     * position is discarded.
      *
-     * The index must be a value greater than or equal to {@code 0}
-     * and less than the current size of the vector. <p>
+     * <p>The index must be a value greater than or equal to {@code 0}
+     * and less than the current size of the vector.
      *
-     * This method is identical in functionality to the set method
+     * <p>This method is identical in functionality to the set method
      * (which is part of the List interface). Note that the set method reverses
      * the order of the parameters, to more closely match array usage.  Note
      * also that the set method returns the old value that was stored at the
@@ -562,9 +562,9 @@ public class Vector<E>
     /**
      * Adds the specified component to the end of this vector,
      * increasing its size by one. The capacity of this vector is
-     * increased if its size becomes greater than its capacity. <p>
+     * increased if its size becomes greater than its capacity.
      *
-     * This method is identical in functionality to the add(Object) method
+     * <p>This method is identical in functionality to the add(Object) method
      * (which is part of the List interface).
      *
      * @param   obj   the component to be added
@@ -582,9 +582,9 @@ public class Vector<E>
      * from this vector. If the object is found in this vector, each
      * component in the vector with an index greater or equal to the
      * object's index is shifted downward to have an index one smaller
-     * than the value it had previously.<p>
+     * than the value it had previously.
      *
-     * This method is identical in functionality to the remove(Object)
+     * <p>This method is identical in functionality to the remove(Object)
      * method (which is part of the List interface).
      *
      * @param   obj   the component to be removed
@@ -655,9 +655,9 @@ public class Vector<E>
      * correct order; the runtime type of the returned array is that of the
      * specified array.  If the Vector fits in the specified array, it is
      * returned therein.  Otherwise, a new array is allocated with the runtime
-     * type of the specified array and the size of this Vector.<p>
+     * type of the specified array and the size of this Vector.
      *
-     * If the Vector fits in the specified array with room to spare
+     * <p>If the Vector fits in the specified array with room to spare
      * (i.e., the array has more elements than the Vector),
      * the element in the array immediately following the end of the
      * Vector is set to null.  (This is useful in determining the length
@@ -668,7 +668,7 @@ public class Vector<E>
      *		be stored, if it is big enough; otherwise, a new array of the
      * 		same runtime type is allocated for this purpose.
      * @return an array containing the elements of the Vector
-     * @exception ArrayStoreException the runtime type of a is not a supertype
+     * @throws ArrayStoreException the runtime type of a is not a supertype
      * of the runtime type of every element in this Vector
      * @throws NullPointerException if the given array is null
      * @since 1.2
@@ -1145,9 +1145,9 @@ public class Vector<E>
      * equal, the returned List is empty.)  The returned List is backed by this
      * List, so changes in the returned List are reflected in this List, and
      * vice-versa.  The returned List supports all of the optional List
-     * operations supported by this List.<p>
+     * operations supported by this List.
      *
-     * This method eliminates the need for explicit range operations (of
+     * <p>This method eliminates the need for explicit range operations (of
      * the sort that commonly exist for arrays).   Any operation that expects
      * a List can be used as a range operation by operating on a subList view
      * instead of a whole List.  For example, the following idiom
@@ -1157,9 +1157,9 @@ public class Vector<E>
      * </pre>
      * Similar idioms may be constructed for indexOf and lastIndexOf,
      * and all of the algorithms in the Collections class can be applied to
-     * a subList.<p>
+     * a subList.
      *
-     * The semantics of the List returned by this method become undefined if
+     * <p>The semantics of the List returned by this method become undefined if
      * the backing list (i.e., this List) is <i>structurally modified</i> in
      * any way other than via the returned List.  (Structural modifications are
      * those that change the size of the List, or otherwise perturb it in such

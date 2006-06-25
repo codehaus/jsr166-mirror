@@ -63,9 +63,9 @@ public class Vector<E>
     /**
      * The array buffer into which the components of the vector are
      * stored. The capacity of the vector is the length of this array buffer,
-     * and is at least large enough to contain all the vector's elements.<p>
+     * and is at least large enough to contain all the vector's elements.
      *
-     * Any array elements following the last element in the Vector are null.
+     * <p>Any array elements following the last element in the Vector are null.
      *
      * @serial
      */
@@ -100,8 +100,8 @@ public class Vector<E>
      * @param   initialCapacity     the initial capacity of the vector
      * @param   capacityIncrement   the amount by which the capacity is
      *                              increased when the vector overflows
-     * @exception IllegalArgumentException if the specified initial capacity
-     *               is negative
+     * @throws IllegalArgumentException if the specified initial capacity
+     *         is negative
      */
     public Vector(int initialCapacity, int capacityIncrement) {
 	super();
@@ -117,8 +117,8 @@ public class Vector<E>
      * with its capacity increment equal to zero.
      *
      * @param   initialCapacity   the initial capacity of the vector
-     * @exception IllegalArgumentException if the specified initial capacity
-     *               is negative
+     * @throws IllegalArgumentException if the specified initial capacity
+     *         is negative
      */
     public Vector(int initialCapacity) {
 	this(initialCapacity, 0);
@@ -212,7 +212,7 @@ public class Vector<E>
      * method for ensuring capacity without incurring the cost of an
      * extra synchronization.
      *
-     * @see java.util.Vector#ensureCapacity(int)
+     * @see #ensureCapacity(int)
      */
     private void ensureCapacityHelper(int minCapacity) {
 	int oldCapacity = elementData.length;
@@ -286,7 +286,6 @@ public class Vector<E>
      * then the item at index {@code 1}, and so on.
      *
      * @return  an enumeration of the components of this vector
-     * @see     Enumeration
      * @see     Iterator
      */
     public Enumeration<E> elements() {
@@ -413,18 +412,15 @@ public class Vector<E>
     }
 
     /**
-     * Returns the component at the specified index.<p>
+     * Returns the component at the specified index.
      *
-     * This method is identical in functionality to the get method
-     * (which is part of the List interface).
+     * <p>This method is identical in functionality to the {@link #get(int)}
+     * method (which is part of the {@link List} interface).
      *
      * @param      index   an index into this vector
      * @return     the component at the specified index
-     * @exception  ArrayIndexOutOfBoundsException  if the {@code index}
-     *             is negative or not less than the current size of this
-     *             {@code Vector} object.
-     * @see	   #get(int)
-     * @see	   List
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *	       ({@code index < 0 || index >= size()})
      */
     public synchronized E elementAt(int index) {
 	if (index >= elementCount) {
@@ -439,7 +435,7 @@ public class Vector<E>
      * this vector.
      *
      * @return     the first component of this vector
-     * @exception  NoSuchElementException  if this vector has no components
+     * @throws NoSuchElementException if this vector has no components
      */
     public synchronized E firstElement() {
 	if (elementCount == 0) {
@@ -453,7 +449,7 @@ public class Vector<E>
      *
      * @return  the last component of the vector, i.e., the component at index
      *          <code>size()&nbsp;-&nbsp;1</code>.
-     * @exception  NoSuchElementException  if this vector is empty
+     * @throws NoSuchElementException if this vector is empty
      */
     public synchronized E lastElement() {
 	if (elementCount == 0) {
@@ -478,7 +474,7 @@ public class Vector<E>
      *
      * @param      obj     what the component is to be set to
      * @param      index   the specified index
-     * @exception  ArrayIndexOutOfBoundsException  if the index was invalid
+     * @throws  ArrayIndexOutOfBoundsException  if the index was invalid
      * @see        #size()
      * @see        List
      * @see	   #set(int, java.lang.Object)
@@ -496,12 +492,12 @@ public class Vector<E>
      * this vector with an index greater or equal to the specified
      * {@code index} is shifted downward to have an index one
      * smaller than the value it had previously. The size of this vector
-     * is decreased by {@code 1}.<p>
+     * is decreased by {@code 1}.
      *
-     * The index must be a value greater than or equal to {@code 0}
-     * and less than the current size of the vector. <p>
+     * <p>The index must be a value greater than or equal to {@code 0}
+     * and less than the current size of the vector.
      *
-     * This method is identical in functionality to the remove method
+     * <p>This method is identical in functionality to the remove method
      * (which is part of the List interface).  Note that the remove method
      * returns the old value that was stored at the specified position.
      *
@@ -533,14 +529,14 @@ public class Vector<E>
      * specified {@code index}. Each component in this vector with
      * an index greater or equal to the specified {@code index} is
      * shifted upward to have an index one greater than the value it had
-     * previously. <p>
+     * previously.
      *
-     * The index must be a value greater than or equal to {@code 0}
+     * <p>The index must be a value greater than or equal to {@code 0}
      * and less than or equal to the current size of the vector. (If the
      * index is equal to the current size of the vector, the new element
-     * is appended to the Vector.)<p>
+     * is appended to the Vector.)
      *
-     * This method is identical in functionality to the add(Object, int) method
+     * <p>This method is identical in functionality to the add(Object, int) method
      * (which is part of the List interface). Note that the add method reverses
      * the order of the parameters, to more closely match array usage.
      *

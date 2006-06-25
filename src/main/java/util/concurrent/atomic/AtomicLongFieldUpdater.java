@@ -10,7 +10,7 @@ import java.lang.reflect.*;
 
 /**
  * A reflection-based utility that enables atomic updates to
- * designated <tt>volatile long</tt> fields of designated classes.
+ * designated {@code volatile long} fields of designated classes.
  * This class is designed for use in atomic data structures in which
  * several fields of the same node are independently subject to atomic
  * updates.
@@ -55,34 +55,36 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 
     /**
      * Atomically sets the field of the given object managed by this updater
-     * to the given updated value if the current value <tt>==</tt> the
+     * to the given updated value if the current value {@code ==} the
      * expected value. This method is guaranteed to be atomic with respect to
-     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * other calls to {@code compareAndSet} and {@code set}, but not
      * necessarily with respect to other changes in the field.
      *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
      * @return true if successful.
-     * @throws ClassCastException if <tt>obj</tt> is not an instance
+     * @throws ClassCastException if {@code obj} is not an instance
      * of the class possessing the field established in the constructor.
      */
     public abstract boolean compareAndSet(T obj, long expect, long update);
 
     /**
      * Atomically sets the field of the given object managed by this updater
-     * to the given updated value if the current value <tt>==</tt> the
+     * to the given updated value if the current value {@code ==} the
      * expected value. This method is guaranteed to be atomic with respect to
-     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * other calls to {@code compareAndSet} and {@code set}, but not
      * necessarily with respect to other changes in the field.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
      * @return true if successful.
-     * @throws ClassCastException if <tt>obj</tt> is not an instance
+     * @throws ClassCastException if {@code obj} is not an instance
      * of the class possessing the field established in the constructor.
      */
     public abstract boolean weakCompareAndSet(T obj, long expect, long update);
@@ -90,8 +92,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
     /**
      * Sets the field of the given object managed by this updater to the
      * given updated value. This operation is guaranteed to act as a volatile
-     * store with respect to subsequent invocations of
-     * <tt>compareAndSet</tt>.
+     * store with respect to subsequent invocations of {@code compareAndSet}.
      *
      * @param obj An object whose field to set
      * @param newValue the new value
@@ -248,7 +249,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
                     caller, tclass, null, modifiers);
 		sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
 
@@ -331,7 +332,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
                     caller, tclass, null, modifiers);
 		sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
 

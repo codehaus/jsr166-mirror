@@ -75,7 +75,7 @@ public class AtomicReference<V>  implements java.io.Serializable {
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
+     * if the current value {@code ==} the expected value.
      * @param expect the expected value
      * @param update the new value
      * @return true if successful. False return indicates that
@@ -87,9 +87,11 @@ public class AtomicReference<V>  implements java.io.Serializable {
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     * if the current value {@code ==} the expected value.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param expect the expected value
      * @param update the new value

@@ -10,7 +10,7 @@ import java.lang.reflect.*;
 
 /**
  * A reflection-based utility that enables atomic updates to
- * designated <tt>volatile</tt> reference fields of designated
+ * designated {@code volatile} reference fields of designated
  * classes.  This class is designed for use in atomic data structures
  * in which several reference fields of the same node are
  * independently subject to atomic updates. For example, a tree node
@@ -74,9 +74,9 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
     /**
      * Atomically sets the field of the given object managed by this updater
-     * to the given updated value if the current value <tt>==</tt> the
+     * to the given updated value if the current value {@code ==} the
      * expected value. This method is guaranteed to be atomic with respect to
-     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * other calls to {@code compareAndSet} and {@code set}, but not
      * necessarily with respect to other changes in the field.
      *
      * @param obj An object whose field to conditionally set
@@ -88,12 +88,14 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
 
     /**
      * Atomically sets the field of the given object managed by this updater
-     * to the given updated value if the current value <tt>==</tt> the
+     * to the given updated value if the current value {@code ==} the
      * expected value. This method is guaranteed to be atomic with respect to
-     * other calls to <tt>compareAndSet</tt> and <tt>set</tt>, but not
+     * other calls to {@code compareAndSet} and {@code set}, but not
      * necessarily with respect to other changes in the field.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
@@ -105,8 +107,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
     /**
      * Sets the field of the given object managed by this updater to the
      * given updated value. This operation is guaranteed to act as a volatile
-     * store with respect to subsequent invocations of
-     * <tt>compareAndSet</tt>.
+     * store with respect to subsequent invocations of {@code compareAndSet}.
      *
      * @param obj An object whose field to set
      * @param newValue the new value

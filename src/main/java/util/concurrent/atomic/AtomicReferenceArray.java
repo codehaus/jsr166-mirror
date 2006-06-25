@@ -74,7 +74,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
-     * Gets the current value at position <tt>i</tt>.
+     * Gets the current value at position {@code i}.
      *
      * @param i the index
      * @return the current value
@@ -84,7 +84,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
-     * Sets the element at position <tt>i</tt> to the given value.
+     * Sets the element at position {@code i} to the given value.
      *
      * @param i the index
      * @param newValue the new value
@@ -94,7 +94,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
-     * Eventually sets the element at position <tt>i</tt> to the given value.
+     * Eventually sets the element at position {@code i} to the given value.
      *
      * @param i the index
      * @param newValue the new value
@@ -106,7 +106,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
 
 
     /**
-     * Atomically sets the element at position <tt>i</tt> to the given
+     * Atomically sets the element at position {@code i} to the given
      * value and returns the old value.
      *
      * @param i the index
@@ -122,8 +122,8 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the element at position <tt>i</tt> to the given
-     * updated value if the current value <tt>==</tt> the expected value.
+     * Atomically sets the element at position {@code i} to the given
+     * updated value if the current value {@code ==} the expected value.
      * @param i the index
      * @param expect the expected value
      * @param update the new value
@@ -136,10 +136,12 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the element at position <tt>i</tt> to the given
-     * updated value if the current value <tt>==</tt> the expected value.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     * Atomically sets the element at position {@code i} to the given
+     * updated value if the current value {@code ==} the expected value.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param i the index
      * @param expect the expected value

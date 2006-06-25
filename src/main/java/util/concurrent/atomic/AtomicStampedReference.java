@@ -7,7 +7,7 @@
 package java.util.concurrent.atomic;
 
 /**
- * An <tt>AtomicStampedReference</tt> maintains an object reference
+ * An {@code AtomicStampedReference} maintains an object reference
  * along with an integer "stamp", that can be updated atomically.
  *
  * <p> Implementation note. This implementation maintains stamped
@@ -31,7 +31,7 @@ public class AtomicStampedReference<V>  {
     private final AtomicReference<ReferenceIntegerPair<V>>  atomicRef;
 
     /**
-     * Creates a new <tt>AtomicStampedReference</tt> with the given
+     * Creates a new {@code AtomicStampedReference} with the given
      * initial values.
      *
      * @param initialRef the initial reference
@@ -62,10 +62,10 @@ public class AtomicStampedReference<V>  {
 
     /**
      * Returns the current values of both the reference and the stamp.
-     * Typical usage is <tt>int[1] holder; ref = v.get(holder); </tt>.
+     * Typical usage is {@code int[1] holder; ref = v.get(holder); }.
      *
      * @param stampHolder an array of size of at least one.  On return,
-     * <tt>stampholder[0]</tt> will hold the value of the stamp.
+     * {@code stampholder[0]} will hold the value of the stamp.
      * @return the current value of the reference
      */
     public V get(int[] stampHolder) {
@@ -77,10 +77,12 @@ public class AtomicStampedReference<V>  {
     /**
      * Atomically sets the value of both the reference and stamp
      * to the given update values if the
-     * current reference is <tt>==</tt> to the expected reference
+     * current reference is {@code ==} to the expected reference
      * and the current stamp is equal to the expected stamp.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param expectedReference the expected value of the reference
      * @param newReference the new value for the reference
@@ -105,7 +107,7 @@ public class AtomicStampedReference<V>  {
     /**
      * Atomically sets the value of both the reference and stamp
      * to the given update values if the
-     * current reference is <tt>==</tt> to the expected reference
+     * current reference is {@code ==} to the expected reference
      * and the current stamp is equal to the expected stamp.
      *
      * @param expectedReference the expected value of the reference
@@ -143,9 +145,9 @@ public class AtomicStampedReference<V>  {
 
     /**
      * Atomically sets the value of the stamp to the given update value
-     * if the current reference is <tt>==</tt> to the expected
+     * if the current reference is {@code ==} to the expected
      * reference.  Any given invocation of this operation may fail
-     * (return <tt>false</tt>) spuriously, but repeated invocation
+     * (return {@code false}) spuriously, but repeated invocation
      * when the current value holds the expected value and no other
      * thread is also attempting to set the value will eventually
      * succeed.

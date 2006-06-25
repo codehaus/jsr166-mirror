@@ -616,9 +616,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * still need to compensate for missing the fact that we should
      * have added a thread (because existing ones died) or that
      * shutdown occurred since entry into this method. So we recheck
-     * state to and if necessary (in ensureQueuedTaskHandled) roll
-     * back the enqueuing if shut down, or start a new thread if there
-     * are none.
+     * state and if necessary (in ensureQueuedTaskHandled) roll back
+     * the enqueuing if shut down, or start a new thread if there are
+     * none.
      *
      * 3. If we cannot queue task, then we try to add a new
      * thread. There's no guesswork here (addIfUnderMaximumPoolSize)
@@ -1081,7 +1081,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * security managers that allow checkAccess but then throw a
          * SecurityException when interrupt() is invoked.  In this
          * third case, because we have already set runState, we can
-         * only try to back out from the shutdown.as cleanly as
+         * only try to back out from the shutdown as cleanly as
          * possible. Some threads may have been killed but we remain
          * in non-shutdown state (which may entail tryTerminate
          * starting a thread to maintain liveness.)

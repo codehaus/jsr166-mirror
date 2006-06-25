@@ -29,7 +29,7 @@ import java.util.Map.Entry;
  * constructor, as per the recommendation in the <tt>Map</tt> interface
  * specification.
  *
- * <p>The documentation for each non-abstract methods in this class describes its
+ * <p>The documentation for each non-abstract method in this class describes its
  * implementation in detail.  Each of these methods may be overridden if the
  * map being implemented admits a more efficient implementation.
  *

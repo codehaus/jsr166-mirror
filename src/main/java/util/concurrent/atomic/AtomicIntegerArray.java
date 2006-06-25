@@ -9,7 +9,7 @@ import sun.misc.Unsafe;
 import java.util.*;
 
 /**
- * An <tt>int</tt> array in which elements may be updated atomically.
+ * An {@code int} array in which elements may be updated atomically.
  * See the {@link java.util.concurrent.atomic} package
  * specification for description of the properties of atomic
  * variables.
@@ -74,7 +74,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Gets the current value at position <tt>i</tt>.
+     * Gets the current value at position {@code i}.
      *
      * @param i the index
      * @return the current value
@@ -84,7 +84,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Sets the element at position <tt>i</tt> to the given value.
+     * Sets the element at position {@code i} to the given value.
      *
      * @param i the index
      * @param newValue the new value
@@ -94,7 +94,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Eventually sets the element at position <tt>i</tt> to the given value.
+     * Eventually sets the element at position {@code i} to the given value.
      *
      * @param i the index
      * @param newValue the new value
@@ -105,7 +105,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the element at position <tt>i</tt> to the given
+     * Atomically sets the element at position {@code i} to the given
      * value and returns the old value.
      *
      * @param i the index
@@ -121,8 +121,8 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the element at position <tt>i</tt> to the given
-     * updated value if the current value <tt>==</tt> the expected value.
+     * Atomically sets the element at position {@code i} to the given
+     * updated value if the current value {@code ==} the expected value.
      *
      * @param i the index
      * @param expect the expected value
@@ -136,10 +136,12 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the element at position <tt>i</tt> to the given
-     * updated value if the current value <tt>==</tt> the expected value.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     * Atomically sets the element at position {@code i} to the given
+     * updated value if the current value {@code ==} the expected value.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param i the index
      * @param expect the expected value
@@ -151,7 +153,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically increments by one the element at index <tt>i</tt>.
+     * Atomically increments by one the element at index {@code i}.
      *
      * @param i the index
      * @return the previous value
@@ -166,7 +168,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically decrements by one the element at index <tt>i</tt>.
+     * Atomically decrements by one the element at index {@code i}.
      *
      * @param i the index
      * @return the previous value
@@ -181,7 +183,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically adds the given value to the element at index <tt>i</tt>.
+     * Atomically adds the given value to the element at index {@code i}.
      *
      * @param i the index
      * @param delta the value to add
@@ -197,7 +199,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically increments by one the element at index <tt>i</tt>.
+     * Atomically increments by one the element at index {@code i}.
      *
      * @param i the index
      * @return the updated value
@@ -212,7 +214,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically decrements by one the element at index <tt>i</tt>.
+     * Atomically decrements by one the element at index {@code i}.
      *
      * @param i the index
      * @return the updated value
@@ -227,7 +229,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
     }
 
     /**
-     * Atomically adds the given value to the element at index <tt>i</tt>.
+     * Atomically adds the given value to the element at index {@code i}.
      *
      * @param i the index
      * @param delta the value to add

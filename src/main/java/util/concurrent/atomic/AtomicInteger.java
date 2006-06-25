@@ -8,13 +8,13 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * An <tt>int</tt> value that may be updated atomically.  See the
+ * An {@code int} value that may be updated atomically.  See the
  * {@link java.util.concurrent.atomic} package specification for
  * description of the properties of atomic variables. An
- * <tt>AtomicInteger</tt> is used in applications such as atomically
+ * {@code AtomicInteger} is used in applications such as atomically
  * incremented counters, and cannot be used as a replacement for an
  * {@link java.lang.Integer}. However, this class does extend
- * <tt>Number</tt> to allow uniform access by tools and utilities that
+ * {@code Number} to allow uniform access by tools and utilities that
  * deal with numerically-based classes.
  *
  * @since 1.5
@@ -46,7 +46,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Creates a new AtomicInteger with initial value <tt>0</tt>.
+     * Creates a new AtomicInteger with initial value {@code 0}.
      */
     public AtomicInteger() {
     }
@@ -95,7 +95,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
+     * if the current value {@code ==} the expected value.
      *
      * @param expect the expected value
      * @param update the new value
@@ -108,9 +108,11 @@ public class AtomicInteger extends Number implements java.io.Serializable {
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     * if the current value {@code ==} the expected value.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param expect the expected value
      * @param update the new value

@@ -8,10 +8,10 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * A <tt>boolean</tt> value that may be updated atomically. See the
+ * A {@code boolean} value that may be updated atomically. See the
  * {@link java.util.concurrent.atomic} package specification for
  * description of the properties of atomic variables. An
- * <tt>AtomicBoolean</tt> is used in applications such as atomically
+ * {@code AtomicBoolean} is used in applications such as atomically
  * updated flags, and cannot be used as a replacement for a
  * {@link java.lang.Boolean}.
  *
@@ -34,7 +34,7 @@ public class AtomicBoolean implements java.io.Serializable {
     private volatile int value;
 
     /**
-     * Creates a new <tt>AtomicBoolean</tt> with the given initial value.
+     * Creates a new {@code AtomicBoolean} with the given initial value.
      *
      * @param initialValue the initial value
      */
@@ -43,7 +43,7 @@ public class AtomicBoolean implements java.io.Serializable {
     }
 
     /**
-     * Creates a new <tt>AtomicBoolean</tt> with initial value <tt>false</tt>.
+     * Creates a new {@code AtomicBoolean} with initial value {@code false}.
      */
     public AtomicBoolean() {
     }
@@ -59,7 +59,7 @@ public class AtomicBoolean implements java.io.Serializable {
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
+     * if the current value {@code ==} the expected value.
      *
      * @param expect the expected value
      * @param update the new value
@@ -74,9 +74,11 @@ public class AtomicBoolean implements java.io.Serializable {
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously and does not provide ordering guarantees,
-     * so is only rarely an appropriate alternative to <tt>compareAndSet</tt>.
+     * if the current value {@code ==} the expected value.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
      *
      * @param expect the expected value
      * @param update the new value

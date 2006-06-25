@@ -20,7 +20,7 @@ classes) atomically sets a variable to the <tt>updateValue</tt> if it
 currently holds the <tt>expectedValue</tt>, reporting <tt>true</tt> on
 success.  The classes in this package also contain methods to get and
 unconditionally set values, as well as a weaker conditional atomic
-update operation <tt>weakCompareAndSet</tt> desribed below.
+update operation <tt>weakCompareAndSet</tt> described below.
 
 <p> The specifications of these methods enable implementations to
 employ efficient machine-level atomic instructions that are available
@@ -42,8 +42,11 @@ as in:
 
 <pre>
 class Sequencer {
-  private AtomicLong sequenceNumber = new AtomicLong(0);
-  public long next() { return sequenceNumber.getAndIncrement(); }
+  private final AtomicLong sequenceNumber
+    = new AtomicLong(0);
+  public long next() {
+    return sequenceNumber.getAndIncrement();
+  }
 }
 </pre>
 
@@ -103,26 +106,29 @@ classes are also notable in providing <tt>volatile</tt> access
 semantics for their array elements, which is not supported for
 ordinary arrays.
 
+<a name="Spurious">
 <p>The atomic classes also support method <tt>weakCompareAndSet</tt>,
 which has limited applicability. On some platforms, the weak version
 may be more efficient than <tt>compareAndSet</tt> in the normal case,
-but differs in that any given invocation of <tt>weakCompareAndSet</tt>
-method may return <tt>false</tt> spuriously (that is, for no apparent
-reason). A <tt>false</tt> return means only that the operation may be
-retried if desired, relying on the guarantee that repeated invocation
-when the variable holds <tt>expectedValue</tt> and no other thread is
-also attempting to set the variable will eventually succeed.  (Such
+but differs in that any given invocation of the
+<tt>weakCompareAndSet</tt> method may return <tt>false</tt>
+<em>spuriously</em> (that is, for no apparent reason)</a>.  A
+<tt>false</tt> return means only that the operation may be retried if
+desired, relying on the guarantee that repeated invocation when the
+variable holds <tt>expectedValue</tt> and no other thread is also
+attempting to set the variable will eventually succeed.  (Such
 spurious failures may for example be due to memory contention effects
 that are unrelated to whether the expected and current values are
 equal.)  Additionally <tt>weakCompareAndSet</tt> does not provide
 ordering guarantees that are usually needed for synchronization
 control.  However, the method may be useful for updating counters and
-statistics when such updates are unrelated to the other happens-before
-orderings of a program. When a thread sees an update to an atomic
-variable caused by a <tt>weakCompareAndSet</tt>, it does not
-necessarily see updates to any <em>other</em> variables that occurred
-before the <tt>weakCompareAndSet</tt>.  This may be acceptable when
-for example updating performance statistics, but rarely otherwise.
+statistics when such updates are unrelated to the other
+happens-before orderings of a program. When a thread sees an update
+to an atomic variable caused by a <tt>weakCompareAndSet</tt>, it does
+not necessarily see updates to any <em>other</em> variables that
+occurred before the <tt>weakCompareAndSet</tt>.  This may be
+acceptable when, for example, updating performance statistics, but
+rarely otherwise.
 
 <p> The {@link java.util.concurrent.atomic.AtomicMarkableReference}
 class associates a single boolean with a reference. For example, this

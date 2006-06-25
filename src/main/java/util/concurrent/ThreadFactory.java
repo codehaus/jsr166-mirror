@@ -34,7 +34,8 @@ public interface ThreadFactory {
      * priority, name, daemon status, <tt>ThreadGroup</tt>, etc.
      *
      * @param r a runnable to be executed by new thread instance
-     * @return constructed thread
+     * @return constructed thread, or <tt>null</tt> if the request to 
+     * create a thread is rejected.
      */
     Thread newThread(Runnable r);
 }

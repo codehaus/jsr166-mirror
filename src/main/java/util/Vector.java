@@ -466,18 +466,17 @@ public class Vector<E>
      * <p>The index must be a value greater than or equal to {@code 0}
      * and less than the current size of the vector.
      *
-     * <p>This method is identical in functionality to the set method
-     * (which is part of the List interface). Note that the set method reverses
-     * the order of the parameters, to more closely match array usage.  Note
-     * also that the set method returns the old value that was stored at the
-     * specified position.
+     * <p>This method is identical in functionality to the
+     * {@link #set(int, Object) set(int, E)}
+     * method (which is part of the {@link List} interface). Note that the
+     * {@code set} method reverses the order of the parameters, to more closely
+     * match array usage.  Note also that the {@code set} method returns the
+     * old value that was stored at the specified position.
      *
      * @param      obj     what the component is to be set to
      * @param      index   the specified index
-     * @throws  ArrayIndexOutOfBoundsException  if the index was invalid
-     * @see        #size()
-     * @see        List
-     * @see	   #set(int, java.lang.Object)
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *	       ({@code index < 0 || index >= size()})
      */
     public synchronized void setElementAt(E obj, int index) {
 	if (index >= elementCount) {
@@ -497,15 +496,14 @@ public class Vector<E>
      * <p>The index must be a value greater than or equal to {@code 0}
      * and less than the current size of the vector.
      *
-     * <p>This method is identical in functionality to the remove method
-     * (which is part of the List interface).  Note that the remove method
-     * returns the old value that was stored at the specified position.
+     * <p>This method is identical in functionality to the {@link #remove(int)}
+     * method (which is part of the {@link List} interface).  Note that the
+     * {@code remove} method returns the old value that was stored at the
+     * specified position.
      *
      * @param      index   the index of the object to remove
-     * @exception  ArrayIndexOutOfBoundsException  if the index was invalid
-     * @see        #size()
-     * @see	   #remove(int)
-     * @see	   List
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *	       ({@code index < 0 || index >= size()})
      */
     public synchronized void removeElementAt(int index) {
 	modCount++;
@@ -536,16 +534,16 @@ public class Vector<E>
      * index is equal to the current size of the vector, the new element
      * is appended to the Vector.)
      *
-     * <p>This method is identical in functionality to the add(Object, int) method
-     * (which is part of the List interface). Note that the add method reverses
-     * the order of the parameters, to more closely match array usage.
+     * <p>This method is identical in functionality to the
+     * {@link #add(int, Object) add(int, E)}
+     * method (which is part of the {@link List} interface).  Note that the
+     * {@code add} method reverses the order of the parameters, to more closely
+     * match array usage.
      *
      * @param      obj     the component to insert
      * @param      index   where to insert the new component
-     * @exception  ArrayIndexOutOfBoundsException  if the index was invalid
-     * @see        #size()
-     * @see	   #add(int, Object)
-     * @see	   List
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *	       ({@code index < 0 || index > size()})
      */
     public synchronized void insertElementAt(E obj, int index) {
 	modCount++;
@@ -564,12 +562,11 @@ public class Vector<E>
      * increasing its size by one. The capacity of this vector is
      * increased if its size becomes greater than its capacity.
      *
-     * <p>This method is identical in functionality to the add(Object) method
-     * (which is part of the List interface).
+     * <p>This method is identical in functionality to the
+     * {@link #remove(Object)} method (which is part of the
+     * {@link List} interface).
      *
      * @param   obj   the component to be added
-     * @see	   #add(Object)
-     * @see	   List
      */
     public synchronized void addElement(E obj) {
 	modCount++;
@@ -604,13 +601,10 @@ public class Vector<E>
     }
 
     /**
-     * Removes all components from this vector and sets its size to zero.<p>
+     * Removes all components from this vector and sets its size to zero.
      *
-     * This method is identical in functionality to the clear method
-     * (which is part of the List interface).
-     *
-     * @see	#clear
-     * @see	List
+     * <p>This method is identical in functionality to the {@link #clear}
+     * method (which is part of the {@link List} interface).
      */
     public synchronized void removeAllElements() {
         modCount++;
@@ -668,7 +662,7 @@ public class Vector<E>
      *		be stored, if it is big enough; otherwise, a new array of the
      * 		same runtime type is allocated for this purpose.
      * @return an array containing the elements of the Vector
-     * @throws ArrayStoreException the runtime type of a is not a supertype
+     * @throws ArrayStoreException if the runtime type of a is not a supertype
      * of the runtime type of every element in this Vector
      * @throws NullPointerException if the given array is null
      * @since 1.2
@@ -692,8 +686,8 @@ public class Vector<E>
      *
      * @param index index of the element to return
      * @return object at the specified index
-     * @exception ArrayIndexOutOfBoundsException index is out of range (index
-     * 		  &lt; 0 || index &gt;= size())
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *            ({@code index < 0 || index >= size()})
      * @since 1.2
      */
     public synchronized E get(int index) {
@@ -710,8 +704,8 @@ public class Vector<E>
      * @param index index of the element to replace
      * @param element element to be stored at the specified position
      * @return the element previously at the specified position
-     * @exception ArrayIndexOutOfBoundsException index out of range
-     *		  (index &lt; 0 || index &gt;= size())
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *	       ({@code index < 0 || index >= size()})
      * @since 1.2
      */
     public synchronized E set(int index, E element) {
@@ -759,8 +753,8 @@ public class Vector<E>
      *
      * @param index index at which the specified element is to be inserted
      * @param element element to be inserted
-     * @exception ArrayIndexOutOfBoundsException index is out of range
-     *		  (index &lt; 0 || index &gt; size())
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *         ({@code index < 0 || index > size()})
      * @since 1.2
      */
     public void add(int index, E element) {

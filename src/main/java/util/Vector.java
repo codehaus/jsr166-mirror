@@ -1033,7 +1033,7 @@ public class Vector<E>
 
     /**
      * Streamlined specialization of AbstractList version of iterator.
-     * Locally perfroms bounds checks, but relies on outer Vector
+     * Locally performs bounds checks, but relies on outer Vector
      * to access elements under synchronization.
      */
     private final class VectorIterator implements ListIterator<E> {

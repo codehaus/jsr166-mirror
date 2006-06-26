@@ -135,16 +135,6 @@ public class ArrayList<E> extends AbstractList<E>
 	    elementData = Arrays.copyOf(elementData, size, Object[].class);
     }
 
-    private void initFromConcurrentlyMutating(Collection<? extends E> c) {
-	elementData = c.toArray();
-	size = elementData.length;
-	// c.toArray might (incorrectly) not return Object[] (see 6260652)
-	if (elementData.getClass() != Object[].class)
-	    elementData = Arrays.copyOf(elementData, size, Object[].class);
-    }
-
-    private final static Object UNALLOCATED = new Object();
-
     /**
      * Trims the capacity of this <tt>ArrayList</tt> instance to be the
      * list's current size.  An application can use this operation to minimize

@@ -8,37 +8,37 @@
 package java.util;
 
 /**
- * This class provides a skeletal implementation of the <tt>List</tt>
+ * This class provides a skeletal implementation of the {@code List}
  * interface to minimize the effort required to implement this interface
  * backed by a "random access" data store (such as an array).  For sequential
- * access data (such as a linked list), <tt>AbstractSequentialList</tt> should
- * be used in preference to this class.<p>
+ * access data (such as a linked list), {@code AbstractSequentialList} should
+ * be used in preference to this class.
  *
- * To implement an unmodifiable list, the programmer needs only to extend this
- * class and provide implementations for the <tt>get(int index)</tt> and
- * <tt>size()</tt> methods.<p>
+ * <p>To implement an unmodifiable list, the programmer needs only to extend this
+ * class and provide implementations for the {@code get(int index)} and
+ * {@code size()} methods.
  *
- * To implement a modifiable list, the programmer must additionally override
- * the <tt>set(int index, Object element)</tt> method (which otherwise throws
- * an <tt>UnsupportedOperationException</tt>.  If the list is variable-size
- * the programmer must additionally override the <tt>add(int index, Object
- * element)</tt> and <tt>remove(int index)</tt> methods.<p>
+ * <p>To implement a modifiable list, the programmer must additionally override
+ * the {@code set(int index, Object element)} method (which otherwise throws
+ * an {@code UnsupportedOperationException}.  If the list is variable-size
+ * the programmer must additionally override the {@code add(int index, Object
+ * element)} and {@code remove(int index)} methods.
  *
- * The programmer should generally provide a void (no argument) and collection
- * constructor, as per the recommendation in the <tt>Collection</tt> interface
- * specification.<p>
+ * <p>The programmer should generally provide a void (no argument) and collection
+ * constructor, as per the recommendation in the {@code Collection} interface
+ * specification.
  *
- * Unlike the other abstract collection implementations, the programmer does
+ * <p>Unlike the other abstract collection implementations, the programmer does
  * <i>not</i> have to provide an iterator implementation; the iterator and
  * list iterator are implemented by this class, on top of the "random access"
- * methods: <tt>get(int index)</tt>, <tt>set(int index, E element)</tt>,
- * <tt>add(int index, E element)</tt> and <tt>remove(int index)</tt>.<p>
+ * methods: {@code get(int index)}, {@code set(int index, E element)},
+ * {@code add(int index, E element)} and {@code remove(int index)}.
  *
- * The documentation for each non-abstract methods in this class describes its
+ * <p>The documentation for each non-abstract methods in this class describes its
  * implementation in detail.  Each of these methods may be overridden if the
- * collection being implemented admits a more efficient implementation.<p>
+ * collection being implemented admits a more efficient implementation.
  *
- * This class is a member of the
+ * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
@@ -71,15 +71,15 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * classes should clearly specify in their documentation any restrictions
      * on what elements may be added.
      *
-     * <p>This implementation calls <tt>add(size(), e)</tt>.
+     * <p>This implementation calls {@code add(size(), e)}.
      *
      * <p>Note that this implementation throws an
-     * <tt>UnsupportedOperationException</tt> unless <tt>add(int, Object)</tt>
+     * {@code UnsupportedOperationException} unless {@code add(int, Object)}
      * is overridden.
      *
      * @param e element to be appended to this list
-     * @return <tt>true</tt> (as specified by {@link Collection#add})
-     * @throws UnsupportedOperationException if the <tt>add</tt> operation
+     * @return {@code true} (as specified by {@link Collection#add})
+     * @throws UnsupportedOperationException if the {@code add} operation
      *         is not supported by this list
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this list
@@ -104,7 +104,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@inheritDoc}
      *
      * <p>This implementation always throws an
-     * <tt>UnsupportedOperationException</tt>.
+     * {@code UnsupportedOperationException}.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
@@ -120,7 +120,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@inheritDoc}
      *
      * <p>This implementation always throws an
-     * <tt>UnsupportedOperationException</tt>.
+     * {@code UnsupportedOperationException}.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
@@ -136,7 +136,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@inheritDoc}
      *
      * <p>This implementation always throws an
-     * <tt>UnsupportedOperationException</tt>.
+     * {@code UnsupportedOperationException}.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws IndexOutOfBoundsException     {@inheritDoc}
@@ -152,7 +152,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@inheritDoc}
      *
      * <p>This implementation first gets a list iterator (with
-     * <tt>listIterator()</tt>).  Then, it iterates over the list until the
+     * {@code listIterator()}).  Then, it iterates over the list until the
      * specified element is found or the end of the list is reached.
      *
      * @throws ClassCastException   {@inheritDoc}
@@ -176,7 +176,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@inheritDoc}
      *
      * <p>This implementation first gets a list iterator that points to the end
-     * of the list (with <tt>listIterator(size())</tt>).  Then, it iterates
+     * of the list (with {@code listIterator(size())}).  Then, it iterates
      * backwards over the list until the specified element is found, or the
      * beginning of the list is reached.
      *
@@ -204,14 +204,14 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * Removes all of the elements from this list (optional operation).
      * The list will be empty after this call returns.
      *
-     * <p>This implementation calls <tt>removeRange(0, size())</tt>.
+     * <p>This implementation calls {@code removeRange(0, size())}.
      *
      * <p>Note that this implementation throws an
-     * <tt>UnsupportedOperationException</tt> unless <tt>remove(int
-     * index)</tt> or <tt>removeRange(int fromIndex, int toIndex)</tt> is
+     * {@code UnsupportedOperationException} unless {@code remove(int
+     * index)} or {@code removeRange(int fromIndex, int toIndex)} is
      * overridden.
      *
-     * @throws UnsupportedOperationException if the <tt>clear</tt> operation
+     * @throws UnsupportedOperationException if the {@code clear} operation
      *         is not supported by this list
      */
     public void clear() {
@@ -224,11 +224,11 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * <p>This implementation gets an iterator over the specified collection and
      * iterates over it, inserting the elements obtained from the iterator
      * into this list at the appropriate position, one at a time, using
-     * <tt>add(int, Object)</tt>.  Many implementations will override this
+     * {@code add(int, Object)}.  Many implementations will override this
      * method for efficiency.
      *
      * <p>Note that this implementation throws an
-     * <tt>UnsupportedOperationException</tt> unless <tt>add(int, Object)</tt>
+     * {@code UnsupportedOperationException} unless {@code add(int, Object)}
      * is overridden.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
@@ -255,17 +255,17 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * sequence. <p>
      *
      * This implementation returns a straightforward implementation of the
-     * iterator interface, relying on the backing list's <tt>size()</tt>,
-     * <tt>get(int)</tt>, and <tt>remove(int)</tt> methods.<p>
+     * iterator interface, relying on the backing list's {@code size()},
+     * {@code get(int)}, and {@code remove(int)} methods.<p>
      *
      * Note that the iterator returned by this method will throw an
-     * <tt>UnsupportedOperationException</tt> in response to its
-     * <tt>remove</tt> method unless the list's <tt>remove(int)</tt> method is
+     * {@code UnsupportedOperationException} in response to its
+     * {@code remove} method unless the list's {@code remove(int)} method is
      * overridden.<p>
      *
      * This implementation can be made to throw runtime exceptions in the face
      * of concurrent modification, as described in the specification for the
-     * (protected) <tt>modCount</tt> field.
+     * (protected) {@code modCount} field.
      *
      * @return an iterator over the elements in this list in proper sequence
      *
@@ -278,7 +278,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     /**
      * {@inheritDoc}
      *
-     * <p>This implementation returns <tt>listIterator(0)</tt>.
+     * <p>This implementation returns {@code listIterator(0)}.
      *
      * @see #listIterator(int)
      */
@@ -290,21 +290,21 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@inheritDoc}
      *
      * <p>This implementation returns a straightforward implementation of the
-     * <tt>ListIterator</tt> interface that extends the implementation of the
-     * <tt>Iterator</tt> interface returned by the <tt>iterator()</tt> method.
-     * The <tt>ListIterator</tt> implementation relies on the backing list's
-     * <tt>get(int)</tt>, <tt>set(int, Object)</tt>, <tt>add(int, Object)</tt>
-     * and <tt>remove(int)</tt> methods.
+     * {@code ListIterator} interface that extends the implementation of the
+     * {@code Iterator} interface returned by the {@code iterator()} method.
+     * The {@code ListIterator} implementation relies on the backing list's
+     * {@code get(int)}, {@code set(int, Object)}, {@code add(int, Object)}
+     * and {@code remove(int)} methods.
      *
      * <p>Note that the list iterator returned by this implementation will
-     * throw an <tt>UnsupportedOperationException</tt> in response to its
-     * <tt>remove</tt>, <tt>set</tt> and <tt>add</tt> methods unless the
-     * list's <tt>remove(int)</tt>, <tt>set(int, Object)</tt>, and
-     * <tt>add(int, Object)</tt> methods are overridden.
+     * throw an {@code UnsupportedOperationException} in response to its
+     * {@code remove}, {@code set} and {@code add} methods unless the
+     * list's {@code remove(int)}, {@code set(int, Object)}, and
+     * {@code add(int, Object)} methods are overridden.
      *
      * <p>This implementation can be made to throw runtime exceptions in the
      * face of concurrent modification, as described in the specification for
-     * the (protected) <tt>modCount</tt> field.
+     * the (protected) {@code modCount} field.
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      *
@@ -437,36 +437,36 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@inheritDoc}
      *
      * <p>This implementation returns a list that subclasses
-     * <tt>AbstractList</tt>.  The subclass stores, in private fields, the
+     * {@code AbstractList}.  The subclass stores, in private fields, the
      * offset of the subList within the backing list, the size of the subList
      * (which can change over its lifetime), and the expected
-     * <tt>modCount</tt> value of the backing list.  There are two variants
-     * of the subclass, one of which implements <tt>RandomAccess</tt>.
-     * If this list implements <tt>RandomAccess</tt> the returned list will
-     * be an instance of the subclass that implements <tt>RandomAccess</tt>.
+     * {@code modCount} value of the backing list.  There are two variants
+     * of the subclass, one of which implements {@code RandomAccess}.
+     * If this list implements {@code RandomAccess} the returned list will
+     * be an instance of the subclass that implements {@code RandomAccess}.
      *
-     * <p>The subclass's <tt>set(int, Object)</tt>, <tt>get(int)</tt>,
-     * <tt>add(int, Object)</tt>, <tt>remove(int)</tt>, <tt>addAll(int,
-     * Collection)</tt> and <tt>removeRange(int, int)</tt> methods all
+     * <p>The subclass's {@code set(int, Object)}, {@code get(int)},
+     * {@code add(int, Object)}, {@code remove(int)}, {@code addAll(int,
+     * Collection)} and {@code removeRange(int, int)} methods all
      * delegate to the corresponding methods on the backing abstract list,
      * after bounds-checking the index and adjusting for the offset.  The
-     * <tt>addAll(Collection c)</tt> method merely returns <tt>addAll(size,
-     * c)</tt>.
+     * {@code addAll(Collection c)} method merely returns {@code addAll(size,
+     * c)}.
      *
-     * <p>The <tt>listIterator(int)</tt> method returns a "wrapper object"
+     * <p>The {@code listIterator(int)} method returns a "wrapper object"
      * over a list iterator on the backing list, which is created with the
-     * corresponding method on the backing list.  The <tt>iterator</tt> method
-     * merely returns <tt>listIterator()</tt>, and the <tt>size</tt> method
-     * merely returns the subclass's <tt>size</tt> field.
+     * corresponding method on the backing list.  The {@code iterator} method
+     * merely returns {@code listIterator()}, and the {@code size} method
+     * merely returns the subclass's {@code size} field.
      *
-     * <p>All methods first check to see if the actual <tt>modCount</tt> of
+     * <p>All methods first check to see if the actual {@code modCount} of
      * the backing list is equal to its expected value, and throw a
-     * <tt>ConcurrentModificationException</tt> if it is not.
+     * {@code ConcurrentModificationException} if it is not.
      *
      * @throws IndexOutOfBoundsException endpoint index value out of range
-     *         <tt>(fromIndex &lt; 0 || toIndex &gt; size)</tt>
+     *         {@code (fromIndex &lt; 0 || toIndex &gt; size)}
      * @throws IllegalArgumentException if the endpoint indices are out of order
-     *         <tt>(fromIndex &gt; toIndex)</tt>
+     *         {@code (fromIndex &gt; toIndex)}
      */
     public List<E> subList(int fromIndex, int toIndex) {
         return (this instanceof RandomAccess ?
@@ -478,24 +478,24 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 
     /**
      * Compares the specified object with this list for equality.  Returns
-     * <tt>true</tt> if and only if the specified object is also a list, both
+     * {@code true} if and only if the specified object is also a list, both
      * lists have the same size, and all corresponding pairs of elements in
-     * the two lists are <i>equal</i>.  (Two elements <tt>e1</tt> and
-     * <tt>e2</tt> are <i>equal</i> if <tt>(e1==null ? e2==null :
-     * e1.equals(e2))</tt>.)  In other words, two lists are defined to be
+     * the two lists are <i>equal</i>.  (Two elements {@code e1} and
+     * {@code e2} are <i>equal</i> if {@code (e1==null ? e2==null :
+     * e1.equals(e2))}.)  In other words, two lists are defined to be
      * equal if they contain the same elements in the same order.<p>
      *
      * This implementation first checks if the specified object is this
-     * list. If so, it returns <tt>true</tt>; if not, it checks if the
-     * specified object is a list. If not, it returns <tt>false</tt>; if so,
+     * list. If so, it returns {@code true}; if not, it checks if the
+     * specified object is a list. If not, it returns {@code false}; if so,
      * it iterates over both lists, comparing corresponding pairs of elements.
-     * If any comparison returns <tt>false</tt>, this method returns
-     * <tt>false</tt>.  If either iterator runs out of elements before the
-     * other it returns <tt>false</tt> (as the lists are of unequal length);
-     * otherwise it returns <tt>true</tt> when the iterations complete.
+     * If any comparison returns {@code false}, this method returns
+     * {@code false}.  If either iterator runs out of elements before the
+     * other it returns {@code false} (as the lists are of unequal length);
+     * otherwise it returns {@code true} when the iterations complete.
      *
      * @param o the object to be compared for equality with this list
-     * @return <tt>true</tt> if the specified object is equal to this list
+     * @return {@code true} if the specified object is equal to this list
      */
     public boolean equals(Object o) {
 	if (o == this)
@@ -535,22 +535,22 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 
     /**
      * Removes from this list all of the elements whose index is between
-     * <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.
      * Shifts any succeeding elements to the left (reduces their index).
-     * This call shortens the ArrayList by <tt>(toIndex - fromIndex)</tt>
-     * elements.  (If <tt>toIndex==fromIndex</tt>, this operation has no
+     * This call shortens the ArrayList by {@code (toIndex - fromIndex)}
+     * elements.  (If {@code toIndex==fromIndex}, this operation has no
      * effect.)<p>
      *
-     * This method is called by the <tt>clear</tt> operation on this list
+     * This method is called by the {@code clear} operation on this list
      * and its subLists.  Overriding this method to take advantage of
      * the internals of the list implementation can <i>substantially</i>
-     * improve the performance of the <tt>clear</tt> operation on this list
+     * improve the performance of the {@code clear} operation on this list
      * and its subLists.<p>
      *
      * This implementation gets a list iterator positioned before
-     * <tt>fromIndex</tt>, and repeatedly calls <tt>ListIterator.next</tt>
-     * followed by <tt>ListIterator.remove</tt> until the entire range has
-     * been removed.  <b>Note: if <tt>ListIterator.remove</tt> requires linear
+     * {@code fromIndex}, and repeatedly calls {@code ListIterator.next}
+     * followed by {@code ListIterator.remove} until the entire range has
+     * been removed.  <b>Note: if {@code ListIterator.remove} requires linear
      * time, this implementation requires quadratic time.</b>
      *
      * @param fromIndex index of first element to be removed
@@ -571,22 +571,22 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * progress may yield incorrect results.<p>
      *
      * This field is used by the iterator and list iterator implementation
-     * returned by the <tt>iterator</tt> and <tt>listIterator</tt> methods.
+     * returned by the {@code iterator} and {@code listIterator} methods.
      * If the value of this field changes unexpectedly, the iterator (or list
-     * iterator) will throw a <tt>ConcurrentModificationException</tt> in
-     * response to the <tt>next</tt>, <tt>remove</tt>, <tt>previous</tt>,
-     * <tt>set</tt> or <tt>add</tt> operations.  This provides
+     * iterator) will throw a {@code ConcurrentModificationException} in
+     * response to the {@code next}, {@code remove}, {@code previous},
+     * {@code set} or {@code add} operations.  This provides
      * <i>fail-fast</i> behavior, rather than non-deterministic behavior in
      * the face of concurrent modification during iteration.<p>
      *
      * <b>Use of this field by subclasses is optional.</b> If a subclass
      * wishes to provide fail-fast iterators (and list iterators), then it
-     * merely has to increment this field in its <tt>add(int, Object)</tt> and
-     * <tt>remove(int)</tt> methods (and any other methods that it overrides
+     * merely has to increment this field in its {@code add(int, Object)} and
+     * {@code remove(int)} methods (and any other methods that it overrides
      * that result in structural modifications to the list).  A single call to
-     * <tt>add(int, Object)</tt> or <tt>remove(int)</tt> must add no more than
+     * {@code add(int, Object)} or {@code remove(int)} must add no more than
      * one to this field, or the iterators (and list iterators) will throw
-     * bogus <tt>ConcurrentModificationExceptions</tt>.  If an implementation
+     * bogus {@code ConcurrentModificationExceptions}.  If an implementation
      * does not wish to provide fail-fast iterators, this field may be
      * ignored.
      */

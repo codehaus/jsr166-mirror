@@ -563,8 +563,8 @@ public class Vector<E>
      * increased if its size becomes greater than its capacity.
      *
      * <p>This method is identical in functionality to the
-     * {@link #remove(Object)} method (which is part of the
-     * {@link List} interface).
+     * {@link #add(Object) add(E)}
+     * method (which is part of the {@link List} interface).
      *
      * @param   obj   the component to be added
      */
@@ -581,14 +581,13 @@ public class Vector<E>
      * object's index is shifted downward to have an index one smaller
      * than the value it had previously.
      *
-     * <p>This method is identical in functionality to the remove(Object)
-     * method (which is part of the List interface).
+     * <p>This method is identical in functionality to the
+     * {@link #remove(Object)} method (which is part of the
+     * {@link List} interface).
      *
      * @param   obj   the component to be removed
      * @return  {@code true} if the argument was a component of this
      *          vector; {@code false} otherwise.
-     * @see	List#remove(Object)
-     * @see	List
      */
     public synchronized boolean removeElement(Object obj) {
 	modCount++;
@@ -766,8 +765,8 @@ public class Vector<E>
      * Shifts any subsequent elements to the left (subtracts one from their
      * indices).  Returns the element that was removed from the Vector.
      *
-     * @exception ArrayIndexOutOfBoundsException index out of range (index
-     * 		  &lt; 0 || index &gt;= size())
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *         ({@code index < 0 || index >= size()})
      * @param index the index of the element to be removed
      * @return element that was removed
      * @since 1.2
@@ -886,8 +885,8 @@ public class Vector<E>
      *              specified collection
      * @param c elements to be inserted into this Vector
      * @return {@code true} if this Vector changed as a result of the call
-     * @exception ArrayIndexOutOfBoundsException index out of range (index
-     *		  &lt; 0 || index &gt; size())
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     *         ({@code index < 0 || index > size()})
      * @throws NullPointerException if the specified collection is null
      * @since 1.2
      */
@@ -1162,10 +1161,10 @@ public class Vector<E>
      * @param fromIndex low endpoint (inclusive) of the subList
      * @param toIndex high endpoint (exclusive) of the subList
      * @return a view of the specified range within this List
-     * @throws IndexOutOfBoundsException endpoint index value out of range
-     *         <code>(fromIndex &lt; 0 || toIndex &gt; size)</code>
-     * @throws IllegalArgumentException endpoint indices out of order
-     *	       <code>(fromIndex &gt; toIndex)</code>
+     * @throws IndexOutOfBoundsException if an endpoint index value is out of range
+     *         {@code (fromIndex < 0 || toIndex > size)}
+     * @throws IllegalArgumentException if the endpoint indices are out of order
+     *	       {@code (fromIndex > toIndex)}
      */
     public synchronized List<E> subList(int fromIndex, int toIndex) {
         return new VectorSubList(this, this, fromIndex, fromIndex, toIndex);

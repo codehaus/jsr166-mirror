@@ -869,4 +869,3 @@ class RandomAccessSubList<E> extends SubList<E> implements RandomAccess {
                                        fromIndex, toIndex);
     }
 }
-

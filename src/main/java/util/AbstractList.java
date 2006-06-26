@@ -250,8 +250,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     // Iterators
 
     /**
-     * Returns an iterator over the elements in this list in proper
-     * sequence.
+     * Returns an iterator over the elements in this list in proper sequence.
      *
      * <p>This implementation returns a straightforward implementation of the
      * iterator interface, relying on the backing list's {@code size()},
@@ -292,7 +291,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@code ListIterator} interface that extends the implementation of the
      * {@code Iterator} interface returned by the {@code iterator()} method.
      * The {@code ListIterator} implementation relies on the backing list's
-     * {@code get(int)}, {@code set(int, E)}, {@code add(int, Object)}
+     * {@code get(int)}, {@code set(int, E)}, {@code add(int, E)}
      * and {@code remove(int)} methods.
      *
      * <p>Note that the list iterator returned by this implementation will
@@ -444,8 +443,8 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * If this list implements {@code RandomAccess} the returned list will
      * be an instance of the subclass that implements {@code RandomAccess}.
      *
-     * <p>The subclass's {@code set(int, Object)}, {@code get(int)},
-     * {@code add(int, Object)}, {@code remove(int)}, {@code addAll(int,
+     * <p>The subclass's {@code set(int, E)}, {@code get(int)},
+     * {@code add(int, E)}, {@code remove(int)}, {@code addAll(int,
      * Collection)} and {@code removeRange(int, int)} methods all
      * delegate to the corresponding methods on the backing abstract list,
      * after bounds-checking the index and adjusting for the offset.  The
@@ -463,9 +462,9 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      * {@code ConcurrentModificationException} if it is not.
      *
      * @throws IndexOutOfBoundsException endpoint index value out of range
-     *         {@code (fromIndex &lt; 0 || toIndex &gt; size)}
+     *         {@code (fromIndex < 0 || toIndex > size)}
      * @throws IllegalArgumentException if the endpoint indices are out of order
-     *         {@code (fromIndex &gt; toIndex)}
+     *         {@code (fromIndex > toIndex)}
      */
     public List<E> subList(int fromIndex, int toIndex) {
         return (this instanceof RandomAccess ?
@@ -580,10 +579,10 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      *
      * <p><b>Use of this field by subclasses is optional.</b> If a subclass
      * wishes to provide fail-fast iterators (and list iterators), then it
-     * merely has to increment this field in its {@code add(int, Object)} and
+     * merely has to increment this field in its {@code add(int, E)} and
      * {@code remove(int)} methods (and any other methods that it overrides
      * that result in structural modifications to the list).  A single call to
-     * {@code add(int, Object)} or {@code remove(int)} must add no more than
+     * {@code add(int, E)} or {@code remove(int)} must add no more than
      * one to this field, or the iterators (and list iterators) will throw
      * bogus {@code ConcurrentModificationExceptions}.  If an implementation
      * does not wish to provide fail-fast iterators, this field may be

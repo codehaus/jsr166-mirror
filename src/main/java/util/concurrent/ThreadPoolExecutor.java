@@ -797,7 +797,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * been completed. Thus, a worker thread may be interrupted
      * needlessly (for example in getTask), in which case it rechecks
      * pool state to see if it should exit.
-     *
      */
     private final class Worker implements Runnable {
         /**
@@ -920,9 +919,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * approach is similar to execute() in that worker threads trying
      * to get a task to run do so on the basis of prevailing state
      * accessed outside of locks.  This may cause them to choose the
-     * "wrong" action, such as or trying to exit because no tasks
+     * "wrong" action, such as trying to exit because no tasks
      * appear to be available, or entering a take when the pool is in
-     * the process of being shut down. These potential problems are
+     * the process of being shut down.  These potential problems are
      * countered by (1) rechecking pool state (in workerCanExit)
      * before giving up, and (2) interrupting other workers upon
      * shutdown, so they can recheck state. All other user-based state
@@ -1061,7 +1060,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * threads that might be blocked in getTask() to wake them up
          * so they can exit. Then, if there happen not to be any
          * threads or tasks, we can directly terminate pool via
-         * tryTerminate.
+         * tryTerminate.  Else, the last worker to leave the building
+         * turns off the lights (in workerDone).
          *
          * But this is made more delicate because we must cooperate
          * with the security manager (if present), which may implement
@@ -1082,9 +1082,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * SecurityException when interrupt() is invoked.  In this
          * third case, because we have already set runState, we can
          * only try to back out from the shutdown as cleanly as
-         * possible. Some threads may have been killed but we remain
-         * in non-shutdown state (which may entail tryTerminate
-         * starting a thread to maintain liveness.)
+         * possible. Some workers may have been killed but we remain
+         * in non-shutdown state (which may entail tryTerminate from
+         * workerDone starting a new worker to maintain liveness.)
          */
 
 	SecurityManager security = System.getSecurityManager();
@@ -1095,7 +1095,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         try {
             if (security != null) { // Check if caller can modify our threads
-                for (Worker w: workers)
+                for (Worker w : workers)
                     security.checkAccess(w.thread);
             }
 
@@ -1104,12 +1104,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 runState = SHUTDOWN;
 
             try {
-                for (Worker w: workers) {
+                for (Worker w : workers) {
                     w.interruptIfIdle();
                 }
             } catch (SecurityException se) { // Try to back out
                 runState = state;
-                tryTerminate();
+                // tryTerminate() here would be a no-op
                 throw se;
             }
 
@@ -1140,9 +1140,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     public List<Runnable> shutdownNow() {
         /*
          * shutdownNow differs from shutdown only in that
-         * (1) runState is set to STOP, (2) All worker threads
-         * are interrupted, not just the idle ones, and (3)
-         * the queue is drained and returned.
+         * 1. runState is set to STOP,
+         * 2. all worker threads are interrupted, not just the idle ones, and
+         * 3. the queue is drained and returned.
          */
 	SecurityManager security = System.getSecurityManager();
 	if (security != null)
@@ -1152,7 +1152,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         try {
             if (security != null) { // Check if caller can modify our threads
-                for (Worker w: workers)
+                for (Worker w : workers)
                     security.checkAccess(w.thread);
             }
 
@@ -1166,7 +1166,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 }
             } catch (SecurityException se) { // Try to back out
                 runState = state;
-                tryTerminate();
+                // tryTerminate() here would be a no-op
                 throw se;
             }
 
@@ -1182,7 +1182,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Drains the task queue into a new list. Used by shutdownNow.
      * Call only while holding main lock.
      */
-    private  List<Runnable> drainQueue() {
+    private List<Runnable> drainQueue() {
         List<Runnable> taskList = new ArrayList<Runnable>();
         workQueue.drainTo(taskList);
         /*
@@ -1479,7 +1479,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * terminated.  This overrides any value set in the constructor.
      * @param time the time to wait.  A time value of zero will cause
      * excess threads to terminate immediately after executing tasks.
-     * @param unit  the time unit of the time argument
+     * @param unit the time unit of the time argument
      * @throws IllegalArgumentException if time less than zero or
      * if time is zero and allowsCoreThreadTimeOut
      * @see #getKeepAliveTime

@@ -15,13 +15,16 @@ import java.security.PrivilegedExceptionAction;
  * methods that can produce a {@link Future} for tracking progress of
  * one or more asynchronous tasks.
  *
- * <p>
- * An <tt>ExecutorService</tt> can be shut down, which will cause it
- * to stop accepting new tasks.  After being shut down, the executor
- * will eventually terminate, at which point no tasks are actively
- * executing, no tasks are awaiting execution, and no new tasks can be
- * submitted.  An unused <tt>ExecutorService</tt> should be shut down
- * to allow reclamation of its resources.
+ * <p> An <tt>ExecutorService</tt> can be shut down, which will cause
+ * it to reject new tasks.  Two different methods are provided for
+ * shutting down an <tt>ExecutorService</tt>. The {@link #shutdown}
+ * method will allow previously submitted tasks to execute before
+ * terminating, while the {@link #shutdownNow} method prevents waiting
+ * tasks from starting and attempts to stop currently executing tasks.
+ * Upon termination, an executor has no tasks actively executing, no
+ * tasks awaiting execution, and no new tasks can be submitted.  An
+ * unused <tt>ExecutorService</tt> should be shut down to allow
+ * reclamation of its resources.
  *
  * <p> Method <tt>submit</tt> extends base method {@link
  * Executor#execute} by creating and returning a {@link Future} that
@@ -35,14 +38,14 @@ import java.security.PrivilegedExceptionAction;
  * <p>The {@link Executors} class provides factory methods for the
  * executor services provided in this package.
  *
- * <h3>Usage Example</h3>
+ * <h3>Usage Examples</h3>
  *
  * Here is a sketch of a network service in which threads in a thread
  * pool service incoming requests. It uses the preconfigured {@link
  * Executors#newFixedThreadPool} factory method:
  *
  * <pre>
- * class NetworkService {
+ * class NetworkService implements Runnable {
  *   private final ServerSocket serverSocket;
  *   private final ExecutorService pool;
  *
@@ -52,7 +55,7 @@ import java.security.PrivilegedExceptionAction;
  *     pool = Executors.newFixedThreadPool(poolSize);
  *   }
  *
- *   public void serve() {
+ *   public void run() { // run the service
  *     try {
  *       for (;;) {
  *         pool.execute(new Handler(serverSocket.accept()));
@@ -67,7 +70,29 @@ import java.security.PrivilegedExceptionAction;
  *   private final Socket socket;
  *   Handler(Socket socket) { this.socket = socket; }
  *   public void run() {
- *     // read and service request
+ *     // read and service request on socket
+ *   }
+ * }
+ * </pre>
+ *
+ * The following method shuts down an <tt>ExecutorService</tt> in two phases,
+ * first by calling <tt>shutdown</tt> to reject incoming tasks, and then
+ * calling <tt>shutdownNow</tt>, if necessary, to cancel any lingering tasks:
+ *
+ * <pre>
+ * void shutdownAndAwaitTermination(ExecutorService pool) {
+ *   pool.shutdown(); // Disable new tasks from being submitted
+ *   try {
+ *     // Wait a while for existing tasks to terminate
+ *     if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+ *       pool.shutdownNow(); // Cancel currently executing tasks
+ *       // Wait a while for tasks to respond to being cancelled
+ *       if (!pool.awaitTermination(60, TimeUnit.SECONDS))
+ *           System.err.println("Pool did not terminate");
+ *     }
+ *   } catch (InterruptedException ie) {
+ *     pool.shutdownNow(); // (Re-)Cancel if current thread also interrupted
+ *     Thread.currentThread().interrupt(); // Preserve interrupt status
  *   }
  * }
  * </pre>

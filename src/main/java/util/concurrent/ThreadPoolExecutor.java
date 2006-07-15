@@ -871,24 +871,16 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     Thread.interrupted() &&
                     runState >= STOP)
                     thread.interrupt();
-                /*
-                 * Track execution state to ensure that afterExecute
-                 * is called only if task completed or threw
-                 * exception. Otherwise, the caught runtime exception
-                 * will have been thrown by afterExecute itself, in
-                 * which case we don't want to call it again.
-                 */
-                boolean ran = false;
+
                 beforeExecute(thread, task);
+                Throwable ex = null;
                 try {
                     task.run();
-                    ran = true;
-                    afterExecute(task, null);
+                } catch (Throwable throwable) {
+                    ex = throwable;
+                } finally {
                     ++completedTasks;
-                } catch (RuntimeException ex) {
-                    if (!ran)
-                        afterExecute(task, ex);
-                    throw ex;
+                    afterExecute(task, ex);
                 }
             } finally {
                 runLock.unlock();
@@ -1005,8 +997,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         try {
             completedTaskCount += w.completedTasks;
             workers.remove(w);
-            if (--poolSize == 0)
-                tryTerminate();
+            --poolSize;
+            tryTerminate();
         } finally {
             mainLock.unlock();
         }
@@ -1017,8 +1009,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Transitions to TERMINATED state if either (SHUTDOWN and pool
      * and queue empty) or (STOP and pool empty), otherwise unless
-     * stopped, ensuring that there is at least one live thread to
-     * handle queued tasks.
+     * stopped, adding a thread if there are fewer than max(1,
+     * corePoolSize) existing threads to handle queued tasks.
      *
      * This method is called from the three places in which
      * termination can occur: in workerDone on exit of the last thread
@@ -1026,15 +1018,16 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * shutdown or shutdownNow, if there are no live threads.
      */
     private void tryTerminate() {
-        if (poolSize == 0) {
+        int n = poolSize;
+        if (n < Math.max(1, corePoolSize)) {
             int state = runState;
             if (state < STOP && !workQueue.isEmpty()) {
-                state = RUNNING; // disable termination check below
                 Thread t = addThread(null);
                 if (t != null)
                     t.start();
+                return;
             }
-            if (state == STOP || state == SHUTDOWN) {
+            if (n == 0 && (state == STOP || state == SHUTDOWN)) {
                 runState = TERMINATED;
                 termination.signalAll();
                 terminated();
@@ -1619,8 +1612,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Returns the approximate total number of tasks that have ever been
      * scheduled for execution. Because the states of tasks and
      * threads may change dynamically during computation, the returned
-     * value is only an approximation, but one that does not ever
-     * decrease across successive calls.
+     * value is only an approximation.
      *
      * @return the number of tasks
      */

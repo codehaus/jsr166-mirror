@@ -856,9 +856,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         /**
          * Runs a single task between before/after methods.
          */
-        private void runTask(Runnable task) {
+        private void runTask(Runnable task) throws Throwable {
             final ReentrantLock runLock = this.runLock;
             runLock.lock();
+            Throwable ex = null;
             try {
                 /*
                  * Ensure that unless pool is stopping, this thread
@@ -873,17 +874,18 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     thread.interrupt();
 
                 beforeExecute(thread, task);
-                Throwable ex = null;
                 try {
                     task.run();
                 } catch (Throwable throwable) {
                     ex = throwable;
                 } finally {
-                    ++completedTasks;
                     afterExecute(task, ex);
                 }
             } finally {
+                ++completedTasks;
                 runLock.unlock();
+                if (ex != null) 
+                    throw ex;
             }
         }
 
@@ -898,6 +900,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     runTask(task);
                     task = null;
                 }
+            } catch (Throwable fallThrough) { 
             } finally {
                 workerDone(this);
             }

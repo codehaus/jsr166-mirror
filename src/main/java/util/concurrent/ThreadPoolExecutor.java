@@ -854,57 +854,86 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
 
         /**
-         * Runs a single task between before/after methods.
-         */
-        private void runTask(Runnable task) {
-            final ReentrantLock runLock = this.runLock;
-            runLock.lock();
-            Throwable ex = null;
-            try {
-                /*
-                 * Ensure that unless pool is stopping, this thread
-                 * does not have its interrupt set. This requires a
-                 * double-check of state in case the interrupt was
-                 * cleared concurrently with a shutdownNow -- if so,
-                 * the interrupt is re-enabled.
-                 */
-                if (runState < STOP &&
-                    Thread.interrupted() &&
-                    runState >= STOP)
-                    thread.interrupt();
-
-                beforeExecute(thread, task);
-                try {
-                    task.run();
-                } catch (Throwable throwable) {
-                    ex = throwable;
-                } finally {
-                    afterExecute(task, ex);
-                }
-            } finally {
-                ++completedTasks;
-                runLock.unlock();
-                if (ex != null) {
-                    if (ex instanceof RuntimeException)
-                        throw (RuntimeException) ex;
-                    else if (ex instanceof Error)
-                        throw (Error) ex;
-                    else
-                        throw new Error(ex);
-                }
-            }
-        }
-
-        /**
          * Main run loop
          */
         public void run() {
+            /*
+             * Basically, we repeatedly get tasks from queue and
+             * execute them, while coping with a number of issues:
+             *
+             * 1. We may start out with a firstTask, in which case we
+             * don't need to get the first one.
+             *
+             * 2. getTask will return null upon interruption (normally
+             * due to shutdown) which will break loop and cause this
+             * thread to die.
+             *
+             * 3. Before running any task, we set runLock (mainly) in
+             * order to avoid interrupts. We then ensure that unless
+             * pool is stopping, this thread does not have its
+             * interrupt set. This requires a double-check of state in
+             * case the interrupt was cleared concurrently with a
+             * shutdownNow -- if so, the interrupt is re-enabled.
+             * This lock is held across all three of beforeExecute,
+             * task.run, and afterExecute, which also shields
+             * extension code from stray interrupts.
+             *
+             * 4. Each task run is preceded by a call beforeExecute,
+             * which might throw an exception, in which case, to be
+             * conservative, we cause thread to die (breaking loop and
+             * falling into workerDone), without processing the task.
+             *
+             * 5. Assuming beforeExecute completes normally, we run
+             * the task, gathering any of its thrown exceptions to
+             * send to afterExecute. We separately handle
+             * RuntimeException, Error (both of which the specs
+             * guarantee that we trap) and arbitrary Throwables.
+             * Because we cannot rethrow Throwables within
+             * Runnable.run, we wrap them within Errors on the way out
+             * (to the thread's UncaughtExceptionHandler).  Any thrown
+             * exception also conservatively causes thread to die.
+             *
+             * 6. After run completes, we call afterExecute, which 
+             * may also throw an exception, which will also cause
+             * thread to die. According to JLS Sec 14.20, this exception
+             * is the one that will be in effect even if task.run throws.
+             *
+             * The net effect of the exception mechanics is that
+             * afterExecute and the thread's UncaughtExceptionHandler
+             * have as accurate information as we can provide about
+             * any problems encountered by user code.
+             */
+
+            final ReentrantLock runLock = this.runLock;
+            Runnable task = firstTask;
+            firstTask = null;
             try {
-                Runnable task = firstTask;
-                firstTask = null;
                 while (task != null || (task = getTask()) != null) {
-                    runTask(task);
-                    task = null;
+                    runLock.lock();
+                    try {
+                        if (runState < STOP &&
+                            Thread.interrupted() &&
+                            runState >= STOP)
+                            thread.interrupt();
+
+                        beforeExecute(thread, task);
+                        Throwable thrown = null;
+                        try {
+                            task.run();
+                        } catch (RuntimeException x) {
+                            thrown = x; throw x;
+                        } catch (Error x) {
+                            thrown = x; throw x;
+                        } catch (Throwable x) {
+                            thrown = x; throw new Error(x);
+                        } finally {
+                            afterExecute(task, thrown);
+                        }
+                    } finally {
+                        task = null;
+                        ++completedTasks;
+                        runLock.unlock();
+                    }
                 }
             } finally {
                 workerDone(this);
@@ -996,29 +1025,39 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Performs bookkeeping for an exiting worker thread.
+     * Removes an exiting worker thread from worker set, and
+     * gathers its statistics. Additionally, this may:
+     *  1. Cause termination if this is the last exiting thread 
+     *     during shutdown, or
+     *  2. Generate a replacement thread if there are any queued tasks
+     *     and the pool is not shutting down.
      * @param w the worker
      */
     void workerDone(Worker w) {
+        Thread replacement = null;
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
             completedTaskCount += w.completedTasks;
             workers.remove(w);
-            --poolSize;
-            tryTerminate();
+            int n = --poolSize;
+            if (runState < STOP && !workQueue.isEmpty())
+                replacement = addThread(null);
+            else if (n == 0)
+                tryTerminate();
         } finally {
             mainLock.unlock();
         }
+        if (replacement != null)
+            replacement.start();
     }
 
     /* Termination support. */
 
     /**
      * Transitions to TERMINATED state if either (SHUTDOWN and pool
-     * and queue empty) or (STOP and pool empty), otherwise unless
-     * stopped, adding a thread if there are fewer than max(1,
-     * corePoolSize) existing threads to handle queued tasks.
+     * and queue empty) or (STOP and pool empty). Call only while
+     * holding mainLock.
      *
      * This method is called from the three places in which
      * termination can occur: in workerDone on exit of the last thread
@@ -1026,16 +1065,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * shutdown or shutdownNow, if there are no live threads.
      */
     private void tryTerminate() {
-        int n = poolSize;
-        if (n < Math.max(1, corePoolSize)) {
+        if (poolSize == 0) {
             int state = runState;
-            if (state < STOP && !workQueue.isEmpty()) {
-                Thread t = addThread(null);
-                if (t != null)
-                    t.start();
-                return;
-            }
-            if (n == 0 && (state == STOP || state == SHUTDOWN)) {
+            if (state == STOP || (state == SHUTDOWN && workQueue.isEmpty())) {
                 runState = TERMINATED;
                 termination.signalAll();
                 terminated();
@@ -1084,8 +1116,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * third case, because we have already set runState, we can
          * only try to back out from the shutdown as cleanly as
          * possible. Some workers may have been killed but we remain
-         * in non-shutdown state (which may entail tryTerminate from
-         * workerDone starting a new worker to maintain liveness.)
+         * in non-shutdown state..
          */
 
 	SecurityManager security = System.getSecurityManager();
@@ -1105,12 +1136,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 runState = SHUTDOWN;
 
             try {
-                for (Worker w : workers) {
+                for (Worker w : workers)
                     w.interruptIfIdle();
-                }
-            } catch (SecurityException se) { // Try to back out
+            } catch (SecurityException se) { // Back out
                 runState = state;
-                // tryTerminate() here would be a no-op
                 throw se;
             }
 
@@ -1162,12 +1191,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 runState = STOP;
 
             try {
-                for (Worker w : workers) {
+                for (Worker w : workers)
                     w.interruptNow();
-                }
-            } catch (SecurityException se) { // Try to back out
+            } catch (SecurityException se) { // Back out
                 runState = state;
-                // tryTerminate() here would be a no-op
                 throw se;
             }
 

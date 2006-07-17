@@ -905,19 +905,28 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
              */
 
             final ReentrantLock runLock = this.runLock;
-            Runnable task = firstTask;
-            firstTask = null;
-            try {
-                while (task != null || (task = getTask()) != null) {
+	    boolean completedAbruptly = true;
+	    try {
+		Runnable task = (firstTask != null) ? firstTask : getTask();
+		firstTask = null;
+                for (; task != null; task = getTask()) {
                     runLock.lock();
                     try {
+			/*
+			 * Ensure that unless pool is stopping, this thread
+			 * does not have its interrupt set. This requires a
+			 * double-check of state in case the interrupt was
+			 * cleared concurrently with a shutdownNow -- if so,
+			 * the interrupt is re-enabled.
+			 */
                         if (runState < STOP &&
                             Thread.interrupted() &&
                             runState >= STOP)
                             thread.interrupt();
 
                         beforeExecute(thread, task);
-                        Throwable thrown = null;
+
+			Throwable thrown = null;
                         try {
                             task.run();
                         } catch (RuntimeException x) {
@@ -930,13 +939,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                             afterExecute(task, thrown);
                         }
                     } finally {
-                        task = null;
                         ++completedTasks;
                         runLock.unlock();
                     }
                 }
+		completedAbruptly = false;
             } finally {
-                workerDone(this);
+                workerDone(this, completedAbruptly);
             }
         }
     }
@@ -1032,8 +1041,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *  2. Generate a replacement thread if there are any queued tasks
      *     and the pool is not shutting down.
      * @param w the worker
+     * @param completedAbruptly whether w died due to a task throwing
      */
-    void workerDone(Worker w) {
+    void workerDone(Worker w, boolean completedAbruptly) {
         Thread replacement = null;
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
@@ -1041,7 +1051,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             completedTaskCount += w.completedTasks;
             workers.remove(w);
             int n = --poolSize;
-            if (runState < STOP && !workQueue.isEmpty())
+            if (runState < STOP &&
+		(completedAbruptly || !workQueue.isEmpty()))
                 replacement = addThread(null);
             else if (n == 0)
                 tryTerminate();

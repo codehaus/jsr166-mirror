@@ -386,9 +386,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private volatile long  keepAliveTime;
 
     /**
-     * If false (default) core threads stay alive even when idle.  If
-     * true, core threads use keepAliveTime to time out waiting for
-     * work.
+     * If false (default), core threads stay alive even when idle.
+     * If true, core threads use keepAliveTime to time out waiting
+     * for work.
      */
     private volatile boolean allowCoreThreadTimeOut;
 
@@ -734,7 +734,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * and is still present in the queue, this task must be removed
      * and rejected to preserve shutdownNow guarantees.  Otherwise,
      * this method ensures (unless addThread fails) that there is at
-     * least one live thread to handle this task
+     * least one live thread to handle this task.
      * @param command the task
      */
     private void ensureQueuedTaskHandled(Runnable command) {

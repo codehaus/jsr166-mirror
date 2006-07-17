@@ -91,8 +91,10 @@ import java.security.PrivilegedExceptionAction;
  *           System.err.println("Pool did not terminate");
  *     }
  *   } catch (InterruptedException ie) {
- *     pool.shutdownNow(); // (Re-)Cancel if current thread also interrupted
- *     Thread.currentThread().interrupt(); // Preserve interrupt status
+ *     // (Re-)Cancel if current thread also interrupted
+ *     pool.shutdownNow();
+ *     // Preserve interrupt status
+ *     Thread.currentThread().interrupt();
  *   }
  * }
  * </pre>

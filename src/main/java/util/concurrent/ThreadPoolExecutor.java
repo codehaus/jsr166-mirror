@@ -893,7 +893,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
              * (to the thread's UncaughtExceptionHandler).  Any thrown
              * exception also conservatively causes thread to die.
              *
-             * 6. After run completes, we call afterExecute, which 
+             * 6. After run completes, we call afterExecute, which
              * may also throw an exception, which will also cause
              * thread to die. According to JLS Sec 14.20, this exception
              * is the one that will be in effect even if task.run throws.
@@ -1027,7 +1027,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Removes an exiting worker thread from worker set, and
      * gathers its statistics. Additionally, this may:
-     *  1. Cause termination if this is the last exiting thread 
+     *  1. Cause termination if this is the last exiting thread
      *     during shutdown, or
      *  2. Generate a replacement thread if there are any queued tasks
      *     and the pool is not shutting down.

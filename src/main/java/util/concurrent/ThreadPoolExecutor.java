@@ -865,8 +865,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
              * don't need to get the first one.
              *
              * 2. getTask will return null upon interruption (normally
-             * due to shutdown) which will break loop and cause this
-             * thread to die.
+             * due to shutdown or lack of work) which will break loop
+             * and cause this thread to die. This is the "normal"
+             * non-abrupt exit (tracked by completedAbruptly). All
+             * other cases exit with completedAbruptly true, which is
+             * relayed to workerDone as an indicator that this thread
+             * should be replaced.
              *
              * 3. Before running any task, we set runLock (mainly) in
              * order to avoid interrupts. We then ensure that unless
@@ -906,10 +910,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
             final ReentrantLock runLock = this.runLock;
 	    boolean completedAbruptly = true;
+            Runnable task = firstTask;
+            firstTask = null;
 	    try {
-		Runnable task = (firstTask != null) ? firstTask : getTask();
-		firstTask = null;
-                for (; task != null; task = getTask()) {
+		while (task != null || (task = getTask()) != null) {
                     runLock.lock();
                     try {
 			/*
@@ -939,6 +943,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                             afterExecute(task, thrown);
                         }
                     } finally {
+                        task = null;
                         ++completedTasks;
                         runLock.unlock();
                     }
@@ -1038,8 +1043,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * gathers its statistics. Additionally, this may:
      *  1. Cause termination if this is the last exiting thread
      *     during shutdown, or
-     *  2. Generate a replacement thread if there are any queued tasks
-     *     and the pool is not shutting down.
+     *  2. If not shutting down, generate a replacement if this
+     *     thread completed abruptly (due to an exception in one of
+     *     its tasks) or there are any queued tasks.
      * @param w the worker
      * @param completedAbruptly whether w died due to a task throwing
      */

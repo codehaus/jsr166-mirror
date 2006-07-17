@@ -1116,7 +1116,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * third case, because we have already set runState, we can
          * only try to back out from the shutdown as cleanly as
          * possible. Some workers may have been killed but we remain
-         * in non-shutdown state..
+         * in non-shutdown state.
          */
 
 	SecurityManager security = System.getSecurityManager();

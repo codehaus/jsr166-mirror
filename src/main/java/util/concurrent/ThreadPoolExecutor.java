@@ -878,7 +878,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
              * task.run, and afterExecute, which also shields
              * extension code from stray interrupts.
              *
-             * 4. Each task run is preceded by a call beforeExecute,
+             * 4. Each task run is preceded by a call to beforeExecute,
              * which might throw an exception, in which case, to be
              * conservative, we cause thread to die (breaking loop and
              * falling into workerDone), without processing the task.

@@ -1897,6 +1897,7 @@ public abstract class AbstractQueuedLongSynchronizer
     private static final long headOffset;
     private static final long tailOffset;
     private static final long waitStatusOffset;
+    private static final long nextOffset;
 
     static {
         try {
@@ -1908,6 +1909,8 @@ public abstract class AbstractQueuedLongSynchronizer
                 (AbstractQueuedLongSynchronizer.class.getDeclaredField("tail"));
             waitStatusOffset = unsafe.objectFieldOffset
                 (Node.class.getDeclaredField("waitStatus"));
+            nextOffset = unsafe.objectFieldOffset
+                (Node.class.getDeclaredField("next"));
 
         } catch (Exception ex) { throw new Error(ex); }
     }
@@ -1934,5 +1937,11 @@ public abstract class AbstractQueuedLongSynchronizer
                                                          int update) {
         return unsafe.compareAndSwapInt(node, waitStatusOffset,
                                         expect, update);
+    }
+    private final static boolean compareAndSetNext(Node node,
+                                                   Node expect,
+                                                   Node update) {
+        return unsafe.compareAndSwapObject(node, nextOffset,
+                                           expect, update);
     }
 }

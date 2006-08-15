@@ -659,6 +659,11 @@ public abstract class AbstractQueuedSynchronizer
             // Can use unconditional write instead of CAS here
             node.waitStatus = Node.CANCELLED;
             unparkSuccessor(node);
+            // Try to remove garbage pointer to this node to
+            // avoid garbage retention
+            Node pred = node.prev;
+            if (pred != null) 
+                compareAndSetNext(pred, node, node.next);
         }
     }
 
@@ -800,8 +805,8 @@ public abstract class AbstractQueuedSynchronizer
                     cancelAcquire(node);
                     return false;
                 }
-                if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node))
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
@@ -906,8 +911,11 @@ public abstract class AbstractQueuedSynchronizer
                     cancelAcquire(node);
                     return false;
                 }
-                if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node))
+                if (
+                    shouldParkAfterFailedAcquire(p, node)
+                    &&
+                    nanosTimeout > spinForTimeoutThreshold
+                    )
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
@@ -2118,6 +2126,7 @@ public abstract class AbstractQueuedSynchronizer
     private static final long headOffset;
     private static final long tailOffset;
     private static final long waitStatusOffset;
+    private static final long nextOffset;
 
     static {
         try {
@@ -2129,6 +2138,8 @@ public abstract class AbstractQueuedSynchronizer
                 (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
             waitStatusOffset = unsafe.objectFieldOffset
                 (Node.class.getDeclaredField("waitStatus"));
+            nextOffset = unsafe.objectFieldOffset
+                (Node.class.getDeclaredField("next"));
 
         } catch (Exception ex) { throw new Error(ex); }
     }
@@ -2155,5 +2166,12 @@ public abstract class AbstractQueuedSynchronizer
                                                          int update) {
         return unsafe.compareAndSwapInt(node, waitStatusOffset,
                                         expect, update);
+    }
+
+    private final static boolean compareAndSetNext(Node node,
+                                                   Node expect,
+                                                   Node update) {
+        return unsafe.compareAndSwapObject(node, nextOffset,
+                                           expect, update);
     }
 }

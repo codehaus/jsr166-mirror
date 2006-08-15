@@ -432,6 +432,10 @@ public abstract class AbstractQueuedLongSynchronizer
             // Can use unconditional write instead of CAS here
             node.waitStatus = Node.CANCELLED;
             unparkSuccessor(node);
+            // Bypass pointer to this node to avoid garbage retention
+            Node pred = node.prev;
+            if (pred != null) 
+                compareAndSetNext(pred, node, node.next);
         }
     }
 
@@ -573,8 +577,8 @@ public abstract class AbstractQueuedLongSynchronizer
                     cancelAcquire(node);
                     return false;
                 }
-                if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node))
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
@@ -679,8 +683,8 @@ public abstract class AbstractQueuedLongSynchronizer
                     cancelAcquire(node);
                     return false;
                 }
-                if (nanosTimeout > spinForTimeoutThreshold &&
-                    shouldParkAfterFailedAcquire(p, node))
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;

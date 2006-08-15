@@ -659,8 +659,7 @@ public abstract class AbstractQueuedSynchronizer
             // Can use unconditional write instead of CAS here
             node.waitStatus = Node.CANCELLED;
             unparkSuccessor(node);
-            // Try to remove garbage pointer to this node to
-            // avoid garbage retention
+            // Bypass pointer to this node to avoid garbage retention
             Node pred = node.prev;
             if (pred != null) 
                 compareAndSetNext(pred, node, node.next);
@@ -911,11 +910,8 @@ public abstract class AbstractQueuedSynchronizer
                     cancelAcquire(node);
                     return false;
                 }
-                if (
-                    shouldParkAfterFailedAcquire(p, node)
-                    &&
-                    nanosTimeout > spinForTimeoutThreshold
-                    )
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;

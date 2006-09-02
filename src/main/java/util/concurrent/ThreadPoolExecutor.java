@@ -495,7 +495,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         new RuntimePermission("modifyThread");
 
     /**
-     * Class Worker mainly maintaina interrupt control state for
+     * Class Worker mainly maintains interrupt control state for
      * threads running tasks, along with other minor bookkeeping. This
      * class opportunistically extends ReentrantLock to simplify
      * acquiring and releasing a lock surrounding each task execution.
@@ -504,16 +504,16 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * task being run.
      */
     private final class Worker extends ReentrantLock implements Runnable {
-        /** Thread this worker is running in. Null if factory fails */
+        /** Thread this worker is running in.  Null if factory fails. */
         final Thread thread;
-        /** Initial task to run. Possibly null..*/
+        /** Initial task to run.  Possibly null. */
         Runnable firstTask;
         /** Per-thread task counter */
         volatile long completedTasks;
 
         /**
-         * Creates with given first task and thread from ThreadFactory
-         * @param firstTask the first task (null if none).
+         * Creates with given first task and thread from ThreadFactory.
+         * @param firstTask the first task (null if none)
          */
         Worker(Runnable firstTask) {
             this.firstTask = firstTask;
@@ -911,7 +911,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 if (r != null)
                     return r;
                 empty = true; // queue probably empty; recheck above
-            } catch(InterruptedException retry) {
+            } catch (InterruptedException retry) {
             }
         }
     }
@@ -929,7 +929,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * usually leads processWorkerExit to replace this thread.
      *
      * 2. Before running any task, the lock is acquired to prevent
-     * other pool interrupts while the task is executing, and.
+     * other pool interrupts while the task is executing, and
      * clearInterruptsForTaskRun called to ensure that unless pool is
      * stopping, this thread does not have its interrupt set.
      *

@@ -363,7 +363,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * The queue used for holding tasks and handing off to worker
      * threads.  We do not require that workQueue.poll() returning
-     * null to necessarily mean that workQueue.isEmpty(), so rely
+     * null necessarily means that workQueue.isEmpty(), so rely
      * solely on isEmpty to see if the queue is empty (which we must
      * do for example when deciding whether to transition from
      * SHUTDOWN to TERMINATED).  This accommodates special-purpose
@@ -455,7 +455,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Core pool size is the minimum number of workers to keep alive
      * (and not allow to time out etc) unless allowCoreThreadTimeOut
-     * is set, in which case the mininum is zero.
+     * is set, in which case the minimum is zero.
      */
     private volatile int corePoolSize;
 
@@ -796,7 +796,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
         Worker w = new Worker(firstTask);
         Thread t = w.thread;
-        if (t == null) {  // Back out on Threadfactory failure
+        if (t == null) {  // Back out on ThreadFactory failure
             decrementWorkerCount();
             tryTerminate();
             return false;

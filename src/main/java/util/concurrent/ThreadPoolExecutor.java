@@ -311,7 +311,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *
      * The workerCount is the number of workers that have been
      * permitted to start and not permitted to stop.  The value may be
-     * transiently different than the actual number of live threads
+     * transiently different from the actual number of live threads,
      * for example when a ThreadFactory fails to create a thread when
      * asked, and when exiting threads are still performing
      * bookkeeping before terminating. The user-visible pool size is
@@ -553,7 +553,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * method must be called following any action that might make
      * termination possible -- reducing worker count or removing tasks
      * from the queue during shutdown. The method is non-private to
-     * allow access from ScheduledThreadPoolExecutor
+     * allow access from ScheduledThreadPoolExecutor.
      */
     final void tryTerminate() {
         for (;;) {
@@ -763,12 +763,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * null if none). Workers are created with an initial first task
      * (in method execute()) to bypass queuing when there are fewer
      * than corePoolSize threads (in which case we always start one),
-     * or when the queue is full.(in which case we must bypass queue).
+     * or when the queue is full (in which case we must bypass queue).
      * Initially idle threads are usually created via
      * prestartCoreThread or to replace other dying workers.
      *
      * @param core if true use corePoolSize as bound, else
-     * maximumPoolSize.(A boolean indicator is used here rather than a
+     * maximumPoolSize. (A boolean indicator is used here rather than a
      * value to ensure reads of fresh values after checking other pool
      * state).
      * @return true if successful
@@ -788,7 +788,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             int wc = workerCountOf(c);
             if (rs > SHUTDOWN ||
                 wc >= CAPACITY ||
-                wc >= (core? corePoolSize : maximumPoolSize))
+                wc >= (core ? corePoolSize : maximumPoolSize))
                 return false;
             if (ctl.compareAndSet(c, ctlOf(rs, wc+1)))
                 break;
@@ -846,7 +846,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         tryTerminate();
 
         if (!completedAbruptly) {
-            int min = allowCoreThreadTimeOut? 0 : corePoolSize;
+            int min = allowCoreThreadTimeOut ? 0 : corePoolSize;
             if (min == 0 && !workQueue.isEmpty())
                 min = 1;
             int c = ctl.get();
@@ -862,7 +862,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * must exit because of any of:
      * 1. There are more than maximumPoolSize workers (due to
      *    a call to setMaximumPoolSize).
-     * 2. The pool is stopped
+     * 2. The pool is stopped.
      * 3. The queue is empty, and either the pool is shutdown,
      *    or the thread has already timed out at least once
      *    waiting for a task, and would otherwise enter another
@@ -905,7 +905,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             }
 
             try {
-                Runnable r = timed?
+                Runnable r = timed ?
                     workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :
                     workQueue.take();
                 if (r != null)

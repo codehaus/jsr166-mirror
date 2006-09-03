@@ -201,7 +201,7 @@ public class ScheduledThreadPoolExecutor
             }
             long d = (getDelay(TimeUnit.NANOSECONDS) -
                       other.getDelay(TimeUnit.NANOSECONDS));
-            return (d == 0)? 0 : ((d < 0)? -1 : 1);
+            return (d == 0) ? 0 : ((d < 0) ? -1 : 1);
         }
 
         /**
@@ -246,7 +246,7 @@ public class ScheduledThreadPoolExecutor
      * @param periodic true if this task periodic, false if delayed
      */
     boolean canRunInCurrentRunState(boolean periodic) {
-        return isRunningOrShutdown(periodic?
+        return isRunningOrShutdown(periodic ?
                                    continueExistingPeriodicTasksAfterShutdown :
                                    executeExistingDelayedTasksAfterShutdown);
     }
@@ -309,7 +309,7 @@ public class ScheduledThreadPoolExecutor
                 if (e instanceof RunnableScheduledFuture) {
                     RunnableScheduledFuture<?> t =
                         (RunnableScheduledFuture<?>)e;
-                    if ((t.isPeriodic()? !keepPeriodic : !keepDelayed) ||
+                    if ((t.isPeriodic() ? !keepPeriodic : !keepDelayed) ||
                         t.isCancelled()) { // also remove if already cancelled
                         if (q.remove(t))
                             t.cancel(false);

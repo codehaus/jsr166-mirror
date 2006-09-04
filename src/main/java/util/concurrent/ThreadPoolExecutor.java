@@ -1575,34 +1575,21 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * the presence of interference by other threads.
      */
     public void purge() {
-        // Take slow path if we encounter interference during traversal
-        boolean slow = false;
-        BlockingQueue<Runnable> q = workQueue;
+        final BlockingQueue<Runnable> q = workQueue;
         try {
             Iterator<Runnable> it = q.iterator();
             while (it.hasNext()) {
                 Runnable r = it.next();
-                if (r instanceof Future<?>) {
-                    Future<?> c = (Future<?>)r;
-                    if (c.isCancelled())
-                        it.remove();
-                }
+                if (r instanceof Future<?> && ((Future<?>)r).isCancelled())
+		    it.remove();
             }
-        }
-        catch (ConcurrentModificationException fallThrough) {
-            slow = true;
-        }
-        if (slow) {
-            // Make copy for traversal and call remove for cancelled entries
-            Object[] entries = q.toArray();
-            for (int i = 0; i < entries.length; ++i) {
-                Object e = entries[i];
-                if (e instanceof Future<?>) {
-                    Future<?> c = (Future<?>)e;
-                    if (c.isCancelled())
-                        q.remove(c);
-                }
-            }
+        } catch (ConcurrentModificationException fallThrough) {
+	    // Take slow path if we encounter interference during traversal.
+            // Make copy for traversal and call remove for cancelled entries.
+	    // The slow path is more likely to be O(N*N).
+            for (Object r : q.toArray())
+                if (r instanceof Future<?> && ((Future<?>)r).isCancelled())
+		    q.remove(r);
         }
 
         tryTerminate(); // In case SHUTDOWN and now empty

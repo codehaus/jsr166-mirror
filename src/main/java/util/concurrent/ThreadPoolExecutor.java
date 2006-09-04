@@ -778,7 +778,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             int c = ctl.get();
             int rs = runStateOf(c);
             // Check if queue empty only if necessary, and re-read ctl
-            // after this call to check if still same run state
+            // after this call to make CAS more likely to succeed.
             if (rs == SHUTDOWN) {
                 if (workQueue.isEmpty())
                     return false;

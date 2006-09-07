@@ -563,7 +563,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 (rs == SHUTDOWN && !workQueue.isEmpty()))
                 return;
             if (workerCountOf(c) != 0) { // Eligible to terminate
-                interruptIdleWorkers(true);
+                interruptIdleWorkers(ONLY_ONE);
                 return;
             }
             if (ctl.compareAndSet(c, ctlOf(TERMINATED, 0))) {
@@ -651,11 +651,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * called only from tryTerminate when termination is otherwise
      * enabled but there are still other workers.  In this case, at
      * most one waiting worker is interrupted to propagate shutdown
-     * signals in case all threads are currently waiting. This
-     * suffices because all waiting workers existing at point of a
-     * shutdown() call must have already been interrupted.
+     * signals in case all threads are currently waiting.
      * Interrupting any arbitrary thread ensures that newly arriving
      * workers since shutdown began will also eventually exit.
+     * To guarantee eventual termination, it suffices to always
+     * interrupt only one idle worker, but shutdown() interrupts all
+     * idle workers so that redundant workers exit promptly, not
+     * waiting for a straggler task to finish.
      */
     private void interruptIdleWorkers(boolean onlyOne) {
         final ReentrantLock mainLock = this.mainLock;
@@ -680,6 +682,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             mainLock.unlock();
         }
     }
+
+    private void interruptIdleWorkers() { interruptIdleWorkers(false); }
+    private static final boolean ONLY_ONE = true;
 
     /**
      * Ensures that unless the pool is stopping, the current thread
@@ -777,13 +782,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         for (;;) {
             int c = ctl.get();
             int rs = runStateOf(c);
-            // Check if queue empty only if necessary, and re-read ctl
-            // after this call to make CAS more likely to succeed.
+            // Check if queue empty only if necessary.
             if (rs == SHUTDOWN) {
                 if (workQueue.isEmpty())
                     return false;
-                if (runStateOf(c = ctl.get()) != rs)
-                    continue;
+		// isEmpty() may be slow, so re-read ctl to reduce the risk
+		// of CAS failing due to harmless change to workerCount.
+		c = ctl.get();
             }
             int wc = workerCountOf(c);
             if (rs > SHUTDOWN ||
@@ -1214,7 +1219,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         try {
             checkShutdownAccess();
             advanceRunState(SHUTDOWN);
-            interruptIdleWorkers(false);
+            interruptIdleWorkers();
             onShutdown(); // hook for ScheduledThreadPoolExecutor
         } finally {
             mainLock.unlock();
@@ -1369,7 +1374,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         int delta = corePoolSize - this.corePoolSize;
         this.corePoolSize = corePoolSize;
         if (workerCountOf(ctl.get()) > corePoolSize)
-            interruptIdleWorkers(false);
+            interruptIdleWorkers();
         else if (delta > 0) {
             // We don't really know how many new threads are "needed".
             // As a heuristic, prestart enough new workers (up to new
@@ -1456,7 +1461,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         if (value != allowCoreThreadTimeOut) {
             allowCoreThreadTimeOut = value;
             if (value)
-                interruptIdleWorkers(false);
+                interruptIdleWorkers();
         }
     }
 
@@ -1477,7 +1482,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             throw new IllegalArgumentException();
         this.maximumPoolSize = maximumPoolSize;
         if (workerCountOf(ctl.get()) > maximumPoolSize)
-            interruptIdleWorkers(false);
+            interruptIdleWorkers();
     }
 
     /**
@@ -1512,7 +1517,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         long delta = keepAliveTime - this.keepAliveTime;
         this.keepAliveTime = keepAliveTime;
         if (delta < 0)
-            interruptIdleWorkers(false);
+            interruptIdleWorkers();
     }
 
     /**

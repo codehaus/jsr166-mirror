@@ -1193,7 +1193,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
         if (runStateOf(c) == RUNNING && workQueue.offer(command)) {
             int recheck = ctl.get();
-            if (runStateOf(recheck) != RUNNING && remove(command))
+            if (runStateOf(recheck) >= STOP && remove(command))
                 reject(command);
             else if (workerCountOf(recheck) == 0)
                 addWorker(null, false);
@@ -1564,8 +1564,16 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return true if the task was removed
      */
     public boolean remove(Runnable task) {
-        boolean removed = workQueue.remove(task);
-        tryTerminate(); // In case SHUTDOWN and now empty
+        boolean removed;
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            removed = workQueue.remove(task);
+        } finally {
+            mainLock.unlock();
+        }
+        if (removed) 
+            tryTerminate(); // In case SHUTDOWN and now empty
         return removed;
     }
 

@@ -132,7 +132,10 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      *
      * @param executor the executor to use
      * @param completionQueue the queue to use as the completion queue
-     * normally one dedicated for use by this service
+     * normally one dedicated for use by this service. This queue is
+     * treated as unbounded -- failed attempted <tt>Queue.add</tt>
+     * operations for completed taskes cause them not to be
+     * retrievable.
      * @throws NullPointerException if executor or completionQueue are <tt>null</tt>
      */
     public ExecutorCompletionService(Executor executor,

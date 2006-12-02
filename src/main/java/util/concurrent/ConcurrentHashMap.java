@@ -153,11 +153,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * differ in lower bits.
      */
     private static int hash(int h) {
-        // This function ensures that hashCodes that differ only by
-        // constant multiples at each bit position have a bounded
-        // number of collisions (approximately 8 at default load factor).
-        h ^= (h >>> 20) ^ (h >>> 12);
-        return h ^ (h >>> 7) ^ (h >>> 4);
+        // Spread bits to regularize both segment and index locations,
+        // using variant of Jenkins's shift-based hash.
+        h += ~(h << 13);
+        h ^= h >>> 7;
+        h += h << 3;
+        h ^= h >>> 17;
+        h += h << 5;
+        return h;
     }
 
     /**

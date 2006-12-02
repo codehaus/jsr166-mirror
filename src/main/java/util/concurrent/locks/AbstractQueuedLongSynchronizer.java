@@ -1473,9 +1473,14 @@ public abstract class AbstractQueuedLongSynchronizer
          * @return its new wait node
          */
         private Node addConditionWaiter() {
-            Node node = new Node(Thread.currentThread(), Node.CONDITION);
             Node t = lastWaiter;
-            if (t == null)
+            // If lastWaiter is cancelled, clean out.
+            if (t != null && t.waitStatus != Node.CONDITION) {
+                unlinkCancelledWaiters();
+                t = lastWaiter;
+            }
+            Node node = new Node(Thread.currentThread(), Node.CONDITION);
+            if (t == null) 
                 firstWaiter = node;
             else
                 t.nextWaiter = node;
@@ -1513,40 +1518,36 @@ public abstract class AbstractQueuedLongSynchronizer
         }
 
         /**
-         * Returns true if given node is on this condition queue.
-         * Call only when holding lock.
+         * Unlinks cancelled waiter nodes from condition queue.
+         * Called only while holding lock. This is called when
+         * cancellation occurred during condition wait, and upon
+         * insertion of a new waiter when lastWaiter is seen to have
+         * been cancelled. This method is needed to avoid garbage
+         * retention in the absence of signals. So even though it may
+         * require a full traversal, it comes into play only when
+         * timeouts or cancellations occur in the absence of
+         * signals. It traverses all nodes rather than stopping at a
+         * particular target to unlink all pointers to garbage nodes
+         * without requiring many re-traversals during cancellation
+         * storms. 
          */
-        private boolean isOnConditionQueue(Node node) {
-            return node.next != null || node == lastWaiter;
-        }
-
-        /**
-         * Unlinks a cancelled waiter node from condition queue.  This
-         * is called when cancellation occurred during condition wait,
-         * not lock wait, and is called only after lock has been
-         * re-acquired by a cancelled waiter and the node is not known
-         * to already have been dequeued.  It is needed to avoid
-         * garbage retention in the absence of signals. So even though
-         * it may require a full traversal, it comes into play only
-         * when timeouts or cancellations occur in the absence of
-         * signals.
-         */
-        private void unlinkCancelledWaiter(Node node) {
+        private void unlinkCancelledWaiters() {
             Node t = firstWaiter;
             Node trail = null;
             while (t != null) {
-                if (t == node) {
-                    Node next = t.nextWaiter;
+                Node next = t.nextWaiter;
+                if (t.waitStatus != Node.CONDITION) {
+                    t.nextWaiter = null;
                     if (trail == null)
                         firstWaiter = next;
                     else
                         trail.nextWaiter = next;
-                    if (lastWaiter == node)
+                    if (next == null) 
                         lastWaiter = trail;
-                    break;
                 }
-                trail = t;
-                t = t.nextWaiter;
+                else 
+                    trail = t;
+                t = next;
             }
         }
 
@@ -1670,8 +1671,8 @@ public abstract class AbstractQueuedLongSynchronizer
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (isOnConditionQueue(node))
-                unlinkCancelledWaiter(node);
+            if (node.nextWaiter != null) // clean up if cancelled
+                unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
         }
@@ -1712,8 +1713,8 @@ public abstract class AbstractQueuedLongSynchronizer
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (isOnConditionQueue(node))
-                unlinkCancelledWaiter(node);
+            if (node.nextWaiter != null) 
+                unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
             return nanosTimeout - (System.nanoTime() - lastTime);
@@ -1755,8 +1756,8 @@ public abstract class AbstractQueuedLongSynchronizer
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (isOnConditionQueue(node))
-                unlinkCancelledWaiter(node);
+            if (node.nextWaiter != null)
+                unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
             return !timedout;
@@ -1793,7 +1794,8 @@ public abstract class AbstractQueuedLongSynchronizer
                     timedout = transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(this, nanosTimeout);
+                if (nanosTimeout >= spinForTimeoutThreshold)
+                    LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
                 long now = System.nanoTime();
@@ -1802,8 +1804,8 @@ public abstract class AbstractQueuedLongSynchronizer
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (isOnConditionQueue(node))
-                unlinkCancelledWaiter(node);
+            if (node.nextWaiter != null)
+                unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
             return !timedout;

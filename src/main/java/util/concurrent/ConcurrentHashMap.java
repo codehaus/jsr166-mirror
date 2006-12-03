@@ -150,17 +150,17 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * defends against poor quality hash functions.  This is critical
      * because ConcurrentHashMap uses power-of-two length hash tables,
      * that otherwise encounter collisions for hashCodes that do not
-     * differ in lower bits.
+     * differ in lower or upper bits.
      */
     private static int hash(int h) {
         // Spread bits to regularize both segment and index locations,
-        // using variant of Jenkins's shift-based hash.
-        h += ~(h << 13);
-        h ^= h >>> 7;
-        h += h << 3;
-        h ^= h >>> 17;
-        h += h << 5;
-        return h;
+        // using variant of single-word Wang/Jenkins hash.
+        h += (h <<  15) ^ 0xffffcd7d;
+        h ^= (h >>> 10);
+        h += (h <<   3);
+        h ^= (h >>>  6);
+        h += (h <<   2) + (h << 14);
+        return h ^ (h >>> 16);
     }
 
     /**

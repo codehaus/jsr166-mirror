@@ -1572,7 +1572,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         } finally {
             mainLock.unlock();
         }
-        if (removed) 
+        if (removed)
             tryTerminate(); // In case SHUTDOWN and now empty
         return removed;
     }

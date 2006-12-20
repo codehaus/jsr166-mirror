@@ -434,7 +434,7 @@ public abstract class AbstractQueuedLongSynchronizer
             unparkSuccessor(node);
             // Bypass pointer to this node to avoid garbage retention
             Node pred = node.prev;
-            if (pred != null) 
+            if (pred != null)
                 compareAndSetNext(pred, node, node.next);
         }
     }
@@ -507,23 +507,25 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return {@code true} if interrupted while waiting
      */
     final boolean acquireQueued(final Node node, long arg) {
-        try {
-            boolean interrupted = false;
-            for (;;) {
-                final Node p = node.predecessor();
-                if (p == head && tryAcquire(arg)) {
-                    setHead(node);
-                    p.next = null; // help GC
-                    return interrupted;
-                }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    parkAndCheckInterrupt())
-                    interrupted = true;
-            }
-        } catch (RuntimeException ex) {
-            cancelAcquire(node);
-            throw ex;
-        }
+	boolean failed = true;
+	try {
+	    boolean interrupted = false;
+	    for (;;) {
+		final Node p = node.predecessor();
+		if (p == head && tryAcquire(arg)) {
+		    setHead(node);
+		    p.next = null; // help GC
+		    failed = false;
+		    return interrupted;
+		}
+		if (shouldParkAfterFailedAcquire(p, node) &&
+		    parkAndCheckInterrupt())
+		    interrupted = true;
+	    }
+	} finally {
+	    if (failed)
+		cancelAcquire(node);
+	}
     }
 
     /**
@@ -531,27 +533,26 @@ public abstract class AbstractQueuedLongSynchronizer
      * @param arg the acquire argument
      */
     private void doAcquireInterruptibly(long arg)
-        throws InterruptedException {
-        final Node node = addWaiter(Node.EXCLUSIVE);
-        try {
-            for (;;) {
-                final Node p = node.predecessor();
-                if (p == head && tryAcquire(arg)) {
-                    setHead(node);
-                    p.next = null; // help GC
-                    return;
-                }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    parkAndCheckInterrupt())
-                    break;
-            }
-        } catch (RuntimeException ex) {
-            cancelAcquire(node);
-            throw ex;
-        }
-        // Arrive here only if interrupted
-        cancelAcquire(node);
-        throw new InterruptedException();
+	throws InterruptedException {
+	final Node node = addWaiter(Node.EXCLUSIVE);
+	boolean failed = true;
+	try {
+	    for (;;) {
+		final Node p = node.predecessor();
+		if (p == head && tryAcquire(arg)) {
+		    setHead(node);
+		    p.next = null; // help GC
+		    failed = false;
+		    return;
+		}
+		if (shouldParkAfterFailedAcquire(p, node) &&
+		    parkAndCheckInterrupt())
+		    throw new InterruptedException();
+	    }
+	} finally {
+	    if (failed)
+		cancelAcquire(node);
+	}
     }
 
     /**
@@ -562,37 +563,34 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return {@code true} if acquired
      */
     private boolean doAcquireNanos(long arg, long nanosTimeout)
-        throws InterruptedException {
-        long lastTime = System.nanoTime();
-        final Node node = addWaiter(Node.EXCLUSIVE);
-        try {
-            for (;;) {
-                final Node p = node.predecessor();
-                if (p == head && tryAcquire(arg)) {
-                    setHead(node);
-                    p.next = null; // help GC
-                    return true;
-                }
-                if (nanosTimeout <= 0) {
-                    cancelAcquire(node);
-                    return false;
-                }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    nanosTimeout > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(this, nanosTimeout);
-                long now = System.nanoTime();
-                nanosTimeout -= now - lastTime;
-                lastTime = now;
-                if (Thread.interrupted())
-                    break;
-            }
-        } catch (RuntimeException ex) {
-            cancelAcquire(node);
-            throw ex;
-        }
-        // Arrive here only if interrupted
-        cancelAcquire(node);
-        throw new InterruptedException();
+	throws InterruptedException {
+	long lastTime = System.nanoTime();
+	final Node node = addWaiter(Node.EXCLUSIVE);
+	boolean failed = true;
+	try {
+	    for (;;) {
+		final Node p = node.predecessor();
+		if (p == head && tryAcquire(arg)) {
+		    setHead(node);
+		    p.next = null; // help GC
+		    failed = false;
+		    return true;
+		}
+		if (nanosTimeout <= 0)
+		    return false;
+		if (shouldParkAfterFailedAcquire(p, node) &&
+		    nanosTimeout > spinForTimeoutThreshold)
+		    LockSupport.parkNanos(this, nanosTimeout);
+		long now = System.nanoTime();
+		nanosTimeout -= now - lastTime;
+		lastTime = now;
+		if (Thread.interrupted())
+		    throw new InterruptedException();
+	    }
+	} finally {
+	    if (failed)
+		cancelAcquire(node);
+	}
     }
 
     /**
@@ -600,29 +598,31 @@ public abstract class AbstractQueuedLongSynchronizer
      * @param arg the acquire argument
      */
     private void doAcquireShared(long arg) {
-        final Node node = addWaiter(Node.SHARED);
-        try {
-            boolean interrupted = false;
-            for (;;) {
-                final Node p = node.predecessor();
-                if (p == head) {
-                    long r = tryAcquireShared(arg);
-                    if (r >= 0) {
-                        setHeadAndPropagate(node, r);
-                        p.next = null; // help GC
-                        if (interrupted)
-                            selfInterrupt();
-                        return;
-                    }
-                }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    parkAndCheckInterrupt())
-                    interrupted = true;
-            }
-        } catch (RuntimeException ex) {
-            cancelAcquire(node);
-            throw ex;
-        }
+	final Node node = addWaiter(Node.SHARED);
+	boolean failed = true;
+	try {
+	    boolean interrupted = false;
+	    for (;;) {
+		final Node p = node.predecessor();
+		if (p == head) {
+		    long r = tryAcquireShared(arg);
+		    if (r >= 0) {
+			setHeadAndPropagate(node, r);
+			p.next = null; // help GC
+			if (interrupted)
+			    selfInterrupt();
+			failed = false;
+			return;
+		    }
+		}
+		if (shouldParkAfterFailedAcquire(p, node) &&
+		    parkAndCheckInterrupt())
+		    interrupted = true;
+	    }
+	} finally {
+	    if (failed)
+		cancelAcquire(node);
+	}
     }
 
     /**
@@ -630,30 +630,29 @@ public abstract class AbstractQueuedLongSynchronizer
      * @param arg the acquire argument
      */
     private void doAcquireSharedInterruptibly(long arg)
-        throws InterruptedException {
-        final Node node = addWaiter(Node.SHARED);
-        try {
-            for (;;) {
-                final Node p = node.predecessor();
-                if (p == head) {
-                    long r = tryAcquireShared(arg);
-                    if (r >= 0) {
-                        setHeadAndPropagate(node, r);
-                        p.next = null; // help GC
-                        return;
-                    }
-                }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    parkAndCheckInterrupt())
-                    break;
-            }
-        } catch (RuntimeException ex) {
-            cancelAcquire(node);
-            throw ex;
-        }
-        // Arrive here only if interrupted
-        cancelAcquire(node);
-        throw new InterruptedException();
+	throws InterruptedException {
+	final Node node = addWaiter(Node.SHARED);
+	boolean failed = true;
+	try {
+	    for (;;) {
+		final Node p = node.predecessor();
+		if (p == head) {
+		    long r = tryAcquireShared(arg);
+		    if (r >= 0) {
+			setHeadAndPropagate(node, r);
+			p.next = null; // help GC
+			failed = false;
+			return;
+		    }
+		}
+		if (shouldParkAfterFailedAcquire(p, node) &&
+		    parkAndCheckInterrupt())
+		    throw new InterruptedException();
+	    }
+	} finally {
+	    if (failed)
+		cancelAcquire(node);
+	}
     }
 
     /**
@@ -664,41 +663,38 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return {@code true} if acquired
      */
     private boolean doAcquireSharedNanos(long arg, long nanosTimeout)
-        throws InterruptedException {
+	throws InterruptedException {
 
-        long lastTime = System.nanoTime();
-        final Node node = addWaiter(Node.SHARED);
-        try {
-            for (;;) {
-                final Node p = node.predecessor();
-                if (p == head) {
-                    long r = tryAcquireShared(arg);
-                    if (r >= 0) {
-                        setHeadAndPropagate(node, r);
-                        p.next = null; // help GC
-                        return true;
-                    }
-                }
-                if (nanosTimeout <= 0) {
-                    cancelAcquire(node);
-                    return false;
-                }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    nanosTimeout > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(this, nanosTimeout);
-                long now = System.nanoTime();
-                nanosTimeout -= now - lastTime;
-                lastTime = now;
-                if (Thread.interrupted())
-                    break;
-            }
-        } catch (RuntimeException ex) {
-            cancelAcquire(node);
-            throw ex;
-        }
-        // Arrive here only if interrupted
-        cancelAcquire(node);
-        throw new InterruptedException();
+	long lastTime = System.nanoTime();
+	final Node node = addWaiter(Node.SHARED);
+	boolean failed = true;
+	try {
+	    for (;;) {
+		final Node p = node.predecessor();
+		if (p == head) {
+		    long r = tryAcquireShared(arg);
+		    if (r >= 0) {
+			setHeadAndPropagate(node, r);
+			p.next = null; // help GC
+			failed = false;
+			return true;
+		    }
+		}
+		if (nanosTimeout <= 0)
+		    return false;
+		if (shouldParkAfterFailedAcquire(p, node) &&
+		    nanosTimeout > spinForTimeoutThreshold)
+		    LockSupport.parkNanos(this, nanosTimeout);
+		long now = System.nanoTime();
+		nanosTimeout -= now - lastTime;
+		lastTime = now;
+		if (Thread.interrupted())
+		    throw new InterruptedException();
+	    }
+	} finally {
+	    if (failed)
+		cancelAcquire(node);
+	}
     }
 
     // Main exported methods
@@ -1342,17 +1338,19 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return previous sync state
      */
     final long fullyRelease(Node node) {
+	boolean failed = true;
         try {
             long savedState = getState();
-            if (release(savedState))
+	    if (release(savedState)) {
+		failed = false;
                 return savedState;
-        } catch (RuntimeException ex) {
-            node.waitStatus = Node.CANCELLED;
-            throw ex;
+	    } else {
+		throw new IllegalMonitorStateException();
         }
-        // reach here if release fails
+	} finally {
+	    if (failed)
         node.waitStatus = Node.CANCELLED;
-        throw new IllegalMonitorStateException();
+	}
     }
 
     // Instrumentation methods for conditions
@@ -1480,7 +1478,7 @@ public abstract class AbstractQueuedLongSynchronizer
                 t = lastWaiter;
             }
             Node node = new Node(Thread.currentThread(), Node.CONDITION);
-            if (t == null) 
+            if (t == null)
                 firstWaiter = node;
             else
                 t.nextWaiter = node;
@@ -1529,7 +1527,7 @@ public abstract class AbstractQueuedLongSynchronizer
          * signals. It traverses all nodes rather than stopping at a
          * particular target to unlink all pointers to garbage nodes
          * without requiring many re-traversals during cancellation
-         * storms. 
+         * storms.
          */
         private void unlinkCancelledWaiters() {
             Node t = firstWaiter;
@@ -1542,10 +1540,10 @@ public abstract class AbstractQueuedLongSynchronizer
                         firstWaiter = next;
                     else
                         trail.nextWaiter = next;
-                    if (next == null) 
+                    if (next == null)
                         lastWaiter = trail;
                 }
-                else 
+                else
                     trail = t;
                 t = next;
             }
@@ -1713,7 +1711,7 @@ public abstract class AbstractQueuedLongSynchronizer
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
-            if (node.nextWaiter != null) 
+            if (node.nextWaiter != null)
                 unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);

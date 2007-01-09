@@ -35,7 +35,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private final Sync sync;
 
     /**
-     * Creates a <tt>FutureTask</tt> that will upon running, execute the
+     * Creates a <tt>FutureTask</tt> that will, upon running, execute the
      * given <tt>Callable</tt>.
      *
      * @param  callable the callable task
@@ -48,11 +48,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Creates a <tt>FutureTask</tt> that will upon running, execute the
+     * Creates a <tt>FutureTask</tt> that will, upon running, execute the
      * given <tt>Runnable</tt>, and arrange that <tt>get</tt> will return the
      * given result on successful completion.
      *
-     * @param  runnable the runnable task
+     * @param runnable the runnable task
      * @param result the result to return on successful completion. If
      * you don't need a particular result, consider using
      * constructions of the form:
@@ -160,6 +160,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private final class Sync extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = -7828117401763700385L;
 
+        /** State value representing that task is ready to run */
+        private static final int READY     = 0;
         /** State value representing that task is running */
         private static final int RUNNING   = 1;
         /** State value representing that task ran */
@@ -193,7 +195,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
          * Implements AQS base acquire to succeed if ran or cancelled
          */
         protected int tryAcquireShared(int ignore) {
-            return innerIsDone()? 1 : -1;
+            return innerIsDone() ? 1 : -1;
         }
 
         /**
@@ -215,11 +217,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
         V innerGet() throws InterruptedException, ExecutionException {
             acquireSharedInterruptibly(0);
-            if (getState() == CANCELLED)
-                throw new CancellationException();
-            if (exception != null)
-                throw new ExecutionException(exception);
-            return result;
+	    if (getState() == CANCELLED)
+		throw new CancellationException();
+	    if (exception != null)
+		throw new ExecutionException(exception);
+	    return result;
         }
 
         V innerGet(long nanosTimeout) throws InterruptedException, ExecutionException, TimeoutException {
@@ -267,7 +269,6 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 }
 		if (compareAndSetState(s, RAN)) {
                     exception = t;
-                    result = null;
                     releaseShared(0);
                     done();
 		    return;
@@ -294,30 +295,30 @@ public class FutureTask<V> implements RunnableFuture<V> {
         }
 
         void innerRun() {
-            if (!compareAndSetState(0, RUNNING))
+            if (!compareAndSetState(READY, RUNNING))
                 return;
             try {
                 runner = Thread.currentThread();
                 if (getState() == RUNNING) // recheck after setting thread
-                    innerSet(callable.call());
+                    set(callable.call());
                 else
                     releaseShared(0); // cancel
             } catch (Throwable ex) {
-                innerSetException(ex);
+                setException(ex);
             }
         }
 
         boolean innerRunAndReset() {
-            if (!compareAndSetState(0, RUNNING))
+            if (!compareAndSetState(READY, RUNNING))
                 return false;
             try {
                 runner = Thread.currentThread();
                 if (getState() == RUNNING)
                     callable.call(); // don't set result
                 runner = null;
-                return compareAndSetState(RUNNING, 0);
+                return compareAndSetState(RUNNING, READY);
             } catch (Throwable ex) {
-                innerSetException(ex);
+                setException(ex);
                 return false;
             }
         }

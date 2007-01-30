@@ -25,45 +25,47 @@ import java.util.*;
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not useful for it. In
  * particular, because it acts as a fixed-sized pool using
- * <tt>corePoolSize</tt> threads and an unbounded queue, adjustments
- * to <tt>maximumPoolSize</tt> have no useful effect. Additionally, it
- * is almost never a good idea to set <tt>corePoolSize</tt> to zero or
- * use <tt>allowCoreThreadTimeOut</tt> because this may leave the pool
+ * {@code corePoolSize} threads and an unbounded queue, adjustments
+ * to {@code maximumPoolSize} have no useful effect. Additionally, it
+ * is almost never a good idea to set {@code corePoolSize} to zero or
+ * use {@code allowCoreThreadTimeOut} because this may leave the pool
  * without threads to handle tasks once they become eligible to run.
  *
- * <p><b>Extension notes:</b> This class overrides {@link
- * AbstractExecutorService} <tt>submit</tt> methods to generate
- * internal objects to control per-task delays and scheduling. To
- * preserve functionality, any further overrides of these methods in
+ * <p><b>Extension notes:</b> This class overrides the
+ * {@link ThreadPoolExecutor#execute execute} and
+ * {@link AbstractExecutorService#submit(Runnable) submit}
+ * methods to generate internal {@link ScheduledFuture} objects to
+ * control per-task delays and scheduling.  To preserve
+ * functionality, any further overrides of these methods in
  * subclasses must invoke superclass versions, which effectively
- * disables additional task customization. However, this class
+ * disables additional task customization.  However, this class
  * provides alternative protected extension method
- * <tt>decorateTask</tt> (one version each for <tt>Runnable</tt> and
- * <tt>Callable</tt>) that can be used to customize the concrete task
- * types used to execute commands entered via <tt>execute</tt>,
- * <tt>submit</tt>, <tt>schedule</tt>, <tt>scheduleAtFixedRate</tt>,
- * and <tt>scheduleWithFixedDelay</tt>.  By default, a
- * <tt>ScheduledThreadPoolExecutor</tt> uses a task type extending
+ * {@code decorateTask} (one version each for {@code Runnable} and
+ * {@code Callable}) that can be used to customize the concrete task
+ * types used to execute commands entered via {@code execute},
+ * {@code submit}, {@code schedule}, {@code scheduleAtFixedRate},
+ * and {@code scheduleWithFixedDelay}.  By default, a
+ * {@code ScheduledThreadPoolExecutor} uses a task type extending
  * {@link FutureTask}. However, this may be modified or replaced using
  * subclasses of the form:
  *
- * <pre>
+ *  <pre> {@code
  * public class CustomScheduledExecutor extends ScheduledThreadPoolExecutor {
  *
- *   static class CustomTask&lt;V&gt; implements RunnableScheduledFuture&lt;V&gt; { ... }
+ *   static class CustomTask<V> implements RunnableScheduledFuture<V> { ... }
  *
- *   protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
- *                Runnable r, RunnableScheduledFuture&lt;V&gt; task) {
- *       return new CustomTask&lt;V&gt;(r, task);
+ *   protected <V> RunnableScheduledFuture<V> decorateTask(
+ *                Runnable r, RunnableScheduledFuture<V> task) {
+ *       return new CustomTask<V>(r, task);
  *   }
  *
- *   protected &lt;V&gt; RunnableScheduledFuture&lt;V&gt; decorateTask(
- *                Callable&lt;V&gt; c, RunnableScheduledFuture&lt;V&gt; task) {
- *       return new CustomTask&lt;V&gt;(c, task);
+ *   protected <V> RunnableScheduledFuture<V> decorateTask(
+ *                Callable<V> c, RunnableScheduledFuture<V> task) {
+ *       return new CustomTask<V>(c, task);
  *   }
  *   // ... add constructors, etc.
- * }
- * </pre>
+ * }}</pre>
+ *
  * @since 1.5
  * @author Doug Lea
  */
@@ -124,14 +126,11 @@ public class ScheduledThreadPoolExecutor
      */
     private static final AtomicLong sequencer = new AtomicLong(0);
 
-    /** Base of nanosecond timings, to avoid wrapping */
-    private static final long NANO_ORIGIN = System.nanoTime();
-
     /**
-     * Returns nanosecond time offset by origin
+     * Returns current nanosecond time.
      */
     final long now() {
-        return System.nanoTime() - NANO_ORIGIN;
+        return System.nanoTime();
     }
 
     private class ScheduledFutureTask<V>
@@ -214,7 +213,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Sets the next time to run for a periodic task
+         * Sets the next time to run for a periodic task.
          */
         private void setNextRunTime() {
             long p = period;
@@ -242,7 +241,8 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * Returns true if can run a task given current run state
-     * and run-after-shutdown parameters
+     * and run-after-shutdown parameters.
+     *
      * @param periodic true if this task periodic, false if delayed
      */
     boolean canRunInCurrentRunState(boolean periodic) {
@@ -258,7 +258,8 @@ public class ScheduledThreadPoolExecutor
      * prestart the thread to run the task because the task (probably)
      * shouldn't be run yet,) If the pool is shut down while the task
      * is being added, cancel and remove it if required by state and
-     * run-after-shutdown parameters
+     * run-after-shutdown parameters.
+     *
      * @param task the task
      */
     private void delayedExecute(RunnableScheduledFuture<?> task) {
@@ -270,14 +271,15 @@ public class ScheduledThreadPoolExecutor
                 !canRunInCurrentRunState(task.isPeriodic()) &&
                 remove(task))
                 task.cancel(false);
-            prestartCoreThread();
+	    else
+		prestartCoreThread();
         }
     }
 
     /**
-     * Requeues a periodic task unless current run state precludes
-     * it. Same idea as delayedExecute except drops task rather than
-     * rejecting.
+     * Requeues a periodic task unless current run state precludes it.
+     * Same idea as delayedExecute except drops task rather than rejecting.
+     *
      * @param task the task
      */
     void reExecutePeriodic(RunnableScheduledFuture<?> task) {
@@ -285,13 +287,14 @@ public class ScheduledThreadPoolExecutor
             super.getQueue().add(task);
             if (!canRunInCurrentRunState(true) && remove(task))
                 task.cancel(false);
-            prestartCoreThread();
+	    else
+		prestartCoreThread();
         }
     }
 
     /**
      * Cancels and clears the queue of all tasks that should not be run
-     * due to shutdown policy. Invoked within super.shutdown.
+     * due to shutdown policy.  Invoked within super.shutdown.
      */
     @Override void onShutdown() {
         BlockingQueue<Runnable> q = super.getQueue();
@@ -303,9 +306,7 @@ public class ScheduledThreadPoolExecutor
             q.clear();
         else {
             // Traverse snapshot to avoid iterator exceptions
-            Object[] entries = q.toArray();
-            for (int i = 0; i < entries.length; ++i) {
-                Object e = entries[i];
+            for (Object e : q.toArray()) {
                 if (e instanceof RunnableScheduledFuture) {
                     RunnableScheduledFuture<?> t =
                         (RunnableScheduledFuture<?>)e;
@@ -317,6 +318,7 @@ public class ScheduledThreadPoolExecutor
                 }
             }
         }
+	tryTerminate();
     }
 
     /**
@@ -352,12 +354,12 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Creates a new ScheduledThreadPoolExecutor with the given core
-     * pool size.
+     * Creates a new {@code ScheduledThreadPoolExecutor} with the
+     * given core pool size.
      *
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle, unless allowCoreThreadTimeOut is set
-     * @throws IllegalArgumentException if <tt>corePoolSize &lt; 0</tt>
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @throws IllegalArgumentException if {@code corePoolSize < 0}
      */
     public ScheduledThreadPoolExecutor(int corePoolSize) {
         super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
@@ -365,15 +367,15 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Creates a new ScheduledThreadPoolExecutor with the given
-     * initial parameters.
+     * Creates a new {@code ScheduledThreadPoolExecutor} with the
+     * given initial parameters.
      *
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle, unless allowCoreThreadTimeOut is set
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param threadFactory the factory to use when the executor
-     * creates a new thread
-     * @throws IllegalArgumentException if <tt>corePoolSize &lt; 0</tt>
-     * @throws NullPointerException if threadFactory is null
+     *        creates a new thread
+     * @throws IllegalArgumentException if {@code corePoolSize < 0}
+     * @throws NullPointerException if {@code threadFactory} is null
      */
     public ScheduledThreadPoolExecutor(int corePoolSize,
                              ThreadFactory threadFactory) {
@@ -385,12 +387,12 @@ public class ScheduledThreadPoolExecutor
      * Creates a new ScheduledThreadPoolExecutor with the given
      * initial parameters.
      *
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle, unless allowCoreThreadTimeOut is set
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param handler the handler to use when execution is blocked
-     * because the thread bounds and queue capacities are reached
-     * @throws IllegalArgumentException if <tt>corePoolSize &lt; 0</tt>
-     * @throws NullPointerException if handler is null
+     *        because the thread bounds and queue capacities are reached
+     * @throws IllegalArgumentException if {@code corePoolSize < 0}
+     * @throws NullPointerException if {@code handler} is null
      */
     public ScheduledThreadPoolExecutor(int corePoolSize,
                               RejectedExecutionHandler handler) {
@@ -402,14 +404,15 @@ public class ScheduledThreadPoolExecutor
      * Creates a new ScheduledThreadPoolExecutor with the given
      * initial parameters.
      *
-     * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle, unless allowCoreThreadTimeOut is set
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param threadFactory the factory to use when the executor
-     * creates a new thread
+     *        creates a new thread
      * @param handler the handler to use when execution is blocked
-     * because the thread bounds and queue capacities are reached.
-     * @throws IllegalArgumentException if <tt>corePoolSize &lt; 0</tt>
-     * @throws NullPointerException if threadFactory or handler is null
+     *        because the thread bounds and queue capacities are reached
+     * @throws IllegalArgumentException if {@code corePoolSize < 0}
+     * @throws NullPointerException if {@code threadFactory} or
+     *         {@code handler} is null
      */
     public ScheduledThreadPoolExecutor(int corePoolSize,
                               ThreadFactory threadFactory,
@@ -501,21 +504,26 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Executes command with zero required delay. This has effect
-     * equivalent to <tt>schedule(command, 0, anyUnit)</tt>.  Note
-     * that inspections of the queue and of the list returned by
-     * <tt>shutdownNow</tt> will access the zero-delayed
-     * {@link ScheduledFuture}, not the <tt>command</tt> itself.
+     * Executes {@code command} with zero required delay.
+     * This has effect equivalent to
+     * {@link #schedule(Runnable,long,TimeUnit) schedule(command, 0, anyUnit)}.
+     * Note that inspections of the queue and of the list returned by
+     * {@code shutdownNow} will access the zero-delayed
+     * {@link ScheduledFuture}, not the {@code command} itself.
      *
-     * @param command the task to execute
+     * <p>A consequence of the use of {@code ScheduledFuture} objects is
+     * that {@link ThreadPoolExecutor#afterExecute afterExecute} is always
+     * called with a null second {@code Throwable} argument, even if the
+     * {@code command} terminated abruptly.  Instead, the {@code Throwable}
+     * thrown by such a task can be obtained via {@link Future#get}.
+     *
      * @throws RejectedExecutionException at discretion of
-     * <tt>RejectedExecutionHandler</tt>, if task cannot be accepted
-     * for execution because the executor has been shut down.
-     * @throws NullPointerException if command is null
+     *         {@code RejectedExecutionHandler}, if the task
+     *         cannot be accepted for execution because the
+     *         executor has been shut down
+     * @throws NullPointerException {@inheritDoc}
      */
     public void execute(Runnable command) {
-        if (command == null)
-            throw new NullPointerException();
         schedule(command, 0, TimeUnit.NANOSECONDS);
     }
 
@@ -548,32 +556,30 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * Sets the policy on whether to continue executing existing
-     * periodic tasks even when this executor has been
-     * <tt>shutdown</tt>. In this case, these tasks will only
-     * terminate upon <tt>shutdownNow</tt>, or after setting the
-     * policy to <tt>false</tt> when already shutdown. This value is
-     * by default false.
+     * periodic tasks even when this executor has been {@code shutdown}.
+     * In this case, these tasks will only terminate upon
+     * {@code shutdownNow} or after setting the policy to
+     * {@code false} when already shutdown.
+     * This value is by default {@code false}.
      *
-     * @param value if true, continue after shutdown, else don't.
+     * @param value if {@code true}, continue after shutdown, else don't.
      * @see #getContinueExistingPeriodicTasksAfterShutdownPolicy
      */
     public void setContinueExistingPeriodicTasksAfterShutdownPolicy(boolean value) {
         continueExistingPeriodicTasksAfterShutdown = value;
-        if (!value && isShutdown()) {
+        if (!value && isShutdown())
             onShutdown();
-            tryTerminate();
-        }
     }
 
     /**
      * Gets the policy on whether to continue executing existing
-     * periodic tasks even when this executor has been
-     * <tt>shutdown</tt>. In this case, these tasks will only
-     * terminate upon <tt>shutdownNow</tt> or after setting the policy
-     * to <tt>false</tt> when already shutdown. This value is by
-     * default false.
+     * periodic tasks even when this executor has been {@code shutdown}.
+     * In this case, these tasks will only terminate upon
+     * {@code shutdownNow} or after setting the policy to
+     * {@code false} when already shutdown.
+     * This value is by default {@code false}.
      *
-     * @return true if will continue after shutdown
+     * @return {@code true} if will continue after shutdown
      * @see #setContinueExistingPeriodicTasksAfterShutdownPolicy
      */
     public boolean getContinueExistingPeriodicTasksAfterShutdownPolicy() {
@@ -582,32 +588,30 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * Sets the policy on whether to execute existing delayed
-     * tasks even when this executor has been <tt>shutdown</tt>. In
-     * this case, these tasks will only terminate upon
-     * <tt>shutdownNow</tt>, or after setting the policy to
-     * <tt>false</tt> when already shutdown. This value is by default
-     * true.
+     * tasks even when this executor has been {@code shutdown}.
+     * In this case, these tasks will only terminate upon
+     * {@code shutdownNow}, or after setting the policy to
+     * {@code false} when already shutdown.
+     * This value is by default {@code true}.
      *
-     * @param value if true, execute after shutdown, else don't.
+     * @param value if {@code true}, execute after shutdown, else don't.
      * @see #getExecuteExistingDelayedTasksAfterShutdownPolicy
      */
     public void setExecuteExistingDelayedTasksAfterShutdownPolicy(boolean value) {
         executeExistingDelayedTasksAfterShutdown = value;
-        if (!value && isShutdown()) {
+        if (!value && isShutdown())
             onShutdown();
-            tryTerminate();
-        }
     }
 
     /**
      * Gets the policy on whether to execute existing delayed
-     * tasks even when this executor has been <tt>shutdown</tt>. In
-     * this case, these tasks will only terminate upon
-     * <tt>shutdownNow</tt>, or after setting the policy to
-     * <tt>false</tt> when already shutdown. This value is by default
-     * true.
+     * tasks even when this executor has been {@code shutdown}.
+     * In this case, these tasks will only terminate upon
+     * {@code shutdownNow}, or after setting the policy to
+     * {@code false} when already shutdown.
+     * This value is by default {@code true}.
      *
-     * @return true if will execute after shutdown
+     * @return {@code true} if will execute after shutdown
      * @see #setExecuteExistingDelayedTasksAfterShutdownPolicy
      */
     public boolean getExecuteExistingDelayedTasksAfterShutdownPolicy() {
@@ -616,13 +620,15 @@ public class ScheduledThreadPoolExecutor
 
     /**
      * Initiates an orderly shutdown in which previously submitted
-     * tasks are executed, but no new tasks will be accepted. If the
-     * <tt>ExecuteExistingDelayedTasksAfterShutdownPolicy</tt> has
-     * been set <tt>false</tt>, existing delayed tasks whose delays
-     * have not yet elapsed are cancelled. And unless the
-     * <tt>ContinueExistingPeriodicTasksAfterShutdownPolicy</tt> has
-     * been set <tt>true</tt>, future executions of existing periodic
+     * tasks are executed, but no new tasks will be accepted.  If the
+     * {@code ExecuteExistingDelayedTasksAfterShutdownPolicy} has
+     * been set {@code false}, existing delayed tasks whose delays
+     * have not yet elapsed are cancelled.  And unless the
+     * {@code ContinueExistingPeriodicTasksAfterShutdownPolicy} has
+     * been set {@code true}, future executions of existing periodic
      * tasks will be cancelled.
+     *
+     * @throws SecurityException {@inheritDoc}
      */
     public void shutdown() {
         super.shutdown();
@@ -638,11 +644,11 @@ public class ScheduledThreadPoolExecutor
      * cancels tasks via {@link Thread#interrupt}, so any task that
      * fails to respond to interrupts may never terminate.
      *
-     * @return list of tasks that never commenced execution.  Each
-     * element of this list is a {@link ScheduledFuture},
-     * including those tasks submitted using <tt>execute</tt>, which
-     * are for scheduling purposes used as the basis of a zero-delay
-     * <tt>ScheduledFuture</tt>.
+     * @return list of tasks that never commenced execution.
+     *         Each element of this list is a {@link ScheduledFuture},
+     *         including those tasks submitted using {@code execute},
+     *         which are for scheduling purposes used as the basis of a
+     *         zero-delay {@code ScheduledFuture}.
      * @throws SecurityException {@inheritDoc}
      */
     public List<Runnable> shutdownNow() {
@@ -652,9 +658,9 @@ public class ScheduledThreadPoolExecutor
     /**
      * Returns the task queue used by this executor.  Each element of
      * this queue is a {@link ScheduledFuture}, including those
-     * tasks submitted using <tt>execute</tt> which are for scheduling
+     * tasks submitted using {@code execute} which are for scheduling
      * purposes used as the basis of a zero-delay
-     * <tt>ScheduledFuture</tt>. Iteration over this queue is
+     * {@code ScheduledFuture}.  Iteration over this queue is
      * <em>not</em> guaranteed to traverse tasks in the order in
      * which they will execute.
      *

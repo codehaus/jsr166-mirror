@@ -45,8 +45,6 @@ class Random implements java.io.Serializable {
      * The internal state associated with this pseudorandom number generator.
      * (The specs for the methods in this class describe the ongoing
      * computation of this value.)
-     *
-     * @serial
      */
     private final AtomicLong seed;
 
@@ -136,7 +134,7 @@ class Random implements java.io.Serializable {
         do {
 	    oldseed = seed.get();
 	    nextseed = (oldseed * multiplier + addend) & mask;
-        } while (!seed.weakCompareAndSet(oldseed, nextseed));
+        } while (!seed.compareAndSet(oldseed, nextseed));
         return (int)(nextseed >>> (48 - bits));
     }
 
@@ -465,9 +463,9 @@ class Random implements java.io.Serializable {
     /**
      * Serializable fields for Random.
      *
-     * @serialField    seed long;
+     * @serialField    seed long
      *              seed for random computations
-     * @serialField    nextNextGaussian double;
+     * @serialField    nextNextGaussian double
      *              next Gaussian to be returned
      * @serialField      haveNextNextGaussian boolean
      *              nextNextGaussian is valid

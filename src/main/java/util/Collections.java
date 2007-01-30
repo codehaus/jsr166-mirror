@@ -3299,19 +3299,20 @@ public class Collections {
      * @see Comparable
      */
     public static <T> Comparator<T> reverseOrder() {
-        return (Comparator<T>) REVERSE_ORDER;
+        return (Comparator<T>) ReverseComparator.REVERSE_ORDER;
     }
-
-    private static final Comparator REVERSE_ORDER = new ReverseComparator();
 
     /**
      * @serial include
      */
-    private static class ReverseComparator<T>
+    private static class ReverseComparator
 	implements Comparator<Comparable<Object>>, Serializable {
 
 	// use serialVersionUID from JDK 1.2.2 for interoperability
 	private static final long serialVersionUID = 7207038068494060240L;
+
+	private static final ReverseComparator REVERSE_ORDER
+	    = new ReverseComparator();
 
         public int compare(Comparable<Object> c1, Comparable<Object> c2) {
             return c2.compareTo(c1);
@@ -3331,12 +3332,15 @@ public class Collections {
      * comparator is also serializable or null).
      *
      * @return a comparator that imposes the reverse ordering of the
-     *     specified comparator.
+     *         specified comparator
      * @since 1.5
      */
     public static <T> Comparator<T> reverseOrder(Comparator<T> cmp) {
         if (cmp == null)
             return reverseOrder();
+
+	if (cmp instanceof ReverseComparator2)
+	    return ((ReverseComparator2<T>)cmp).cmp;
 
         return new ReverseComparator2<T>(cmp);
     }
@@ -3356,7 +3360,7 @@ public class Collections {
          *
          * @serial
          */
-        private Comparator<T> cmp;
+        private final Comparator<T> cmp;
 
         ReverseComparator2(Comparator<T> cmp) {
             assert cmp != null;
@@ -3366,6 +3370,16 @@ public class Collections {
         public int compare(T t1, T t2) {
             return cmp.compare(t2, t1);
         }
+
+	public boolean equals(Object o) {
+	    return (o == this) ||
+		(o instanceof ReverseComparator2 &&
+		 cmp.equals(((ReverseComparator2)o).cmp));
+	}
+
+	public int hashCode() {
+	    return cmp.hashCode() ^ Integer.MIN_VALUE;
+	}
     }
 
     /**

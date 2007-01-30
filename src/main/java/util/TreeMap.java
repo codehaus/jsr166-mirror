@@ -1209,6 +1209,12 @@ public class TreeMap<K,V>
     // SubMaps
 
     /**
+     * Dummy value serving as unmatchable fence key for unbounded
+     * SubMapIterators
+     */
+    private static final Object UNBOUNDED = new Object();
+
+    /**
      * @serial include
      */
     static abstract class NavigableSubMap<K,V> extends AbstractMap<K,V>
@@ -1547,7 +1553,7 @@ public class TreeMap<K,V>
         abstract class SubMapIterator<T> implements Iterator<T> {
             TreeMap.Entry<K,V> lastReturned;
             TreeMap.Entry<K,V> next;
-            final K fenceKey;
+            final Object fenceKey;
             int expectedModCount;
 
             SubMapIterator(TreeMap.Entry<K,V> first,
@@ -1555,7 +1561,7 @@ public class TreeMap<K,V>
                 expectedModCount = m.modCount;
                 lastReturned = null;
                 next = first;
-                fenceKey = fence == null ? null : fence.key;
+                fenceKey = fence == null ? UNBOUNDED : fence.key;
             }
 
             public final boolean hasNext() {

@@ -39,73 +39,65 @@ import java.util.*;
  * <dt>Core and maximum pool sizes</dt>
  *
  * <dd>A {@code ThreadPoolExecutor} will automatically adjust the
- * pool size
- * (see {@link ThreadPoolExecutor#getPoolSize})
- * according to the bounds set by corePoolSize
- * (see {@link ThreadPoolExecutor#getCorePoolSize})
- * and
- * maximumPoolSize
- * (see {@link ThreadPoolExecutor#getMaximumPoolSize}).
- * When a new task is submitted in method {@link
- * ThreadPoolExecutor#execute}, and fewer than corePoolSize threads
- * are running, a new thread is created to handle the request, even if
- * other worker threads are idle.  If there are more than
- * corePoolSize but less than maximumPoolSize threads running, a new
- * thread will be created only if the queue is full.  By setting
- * corePoolSize and maximumPoolSize the same, you create a fixed-size
- * thread pool. By setting maximumPoolSize to an essentially unbounded
- * value such as {@code Integer.MAX_VALUE}, you allow the pool to
- * accommodate an arbitrary number of concurrent tasks. Most typically,
- * core and maximum pool sizes are set only upon construction, but they
- * may also be changed dynamically using {@link
- * ThreadPoolExecutor#setCorePoolSize} and {@link
- * ThreadPoolExecutor#setMaximumPoolSize}. </dd>
+ * pool size (see {@link #getPoolSize})
+ * according to the bounds set by
+ * corePoolSize (see {@link #getCorePoolSize}) and
+ * maximumPoolSize (see {@link #getMaximumPoolSize}).
+ *
+ * When a new task is submitted in method {@link #execute}, and fewer
+ * than corePoolSize threads are running, a new thread is created to
+ * handle the request, even if other worker threads are idle.  If
+ * there are more than corePoolSize but less than maximumPoolSize
+ * threads running, a new thread will be created only if the queue is
+ * full.  By setting corePoolSize and maximumPoolSize the same, you
+ * create a fixed-size thread pool. By setting maximumPoolSize to an
+ * essentially unbounded value such as {@code Integer.MAX_VALUE}, you
+ * allow the pool to accommodate an arbitrary number of concurrent
+ * tasks. Most typically, core and maximum pool sizes are set only
+ * upon construction, but they may also be changed dynamically using
+ * {@link #setCorePoolSize} and {@link #setMaximumPoolSize}. </dd>
  *
  * <dt>On-demand construction</dt>
  *
  * <dd> By default, even core threads are initially created and
  * started only when new tasks arrive, but this can be overridden
- * dynamically using method {@link
- * ThreadPoolExecutor#prestartCoreThread} or
- * {@link ThreadPoolExecutor#prestartAllCoreThreads}.
- * You probably want to prestart threads if you construct the
- * pool with a non-empty queue. </dd>
+ * dynamically using method {@link #prestartCoreThread} or {@link
+ * #prestartAllCoreThreads}.  You probably want to prestart threads if
+ * you construct the pool with a non-empty queue. </dd>
  *
  * <dt>Creating new threads</dt>
  *
- * <dd>New threads are created using a {@link
- * java.util.concurrent.ThreadFactory}.  If not otherwise specified, a
- * {@link Executors#defaultThreadFactory} is used, that creates
- * threads to all be in the same {@link ThreadGroup} and with the same
- * {@code NORM_PRIORITY} priority and non-daemon status. By supplying
- * a different ThreadFactory, you can alter the thread's name, thread
- * group, priority, daemon status, etc. If a {@code ThreadFactory}
- * fails to create a thread when asked by returning null from
- * {@code newThread}, the executor will continue, but might not be
- * able to execute any tasks. Threads should possess the
- * "modifyThread" {@code RuntimePermission}. If worker threads or
- * other threads using the pool do not possess this permission,
- * service may be degraded: configuration changes may not take effect
- * in a timely manner, and a shutdown pool may remain in a state in
- * which termination is possible but not completed.</dd>
+ * <dd>New threads are created using a {@link ThreadFactory}.  If not
+ * otherwise specified, a {@link Executors#defaultThreadFactory} is
+ * used, that creates threads to all be in the same {@link
+ * ThreadGroup} and with the same {@code NORM_PRIORITY} priority and
+ * non-daemon status. By supplying a different ThreadFactory, you can
+ * alter the thread's name, thread group, priority, daemon status,
+ * etc. If a {@code ThreadFactory} fails to create a thread when asked
+ * by returning null from {@code newThread}, the executor will
+ * continue, but might not be able to execute any tasks. Threads
+ * should possess the "modifyThread" {@code RuntimePermission}. If
+ * worker threads or other threads using the pool do not possess this
+ * permission, service may be degraded: configuration changes may not
+ * take effect in a timely manner, and a shutdown pool may remain in a
+ * state in which termination is possible but not completed.</dd>
  *
  * <dt>Keep-alive times</dt>
  *
  * <dd>If the pool currently has more than corePoolSize threads,
  * excess threads will be terminated if they have been idle for more
- * than the keepAliveTime (see {@link
- * ThreadPoolExecutor#getKeepAliveTime}). This provides a means of
- * reducing resource consumption when the pool is not being actively
- * used. If the pool becomes more active later, new threads will be
- * constructed. This parameter can also be changed dynamically using
- * method {@link ThreadPoolExecutor#setKeepAliveTime}. Using a value
+ * than the keepAliveTime (see {@link #getKeepAliveTime}). This
+ * provides a means of reducing resource consumption when the pool is
+ * not being actively used. If the pool becomes more active later, new
+ * threads will be constructed. This parameter can also be changed
+ * dynamically using method {@link #setKeepAliveTime}. Using a value
  * of {@code Long.MAX_VALUE} {@link TimeUnit#NANOSECONDS} effectively
  * disables idle threads from ever terminating prior to shut down. By
  * default, the keep-alive policy applies only when there are more
  * than corePoolSizeThreads. But method {@link
- * ThreadPoolExecutor#allowCoreThreadTimeOut(boolean)} can be used to apply
- * this time-out policy to core threads as well, so long as
- * the keepAliveTime value is non-zero. </dd>
+ * #allowCoreThreadTimeOut(boolean)} can be used to apply this
+ * time-out policy to core threads as well, so long as the
+ * keepAliveTime value is non-zero. </dd>
  *
  * <dt>Queuing</dt>
  *
@@ -174,35 +166,33 @@ import java.util.*;
  *
  * <dt>Rejected tasks</dt>
  *
- * <dd> New tasks submitted in method {@link
- * ThreadPoolExecutor#execute} will be <em>rejected</em> when the
- * Executor has been shut down, and also when the Executor uses finite
- * bounds for both maximum threads and work queue capacity, and is
- * saturated.  In either case, the {@code execute} method invokes the
- * {@link RejectedExecutionHandler#rejectedExecution} method of its
- * {@link RejectedExecutionHandler}.  Four predefined handler policies
- * are provided:
+ * <dd> New tasks submitted in method {@link #execute} will be
+ * <em>rejected</em> when the Executor has been shut down, and also
+ * when the Executor uses finite bounds for both maximum threads and
+ * work queue capacity, and is saturated.  In either case, the {@code
+ * execute} method invokes the {@link
+ * RejectedExecutionHandler#rejectedExecution} method of its {@link
+ * RejectedExecutionHandler}.  Four predefined handler policies are
+ * provided:
  *
  * <ol>
  *
- * <li> In the
- * default {@link ThreadPoolExecutor.AbortPolicy}, the handler throws a
- * runtime {@link RejectedExecutionException} upon rejection. </li>
+ * <li> In the default {@link ThreadPoolExecutor.AbortPolicy}, the
+ * handler throws a runtime {@link RejectedExecutionException} upon
+ * rejection. </li>
  *
- * <li> In {@link
- * ThreadPoolExecutor.CallerRunsPolicy}, the thread that invokes
- * {@code execute} itself runs the task. This provides a simple
- * feedback control mechanism that will slow down the rate that new
- * tasks are submitted. </li>
+ * <li> In {@link ThreadPoolExecutor.CallerRunsPolicy}, the thread
+ * that invokes {@code execute} itself runs the task. This provides a
+ * simple feedback control mechanism that will slow down the rate that
+ * new tasks are submitted. </li>
  *
- * <li> In {@link ThreadPoolExecutor.DiscardPolicy},
- * a task that cannot be executed is simply dropped.  </li>
+ * <li> In {@link ThreadPoolExecutor.DiscardPolicy}, a task that
+ * cannot be executed is simply dropped.  </li>
  *
- * <li>In {@link
- * ThreadPoolExecutor.DiscardOldestPolicy}, if the executor is not
- * shut down, the task at the head of the work queue is dropped, and
- * then execution is retried (which can fail again, causing this to be
- * repeated.) </li>
+ * <li>In {@link ThreadPoolExecutor.DiscardOldestPolicy}, if the
+ * executor is not shut down, the task at the head of the work queue
+ * is dropped, and then execution is retried (which can fail again,
+ * causing this to be repeated.) </li>
  *
  * </ol>
  *
@@ -214,39 +204,37 @@ import java.util.*;
  * <dt>Hook methods</dt>
  *
  * <dd>This class provides {@code protected} overridable {@link
- * ThreadPoolExecutor#beforeExecute} and {@link
- * ThreadPoolExecutor#afterExecute} methods that are called before and
- * after execution of each task.  These can be used to manipulate the
- * execution environment; for example, reinitializing ThreadLocals,
- * gathering statistics, or adding log entries. Additionally, method
- * {@link ThreadPoolExecutor#terminated} can be overridden to perform
- * any special processing that needs to be done once the Executor has
- * fully terminated.
+ * #beforeExecute} and {@link #afterExecute} methods that are called
+ * before and after execution of each task.  These can be used to
+ * manipulate the execution environment; for example, reinitializing
+ * ThreadLocals, gathering statistics, or adding log
+ * entries. Additionally, method {@link #terminated} can be overridden
+ * to perform any special processing that needs to be done once the
+ * Executor has fully terminated.
  *
- * <p>If hook or callback methods throw
- * exceptions, internal worker threads may in turn fail and
- * abruptly terminate.</dd>
+ * <p>If hook or callback methods throw exceptions, internal worker
+ * threads may in turn fail and abruptly terminate.</dd>
  *
  * <dt>Queue maintenance</dt>
  *
- * <dd> Method {@link ThreadPoolExecutor#getQueue} allows access to
- * the work queue for purposes of monitoring and debugging.  Use of
- * this method for any other purpose is strongly discouraged.  Two
- * supplied methods, {@link ThreadPoolExecutor#remove} and {@link
- * ThreadPoolExecutor#purge} are available to assist in storage
- * reclamation when large numbers of queued tasks become
+ * <dd> Method {@link #getQueue} allows access to the work queue for
+ * purposes of monitoring and debugging.  Use of this method for any
+ * other purpose is strongly discouraged.  Two supplied methods,
+ * {@link #remove} and {@link #purge} are available to assist in
+ * storage reclamation when large numbers of queued tasks become
  * cancelled.</dd>
  *
  * <dt>Finalization</dt>
  *
  * <dd> A pool that is no longer referenced in a program <em>AND</em>
- * has no remaining threads will be {@code shutdown}
- * automatically. If you would like to ensure that unreferenced pools
- * are reclaimed even if users forget to call {@link
- * ThreadPoolExecutor#shutdown}, then you must arrange that unused
- * threads eventually die, by setting appropriate keep-alive times,
- * using a lower bound of zero core threads and/or setting {@link
- * ThreadPoolExecutor#allowCoreThreadTimeOut(boolean)}.  </dd> </dl>
+ * has no remaining threads will be {@code shutdown} automatically. If
+ * you would like to ensure that unreferenced pools are reclaimed even
+ * if users forget to call {@link #shutdown}, then you must arrange
+ * that unused threads eventually die, by setting appropriate
+ * keep-alive times, using a lower bound of zero core threads and/or
+ * setting {@link #allowCoreThreadTimeOut(boolean)}.  </dd>
+ *
+ * </dl>
  *
  * <p> <b>Extension example</b>. Most extensions of this class
  * override one or more of the protected hook methods. For example,
@@ -303,7 +291,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *   runState,    indicating whether running, shutting down etc
      *
      * In order to pack them into one int, we limit workerCount to
-     * (2^30)-1 (about 1 billion) threads rather than (2^31)-1 (2
+     * (2^29)-1 (about 500 million) threads rather than (2^31)-1 (2
      * billion) otherwise representable. If this is ever an issue in
      * the future, the variable can be changed to be an AtomicLong,
      * and the shift/mask constants below adjusted. But until the need
@@ -323,7 +311,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *   SHUTDOWN: Don't accept new tasks, but process queued tasks
      *   STOP:     Don't accept new tasks, don't process queued tasks,
      *             and interrupt in-progress tasks
-     *   TERMINATED: Same as STOP, plus all threads have terminated
+     *   TIDYING:  All tasks have terminated, workerCount is zero,
+     *             the thread transitioning to state TIDYING
+     *             will run the terminated() hook method
+     *   TERMINATED: terminated() has completed
      *
      * The numerical order among these values matters, to allow
      * ordered comparisons. The runState monotonically increases over
@@ -333,12 +324,17 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *    On invocation of shutdown(), perhaps implicitly in finalize()
      * (RUNNING or SHUTDOWN) -> STOP
      *    On invocation of shutdownNow()
-     * SHUTDOWN -> TERMINATED
+     * SHUTDOWN -> TIDYING
      *    When both queue and pool are empty
-     * STOP -> TERMINATED
+     * STOP -> TIDYING
      *    When pool is empty
+     * TIDYING -> TERMINATED
+     *    When the terminated() hook method has completed
      *
-     * Detecting the transition from SHUTDOWN to TERMINATED is less
+     * Threads waiting in awaitTermination() will return when the
+     * state reaches TERMINATED.
+     *
+     * Detecting the transition from SHUTDOWN to TIDYING is less
      * straightforward than you'd like because the queue may become
      * empty after non-empty and vice versa during SHUTDOWN state, but
      * we can only terminate if, after seeing that it is empty, we see
@@ -346,19 +342,60 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * below).
      */
     private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
-    private static final int COUNT_BITS = 30;
+    private static final int COUNT_BITS = Integer.SIZE - 3;
     private static final int CAPACITY   = (1 << COUNT_BITS) - 1;
 
-    // The unusual values for states preserve order even though using sign bit
-    private static final int RUNNING    = 2 << COUNT_BITS;
-    private static final int SHUTDOWN   = 3 << COUNT_BITS;
-    private static final int STOP       = 0 << COUNT_BITS;
-    private static final int TERMINATED = 1 << COUNT_BITS;
+    // runState is stored in the high-order bits
+    private static final int RUNNING    = -1 << COUNT_BITS;
+    private static final int SHUTDOWN   =  0 << COUNT_BITS;
+    private static final int STOP       =  1 << COUNT_BITS;
+    private static final int TIDYING    =  2 << COUNT_BITS;
+    private static final int TERMINATED =  3 << COUNT_BITS;
 
     // Packing and unpacking ctl
-    private static int runStateOf(int c)    { return c & ~CAPACITY; }
-    private static int workerCountOf(int c) { return c & CAPACITY; }
-    private static int ctlOf(int r, int w)  { return r | w; }
+    private static int runStateOf(int c)     { return c & ~CAPACITY; }
+    private static int workerCountOf(int c)  { return c & CAPACITY; }
+    private static int ctlOf(int rs, int wc) { return rs | wc; }
+
+    /*
+     * Bit field accessors that don't require unpacking ctl.
+     * These depend on the bit layout and on workerCount being never negative.
+     */
+
+    private static boolean runStateLessThan(int c, int s) {
+	return c < s;
+    }
+
+    private static boolean runStateAtLeast(int c, int s) {
+	return c >= s;
+    }
+
+    private static boolean isRunning(int c) {
+	return c < SHUTDOWN;
+    }
+
+    /**
+     * Attempt to CAS-increment the workerCount field of ctl.
+     */
+    private boolean compareAndIncrementWorkerCount(int expect) {
+	return ctl.compareAndSet(expect, expect + 1);
+    }
+
+    /**
+     * Attempt to CAS-decrement the workerCount field of ctl.
+     */
+    private boolean compareAndDecrementWorkerCount(int expect) {
+	return ctl.compareAndSet(expect, expect - 1);
+    }
+
+    /**
+     * Decrements the workerCount field of ctl. This is called only on
+     * abrupt termination of a thread (see processWorkerExit). Other
+     * decrements are performed within getTask.
+     */
+    private void decrementWorkerCount() {
+	do {} while (! compareAndDecrementWorkerCount(ctl.get()));
+    }
 
     /**
      * The queue used for holding tasks and handing off to worker
@@ -366,7 +403,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * null necessarily means that workQueue.isEmpty(), so rely
      * solely on isEmpty to see if the queue is empty (which we must
      * do for example when deciding whether to transition from
-     * SHUTDOWN to TERMINATED).  This accommodates special-purpose
+     * SHUTDOWN to TIDYING).  This accommodates special-purpose
      * queues such as DelayQueues for which poll() is allowed to
      * return null even if it may later return non-null when delays
      * expire.
@@ -540,13 +577,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Transitions runState to given target, or leaves it alone if
      * already at least the given target.
      *
-     * @param targetState the desired state (but not TERMINATED -- use
-     *        tryTerminate for that)
+     * @param targetState the desired state, either SHUTDOWN or STOP
+     *        (but not TIDYING or TERMINATED -- use tryTerminate for that)
      */
     private void advanceRunState(int targetState) {
         for (;;) {
             int c = ctl.get();
-            if (runStateOf(c) >= targetState ||
+            if (runStateAtLeast(c, targetState) ||
                 ctl.compareAndSet(c, ctlOf(targetState, workerCountOf(c))))
                 break;
         }
@@ -565,19 +602,23 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     final void tryTerminate() {
         for (;;) {
             int c = ctl.get();
-            int rs = runStateOf(c);
-            if (rs < SHUTDOWN || rs == TERMINATED ||
-                (rs == SHUTDOWN && !workQueue.isEmpty()))
+	    if (isRunning(c)
+		|| runStateAtLeast(c, TIDYING)
+		|| (runStateOf(c) == SHUTDOWN && ! workQueue.isEmpty()))
                 return;
             if (workerCountOf(c) != 0) { // Eligible to terminate
                 interruptIdleWorkers(ONLY_ONE);
                 return;
             }
-            if (ctl.compareAndSet(c, ctlOf(TERMINATED, 0))) {
+            if (ctl.compareAndSet(c, ctlOf(TIDYING, 0))) {
                 mainLock.lock();
                 try {
-                    terminated();
-                    termination.signalAll();
+		    try {
+			terminated();
+		    } finally {
+			ctl.set(ctlOf(TERMINATED, 0));
+			termination.signalAll();
+		    }
                 } finally {
                     mainLock.unlock();
                 }
@@ -585,28 +626,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             }
             // else retry on failed CAS
         }
-    }
-
-    /*
-     * Methods to CAS the workerCount field of ctl.  These rely on the
-     * layout of the bit fields and on workerCount never being negative.
-     */
-
-    private boolean compareAndIncrementWorkerCount(int expect) {
-	return ctl.compareAndSet(expect, expect + 1);
-    }
-
-    private boolean compareAndDecrementWorkerCount(int expect) {
-	return ctl.compareAndSet(expect, expect - 1);
-    }
-
-    /**
-     * Decrements the workerCount field of ctl. This is called only on
-     * abrupt termination of a thread (see processWorkerExit). Other
-     * decrements are performed within getTask.
-     */
-    private void decrementWorkerCount() {
-	do {} while (! compareAndDecrementWorkerCount(ctl.get()));
     }
 
     /*
@@ -706,9 +725,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * shutdownNow -- if so, the interrupt is re-enabled.
      */
     private void clearInterruptsForTaskRun() {
-        if (runStateOf(ctl.get()) < STOP &&
+        if (runStateLessThan(ctl.get(), STOP) &&
             Thread.interrupted() &&
-            runStateOf(ctl.get()) >= STOP)
+            runStateAtLeast(ctl.get(), STOP))
             Thread.currentThread().interrupt();
     }
 
@@ -735,7 +754,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * State check needed by ScheduledThreadPoolExecutor to
-     * enable running tasks during shutdown;
+     * enable running tasks during shutdown.
+     *
      * @param shutdownOK true if should return true if SHUTDOWN
      */
     final boolean isRunningOrShutdown(boolean shutdownOK) {
@@ -771,7 +791,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * pool state and the given bound (either core or maximum). If so,
      * the worker count is adjusted accordingly, and, if possible, a
      * new worker is created and started running firstTask as its
-     * first task, This method returns false if the pool is stopped or
+     * first task. This method returns false if the pool is stopped or
      * eligible to shut down. It also returns false if the thread
      * factory fails to create a thread when asked, which requires a
      * backout of workerCount, and a recheck for termination, in case
@@ -794,18 +814,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private boolean addWorker(Runnable firstTask, boolean core) {
         for (;;) {
             int c = ctl.get();
-            int rs = runStateOf(c);
-            // Check if queue empty only if necessary.
-            if (rs == SHUTDOWN) {
-                if (workQueue.isEmpty())
-                    return false;
-		// isEmpty() may be slow, so re-read ctl to reduce the risk
-		// of CAS failing due to harmless change to workerCount.
-		c = ctl.get();
-            }
+	    // Check if queue empty only if necessary.
+            if (runStateAtLeast(c, SHUTDOWN)
+		&& ! (runStateOf(c) == SHUTDOWN
+		      && firstTask == null
+		      && ! workQueue.isEmpty()))
+		    return false;
             int wc = workerCountOf(c);
-            if (rs > SHUTDOWN ||
-                wc >= CAPACITY ||
+            if (wc >= CAPACITY ||
                 wc >= (core ? corePoolSize : maximumPoolSize))
                 return false;
             if (compareAndIncrementWorkerCount(c))
@@ -814,15 +830,21 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
         Worker w = new Worker(firstTask);
         Thread t = w.thread;
-        if (t == null) {  // Back out on ThreadFactory failure
-            decrementWorkerCount();
-            tryTerminate();
-            return false;
-        }
 
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
+	    // Back out on ThreadFactory failure or if
+	    // shut down before lock acquired.
+            int c = ctl.get();
+	    if (t == null
+		|| (runStateAtLeast(c, SHUTDOWN)
+		    && (! (runStateOf(c) == SHUTDOWN
+			   && firstTask == null)))) {
+		decrementWorkerCount();
+		tryTerminate();
+		return false;
+	    }
             workers.add(w);
             int s = workers.size();
             if (s > largestPoolSize)
@@ -863,15 +885,17 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
         tryTerminate();
 
-        if (!completedAbruptly) {
-            int min = allowCoreThreadTimeOut ? 0 : corePoolSize;
-            if (min == 0 && !workQueue.isEmpty())
-                min = 1;
-            int c = ctl.get();
-            if (workerCountOf(c) >= min || runStateOf(c) >= STOP)
-                return; // replacement not needed
-        }
-        addWorker(null, false);
+	int c = ctl.get();
+	if (runStateLessThan(c, STOP)) {
+	    if (!completedAbruptly) {
+		int min = allowCoreThreadTimeOut ? 0 : corePoolSize;
+		if (min == 0 && ! workQueue.isEmpty())
+		    min = 1;
+		if (workerCountOf(c) >= min)
+		    return; // replacement not needed
+	    }
+	    addWorker(null, false);
+	}
     }
 
     /**
@@ -1208,9 +1232,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 return;
             c = ctl.get();
         }
-        if (runStateOf(c) == RUNNING && workQueue.offer(command)) {
+        if (isRunning(c) && workQueue.offer(command)) {
             int recheck = ctl.get();
-            if (runStateOf(recheck) != RUNNING && remove(command))
+            if (! isRunning(recheck) && remove(command))
                 reject(command);
             else if (workerCountOf(recheck) == 0)
                 addWorker(null, false);
@@ -1270,12 +1294,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     public boolean isShutdown() {
-        return runStateOf(ctl.get()) != RUNNING;
+        return ! isRunning(ctl.get());
     }
 
     /**
      * Returns true if this executor is in the process of terminating
-     * after {@code shutdown} or {@code shutdownNow} but has not
+     * after {@link #shutdown} or {@link #shutdownNow} but has not
      * completely terminated.  This method may be useful for
      * debugging. A return of {@code true} reported a sufficient
      * period after shutdown may indicate that submitted tasks have
@@ -1285,12 +1309,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return true if terminating but not yet terminated
      */
     public boolean isTerminating() {
-        int rs = runStateOf(ctl.get());
-        return rs == SHUTDOWN || rs == STOP;
+        int c = ctl.get();
+        return ! isRunning(c) && runStateLessThan(c, TERMINATED);
     }
 
     public boolean isTerminated() {
-        return runStateOf(ctl.get()) == TERMINATED;
+        return runStateAtLeast(ctl.get(), TERMINATED);
     }
 
     public boolean awaitTermination(long timeout, TimeUnit unit)
@@ -1300,7 +1324,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         mainLock.lock();
         try {
             for (;;) {
-                if (runStateOf(ctl.get()) == TERMINATED)
+                if (runStateAtLeast(ctl.get(), TERMINATED))
                     return true;
                 if (nanos <= 0)
                     return false;
@@ -1570,8 +1594,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * into other forms before being placed on the internal queue. For
      * example, a task entered using {@code submit} might be
      * converted into a form that maintains {@code Future} status.
-     * However, in such cases, method {@link ThreadPoolExecutor#purge}
-     * may be used to remove those Futures that have been cancelled.
+     * However, in such cases, method {@link #purge} may be used to
+     * remove those Futures that have been cancelled.
      *
      * @param task the task to remove
      * @return true if the task was removed
@@ -1626,7 +1650,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         try {
 	    // Remove rare and surprising possibility of
 	    // isTerminated() && getPoolSize() > 0
-            return runStateOf(ctl.get()) == TERMINATED ? 0 : workers.size();
+            return runStateAtLeast(ctl.get(), TIDYING) ? 0
+		: workers.size();
         } finally {
             mainLock.unlock();
         }

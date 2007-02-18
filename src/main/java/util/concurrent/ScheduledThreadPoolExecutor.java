@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 import java.util.*;
 
 /**
@@ -20,7 +21,8 @@ import java.util.*;
  * without any real-time guarantees about when, after they are
  * enabled, they will commence. Tasks scheduled for exactly the same
  * execution time are enabled in first-in-first-out (FIFO) order of
- * submission.
+ * submission. Cancelled tasks are automatically removed from the
+ * work queue.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not useful for it. In
@@ -149,6 +151,11 @@ public class ScheduledThreadPoolExecutor
         private final long period;
 
         /**
+         * Index into delay queue, to support faster cancellation.
+         */
+        int heapIndex;
+
+        /**
          * Creates a one-shot action with given nanoTime-based trigger time.
          */
         ScheduledFutureTask(Runnable r, V result, long ns) {
@@ -221,6 +228,11 @@ public class ScheduledThreadPoolExecutor
                 time += p;
             else
                 time = now() - p;
+        }
+
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            remove(this); //  unconditionally remove
+            return super.cancel(mayInterruptIfRunning);
         }
 
         /**
@@ -310,11 +322,8 @@ public class ScheduledThreadPoolExecutor
                 if (e instanceof RunnableScheduledFuture) {
                     RunnableScheduledFuture<?> t =
                         (RunnableScheduledFuture<?>)e;
-                    if ((t.isPeriodic() ? !keepPeriodic : !keepDelayed) ||
-                        t.isCancelled()) { // also remove if already cancelled
-                        if (q.remove(t))
-                            t.cancel(false);
-                    }
+                    if ((t.isPeriodic() ? !keepPeriodic : !keepDelayed))
+                        t.cancel(false);
                 }
             }
         }
@@ -671,56 +680,444 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * An annoying wrapper class to convince javac to use a
-     * DelayQueue<RunnableScheduledFuture> as a BlockingQueue<Runnable>
+     * Specialized delay queue. To mesh with TPE declarations, this
+     * class must be declared as a BlockingQueue<Runnable> even though
+     * it can only hold RunnableScheduledFutures
      */
-    private static class DelayedWorkQueue
-        extends AbstractCollection<Runnable>
+    static class DelayedWorkQueue extends AbstractQueue<Runnable>
         implements BlockingQueue<Runnable> {
 
-        private final DelayQueue<RunnableScheduledFuture> dq = new DelayQueue<RunnableScheduledFuture>();
-        public Runnable poll() { return dq.poll(); }
-        public Runnable peek() { return dq.peek(); }
-        public Runnable take() throws InterruptedException { return dq.take(); }
-        public Runnable poll(long timeout, TimeUnit unit) throws InterruptedException {
-            return dq.poll(timeout, unit);
+        /*
+         * A DelayedWorkQueue is based on a heap-based data structure
+         * like those in DelayQueue and PriorityQueue, except that
+         * every ScheduledFutureTask also records its index into the
+         * heap array. This eliminates the need to find a task upon
+         * cancellation, greatly speeding up removal (down from O(n)
+         * to O(log n)), and reducing garbage retention that would
+         * otherwise occur by waiting for the element to rise to top
+         * before clearing. But because the queue may also hold
+         * RunnableScheduledFutures that are not ScheduledFutureTasks,
+         * we are not guaranteed to have such indices available, in
+         * which case we fall back to linear search. (We expect that
+         * most tasks will not be decorated, and that the faster cases
+         * will be much more common.)
+         *
+         * All heap operations must record index changes -- mainly
+         * within siftUp and siftDown. Upon removal, a task's
+         * heapIndex is set to -1. Note that ScheduledFutureTasks can
+         * appear at most once in the queue (this need not be true for
+         * other kinds of tasks or work queues), so are uniquely
+         * identified by heapIndex.
+         */
+
+        private static final int INITIAL_CAPACITY = 64;
+        private transient RunnableScheduledFuture[] queue =
+            new RunnableScheduledFuture[INITIAL_CAPACITY];
+        private transient final ReentrantLock lock = new ReentrantLock();
+        private transient final Condition available = lock.newCondition();
+        private int size = 0;
+
+
+        /**
+         * Set f's heapIndex if it is a ScheduledFutureTask
+         */
+        private void setIndex(Object f, int idx) {
+            if (f instanceof ScheduledFutureTask)
+                ((ScheduledFutureTask)f).heapIndex = idx;
         }
 
-        public boolean add(Runnable x) {
-	    return dq.add((RunnableScheduledFuture)x);
-	}
+        /**
+         * Sift element added at bottom up to its heap-ordered spot
+         * Call only when holding lock.
+         */
+        private void siftUp(int k, RunnableScheduledFuture key) {
+            while (k > 0) {
+                int parent = (k - 1) >>> 1;
+                RunnableScheduledFuture e = queue[parent];
+                if (key.compareTo(e) >= 0)
+                    break;
+                queue[k] = e;
+                setIndex(e, k);
+                k = parent;
+            }
+            queue[k] = key;
+            setIndex(key, k);
+        }
+
+        /**
+         * Sift element added at top down to its heap-ordered spot
+         * Call only when holding lock.
+         */
+        private void siftDown(int k, RunnableScheduledFuture key) {
+            int half = size >>> 1;        
+            while (k < half) {
+                int child = (k << 1) + 1; 
+                RunnableScheduledFuture c = queue[child];
+                int right = child + 1;
+                if (right < size && c.compareTo(queue[right]) > 0)
+                    c = queue[child = right];
+                if (key.compareTo(c) <= 0)
+                    break;
+                queue[k] = c;
+                setIndex(c, k);
+                k = child;
+            }
+            queue[k] = key;
+            setIndex(key, k);
+        }
+
+        /**
+         * Performs common bookkeeping for poll and take: Replaces
+         * first element with last; sifts it down, and signals any
+         * waiting consumers.  Call only when holding lock.
+         * @param f the task to remove and return
+         */
+        private RunnableScheduledFuture finishPoll(RunnableScheduledFuture f) {
+            int s = --size;
+            RunnableScheduledFuture x = queue[s];
+            queue[s] = null;
+            if (s != 0) {
+                siftDown(0, x);
+                available.signalAll();
+            }
+            setIndex(f, -1);
+            return f;
+        }
+
+        /**
+         * Resize the heap array.  Call only when holding lock.
+         */
+        private void grow() {
+            int oldCapacity = queue.length;
+            int newCapacity = oldCapacity + (oldCapacity >> 1); // grow 50%
+            if (newCapacity < 0) // overflow
+                newCapacity = Integer.MAX_VALUE;
+            queue = Arrays.copyOf(queue, newCapacity);
+        }
+
+        /**
+         * Find index of given object, or -1 if absent
+         */
+        private int indexOf(Object x) {
+            if (x != null) {
+                for (int i = 0; i < size; i++)
+                    if (x.equals(queue[i]))
+                        return i;
+            }
+            return -1;
+        }
+
+        public boolean remove(Object x) {
+            boolean removed;
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                int i;
+                if (x instanceof ScheduledFutureTask)
+                    i = ((ScheduledFutureTask)x).heapIndex;
+                else
+                    i = indexOf(x);
+                if (removed = (i >= 0 && i < size && queue[i] == x)) {
+                    setIndex(x, -1);
+                    int s = --size;
+                    RunnableScheduledFuture replacement = queue[s];
+                    queue[s] = null;
+                    if (s != i) {
+                        siftDown(i, replacement);
+                        if (queue[i] == replacement)
+                            siftUp(i, replacement);
+                    }
+                }
+            } finally {
+                lock.unlock();
+            }
+            return removed;
+        }
+
+        public int size() {
+            int s;
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                s = size;
+            } finally {
+                lock.unlock();
+            }
+            return s;
+        }
+
+        public boolean isEmpty() { 
+            return size() == 0; 
+        }
+
+        public int remainingCapacity() {
+            return Integer.MAX_VALUE;
+        }
+
+        public RunnableScheduledFuture peek() {
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                return queue[0];
+            } finally {
+                lock.unlock();
+            }
+        }
+
         public boolean offer(Runnable x) {
-	    return dq.offer((RunnableScheduledFuture)x);
+            if (x == null)
+                throw new NullPointerException();
+            RunnableScheduledFuture e = (RunnableScheduledFuture)x;
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                int i = size;
+                if (i >= queue.length)
+                    grow();
+                size = i + 1;
+                boolean notify;
+                if (i == 0) {
+                    notify = true;
+                    queue[0] = e;
+                    setIndex(e, 0);
+                }
+                else {
+                    notify = e.compareTo(queue[0]) < 0;
+                    siftUp(i, e);
+                }
+                if (notify)
+                    available.signalAll();
+            } finally {
+                lock.unlock();
+            }
+            return true;
 	}
-        public void put(Runnable x) {
-            dq.put((RunnableScheduledFuture)x);
-        }
-        public boolean offer(Runnable x, long timeout, TimeUnit unit) {
-            return dq.offer((RunnableScheduledFuture)x, timeout, unit);
+
+        public void put(Runnable e) {
+            offer(e);
         }
 
-        public Runnable remove() { return dq.remove(); }
-        public Runnable element() { return dq.element(); }
-        public void clear() { dq.clear(); }
-        public int drainTo(Collection<? super Runnable> c) { return dq.drainTo(c); }
+        public boolean add(Runnable e) {
+	    return offer(e);
+	}
+
+        public boolean offer(Runnable e, long timeout, TimeUnit unit) {
+            return offer(e);
+        }
+        
+        public RunnableScheduledFuture poll() {
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                RunnableScheduledFuture first = queue[0];
+                if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
+                    return null;
+                else 
+                    return finishPoll(first);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public RunnableScheduledFuture take() throws InterruptedException {
+            final ReentrantLock lock = this.lock;
+            lock.lockInterruptibly();
+            try {
+                for (;;) {
+                    RunnableScheduledFuture first = queue[0];
+                    if (first == null) 
+                        available.await();
+                    else {
+                        long delay =  first.getDelay(TimeUnit.NANOSECONDS);
+                        if (delay > 0)
+                            available.awaitNanos(delay);
+                        else 
+                            return finishPoll(first);
+                    }
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public RunnableScheduledFuture poll(long timeout, TimeUnit unit) 
+            throws InterruptedException {
+            long nanos = unit.toNanos(timeout);
+            final ReentrantLock lock = this.lock;
+            lock.lockInterruptibly();
+            try {
+                for (;;) {
+                    RunnableScheduledFuture first = queue[0];
+                    if (first == null) {
+                        if (nanos <= 0)
+                            return null;
+                        else
+                            nanos = available.awaitNanos(nanos);
+                    } else {
+                        long delay = first.getDelay(TimeUnit.NANOSECONDS);
+                        if (delay > 0) {
+                            if (nanos <= 0)
+                                return null;
+                            if (delay > nanos)
+                                delay = nanos;
+                            long timeLeft = available.awaitNanos(delay);
+                            nanos -= delay - timeLeft;
+                        } else 
+                            return finishPoll(first);
+                    }
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public void clear() {
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                for (int i = 0; i < size; i++) {
+                    RunnableScheduledFuture t = queue[i];
+                    if (t != null) {
+                        queue[i] = null;
+                        setIndex(t, -1);
+                    }
+                }
+                size = 0;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        /**
+         * Return and remove first element only if it is expired.
+         * Used only by drainTo.  Call only when holding lock.
+         */
+        private RunnableScheduledFuture pollExpired() {
+            RunnableScheduledFuture first = queue[0];
+            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0) 
+                return null;
+            setIndex(first, -1);
+            int s = --size;
+            RunnableScheduledFuture x = queue[s];
+            queue[s] = null;
+            if (s != 0)
+                siftDown(0, x);
+            return first;
+        }
+
+        public int drainTo(Collection<? super Runnable> c) {
+            if (c == null)
+                throw new NullPointerException();
+            if (c == this)
+                throw new IllegalArgumentException();
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                int n = 0;
+                for (;;) {
+                    RunnableScheduledFuture first = pollExpired();
+                    if (first != null) {
+                        c.add(first);
+                        ++n;
+                    }
+                    else
+                        break;
+                }
+                if (n > 0)
+                    available.signalAll();
+                return n;
+            } finally {
+                lock.unlock();
+            }
+        }
+
         public int drainTo(Collection<? super Runnable> c, int maxElements) {
-            return dq.drainTo(c, maxElements);
+            if (c == null)
+                throw new NullPointerException();
+            if (c == this)
+                throw new IllegalArgumentException();
+            if (maxElements <= 0)
+                return 0;
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                int n = 0;
+                while (n < maxElements) {
+                    RunnableScheduledFuture first = pollExpired();
+                    if (first != null) {
+                        c.add(first);
+                        ++n;
+                    }
+                    else
+                        break;
+                }
+                if (n > 0)
+                    available.signalAll();
+                return n;
+            } finally {
+                lock.unlock();
+            }
         }
 
-        public int remainingCapacity() { return dq.remainingCapacity(); }
-        public boolean remove(Object x) { return dq.remove(x); }
-        public boolean contains(Object x) { return dq.contains(x); }
-        public int size() { return dq.size(); }
-        public boolean isEmpty() { return dq.isEmpty(); }
-        public Object[] toArray() { return dq.toArray(); }
-        public <T> T[] toArray(T[] array) { return dq.toArray(array); }
+        public Object[] toArray() {
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                return Arrays.copyOf(queue, size);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public <T> T[] toArray(T[] a) {
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                if (a.length < size)
+                    return (T[]) Arrays.copyOf(queue, size, a.getClass());
+                System.arraycopy(queue, 0, a, 0, size);
+                if (a.length > size)
+                    a[size] = null;
+                return a;
+            } finally {
+                lock.unlock();
+            }
+        }
+
         public Iterator<Runnable> iterator() {
-            return new Iterator<Runnable>() {
-                private Iterator<RunnableScheduledFuture> it = dq.iterator();
-                public boolean hasNext() { return it.hasNext(); }
-                public Runnable next() { return it.next(); }
-                public void remove() { it.remove(); }
-            };
+            return new Itr(toArray());
+        }
+        
+        /**
+         * Snapshot iterator that works off copy of underlying q array.
+         */
+        private class Itr implements Iterator<Runnable> {
+            final Object[] array; // Array of all elements
+            int cursor;           // index of next element to return;
+            int lastRet;          // index of last element, or -1 if no such
+            
+            Itr(Object[] array) {
+                lastRet = -1;
+                this.array = array;
+            }
+            
+            public boolean hasNext() {
+                return cursor < array.length;
+            }
+            
+            public Runnable next() {
+                if (cursor >= array.length)
+                    throw new NoSuchElementException();
+                lastRet = cursor;
+                return (Runnable)array[cursor++];
+            }
+            
+            public void remove() {
+                if (lastRet < 0)
+                    throw new IllegalStateException();
+                DelayedWorkQueue.this.remove(array[lastRet]);
+                lastRet = -1;
+            }
         }
     }
 }

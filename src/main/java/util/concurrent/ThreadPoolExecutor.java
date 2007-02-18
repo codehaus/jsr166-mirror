@@ -602,9 +602,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     final void tryTerminate() {
         for (;;) {
             int c = ctl.get();
-	    if (isRunning(c)
-		|| runStateAtLeast(c, TIDYING)
-		|| (runStateOf(c) == SHUTDOWN && ! workQueue.isEmpty()))
+	    if (isRunning(c) ||
+		runStateAtLeast(c, TIDYING) ||
+		(runStateOf(c) == SHUTDOWN && !workQueue.isEmpty()))
                 return;
             if (workerCountOf(c) != 0) { // Eligible to terminate
                 interruptIdleWorkers(ONLY_ONE);
@@ -715,7 +715,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    private void interruptIdleWorkers() { interruptIdleWorkers(false); }
+    /**
+     * Common form of interruptIdleWorkers, to avoid having to
+     * remember what the boolean argument means.
+     */
+    private void interruptIdleWorkers() { 
+        interruptIdleWorkers(false); 
+    }
+
     private static final boolean ONLY_ONE = true;
 
     /**
@@ -814,12 +821,16 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private boolean addWorker(Runnable firstTask, boolean core) {
         for (;;) {
             int c = ctl.get();
-	    // Check if queue empty only if necessary.
-            if (runStateAtLeast(c, SHUTDOWN)
-		&& ! (runStateOf(c) == SHUTDOWN
-		      && firstTask == null
-		      && ! workQueue.isEmpty()))
-		    return false;
+            if (runStateAtLeast(c, SHUTDOWN)) {
+                int rs = runStateOf(c);
+		if (rs != SHUTDOWN || firstTask != null || workQueue.isEmpty())
+                    return false;
+                // Avoid unnecessary CAS failure if isEmpty is slow.
+                int reread = ctl.get();
+                if (runStateOf(reread) != rs)
+                    continue; // must recheck
+                c = reread;
+            }
             int wc = workerCountOf(c);
             if (wc >= CAPACITY ||
                 wc >= (core ? corePoolSize : maximumPoolSize))
@@ -837,10 +848,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	    // Back out on ThreadFactory failure or if
 	    // shut down before lock acquired.
             int c = ctl.get();
-	    if (t == null
-		|| (runStateAtLeast(c, SHUTDOWN)
-		    && (! (runStateOf(c) == SHUTDOWN
-			   && firstTask == null)))) {
+	    if (t == null ||
+                (runStateAtLeast(c, SHUTDOWN) &&
+                 ((runStateOf(c) != SHUTDOWN || firstTask != null)))) {
 		decrementWorkerCount();
 		tryTerminate();
 		return false;

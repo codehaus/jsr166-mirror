@@ -23,7 +23,7 @@ public final class SimpleReentrantLockLoops {
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 5;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         print = true;
@@ -56,7 +56,7 @@ public final class SimpleReentrantLockLoops {
         }
 
         final void test() throws Exception {
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -75,7 +75,7 @@ public final class SimpleReentrantLockLoops {
 
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v;
                 int x = 0;
                 int n = iters;
@@ -100,8 +100,8 @@ public final class SimpleReentrantLockLoops {
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }

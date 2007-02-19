@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 import java.io.*;
 
 /**
- * A sample user extension of AbstractQueuedSynchronizer. 
+ * A sample user extension of AbstractQueuedSynchronizer.
  */
 public class Mutex implements Lock, java.io.Serializable {
     private static class Sync extends AbstractQueuedSynchronizer {
@@ -21,28 +21,28 @@ public class Mutex implements Lock, java.io.Serializable {
             assert acquires == 1; // Does not use multiple acquires
             return compareAndSetState(0, 1);
         }
-            
+
         public boolean tryRelease(int releases) {
             setState(0);
             return true;
         }
-            
+
         Condition newCondition() { return new ConditionObject(); }
-            
+
         private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
             s.defaultReadObject();
             setState(0); // reset to unlocked state
         }
     }
-        
+
     private final Sync sync = new Sync();
-    public void lock() { 
-        sync.acquire(1);  
+    public void lock() {
+        sync.acquire(1);
     }
-    public boolean tryLock() { 
+    public boolean tryLock() {
         return sync.tryAcquire(1);
     }
-    public void lockInterruptibly() throws InterruptedException { 
+    public void lockInterruptibly() throws InterruptedException {
         sync.acquireInterruptibly(1);
     }
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {

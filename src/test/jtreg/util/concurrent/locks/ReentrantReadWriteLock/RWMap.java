@@ -18,14 +18,14 @@ import java.util.concurrent.locks.*;
 public class RWMap implements Map {
     private final Map m;
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
-    
+
     public RWMap(Map m) {
         if (m == null)
             throw new NullPointerException();
         this.m = m;
     }
 
-    public RWMap() { 
+    public RWMap() {
         this(new TreeMap()); // use TreeMap by default
     }
 
@@ -51,15 +51,15 @@ public class RWMap implements Map {
     public Set keySet() { // Not implemented
         return null;
     }
-    
+
     public Set entrySet() { // Not implemented
         return null;
     }
-    
+
     public Collection values() { // Not implemented
         return null;
     }
-    
+
     public boolean equals(Object o) {
         rwl.readLock().lock(); try {return m.equals(o);} finally { rwl.readLock().unlock(); }
     }
@@ -84,5 +84,5 @@ public class RWMap implements Map {
     public void clear() {
         rwl.writeLock().lock(); try {m.clear();} finally { rwl.writeLock().unlock(); }
     }
-    
+
 }

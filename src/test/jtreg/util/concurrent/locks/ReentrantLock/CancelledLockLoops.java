@@ -22,11 +22,11 @@ public final class CancelledLockLoops {
     static final Random rng = new Random();
     static boolean print = false;
     static final int ITERS = 1000000;
-    static final long TIMEOUT = 100; 
+    static final long TIMEOUT = 100;
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 5;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         print = true;
@@ -58,9 +58,9 @@ public final class CancelledLockLoops {
 
         final void test() throws Exception {
             Thread[] threads = new Thread[nthreads];
-            for (int i = 0; i < threads.length; ++i) 
+            for (int i = 0; i < threads.length; ++i)
                 threads[i] = new Thread(this);
-            for (int i = 0; i < threads.length; ++i) 
+            for (int i = 0; i < threads.length; ++i)
                 threads[i].start();
             Thread[] cancels = (Thread[]) (threads.clone());
             Collections.shuffle(Arrays.asList(cancels), rng);
@@ -69,7 +69,7 @@ public final class CancelledLockLoops {
             for (int i = 0; i < cancels.length-2; ++i) {
                 cancels[i].interrupt();
                 // make sure all OK even when cancellations spaced out
-                if ( (i & 3) == 0) 
+                if ( (i & 3) == 0)
                     Thread.sleep(1 + rng.nextInt(10));
             }
             barrier.await();
@@ -96,7 +96,7 @@ public final class CancelledLockLoops {
 
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v;
                 int x = 0;
                 int n = ITERS;
@@ -117,7 +117,7 @@ public final class CancelledLockLoops {
                     sum += LoopHelpers.compute2(x);
                 } while (n-- > 0);
                 if (n <= 0) {
-                    lock.lock(); 
+                    lock.lock();
                     try {
                         ++completed;
                     }
@@ -128,9 +128,9 @@ public final class CancelledLockLoops {
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ex) { 
+            catch (Exception ex) {
                 ex.printStackTrace();
-                return; 
+                return;
             }
         }
     }

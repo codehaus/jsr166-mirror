@@ -24,10 +24,10 @@ public final class LockOncePerThreadLoops {
     static int replications = 5;
 
     public static void main(String[] args) throws Exception {
-        if (args.length > 0) 
+        if (args.length > 0)
             replications = Integer.parseInt(args[0]);
 
-        if (args.length > 1) 
+        if (args.length > 1)
             nlocks = Integer.parseInt(args[1]);
 
         print = true;
@@ -57,7 +57,7 @@ public final class LockOncePerThreadLoops {
         }
 
         final void test() throws Exception {
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -74,7 +74,7 @@ public final class LockOncePerThreadLoops {
 
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v;
                 int x = 0;
                 for (int i = 0; i < locks.length; ++i) {
@@ -95,8 +95,8 @@ public final class LockOncePerThreadLoops {
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }

@@ -15,10 +15,10 @@ class LoopHelpers {
     // Some mindless computation to do between synchronizations...
 
     /**
-     * generates 32 bit pseudo-random numbers. 
+     * generates 32 bit pseudo-random numbers.
      * Adapted from http://www.snippets.org
      */
-    public static int compute1(int x) { 
+    public static int compute1(int x) {
         int lo = 16807 * (x & 0xFFFF);
         int hi = 16807 * (x >>> 16);
         lo += (hi & 0x7FFF) << 16;
@@ -38,7 +38,7 @@ class LoopHelpers {
      *  Computes a linear congruential random number a random number
      *  of times.
      */
-    public static int compute2(int x) { 
+    public static int compute2(int x) {
         int loops = (x >>> 4) & 7;
         while (loops-- > 0) {
             x = (x * 2147483647) % 16807;
@@ -97,5 +97,5 @@ class LoopHelpers {
         b.replace(b.length()-num.length(), b.length(), num);
         return b.toString();
     }
-   
+
 }

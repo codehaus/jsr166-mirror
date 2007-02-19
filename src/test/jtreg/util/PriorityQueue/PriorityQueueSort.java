@@ -14,7 +14,7 @@ import java.util.*;
 
 public class PriorityQueueSort {
 
-    static class MyComparator implements Comparator<Integer> { 
+    static class MyComparator implements Comparator<Integer> {
         public int compare(Integer x, Integer y) {
             int i = x.intValue();
             int j = y.intValue();
@@ -28,7 +28,7 @@ public class PriorityQueueSort {
         int n = 10000;
         if (args.length > 0)
             n = Integer.parseInt(args[0]);
-        
+
         List<Integer> sorted = new ArrayList<Integer>(n);
         for (int i = 0; i < n; i++)
             sorted.add(new Integer(i));

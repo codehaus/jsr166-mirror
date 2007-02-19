@@ -15,9 +15,9 @@ import java.util.concurrent.*;
 
 public class ExecutorCompletionServiceLoops {
     static final int POOLSIZE =      100;
-    static final ExecutorService pool = 
+    static final ExecutorService pool =
         Executors.newFixedThreadPool(POOLSIZE);
-    static final ExecutorCompletionService<Integer> ecs = 
+    static final ExecutorCompletionService<Integer> ecs =
         new ExecutorCompletionService<Integer>(pool);
     static boolean print = false;
 
@@ -25,14 +25,14 @@ public class ExecutorCompletionServiceLoops {
         int max = 8;
         int base = 10000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             max = Integer.parseInt(args[0]);
 
         System.out.println("Warmup...");
         oneTest( base );
         Thread.sleep(100);
         print = true;
-        
+
         for (int i = 1; i <= max; i += (i+1) >>> 1) {
             System.out.print("n: " + i * base);
             oneTest(i * base );
@@ -42,7 +42,7 @@ public class ExecutorCompletionServiceLoops {
 	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
 	    throw new Error();
    }
-    
+
     static class Task implements Callable<Integer> {
         public Integer call() {
             int s = 0;
@@ -58,9 +58,9 @@ public class ExecutorCompletionServiceLoops {
     static class Producer implements Runnable {
         final ExecutorCompletionService cs;
         final int iters;
-        Producer(ExecutorCompletionService ecs, int i) { 
+        Producer(ExecutorCompletionService ecs, int i) {
             cs = ecs;
-            iters = i; 
+            iters = i;
         }
         public void run() {
             for (int i = 0; i < iters; ++i)

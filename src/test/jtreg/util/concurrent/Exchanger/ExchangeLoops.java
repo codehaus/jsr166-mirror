@@ -21,13 +21,13 @@ public class ExchangeLoops {
         public int value;
         Int(int i) { value = i; }
     }
-    
+
 
     public static void main(String[] args) throws Exception {
         int maxStages = 5;
         int iters = 10000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxStages = Integer.parseInt(args[0]);
 
         print = false;
@@ -50,8 +50,8 @@ public class ExchangeLoops {
         final Exchanger<Int> right;
         final CyclicBarrier barrier;
         volatile int result;
-        Stage (Exchanger<Int> left, 
-               Exchanger<Int> right, 
+        Stage (Exchanger<Int> left,
+               Exchanger<Int> right,
                CyclicBarrier b, int iters) {
             this.left = left;
             this.right = right;
@@ -67,7 +67,7 @@ public class ExchangeLoops {
                     if (left != null) {
                         item.value = LoopHelpers.compute1(item.value);
                         Int other = left.exchange(item);
-                        if (other == item || other == null) 
+                        if (other == item || other == null)
                             throw new Error("Failed Exchange");
                         item = other;
 
@@ -75,17 +75,17 @@ public class ExchangeLoops {
                     if (right != null) {
                         item.value = LoopHelpers.compute2(item.value);
                         Int other = right.exchange(item);
-                        if (other == item || other == null) 
+                        if (other == item || other == null)
                             throw new Error("Failed Exchange");
                         item = other;
                     }
                 }
                 barrier.await();
-                
+
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
     }

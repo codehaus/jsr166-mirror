@@ -37,7 +37,7 @@ public class ProducerConsumerLoops {
         int maxPairs = 8;
         int iters = 10000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxPairs = Integer.parseInt(args[0]);
 
         print = false;
@@ -47,7 +47,7 @@ public class ProducerConsumerLoops {
         oneTest(2, 10000);
         Thread.sleep(100);
         print = true;
-        
+
         for (int i = 1; i <= maxPairs; i += (i+1) >>> 1) {
             System.out.println("Pairs:" + i);
             oneTest(i, iters);
@@ -83,13 +83,13 @@ public class ProducerConsumerLoops {
             System.out.print("ArrayBlockingQueue(fair)");
         oneRun(new ArrayBlockingQueue<Integer>(CAPACITY, true), pairs, iters);
     }
-    
+
     static abstract class Stage implements Runnable {
         final int iters;
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.iters = iters;
         }
@@ -113,15 +113,15 @@ public class ProducerConsumerLoops {
                 addProducerSum(s);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
     }
 
     static class Consumer extends Stage {
-        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) { 
+        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             super(q, b, iters);
         }
 
@@ -137,9 +137,9 @@ public class ProducerConsumerLoops {
                 addConsumerSum(s);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
 

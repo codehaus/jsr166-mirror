@@ -23,7 +23,7 @@ public class SingleProducerMultipleConsumerLoops {
         int maxConsumers = 5;
         int iters = 10000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxConsumers = Integer.parseInt(args[0]);
 
         print = false;
@@ -33,7 +33,7 @@ public class SingleProducerMultipleConsumerLoops {
         oneTest(2, 10000);
         Thread.sleep(100);
         print = true;
-        
+
         for (int i = 1; i <= maxConsumers; i += (i+1) >>> 1) {
             System.out.println("Consumers:" + i);
             oneTest(i, iters);
@@ -69,14 +69,14 @@ public class SingleProducerMultipleConsumerLoops {
             System.out.print("ArrayBlockingQueue(fair)");
         oneRun(new ArrayBlockingQueue<Integer>(CAPACITY, true), consumers, iters);
     }
-    
+
     static abstract class Stage implements Runnable {
         final int iters;
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         volatile int result;
         Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.iters = iters;
         }
@@ -96,15 +96,15 @@ public class SingleProducerMultipleConsumerLoops {
                 barrier.await();
                 result = 432;
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
     }
 
     static class Consumer extends Stage {
-        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) { 
+        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             super(q, b, iters);
         }
 
@@ -126,9 +126,9 @@ public class SingleProducerMultipleConsumerLoops {
                 barrier.await();
                 result = s;
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
 

@@ -24,7 +24,7 @@ public class ConcurrentQueueLoops {
         int maxStages = 8;
         int items = 100000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxStages = Integer.parseInt(args[0]);
 
         print = false;
@@ -48,7 +48,7 @@ public class ConcurrentQueueLoops {
         final CyclicBarrier barrier;
         int items;
         Stage (Queue<Integer> q, CyclicBarrier b, int items) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.items = items;
         }
@@ -82,7 +82,7 @@ public class ConcurrentQueueLoops {
                 }
                 return new Integer(l);
             }
-            catch (Exception ie) { 
+            catch (Exception ie) {
                 ie.printStackTrace();
                 throw new Error("Call loop failed");
             }
@@ -95,7 +95,7 @@ public class ConcurrentQueueLoops {
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);
         totalItems = new AtomicInteger(n * items);
         ArrayList<Future<Integer>> results = new ArrayList<Future<Integer>>(n);
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             results.add(pool.submit(new Stage(q, barrier, items)));
 
         if (print)
@@ -113,6 +113,6 @@ public class ConcurrentQueueLoops {
             System.out.println(LoopHelpers.rightJustify(time / (items * n)) + " ns per item");
         if (total == 0) // avoid overoptimization
             System.out.println("useless result: " + total);
-        
+
     }
 }

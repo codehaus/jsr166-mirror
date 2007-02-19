@@ -23,11 +23,11 @@ public final class TimeoutLockLoops {
     static final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
     static boolean print = false;
     static final int ITERS = Integer.MAX_VALUE;
-    static final long TIMEOUT = 100; 
+    static final long TIMEOUT = 100;
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
 
@@ -82,7 +82,7 @@ public final class TimeoutLockLoops {
 
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v;
                 int x = 17;
                 int n = ITERS;
@@ -107,9 +107,9 @@ public final class TimeoutLockLoops {
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ex) { 
+            catch (Exception ex) {
                 ex.printStackTrace();
-                return; 
+                return;
             }
         }
     }

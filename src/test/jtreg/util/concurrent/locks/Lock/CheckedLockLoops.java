@@ -20,7 +20,7 @@ public final class CheckedLockLoops {
         int maxThreads = 5;
         int iters = 100000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         rng.setSeed(3122688L);
@@ -70,7 +70,7 @@ public final class CheckedLockLoops {
             System.out.print("ReentrantWriteLock    ");
         new ReentrantWriteLockLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("ReentrantReadWriteLock");
         new ReentrantReadWriteLockLoop().test(v, nthreads, iters);
@@ -80,7 +80,7 @@ public final class CheckedLockLoops {
             System.out.print("Semaphore             ");
         new SemaphoreLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("fair Semaphore        ");
         new FairSemaphoreLoop().test(v, nthreads, iters);
@@ -90,12 +90,12 @@ public final class CheckedLockLoops {
             System.out.print("FairReentrantLock     ");
         new FairReentrantLockLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("FairRWriteLock         ");
         new FairReentrantWriteLockLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("FairRReadWriteLock     ");
         new FairReentrantReadWriteLockLoop().test(v, nthreads, iters);
@@ -118,7 +118,7 @@ public final class CheckedLockLoops {
 
         final int getValue() {
             int v = value;
-            if (checkValue != ~(v ^ 0xAAAAAAAA)) 
+            if (checkValue != ~(v ^ 0xAAAAAAAA))
                 throw new Error("lock protection failure");
             return v;
         }
@@ -127,7 +127,7 @@ public final class CheckedLockLoops {
             setValue(initialValue);
             this.iters = iters;
             barrier = new CyclicBarrier(nthreads+1, timer);
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -146,12 +146,12 @@ public final class CheckedLockLoops {
         abstract int loop(int n);
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 result += loop(iters);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
 

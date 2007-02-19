@@ -1,4 +1,4 @@
-/* 
+/*
  * @test %I% %E%
  * @bug 4486658
  * @compile -source 1.5 MapLoops.java
@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class MapLoops {
-    static final int NKEYS = 100000; 
+    static final int NKEYS = 100000;
     static int pinsert     = 60;
     static int premove     = 2;
     static int maxThreads  = 5;
@@ -42,30 +42,30 @@ public class MapLoops {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
-        else 
+        else
             mapClass = RWMap.class;
 
-        if (args.length > 1) 
+        if (args.length > 1)
             maxThreads = Integer.parseInt(args[1]);
 
-        if (args.length > 2) 
+        if (args.length > 2)
             nops = Integer.parseInt(args[2]);
 
-        if (args.length > 3) 
+        if (args.length > 3)
             pinsert = Integer.parseInt(args[3]);
 
-        if (args.length > 4) 
+        if (args.length > 4)
             premove = Integer.parseInt(args[4]);
 
         // normalize probabilities wrt random number generator
         removesPerMaxRandom = (int)(((double)premove/100.0 * 0x7FFFFFFFL));
         insertsPerMaxRandom = (int)(((double)pinsert/100.0 * 0x7FFFFFFFL));
-        
+
         System.out.println("Using " + mapClass.getName());
 
         Random rng = new Random(315312);
         Integer[] key = new Integer[NKEYS];
-        for (int i = 0; i < key.length; ++i) 
+        for (int i = 0; i < key.length; ++i)
             key[i] = new Integer(rng.nextInt());
 
         // warmup
@@ -84,7 +84,7 @@ public class MapLoops {
             Map<Integer, Integer> map = (Map<Integer,Integer>)mapClass.newInstance();
             LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
             CyclicBarrier barrier = new CyclicBarrier(i+1, timer);
-            for (int k = 0; k < i; ++k) 
+            for (int k = 0; k < i; ++k)
                 pool.execute(new Runner(map, key, barrier));
             barrier.await();
             barrier.await();
@@ -109,8 +109,8 @@ public class MapLoops {
         int total;
 
         Runner(Map<Integer,Integer> map, Integer[] key,  CyclicBarrier barrier) {
-            this.map = map; 
-            this.key = key; 
+            this.map = map;
+            this.key = key;
             this.barrier = barrier;
             position = key.length / 2;
         }
@@ -119,14 +119,14 @@ public class MapLoops {
             // random-walk around key positions,  bunching accesses
             int r = rng.next();
             position += (r & 7) - 3;
-            while (position >= key.length) position -= key.length;  
+            while (position >= key.length) position -= key.length;
             while (position < 0) position += key.length;
 
             Integer k = key[position];
             Integer x = map.get(k);
 
             if (x != null) {
-                if (x.intValue() != k.intValue()) 
+                if (x.intValue() != k.intValue())
                     throw new Error("bad mapping: " + x + " to " + k);
 
                 if (r < removesPerMaxRandom) {
@@ -151,7 +151,7 @@ public class MapLoops {
             try {
                 barrier.await();
                 int ops = nops;
-                while (ops > 0) 
+                while (ops > 0)
                     ops -= step();
                 barrier.await();
             }

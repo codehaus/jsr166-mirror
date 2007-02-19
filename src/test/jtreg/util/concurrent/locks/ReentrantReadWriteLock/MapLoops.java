@@ -96,6 +96,8 @@ public class MapLoops {
             map.clear();
         }
         pool.shutdown();
+	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+	    throw new Error();
     }
 
     static class Runner implements Runnable {

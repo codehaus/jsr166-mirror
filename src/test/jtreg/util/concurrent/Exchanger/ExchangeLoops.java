@@ -40,6 +40,8 @@ public class ExchangeLoops {
             oneRun(i, iters);
         }
         pool.shutdown();
+	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+	    throw new Error();
    }
 
     static class Stage implements Runnable {

@@ -43,6 +43,8 @@ public final class CheckedLockLoops {
             Thread.sleep(100);
         }
         pool.shutdown();
+	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+	    throw new Error();
     }
 
     static void oneTest(int nthreads, int iters) throws Exception {

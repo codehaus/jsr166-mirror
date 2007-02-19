@@ -94,6 +94,8 @@ public class MapLoops {
                 i = k;
         }
         pool.shutdown();
+	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+	    throw new Error();
 
 	if (! throwables.isEmpty())
 	    throw new Error

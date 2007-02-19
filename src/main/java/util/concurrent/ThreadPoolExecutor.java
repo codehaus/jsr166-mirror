@@ -604,26 +604,28 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             int c = ctl.get();
 	    if (isRunning(c) ||
 		runStateAtLeast(c, TIDYING) ||
-		(runStateOf(c) == SHUTDOWN && !workQueue.isEmpty()))
-                return;
+		(runStateOf(c) == SHUTDOWN && ! workQueue.isEmpty()))
+		return;
             if (workerCountOf(c) != 0) { // Eligible to terminate
                 interruptIdleWorkers(ONLY_ONE);
                 return;
             }
-            if (ctl.compareAndSet(c, ctlOf(TIDYING, 0))) {
-                mainLock.lock();
-                try {
+
+	    final ReentrantLock mainLock = this.mainLock;
+	    mainLock.lock();
+	    try {
+		if (ctl.compareAndSet(c, ctlOf(TIDYING, 0))) {
 		    try {
 			terminated();
 		    } finally {
 			ctl.set(ctlOf(TERMINATED, 0));
 			termination.signalAll();
 		    }
-                } finally {
-                    mainLock.unlock();
-                }
-                return;
-            }
+		    return;
+		}
+	    } finally {
+		mainLock.unlock();
+	    }
             // else retry on failed CAS
         }
     }
@@ -719,8 +721,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Common form of interruptIdleWorkers, to avoid having to
      * remember what the boolean argument means.
      */
-    private void interruptIdleWorkers() { 
-        interruptIdleWorkers(false); 
+    private void interruptIdleWorkers() {
+        interruptIdleWorkers(false);
     }
 
     private static final boolean ONLY_ONE = true;
@@ -819,24 +821,30 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @return true if successful
      */
     private boolean addWorker(Runnable firstTask, boolean core) {
+	retry:
         for (;;) {
-            int c = ctl.get();
-            if (runStateAtLeast(c, SHUTDOWN)) {
-                int rs = runStateOf(c);
-		if (rs != SHUTDOWN || firstTask != null || workQueue.isEmpty())
-                    return false;
-                // Avoid unnecessary CAS failure if isEmpty is slow.
-                int reread = ctl.get();
-                if (runStateOf(reread) != rs)
-                    continue; // must recheck
-                c = reread;
-            }
-            int wc = workerCountOf(c);
-            if (wc >= CAPACITY ||
-                wc >= (core ? corePoolSize : maximumPoolSize))
-                return false;
-            if (compareAndIncrementWorkerCount(c))
-                break;
+	    int c = ctl.get();
+	    int rs = runStateOf(c);
+
+	    // Check if queue empty only if necessary.
+            if (rs >= SHUTDOWN &&
+		! (rs == SHUTDOWN &&
+		   firstTask == null &&
+		   ! workQueue.isEmpty()))
+		return false;
+
+	    for (;;) {
+		int wc = workerCountOf(c);
+		if (wc >= CAPACITY ||
+		    wc >= (core ? corePoolSize : maximumPoolSize))
+		    return false;
+		if (compareAndIncrementWorkerCount(c))
+		    break retry;
+		c = ctl.get();	// Re-read ctl
+		if (runStateOf(c) != rs)
+		    continue retry;
+		// else CAS failed due to workerCount change; retry inner loop
+	    }
         }
 
         Worker w = new Worker(firstTask);
@@ -845,18 +853,24 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
+	    // Recheck while holding lock.
 	    // Back out on ThreadFactory failure or if
 	    // shut down before lock acquired.
             int c = ctl.get();
+	    int rs = runStateOf(c);
+
 	    if (t == null ||
-                (runStateAtLeast(c, SHUTDOWN) &&
-                 ((runStateOf(c) != SHUTDOWN || firstTask != null)))) {
+		(rs >= SHUTDOWN &&
+		 ! (rs == SHUTDOWN &&
+		    firstTask == null))) {
 		decrementWorkerCount();
 		tryTerminate();
 		return false;
 	    }
-            workers.add(w);
-            int s = workers.size();
+
+	    workers.add(w);
+
+	    int s = workers.size();
             if (s > largestPoolSize)
                 largestPoolSize = s;
         } finally {
@@ -864,7 +878,15 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
 
         t.start();
-        return true;
+	// It is possible (but unlikely) for a thread to have been
+	// added to workers, but not yet started, during transition to
+	// STOP, which could result in a rare missed interrupt,
+	// because Thread.interrupt is not guaranteed to have any effect
+	// on a non-yet-started Thread (see Thread#interrupt).
+	if (runStateOf(ctl.get()) == STOP && ! t.isInterrupted())
+	    t.interrupt();
+
+	return true;
     }
 
     /**
@@ -915,45 +937,43 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * 1. There are more than maximumPoolSize workers (due to
      *    a call to setMaximumPoolSize).
      * 2. The pool is stopped.
-     * 3. The queue is empty, and either the pool is shutdown,
-     *    or the thread has already timed out at least once
-     *    waiting for a task, and would otherwise enter another
-     *    timed wait.
+     * 3. The pool is shutdown and the queue is empty.
+     * 4. This worker timed out waiting for a task, and timed-out
+     *    workers are subject to termination (that is,
+     *    {@code allowCoreThreadTimeOut || workerCount > corePoolSize})
+     *    both before and after the timed wait.
      *
      * @return task, or null if the worker must exit, in which case
      *         workerCount is decremented
      */
     private Runnable getTask() {
-        /*
-         * Variable "empty" tracks whether the queue appears to be
-         * empty in case we need to know to check exit. This is set
-         * true on time-out from timed poll as an indicator of likely
-         * emptiness, in which case it is rechecked explicitly via
-         * isEmpty when deciding whether to exit.  Emptiness must also
-         * be checked in state SHUTDOWN.  The variable is initialized
-         * false to indicate lack of prior timeout, and left false
-         * until otherwise required to check.
-         */
-        boolean empty = false;
-        for (;;) {
+	boolean timedOut = false; // Did the last poll() time out?
+
+	retry:
+	for (;;) {
             int c = ctl.get();
-            int rs = runStateOf(c);
-            if (rs == SHUTDOWN || empty) {
-                empty = workQueue.isEmpty();
-                if (runStateOf(c = ctl.get()) != rs)
-                    continue; // retry if state changed
-            }
+	    int rs = runStateOf(c);
 
-            int wc = workerCountOf(c);
-            boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
+	    // Check if queue empty only if necessary.
+	    if (rs >= SHUTDOWN && (rs >= STOP || workQueue.isEmpty())) {
+		decrementWorkerCount();
+		return null;
+	    }
 
-            // Try to exit if too many threads, shutting down, and/or timed out
-            if (wc > maximumPoolSize || rs > SHUTDOWN ||
-                (empty && (timed || rs == SHUTDOWN))) {
-                if (compareAndDecrementWorkerCount(c))
-                    return null;
-                else
-                    continue; // retry on CAS failure
+	    boolean timed;	// Are workers subject to culling?
+
+	    for (;;) {
+		int wc = workerCountOf(c);
+		timed = allowCoreThreadTimeOut || wc > corePoolSize;
+
+		if (wc <= maximumPoolSize && ! (timedOut && timed))
+		    break;
+		if (compareAndDecrementWorkerCount(c))
+		    return null;
+		c = ctl.get();	// Re-read ctl
+		if (runStateOf(c) != rs)
+		    continue retry;
+		// else CAS failed due to workerCount change; retry inner loop
             }
 
             try {
@@ -962,8 +982,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     workQueue.take();
                 if (r != null)
                     return r;
-                empty = true; // queue probably empty; recheck above
+		timedOut = true;
             } catch (InterruptedException retry) {
+		timedOut = false;
             }
         }
     }

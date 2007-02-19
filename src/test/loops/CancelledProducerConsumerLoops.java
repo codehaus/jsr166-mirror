@@ -1,18 +1,8 @@
 /*
- * @test %I% %E%
- * @bug 4486658
- * @compile -source 1.5 CancelledProducerConsumerLoops.java
- * @run main/timeout=7000 CancelledProducerConsumerLoops
- * @summary Checks for responsiveness of blocking queues to cancellation. 
- * Runs under the assumption that ITERS computations require more than
- * TIMEOUT msecs to complete.
- */
-/*
  * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain. Use, modify, and
- * redistribute this code in any way without acknowledgement.
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
  */
-
 import java.util.concurrent.*;
 
 public class CancelledProducerConsumerLoops {

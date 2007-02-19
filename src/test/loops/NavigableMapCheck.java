@@ -506,7 +506,7 @@ public class NavigableMapCheck {
         Stats(double t) { least = t; }
     }
 
-    static Random rng = new Random();
+    static Random rng = new Random(111);
 
     static void shuffle(Integer[] keys) {
         int size = keys.length;

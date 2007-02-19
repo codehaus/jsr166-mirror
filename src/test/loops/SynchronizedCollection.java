@@ -1,11 +1,15 @@
+
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
+ */
+
 // Stand-alone version of java.util.Collections.synchronizedCollection
 import java.util.*;
 import java.io.*;
 
 public final class SynchronizedCollection<E> implements Collection<E>, Serializable {
-    // use serialVersionUID from JDK 1.2.2 for interoperability
-    private static final long serialVersionUID = 3053995032091335093L;
-
     final Collection<E> c;	   // Backing Collection
     final Object	   mutex;  // Object on which to synchronize
 
@@ -41,7 +45,7 @@ public final class SynchronizedCollection<E> implements Collection<E>, Serializa
     }
 
     public final Iterator<E> iterator() {
-        return c.iterator(); // Must be manually synched by user!
+        return c.iterator();
     }
 
     public final boolean add(E e) {

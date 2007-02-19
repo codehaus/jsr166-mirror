@@ -1,7 +1,7 @@
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain. Use, modify, and
- * redistribute this code in any way without acknowledgement.
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
  */
 
 import java.util.concurrent.*;
@@ -49,6 +49,10 @@ public class CachedThreadPoolLoops {
    }
 
     static void oneTest(int nThreads, int iters, boolean print) throws Exception {
+        //        if (print) System.out.print("LinkedBlockingQueue     ");
+        //        oneRun(new LinkedBlockingQueue<Runnable>(256), nThreads, iters, print);
+        //        if (print) System.out.print("ArrayBlockingQueue      ");
+        //        oneRun(new ArrayBlockingQueue<Runnable>(256), nThreads, iters, print);
         if (print) System.out.print("SynchronousQueue        ");
         oneRun(new SynchronousQueue<Runnable>(false), nThreads, iters, print);
         if (print) System.out.print("SynchronousQueue(fair)  ");

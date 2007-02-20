@@ -21,8 +21,8 @@ import java.util.*;
  * without any real-time guarantees about when, after they are
  * enabled, they will commence. Tasks scheduled for exactly the same
  * execution time are enabled in first-in-first-out (FIFO) order of
- * submission. Cancelled tasks are automatically removed from the
- * work queue.
+ * submission. If {@link #setRemoveOnCancelPolicy} is set {@code true}
+ * cancelled tasks are automatically removed from the work queue.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not useful for it. In
@@ -121,6 +121,11 @@ public class ScheduledThreadPoolExecutor
      * False if should cancel non-periodic tasks on shutdown.
      */
     private volatile boolean executeExistingDelayedTasksAfterShutdown = true;
+
+    /**
+     * True if ScheduledFutureTask.cancel should remove from queue
+     */
+    private volatile boolean removeOnCancel = false;
 
     /**
      * Sequence number to break scheduling ties, and in turn to
@@ -231,8 +236,10 @@ public class ScheduledThreadPoolExecutor
         }
 
         public boolean cancel(boolean mayInterruptIfRunning) {
-            remove(this); //  unconditionally remove
-            return super.cancel(mayInterruptIfRunning);
+            boolean cancelled = super.cancel(mayInterruptIfRunning);
+            if (cancelled && removeOnCancel && heapIndex >= 0)
+                remove(this); 
+            return cancelled;
         }
 
         /**
@@ -322,8 +329,11 @@ public class ScheduledThreadPoolExecutor
                 if (e instanceof RunnableScheduledFuture) {
                     RunnableScheduledFuture<?> t =
                         (RunnableScheduledFuture<?>)e;
-                    if ((t.isPeriodic() ? !keepPeriodic : !keepDelayed))
-                        t.cancel(false);
+                    if ((t.isPeriodic() ? !keepPeriodic : !keepDelayed) ||
+                        t.isCancelled()) { // also remove if already cancelled
+                        if (q.remove(t))
+                            t.cancel(false);
+                    }
                 }
             }
         }
@@ -625,6 +635,30 @@ public class ScheduledThreadPoolExecutor
      */
     public boolean getExecuteExistingDelayedTasksAfterShutdownPolicy() {
         return executeExistingDelayedTasksAfterShutdown;
+    }
+
+    /**
+     * Sets the policy on whether to cancellation of a a task should
+     * remove it from the work queue.  This value is
+     * by default {@code false}.
+     *
+     * @param value if {@code true}, remove on cancellation, else don't.
+     * @see #getRemoveOnCancelPolicy
+     */
+    public void setRemoveOnCancelPolicy(boolean value) {
+        removeOnCancel = value;
+    }
+
+    /**
+     * Gets the policy on whether to cancellation of a a task should
+     * remove it from the work queue.
+     * This value is by default {@code false}.
+     *
+     * @return {@code true} if cancelled tasks are removed from the queue.
+     * @see #setRemoveOnCancelPolicy
+     */
+    public boolean getRemoveOnCancelPolicy() {
+        return removeOnCancel;
     }
 
     /**

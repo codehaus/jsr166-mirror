@@ -985,19 +985,15 @@ public class CopyOnWriteArrayList<E>
         }
 
         public E next() {
-            try {
-                return (E)(snapshot[cursor++]);
-            } catch (IndexOutOfBoundsException ex) {
+	    if (! hasNext())
                 throw new NoSuchElementException();
-            }
+	    return (E) snapshot[cursor++];
         }
 
         public E previous() {
-            try {
-                return (E)(snapshot[--cursor]);
-            } catch (IndexOutOfBoundsException e) {
+	    if (! hasPrevious())
                 throw new NoSuchElementException();
-            }
+	    return (E) snapshot[--cursor];
         }
 
         public int nextIndex() {

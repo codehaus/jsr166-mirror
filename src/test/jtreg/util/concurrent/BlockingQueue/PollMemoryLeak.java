@@ -1,15 +1,16 @@
 /*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
+ */
+
+/*
  * @test %I% %E%
  * @bug 6236036 6264015
  * @compile PollMemoryLeak.java
  * @run main/othervm -Xmx8m PollMemoryLeak
  * @summary  Checks for OutOfMemoryError when an unbounded
  * number of aborted timed waits occur without a signal.
- */
-/*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
  */
 
 import java.util.concurrent.*;

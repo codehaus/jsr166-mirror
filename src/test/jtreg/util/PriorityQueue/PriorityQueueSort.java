@@ -1,13 +1,13 @@
 /*
- * @test %I% %E%
- * @bug 4486658
- * @summary Checks that a priority queue returns elements in sorted order across various operations
- */
-
-/*
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
+ */
+
+/*
+ * @test %I% %E%
+ * @bug 4486658
+ * @summary Checks that a priority queue returns elements in sorted order across various operations
  */
 
 import java.util.*;

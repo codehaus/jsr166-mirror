@@ -1,15 +1,14 @@
-/**
- * @test %I% %E%
- * @bug 4949279
- * @summary Independent instantiations of Random() have distinct seeds.
- */
-
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
  */
 
+/*
+ * @test %I% %E%
+ * @bug 4949279
+ * @summary Independent instantiations of Random() have distinct seeds.
+ */
 
 import java.util.Random;
 

@@ -1,14 +1,15 @@
 /*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
+ */
+
+/*
  * @test %I% %E%
  * @bug 4486658
  * @compile -source 1.5 MultipleProducersSingleConsumerLoops.java
  * @run main/timeout=3600 MultipleProducersSingleConsumerLoops
  * @summary  multiple producers and single consumer using blocking queues
- */
-/*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
  */
 
 import java.util.concurrent.*;

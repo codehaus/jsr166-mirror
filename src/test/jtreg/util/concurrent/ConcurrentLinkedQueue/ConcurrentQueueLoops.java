@@ -1,14 +1,15 @@
 /*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
+ */
+
+/*
  * @test %I% %E%
  * @bug 4486658
  * @compile -source 1.5 ConcurrentQueueLoops.java
  * @run main/timeout=230 ConcurrentQueueLoops
  * @summary Checks that a set of threads can repeatedly get and modify items
- */
-/*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
  */
 
 import java.util.*;

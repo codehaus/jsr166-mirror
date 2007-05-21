@@ -1111,22 +1111,24 @@ public class TreeMap<K,V>
         }
 
 	final Entry<K,V> nextEntry() {
-            Entry<K,V> e = lastReturned = next;
+            Entry<K,V> e = next;
             if (e == null)
                 throw new NoSuchElementException();
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
             next = successor(e);
+            lastReturned = e;
             return e;
         }
 
         final Entry<K,V> prevEntry() {
-            Entry<K,V> e = lastReturned= next;
+            Entry<K,V> e = next;
             if (e == null)
                 throw new NoSuchElementException();
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
             next = predecessor(e);
+            lastReturned = e;
             return e;
         }
 
@@ -1587,22 +1589,24 @@ public class TreeMap<K,V>
             }
 
             final TreeMap.Entry<K,V> nextEntry() {
-                TreeMap.Entry<K,V> e = lastReturned = next;
+                TreeMap.Entry<K,V> e = next;
                 if (e == null || e.key == fenceKey)
                     throw new NoSuchElementException();
                 if (m.modCount != expectedModCount)
                     throw new ConcurrentModificationException();
                 next = successor(e);
+		lastReturned = e;
                 return e;
             }
 
             final TreeMap.Entry<K,V> prevEntry() {
-                TreeMap.Entry<K,V> e = lastReturned = next;
+                TreeMap.Entry<K,V> e = next;
                 if (e == null || e.key == fenceKey)
                     throw new NoSuchElementException();
                 if (m.modCount != expectedModCount)
                     throw new ConcurrentModificationException();
                 next = predecessor(e);
+		lastReturned = e;
                 return e;
             }
 

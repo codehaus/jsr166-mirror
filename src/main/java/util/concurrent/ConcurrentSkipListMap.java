@@ -2231,8 +2231,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /** Advances next to higher entry. */
         final void advance() {
-            if ((lastReturned = next) == null)
+            if (next == null)
                 throw new NoSuchElementException();
+	    lastReturned = next;
             for (;;) {
 		next = next.next;
                 if (next == null)
@@ -3036,8 +3037,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
 
             final void advance() {
-                if ((lastReturned = next) == null)
+                if (next == null)
                     throw new NoSuchElementException();
+		lastReturned = next;
                 if (isDescending)
                     descend();
                 else

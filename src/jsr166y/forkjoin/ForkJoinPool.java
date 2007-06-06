@@ -104,7 +104,6 @@ public class ForkJoinPool {
      */
     private boolean continueOnError;
 
-
     /**
      * Maximum number of active jobs allowed to run;
      */
@@ -207,7 +206,7 @@ public class ForkJoinPool {
      * @param h the new handler
      * @return the old handler, or null if none
      */
-    public Thread.UncaughtExceptionHandler 
+    public Thread.UncaughtExceptionHandler
         setUncaughtExceptionHandler(Thread.UncaughtExceptionHandler h) {
 
         final ReentrantLock lock = this.lock;
@@ -348,7 +347,7 @@ public class ForkJoinPool {
         long sum = 0;
         for (int i = 0; i < workers.length; ++i) {
             Worker t = workers[i];
-            if (t != null) 
+            if (t != null)
                 sum += t.stealCount;
         }
         return sum;
@@ -553,7 +552,7 @@ public class ForkJoinPool {
             return futureResult(t);
         }
 
-        public T get(long timeout, TimeUnit unit) 
+        public T get(long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
             final ForkJoinTask<T> t = this.task;
             if (!t.isDone()) {
@@ -692,10 +691,10 @@ public class ForkJoinPool {
     }
 
     /**
-     * Returns a job to run, or null if none available. Called
-     * only from main worker run-loop.
+     * Returns a job to run, or null if none available.
+     * @param w calling worker
      */
-    final ForkJoinTask<?> getJob() {
+    final ForkJoinTask<?> getJob(Worker w) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -703,6 +702,7 @@ public class ForkJoinPool {
             if (activeJobs < maxActive) {
                 task = jobs.poll();
                 if (task == null && activeJobs == 0) {
+                    w.setIdle(); // needed for quiescence detection
                     work.await();
                     if (activeJobs < maxActive)
                         task = jobs.poll();
@@ -720,6 +720,7 @@ public class ForkJoinPool {
         }
     }
 
+
     /**
      * Termination callback from dying worker.
      */
@@ -729,7 +730,7 @@ public class ForkJoinPool {
         try {
             if (!continueOnError)
                 tryTerminate();
-                
+
             if (runState >= STOP) {
                 if (--runningWorkers <= 0) {
                     runState = TERMINATED;
@@ -763,7 +764,7 @@ public class ForkJoinPool {
      * here uses a variant of the algorithm described in "Dynamic
      * Circular Work-Stealing Deque" by David Chase and Yossi Lev,
      * SPAA 2005. For an explanation, read the paper.
-     * http://research.sun.com/scalable/pubs/index.html The
+     * http://research.sun.com/scalable/pubs/index.html The main
      * differences here stem from ensuring that deq slots referencing
      * popped and stolen tasks are cleared. (Also. method and variable
      * names differ.)
@@ -831,26 +832,10 @@ public class ForkJoinPool {
         private long nextSlotToClean;
 
         /**
-         * Number of scans since last successfully getting a task. Is
-         * <= 0 when busy. Biased to start at -1 when getting a task
-         * to cover the interval between stealing and commencing a
-         * task. Set to 1 on startup to reflect initial idleness.
+         * Index of this worker in pool array. Needed for replacement
+         * upon uncaught exceptions.
          */
-        int idleCount;
-
-        /**
-         * Status tracking sleeps on idle scans. Normally zero,
-         * negative while sleeping, positive when awakened.
-         */
-        volatile int sleepStatus;
-
-        static final AtomicIntegerFieldUpdater<Worker> sleepStatusUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(Worker.class, "sleepStatus");
-
-        // values for sleepStatus. Order among values matters.
-        static final int AWAKE    =  0;
-        static final int SLEEPING = -1;
-        static final int WOKEN    =  1;
+        final int index;
 
         /**
          * Seed for random number generator in randomIndex
@@ -863,10 +848,18 @@ public class ForkJoinPool {
         int stealCount;
 
         /**
-         * Index of this worker in pool array. Needed for replacement
-         * upon uncaught exceptions.
+         * Number of scans since last successfully getting a task.
+         * Always zero when busy executing tasks. Incremented after a
+         * failed scan in getTask().  When maybeSleeping(scanCtl) is
+         * true, this worker sleeps for a while.
          */
-        final int index;
+        private volatile int scanCtl;
+
+        /**
+         * Updater for scanCtl to control wakeups
+         */
+        static final AtomicIntegerFieldUpdater<Worker> scanCtlUpdater =
+            AtomicIntegerFieldUpdater.newUpdater(Worker.class, "scanCtl");
 
         /**
          * Padding to avoid cache-line sharing across workers
@@ -879,20 +872,35 @@ public class ForkJoinPool {
          * be a power of two minus 1. Using short sleeps during times
          * when tasks should be available but aren't makes these
          * threads cope better with lags due to GC, dynamic
-         * compilation, and multitasking.
+         * compilation, queue resizing, and multitasking.
          */
-        private static final int SCANS_PER_SLEEP = 31;
+        private static final int SCANS_PER_SLEEP = (1 << 6) - 1;
 
         /**
          * The amount of time to sleep per empty scan. Sleep durations
          * increase only arithmetically, as a compromise between
-         * responsiveness and good citizenship.
-         * 
-         * The value here arranges that first sleep is approximately
-         * the smallest value worth context switching out for on
-         * typical platforms.
+         * responsiveness and good citizenship.  The value here
+         * arranges that first sleep is approximately the smallest
+         * value worth context switching out for on typical platforms.
          */
         private static final long SLEEP_NANOS_PER_SCAN = (1 << 16);
+
+        /**
+         * Returns true if a given scanCtl value indicates that its
+         * corresponding worker might be sleeping (or should enter a
+         * sleep).
+         */
+        private static boolean maybeSleeping(int scans) {
+            return (scans & SCANS_PER_SLEEP) == SCANS_PER_SLEEP;
+        }
+
+        /**
+         * Returns next value for scan count, avoiding negative values.
+         */
+        private static int nextScanCount(int scans) {
+            int s = scans + 1;
+            return s < 0? 1 : s;
+        }
 
         /**
          * Creates new Worker.
@@ -901,10 +909,9 @@ public class ForkJoinPool {
             this.pool = pool;
             this.index = index;
             this.randomSeed =  index ^ (int)System.nanoTime();
-            this.idleCount = 1;
             setDaemon(true);
         }
-        
+
         /**
          * Main run loop
          */
@@ -914,9 +921,7 @@ public class ForkJoinPool {
                     tasks = new ForkJoinTask<?>[INITIAL_CAPACITY];
                 while (!pool.isStopped()) {
                     ForkJoinTask<?> task = popTask();
-                    if (task != null)
-                        idleCount = -1;
-                    else
+                    if (task == null)
                         task = getTask(true);
                     if (task != null)
                         task.exec();
@@ -945,10 +950,14 @@ public class ForkJoinPool {
             return base >= sp;
         }
 
-        boolean isActive() { 
-            return base < sp || idleCount <= 0;
+        boolean isActive() {
+            return base < sp || scanCtl == 0;
         }
 
+        void setIdle() {
+            if (scanCtl == 0)
+                scanCtl = 1;
+        }
 
         /**
          * Pushes a task. Called only by current thread.
@@ -985,14 +994,17 @@ public class ForkJoinPool {
             if (newSize > MAXIMUM_CAPACITY)
                 throw new Error("Work queue capacity exceeded");
             ForkJoinTask<?>[] newArray = new ForkJoinTask<?>[newSize];
+            int newMask = newSize - 1;
             long s = sp;
+            newArray[((int)s) & newMask] = x;
             if (oldArray != null) {
+                int oldMask = oldSize - 1;
                 for (long i = nextSlotToClean = base; i < s; ++i) {
-                    int k = ((int)i) & (newSize-1);
-                    newArray[k] = oldArray[k & (oldSize-1)];
+                    newArray[((int)i) & newMask] =
+                        oldArray[((int)i) & oldMask];
                 }
             }
-            newArray[((int)s) & (newSize-1)] = x;
+            sp = s; // need volatile write here just to force ordering
             tasks = newArray;
             sp = s + 1;
         }
@@ -1052,11 +1064,13 @@ public class ForkJoinPool {
 
         /**
          * Takes a task from the base of the queue.  Always called by
-         * other non-owning threads.
-         * @param retry if true, retry on contention, else return null
+         * other non-owning threads. Retries upon contention.
+         *
+         * Currently used only for cancellation -- getTask embeds a
+         * variant with better contention control for other uses..
          * @return a task, or null if none
          */
-        private ForkJoinTask<?> stealTask(boolean retry) {
+        private ForkJoinTask<?> stealTask() {
             for (;;) {
                 long b = base;
                 if (b >= sp)
@@ -1068,112 +1082,113 @@ public class ForkJoinPool {
                 if (x != null &&
                     baseUpdater.compareAndSet(this, b, b+1))
                     return x;
-                if (!retry)
-                    return null;
             }
         }
 
-
         /**
-         * Tries to get a non-local task, stealing from other queues
-         * and/or pool submission queue. 
-         * @param mainLoop true if should get task from pool if no
-         * steals are available
-         * @return a task, or null if none are available.
+         * Steal a task or get one from submission queue.
+         * @param inMainLoop true if should try submission queue
+         * @return a task or null if none
          */
-        private ForkJoinTask<?> getTask(boolean mainLoop) {
+        private ForkJoinTask<?> getTask(boolean inMainLoop) {
             clearStolenSlots(); // first, clean up
-            if (++idleCount < 0)
-                idleCount = 1;
 
             /*
-             * Scan through workers array twice starting at random
-             * index. The first pass skips over those for which
-             * stealTask reports contention. The second retries steals
-             * even under contention.
-             *
-             * While traversing, the first failed attempted steal for
-             * which the attempted victim is sleeping is recorded. If
-             * a task is found in some other queue, and that queue
-             * appears to have more tasks, that sleeper is woken up.
-             * This propagates wakeups across workers when new work
-             * becomes available to a set of otherwise idle threads.
+             * Scan through all workers starting at random index. If
+             * any attempted steal fails due to apparent contention,
+             * rescan all workers starting at a new random
+             * index. While traversing, the first failed attempted
+             * steal for which the attempted victim is apparently
+             * sleeping is recorded. If a task is found in some other
+             * queue, and that queue appears to have more tasks, that
+             * sleeper is woken up.  This propagates wakeups across
+             * workers when new work becomes available to a set of
+             * otherwise idle threads (Workers sleep here only if
+             * there is not enough parallelism to keep them busy. They
+             * block on input queue when there are no jobs.)
              */
+            Worker sleeper = null;
             Worker[] workers = pool.getWorkers();
             int n = workers.length;
-            int idx = randomIndex(n);
-            int origin = idx;
-            Worker sleeper = null;
-            boolean retry = false; // first pass skips on contention
-
-            for (;;) {
-                Worker victim = workers[idx];
-                if (victim != null && victim != this) {
-                    ForkJoinTask<?> task = victim.stealTask(retry);
-                    if (task == null) {
-                        if (sleeper == null && // first sleeping worker
-                            victim.sleepStatus == SLEEPING)
-                            sleeper = victim; 
-                    }
-                    else {
-                        idleCount = -1;
-                        ++stealCount;
-                        if (sleeper != null && !victim.queueIsEmpty())
-                            sleeper.wakeup();
-                        return task;
-                    }
-                }
-                if (++idx >= n)
+            int idx = -1;          // force randomIndex call below
+            int remaining = n;     // number of workers to be scanned
+            while (remaining-- > 0) {
+                if (idx < 0)
+                    idx = randomIndex(n);
+                else if (++idx >= n)
                     idx = 0;
-                if (idx == origin) {
-                    if (!retry)
-                        retry = true;
-                    else 
-                        break;
+                Worker v = workers[idx];
+                if (v != null && v != this) {
+                    long b = v.base;
+                    ForkJoinTask<?>[] array;
+                    if (b < v.sp && (array = v.tasks) != null) {
+                        int k = ((int)b) & (array.length-1);
+                        ForkJoinTask<?> task = array[k];
+                        if (task != null &&
+                            baseUpdater.compareAndSet(v, b, b+1)) {
+                            ++stealCount;
+                            scanCtl = 0;
+                            if (sleeper != null && v.base < v.sp)
+                                sleeper.wakeup();
+                            return task;
+                        }
+                        idx = -1;
+                        remaining = n; // apparent contention
+                    }
+                    else if (sleeper == null &&
+                             maybeSleeping(v.scanCtl))
+                        sleeper = v;
                 }
             }
-            
-            if (mainLoop) 
-                return getTaskFromPool(sleeper);
-            else
-                return null;
-        }
 
-        /**
-         * Try to get a task from pool. On failure, possibly sleep.
-         * On success, try to wake up some other sleeping worker.
-         * @param sleeper a worker noticed to be sleeping while scanning
-         */
-        private ForkJoinTask<?> getTaskFromPool(Worker sleeper) {
-            ForkJoinTask<?> job = pool.getJob();
-            if (job != null) {
-                idleCount = -1;
-                if (sleeper != null)
-                    sleeper.wakeup();
-                return job;
-            }
-            int scans = idleCount + 1;
-            if ((scans & SCANS_PER_SLEEP) == 0) {
-                if (sleepStatus == AWAKE &&
-                    sleepStatusUpdater.compareAndSet(this, AWAKE, SLEEPING)){
-                    LockSupport.parkNanos(scans * SLEEP_NANOS_PER_SCAN);
-                    if (sleepStatus == WOKEN) // reset count on wakeup
-                        idleCount = 1;
+            /*
+             * If in main loop, check submission queue
+             */
+            if (inMainLoop) {
+                ForkJoinTask<?> job = pool.getJob(this);
+                if (job != null) {
+                    scanCtl = 0;
+                    if (sleeper != null)
+                        sleeper.wakeup();
+                    return job;
                 }
-                sleepStatus = AWAKE;
             }
+
+            /*
+             * Adjust scanCtl count and possibly sleep or yield
+             * after failing to find work
+             */
+            int scans = nextScanCount(scanCtl);
+            if (maybeSleeping(scans)) {
+                int next = nextScanCount(scans);
+                if (inMainLoop) {
+                    scanCtl = scans;
+                    LockSupport.parkNanos(scans * SLEEP_NANOS_PER_SCAN);
+                    scanCtl = next; // OK to unconditionally set here
+                }
+                else { // skip over sleep state
+                    scanCtl = next;
+                    Thread.yield();
+                }
+            }
+            else
+                scanCtl = scans;
+
             return null;
         }
+
 
         /**
          * Wake up if sleeping waiting for work
          */
         private void wakeup() {
-            if (sleepStatus == SLEEPING && 
-                sleepStatusUpdater.compareAndSet(this, SLEEPING, WOKEN))
+            int scans = scanCtl;
+            if (maybeSleeping(scans) &&
+                scanCtlUpdater.compareAndSet(this, scans,
+                                             nextScanCount(scans)))
                 LockSupport.unpark(this);
         }
-            
+
         /**
          * Returns a random index for choosing thread to steal from.
          * This doesn't need to be a high quality generator.  So it
@@ -1214,14 +1229,13 @@ public class ForkJoinPool {
             }
         }
 
-
         /*
          * Remove (via steal) and cancel all tasks in queue.
          * Called from pool only during shutdown.
          */
         void cancelTasks() {
             while (!queueIsEmpty()) {
-                ForkJoinTask<?> t = stealTask(true);
+                ForkJoinTask<?> t = stealTask();
                 if (t != null)
                     t.cancel();
             }
@@ -1248,7 +1262,7 @@ public class ForkJoinPool {
         void helpUntilQuiescent() {
             for (;;) {
                 ForkJoinTask<?> t = popTask();
-                if (t == null) 
+                if (t == null)
                     t = getTask(false);
                 if (t != null)
                     t.exec();
@@ -1271,7 +1285,6 @@ public class ForkJoinPool {
                     return joinMe.getException();
             }
         }
-
 
         /**
          * Version of join for void actions
@@ -1322,27 +1335,6 @@ public class ForkJoinPool {
                     if (p != phase) { // if barrier advanced
                         pushTask(t);  // push task and exit
                         return p;
-                    }
-                    else
-                        t.exec();
-                }
-            }
-        }
-
-        /**
-         * Variant of helpUntilBarrierAdvance for termination
-         */
-        final void helpUntilBarrierTermination(TaskBarrier b) {
-            for (;;) {
-                if (b.getCycle() < 0)
-                    return;
-                ForkJoinTask<?> t = popTask();
-                if (t == null)
-                    t = getTask(false);
-                if (t != null) {
-                    if (b.getCycle() < 0) { 
-                        pushTask(t);
-                        return;
                     }
                     else
                         t.exec();

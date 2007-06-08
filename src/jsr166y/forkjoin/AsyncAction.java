@@ -125,7 +125,7 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Returns this task's parentor null if none.
+     * Returns this task's parent, or null if none.
      * @return this task's parent, or null if none.
      */
     public AsyncAction getParent() { 
@@ -216,9 +216,23 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         return join();
     }
 
-    public final void reinitialize() {
-        pendingCount = 0;
+    public void reinitialize() {
         super.reinitialize();
+        pendingCount = 0;
+    }
+
+    /**
+     * Reinitialize with the given parent, optionally registering.
+     * @param parent the parent task, or null if none
+     * @param register true if parent must wait for this task
+     * to complete before it completes
+     */
+    public void reinitialize(AsyncAction parent, boolean register) {
+        super.reinitialize();
+        pendingCount = 0;
+        this.parent = parent;
+        if (parent != null && register) 
+            pendingCountUpdater.incrementAndGet(parent);
     }
 
 }

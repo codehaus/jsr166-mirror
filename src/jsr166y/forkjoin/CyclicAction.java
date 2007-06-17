@@ -52,7 +52,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
         TaskBarrier b = barrier;
         RuntimeException ex = exception;
         if (ex != null) {
-            if (status == 0)
+            if (status >= 0)
                 b.arriveAndDeregister();
             return setDone();
         }

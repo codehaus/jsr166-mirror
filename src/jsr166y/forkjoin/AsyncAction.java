@@ -66,14 +66,14 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     /**
      * Parent to notify on completion
      */
-    AsyncAction parent;
+    private AsyncAction parent;
 
     /**
      * Count of outstanding subtask joins
      */
-    volatile int pendingCount;
+    private volatile int pendingCount;
 
-    static final AtomicIntegerFieldUpdater<AsyncAction> pendingCountUpdater =
+    private static final AtomicIntegerFieldUpdater<AsyncAction> pendingCountUpdater =
         AtomicIntegerFieldUpdater.newUpdater(AsyncAction.class, "pendingCount");
 
     /**
@@ -143,18 +143,14 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     /**
      * If pending completion count is zero, invokes
      * <tt>onCompletion</tt>, then causes this task to be joinable
-     * (<tt>idDone</tt> bcomes true), and then recursively applies to
+     * (<tt>isDone</tt> becomes true), and then recursively applies to
      * this tasks's parent
      */
     public final void finish() {
         AsyncAction a = this;
-        for (;;) {
+        while (a != null) {
             int c = a.pendingCount;
-            if (c > 0) {
-                if (pendingCountUpdater.compareAndSet(a, c, c-1))
-                    return;
-            }
-            else {
+            if (c == 0) {
                 try {
                     a.onCompletion();
                 } catch (RuntimeException rex) {
@@ -163,9 +159,9 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
                 } 
                 a.setDone();
                 a = a.parent;
-                if (a == null)
-                    return;
             }
+            else if (pendingCountUpdater.compareAndSet(a, c, c-1))
+                return;
         }
     }
 
@@ -212,8 +208,8 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     }
 
     public final Void invoke() {
-        fork();
-        return join();
+        exec();
+        return ((ForkJoinPool.Worker)(Thread.currentThread())).joinAction(this);
     }
 
     public void reinitialize() {

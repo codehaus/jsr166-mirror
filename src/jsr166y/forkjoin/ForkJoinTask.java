@@ -78,12 +78,12 @@ public abstract class ForkJoinTask<V> {
     volatile RuntimeException exception;
 
     /**
-     * Status becoming positive when task completes normally.  While
+     * Status becoming negative when task completes normally.  While
      * it is treated only as a boolean, it is declared as an int to
      * simplify future extensions.  When a computation proceeds
      * normally (i.e., not via exceptions or cancellation), the
      * "status" is set nonzero.  So a task is considered completed if
-     * either the exception is non-null or status is positive; and
+     * either the exception is non-null or status is negative; and
      * must always be checked in that order. This avoids requiring
      * volatile reads and writes for other fields. Even though
      * according to the JMM, writes to status (or other per-task
@@ -107,8 +107,14 @@ public abstract class ForkJoinTask<V> {
      */
     final RuntimeException setDone() {
         RuntimeException ex = exception;
-        status = 1;
+        status = -1;
         return ex;
+    }
+
+    static final int STOLEN = 1;
+
+    final void setStolen() {
+        status = STOLEN;
     }
 
     /**
@@ -139,7 +145,7 @@ public abstract class ForkJoinTask<V> {
      * completed (or has been cancelled).
      */
     public final boolean isDone() {
-        return exception != null || status > 0;
+        return exception != null || status < 0;
     }
 
     /**
@@ -162,6 +168,8 @@ public abstract class ForkJoinTask<V> {
      */
     public final void cancel() {
         casException(new CancellationException());
+        if (this instanceof Future<?>) // propagate for external submissions
+            ((Future<?>)this).cancel(false);
     }
 
     /**
@@ -289,10 +297,22 @@ public abstract class ForkJoinTask<V> {
      * a large number of subtasks. Rather than joining them all
      * one-by-one, you can help execute them until all have
      * completed. However, this applies only if you are sure that no
-     * other tasks have been submitted to the pool.
+     * other tasks have been submitted to the pool. See
+     * {@link ForkJoinPool.setMaximumActiveSubmissionCount}.
      */
     public final void helpUntilQuiescent() {
         ((ForkJoinPool.Worker)(Thread.currentThread())).helpUntilQuiescent();
+    }
+
+    /**
+     * Returns true if this task was stolen from some other worker in the 
+     * pool and has not yet completed. This method should be called
+     * only by the thread currently executing this task. The results
+     * of calling this method in any other context are undefined.
+     * @return true is this task is stolen
+     */
+    public final boolean isStolen() {
+        return status == STOLEN;
     }
 
     /**
@@ -303,6 +323,18 @@ public abstract class ForkJoinTask<V> {
      */ 
     public static <T> Future<T> submit(ForkJoinTask<T> task) {
         return getPool().submit(task);
+    }
+
+    /**
+     * Cancels all tasks that are currently held in any worker
+     * thread's local queues. This method may be useful for bulk
+     * cancellation of a set of tasks that may terminate when any one
+     * of them finds a solution. However, this applies only if you are
+     * sure that no other tasks have been submitted to the pool. See
+     * {@link ForkJoinPool.setMaximumActiveSubmissionCount}.
+     */
+    public final void cancelAllQueuedTasks() {
+        ((ForkJoinPool.Worker)(Thread.currentThread())).cancelCurrentTasks();
     }
 
 }

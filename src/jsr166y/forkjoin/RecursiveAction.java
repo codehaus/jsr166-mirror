@@ -11,8 +11,8 @@ import java.util.concurrent.atomic.*;
 
 /**
  * Recursive resultless ForkJoinTasks. To maintain conformance with
- * other classes in this framework, they are paramterized as
- * <tt>Void</tt> ForkJoinTasks, and return <tt>null</tt> as
+ * other classes in this framework, RecursiveActions are parameterized
+ * as <tt>Void</tt> ForkJoinTasks, and return <tt>null</tt> as
  * results. But for simplicity and efficiency, the <tt>compute</tt>
  * method and related methods use <tt>void</tt>.  RecursiveActions
  * normally proceed via parallel divide and conquer; very often using
@@ -42,10 +42,7 @@ import java.util.concurrent.atomic.*;
  * </pre>
  *
  * You could then sort anArray by creating <tt> new SortTask(anArray, 0,
- * anArray.length-1) </tt> and invoking it in a ForkJoinPool. Notice
- * that like many kinds of tasks, these don't return interesting
- * values (but instead process independent parts of a common array), so
- * use Void as a type parameter and return null.
+ * anArray.length-1) </tt> and invoking it in a ForkJoinPool. 
  *
  * <p>RecursiveActions need not be fully recursive, so long as they
  * maintain the basic divide-and-conquer approach. For example, here
@@ -53,13 +50,13 @@ import java.util.concurrent.atomic.*;
  * by subdividing out only the right-hand-sides of repeated divisions
  * by two, and keeping track of them with a chain of <tt>next</tt>
  * references. It uses a common rule of thumb for granularity
- * settings, corresponding to about three times as many base tasks as
+ * settings, corresponding to about four times as many base tasks as
  * there are threads in the pool.
  *
  * <pre>
  * double sumOfSquares(ForkJoinPool pool, double[] array) {
  *   int n = array.length;
- *   int seqSize = 1 + n / (3 * pool.getPoolSize() - 2);
+ *   int seqSize = 1 + n / (4 * pool.getPoolSize() - 3);
  *   Applier a = new Applier(array, 0, n-1, seqSize, null);
  *   pool.invoke(a);
  *   return a.result;

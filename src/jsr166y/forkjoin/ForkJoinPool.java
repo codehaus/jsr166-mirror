@@ -34,6 +34,11 @@ public class ForkJoinPool {
      */
 
     /**
+     * Pool number generator, just for assigning thread names.
+     */
+    static final AtomicInteger poolNumberGenerator = new AtomicInteger();
+
+    /**
      * Main lock protecting access to threads and run state. You might
      * think that having a single lock and condition here wouldn't
      * work so well. But serializing the starting and stopping of
@@ -125,6 +130,10 @@ public class ForkJoinPool {
      */
     volatile int sleepingWorkers;
 
+    /**
+     * Pool number, just for assigning names
+     */
+    final int poolNumber;
 
     /**
      * The number of times to scan for tasks before
@@ -169,6 +178,7 @@ public class ForkJoinPool {
      */
     public ForkJoinPool(int poolSize) {
         if (poolSize <= 0) throw new IllegalArgumentException();
+        poolNumber = poolNumberGenerator.incrementAndGet();
         maxActive = poolSize;
         workers = new Worker[poolSize];
         lock.lock();
@@ -245,7 +255,7 @@ public class ForkJoinPool {
      * but instead cause threads to die, invoking the handler, and
      * then acting in accord with the given error policy. Because
      * aborted threads can cause tasks to never properly be joined, it
-     * is may be in some cases be preferable to install a handler to
+     * may be in some cases be preferable to install a handler to
      * terminate the program or perform other program-wide recovery.
      * Unless set, the current default or ThreadGroup handler is used
      * as handler.
@@ -898,19 +908,19 @@ public class ForkJoinPool {
          * alternatively be lazily allocated (see growAndPushTask)
          * and/or disposed of when empty.
          */
-        private ForkJoinTask<?>[] tasks;
+        private ForkJoinTask<?>[] queue;
 
         private static final int INITIAL_CAPACITY = 1 << 13;
         private static final int MAXIMUM_CAPACITY = 1 << 30;
 
         /**
-         * Index (mod tasks.length) of least valid slot, which
+         * Index (mod queue.length) of least valid slot, which
          * is always the next position to steal from if nonempty.
          */
         private volatile long base;
 
         /**
-         * Index (mod tasks.length-1) of next position to push to
+         * Index (mod queue.length-1) of next position to push to
          * or pop from
          */
         private volatile long sp;
@@ -925,8 +935,8 @@ public class ForkJoinPool {
             AtomicLongFieldUpdater.newUpdater(Worker.class, "base");
 
         /**
-         * Index (mod tasks.length) of the next slot to null
-         * out. Tasks slots stolen by other threads cannot be safely
+         * Index (mod queue.length) of the next slot to null
+         * out. Queue slots stolen by other threads cannot be safely
          * nulled out by them. Instead, they are cleared by owning
          * thread whenever queue is empty.
          */
@@ -941,7 +951,7 @@ public class ForkJoinPool {
         /**
          * Seed for random number generator in randomIndex
          */
-        private int randomSeed;
+        private long randomSeed;
 
         /**
          * Number of steals
@@ -950,7 +960,7 @@ public class ForkJoinPool {
 
         /**
          * Number of scans since last successfully getting a task.
-         * Always zero when busy executing tasks. Incremented after a
+         * Always zero when busy executing queue. Incremented after a
          * failed scan in scanForTask(), to help control sleeps.
          * inside Pool.getJob
          */
@@ -1017,14 +1027,20 @@ public class ForkJoinPool {
             return base >= sp;
         }
 
+        int getIndex() {
+            return index;
+        }
+
         /**
          * Creates new Worker.
          */
         Worker(ForkJoinPool pool, int index) {
+            super("ForkJoinPool-" + pool.poolNumber + "-worker-" + index);
             this.pool = pool;
             this.index = index;
             this.idleCount = 1;
-            this.randomSeed =  index ^ (int)System.nanoTime();
+            long r = index ^ System.nanoTime();
+            this.randomSeed = (r == 0)? 1 : r; 
             setDaemon(true);
         }
 
@@ -1033,8 +1049,8 @@ public class ForkJoinPool {
          */
         public void run() {
             try {
-                if (tasks == null) // lazily initialize array
-                    tasks = new ForkJoinTask<?>[INITIAL_CAPACITY];
+                if (queue == null) // lazily initialize array
+                    queue = new ForkJoinTask<?>[INITIAL_CAPACITY];
                 while (!pool.isStopped()) {
                     ForkJoinTask<?> task = popTask();
                     if (task == null)
@@ -1054,12 +1070,12 @@ public class ForkJoinPool {
          * @param x the task
          */
         void pushTask(ForkJoinTask<?> x) {
-            ForkJoinTask<?>[] array = tasks;
-            if (array != null) {
-                int mask = array.length - 1;
+            ForkJoinTask<?>[] q = queue;
+            if (q != null) {
+                int mask = q.length - 1;
                 long s = sp;
                 if (s - base < mask) {
-                    array[((int)s) & mask] = x;
+                    q[((int)s) & mask] = x;
                     sp = s + 1;
                     return;
                 }
@@ -1074,28 +1090,26 @@ public class ForkJoinPool {
         private void growAndPushTask(ForkJoinTask<?> x) {
             int oldSize = 0;
             int newSize = 0;
-            ForkJoinTask<?>[] oldArray = tasks;
-            if (oldArray != null) {
-                oldSize = oldArray.length;
+            ForkJoinTask<?>[] oldQ = queue;
+            if (oldQ != null) {
+                oldSize = oldQ.length;
                 newSize = oldSize << 1;
             }
             if (newSize < INITIAL_CAPACITY)
                 newSize = INITIAL_CAPACITY;
             if (newSize > MAXIMUM_CAPACITY)
                 throw new Error("Queue capacity exceeded");
-            ForkJoinTask<?>[] newArray = new ForkJoinTask<?>[newSize];
+            ForkJoinTask<?>[] newQ = new ForkJoinTask<?>[newSize];
             int newMask = newSize - 1;
             long s = sp;
-            newArray[((int)s) & newMask] = x;
-            if (oldArray != null) {
+            newQ[((int)s) & newMask] = x;
+            if (oldQ != null) {
                 int oldMask = oldSize - 1;
-                for (long i = nextSlotToClean = base; i < s; ++i) {
-                    newArray[((int)i) & newMask] =
-                        oldArray[((int)i) & oldMask];
-                }
+                for (long i = nextSlotToClean = base; i < s; ++i)
+                    newQ[((int)i) & newMask] = oldQ[((int)i) & oldMask];
             }
             sp = s; // need volatile write here just to force ordering
-            tasks = newArray;
+            queue = newQ;
             sp = s + 1;
         }
 
@@ -1105,14 +1119,14 @@ public class ForkJoinPool {
          */
         private ForkJoinTask<?> popTask() {
             ForkJoinTask<?> x = null;
-            ForkJoinTask<?>[] array = tasks;
-            if (array != null) {
+            ForkJoinTask<?>[] q = queue;
+            if (q != null) {
                 long s = sp - 1;
-                int idx = ((int)s) & (array.length-1);
-                x = array[idx];
+                int idx = ((int)s) & (q.length-1);
+                x = q[idx];
                 if (x != null) {
                     sp = s;
-                    array[idx] = null; // always OK to clear slot here
+                    q[idx] = null; // always OK to clear slot here
                     long b = base;
                     if (s <= b) {
                         if (s < b || // note b++ side effect
@@ -1133,12 +1147,12 @@ public class ForkJoinPool {
         private boolean popIfEq(ForkJoinTask<?> task) {
             boolean popped = false;
             long s = sp - 1;
-            ForkJoinTask<?>[] array = tasks;
-            if (array != null) {
-                int idx = ((int)s) & (array.length-1);
-                if (array[idx] == task) {
+            ForkJoinTask<?>[] q = queue;
+            if (q != null) {
+                int idx = ((int)s) & (q.length-1);
+                if (q[idx] == task) {
                     sp = s;
-                    array[idx] = null;
+                    q[idx] = null;
                     long b = base;
                     if (s <= b) {
                         popped = (s == b &&
@@ -1153,26 +1167,23 @@ public class ForkJoinPool {
         }
 
         /**
-         * Takes a task from the base of the queue.  Always called by
-         * other non-owning threads. Retries upon contention.
+         * Tries to take a task from the base of the queue.  Always
+         * called by other non-owning threads. Fails upon contention.
          *
-         * Currently used only for cancellation -- scanForTask embeds a
-         * variant with better contention control for other cases.
+         * Currently used only for cancellation -- scanForTask embeds
+         * a variant with contention control for other cases.
          * @return a task, or null if none
          */
-        private ForkJoinTask<?> stealTask() {
-            for (;;) {
-                long b = base;
-                if (b >= sp)
-                    return null;
-                ForkJoinTask<?>[] array = tasks;
-                if (array == null)
-                    return null;
-                ForkJoinTask<?> x = array[((int)b) & (array.length-1)];
+        private ForkJoinTask<?> tryStealTask() {
+            ForkJoinTask<?>[] q;
+            long b = base;
+            if (b < sp && (q = queue) != null) {
+                ForkJoinTask<?> x = q[((int)b) & (q.length-1)];
                 if (x != null &&
                     baseUpdater.compareAndSet(this, b, b+1))
                     return x;
             }
+            return null;
         }
 
         /**
@@ -1185,7 +1196,7 @@ public class ForkJoinPool {
         private ForkJoinTask<?> scanForTask() {
             clearStolenSlots();    // first, clean up
             Worker[] workers = pool.getWorkers();
-            int n = workers.length;
+            final int n = workers.length;
             int idx = -1;          // force randomIndex call below
             int remaining = n;     // number of workers to be scanned
             while (remaining-- > 0) {
@@ -1196,18 +1207,17 @@ public class ForkJoinPool {
                 Worker v = workers[idx];
                 if (v != null && v != this) {
                     long b = v.base;
-                    ForkJoinTask<?>[] array;
-                    if (b < v.sp && (array = v.tasks) != null) {
-                        clearIdleCount(); // must clear even if fail below
-                        int k = ((int)b) & (array.length-1);
-                        ForkJoinTask<?> task = array[k];
-                        if (task != null &&
+                    ForkJoinTask<?>[] q;
+                    if (b < v.sp && (q = v.queue) != null) {
+                        clearIdleCount(); // must clear even if fail CAS
+                        ForkJoinTask<?> t = q[((int)b) & (q.length-1)];
+                        if (t != null &&
                             baseUpdater.compareAndSet(v, b, b+1)) {
                             if (pool.sleepingWorkers > 0)
                                 pool.wakeupSleeper(v);
                             ++stealCount;
-                            task.setStolen();
-                            return task;
+                            t.setStolen();
+                            return t;
                         }
                         idx = -1;
                         remaining = n; // apparent contention
@@ -1224,14 +1234,14 @@ public class ForkJoinPool {
          * isn't -- it uses a simple Marsaglia xorshift.
          */
         private int randomIndex(int n) {
-            int rand = randomSeed;
+            long rand = randomSeed;
             rand ^= rand << 13;
-            rand ^= rand >>> 17;
-            randomSeed = rand ^= rand << 5;
+            rand ^= rand >>> 7;
+            randomSeed = rand ^= rand << 17;
             if ((n & (n-1)) == 0) // avoid "%"
-                return rand & (n-1);
+                return (int)(rand & (n-1));
             else
-                return (rand & 0x7fffffff) % n;
+                return ((int)(rand & 0x7fffffff)) % n;
         }
 
         /**
@@ -1244,14 +1254,14 @@ public class ForkJoinPool {
                 long i = nextSlotToClean;
                 if (i < b) {
                     nextSlotToClean = b;
-                    ForkJoinTask<?>[] array = tasks;
-                    if (array != null) {
+                    ForkJoinTask<?>[] q = queue;
+                    if (q != null) {
                         // Due to wraparounds, we might clear some
                         // slots multiple times. But this is not
                         // common enough to bother dealing with.
-                        int mask = array.length - 1;
+                        int mask = q.length - 1;
                         do {
-                            array[((int)(i)) & mask] = null;
+                            q[((int)(i)) & mask] = null;
                         } while (++i < b);
                     }
                 }
@@ -1264,7 +1274,7 @@ public class ForkJoinPool {
          */
         void cancelTasks() {
             while (!queueIsEmpty()) {
-                ForkJoinTask<?> t = stealTask();
+                ForkJoinTask<?> t = tryStealTask();
                 if (t != null) 
                     t.cancel();
             }
@@ -1274,9 +1284,11 @@ public class ForkJoinPool {
          * Pop and cancel all tasks in this thread's queue
          */
         void cancelLocalTasks() {
-            ForkJoinTask<?> t;
-            while ((t = popTask()) != null)
-                t.cancel();
+            while (!queueIsEmpty()) {
+                ForkJoinTask<?> t = popTask();
+                if (t != null) 
+                    t.cancel();
+            }
             clearStolenSlots();
         }
 
@@ -1301,21 +1313,6 @@ public class ForkJoinPool {
                 return false;
             t.exec();
             return true;
-        }
-
-        /**
-         * Implements ForkJoinTask.helpUntilQuiescent
-         */
-        void helpUntilQuiescent() {
-            for (;;) {
-                ForkJoinTask<?> t = popTask();
-                if (t == null)
-                    t = scanForTask();
-                if (t != null)
-                    t.exec();
-                else if (pool.isQuiescent()) 
-                    return;
-            }
         }
 
         /**

@@ -280,8 +280,11 @@ public abstract class ForkJoinTask<V> {
      * Helps this program complete by processing a ready task, if one
      * is available.  This method may be useful when several tasks are
      * forked, and only one of them must be joined, as in: <code>while
-     * (!t1.isDone() &amp;&amp; !t2.isDone()) help();</code> This
-     * method may be invoked only from within other ForkJoinTask
+     * (!t1.isDone() &amp;&amp; !t2.isDone()) help();</code>. 
+     * Similarly, you can process tasks until a computation
+     * completes via <tt>while(help() || !getPool.isQuiescent()) ;<tt>.
+     *
+     * This method may be invoked only from within other ForkJoinTask
      * computations. Attempts to invoke in other contexts result in
      * exceptions or errors including ClassCastException.
      * @return true if a task was run; a false return indicates
@@ -289,19 +292,6 @@ public abstract class ForkJoinTask<V> {
      */
     public final boolean help() {
         return ((ForkJoinPool.Worker)(Thread.currentThread())).help();
-    }
-
-    /**
-     * Helps execute ready tasks until none are available in the pool.
-     * This method may be useful when a top-level submitted task forks
-     * a large number of subtasks. Rather than joining them all
-     * one-by-one, you can help execute them until all have
-     * completed. However, this applies only if you are sure that no
-     * other tasks have been submitted to the pool. See
-     * {@link ForkJoinPool.setMaximumActiveSubmissionCount}.
-     */
-    public final void helpUntilQuiescent() {
-        ((ForkJoinPool.Worker)(Thread.currentThread())).helpUntilQuiescent();
     }
 
     /**
@@ -313,6 +303,21 @@ public abstract class ForkJoinTask<V> {
      */
     public final boolean isStolen() {
         return status == STOLEN;
+    }
+
+    /**
+     * Returns the index number of the current worker in its pool.
+     * The return value is in the range
+     * <tt>[0..getPool().getPoolSize()-1</tt>.  This method may be
+     * useful for applications that track status or collect results
+     * per-worker rather than per-task.
+     * This method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result
+     * in exceptions or errors including ClassCastException.
+     * @return the index number.
+     */
+    public static int getWorkerIndex() {
+        return ((ForkJoinPool.Worker)(Thread.currentThread())).getIndex();
     }
 
     /**
@@ -331,7 +336,7 @@ public abstract class ForkJoinTask<V> {
      * cancellation of a set of tasks that may terminate when any one
      * of them finds a solution. However, this applies only if you are
      * sure that no other tasks have been submitted to the pool. See
-     * {@link ForkJoinPool.setMaximumActiveSubmissionCount}.
+     * {@link ForkJoinPool#setMaximumActiveSubmissionCount}.
      */
     public final void cancelAllQueuedTasks() {
         ((ForkJoinPool.Worker)(Thread.currentThread())).cancelCurrentTasks();

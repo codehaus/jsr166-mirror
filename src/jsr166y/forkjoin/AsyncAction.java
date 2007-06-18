@@ -31,9 +31,9 @@ import java.util.concurrent.atomic.*;
  * visits all of the nodes of a graph. The details of the graph's Node
  * and Edge classes are omitted, but we assume each node contains an
  * <tt>AtomicBoolean</tt> mark that starts out false. To execute this,
- * you would create a GraphVisitor with null parent and root
- * node, and <tt>invoke</tt> in a ForkJoinPool. Upon return, all
- * reachable nodes will have been visited.
+ * you would create a GraphVisitor for the root node with null parent,
+ * and <tt>invoke</tt> in a ForkJoinPool. Upon return, all reachable
+ * nodes will have been visited.
  * 
  * <pre>
  * class GraphVisitor extends AsyncAction {
@@ -43,12 +43,12 @@ import java.util.concurrent.atomic.*;
  *    }
  *    protected void compute() {
  *      if (node.mark.compareAndSet(false, true)) {
- *         visit(node);
  *         for (Edge e : node.edges()) {
  *            Node dest = e.getDestination();
  *            if (!dest.mark.get())
  *               new GraphVisitor(this, dest).fork();
  *         }
+ *         visit(node);
  *      }
  *      finish();
  *   }
@@ -144,7 +144,9 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      * If pending completion count is zero, invokes
      * <tt>onCompletion</tt>, then causes this task to be joinable
      * (<tt>isDone</tt> becomes true), and then recursively applies to
-     * this tasks's parent
+     * this tasks's parent. If an exception is encountered in any
+     * <tt>onCompletion</tt> invocation, that task and its ancestors
+     * <tt>finishExceptionally</tt>.
      */
     public final void finish() {
         AsyncAction a = this;

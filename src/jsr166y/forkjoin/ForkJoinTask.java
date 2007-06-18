@@ -141,6 +141,37 @@ public abstract class ForkJoinTask<V> {
     abstract RuntimeException exec();
 
     /**
+     * Arranges to asynchronously execute this task, which will later
+     * be directly or indirectly joined by the caller of this method.
+     * This method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result
+     * in exceptions or errors including ClassCastException.
+     */
+    public final void fork() {
+        ((ForkJoinPool.Worker)(Thread.currentThread())).pushTask(this);
+    }
+
+    /**
+     * Returns the result of the computation when it is ready.
+     * Monitoring note: Callers of this method need not block, but may
+     * instead assist in performing computations that may directly or
+     * indirectly cause the result to be ready.
+     * This method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result
+     * in exceptions or errors including ClassCastException.
+     *
+     * @return the computed result
+     * @throws RuntimeException if the underlying computation did so.
+     */
+    public abstract V join();
+
+    /**
+     * Equivalent in effect to the sequence <tt>fork(); join();</tt>
+     * but may be more efficient.
+     */
+    public abstract V invoke();
+
+    /**
      * Returns true if the computation performed by this task has
      * completed (or has been cancelled).
      */
@@ -171,37 +202,6 @@ public abstract class ForkJoinTask<V> {
         if (this instanceof Future<?>) // propagate for external submissions
             ((Future<?>)this).cancel(false);
     }
-
-    /**
-     * Arranges to asynchronously execute this task, which will later
-     * be directly or indirectly joined by the caller of this method.
-     * This method may be invoked only from within other ForkJoinTask
-     * computations. Attempts to invoke in other contexts result
-     * in exceptions or errors including ClassCastException.
-     */
-    public final void fork() {
-        ((ForkJoinPool.Worker)(Thread.currentThread())).pushTask(this);
-    }
-
-    /**
-     * Returns the result of the computation when it is ready.
-     * Monitoring note: Callers of this method need not block, but may
-     * instead assist in performing computations that may directly or
-     * indirectly cause the result to be ready.
-     * This method may be invoked only from within other ForkJoinTask
-     * computations. Attempts to invoke in other contexts result
-     * in exceptions or errors including ClassCastException.
-     *
-     * @return the computed result
-     * @throws RuntimeException if the underlying computation did so.
-     */
-    public abstract V join();
-
-    /**
-     * Equivalent in effect to the sequence <tt>fork(); join();</tt>
-     * but may be more efficient.
-     */
-    public abstract V invoke();
 
     /**
      * Returns the exception thrown by method <tt>compute</tt>, or a
@@ -261,28 +261,18 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Joins this task, ignoring any result or exception. This method
-     * may be useful when processing collections of tasks when some
-     * have been cancelled or otherwise known to have aborted. You can
-     * still inspect the status of an ignored task using for example,
-     * <tt>getException</tt>.
-     * This method may be invoked only from within other ForkJoinTask
-     * computations. Attempts to invoke in other contexts result
-     * in exceptions or errors including ClassCastException.
-     */
-    public final void joinAndIgnore() {
-        if (!isDone())
-            ((ForkJoinPool.Worker)(Thread.currentThread())).
-                helpWhileJoining(this);
-    }
-
-    /**
      * Helps this program complete by processing a ready task, if one
      * is available.  This method may be useful when several tasks are
-     * forked, and only one of them must be joined, as in: <code>while
-     * (!t1.isDone() &amp;&amp; !t2.isDone()) help();</code>. 
-     * Similarly, you can process tasks until a computation
-     * completes via <tt>while(help() || !getPool.isQuiescent()) ;<tt>.
+     * forked, and only one of them must be joined, as in: 
+     * <pre>
+     *   while (!t1.isDone() &amp;&amp; !t2.isDone()) help();
+     * </pre>. 
+     * Similarly, you can help process tasks until a computation
+     * completes via 
+     * <pre>
+     *   while(help() || !getPool.isQuiescent()) 
+     *      ;
+     * </pre>.
      *
      * This method may be invoked only from within other ForkJoinTask
      * computations. Attempts to invoke in other contexts result in
@@ -328,6 +318,22 @@ public abstract class ForkJoinTask<V> {
      */ 
     public static <T> Future<T> submit(ForkJoinTask<T> task) {
         return getPool().submit(task);
+    }
+
+    /**
+     * Joins this task, ignoring any result or exception. This method
+     * may be useful when processing collections of tasks when some
+     * have been cancelled or otherwise known to have aborted. You can
+     * still inspect the status of an ignored task using for example,
+     * <tt>getException</tt>.
+     * This method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result
+     * in exceptions or errors including ClassCastException.
+     */
+    public final void joinAndIgnore() {
+        if (!isDone())
+            ((ForkJoinPool.Worker)(Thread.currentThread())).
+                helpWhileJoining(this);
     }
 
     /**

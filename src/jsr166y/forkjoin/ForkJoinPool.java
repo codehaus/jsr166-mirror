@@ -292,26 +292,6 @@ public class ForkJoinPool {
     }
 
     /**
-     * Returns <tt>true</tt> if this pool has been shut down.
-     *
-     * @return <tt>true</tt> if this pool has been shut down
-     */
-    public boolean isShutdown() {
-        return runState >= SHUTDOWN;
-    }
-
-    /**
-     * Returns <tt>true</tt> if all tasks have completed following shut down.
-     * Note that <tt>isTerminated</tt> is never <tt>true</tt> unless
-     * either <tt>shutdown</tt> or <tt>shutdownNow</tt> was called first.
-     *
-     * @return <tt>true</tt> if all tasks have completed following shut down
-     */
-    public boolean isTerminated() {
-        return runState == TERMINATED;
-    }
-
-    /**
      * Initiates an orderly shutdown in which previously submitted
      * tasks are executed, but no new tasks will be accepted.
      * Invocation has no additional effect if already shut down.
@@ -344,6 +324,26 @@ public class ForkJoinPool {
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * Returns <tt>true</tt> if this pool has been shut down.
+     *
+     * @return <tt>true</tt> if this pool has been shut down
+     */
+    public boolean isShutdown() {
+        return runState >= SHUTDOWN;
+    }
+
+    /**
+     * Returns <tt>true</tt> if all tasks have completed following shut down.
+     * Note that <tt>isTerminated</tt> is never <tt>true</tt> unless
+     * either <tt>shutdown</tt> or <tt>shutdownNow</tt> was called first.
+     *
+     * @return <tt>true</tt> if all tasks have completed following shut down
+     */
+    public boolean isTerminated() {
+        return runState == TERMINATED;
     }
 
     /**

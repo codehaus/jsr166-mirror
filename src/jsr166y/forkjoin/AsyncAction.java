@@ -216,7 +216,8 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
 
     public void reinitialize() {
         super.reinitialize();
-        pendingCount = 0;
+        if (pendingCount != 0)
+            pendingCount = 0;
     }
 
     /**
@@ -227,7 +228,8 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      */
     public void reinitialize(AsyncAction parent, boolean register) {
         super.reinitialize();
-        pendingCount = 0;
+        if (pendingCount != 0)
+            pendingCount = 0;
         this.parent = parent;
         if (parent != null && register) 
             pendingCountUpdater.incrementAndGet(parent);

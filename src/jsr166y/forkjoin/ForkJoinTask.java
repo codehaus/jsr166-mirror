@@ -111,7 +111,10 @@ public abstract class ForkJoinTask<V> {
         return ex;
     }
 
-    static final int STOLEN = 1;
+    /**
+     * Status value set by ForkJoinPool stealing code
+     */
+    static final int STOLEN = (1 << 30);
 
     final void setStolen() {
         status = STOLEN;
@@ -233,7 +236,8 @@ public abstract class ForkJoinTask<V> {
      */
     public void reinitialize() {
         status = 0;
-        exception = null;
+        if (exception != null)
+            exception = null;
     }
 
     /**
@@ -270,7 +274,7 @@ public abstract class ForkJoinTask<V> {
      * Similarly, you can help process tasks until a computation
      * completes via 
      * <pre>
-     *   while(help() || !getPool.isQuiescent()) 
+     *   while(help() || !getPool().isQuiescent()) 
      *      ;
      * </pre>.
      *

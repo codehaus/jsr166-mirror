@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.*;
  * }
  * </pre>
  *
- * You could then sort anArray by creating <tt> new SortTask(anArray, 0,
+ * You could then sort anArray by creating <tt>new SortTask(anArray, 0,
  * anArray.length-1) </tt> and invoking it in a ForkJoinPool. 
  *
  * <p>RecursiveActions need not be fully recursive, so long as they
@@ -62,7 +62,7 @@ import java.util.concurrent.atomic.*;
  *   return a.result;
  * }
  *
- * class Applier extends  RecursiveAction {
+ * class Applier extends RecursiveAction {
  *   final double[] array;
  *   final int lo, hi, seqSize;
  *   int result;
@@ -72,7 +72,7 @@ import java.util.concurrent.atomic.*;
  *     this.seqSize = seqSize; this.next = next;
  *   }
  *
- *   protected Void compute() {
+ *   protected void compute() {
  *     int l = lo;
  *     int h = hi;
  *     Applier right = null;
@@ -91,7 +91,6 @@ import java.util.concurrent.atomic.*;
  *       right = right.next;
  *     }
  *     result = sum;
- *     return null;
  *   }
  * }
  * </pre>
@@ -103,6 +102,14 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * To immediately perform the computation, use <tt>invoke</tt>.
      */
     protected abstract void compute();
+
+    /**
+     * Always returns null.
+     * @return null
+     */
+    public final Void getResult() { 
+        return null; 
+    }
 
     final RuntimeException exec() {
         if (exception == null) {
@@ -127,18 +134,6 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
         if (ex != null)
             throw ex;
         return null;
-    }
-
-    public final Void join() {
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).joinAction(this);
-    }
-
-    /**
-     * Always returns null.
-     * @return null
-     */
-    public final Void getResult() { 
-        return null; 
     }
 
     /**

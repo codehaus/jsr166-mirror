@@ -68,6 +68,14 @@ public class ForkJoinPool {
     static final int TERMINATED = 3;
 
     /**
+     * Number of workers that are (probably) executing tasks.
+     * Incremented when a worker gets a task to run, and decremented
+     * when worker has no tasks and cannot find any to steal from
+     * other workers.
+     */
+    final AtomicInteger activeWorkers = new AtomicInteger();
+
+    /**
      * The pool of threads. Currently, all threads are created
      * upon construction. However, all usages of workers array
      * are prepared to see null entries, allowing alternative
@@ -112,14 +120,6 @@ public class ForkJoinPool {
      * Maximum number of active jobs allowed to run;
      */
     private int maxActive;
-
-    /**
-     * Number of workers that are (probably) executing tasks.
-     * Incremented when a worker gets a task to run, and decremented
-     * when worker has no tasks and cannot find any to steal from
-     * other workers.
-     */
-    final AtomicInteger activeWorkers = new AtomicInteger();
 
     /**
      * Number of workers that are (probably) sleeping.  Incremented
@@ -188,8 +188,7 @@ public class ForkJoinPool {
         workers = new Worker[poolSize];
         lock.lock();
         try {
-            // Ensure proper failure in case of errors creating or
-            // starting threads
+            // Create then start, to ensure proper failure in case of errors
             for (int i = 0; i < poolSize; ++i) 
                 workers[i] = new Worker(this, i);
             for (int i = 0; i < poolSize; ++i) {
@@ -1295,7 +1294,7 @@ public class ForkJoinPool {
         }
 
         /*
-         * Support for main functionality of ForkJoinTask methods.
+         * Support for other ForkJoinTask methods.
          */
 
         /**
@@ -1325,25 +1324,9 @@ public class ForkJoinPool {
         }
 
         /**
-         * Version of join for void actions
+         * Implements ForkJoinTask.join
          */
-        Void joinAction(ForkJoinTask<Void> joinMe) {
-            for (;;) {
-                RuntimeException ex = joinMe.exception;
-                if (ex != null)
-                    throw ex;
-                if (joinMe.status < 0)
-                    return null;
-                ForkJoinTask<?> t = popTask();
-                if (t != null || (t = scanForTask()) != null)
-                    t.exec();
-            }
-        }
-
-        /**
-         * Version of join for result-bearing actions
-         */
-        <T> T joinTask(RecursiveTask<T> joinMe) {
+        <T> T joinTask(ForkJoinTask<T> joinMe) {
             for (;;) {
                 RuntimeException ex = joinMe.exception;
                 if (ex != null)

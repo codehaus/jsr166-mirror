@@ -24,16 +24,18 @@ import java.util.concurrent.atomic.*;
  * constructor, and then defines a <tt>protected compute</tt> method
  * that somehow uses the control methods supplied by this base
  * class. While these methods have <tt>public</tt> access, most may
- * only be called from within other ForkJoinTasks.  The only generally
- * accessible methods are those for cancellation and status
- * checking. The only way to invoke a "main" driver task is to submit
- * it to a ForkJoinPool. Normally, once started, this will in turn
- * start other subtasks.  Nearly all of these base support methods are
- * <tt>final</tt> because their implementations are intrinsically tied
- * to the underlying lightweight task scheduling framework, and so
- * cannot in general be overridden.
+ * only be called from within other ForkJoinTasks. Attempts to invoke
+ * them in other contexts result in exceptions or errors including
+ * ClassCastException.  The only generally accessible methods are
+ * those for cancellation and status checking. The only way to invoke
+ * a "main" driver task is to submit it to a ForkJoinPool. Normally,
+ * once started, this will in turn start other subtasks.  Nearly all
+ * of these base support methods are <tt>final</tt> because their
+ * implementations are intrinsically tied to the underlying
+ * lightweight task scheduling framework, and so cannot in general be
+ * overridden.
  *
- * <p> ForkJoinTasks may play similar roles as <tt>Futures</tt> but
+ * <p> ForkJoinTasks play similar roles as <tt>Futures</tt> but
  * support a more limited range of use.  The "lightness" of
  * ForkJoinTasks is due to a set of restrictions (that are only
  * partially statically enforceable) reflecting their intended use as
@@ -45,17 +47,20 @@ import java.util.concurrent.atomic.*;
  * of cancellation is also supported).  The computation defined in the
  * <tt>compute</tt> method should not in general perform any other
  * form of blocking synchronization, should not perform IO, and should
- * be independent of other tasks. (Minor breaches of these
+ * be independent of other tasks. Minor breaches of these
  * restrictions, for example using shared output streams, may be
- * tolerable in practice.)  This is in part enforced by not permitting
- * checked exceptions to be thrown. However, ForkJoinTask computations
- * may encounter RuntimeExceptions, that are rethrown to any callers
- * attempting join them or get their values. On the other hand, Errors
- * and other unchecked Throwables are not trapped, and so will usually
- * cause ForkJoinPool threads to die and be handled using the pool's
- * UncaughtExceptionHandler.  You can also deal with Errors arising
- * within computations by catching and handling them before returning
- * from <tt>compute</tt>.
+ * tolerable in practice, but frequent use will result in poor
+ * performance, and the potential to indefinitely stall if the number
+ * of threads not waiting for external synchronization becomes
+ * exhausted. This usage restriction is in part enforced by not
+ * permitting checked exceptions to be thrown. However, ForkJoinTask
+ * computations may encounter RuntimeExceptions, that are rethrown to
+ * any callers attempting join them or get their values. On the other
+ * hand, Errors and other unchecked Throwables are not trapped, and so
+ * will usually cause ForkJoinPool threads to die and be handled using
+ * the pool's UncaughtExceptionHandler.  You can also deal with Errors
+ * arising within computations by catching and handling them before
+ * returning from <tt>compute</tt>.
  *
  * <p> Note the conventions similar to those in class Thread:
  * <tt>static</tt> methods implicitly refer to the current execution
@@ -78,27 +83,30 @@ public abstract class ForkJoinTask<V> {
     volatile RuntimeException exception;
 
     /**
-     * Status becoming negative when task completes normally.  While
-     * it is treated only as a boolean, it is declared as an int to
-     * simplify future extensions.  When a computation proceeds
-     * normally (i.e., not via exceptions or cancellation), the
-     * "status" is set nonzero.  So a task is considered completed if
-     * either the exception is non-null or status is negative; and
-     * must always be checked in that order. This avoids requiring
-     * volatile reads and writes for other fields. Even though
-     * according to the JMM, writes to status (or other per-task
-     * fields) need not be immediately visible to other threads, they
-     * must eventually be so here: They will always be visible to any
-     * stealing thread, since these reads will be fresh. In other
-     * situations, in the worst case of not being seen earlier, since
-     * Worker.getTask eventually, with probability 1, scans all other
-     * threads, any subsequent read must see any writes occuring
-     * before last volatile bookkeeping operation, which all workers
-     * must eventually perform. And on the issuing side, "status" is
-     * asserted after rechecking exception field after compute
-     * returns, which prevents premature writes.
+     * Status becoming negative when task completes normally.  When a
+     * computation completes normally (i.e., not via exceptions or
+     * cancellation), the "status" is set negative.  So a task is
+     * considered completed if either the exception is non-null or
+     * status is negative; and must always be checked in that
+     * order. (When not complete, status bits can are used for other
+     * purposes). This avoids requiring volatile reads and writes for
+     * other fields. Even though according to the JMM, writes to
+     * status (or other per-task fields) need not be immediately
+     * visible to other threads, they must eventually be so here: They
+     * will always be visible to any stealing thread, since these
+     * reads will be fresh. In other situations, in the worst case of
+     * not being seen earlier, since Worker threads eventually, with
+     * probability 1 scan all other threads, any subsequent read
+     * must see any writes occuring before last volatile bookkeeping
+     * operation, which all workers must eventually perform. And on
+     * the issuing side, "status" is asserted after rechecking
+     * exception field after compute returns, which prevents premature
+     * writes.
      */
     int status;
+
+    static final int DONE   = (1 << 31);
+    static final int STOLEN = (1 << 30);
 
     /**
      * Sets status to indicate this task is done, ensuring
@@ -107,17 +115,16 @@ public abstract class ForkJoinTask<V> {
      */
     final RuntimeException setDone() {
         RuntimeException ex = exception;
-        status = -1;
+        status = DONE;
         return ex;
     }
 
     /**
-     * Status value set by ForkJoinPool stealing code
+     * Set status field to indicate task was stolen. Set only inside
+     * Worker steal code. The bit disappears when task completes.
      */
-    static final int STOLEN = (1 << 30);
-
     final void setStolen() {
-        status = STOLEN;
+        status |= STOLEN;
     }
 
     /**
@@ -146,9 +153,12 @@ public abstract class ForkJoinTask<V> {
     /**
      * Arranges to asynchronously execute this task, which will later
      * be directly or indirectly joined by the caller of this method.
-     * This method may be invoked only from within other ForkJoinTask
-     * computations. Attempts to invoke in other contexts result
-     * in exceptions or errors including ClassCastException.
+     * While it is not necessarily enforced, it is a usage error to
+     * fork a task more than once unless it has completed and been
+     * reinitialized.  This method may be invoked only from within
+     * other ForkJoinTask computations. Attempts to invoke in other
+     * contexts result in exceptions or errors including
+     * ClassCastException.
      */
     public final void fork() {
         ((ForkJoinPool.Worker)(Thread.currentThread())).pushTask(this);
@@ -166,7 +176,9 @@ public abstract class ForkJoinTask<V> {
      * @return the computed result
      * @throws RuntimeException if the underlying computation did so.
      */
-    public abstract V join();
+    public final V join() {
+        return ((ForkJoinPool.Worker)(Thread.currentThread())).joinTask(this);
+    }
 
     /**
      * Equivalent in effect to the sequence <tt>fork(); join();</tt>
@@ -227,12 +239,12 @@ public abstract class ForkJoinTask<V> {
 
     /**
      * Resets the internal bookkeeping state of this task. This method
-     * allows repeated reuse of this task, but only when reuse occurs
-     * after the ultimate parent of this task, initially submitted to
-     * a <tt>ForkJoinPool</tt>, is known to have completed. Effects
-     * under any other usage conditions are not guaranteed, and are
-     * almost surely wrong. This method may be useful when repeatedly
-     * executing pre-constructed trees of subtasks.
+     * allows repeated reuse of this task, but only if reuse occurs
+     * when either this task has either never been forked or has
+     * completed. Effects under any other usage conditions are not
+     * guaranteed, and are almost surely wrong. This method may be
+     * useful when repeatedly executing pre-constructed trees of
+     * subtasks.
      */
     public void reinitialize() {
         status = 0;
@@ -269,14 +281,15 @@ public abstract class ForkJoinTask<V> {
      * is available.  This method may be useful when several tasks are
      * forked, and only one of them must be joined, as in: 
      * <pre>
-     *   while (!t1.isDone() &amp;&amp; !t2.isDone()) help();
+     *   while (!t1.isDone() &amp;&amp; !t2.isDone()) 
+     *     help();
      * </pre>. 
      * Similarly, you can help process tasks until a computation
      * completes via 
      * <pre>
      *   while(help() || !getPool().isQuiescent()) 
      *      ;
-     * </pre>.
+     * </pre>
      *
      * This method may be invoked only from within other ForkJoinTask
      * computations. Attempts to invoke in other contexts result in
@@ -296,7 +309,7 @@ public abstract class ForkJoinTask<V> {
      * @return true is this task is stolen
      */
     public final boolean isStolen() {
-        return status == STOLEN;
+        return (status & STOLEN) != 0;
     }
 
     /**
@@ -345,8 +358,9 @@ public abstract class ForkJoinTask<V> {
      * thread's local queues. This method may be useful for bulk
      * cancellation of a set of tasks that may terminate when any one
      * of them finds a solution. However, this applies only if you are
-     * sure that no other tasks have been submitted to the pool. See
-     * {@link ForkJoinPool#setMaximumActiveSubmissionCount}.
+     * sure that no other tasks have been submitted to, or are active
+     * in, the pool. See {@link
+     * ForkJoinPool#setMaximumActiveSubmissionCount}.
      */
     public final void cancelAllQueuedTasks() {
         ((ForkJoinPool.Worker)(Thread.currentThread())).cancelCurrentTasks();

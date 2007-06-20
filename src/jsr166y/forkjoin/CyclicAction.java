@@ -84,7 +84,6 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
         barrier.register();
     }
 
-
     /**
      * The computation performed by this task on each cycle of the
      * barrier.  While you must define this method, you should not in
@@ -95,16 +94,15 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     /**
      * Returns the barrier
      */
-    public final TaskBarrier getBarrier() { return barrier; }
+    public final TaskBarrier getBarrier() { 
+        return barrier; 
+    }
 
     /**
      * Returns the current cycle of the barrier
      */
-    public final int getCycle() { return barrier.getCycle(); }
-
-
-    public final Void join() {
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).joinAction(this);
+    public final int getCycle() { 
+        return barrier.getCycle(); 
     }
 
     /**
@@ -116,7 +114,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     }
 
     public final Void invoke() {
-        fork();
+        exec();
         return join();
     }
 

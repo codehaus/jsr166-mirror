@@ -1,7 +1,7 @@
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
+ *
  */
 
 package jsr166y.forkjoin;
@@ -77,6 +77,13 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         AtomicIntegerFieldUpdater.newUpdater(AsyncAction.class, "pendingCount");
 
     /**
+     * Creates a new action with no parent. (You can add a parent
+     * later (but before forking) via <tt>reinitialize</tt>).
+     */
+    protected AsyncAction() {
+    }
+
+    /**
      * Creates a new action with the given parent. If the parent
      * is non-null, this tasks registers with the parent, in
      * which case, the parent task cannot complete until this
@@ -106,10 +113,34 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
+     * Creates a new action with the given parent, optionally
+     * registering with the parent, and setting the pending join count
+     * to the given value. If the parent is non-null and
+     * <tt>register</tt> is true, this tasks registers with the
+     * parent, in which case, the parent task cannot complete until
+     * this task completes. Setting the pending join count requires
+     * care -- it is correct only if all child tasks do not themselves
+     * register.
+     * @param parent the parent task, or null if none
+     * @param register true if parent must wait for this task
+     * to complete before it completes
+     * @param pending the pending join count
+     */
+    protected AsyncAction(AsyncAction parent, 
+                          boolean register,
+                          int pending) {
+        this.parent = parent;
+        pendingCount = pending;
+        if (parent != null && register) 
+            pendingCountUpdater.incrementAndGet(parent);
+    }
+
+    /**
      * The asynchronous part of the computation performed by this
      * task.  While you must define this method, you should not in
      * general call it directly. If this method throws a
-     * RuntimeException, <tt>finishExceptionally</tt> is immediately invoked.
+     * RuntimeException, <tt>finishExceptionally</tt> is immediately
+     * invoked.
      */
     protected abstract void compute();
 
@@ -174,12 +205,15 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      * exceptionally.  To avoid the possibility of unbounded exception
      * loops, the <tt>onCompletion</tt> method is <em>not</em>
      * invoked.
-     * @param rex the exception to throw when joining this task
+     * @param ex the exception to throw when joining this task
+     * @throws NullPointerException if ex is null
      */
-    public final void finishExceptionally(RuntimeException rex) {
+    public final void finishExceptionally(RuntimeException ex) {
+        if (ex == null)
+            throw new NullPointerException();
         AsyncAction a = this;
         while (a != null) {
-            if (!exceptionUpdater.compareAndSet(a, null, rex))
+            if (!exceptionUpdater.compareAndSet(a, null, ex))
                 break;
             a = a.parent;
         }
@@ -196,11 +230,6 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         return exception;
     }
 
-
-    public final Void join() {
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).joinAction(this);
-    }
-
     /**
      * Always returns null.
      * @return null
@@ -211,13 +240,27 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
 
     public final Void invoke() {
         exec();
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).joinAction(this);
+        return join();
     }
 
+    /**
+     * Resets the internal bookkeeping state of this task, maintaining
+     * the current parent but clearing pending joins.
+     */
     public void reinitialize() {
         super.reinitialize();
         if (pendingCount != 0)
             pendingCount = 0;
+    }
+
+    /**
+     * Resets the internal bookkeeping state of this task, maintaining
+     * the current parent and setting pending joins to the given value.
+     * @param pending the number of pending joins
+     */
+    public void reinitialize(int pending) {
+        super.reinitialize();
+        pendingCount = pending;
     }
 
     /**
@@ -230,6 +273,24 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         super.reinitialize();
         if (pendingCount != 0)
             pendingCount = 0;
+        this.parent = parent;
+        if (parent != null && register) 
+            pendingCountUpdater.incrementAndGet(parent);
+    }
+
+    /**
+     * Reinitialize with the given parent, optionally registering
+     * and setting pending join count.
+     * @param parent the parent task, or null if none
+     * @param register true if parent must wait for this task
+     * to complete before it completes
+     * @param pending the pending join count
+     */
+    public void reinitialize(AsyncAction parent, 
+                             boolean register,
+                             int pending) {
+        super.reinitialize();
+        pendingCount = pending;
         this.parent = parent;
         if (parent != null && register) 
             pendingCountUpdater.incrementAndGet(parent);

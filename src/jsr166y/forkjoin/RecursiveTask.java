@@ -14,26 +14,29 @@ import java.util.concurrent.atomic.*;
  * <p> For a classic example, here is a task computing Fibonacci numbers:
  *
  * <pre>
- * class Fibonacci extends ForkJoinTask&lt;Integer&gt; {
+ * class Fibonacci extends RecursiveTask&lt;Integer&gt; {
  *   final int n;
  *   Fibonnaci(int n) { this.n = n; }
  *   Integer compute() {
  *     if (n &lt;= 1)
  *        return n;
  *     Fibonacci f1 = new Fibonacci(n - 1);
+ *     f1.fork();
  *     Fibonacci f2 = new Fibonacci(n - 2);
- *     coInvoke(f1, f2);
- *     return f1.join() + f2.join();
+ *     return f2.invoke() + f1.join();
  *   }
  * }
  * </pre>
- * However, besides being a dumb way to compute fibonacci functions
+ *
+ * However, besides being a dumb way to compute Fibonacci functions
  * (there is a simple fast linear algorithm that you'd use in
- * practice), this would likely not perform too well because
- * the smallest subtasks are too small to be worthwhile splitting
- * up. Instead, as is the case for nearly all fork/join applications,
- * you'd pick some minimum granularity size (for example 10 here)
- * for which you always sequentially solve rather than subdividing.
+ * practice), this is likely to perform poorly because the smallest
+ * subtasks are too small to be worthwhile splitting up. Instead, as
+ * is the case for nearly all fork/join applications, you'd pick some
+ * minimum granularity size (for example 10 here) for which you always
+ * sequentially solve rather than subdividing.  Note also the use of
+ * <tt>f2.invoke()</tt> instead of <tt>f2.fork(); f2.join()</tt>,
+ * which is both more convenient and more efficient.
  *
  */
 public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
@@ -74,10 +77,6 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
         if (ex != null)
             throw ex;
         return v;
-    }
-
-    public final V join() {
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).joinTask(this);
     }
 
     public final V getResult() { 

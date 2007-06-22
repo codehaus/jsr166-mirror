@@ -145,12 +145,6 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Runs this task unless already cancelled, and sets status.
-     * @return exception thrown by compute (or via cancellation)
-     */
-    abstract RuntimeException exec();
-
-    /**
      * Arranges to asynchronously execute this task, which will later
      * be directly or indirectly joined by the caller of this method.
      * While it is not necessarily enforced, it is a usage error to
@@ -238,13 +232,14 @@ public abstract class ForkJoinTask<V> {
     public abstract V getResult();
 
     /**
-     * Resets the internal bookkeeping state of this task. This method
-     * allows repeated reuse of this task, but only if reuse occurs
-     * when either this task has either never been forked or has
-     * completed. Effects under any other usage conditions are not
-     * guaranteed, and are almost surely wrong. This method may be
-     * useful when repeatedly executing pre-constructed trees of
-     * subtasks.
+     * Resets the internal bookkeeping state of this task, allowing a
+     * subsequent <tt>fork</tt>. This method allows repeated reuse of
+     * this task, but only if reuse occurs when this task has either
+     * never been forked, or has been forked, then completed and all
+     * outstanding joins of this task have also completed. Effects
+     * under any other usage conditions are not guaranteed, and are
+     * almost surely wrong. This method may be useful when repeatedly
+     * executing pre-constructed trees of subtasks.
      */
     public void reinitialize() {
         status = 0;
@@ -283,7 +278,7 @@ public abstract class ForkJoinTask<V> {
      * <pre>
      *   while (!t1.isDone() &amp;&amp; !t2.isDone()) 
      *     help();
-     * </pre>. 
+     * </pre> 
      * Similarly, you can help process tasks until a computation
      * completes via 
      * <pre>
@@ -297,8 +292,14 @@ public abstract class ForkJoinTask<V> {
      * @return true if a task was run; a false return indicates
      * that no ready task was available.
      */
-    public final boolean help() {
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).help();
+    public static boolean help() {
+        ForkJoinTask<?> t = 
+            ((ForkJoinPool.Worker)(Thread.currentThread())).takeNext();
+        if (t != null) {
+            t.exec();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -315,7 +316,7 @@ public abstract class ForkJoinTask<V> {
     /**
      * Returns the index number of the current worker in its pool.
      * The return value is in the range
-     * <tt>[0..getPool().getPoolSize()-1</tt>.  This method may be
+     * <tt>0...getPool().getPoolSize()-1</tt>.  This method may be
      * useful for applications that track status or collect results
      * per-worker rather than per-task.
      * This method may be invoked only from within other ForkJoinTask
@@ -328,13 +329,12 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Submit the given task to the pool hosting the current task
+     * Submit this task to the pool hosting the current task
      * execution.
-     * @param task the task
      * @return a Future that can be used to get the task's results.
      */ 
-    public static <T> Future<T> submit(ForkJoinTask<T> task) {
-        return getPool().submit(task);
+    public final Future<V> submit() {
+        return getPool().submit(this);
     }
 
     /**
@@ -354,6 +354,53 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
+     * Removes and returns, without executing, this task from the queue
+     * hosting current execution only if it would be the next task
+     * that would be executed by the current worker thread.  Among
+     * other usages, this method can sometimes be used to more cheaply
+     * bypass task execution during cancellation.
+     * @return true if removed
+     */
+    public final boolean takeIfNextLocalTask() {
+        return ((ForkJoinPool.Worker)(Thread.currentThread())).takeIfNextLocalTask(this);
+    }
+
+    /**
+     * Removes and returns, without executing, the next task queued
+     * for execution, which may be either locally queued task, or one
+     * stolen from another worker thread.
+     * @return the next task to execute, or null if none
+     */
+    public static ForkJoinTask<?> takeNextTask() {
+        return ((ForkJoinPool.Worker)(Thread.currentThread())).takeNext();
+    }
+
+    /**
+     * Immediately commences execution of this task unless already
+     * cancelled, returning any exception thrown by its
+     * <tt>compute</tt> method.
+     * @return exception thrown by compute (or via cancellation), or
+     * null if none
+     */
+    public abstract RuntimeException exec();
+
+    /**
+     * Completes this task, and if not already aborted or cancelled,
+     * returning the given result upon <tt>join</tt> and related
+     * operations.
+     * @param result the result to return
+     */
+    public abstract void finish(V result);
+
+    /**
+     * Completes this task abnormally, and if not already aborted or
+     * cancelled, causing it to throw the given exception upon
+     * <tt>join</tt> and related operations.
+     * @param ex the exception to throw
+     */
+    public abstract void finishExceptionally(RuntimeException ex);
+
+    /**
      * Cancels all tasks that are currently held in any worker
      * thread's local queues. This method may be useful for bulk
      * cancellation of a set of tasks that may terminate when any one
@@ -362,7 +409,7 @@ public abstract class ForkJoinTask<V> {
      * in, the pool. See {@link
      * ForkJoinPool#setMaximumActiveSubmissionCount}.
      */
-    public final void cancelAllQueuedTasks() {
+    public static void cancelAllQueuedTasks() {
         ((ForkJoinPool.Worker)(Thread.currentThread())).cancelCurrentTasks();
     }
 

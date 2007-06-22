@@ -17,15 +17,22 @@ import java.util.concurrent.atomic.*;
  * of subtasks.
  *
  * <p> Upon construction, an AsyncAction may register as a subtask of
- * a given parent task. In this case, completion of this task
- * will propagate to its parent. If the parent's pending completion
- * count becomes zero, it too will finish.
+ * a given parent task. In this case, completion of this task will
+ * propagate to its parent. If the parent's pending subtask completion
+ * count becomes zero, it too will finish.  AsyncActions rarely use
+ * methods <tt>join</tt> or <tt>invoke</tt> but instead propagate
+ * completion to parents implicitly via <tt>finish</tt>.  While
+ * typical, it is not necessary for each task to <tt>finish</tt>
+ * itself. For example, it is possible to treat one subtask as a
+ * continuation of the current task by not registering it on
+ * construction.  In this case, a <tt>finish</tt> of the subtask will
+ * trigger <tt>finish</tt> of the parent without the parent explicitly
+ * doing so.
  *
- * <p> In addition to supporting this different computation style
- * compared to Recursive tasks, AsyncActions will often have smaller
- * footprints while executing (in particular, they do not require
- * stack space recursively awaiting joins), at the expense of somewhat
- * greater per-task overhead.
+ * <p> In addition to supporting these different computation styles
+ * compared to Recursive tasks, AsyncActions may have smaller stack
+ * space footprints while executing, but may have greater per-task
+ * overhead.
  *
  * <p> <b>Sample Usage.</b> Here is a sketch of an AsyncAction that
  * visits all of the nodes of a graph. The details of the graph's Node
@@ -55,12 +62,6 @@ import java.util.concurrent.atomic.*;
  * }
  * </pre>
  *
- * <p> While perhaps typical, it is not necessary for each task to
- * <tt>finish</tt> itself. For example, it is possible to treat one
- * subtask as a "continuation" of the current task by not registering
- * it on construction.  In this case, a <tt>finish</tt> of the subtask
- * will trigger <tt>finish</tt> of the parent without the parent
- * explicitly doing so. This is often a bit more efficient.
  */
 public abstract class AsyncAction extends ForkJoinTask<Void> {
     /**
@@ -119,7 +120,7 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      * <tt>register</tt> is true, this tasks registers with the
      * parent, in which case, the parent task cannot complete until
      * this task completes. Setting the pending join count requires
-     * care -- it is correct only if all child tasks do not themselves
+     * care -- it is correct only if child tasks do not themselves
      * register.
      * @param parent the parent task, or null if none
      * @param register true if parent must wait for this task
@@ -138,50 +139,61 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     /**
      * The asynchronous part of the computation performed by this
      * task.  While you must define this method, you should not in
-     * general call it directly. If this method throws a
+     * general call it directly (although you can invoke immediately
+     * via <tt>startNow</tt>.) If this method throws a
      * RuntimeException, <tt>finishExceptionally</tt> is immediately
      * invoked.
      */
     protected abstract void compute();
 
     /**
-     * Callback action triggered by <tt>finish</tt>.  Upon invocation,
-     * all subtasks have completed.  After return, this task
-     * <tt>isDone</tt> and is joinable by other tasks. The default
-     * version of this method does nothing. But it may may be
+     * Overridable callback action triggered by <tt>finish</tt>.  Upon
+     * invocation, all subtasks have completed.  After return, this
+     * task <tt>isDone</tt> and is joinable by other tasks. The
+     * default version of this method does nothing. But it may may be
      * overridden in subclasses to perform some action when this task
-     * and all of its subtasks are about to complete.
+     * is about to complete.
      */
     protected void onCompletion() {
     }
 
     /**
-     * Returns this task's parent, or null if none.
-     * @return this task's parent, or null if none.
+     * Overridable callback action triggered by
+     * <tt>finishExceptionally</tt>.  Upon invocation, this task has
+     * aborted due to an exception (accessible via
+     * <tt>getException</tt>). If this method returns <tt>true</tt>,
+     * the exception propagates to the current task's
+     * parent. Otherwise, normal completion is propagated.  The
+     * default version of this method does nothing and returns
+     * <tt>true</tt>.
+     * @return true if this task's exception should be propagated to
+     * this tasks parent.
      */
-    public AsyncAction getParent() { 
-        return parent; 
+    protected boolean onException() {
+        return true;
     }
 
     /**
-     * Returns the number of subtasks that have not yet completed.
-     * @return the number of subtasks that have not yet completed.
-     */
-    public int getPendingSubtaskCount() { 
-        return pendingCount; 
-    }
-
-    /**
-     * If pending completion count is zero, invokes
-     * <tt>onCompletion</tt>, then causes this task to be joinable
-     * (<tt>isDone</tt> becomes true), and then recursively applies to
-     * this tasks's parent. If an exception is encountered in any
-     * <tt>onCompletion</tt> invocation, that task and its ancestors
-     * <tt>finishExceptionally</tt>.
+     * Equivalent to <tt>finish(null)</tt>.
      */
     public final void finish() {
+        finish(null);
+    }
+
+    /**
+     * Completes this task. If the pending subtask completion count is
+     * zero, invokes <tt>onCompletion</tt>, then causes this task to
+     * be joinable (<tt>isDone</tt> becomes true), and then
+     * recursively applies to this tasks's parent, if it exists. If an
+     * exception is encountered in any <tt>onCompletion</tt>
+     * invocation, that task and its ancestors
+     * <tt>finishExceptionally</tt>.
+     * 
+     * @param result must be <tt>null</tt>.
+     */
+    public final void finish(Void result) {
         AsyncAction a = this;
-        while (a != null) {
+        while (a != null && !a.isDone()) {
             int c = a.pendingCount;
             if (c == 0) {
                 try {
@@ -199,35 +211,48 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Causes this task and its parent (and further ancestors) to be
-     * immediately joinable, reporting or throwing the given
-     * exception. Has no effect if this task has already terminated
-     * exceptionally.  To avoid the possibility of unbounded exception
-     * loops, the <tt>onCompletion</tt> method is <em>not</em>
-     * invoked.
+     * Completes this task abnormally. Unless this task already
+     * cancelled or aborted, upon invocation, this method invokes
+     * <tt>onException</tt>, and then, depending on its return value,
+     * finishes parent (if one exists) exceptionally or normally.  To
+     * avoid unbounded exception loops, this method aborts if an
+     * exception is encountered in any <tt>onException</tt>
+     * invocation.
      * @param ex the exception to throw when joining this task
      * @throws NullPointerException if ex is null
+     * @throws RuntimeException if any invocation of
+     * <tt>onException</tt> does so.
      */
     public final void finishExceptionally(RuntimeException ex) {
         if (ex == null)
             throw new NullPointerException();
         AsyncAction a = this;
-        while (a != null) {
-            if (!exceptionUpdater.compareAndSet(a, null, ex))
-                break;
+        while (a.casException(ex)) {
+            boolean up = a.onException(); // abort if this throws
             a = a.parent;
+            if (a == null)
+                return;
+            if (!up) {
+                a.finish();
+                return;
+            }
         }
     }
 
-    final RuntimeException exec() {
-        if (exception == null) {
-            try {
-                compute();
-            } catch(RuntimeException rex) {
-                finishExceptionally(rex);
-            }
-        }
-        return exception;
+    /**
+     * Returns this task's parent, or null if none.
+     * @return this task's parent, or null if none.
+     */
+    public final AsyncAction getParent() { 
+        return parent; 
+    }
+
+    /**
+     * Returns the number of subtasks that have not yet completed.
+     * @return the number of subtasks that have not yet completed.
+     */
+    public final int getPendingSubtaskCount() { 
+        return pendingCount; 
     }
 
     /**
@@ -236,11 +261,6 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      */
     public final Void getResult() { 
         return null; 
-    }
-
-    public final Void invoke() {
-        exec();
-        return join();
     }
 
     /**
@@ -294,6 +314,23 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         this.parent = parent;
         if (parent != null && register) 
             pendingCountUpdater.incrementAndGet(parent);
+    }
+
+
+    public final Void invoke() {
+        exec();
+        return join();
+    }
+
+    public final RuntimeException exec() {
+        if (exception == null) {
+            try {
+                compute();
+            } catch(RuntimeException rex) {
+                finishExceptionally(rex);
+            }
+        }
+        return exception;
     }
 
 }

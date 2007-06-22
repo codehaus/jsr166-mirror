@@ -238,7 +238,22 @@ public class TaskBarrier {
      * @return the cycle on exit from this method
      */
     public int awaitCycleAdvance(int cycle) {
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).helpUntilBarrierAdvance(this, cycle);
+        for (;;) {
+            int p = getCycle();
+            if (p != cycle || p < 0)
+                return p;
+            ForkJoinTask<?> t =
+                ((ForkJoinPool.Worker)(Thread.currentThread())).takeNext();
+            if (t != null) {
+                p = getCycle();
+                if (p != cycle) { // if barrier advanced
+                    t.fork();     // push task and exit
+                    return p;
+                }
+                else
+                    t.exec();
+            }
+        }
     }
 
     /**

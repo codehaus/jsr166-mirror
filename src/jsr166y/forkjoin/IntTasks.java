@@ -216,6 +216,20 @@ public class IntTasks {
     }
 
     /**
+     * Replaces each element with running cumulative sum.
+     * @param pool the pool
+     * @param array the array
+     * @return the sum of all elements
+     */
+    public static int plusScan(ForkJoinPool pool, int[] array) {
+        int n = array.length;
+        FJPlusScan r = new FJPlusScan(array, 0, n-1, 
+                                      defaultGranularity(pool, n), -1);
+        pool.invoke(r);
+        return r.out;
+    }
+
+    /**
      * Returns the minimum of all elements, or MAX_VALUE if empty
      * @param pool the pool
      * @param array the array
@@ -772,6 +786,79 @@ public class IntTasks {
         }
 
     }              
+
+    /**
+     * Fork/Join version of prefix scan
+     */
+    static final class FJPlusScan extends RecursiveAction {
+        final int[] array;
+        final int lo;
+        final int hi;
+        final int gran;
+        int phase; // -1 for root, 0 before sum computed, 
+        int in, out;
+        FJPlusScan left, right;
+
+        FJPlusScan(int[] array, 
+                   int lo, 
+                   int hi, 
+                   int gran,
+                   int phase) {
+            this.array = array;
+            this.lo = lo; 
+            this.hi = hi;
+            this.gran = gran;
+            this.phase = phase;
+        }
+
+        protected void compute() {
+            int p = phase;
+            if (p <= 0) {
+                phase = 1;
+                up();
+                if (p == 0) {
+                    reinitialize();
+                    return;
+                }
+            }
+            down();
+        }
+
+        private void up() {
+            int l = lo;
+            int h = hi;
+            if (h - l <= gran) {
+                int sum = 0;
+                for (int i = l; i <= h; ++i)
+                    sum += array[i];
+                out = sum;
+            }
+            else {
+                int mid = (l + h) >>> 1;
+                left = new FJPlusScan(array, l, mid, gran, 0);
+                right = new FJPlusScan(array, mid+1, h, gran, 0);
+                coInvoke(left, right);
+                out = left.out + right.out;
+            }
+        }
+
+        private void down() {
+            if (left == null) {
+                int l = lo;
+                int h = hi;
+                int sum = in;
+                for (int i = l; i <= h; ++i)
+                    sum = array[i] += sum;
+            }
+            else {
+                int t = in;
+                left.in = t;
+                right.in = t + left.out;
+                coInvoke(left, right);
+            } 
+        }
+    }
+
 
     /**
      * Fork/Join version of FindAny

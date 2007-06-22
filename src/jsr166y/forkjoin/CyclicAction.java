@@ -48,32 +48,6 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     final TaskBarrier barrier;
     int phase = -1;
 
-    final RuntimeException exec() {
-        TaskBarrier b = barrier;
-        RuntimeException ex = exception;
-        if (ex != null) {
-            if (status >= 0)
-                b.arriveAndDeregister();
-            return setDone();
-        }
-        if (phase < 0)
-            phase = b.getCycle();
-        else
-            phase = b.awaitCycleAdvance(phase);
-        if (phase < 0)
-            return setDone();
-        try {
-            compute();
-        } catch (RuntimeException rex) {
-            b.arriveAndDeregister();
-            casException(rex);
-            return setDone();
-        }
-        b.arrive();
-        this.fork();
-        return null;
-    }
-
     /**
      * Constructs a new CyclicAction using the supplied barrier,
      * registering for this barrier upon construction.
@@ -113,9 +87,51 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
         return null; 
     }
 
+    public final RuntimeException exec() {
+        TaskBarrier b = barrier;
+        RuntimeException ex = exception;
+        if (ex != null) {
+            if (status >= 0)
+                b.arriveAndDeregister();
+            return setDone();
+        }
+        if (phase < 0)
+            phase = b.getCycle();
+        else
+            phase = b.awaitCycleAdvance(phase);
+        if (phase < 0)
+            return setDone();
+        try {
+            compute();
+        } catch (RuntimeException rex) {
+            b.arriveAndDeregister();
+            casException(rex);
+            return setDone();
+        }
+        b.arrive();
+        this.fork();
+        return null;
+    }
+
+
     public final Void invoke() {
         exec();
         return join();
+    }
+
+    /**
+     * Equivalent to <tt>finish(null)</tt>.
+     */
+    public final void finish() { 
+        setDone();
+    }
+
+    public final void finish(Void result) { 
+        setDone();
+    }
+
+    public final void finishExceptionally(RuntimeException ex) {
+        casException(ex);
     }
 
 }

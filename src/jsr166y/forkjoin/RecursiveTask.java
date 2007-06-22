@@ -53,15 +53,8 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
      */
     protected abstract V compute();
 
-    final RuntimeException exec() {
-        if (exception == null) {
-            try {
-                result = compute();
-            } catch(RuntimeException rex) {
-                exceptionUpdater.compareAndSet(this, null, rex);
-            }
-        }
-        return setDone();
+    public final V getResult() { 
+        return result; 
     }
 
     public final V invoke() {
@@ -79,8 +72,24 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
         return v;
     }
 
-    public final V getResult() { 
-        return result; 
+    public final RuntimeException exec() {
+        if (exception == null) {
+            try {
+                result = compute();
+            } catch(RuntimeException rex) {
+                exceptionUpdater.compareAndSet(this, null, rex);
+            }
+        }
+        return setDone();
+    }
+
+    public final void finish(V result) { 
+        this.result = result;
+        setDone();
+    }
+
+    public final void finishExceptionally(RuntimeException ex) {
+        casException(ex);
     }
 
     public final void reinitialize() {

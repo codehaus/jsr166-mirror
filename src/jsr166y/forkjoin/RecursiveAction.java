@@ -104,39 +104,6 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     protected abstract void compute();
 
     /**
-     * Always returns null.
-     * @return null
-     */
-    public final Void getResult() { 
-        return null; 
-    }
-
-    final RuntimeException exec() {
-        if (exception == null) {
-            try {
-                compute();
-            } catch(RuntimeException rex) {
-                exceptionUpdater.compareAndSet(this, null, rex);
-            }
-        }
-        return setDone();
-    }
-
-    public final Void invoke() {
-        try {
-            if (exception == null)
-                compute();
-        } catch(RuntimeException rex) {
-            exceptionUpdater.compareAndSet(this, null, rex);
-            throw rex;
-        }
-        RuntimeException ex = setDone();
-        if (ex != null)
-            throw ex;
-        return null;
-    }
-
-    /**
      * Forks both tasks and returns when <tt>isDone</tt> holds for
      * both, cancelling one if the other encounters an exception. If
      * both tasks encounter exceptions, only one of them (arbitrarily
@@ -179,5 +146,52 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
         ((ForkJoinPool.Worker)(Thread.currentThread())).coInvokeTasks(tasks);
     }
 
+    /**
+     * Always returns null.
+     * @return null
+     */
+    public final Void getResult() { 
+        return null; 
+    }
+
+    public final Void invoke() {
+        try {
+            if (exception == null)
+                compute();
+        } catch(RuntimeException rex) {
+            exceptionUpdater.compareAndSet(this, null, rex);
+            throw rex;
+        }
+        RuntimeException ex = setDone();
+        if (ex != null)
+            throw ex;
+        return null;
+    }
+
+    public final RuntimeException exec() {
+        if (exception == null) {
+            try {
+                compute();
+            } catch(RuntimeException rex) {
+                exceptionUpdater.compareAndSet(this, null, rex);
+            }
+        }
+        return setDone();
+    }
+
+    /**
+     * Equivalent to <tt>finish(null)</tt>.
+     */
+    public final void finish() { 
+        setDone();
+    }
+
+    public final void finish(Void result) { 
+        setDone();
+    }
+
+    public final void finishExceptionally(RuntimeException ex) {
+        casException(ex);
+    }
 
 }

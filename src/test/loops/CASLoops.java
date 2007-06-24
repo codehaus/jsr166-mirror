@@ -46,6 +46,8 @@ public class CASLoops {
         if (args.length > 0) 
             maxThreads = Integer.parseInt(args[0]);
 
+	loopIters = new long[maxThreads+1];
+
         if (args.length > 1)
             includeLocks = true;
 
@@ -85,7 +87,7 @@ public class CASLoops {
 
     static final LoopHelpers.MarsagliaRandom rng = new LoopHelpers.MarsagliaRandom();
 
-    static final long[] loopIters = new long[maxThreads+1];
+    static long[] loopIters;
 
     static final class NonAtomicInteger {
         volatile int readBarrier;

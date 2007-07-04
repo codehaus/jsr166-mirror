@@ -105,6 +105,7 @@ public abstract class ForkJoinTask<V> {
      */
     int status;
 
+    // Only two bits defined so far for status. DONE must be sign bit
     static final int DONE   = (1 << 31);
     static final int STOLEN = (1 << 30);
 
@@ -354,15 +355,15 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Removes and returns, without executing, this task from the queue
-     * hosting current execution only if it would be the next task
-     * that would be executed by the current worker thread.  Among
-     * other usages, this method can sometimes be used to more cheaply
-     * bypass task execution during cancellation.
+     * Removes and returns, without executing, this task from the
+     * queue hosting current execution only if it would be the next
+     * task that would be executed by the current worker thread.
+     * Among other usages, this method can sometimes be used to bypass
+     * task execution during cancellation.
      * @return true if removed
      */
-    public final boolean takeIfNextLocalTask() {
-        return ((ForkJoinPool.Worker)(Thread.currentThread())).takeIfNextLocalTask(this);
+    public final boolean removeIfNextLocalTask() {
+        return ((ForkJoinPool.Worker)(Thread.currentThread())).popIfNext(this);
     }
 
     /**
@@ -376,9 +377,20 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Immediately commences execution of this task unless already
-     * cancelled, returning any exception thrown by its
-     * <tt>compute</tt> method.
+     * Returns, but does not remove or execute, the next task locally
+     * queued for execution. There is no guarantee that this task will
+     * be the next one actually executed or returned from
+     * <tt>takeNextTask</tt>.
+     * @return the next task or null if none
+     */
+    public static ForkJoinTask<?> peekNextLocalTask() {
+        return ((ForkJoinPool.Worker)(Thread.currentThread())).peekTask();
+    }
+
+    /**
+     * Immediately commences execution of this task by the current
+     * worker thread unless already cancelled, returning any exception
+     * thrown by its <tt>compute</tt> method.
      * @return exception thrown by compute (or via cancellation), or
      * null if none
      */
@@ -387,7 +399,7 @@ public abstract class ForkJoinTask<V> {
     /**
      * Completes this task, and if not already aborted or cancelled,
      * returning the given result upon <tt>join</tt> and related
-     * operations.
+     * operations. 
      * @param result the result to return
      */
     public abstract void finish(V result);

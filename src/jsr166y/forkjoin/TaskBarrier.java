@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.*;
  * needing to keep track of which tasks it is waiting for. This is
  * similar to the "sync" construct in Cilk and "clocks" in X10.
  * Special constructions based on such barriers are available using
- * the <tt>AsyncAction</tt> and <tt>CyclicAction</tt> classes, but
+ * the <tt>LinkedAsyncAction</tt> and <tt>CyclicAction</tt> classes, but
  * they can be useful in other contexts as well.  For a simple (but
  * not very useful) example, here is a variant of Fibonacci:
  *

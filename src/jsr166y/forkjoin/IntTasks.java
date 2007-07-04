@@ -32,7 +32,7 @@ public class IntTasks {
                                  int[] array, 
                                  IntProcedure proc) {
         int n = array.length;
-        pool.invoke(new FJApplyer(array, proc, 0, n-1, defaultGranularity(pool, n)));
+        pool.invoke(new FJApplyer(array, proc, 0, n, defaultGranularity(pool, n)));
     }
     
     /**
@@ -48,7 +48,7 @@ public class IntTasks {
                              int base) {
         int n = array.length;
         FJReducer r = new FJReducer(array,reducer, base,
-                                    0, n-1, defaultGranularity(pool, n));
+                                    0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -69,7 +69,7 @@ public class IntTasks {
         int n = list.size();
         FJMapReducer<T> r =
             new FJMapReducer<T>(list, mapper, reducer, base,
-                                0, n-1, defaultGranularity(pool, n));
+                                0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -90,7 +90,7 @@ public class IntTasks {
         int n = array.length;
         FJArrayMapReducer<T> r =
             new FJArrayMapReducer<T>(array, mapper, reducer, base,
-                                     0, n-1, defaultGranularity(pool, n));
+                                     0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -104,14 +104,14 @@ public class IntTasks {
      * @param base the result for an empty array
      */
     public static <T> int reduce(ForkJoinPool pool,
-                          int[] array, 
-                          IntTransformer mapper,
-                          IntReducer reducer,
-                          int base) {
+                                 int[] array, 
+                                 IntTransformer mapper,
+                                 IntReducer reducer,
+                                 int base) {
         int n = array.length;
         FJTransformReducer r =
             new FJTransformReducer(array, mapper, reducer, base,
-                                   0, n-1, defaultGranularity(pool, n));
+                                   0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -128,7 +128,7 @@ public class IntTasks {
         int n = array.length;
         int[] dest = new int[n];
         pool.invoke(new FJMapper(array, dest, mapper,  
-                                 0, n-1, defaultGranularity(pool, n)));
+                                 0, n, defaultGranularity(pool, n)));
         return dest;
     }
 
@@ -147,7 +147,7 @@ public class IntTasks {
         int n = array.length;
         VolatileInt result = new VolatileInt(missing);
         pool.invoke(new FJFindAny(array, pred, result, missing,
-                                  0, n-1, defaultGranularity(pool, n)));
+                                  0, n, defaultGranularity(pool, n)));
         return result.value;
     }
 
@@ -168,7 +168,7 @@ public class IntTasks {
         int n = array.length;
         Vector<Integer> dest = new Vector<Integer>(); // todo: use smarter list
         pool.invoke(new FJFindAll(array, pred, dest,  
-                                  0, n-1, defaultGranularity(pool, n)));
+                                  0, n, defaultGranularity(pool, n)));
         return dest;
     }
 
@@ -184,17 +184,15 @@ public class IntTasks {
         pool.invoke(new FJSorter(array, 0, workSpace, 0, n));
     }
 
-
-
     /**
      * Returns the sum of all elements
      * @param pool the pool
      * @param array the array
      */
     public static int sum(ForkJoinPool pool, 
-                             int[] array) {
+                          int[] array) {
         int n = array.length;
-        FJSum r = new FJSum(array, 0, n-1, defaultGranularity(pool, n));
+        FJSum r = new FJSum(array, 0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -206,11 +204,11 @@ public class IntTasks {
      * @param mapper the mapper
      */
     public static int sum(ForkJoinPool pool, 
-                             int[] array, 
-                             IntTransformer mapper) {
+                          int[] array, 
+                          IntTransformer mapper) {
         int n = array.length;
         FJTransformSum r = 
-            new FJTransformSum(array, mapper, 0, n-1, defaultGranularity(pool, n));
+            new FJTransformSum(array, mapper, 0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -223,10 +221,17 @@ public class IntTasks {
      */
     public static int plusScan(ForkJoinPool pool, int[] array) {
         int n = array.length;
-        FJPlusScan r = new FJPlusScan(array, 0, n-1, 
-                                      defaultGranularity(pool, n), -1);
+        if (n == 0)
+            return 0;
+        if (n == 1)
+            return array[0];
+        int threads = pool.getPoolSize();
+        int gran = 1 + n / ((threads << 3) - 7);
+        if (gran < 2048)
+            gran = 2048;
+        FJPlusScan r = new FJPlusScan(null, null, array, 0, n, gran);
         pool.invoke(r);
-        return r.out;
+        return array[n-1];
     }
 
     /**
@@ -235,9 +240,9 @@ public class IntTasks {
      * @param array the array
      */
     public static int min(ForkJoinPool pool, 
-                             int[] array) {
+                          int[] array) {
         int n = array.length;
-        FJMin r = new FJMin(array, 0, n-1, defaultGranularity(pool, n));
+        FJMin r = new FJMin(array, 0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -250,7 +255,7 @@ public class IntTasks {
     public static int max(ForkJoinPool pool, 
                           int[] array) {
         int n = array.length;
-        FJMax r = new FJMax(array, 0, n-1, defaultGranularity(pool, n));
+        FJMax r = new FJMax(array, 0, n, defaultGranularity(pool, n));
         pool.invoke(r);
         return r.result;
     }
@@ -282,14 +287,13 @@ public class IntTasks {
             int g = gran;
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
-                FJApplyer r = new FJApplyer(array, f, mid+1, h, g);
+                FJApplyer r = new FJApplyer(array, f, mid, h, g);
                 r.fork();
                 r.next = right;
-                    
                 right = r;
                 h = mid;
             }
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 f.apply(array[i]);
             while (right != null) {
                 right.join();
@@ -313,12 +317,12 @@ public class IntTasks {
         FJMapReducer<T> next;
 
         FJMapReducer(List<T> list, 
-                   MapperToInt<T> mapper,
-                   IntReducer reducer,
-                   int base,
-                   int lo, 
-                   int hi, 
-                   int gran) {
+                     MapperToInt<T> mapper,
+                     IntReducer reducer,
+                     int base,
+                     int lo, 
+                     int hi, 
+                     int gran) {
             this.list = list;
             this.mapper = mapper;
             this.reducer = reducer;
@@ -338,15 +342,14 @@ public class IntTasks {
                 int mid = (l + h) >>> 1;
                 FJMapReducer<T> r = 
                     new FJMapReducer<T>(list, mapper, reducer, 
-                                           base, mid + 1, h, g);
+                                        base, mid, h, g);
                 r.fork();
                 r.next = right;
-                    
                 right = r;
                 h = mid;
             }
             int x = base;
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 x = reducer.combine(x, mapper.map(list.get(i)));
             while (right != null) {
                 right.join();
@@ -397,14 +400,14 @@ public class IntTasks {
                 int mid = (l + h) >>> 1;
                 FJArrayMapReducer<T> r = 
                     new FJArrayMapReducer<T>(array, mapper, reducer, 
-                                             base, mid + 1, h, g);
+                                             base, mid, h, g);
                 r.next = right;
                 right = r;
                 h = mid;
                 r.fork();
             }
             int x = base;
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 x = reducer.combine(x, mapper.map(array[i]));
             while (right != null) {
                 right.join();
@@ -456,7 +459,7 @@ public class IntTasks {
                 int mid = (l + h) >>> 1;
                 FJTransformReducer r = 
                     new FJTransformReducer(array, mapper, reducer, 
-                                           base, mid + 1, h, g);
+                                           base, mid, h, g);
                 r.fork();
                 r.next = right;
                     
@@ -464,7 +467,7 @@ public class IntTasks {
                 h = mid;
             }
             int x = base;
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 x = reducer.combine(x, mapper.map(array[i]));
             while (right != null) {
                 right.join();
@@ -511,14 +514,14 @@ public class IntTasks {
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
                 FJMapper r = 
-                    new FJMapper(array, dest, mapper, mid + 1, h, g);
+                    new FJMapper(array, dest, mapper, mid, h, g);
                 r.fork();
                 r.next = right;
                     
                 right = r;
                 h = mid;
             }
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 dest[i] = mapper.map(array[i]);
             while (right != null) {
                 right.join();
@@ -562,7 +565,7 @@ public class IntTasks {
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
                 FJReducer r = 
-                    new FJReducer(array, reducer, base, mid + 1, h, g);
+                    new FJReducer(array, reducer, base, mid, h, g);
                 r.fork();
                 r.next = right;
                     
@@ -570,7 +573,7 @@ public class IntTasks {
                 h = mid;
             }
             int x = base;
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 x = reducer.combine(x, array[i]);
             while (right != null) {
                 right.join();
@@ -610,7 +613,7 @@ public class IntTasks {
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
                 FJSum r = 
-                    new FJSum(array, mid + 1, h, g);
+                    new FJSum(array, mid, h, g);
                 r.fork();
                 r.next = right;
                     
@@ -618,7 +621,7 @@ public class IntTasks {
                 h = mid;
             }
             int x = 0;
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 x += array[i];
             while (right != null) {
                 right.join();
@@ -658,7 +661,7 @@ public class IntTasks {
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
                 FJMin r = 
-                    new FJMin(array, mid + 1, h, g);
+                    new FJMin(array, mid, h, g);
                 r.fork();
                 r.next = right;
                     
@@ -666,7 +669,7 @@ public class IntTasks {
                 h = mid;
             }
             int x = Integer.MAX_VALUE;
-            for (int i = l; i <= h; ++i) {
+            for (int i = l; i < h; ++i) {
                 int y = array[i];
                 if (y < x)
                     x = y;
@@ -711,7 +714,7 @@ public class IntTasks {
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
                 FJMax r = 
-                    new FJMax(array, mid + 1, h, g);
+                    new FJMax(array, mid, h, g);
                 r.fork();
                 r.next = right;
                     
@@ -719,7 +722,7 @@ public class IntTasks {
                 h = mid;
             }
             int x = Integer.MAX_VALUE;
-            for (int i = l; i <= h; ++i) {
+            for (int i = l; i < h; ++i) {
                 int y = array[i];
                 if (y > x)
                     x = y;
@@ -767,7 +770,7 @@ public class IntTasks {
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
                 FJTransformSum r = 
-                    new FJTransformSum(array, mapper, mid + 1, h, g);
+                    new FJTransformSum(array, mapper, mid, h, g);
                 r.fork();
                 r.next = right;
                     
@@ -775,7 +778,7 @@ public class IntTasks {
                 h = mid;
             }
             int x = 0;
-            for (int i = l; i <= h; ++i)
+            for (int i = l; i < h; ++i)
                 x += mapper.map(array[i]);
             while (right != null) {
                 right.join();
@@ -788,74 +791,199 @@ public class IntTasks {
     }              
 
     /**
-     * Fork/Join version of prefix scan
+     * Fork/Join version of scan
+     *
+     * A basic version of scan is straightforward.
+     *  Keep dividing by two to threshold segment size, and then:
+     *   Pass 1: Create tree of partial sums for each segment
+     *   Pass 2: For each segment, cumulate with offset of left sibling
+     * See G. Blelloch's http://www.cs.cmu.edu/~scandal/alg/scan.html
+     *
+     * This version improves performance within FJ framework:
+     * a) It allows second pass of ready left-hand sides to proceed even 
+     *    if some right-hand side first passes are still executing.
+     * b) It collapses the first and second passes of segments for which
+     *    incoming cumulations are ready before summing.
+     * c) It skips first pass for rightmost segment (whose
+     *    result is not needed for second pass).
+     *
      */
-    static final class FJPlusScan extends RecursiveAction {
+    static final class FJPlusScan extends AsyncAction {
+        final FJPlusScan parent;
+        FJPlusScan left, right;
         final int[] array;
         final int lo;
         final int hi;
         final int gran;
-        int phase; // -1 for root, 0 before sum computed, 
-        int in, out;
-        FJPlusScan left, right;
+        final boolean isLeaf;
 
-        FJPlusScan(int[] array, 
+        /**
+         * A predecessor in tree (or null if none). Needed to
+         * determine if a segment already has incoming cumulation
+         * during first pass. For right-hand leaf nodes, this always
+         * points to left sibling.  For others, it points to parent's
+         * pred, in which case, when determining if cumulation is
+         * ready, it descends right children to find predecessor leaf,
+         * if it exists. It might not exist if the node has not yet
+         * been created.
+         */
+        final FJPlusScan pred;
+
+        /** Incoming cumulative sum */
+        int in;
+
+        /** Sum of this subtree */
+        int out;
+        
+        /**
+         * Phase/state control, updated only via transitionTo, for
+         * CUMULATE, SUMMED, and FINISHED bits.
+         */
+        volatile int phase;
+
+        /**
+         * Phase bit. When false, segments compute only their sum.
+         * When true, they cumulate array elements. CUMULATE is set at
+         * root at beginning of second pass and then propagated
+         * down. But it may also be set earlier in two cases when
+         * cumulations are known to be ready: (1) For subtrees with
+         * lo==0 (the left spine of tree) (2) Leaf nodes with
+         * completed predecessors.
+         */
+        static final int CUMULATE = 1;
+
+        /**
+         * One bit join count. For leafs, set when summed. For
+         * internal nodes, becomes true when one child is summed.
+         * When second child finishes summing, it then moves up tree
+         * to trigger cumulate phase.
+         */
+        static final int SUMMED   = 2;
+
+        /**
+         * One bit join count. For leafs, set when cumulated. For
+         * internal nodes, becomes true when one child is cumulated.
+         * When second child finishes cumulating, it then moves up
+         * tree, excecuting finish() at the root.
+         */
+        static final int FINISHED = 4;
+
+        static final AtomicIntegerFieldUpdater<FJPlusScan> phaseUpdater =
+            AtomicIntegerFieldUpdater.newUpdater(FJPlusScan.class, "phase");
+
+        /**
+         * Sets phase to indicated bits, returning false if already
+         * set.
+         */
+        boolean transitionTo(int bits) {
+            int c;
+            while (((c = phase) & bits) != bits)
+                if (phaseUpdater.compareAndSet(this, c, c | bits))
+                    return true;
+            return false;
+        }
+
+        FJPlusScan(FJPlusScan parent,
+                   FJPlusScan pred,
+                   int[] array, 
                    int lo, 
                    int hi, 
-                   int gran,
-                   int phase) {
+                   int gran) {
+            this.parent = parent;
+            this.pred = pred;
             this.array = array;
             this.lo = lo; 
             this.hi = hi;
             this.gran = gran;
-            this.phase = phase;
+            this.isLeaf = hi - lo <= gran;
         }
+        
+        public void compute() {
+            boolean cumulate = (phase & CUMULATE) != 0;
 
-        protected void compute() {
-            int p = phase;
-            if (p <= 0) {
-                phase = 1;
-                up();
-                if (p == 0) {
-                    reinitialize();
-                    return;
+            if (!isLeaf) {
+                if (left == null) {
+                    int mid = (lo + hi) >>> 1;
+                    left =  new FJPlusScan(this, pred, array, lo, mid, gran);
+                    right = new FJPlusScan(this, left, array, mid, hi, gran);
+                }
+                if (cumulate) { // push down sums
+                    int cin = in;
+                    left.in = cin;
+                    right.in = cin + left.out;
+                }
+                // Suppress second pass forks if already triggered
+                if (!cumulate || right.transitionTo(CUMULATE))
+                    right.fork();
+                if (!cumulate || left.transitionTo(CUMULATE))
+                    left.compute();
+            }
+
+            else {
+                if (!cumulate) { // try early cumulation if predecessor done
+                    FJPlusScan prev = pred;
+                    if (prev == null) // leftmost segment always OK
+                        cumulate = true;
+                    else {  // (this rarely loops unless can cumulate)
+                        for (;;) {
+                            if ((prev.phase & FINISHED) == 0)
+                                break;
+                            if (prev.isLeaf) {
+                                cumulate = true;
+                                break;
+                            }
+                            if ((prev = prev.right) == null)
+                                break;
+                        }
+                    }
+                    if (cumulate) {
+                        if (!transitionTo(CUMULATE))
+                            return; // lost refork race
+                        int last = lo - 1;
+                        in = (last < 0)? 0 : array[last];
+                    }
+                }
+                
+                if (cumulate) {
+                    int cin = in;
+                    int sum = cin;
+                    for (int i = lo; i < hi; ++i)
+                        sum = array[i] += sum;
+                    out = sum - cin;
+                }
+
+                else if (hi < array.length) { // skip rightmost
+                    int sum = 0;
+                    for (int i = lo; i < hi; ++i)
+                        sum += array[i];
+                    out = sum;
+                }
+
+                // Propagate sums upward and trigger second pass
+                if (transitionTo(SUMMED)) {
+                    FJPlusScan p = parent;
+                    while (p != null && !p.transitionTo(SUMMED)) {
+                        p.out = p.left.out + p.right.out;
+                        // lo is 0 for root and left spine subtrees
+                        if (p.lo == 0 && p.transitionTo(CUMULATE))
+                            p.fork();
+                        p = p.parent;
+                    }
+                }
+
+                // Propagate completion
+                if (cumulate && transitionTo(FINISHED)) {
+                    FJPlusScan s = this;
+                    FJPlusScan p = parent;
+                    while (p != null) {
+                        if (p.transitionTo(FINISHED))
+                            return;
+                        s = p;
+                        p = p.parent;
+                    }
+                    s.finish(); // explicit finish() call only at root
                 }
             }
-            down();
-        }
-
-        private void up() {
-            int l = lo;
-            int h = hi;
-            if (h - l <= gran) {
-                int sum = 0;
-                for (int i = l; i <= h; ++i)
-                    sum += array[i];
-                out = sum;
-            }
-            else {
-                int mid = (l + h) >>> 1;
-                left = new FJPlusScan(array, l, mid, gran, 0);
-                right = new FJPlusScan(array, mid+1, h, gran, 0);
-                coInvoke(left, right);
-                out = left.out + right.out;
-            }
-        }
-
-        private void down() {
-            if (left == null) {
-                int l = lo;
-                int h = hi;
-                int sum = in;
-                for (int i = l; i <= h; ++i)
-                    sum = array[i] += sum;
-            }
-            else {
-                int t = in;
-                left.in = t;
-                right.in = t + left.out;
-                coInvoke(left, right);
-            } 
         }
     }
 
@@ -889,7 +1017,7 @@ public class IntTasks {
         }
 
         void seqCompute() {
-            for (int i = lo; i <= hi; ++i) {
+            for (int i = lo; i < hi; ++i) {
                 int x = array[i];
                 if (pred.evaluate(x) && result.value == missing) {
                     result.value = x;
@@ -910,7 +1038,7 @@ public class IntTasks {
                 new FJFindAny(array, pred, result, missing, lo, mid, gran);
             left.fork();
             FJFindAny right = 
-                new FJFindAny(array, pred, result, missing, mid + 1, hi, gran);
+                new FJFindAny(array, pred, result, missing, mid, hi, gran);
             right.invoke();
             if (result.value != missing)
                 left.cancel();
@@ -946,7 +1074,7 @@ public class IntTasks {
 
 
         void seqCompute() {
-            for (int i = lo; i <= hi; ++i) {
+            for (int i = lo; i < hi; ++i) {
                 int x = array[i];
                 if (pred.evaluate(x))
                     result.add(x);
@@ -962,7 +1090,7 @@ public class IntTasks {
             FJFindAll left = 
                 new FJFindAll(array, pred, result, lo, mid, gran);
             FJFindAll right = 
-                new FJFindAll(array, pred, result, mid + 1, hi, gran);
+                new FJFindAll(array, pred, result, mid, hi, gran);
             coInvoke(left, right);
         }
     }              
@@ -1010,13 +1138,13 @@ public class IntTasks {
                 int u = h + q;   // upper quarter
 
                 coInvoke(new SubSorter(new FJSorter(a, ao,   w, wo,   q),
-                                          new FJSorter(a, ao+q, w, wo+q, q),
-                                          new FJMerger(a, ao,   q, ao+q, q, 
-                                                        w, wo)),
+                                       new FJSorter(a, ao+q, w, wo+q, q),
+                                       new FJMerger(a, ao,   q, ao+q, q, 
+                                                    w, wo)),
                          new SubSorter(new FJSorter(a, ao+h, w, wo+h, q),
-                                          new FJSorter(a, ao+u, w, wo+u, n-u),
-                                          new FJMerger(a, ao+h, q, ao+u, n-u, 
-                                                        w, wo+h)));
+                                       new FJSorter(a, ao+u, w, wo+u, n-u),
+                                       new FJMerger(a, ao+h, q, ao+u, n-u, 
+                                                    w, wo+h)));
                 new FJMerger(w, wo, h, wo+h, n-h, a, ao).compute();
             }
         }
@@ -1071,11 +1199,11 @@ public class IntTasks {
               Otherwise:
               1. Split Left partition in half.
               2. Find the greatest point in Right partition
-                 less than the beginning of the second half of left, 
-                 via binary search.
+              less than the beginning of the second half of left, 
+              via binary search.
               3. In parallel:
-                  merge left half of  L with elements of R up to split point
-                  merge right half of L with elements of R past split point
+              merge left half of  L with elements of R up to split point
+              merge right half of L with elements of R past split point
             */
 
             if (ln <= SEQUENTIAL_THRESHOLD)

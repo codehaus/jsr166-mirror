@@ -229,7 +229,8 @@ public class IntTasks {
         int gran = 1 + n / ((threads << 3) - 7);
         if (gran < 2048)
             gran = 2048;
-        FJPlusScan r = new FJPlusScan(null, null, array, 0, n, gran);
+        FJCumulator.Ctl ctl = new FJCumulator.Ctl(array, gran);
+        FJCumulator r = new FJCumulator(null, ctl, 0, n);
         pool.invoke(r);
         return array[n-1];
     }
@@ -808,26 +809,35 @@ public class IntTasks {
      *    result is not needed for second pass).
      *
      */
-    static final class FJPlusScan extends AsyncAction {
-        final FJPlusScan parent;
-        FJPlusScan left, right;
-        final int[] array;
-        final int lo;
-        final int hi;
-        final int gran;
-        final boolean isLeaf;
+    static final class FJCumulator extends AsyncAction {
 
         /**
-         * A predecessor in tree (or null if none). Needed to
-         * determine if a segment already has incoming cumulation
-         * during first pass. For right-hand leaf nodes, this always
-         * points to left sibling.  For others, it points to parent's
-         * pred, in which case, when determining if cumulation is
-         * ready, it descends right children to find predecessor leaf,
-         * if it exists. It might not exist if the node has not yet
-         * been created.
+         * Shared control across nodes
          */
-        final FJPlusScan pred;
+        static final class Ctl {
+            final int[] array;
+            final int granularity;
+            /**
+             * The index of the max current consecutive
+             * cumulation starting from leftmost. Initially zero.
+             */
+            volatile int consecutiveIndex;
+            /**
+             * The current consecutive cumulation
+             */
+            int consecutiveSum;
+
+            Ctl(int[] array, int granularity) {
+                this.array = array;
+                this.granularity = granularity;
+            }
+        }
+
+        final FJCumulator parent;
+        final FJCumulator.Ctl ctl;
+        FJCumulator left, right;
+        final int lo;
+        final int hi;
 
         /** Incoming cumulative sum */
         int in;
@@ -868,8 +878,8 @@ public class IntTasks {
          */
         static final int FINISHED = 4;
 
-        static final AtomicIntegerFieldUpdater<FJPlusScan> phaseUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(FJPlusScan.class, "phase");
+        static final AtomicIntegerFieldUpdater<FJCumulator> phaseUpdater =
+            AtomicIntegerFieldUpdater.newUpdater(FJCumulator.class, "phase");
 
         /**
          * Sets phase to indicated bits, returning false if already
@@ -883,29 +893,24 @@ public class IntTasks {
             return false;
         }
 
-        FJPlusScan(FJPlusScan parent,
-                   FJPlusScan pred,
-                   int[] array, 
-                   int lo, 
-                   int hi, 
-                   int gran) {
+        FJCumulator(FJCumulator parent,
+                    FJCumulator.Ctl ctl,
+                    int lo, 
+                    int hi) {
             this.parent = parent;
-            this.pred = pred;
-            this.array = array;
+            this.ctl = ctl;
             this.lo = lo; 
             this.hi = hi;
-            this.gran = gran;
-            this.isLeaf = hi - lo <= gran;
         }
         
         public void compute() {
             boolean cumulate = (phase & CUMULATE) != 0;
 
-            if (!isLeaf) {
+            if (hi - lo > ctl.granularity) {
                 if (left == null) {
                     int mid = (lo + hi) >>> 1;
-                    left =  new FJPlusScan(this, pred, array, lo, mid, gran);
-                    right = new FJPlusScan(this, left, array, mid, hi, gran);
+                    left =  new FJCumulator(this, ctl, lo, mid);
+                    right = new FJCumulator(this, ctl, mid, hi);
                 }
                 if (cumulate) { // push down sums
                     int cin = in;
@@ -920,38 +925,24 @@ public class IntTasks {
             }
 
             else {
-                if (!cumulate) { // try early cumulation if predecessor done
-                    FJPlusScan prev = pred;
-                    if (prev == null) // leftmost segment always OK
-                        cumulate = true;
-                    else {  // (this rarely loops unless can cumulate)
-                        for (;;) {
-                            if ((prev.phase & FINISHED) == 0)
-                                break;
-                            if (prev.isLeaf) {
-                                cumulate = true;
-                                break;
-                            }
-                            if ((prev = prev.right) == null)
-                                break;
-                        }
-                    }
-                    if (cumulate) {
-                        if (!transitionTo(CUMULATE))
-                            return; // lost refork race
-                        int last = lo - 1;
-                        in = (last < 0)? 0 : array[last];
-                    }
-                }
-                
+                int[] array = ctl.array;
                 if (cumulate) {
-                    int cin = in;
+                    int sum = in;
+                    for (int i = lo; i < hi; ++i)
+                        sum = array[i] += sum;
+                }
+                else if (lo == ctl.consecutiveIndex) {
+                    if (!transitionTo(CUMULATE))
+                        return; // lost refork race
+                    int cin = ctl.consecutiveSum;
                     int sum = cin;
                     for (int i = lo; i < hi; ++i)
                         sum = array[i] += sum;
                     out = sum - cin;
+                    ctl.consecutiveSum = sum;
+                    ctl.consecutiveIndex = hi;
+                    cumulate = true;
                 }
-
                 else if (hi < array.length) { // skip rightmost
                     int sum = 0;
                     for (int i = lo; i < hi; ++i)
@@ -961,7 +952,7 @@ public class IntTasks {
 
                 // Propagate sums upward and trigger second pass
                 if (transitionTo(SUMMED)) {
-                    FJPlusScan p = parent;
+                    FJCumulator p = parent;
                     while (p != null && !p.transitionTo(SUMMED)) {
                         p.out = p.left.out + p.right.out;
                         // lo is 0 for root and left spine subtrees
@@ -972,9 +963,10 @@ public class IntTasks {
                 }
 
                 // Propagate completion
-                if (cumulate && transitionTo(FINISHED)) {
-                    FJPlusScan s = this;
-                    FJPlusScan p = parent;
+                if (cumulate) {
+                    transitionTo(FINISHED);
+                    FJCumulator s = this;
+                    FJCumulator p = parent;
                     while (p != null) {
                         if (p.transitionTo(FINISHED))
                             return;

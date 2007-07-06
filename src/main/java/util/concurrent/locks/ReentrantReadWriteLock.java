@@ -327,8 +327,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         protected final boolean tryAcquire(int acquires) {
             /*
              * Walkthrough:
-             * 1. if read count nonzero or write count nonzero
-             *     and owner is a different thread, fail.
+             * 1. If read count nonzero or write count nonzero
+             *    and owner is a different thread, fail.
              * 2. If count would saturate, fail. (This can only
              *    happen if count is already nonzero.)
              * 3. Otherwise, this thread is eligible for lock if

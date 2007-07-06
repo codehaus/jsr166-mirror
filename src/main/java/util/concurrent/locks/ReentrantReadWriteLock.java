@@ -539,7 +539,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
             /* As a heuristic to avoid indefinite writer starvation,
              * block if the thread that momentarily appears to be head
              * of queue, if one exists, is a waiting writer. This is
-             * only a probablistic effect since a new reader will not
+             * only a probabilistic effect since a new reader will not
              * block if there is a waiting writer behind other enabled
              * readers that have not yet drained from the queue.
              */

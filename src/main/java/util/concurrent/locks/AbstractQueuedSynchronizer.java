@@ -1338,7 +1338,7 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Returns true if the given thread is currently queued.
+     * Returns {@code true} if the given thread is currently queued.
      *
      * <p>This implementation traverses the queue to determine
      * presence of the given thread.
@@ -1357,7 +1357,7 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Return {@code true} if the apparent first queued thread, if one
+     * Returns {@code true} if the apparent first queued thread, if one
      * exists, is waiting in exclusive mode. Used only as a heuristic
      * in ReentrantReadWriteLock.
      */
@@ -1367,7 +1367,7 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Return {@code true} if the queue is empty or if the given thread
+     * Returns {@code true} if the queue is empty or if the given thread
      * is at the head of the queue. This is reliable only if
      * <tt>current</tt> is actually Thread.currentThread() of caller.
      */

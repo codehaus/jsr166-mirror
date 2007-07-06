@@ -290,14 +290,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          */
 
         /**
-         * Return true if a reader thread that is otherwise
+         * Returns {@code true} if a reader thread that is otherwise
          * eligible for lock should block because of policy
          * for overtaking other waiting threads.
          */
         abstract boolean readerShouldBlock(Thread current);
 
         /**
-         * Return true if a writer thread that is otherwise
+         * Returns {@code true} if a writer thread that is otherwise
          * eligible for lock should block because of policy
          * for overtaking other waiting threads.
          */

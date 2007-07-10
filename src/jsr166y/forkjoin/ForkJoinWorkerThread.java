@@ -14,10 +14,10 @@ import java.util.concurrent.atomic.*;
  * managed by ForkJoinPools in support of ForkJoinTasks.  However,
  * this class also provides public <tt>static</tt> methods accessing
  * basic scheduling and execution mechanics for the current
- * ForkJoinWorkerThread.  These methods may be invoked only from
- * within other ForkJoinTask computations. Attempts to invoke in other
- * contexts result in exceptions or errors including
- * ClassCastException.
+ * ForkJoinWorkerThread. These enable construction of special-purpose
+ * task classes. These methods may be invoked only from within other
+ * ForkJoinTask computations. Attempts to invoke in other contexts
+ * result in exceptions or errors including ClassCastException.
  */
 public class ForkJoinWorkerThread extends Thread {
     /*
@@ -127,6 +127,8 @@ public class ForkJoinWorkerThread extends Thread {
      */
     int idleCount;
 
+    volatile boolean shouldStop;
+
     /**
      * Padding to avoid cache-line sharing across workers
      */
@@ -140,6 +142,7 @@ public class ForkJoinWorkerThread extends Thread {
         this.pool = pool;
         this.index = index;
         setDaemon(true);
+        pool.workerActive();
     }
 
     /**
@@ -147,23 +150,26 @@ public class ForkJoinWorkerThread extends Thread {
      * called explicitly. It executes the main run loop.
      */
     public void run() {
+        Throwable exception = null;
         try {
-            pool.workerActive();
             // Finish initialization
+            randomSeed = (((long)index << 24) ^ System.nanoTime());
+            if (randomSeed == 0)
+                randomSeed = index + 1;
             if (queue == null) 
                 growQueue(null);
-            randomSeed = (((long)index << 24) ^ System.nanoTime()) | 1;
 
-            while (!pool.isStopped()) {
+            while (!shouldStop) {
                 ForkJoinTask<?> task = doTakeNextTask();
                 if (task == null)
                     task = pool.takeSubmission(this);
                 if (task != null)
                     task.exec();
             }
-
+        } catch (Throwable ex) {
+            exception = ex;
         } finally {
-            pool.workerTerminated(this, index);
+            pool.workerTerminated(this, exception);
         }
     }
 
@@ -188,7 +194,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Sets status to represent that this worker is active running
      * a task
      */
-    void clearIdleCount() {
+    final void clearIdleCount() {
         if (idleCount != 0) {
             idleCount = 0;
             pool.workerActive();
@@ -198,7 +204,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Increments idle count upon unsuccessful scan.
      */
-    void advanceIdleCount() {
+    final void advanceIdleCount() {
         int next = idleCount + 1;
         if (next >= MAX_SCANS)
             next = MAX_SCANS;
@@ -209,14 +215,26 @@ public class ForkJoinWorkerThread extends Thread {
             Thread.yield(); 
     }
 
+    final boolean isActive() {
+        return idleCount == 0;
+    }
+
     // Misc status and accessor methods, callable from ForkJoinTasks
 
-    private ForkJoinPool doGetPool() {
+    final ForkJoinPool doGetPool() {
         return pool;
     }
 
-    private int getIndex() {
+    final int getIndex() {
         return index;
+    }
+
+    final void shouldStop() {
+        shouldStop = true;
+    }
+
+    final boolean isStopped() {
+        return shouldStop;
     }
 
     boolean queueIsEmpty() {
@@ -388,12 +406,12 @@ public class ForkJoinWorkerThread extends Thread {
         ForkJoinTask<?> popped = popTask();
         if (popped != null)
             return popped;
-        ForkJoinWorkerThread[] workers = pool.getWorkers();
-        final int n = workers.length;
+        ForkJoinWorkerThread[] ws = pool.getWorkers();
+        final int n = ws.length;
         int idx = randomIndex(n);
         int remaining = n;
         while (remaining-- > 0) {
-            ForkJoinWorkerThread v = workers[idx];
+            ForkJoinWorkerThread v = ws[idx];
             if (++idx >= n)
                 idx = 0;
             if (v != null && v != this) {
@@ -601,6 +619,18 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
+     * Adds the given task as the next task scheduled for execution in
+     * this worker's local queue.
+     * @param task the task
+     * @throws NullPointerException if task is null
+     */
+    public static void putNextLocalTask(ForkJoinTask<?> task) {
+        if (task == null)
+            throw new NullPointerException();
+        ((ForkJoinWorkerThread)(Thread.currentThread())).pushTask(task);
+    }
+
+    /**
      * Removes and returns, without executing, the given task from the
      * queue hosting current execution only if it would be the next
      * task executed by the current worker thread.  Among other
@@ -660,11 +690,12 @@ public class ForkJoinWorkerThread extends Thread {
     public static boolean helpExecuteTasks() {
         ForkJoinTask<?> t = 
             ((ForkJoinWorkerThread)(Thread.currentThread())).takeNextTask();
-        if (t != null) {
+        if (t == null)
+            return false;
+        else {
             t.exec();
             return true;
         }
-        return false;
     }
 
     /**
@@ -678,4 +709,16 @@ public class ForkJoinWorkerThread extends Thread {
     public static int getWorkerIndex() {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).getIndex();
     }
+
+    /**
+     * Returns true if the current worker thread cannot obtain
+     * a task to execute. This method is conservative: It might
+     * not return true immediately upon idleness, but will eventually
+     * return true if this thread cannot obtain work.
+     * @return true if idle
+     */
+    public static boolean isIdle() {
+        return !(((ForkJoinWorkerThread)(Thread.currentThread())).isActive());
+    }
+
 }

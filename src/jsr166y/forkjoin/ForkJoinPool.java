@@ -40,12 +40,13 @@ public class ForkJoinPool {
     static final AtomicInteger poolNumberGenerator = new AtomicInteger();
 
     /**
-     * The pool of threads. Currently, all threads are created
-     * upon construction. However, all usages of workers array
-     * are prepared to see null entries, allowing alternative
-     * schemes in which workers are added more lazily.
+     * Array holding all worker threads in the pool. Acts basically as
+     * a CopyOnWriteArrayList, but hand-crafted to allow in-place
+     * replacements and to maintain thread to index mappings. All uses
+     * of this array should first assign as local, and must screen out
+     * nulls.
      */
-    final ForkJoinWorkerThread[] workers;
+    volatile ForkJoinWorkerThread[] workers;
 
     /**
      * External submission queue. "Submissions" are tasks scheduled
@@ -65,7 +66,13 @@ public class ForkJoinPool {
     final ReentrantLock lock;
 
     /**
-     * Condition triggered when new work is available so workers
+     * Condition for awaitTermination. Triggered when
+     * runningWorkers reaches zero.
+     */
+    final Condition termination;
+
+    /**
+     * Condition triggered when new submission is available so workers
      * should awaken if blocked.
      */
     final Condition workAvailable;
@@ -77,12 +84,6 @@ public class ForkJoinPool {
      * wakeups of one vs the other kinds of waits.
      */
     final Condition idleSleep;
-
-    /**
-     * Condition for awaitTermination. Triggered when
-     * runningWorkers reaches zero.
-     */
-    final Condition termination;
 
     /**
      * Tracks whether pool is running, shutdown, etc. Modified
@@ -182,6 +183,13 @@ public class ForkJoinPool {
     }
 
     /**
+     * Return a useful name for a worker thread
+     */
+    private String workerName(int i) {
+        return "ForkJoinPool-" + poolNumber + "-worker-" + i;
+    }
+
+    /**
      * Creates a ForkJoinPool with a pool size equal to the number of
      * processors available on the system.
      */
@@ -190,8 +198,15 @@ public class ForkJoinPool {
     }
 
     /**
-     * Creates a ForkJoinPool with the indicated number
-     * of Worker threads.
+     * Creates a ForkJoinPool with the indicated number of Worker
+     * threads. You can also add and remove threads while the pool is
+     * running, it is generally more efficient and leads to more
+     * predictable performance to initialize the pool with a
+     * sufficient number of threads to support the desired concurrency
+     * level and leave this value fixed.
+     * @param poolSize the number of worker threads
+     * @throws IllegalArgumentException if poolSize less than or
+     * equal to zero
      */
     public ForkJoinPool(int poolSize) {
         if (poolSize <= 0) 
@@ -203,23 +218,87 @@ public class ForkJoinPool {
         idleSleep = lock.newCondition();
         termination = lock.newCondition();
         submissions = new SubmissionQueue();
-        workers = new ForkJoinWorkerThread[poolSize];
-        startWorkers();
+        ForkJoinWorkerThread[] ws = new ForkJoinWorkerThread[poolSize];
+        for (int i = 0; i < ws.length; ++i)
+            ws[i] = new ForkJoinWorkerThread(this, i, workerName(i));
+        workers = ws;
+        startWorkers(ws);
     }
 
-
-    private void startWorkers() {
-        // Create then start all threads, in case of creation errors.
-        for (int i = 0; i < workers.length; ++i) {
-            String name = "ForkJoinPool-" + poolNumber + "-worker-" + i;
-            workers[i] = new ForkJoinWorkerThread(this, i, name);
-        }
+    /**
+     * Start all workers in the given array.
+     */
+    private void startWorkers(ForkJoinWorkerThread[] ws) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = 0; i < workers.length; ++i) {
-                workers[i].start();
-                ++runningWorkers;
+            for (int i = 0; i < ws.length; ++i) {
+                ForkJoinWorkerThread t = ws[i];
+                if (t != null) {
+                    t.start();
+                    ++runningWorkers;
+                }
             }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Adds a new worker thread to the pool. This method may be used
+     * to increase the amount of parallelism available to tasks.
+     * @return the index of the added worker thread.
+     * @throws IllegalStateException if pool is terminating or
+     * terminated
+     */
+    public int addWorker() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            if (runState >= STOP)
+                throw new IllegalStateException();
+            ForkJoinWorkerThread[] ws = workers;
+            int len = ws.length;
+            ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[len+1];
+            System.arraycopy(ws, 0, nws, 0, len);
+            ForkJoinWorkerThread w =
+                new ForkJoinWorkerThread(this, len, workerName(len));
+            if (ueh != null)
+                w.setUncaughtExceptionHandler(ueh);
+            nws[len] = w;
+            new ForkJoinWorkerThread(this, len, workerName(len));
+            workers = nws;
+            w.start();
+            ++runningWorkers;
+            return len;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Removes a worker thread from the pool. The worker will
+     * exit the next time it is idle. This method may be used
+     * to decrease the amount of parallelism available to tasks.
+     * @return the index of the removed worker thread.
+     * @throws IllegalStateException if pool is terminating or
+     * terminated or the poolSize would become zero.
+     */
+    public int removeWorker() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            ForkJoinWorkerThread[] ws = workers;
+            int newlen = ws.length - 1;
+            if (newlen <= 0 || runState >= STOP)
+                throw new IllegalStateException();
+            ForkJoinWorkerThread w = ws[newlen];
+            ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[newlen];
+            System.arraycopy(ws, 0, nws, 0, newlen);
+            workers = nws;
+            if (w != null) 
+                w.shouldStop();
+            return newlen;
         } finally {
             lock.unlock();
         }
@@ -272,6 +351,7 @@ public class ForkJoinPool {
      * @return true if pool should continue when one thread aborts
      */
     public boolean getContinueOnErrorPolicy() {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             return continueOnError;
@@ -287,6 +367,7 @@ public class ForkJoinPool {
      * @param shouldContinue true if the pool should continue
      */
     public void setContinueOnErrorPolicy(boolean shouldContinue) {
+        final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             continueOnError = shouldContinue;
@@ -319,8 +400,9 @@ public class ForkJoinPool {
         try {
             old = ueh;
             ueh = h;
-            for (int i = 0; i < workers.length; ++i) {
-                ForkJoinWorkerThread w = workers[i];
+            ForkJoinWorkerThread[] ws = workers;
+            for (int i = 0; i < ws.length; ++i) {
+                ForkJoinWorkerThread w = ws[i];
                 if (w != null)
                     w.setUncaughtExceptionHandler(h);
             }
@@ -331,7 +413,11 @@ public class ForkJoinPool {
     }
 
     /**
-     * Returns the number of worker threads in this pool.
+     * Returns the number of worker threads in this pool.  If
+     * <tt>removeWorker</tt> has been called but the associated
+     * removed workers have not reached an idle state, there may
+     * transiently be more workers executing than indicated by this
+     * method.
      *
      * @return the number of worker threads in this pool
      */
@@ -395,6 +481,16 @@ public class ForkJoinPool {
     }
 
     /**
+     * Returns <tt>true</tt> if termination has commenced but has
+     * not yet completed.
+     *
+     * @return <tt>true</tt> if in the process of terminating
+     */
+    public boolean isTerminating() {
+        return runState == STOP;
+    }
+
+    /**
      * Blocks until all tasks have completed execution after a shutdown
      * request, or the timeout occurs, or the current thread is
      * interrupted, whichever happens first.
@@ -427,8 +523,10 @@ public class ForkJoinPool {
         if (runState < STOP) {
             runState = STOP;
             cancelQueuedSubmissions();
-            cancelQueuedWorkerTasks();
-            interruptAllWorkers();
+            ForkJoinWorkerThread[] ws = workers;
+            stopAllWorkers(ws);
+            doCancelQueuedWorkerTasks(ws);
+            interruptAllWorkers(ws);
             signalWork();
         }
     }
@@ -449,18 +547,30 @@ public class ForkJoinPool {
      * ForkJoinPool#setMaximumActiveSubmissionCount}.
      */
     public void cancelQueuedWorkerTasks() {
-        for (int i = 0; i < workers.length; ++i) {
-            ForkJoinWorkerThread t = workers[i];
+        doCancelQueuedWorkerTasks(workers);
+    }
+    
+    final void doCancelQueuedWorkerTasks(ForkJoinWorkerThread[] ws) {
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread t = ws[i];
             if (t != null)
                 t.cancelTasks();
         }
     }
 
-    final void interruptAllWorkers() {
-        for (int i = 0; i < workers.length; ++i) {
-            ForkJoinWorkerThread t = workers[i];
+    final void interruptAllWorkers(ForkJoinWorkerThread[] ws) {
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread t = ws[i];
             if (t != null)
                 t.interrupt();
+        }
+    }
+
+    final void stopAllWorkers(ForkJoinWorkerThread[] ws) {
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread t = ws[i];
+            if (t != null)
+                t.shouldStop();
         }
     }
 
@@ -473,8 +583,9 @@ public class ForkJoinPool {
      */
     public long getStealCount() {
         long sum = 0;
-        for (int i = 0; i < workers.length; ++i) {
-            ForkJoinWorkerThread t = workers[i];
+        ForkJoinWorkerThread[] ws = workers;
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread t = ws[i];
             if (t != null)
                 sum += t.stealCount;
         }
@@ -500,8 +611,9 @@ public class ForkJoinPool {
      */
     public long getTotalPerThreadQueueSize() {
         long count = 0;
-        for (int i = 0; i < workers.length; ++i) {
-            ForkJoinWorkerThread t = workers[i];
+        ForkJoinWorkerThread[] ws = workers;
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread t = ws[i];
             if (t != null)
                 count += t.getQueueSize();
         }
@@ -572,16 +684,19 @@ public class ForkJoinPool {
         }
     }
 
-
-    // Internal methods that may be invoked by workers
-
     /**
-     * Returns true if all threads are currently idle.
+     * Returns true if all worker threads are currently idle. An idle
+     * worker is one that cannot obtain a task to execute.  This
+     * method is conservative: It might not return true immediately
+     * upon idleness of all threads, but will eventually become true
+     * if no threads become active.
      * @return true is all threads are currently idle
      */
     public boolean isQuiescent() {
         return activeWorkers == 0;
     }
+
+    // Internal methods that may be invoked by workers
 
     /**
      * Callback when worker becomes active
@@ -597,10 +712,6 @@ public class ForkJoinPool {
         activeWorkersUpdater.decrementAndGet(this);
     }
 
-    final boolean isStopped() {
-        return runState >= STOP;
-    }
-
     final ForkJoinWorkerThread[] getWorkers() {
         return workers;
     }
@@ -613,7 +724,7 @@ public class ForkJoinPool {
         lock.lock();
         try {
             if (--runningSubmissions <= 0) {
-                if (runState == SHUTDOWN && submissions.isEmpty())
+                if (runState >= SHUTDOWN && submissions.isEmpty())
                     terminate();
             }
         } finally {
@@ -700,9 +811,9 @@ public class ForkJoinPool {
 
     /**
      * Wakes up some thread that is sleeping waiting for work.  Called
-     * from ForkJoinWorkerThread.takeNextTask. This propagates wakeups across
-     * workers when new work becomes available to a set of otherwise
-     * idle threads.
+     * from ForkJoinWorkerThreads upon successful steals. This
+     * propagates wakeups across workers when new work becomes
+     * available to a set of otherwise idle threads.
      * @param w the worker that may have some tasks to steal from
      */
     final void alertSleeper(ForkJoinWorkerThread w) {
@@ -725,31 +836,49 @@ public class ForkJoinPool {
     /**
      * Termination callback from dying worker.
      * @param w the worker
+     * @param ex the exception causing abrupt termination, or null if
+     * completed normally
      */
-    final void workerTerminated(ForkJoinWorkerThread w, int index) {
+    final void workerTerminated(ForkJoinWorkerThread w, Throwable ex) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             w.cancelTasks();
             w.advanceIdleCount();
-            if (runState >= STOP) {
-                if (--runningWorkers <= 0) {
-                    runState = TERMINATED;
-                    termination.signalAll();
+            boolean replaced = false;
+            if (ex != null) {
+                if (!continueOnError)
+                    terminate();
+                else if (runState < STOP) {
+                    int idx = w.getIndex();
+                    ForkJoinWorkerThread[] ws = workers;
+                    if (idx < ws.length) { 
+                        ForkJoinWorkerThread replacement = 
+                            new ForkJoinWorkerThread(this, idx, w.getName());
+                        if (ueh != null)
+                            replacement.setUncaughtExceptionHandler(ueh);
+                        ws[idx] = replacement;
+                        replacement.start();
+                        replaced = true;
+                    }
                 }
             }
-            else if (!continueOnError)
-                terminate();
-            else {
-                ForkJoinWorkerThread replacement = 
-                    new ForkJoinWorkerThread(this, index, w.getName());
-                if (ueh != null)
-                    replacement.setUncaughtExceptionHandler(ueh);
-                workers[index] = replacement;
-                replacement.start();
+            if (!replaced && --runningWorkers <= 0) {
+                if (runState < STOP)
+                    terminate();
+                runState = TERMINATED;
+                termination.signalAll();
             }
         } finally {
             lock.unlock();
+        }
+        if (ex != null) {
+            if (ex instanceof RuntimeException)
+                throw (RuntimeException)ex;
+            else if (ex instanceof Error)
+                throw (RuntimeException)ex;
+            else
+                throw new Error(ex);
         }
     }
 

@@ -29,7 +29,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
 
     /**
      * Records whether the underlying JVM supports lockless
-     * CompareAndSet for longs. While the unsafe.CompareAndSetLong
+     * compareAndSwap for longs. While the Unsafe.compareAndSwapLong
      * method works in either case, some constructions should be
      * handled at Java level to avoid locking user-visible locks.
      */

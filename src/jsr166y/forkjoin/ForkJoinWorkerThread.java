@@ -18,6 +18,15 @@ import java.util.concurrent.atomic.*;
  * task classes. These methods may be invoked only from within other
  * ForkJoinTask computations. Attempts to invoke in other contexts
  * result in exceptions or errors including ClassCastException.
+ *
+ * <p>Worker threads may access and process tasks obtained in any of
+ * three ways. In preference order: <em>Local</em> tasks are processed
+ * in LIFO (newest first) order. <em>Stolen</em> tasks are obtained
+ * from other threads in FIFO (oldest first) order.
+ * <em>Submissions</em> form a FIFO queue common to the entire
+ * pool. The preference order among local and stolen tasks cannot be
+ * changed. However, methods exist to preferentially process
+ * submissions
  */
 public class ForkJoinWorkerThread extends Thread {
     /*
@@ -122,7 +131,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Number of scans since last successfully getting a task.
      * Always zero when busy executing tasks. 
-     * Incremented after a failed scan in doTakeNextTask(),
+     * Incremented after a failed scan in getNextTask(),
      * to help control sleeps inside Pool.takeSubmission
      */
     int idleCount;
@@ -160,7 +169,7 @@ public class ForkJoinWorkerThread extends Thread {
                 growQueue(null);
 
             while (!shouldStop) {
-                ForkJoinTask<?> task = doTakeNextTask();
+                ForkJoinTask<?> task = getNextTask();
                 if (task == null)
                     task = pool.takeSubmission(this);
                 if (task != null)
@@ -376,7 +385,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Tries to take a task from the base of the queue.  Always
      * called by other non-owning threads. Fails upon contention.
      *
-     * Currently used only for cancellation -- doTakeNextTask embeds
+     * Currently used only for cancellation -- getNextTask embeds
      * a variant with contention control for other cases.
      * @return a task, or null if none
      */
@@ -402,7 +411,7 @@ public class ForkJoinWorkerThread extends Thread {
      * apparent contention, rescans all workers.
      * @return a task or null if none
      */
-    ForkJoinTask<?> doTakeNextTask() {
+    ForkJoinTask<?> getNextTask() {
         ForkJoinTask<?> popped = popTask();
         if (popped != null)
             return popped;
@@ -469,6 +478,20 @@ public class ForkJoinWorkerThread extends Thread {
         }
     }
 
+    /**
+     * Return either a task, or if none, a pool submission
+     */
+    ForkJoinTask<?> getNextTaskOrSubmission() {
+        ForkJoinTask<?> t = getNextTask();
+        if (t == null)
+            t = pool.pollSubmission(this);
+        return t;
+    }
+
+    ForkJoinTask<?> doPollSubmission() {
+        return pool.pollSubmission(this);
+    }
+
     /*
      * Support for other ForkJoinTask methods.
      */
@@ -483,7 +506,7 @@ public class ForkJoinWorkerThread extends Thread {
                 throw ex;
             if (joinMe.status < 0)
                 return joinMe.getResult();
-            ForkJoinTask<?> t = doTakeNextTask();
+            ForkJoinTask<?> t = getNextTask();
             if (t != null)
                 t.exec();
         }
@@ -497,7 +520,7 @@ public class ForkJoinWorkerThread extends Thread {
             RuntimeException ex = joinMe.exception;
             if (ex != null || joinMe.status < 0)
                 return ex;
-            ForkJoinTask<?> t = doTakeNextTask();
+            ForkJoinTask<?> t = getNextTask();
             if (t != null)
                 t.exec();
         }
@@ -600,22 +623,36 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Removes and returns, without executing, the next task queued
-     * for execution, which may be either locally queued task, or one
-     * stolen from another worker thread.
-     * @return the next task to execute, or null if none
+     * Returns the index number of the current worker in its pool.
+     * The return value is in the range
+     * <tt>0...getPool().getPoolSize()-1</tt>.  This method may be
+     * useful for applications that track status or collect results
+     * per-worker rather than per-task.
+     * @return the index number.
      */
-    public static ForkJoinTask<?> takeNextTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).doTakeNextTask();
+    public static int getWorkerIndex() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).getIndex();
     }
 
     /**
-     * Removes and returns, without executing, the next task queued
-     * for execution in this worker's local queue.
-     * @return the next task to execute, or null if none
+     * Returns true if the current worker thread cannot obtain
+     * a task to execute. This method is conservative: It might
+     * not return true immediately upon idleness, but will eventually
+     * return true if this thread cannot obtain work.
+     * @return true if idle
      */
-    public static ForkJoinTask<?> takeNextLocalTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).popTask();
+    public static boolean isIdle() {
+        return !(((ForkJoinWorkerThread)(Thread.currentThread())).isActive());
+    }
+
+    /**
+     * Returns the number of tasks waiting to be run by the thread
+     * currently performing task execution. This value may be useful
+     * for heuristic decisions about whether to fork other tasks.
+     * @return the number of tasks
+     */
+    public static int getLocalQueueSize() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).getQueueSize();
     }
 
     /**
@@ -624,7 +661,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @param task the task
      * @throws NullPointerException if task is null
      */
-    public static void putNextLocalTask(ForkJoinTask<?> task) {
+    public static void addNextLocalTask(ForkJoinTask<?> task) {
         if (task == null)
             throw new NullPointerException();
         ((ForkJoinWorkerThread)(Thread.currentThread())).pushTask(task);
@@ -646,12 +683,11 @@ public class ForkJoinWorkerThread extends Thread {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).doRemoveIfNextLocalTask(task);
     }
 
-
     /**
      * Returns, but does not remove or execute, the next task locally
      * queued for execution. There is no guarantee that this task will
      * be the next one actually executed or returned from
-     * <tt>takeNextTask</tt>.
+     * <tt>pollNextTask</tt>.
      * @return the next task or null if none
      */
     public static ForkJoinTask<?> peekNextLocalTask() {
@@ -659,37 +695,49 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns the number of tasks waiting to be run by the thread
-     * currently performing task execution. This value may be useful
-     * for heuristic decisions about whether to fork other tasks.
-     * @return the number of tasks
+     * Removes and returns, without executing, the next task queued
+     * for execution in this worker's local queue.
+     * @return the next task to execute, or null if none
      */
-    public static int getLocalQueueSize() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).getQueueSize();
+    public static ForkJoinTask<?> pollNextLocalTask() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).popTask();
     }
 
     /**
-     * Helps this program complete by processing a ready task, if one
-     * is available.  This method may be useful when several tasks are
-     * forked, and only one of them must be joined, as in: 
-     * <pre>
-     *   while (!t1.isDone() &amp;&amp; !t2.isDone()) 
-     *     ForkJoinWorkerThread.helpExecuteTasks();
-     * </pre> 
-     * Similarly, you can help process tasks until a computation
-     * completes via 
-     * <pre>
-     *   while(ForkJoinWorkerThread.helpExecuteTasks() || 
-     *         !ForkJoinWorkerThread.getPool().isQuiescent()) 
-     *      ;
-     * </pre>
-     *
-     * @return true if a task was run; a false return indicates
-     * that no ready task was available.
+     * Removes and returns, without executing, the next task queued
+     * for execution, which may be either locally queued task, or one
+     * stolen from another worker thread.
+     * @return the next task to execute, or null if none
      */
-    public static boolean helpExecuteTasks() {
+    public static ForkJoinTask<?> pollNextTask() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).getNextTask();
+    }
+
+    /**
+     * Removes and returns, without executing, the next pool submission.
+     * @return the next task to execute, or null if none
+     */
+    public static ForkJoinTask<?> pollNextSubmission() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).doPollSubmission();
+    }
+
+    /**
+     * Removes and returns, without executing, the next task queued
+     * for execution, if one exists, or a pool submission, if one exsits.
+     * @return the next task to execute, or null if none
+     */
+    public static ForkJoinTask<?> pollNextTaskOrSubmission() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).getNextTaskOrSubmission();
+    }
+
+    /**
+     * Execute a locally queued task, if one is available.
+     * @return true if a task was run; a false return indicates
+     * that no task was available.
+     */
+    public static boolean executeLocalTask() {
         ForkJoinTask<?> t = 
-            ((ForkJoinWorkerThread)(Thread.currentThread())).takeNextTask();
+            ((ForkJoinWorkerThread)(Thread.currentThread())).popTask();
         if (t == null)
             return false;
         else {
@@ -699,26 +747,67 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns the index number of the current worker in its pool.
-     * The return value is in the range
-     * <tt>0...getPool().getPoolSize()-1</tt>.  This method may be
-     * useful for applications that track status or collect results
-     * per-worker rather than per-task.
-     * @return the index number.
+     * Executes a local or stolen task, if one is available.  This
+     * method may be useful when several tasks are forked, and only
+     * one of them must be joined, as in:
+     * <pre>
+     *   while (!t1.isDone() &amp;&amp; !t2.isDone()) 
+     *     ForkJoinWorkerThread.executeTask();
+     * </pre> 
+     * Similarly, you can help process tasks until a computation
+     * completes via 
+     * <pre>
+     *   while(ForkJoinWorkerThread.executeTask() || 
+     *         !ForkJoinWorkerThread.getPool().isQuiescent()) 
+     *      ;
+     * </pre>
+     *
+     * @return true if a task was run; a false return indicates
+     * that no task was available.
      */
-    public static int getWorkerIndex() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).getIndex();
+    public static boolean executeTask() {
+        ForkJoinTask<?> t = 
+            ((ForkJoinWorkerThread)(Thread.currentThread())).getNextTask();
+        if (t == null)
+            return false;
+        else {
+            t.exec();
+            return true;
+        }
     }
 
     /**
-     * Returns true if the current worker thread cannot obtain
-     * a task to execute. This method is conservative: It might
-     * not return true immediately upon idleness, but will eventually
-     * return true if this thread cannot obtain work.
-     * @return true if idle
+     * Commences execution of a pool submission, if one exists.
+     * @return true if a task was run; a false return indicates that
+     * no pool submission was available.
      */
-    public static boolean isIdle() {
-        return !(((ForkJoinWorkerThread)(Thread.currentThread())).isActive());
+    public static boolean executeSubmission() {
+        ForkJoinTask<?> t = 
+            ((ForkJoinWorkerThread)(Thread.currentThread())).doPollSubmission();
+        if (t == null)
+            return false;
+        else {
+            t.exec();
+            return true;
+        }
+    }
+
+    /**
+     * Helps this program complete by processing a ready task, if one
+     * is available, or if not available, commencing execution of a
+     * pool submission, if one exists.
+     * @return true if a task was run; a false return indicates that
+     * no task or pool submission was available.
+     */
+    public static boolean executeTaskOrSubmission() {
+        ForkJoinTask<?> t = 
+            ((ForkJoinWorkerThread)(Thread.currentThread())).getNextTaskOrSubmission();
+        if (t == null)
+            return false;
+        else {
+            t.exec();
+            return true;
+        }
     }
 
 }

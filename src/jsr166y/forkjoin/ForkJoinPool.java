@@ -212,7 +212,7 @@ public class ForkJoinPool {
         if (poolSize <= 0) 
             throw new IllegalArgumentException();
         poolNumber = poolNumberGenerator.incrementAndGet();
-        maxRunningSubmissions = poolSize;
+        maxRunningSubmissions = Integer.MAX_VALUE;
         lock = new ReentrantLock();
         workAvailable = lock.newCondition();
         idleSleep = lock.newCondition();
@@ -575,6 +575,27 @@ public class ForkJoinPool {
     }
 
     /**
+     * Returns true if all worker threads are currently idle. An idle
+     * worker is one that cannot obtain a task to execute.  This
+     * method is conservative: It might not return true immediately
+     * upon idleness of all threads, but will eventually become true
+     * if no threads become active.
+     * @return true is all threads are currently idle
+     */
+    public boolean isQuiescent() {
+        return activeWorkers == 0;
+    }
+
+    /**
+     * Returns the number of threads that are not currently idle
+     * waiting for tasks.
+     * @return the number of active threads.
+     */
+    public int getActiveThreadCount() {
+        return activeWorkers;
+    }
+
+    /**
      * Returns the total number of tasks stolen from one thread's work
      * queue by another. This value is only an approximation,
      * obtained by iterating across all threads in the pool, but may
@@ -590,15 +611,6 @@ public class ForkJoinPool {
                 sum += t.stealCount;
         }
         return sum;
-    }
-
-    /**
-     * Returns the number of threads that are not currently idle
-     * waiting for tasks.
-     * @return the number of active threads.
-     */
-    public int getActiveThreadCount() {
-        return activeWorkers;
     }
 
     /**
@@ -652,8 +664,8 @@ public class ForkJoinPool {
 
     /**
      * Returns the maximum number of submitted tasks that are allowed
-     * to concurrently execute. By default, the value is equal to
-     * the pool size.
+     * to concurrently execute. By default, the value is essentially
+     * unbounded (Integer.MAX_VALUE).
      * @return the maximum number
      */
     public int getMaximumActiveSubmissionCount() {
@@ -682,18 +694,6 @@ public class ForkJoinPool {
         } finally {
             lock.unlock();
         }
-    }
-
-    /**
-     * Returns true if all worker threads are currently idle. An idle
-     * worker is one that cannot obtain a task to execute.  This
-     * method is conservative: It might not return true immediately
-     * upon idleness of all threads, but will eventually become true
-     * if no threads become active.
-     * @return true is all threads are currently idle
-     */
-    public boolean isQuiescent() {
-        return activeWorkers == 0;
     }
 
     // Internal methods that may be invoked by workers
@@ -751,7 +751,7 @@ public class ForkJoinPool {
             throw new RejectedExecutionException();
     }
 
-    /**!
+    /**
      * Returns a job to run, or null if none available. Blocks if
      * there are no available submissions. Also sets caller to sleep if
      * repeatedly called when there are active submissions but no available
@@ -807,6 +807,30 @@ public class ForkJoinPool {
             }
         }
         return task;
+    }
+
+    /**
+     * Returns a job to run, or null if none available without blocking.
+     * @param w calling worker
+     */
+    final ForkJoinTask<?> pollSubmission(ForkJoinWorkerThread w) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            if (runState < STOP && 
+                runningSubmissions < maxRunningSubmissions) {
+                ForkJoinTask<?> task = submissions.poll();
+                if (task != null) {
+                    ++runningSubmissions;
+                    w.clearIdleCount();
+                    signalWork();
+                    return task;
+                }
+            }
+            return null;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -876,7 +900,7 @@ public class ForkJoinPool {
             if (ex instanceof RuntimeException)
                 throw (RuntimeException)ex;
             else if (ex instanceof Error)
-                throw (RuntimeException)ex;
+                throw (Error)ex;
             else
                 throw new Error(ex);
         }

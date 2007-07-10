@@ -242,7 +242,7 @@ public class TaskBarrier {
             int p = getCycle();
             if (p != cycle || p < 0)
                 return p;
-            ForkJoinTask<?> t = ForkJoinWorkerThread.takeNextTask();
+            ForkJoinTask<?> t = ForkJoinWorkerThread.pollNextTask();
             if (t != null) {
                 p = getCycle();
                 if (p != cycle) { // if barrier advanced

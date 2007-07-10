@@ -117,7 +117,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * @throws RuntimeException if thrown in either task's compute methods
      */
     public static void coInvoke(RecursiveAction t1, RecursiveAction t2) {
-        ((ForkJoinPool.Worker)(Thread.currentThread())).coInvokeTasks(t1, t2);
+        ((ForkJoinWorkerThread)(Thread.currentThread())).coInvokeTasks(t1, t2);
     }
 
     /**
@@ -130,7 +130,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * @throws RuntimeException if thrown in any task's compute method
      */
     public static void coInvoke(RecursiveAction[] tasks) {
-        ((ForkJoinPool.Worker)(Thread.currentThread())).coInvokeTasks(tasks);
+        ((ForkJoinWorkerThread)(Thread.currentThread())).coInvokeTasks(tasks);
     }
 
     /**
@@ -143,7 +143,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * @throws RuntimeException if thrown in any task's compute method
      */
     public static void coInvoke(List<? extends RecursiveAction> tasks) {
-        ((ForkJoinPool.Worker)(Thread.currentThread())).coInvokeTasks(tasks);
+        ((ForkJoinWorkerThread)(Thread.currentThread())).coInvokeTasks(tasks);
     }
 
     /**

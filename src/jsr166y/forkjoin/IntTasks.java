@@ -219,16 +219,17 @@ public class IntTasks {
      * @param array the array
      * @return the sum of all elements
      */
-    public static int plusScan(ForkJoinPool pool, int[] array) {
+    public static int cumulate(ForkJoinPool pool, int[] array) {
         int n = array.length;
         if (n == 0)
             return 0;
         if (n == 1)
             return array[0];
         int threads = pool.getPoolSize();
-        int gran = 1 + n / ((threads << 3) - 7);
-        if (gran < 2048)
-            gran = 2048;
+        //        int gran = 1 + n / ((threads << 3) - 7);
+        //        if (gran < 2048)
+        //            gran = 2048;
+        int gran = (threads == 1)? n : 4096;
         FJCumulator.Ctl ctl = new FJCumulator.Ctl(array, gran);
         FJCumulator r = new FJCumulator(null, ctl, 0, n);
         pool.invoke(r);

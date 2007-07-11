@@ -12,10 +12,13 @@ import java.util.concurrent.*;
  * to receive elements.  A <tt>TransferQueue</tt> may be useful for
  * example in message passing applications in which producers
  * sometimes (using method <tt>transfer</tt>) await receipt of
- * elements by consumers invoking <tt>take</tt> or <tt>poll</tt>, while
- * at other times enqueue elements (via method <tt>put</tt>) without
- * waiting for receipt. Non-blocking and time-out versions of
- * <tt>tryTransfer</tt> are also available.
+ * elements by consumers invoking <tt>take</tt> or <tt>poll</tt>,
+ * while at other times enqueue elements (via method <tt>put</tt>)
+ * without waiting for receipt. Non-blocking and time-out versions of
+ * <tt>tryTransfer</tt> are also available.  A TransferQueue may also
+ * be queried via <tt>hasWaitingConsumer</tt> whether there are any
+ * threads waiting for items, which is a converse analogy to a
+ * <tt>peek</tt> operation
  *
  * <p>Like any <tt>BlockingQueue</tt>, a <tt>TransferQueue</tt> may be
  * capacity bounded. If so, an attempted <tt>transfer</tt> operation
@@ -93,9 +96,7 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Returns true if there is at least one consumer waiting to
      * dequeue an element via <tt>take</tt> or <tt>poll</tt>. The
-     * return value represents a momentary state of affairs, that
-     * may be useful for monitoring and heuristics, but not
-     * for synchronization control.
+     * return value represents a momentary state of affairs.
      * @return true if there is at least one waiting consumer.
      */
     boolean hasWaitingConsumer();
@@ -104,10 +105,11 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Returns an estimate of the number of consumers waiting to
      * dequeue elements via <tt>take</tt> or <tt>poll</tt>. The return
-     * value represents a momentary state of affairs, that may be
-     * useful for monitoring and heuristics, but not for
-     * synchronization control. Implementations of this method are
-     * likely to be noticeably slower than those for
+     * value is an approximation of a momentary state of affairs, that
+     * may be inaccurate if consumers have completed or given up
+     * waiting. The value may be useful for monitoring and heuristics,
+     * but not for synchronization control. Implementations of this
+     * method are likely to be noticeably slower than those for
      * <tt>hasWaitingConsumer</tt>.
      * @return the number of consumers waiting to dequeue elements
      */

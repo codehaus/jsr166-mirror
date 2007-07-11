@@ -35,12 +35,49 @@ public class ForkJoinPool {
      */
 
     /**
+     * Factory for creating new ForkJoinWorkerThreads. Use of this
+     * factory supports construction of ForkJoinWorkerThread
+     * subclasses that extend base functionality.
+     */
+    public static interface ForkJoinWorkerThreadFactory {
+        /**
+         * Returns a new worker thread operating in the given pool.
+         * 
+         * @param pool the pool this thread works in
+         * @throws NullPointerException if pool is null;
+         */
+        public ForkJoinWorkerThread newThread(ForkJoinPool pool);
+    }
+
+
+    /**
+     * The default ForkJoinWorkerThreadFactory, used unless overridden
+     * in ForkJoinPool constructors.
+     */
+    public static class  DefaultForkJoinWorkerThreadFactory 
+        implements ForkJoinWorkerThreadFactory {
+        public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+            return new ForkJoinWorkerThread(pool);
+        }
+    }
+
+    static final DefaultForkJoinWorkerThreadFactory 
+        defaultForkJoinWorkerThreadFactory = 
+        new DefaultForkJoinWorkerThreadFactory();
+
+
+    /**
      * Generator for assigning sequence numbers as thread names.
      */
     static final AtomicInteger poolNumberGenerator = new AtomicInteger();
 
     /**
-     * Array holding all worker threads in the pool. Acts basically as
+     * Creation factory for worker threads.
+     */
+    final ForkJoinWorkerThreadFactory factory;
+
+    /**
+     * Array holding all worker threads in the pool. Acts similarly to
      * a CopyOnWriteArrayList, but hand-crafted to allow in-place
      * replacements and to maintain thread to index mappings. All uses
      * of this array should first assign as local, and must screen out
@@ -150,79 +187,104 @@ public class ForkJoinPool {
     boolean continueOnError;
 
     /**
-     * Pool number, just for assigning names
+     * Pool number, just for assigning useful names to worker threads
      */
     final int poolNumber;
 
     /**
-     * The number of times to scan for tasks before
-     * yileding/sleeping (and thereafter, between sleeps).  Must
-     * be a power of two minus 1. Using short sleeps during times
-     * when tasks should be available but aren't makes these
-     * threads cope better with lags due to GC, dynamic
-     * compilation, queue resizing, and multitasking.
-     */
-    static final int SCANS_PER_SLEEP = (1 << 10) - 1;
-
-    /**
-     * The amount of time to sleep per empty scan. Sleep durations
-     * increase only arithmetically, as a compromise between
-     * responsiveness and good citizenship.  The value here
-     * arranges that first sleep is approximately the smallest
-     * value worth context switching out for on typical platforms.
-     */
-    static final long SLEEP_NANOS_PER_SCAN = (1 << 16);
-
-    /**
-     * Returns true if a given idleCount value indicates that its
-     * corresponding worker should enter a sleep on failure to get a
-     * new task.
-     */
-    static boolean shouldSleep(int scans) {
-        return (scans & SCANS_PER_SLEEP) == SCANS_PER_SLEEP;
-    }
-
-    /**
-     * Return a useful name for a worker thread
-     */
-    private String workerName(int i) {
-        return "ForkJoinPool-" + poolNumber + "-worker-" + i;
-    }
-
-    /**
      * Creates a ForkJoinPool with a pool size equal to the number of
-     * processors available on the system.
+     * processors available on the system and using the default
+     * ForkJoinWorkerThreadFactory,
      */
     public ForkJoinPool() {
-        this(Runtime.getRuntime().availableProcessors());
+        this(Runtime.getRuntime().availableProcessors(),
+             defaultForkJoinWorkerThreadFactory);
     }
 
     /**
      * Creates a ForkJoinPool with the indicated number of Worker
-     * threads. You can also add and remove threads while the pool is
-     * running, it is generally more efficient and leads to more
-     * predictable performance to initialize the pool with a
-     * sufficient number of threads to support the desired concurrency
-     * level and leave this value fixed.
+     * threads, and using the default ForkJoinWorkerThreadFactory,
      * @param poolSize the number of worker threads
      * @throws IllegalArgumentException if poolSize less than or
      * equal to zero
      */
     public ForkJoinPool(int poolSize) {
+        this(poolSize, defaultForkJoinWorkerThreadFactory);
+    }
+
+    /**
+     * Creates a ForkJoinPool with a pool size equal to the number of
+     * processors available on the system and using the given
+     * ForkJoinWorkerThreadFactory,
+     * @param factory the factory for creating new threads
+     * @throws NullPointerException if factory is null
+     */
+    public ForkJoinPool(ForkJoinWorkerThreadFactory factory) {
+        this(Runtime.getRuntime().availableProcessors(), factory);
+    }
+
+    /**
+     * Creates a ForkJoinPool with the indicated number of worker
+     * threads and the given factory.
+     *
+     * <p> You can also add and remove threads while the pool is
+     * running, it is generally more efficient and leads to more
+     * predictable performance to initialize the pool with a
+     * sufficient number of threads to support the desired concurrency
+     * level and leave this value fixed.
+     *
+     * @param poolSize the number of worker threads
+     * @param factory the factory for creating new threads
+     * @throws IllegalArgumentException if poolSize less than or
+     * equal to zero
+     * @throws NullPointerException if factory is null
+     */
+    public ForkJoinPool(int poolSize, ForkJoinWorkerThreadFactory factory) {
         if (poolSize <= 0) 
             throw new IllegalArgumentException();
-        poolNumber = poolNumberGenerator.incrementAndGet();
-        maxRunningSubmissions = Integer.MAX_VALUE;
-        lock = new ReentrantLock();
-        workAvailable = lock.newCondition();
-        idleSleep = lock.newCondition();
-        termination = lock.newCondition();
-        submissions = new SubmissionQueue();
+        if (factory == null)
+            throw new NullPointerException();
+        this.factory = factory;
+        this.poolNumber = poolNumberGenerator.incrementAndGet();
+        this.maxRunningSubmissions = Integer.MAX_VALUE;
+        this.lock = new ReentrantLock();
+        this.termination = lock.newCondition();
+        this.workAvailable = lock.newCondition();
+        this.idleSleep = lock.newCondition();
+        this.submissions = new SubmissionQueue();
         ForkJoinWorkerThread[] ws = new ForkJoinWorkerThread[poolSize];
         for (int i = 0; i < ws.length; ++i)
-            ws[i] = new ForkJoinWorkerThread(this, i, workerName(i));
-        workers = ws;
+            ws[i] = createWorker(i);
+        this.workers = ws;
         startWorkers(ws);
+    }
+
+    /**
+     * Create new worker using factory
+     * @param index the index to assign worker
+     */
+    private ForkJoinWorkerThread createWorker(int index) {
+        ForkJoinWorkerThread w = factory.newThread(this);
+        w.setDaemon(true);
+        w.setIndex(index);
+        String name = "ForkJoinPool-" + poolNumber + "-worker-" + index;
+        w.setName(name);
+        if (ueh != null)
+            w.setUncaughtExceptionHandler(ueh);
+        workerActive();
+        return w;
+    }
+
+    /**
+     * Start the given worker, if nonnull. Call only while holding
+     * main lock.
+     * @param w the worker
+     */
+    private void startWorker(ForkJoinWorkerThread w) {
+        if (w != null) {
+            w.start();
+            ++runningWorkers;
+        }
     }
 
     /**
@@ -232,13 +294,8 @@ public class ForkJoinPool {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = 0; i < ws.length; ++i) {
-                ForkJoinWorkerThread t = ws[i];
-                if (t != null) {
-                    t.start();
-                    ++runningWorkers;
-                }
-            }
+            for (int i = 0; i < ws.length; ++i) 
+                startWorker(ws[i]);
         } finally {
             lock.unlock();
         }
@@ -261,15 +318,10 @@ public class ForkJoinPool {
             int len = ws.length;
             ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[len+1];
             System.arraycopy(ws, 0, nws, 0, len);
-            ForkJoinWorkerThread w =
-                new ForkJoinWorkerThread(this, len, workerName(len));
-            if (ueh != null)
-                w.setUncaughtExceptionHandler(ueh);
+            ForkJoinWorkerThread w = createWorker(len);
             nws[len] = w;
-            new ForkJoinWorkerThread(this, len, workerName(len));
             workers = nws;
-            w.start();
-            ++runningWorkers;
+            startWorker(w);
             return len;
         } finally {
             lock.unlock();
@@ -302,17 +354,6 @@ public class ForkJoinPool {
         } finally {
             lock.unlock();
         }
-    }
-
-    /**
-     * Signal blocked/sleeping workers
-     */
-    final void signalWork() {
-        if (sleepers != 0) {
-            sleepers = 0;
-            idleSleep.signalAll();
-        }
-        workAvailable.signalAll();
     }
 
     /**
@@ -519,7 +560,24 @@ public class ForkJoinPool {
         }
     }
 
-    final void terminate() { // called only under lock
+    /**
+     * Cancels all tasks that are currently held in any worker
+     * thread's local queues. This method may be useful for bulk
+     * cancellation of a set of tasks that may terminate when any one
+     * of them finds a solution. However, this applies only if you are
+     * sure that no other tasks have been submitted to, or are active
+     * in, the pool. See {@link
+     * ForkJoinPool#setMaximumActiveSubmissionCount}.
+     */
+    public void cancelQueuedWorkerTasks() {
+        doCancelQueuedWorkerTasks(workers);
+    }
+
+
+    /**
+     * Initiate termination. Call only while holding main lock.
+     */
+    final void terminate() {
         if (runState < STOP) {
             runState = STOP;
             cancelQueuedSubmissions();
@@ -537,19 +595,6 @@ public class ForkJoinPool {
             task.cancel(false);
     }
 
-    /**
-     * Cancels all tasks that are currently held in any worker
-     * thread's local queues. This method may be useful for bulk
-     * cancellation of a set of tasks that may terminate when any one
-     * of them finds a solution. However, this applies only if you are
-     * sure that no other tasks have been submitted to, or are active
-     * in, the pool. See {@link
-     * ForkJoinPool#setMaximumActiveSubmissionCount}.
-     */
-    public void cancelQueuedWorkerTasks() {
-        doCancelQueuedWorkerTasks(workers);
-    }
-    
     final void doCancelQueuedWorkerTasks(ForkJoinWorkerThread[] ws) {
         for (int i = 0; i < ws.length; ++i) {
             ForkJoinWorkerThread t = ws[i];
@@ -608,7 +653,7 @@ public class ForkJoinPool {
         for (int i = 0; i < ws.length; ++i) {
             ForkJoinWorkerThread t = ws[i];
             if (t != null)
-                sum += t.stealCount;
+                sum += t.getSteals();
         }
         return sum;
     }
@@ -696,10 +741,10 @@ public class ForkJoinPool {
         }
     }
 
-    // Internal methods that may be invoked by workers
+    // Internal methods
 
     /**
-     * Callback when worker becomes active
+     * Callback when worker is created or becomes active
      */
     final void workerActive() {
         activeWorkersUpdater.incrementAndGet(this);
@@ -712,24 +757,22 @@ public class ForkJoinPool {
         activeWorkersUpdater.decrementAndGet(this);
     }
 
+    /**
+     * Return current workers array
+     */
     final ForkJoinWorkerThread[] getWorkers() {
         return workers;
     }
 
     /**
-     * Completion callback from externally submitted job.
+     * Signal blocked/sleeping workers
      */
-    final void submissionCompleted() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (--runningSubmissions <= 0) {
-                if (runState >= SHUTDOWN && submissions.isEmpty())
-                    terminate();
-            }
-        } finally {
-            lock.unlock();
+    final void signalWork() {
+        if (sleepers != 0) {
+            sleepers = 0;
+            idleSleep.signalAll();
         }
+        workAvailable.signalAll();
     }
 
     /**
@@ -752,6 +795,50 @@ public class ForkJoinPool {
     }
 
     /**
+     * Completion callback from externally submitted job.
+     */
+    final void submissionCompleted() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            if (--runningSubmissions <= 0) {
+                if (runState >= SHUTDOWN && submissions.isEmpty())
+                    terminate();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * The number of times to scan for tasks before
+     * yileding/sleeping (and thereafter, between sleeps).  Must
+     * be a power of two minus 1. Using short sleeps during times
+     * when tasks should be available but aren't makes these
+     * threads cope better with lags due to GC, dynamic
+     * compilation, queue resizing, and multitasking.
+     */
+    static final int SCANS_PER_SLEEP = (1 << 10) - 1;
+
+    /**
+     * The amount of time to sleep per empty scan. Sleep durations
+     * increase only arithmetically, as a compromise between
+     * responsiveness and good citizenship.  The value here
+     * arranges that first sleep is approximately the smallest
+     * value worth context switching out for on typical platforms.
+     */
+    static final long SLEEP_NANOS_PER_SCAN = (1 << 16);
+
+    /**
+     * Returns true if a given idleCount value indicates that its
+     * corresponding worker should enter a sleep on failure to get a
+     * new task.
+     */
+    static boolean shouldSleep(int scans) {
+        return (scans & SCANS_PER_SLEEP) == SCANS_PER_SLEEP;
+    }
+
+    /**
      * Returns a job to run, or null if none available. Blocks if
      * there are no available submissions. Also sets caller to sleep if
      * repeatedly called when there are active submissions but no available
@@ -760,7 +847,7 @@ public class ForkJoinPool {
      * etc.
      * @param w calling worker
      */
-    final ForkJoinTask<?> takeSubmission(ForkJoinWorkerThread w) {
+    final ForkJoinTask<?> getSubmission(ForkJoinWorkerThread w) {
         ForkJoinTask<?> task = null;
         final ReentrantLock lock = this.lock;
         if (lock.tryLock()) { // skip on lock contention
@@ -867,9 +954,8 @@ public class ForkJoinPool {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            w.cancelTasks();
-            w.advanceIdleCount();
             boolean replaced = false;
+            int rw = --runningWorkers;
             if (ex != null) {
                 if (!continueOnError)
                     terminate();
@@ -877,17 +963,14 @@ public class ForkJoinPool {
                     int idx = w.getIndex();
                     ForkJoinWorkerThread[] ws = workers;
                     if (idx < ws.length) { 
-                        ForkJoinWorkerThread replacement = 
-                            new ForkJoinWorkerThread(this, idx, w.getName());
-                        if (ueh != null)
-                            replacement.setUncaughtExceptionHandler(ueh);
+                        ForkJoinWorkerThread replacement = createWorker(idx);
                         ws[idx] = replacement;
-                        replacement.start();
+                        startWorker(replacement);
                         replaced = true;
                     }
                 }
             }
-            if (!replaced && --runningWorkers <= 0) {
+            if (!replaced && rw <= 0) {
                 if (runState < STOP)
                     terminate();
                 runState = TERMINATED;
@@ -903,6 +986,58 @@ public class ForkJoinPool {
                 throw (Error)ex;
             else
                 throw new Error(ex);
+        }
+    }
+
+
+    /**
+     * A SubmissionQueue is a simple array-based circular queue.
+     * Basically a stripped-down ArrayDeque
+     */
+    static final class SubmissionQueue {
+        static final int INITIAL_SUBMISSION_QUEUE_CAPACITY = 64;
+        Submission<?>[] elements = (Submission<?>[]) 
+            new Submission[INITIAL_SUBMISSION_QUEUE_CAPACITY];
+        int head;
+        int tail;
+
+        int size() {
+            return (tail - head) & (elements.length - 1);
+        }
+
+        boolean isEmpty() {
+            return head == tail;
+        }
+
+        void add(Submission<?> e) {
+            elements[tail] = e;
+            if ( (tail = (tail + 1) & (elements.length - 1)) == head)
+                doubleCapacity();
+        }
+
+        Submission<?> poll() {
+            int h = head;
+            Submission<?> result = elements[h];
+            if (result != null) {
+                elements[h] = null;
+                head = (h + 1) & (elements.length - 1);
+            }
+            return result;
+        }
+
+        void doubleCapacity() {
+            int p = head;
+            int n = elements.length;
+            int r = n - p;
+            int newCapacity = n << 1;
+            if (newCapacity < 0)
+                throw new IllegalStateException("Queue capacity exceeded");
+            Submission<?>[] a = (Submission<?>[]) new Submission[newCapacity];
+            System.arraycopy(elements, p, a, 0, r);
+            System.arraycopy(elements, 0, a, r, p);
+            elements = a;
+            head = 0;
+            tail = n;
         }
     }
 
@@ -1035,58 +1170,6 @@ public class ForkJoinPool {
                 }
             }
             return t.getResult();
-        }
-    }
-
-
-    /**
-     * A SubmissionQueue is a simple array-based circular queue.
-     * Basically a stripped-down ArrayDeque
-     */
-    static final class SubmissionQueue {
-        static final int INITIAL_SUBMISSION_QUEUE_CAPACITY = 64;
-        Submission<?>[] elements = (Submission<?>[]) 
-            new Submission[INITIAL_SUBMISSION_QUEUE_CAPACITY];
-        int head;
-        int tail;
-
-        int size() {
-            return (tail - head) & (elements.length - 1);
-        }
-
-        boolean isEmpty() {
-            return head == tail;
-        }
-
-        void add(Submission<?> e) {
-            elements[tail] = e;
-            if ( (tail = (tail + 1) & (elements.length - 1)) == head)
-                doubleCapacity();
-        }
-
-        Submission<?> poll() {
-            int h = head;
-            Submission<?> result = elements[h];
-            if (result != null) {
-                elements[h] = null;
-                head = (h + 1) & (elements.length - 1);
-            }
-            return result;
-        }
-
-        void doubleCapacity() {
-            int p = head;
-            int n = elements.length;
-            int r = n - p;
-            int newCapacity = n << 1;
-            if (newCapacity < 0)
-                throw new IllegalStateException("Queue capacity exceeded");
-            Submission<?>[] a = (Submission<?>[]) new Submission[newCapacity];
-            System.arraycopy(elements, p, a, 0, r);
-            System.arraycopy(elements, 0, a, r, p);
-            elements = a;
-            head = 0;
-            tail = n;
         }
     }
 

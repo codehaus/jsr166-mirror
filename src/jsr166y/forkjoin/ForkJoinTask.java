@@ -82,23 +82,22 @@ public abstract class ForkJoinTask<V> {
     /**
      * Status becoming negative when task completes normally.  When a
      * computation completes normally (i.e., not via exceptions or
-     * cancellation), the "status" is set negative.  So a task is
-     * considered completed if either the exception is non-null or
-     * status is negative; and must always be checked in that
-     * order. (When not complete, status bits can are used for other
-     * purposes). This avoids requiring volatile reads and writes for
-     * other fields. Even though according to the JMM, writes to
-     * status (or other per-task fields) need not be immediately
-     * visible to other threads, they must eventually be so here: They
-     * will always be visible to any stealing thread, since these
-     * reads will be fresh. In other situations, in the worst case of
-     * not being seen earlier, since Worker threads eventually, with
-     * probability 1 scan all other threads, any subsequent read
-     * must see any writes occuring before last volatile bookkeeping
-     * operation, which all workers must eventually perform. And on
-     * the issuing side, "status" is asserted after rechecking
-     * exception field after compute returns, which prevents premature
-     * writes.
+     * cancellation), status is set negative.  So a task is considered
+     * completed if either the exception is non-null or status is
+     * negative; and must always be checked in that order. (When not
+     * complete, status bits are used for other purposes). This avoids
+     * requiring volatile reads and writes for other fields. Even
+     * though according to the JMM, writes to status (or other
+     * per-task fields) need not be immediately visible to other
+     * threads, they must eventually be so here: They will always be
+     * visible to any stealing thread, since these reads will be
+     * fresh. In other situations, in the worst case of not being seen
+     * earlier, since Worker threads eventually, with probability 1
+     * scan all other threads, any subsequent read must see any writes
+     * occuring before last volatile bookkeeping operation, which all
+     * workers must eventually perform. And on the issuing side,
+     * "status" is asserted after rechecking exception field after
+     * task bodies returns, which prevents premature writes.
      */
     int status;
 
@@ -153,7 +152,7 @@ public abstract class ForkJoinTask<V> {
      * ClassCastException.
      */
     public final void fork() {
-        ((ForkJoinWorkerThread)(Thread.currentThread())).pushTask(this);
+        ForkJoinWorkerThread.addLocalTask(this);
     }
 
     /**
@@ -169,7 +168,16 @@ public abstract class ForkJoinTask<V> {
      * @throws RuntimeException if the underlying computation did so.
      */
     public final V join() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).joinTask(this);
+        for (;;) {
+            RuntimeException ex;
+            ForkJoinTask<?> t;
+            if ((ex = exception) != null)
+                throw ex;
+            if (status < 0)
+                return getResult();
+            if ((t = ForkJoinWorkerThread.pollTask()) != null)
+                t.exec();
+        }
     }
 
     /**
@@ -268,7 +276,14 @@ public abstract class ForkJoinTask<V> {
      * null if this task completed normally.
      */
     public final RuntimeException quietlyJoin() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).quietlyJoinTask(this);
+        for (;;) {
+            RuntimeException ex;
+            ForkJoinTask<?> t;
+            if ((ex = exception) != null || status < 0)
+                return ex;
+            if ((t = ForkJoinWorkerThread.pollTask()) != null)
+                t.exec();
+        }
     }
 
     /**

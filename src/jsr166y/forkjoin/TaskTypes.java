@@ -9,28 +9,29 @@ import java.util.*;
 
 /**
  * Interface type names for common methods forms used in parallel
- * operations. It includes type names for common operation signatures;
- * those accepting zero, one or two arguments, and returning zero or
- * one results, for parameterized types, as well as specializations to
- * <tt>int</tt>, <tt>long</tt>, and <tt>double</tt>. (Lesser used
- * types like <tt>short</tt> are absent.)
+ * operations. This class provides type names for common operation
+ * signatures; those accepting zero, one or two arguments, and
+ * returning zero or one results, for parameterized types, as well as
+ * specializations to <tt>int</tt>, <tt>long</tt>, and
+ * <tt>double</tt>. (Lesser used types like <tt>short</tt> are
+ * absent.)
  * 
- * <p>This class is a stand-in for functionality that will probably be
- * supported in some other way in Java 7. For now, you can <tt>import
+ * <p>This class is a stand-in for functionality that may be supported
+ * in some other way in Java 7. For now, you can <tt>import
  * static</tt> this class.
  */
 public class TaskTypes {
 
     /** 
-     * Interface for a generator (builder) of objects of type T that
-     * takes no arguments.
+     * A generator (builder) of objects of type T that takes no
+     * arguments.
      */
     public static interface Generator<T> { 
         public T generate();               
     }
 
     /**
-     * Interface for a method of one argument that does not return a
+     * An object with a method of one argument that does not return a
      * result.
      */
     public static interface Procedure<T> {
@@ -38,7 +39,7 @@ public class TaskTypes {
     }
 
     /**
-     * Interface for a function accepting objects of type T and
+     * An object with a function accepting objects of type T and
      * returning those of type U
      */
     public static interface Mapper<T, U> {
@@ -46,15 +47,15 @@ public class TaskTypes {
     }
 
     /**
-     * A specialization of a Mapper that produces results of the same
-     * type as its argument.
+     * A specialized Mapper that produces results of the same type as
+     * its argument.
      */
     public static interface Transformer<T> extends Mapper<T, T> {
         public T map(T u);
     }
 
     /**
-     * Interface for a function accepting pairs of objects, one of
+     * On object with a function accepting pairs of objects, one of
      * type T and one of type U, returning those of type V
      */
     public static interface Combiner<T, U, V> { 
@@ -62,8 +63,8 @@ public class TaskTypes {
     }
 
     /**
-     * A specialization of combiner that is associative and accepts
-     * pairs of objects of the same type and returning one of the same
+     * A specialized Combiner that is associative and accepts pairs of
+     * objects of the same type and returning one of the same
      * type. Like for example, an addition operation, a Reducer must
      * be (left) associative: combine(a, combine(b, c)) should have
      * the same result as combine(conbine(a, b), c).
@@ -73,126 +74,125 @@ public class TaskTypes {
     }
 
     /**
-     * Interface for a boolean method of one argument
+     * An object with boolean method of one argument
      */
     public static interface Predicate<T> {
         public boolean evaluate(T t);
     }
 
     /**
-     * Version of a mapper that returns an int result
+     *  A Mapper returning an int
      */
     public static interface MapperToInt<T> {
         public int map(T t);
     }
 
     /**
-     * Version of a mapper that returns a double result
+     * A Mapper returning a double
      */
     public static interface MapperToDouble<T> {
         public double map(T t);
     }
 
     /**
-     * Version of a mapper that returns a long result
+     * A Mapper returning a long
      */
     public static interface MapperToLong<T> {
         public long map(T t);
     }
 
     /**
-     * Version of a Mapper that accepts int arguments
+     * A Mapper accepting an int
      */
     public static interface MapperFromInt<T> {
         public T map(int t);
     }
 
     /**
-     * Version of a Mapper that accepts double arguments
+     * A Mapper accepting a double
      */
     public static interface MapperFromDouble<T> {
         public T map(double t);
     }
 
     /**
-     * Version of a Mapper that accepts long arguments
+     * A Mapper accepting a long argument
      */
     public static interface MapperFromLong<T> {
         public T map(long t);
     }
 
-    /** Version of Generator for double */
+    /** A Generator of doubles */
     public static interface DoubleGenerator { 
         public double generate();               
     }
 
-    /** Version of Procedure for double */
+    /** A Procedure accepting a double */
     public static interface DoubleProcedure {
         public void apply(double t);
     }
 
-    /** Version of Transformer for double */
+    /** A Transformer accepting and returing doubles */
     public static interface DoubleTransformer {
         public double map(double u);
     }
 
-    /** Version of Reducer for double */
+    /** A Reducer accepting and returning doubles */
     public static interface DoubleReducer {
         public double combine(double u, double v);
     }
 
-    /** Version of Predicate for double */
+    /** A Predicate accepting a double argument */
     public static interface DoublePredicate {
         public boolean evaluate(double t);
     }
 
-
-    /** Version of Generator for long */
+    /** A Generator of longs */
     public static interface LongGenerator { 
         public long generate();               
     }
 
-    /** Version of Procedure for long */
+    /** A Procedure accepting a long */
     public static interface LongProcedure {
         public void apply(long t);
     }
 
-    /** Version of Transformer for long */
+    /** A Transformer accepting and returning longs */
     public static interface LongTransformer {
         public long map(long u);
     }
 
-    /** Version of Reducer for long */
+    /** A Reducer accepting and returning longs */
     public static interface LongReducer {
         public long combine(long u, long v);
     }
 
-    /** Version of Predicate for long */
+    /** A Predicate accepting a long argument */
     public static interface LongPredicate {
         public boolean evaluate(long t);
     }
 
-    /** Version of Generator for int */
+    /** A Generator of ints */
     public static interface IntGenerator { 
         public int generate();               
     }
 
-    /** Version of Procedure for int */
+    /** A Procedure accepting an int */
     public static interface IntProcedure {
         public void apply(int t);
     }
 
-    /** Version of Transformer for int */
+    /** A Transformer accepting and returning ints */
     public static interface IntTransformer {
         public int map(int u);
     }
 
-    /** Version of Reducer for int */
+    /** A Reducer accepting and returning ints */
     public static interface IntReducer {
         public int combine(int u, int v);
     }
 
-    /** Version of Predicate for int */
+    /** A Predicate accepting an int */
     public static interface IntPredicate {
         public boolean evaluate(int t);
     }

@@ -114,10 +114,20 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * This method may be invoked only from within other ForkJoinTask
      * computations. Attempts to invoke in other contexts result
      * in exceptions or errors including ClassCastException.
+     * @throws NullPointerException if t1 or t2 are null.
      * @throws RuntimeException if thrown in either task's compute methods
      */
     public static void coInvoke(RecursiveAction t1, RecursiveAction t2) {
-        ((ForkJoinWorkerThread)(Thread.currentThread())).coInvokeTasks(t1, t2);
+        if (t1 == null || t2 == null)
+            throw new NullPointerException();
+        ForkJoinWorkerThread.addLocalTask(t2);
+        RuntimeException ex = t1.exec();
+        boolean popped = ForkJoinWorkerThread.removeIfNextLocalTask(t2);
+        if (ex != null ||
+            ((ex = !popped? t2.quietlyJoin() : t2.exec()) != null)) {
+            t2.cancel();
+            throw ex;
+        }
     }
 
     /**
@@ -127,10 +137,39 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * This method may be invoked only from within other ForkJoinTask
      * computations. Attempts to invoke in other contexts result
      * in exceptions or errors including ClassCastException.
+     * @throws NullPointerException if array or any element of array are null
      * @throws RuntimeException if thrown in any task's compute method
      */
     public static void coInvoke(RecursiveAction[] tasks) {
-        ((ForkJoinWorkerThread)(Thread.currentThread())).coInvokeTasks(tasks);
+        int last = tasks.length - 1;
+        RuntimeException ex = null;
+        for (int i = last; i >= 0; --i) {
+            RecursiveAction t = tasks[i];
+            if (t == null) {
+                if (ex == null)
+                    ex = new NullPointerException();
+            }
+            else if (ex != null)
+                t.cancel();
+            else if (i != 0)
+                ForkJoinWorkerThread.addLocalTask(t);
+            else
+                ex = t.exec();
+        }
+        for (int i = 1; i <= last; ++i) {
+            RecursiveAction t = tasks[i];
+            if (t != null) {
+                boolean pop = ForkJoinWorkerThread.removeIfNextLocalTask(t);
+                if (ex != null)
+                    t.cancel();
+                else if (!pop)
+                    ex = t.quietlyJoin();
+                else
+                    ex = t.exec();
+            }
+        }
+        if (ex != null)
+            throw ex;
     }
 
     /**
@@ -140,10 +179,39 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * This method may be invoked only from within other ForkJoinTask
      * computations. Attempts to invoke in other contexts result
      * in exceptions or errors including ClassCastException.
+     * @throws NullPointerException if list or any element of list are null.
      * @throws RuntimeException if thrown in any task's compute method
      */
     public static void coInvoke(List<? extends RecursiveAction> tasks) {
-        ((ForkJoinWorkerThread)(Thread.currentThread())).coInvokeTasks(tasks);
+        int last = tasks.size() - 1;
+        RuntimeException ex = null;
+        for (int i = last; i >= 0; --i) {
+            RecursiveAction t = tasks.get(i);
+            if (t == null) {
+                if (ex == null)
+                    ex = new NullPointerException();
+            }
+            else if (i != 0)
+                ForkJoinWorkerThread.addLocalTask(t);
+            else if (ex != null)
+                t.cancel();
+            else
+                ex = t.exec();
+        }
+        for (int i = 1; i <= last; ++i) {
+            RecursiveAction t = tasks.get(i);
+            if (t != null) {
+                boolean pop = ForkJoinWorkerThread.removeIfNextLocalTask(t);
+                if (ex != null)
+                    t.cancel();
+                else if (!pop)
+                    ex = t.quietlyJoin();
+                else
+                    ex = t.exec();
+            }
+        }
+        if (ex != null)
+            throw ex;
     }
 
     /**

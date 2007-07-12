@@ -693,7 +693,7 @@ public class ArrayTasks {
      */
 
     // Cutoff for when to do sequential versus parallel sorts and merges 
-    static final int SEQUENTIAL_THRESHOLD = 256; // == 16 * 16
+    static final int SEQUENTIAL_THRESHOLD = 2048; // 256; // == 16 * 16
     // Todo: check for #cpu sensitivity
 
 

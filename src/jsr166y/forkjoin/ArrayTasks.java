@@ -229,9 +229,13 @@ public class ArrayTasks {
      */
     public static <T extends Comparable<? super T>> void sort(ForkJoinPool pool, T[] array) {
         int n = array.length;
+        int threads = pool.getPoolSize();
+        int gran = 1 + n / ((threads * 6) - 5);
+        if (n < 256)
+            n = 256;
         T[] workSpace = (T[])java.lang.reflect.Array.
             newInstance(array.getClass().getComponentType(), n);
-        pool.invoke(new FJSorter<T>(array, 0, workSpace, 0, n));
+        pool.invoke(new FJSorter<T>(array, 0, workSpace, 0, n, gran));
     }
 
     /**
@@ -703,28 +707,31 @@ public class ArrayTasks {
         final T[] w;     // workspace array for merge
         final int wo;    // its origin
         final int n;     // Number of elements in (sub)arrays.
+        final int gran;
 
-        FJSorter (T[] a, int ao, T[] w, int wo, int n) {
+        FJSorter (T[] a, int ao, T[] w, int wo, int n, int gran) {
             this.a = a; this.ao = ao; this.w = w; this.wo = wo; this.n = n;
+            this.gran = gran;
         }
 
         protected void compute()  {
-            if (n <= SEQUENTIAL_THRESHOLD)
+            int g = gran;
+            if (n <= g)
                 quickSort(a, ao, ao+n-1);
             else {
                 int q = n >>> 2; // lower quarter index
                 int h = n >>> 1; // half
                 int u = h + q;   // upper quarter
 
-                coInvoke(new SubSorter<T>(new FJSorter<T>(a, ao,   w, wo,   q),
-                                          new FJSorter<T>(a, ao+q, w, wo+q, q),
+                coInvoke(new SubSorter<T>(new FJSorter<T>(a, ao,   w, wo,   q, g),
+                                          new FJSorter<T>(a, ao+q, w, wo+q, q, g),
                                           new FJMerger<T>(a, ao,   q, ao+q, q, 
-                                                        w, wo)),
-                         new SubSorter<T>(new FJSorter<T>(a, ao+h, w, wo+h, q),
-                                          new FJSorter<T>(a, ao+u, w, wo+u, n-u),
+                                                        w, wo, g)),
+                         new SubSorter<T>(new FJSorter<T>(a, ao+h, w, wo+h, q, g),
+                                          new FJSorter<T>(a, ao+u, w, wo+u, n-u, g),
                                           new FJMerger<T>(a, ao+h, q, ao+u, n-u, 
-                                                        w, wo+h)));
-                new FJMerger<T>(w, wo, h, wo+h, n-h, a, ao).compute();
+                                                        w, wo+h, g)));
+                new FJMerger<T>(w, wo, h, wo+h, n-h, a, ao, g).compute();
             }
         }
 
@@ -752,14 +759,16 @@ public class ArrayTasks {
         final int ln;     // number of elements on left
         final int ro;     // relative origin of right side
         final int rn;     // number of elements on right
-
         final T[] w;      // Output array.
         final int wo;
+        final int gran;
 
-        FJMerger (T[] a, int lo, int ln, int ro, int rn, T[] w, int wo) {
+        FJMerger (T[] a, int lo, int ln, int ro, int rn, T[] w, int wo,
+                  int gran) {
             this.a = a;
             this.w = w;
             this.wo = wo;
+            this.gran = gran;
             // Left side should be largest of the two for fiding split.
             // Swap now, since left/right doesn't otherwise matter
             if (ln >= rn) {
@@ -784,8 +793,8 @@ public class ArrayTasks {
                   merge left half of  L with elements of R up to split point
                   merge right half of L with elements of R past split point
             */
-
-            if (ln <= SEQUENTIAL_THRESHOLD)
+            int g = gran;
+            if (ln <= g)
                 merge();
             else {
                 int lh = ln >>> 1; 
@@ -800,8 +809,8 @@ public class ArrayTasks {
                     else
                         rl = mid + 1;
                 }
-                coInvoke(new FJMerger<T>(a, lo, lh,    ro,    rh,    w, wo), 
-                         new FJMerger<T>(a, ls, ln-lh, ro+rh, rn-rh, w, wo+lh+rh));
+                coInvoke(new FJMerger<T>(a, lo, lh,    ro,    rh,    w, wo, g), 
+                         new FJMerger<T>(a, ls, ln-lh, ro+rh, rn-rh, w, wo+lh+rh, g));
             }
         }
 

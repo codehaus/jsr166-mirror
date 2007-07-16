@@ -230,12 +230,13 @@ public class ArrayTasks {
     public static <T extends Comparable<? super T>> void sort(ForkJoinPool pool, T[] array) {
         int n = array.length;
         int threads = pool.getPoolSize();
-        int gran = 1 + n / ((threads * 6) - 5);
-        if (n < 256)
-            n = 256;
+        if (threads == 1) {
+            quickSort(array, 0, n-1);
+            return;
+        }
         T[] workSpace = (T[])java.lang.reflect.Array.
             newInstance(array.getClass().getComponentType(), n);
-        pool.invoke(new FJSorter<T>(array, 0, workSpace, 0, n, gran));
+        pool.invoke(new FJSorter<T>(array, 0, workSpace, 0, n));
     }
 
     /**
@@ -677,7 +678,6 @@ public class ArrayTasks {
     }              
 
 
-
     /*
      * Sort algorithm based mainly on CilkSort
      * <A href="http://supertech.lcs.mit.edu/cilk/"> Cilk</A>:
@@ -697,9 +697,7 @@ public class ArrayTasks {
      */
 
     // Cutoff for when to do sequential versus parallel sorts and merges 
-    static final int SEQUENTIAL_THRESHOLD = 2048; // 256; // == 16 * 16
-    // Todo: check for #cpu sensitivity
-
+    static final int SEQUENTIAL_THRESHOLD = 1024; 
 
     static class FJSorter<T extends Comparable<? super T>> extends RecursiveAction {
         final T[] a;     // Array to be sorted.
@@ -707,31 +705,28 @@ public class ArrayTasks {
         final T[] w;     // workspace array for merge
         final int wo;    // its origin
         final int n;     // Number of elements in (sub)arrays.
-        final int gran;
 
-        FJSorter (T[] a, int ao, T[] w, int wo, int n, int gran) {
+        FJSorter (T[] a, int ao, T[] w, int wo, int n) {
             this.a = a; this.ao = ao; this.w = w; this.wo = wo; this.n = n;
-            this.gran = gran;
         }
 
         protected void compute()  {
-            int g = gran;
-            if (n <= g)
+            if (n <= SEQUENTIAL_THRESHOLD)
                 quickSort(a, ao, ao+n-1);
             else {
                 int q = n >>> 2; // lower quarter index
                 int h = n >>> 1; // half
                 int u = h + q;   // upper quarter
 
-                coInvoke(new SubSorter<T>(new FJSorter<T>(a, ao,   w, wo,   q, g),
-                                          new FJSorter<T>(a, ao+q, w, wo+q, q, g),
+                coInvoke(new SubSorter<T>(new FJSorter<T>(a, ao,   w, wo,   q),
+                                          new FJSorter<T>(a, ao+q, w, wo+q, q),
                                           new FJMerger<T>(a, ao,   q, ao+q, q, 
-                                                        w, wo, g)),
-                         new SubSorter<T>(new FJSorter<T>(a, ao+h, w, wo+h, q, g),
-                                          new FJSorter<T>(a, ao+u, w, wo+u, n-u, g),
+                                                        w, wo)),
+                         new SubSorter<T>(new FJSorter<T>(a, ao+h, w, wo+h, q),
+                                          new FJSorter<T>(a, ao+u, w, wo+u, n-u),
                                           new FJMerger<T>(a, ao+h, q, ao+u, n-u, 
-                                                        w, wo+h, g)));
-                new FJMerger<T>(w, wo, h, wo+h, n-h, a, ao, g).compute();
+                                                        w, wo+h)));
+                new FJMerger<T>(w, wo, h, wo+h, n-h, a, ao).compute();
             }
         }
 
@@ -749,7 +744,7 @@ public class ArrayTasks {
         }
         protected void compute() {
             coInvoke(left, right);
-            merger.invoke();
+            merger.compute();
         }
     }
 
@@ -759,17 +754,15 @@ public class ArrayTasks {
         final int ln;     // number of elements on left
         final int ro;     // relative origin of right side
         final int rn;     // number of elements on right
+
         final T[] w;      // Output array.
         final int wo;
-        final int gran;
 
-        FJMerger (T[] a, int lo, int ln, int ro, int rn, T[] w, int wo,
-                  int gran) {
+        FJMerger (T[] a, int lo, int ln, int ro, int rn, T[] w, int wo) {
             this.a = a;
             this.w = w;
             this.wo = wo;
-            this.gran = gran;
-            // Left side should be largest of the two for fiding split.
+            // Left side should be largest of the two for finding split.
             // Swap now, since left/right doesn't otherwise matter
             if (ln >= rn) {
                 this.lo = lo;    this.ln = ln;
@@ -793,8 +786,8 @@ public class ArrayTasks {
                   merge left half of  L with elements of R up to split point
                   merge right half of L with elements of R past split point
             */
-            int g = gran;
-            if (ln <= g)
+
+            if (ln <= SEQUENTIAL_THRESHOLD)
                 merge();
             else {
                 int lh = ln >>> 1; 
@@ -809,8 +802,8 @@ public class ArrayTasks {
                     else
                         rl = mid + 1;
                 }
-                coInvoke(new FJMerger<T>(a, lo, lh,    ro,    rh,    w, wo, g), 
-                         new FJMerger<T>(a, ls, ln-lh, ro+rh, rn-rh, w, wo+lh+rh, g));
+                coInvoke(new FJMerger<T>(a, lo, lh,    ro,    rh,    w, wo), 
+                         new FJMerger<T>(a, ls, ln-lh, ro+rh, rn-rh, w, wo+lh+rh));
             }
         }
 
@@ -879,7 +872,6 @@ public class ArrayTasks {
         quickSort(a, lo,    left);
         quickSort(a, left+1, hi);
     }
-
 
 
 }

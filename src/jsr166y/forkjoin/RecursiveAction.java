@@ -118,16 +118,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * @throws RuntimeException if thrown in either task's compute methods
      */
     public static void coInvoke(RecursiveAction t1, RecursiveAction t2) {
-        if (t1 == null || t2 == null)
-            throw new NullPointerException();
-        ForkJoinWorkerThread.addLocalTask(t2);
-        RuntimeException ex = t1.exec();
-        boolean popped = ForkJoinWorkerThread.removeIfNextLocalTask(t2);
-        if (ex != null ||
-            ((ex = !popped? t2.quietlyJoin() : t2.exec()) != null)) {
-            t2.cancel();
-            throw ex;
-        }
+        ((ForkJoinWorkerThread)(Thread.currentThread())).doCoInvoke(t1, t2);
     }
 
     /**

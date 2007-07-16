@@ -16,9 +16,14 @@ import java.util.*;
  * <tt>double</tt>. (Lesser used types like <tt>short</tt> are
  * absent.)
  * 
- * <p>This class is a stand-in for functionality that may be supported
- * in some other way in Java 7. For now, you can <tt>import
- * static</tt> this class.
+ * <p>In addition to stated signatures, operations used in forkjoin
+ * tasks must work safely in parallel. In general, this means that the
+ * methods should operate only on their arguments, and should not rely
+ * on ThreadLocals, unsafely published globals, or other unsafe
+ * constructions. Additionally, they should not block waiting for
+ * synchronization.
+ *
+ * <p>You might want to <tt>import static</tt> this class.
  */
 public class TaskTypes {
 

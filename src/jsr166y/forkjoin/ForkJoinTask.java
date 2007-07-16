@@ -152,7 +152,8 @@ public abstract class ForkJoinTask<V> {
      * ClassCastException.
      */
     public final void fork() {
-        ForkJoinWorkerThread.addLocalTask(this);
+        // a bit faster to bypass static method
+        ((ForkJoinWorkerThread)(Thread.currentThread())).pushTask(this);
     }
 
     /**
@@ -168,16 +169,8 @@ public abstract class ForkJoinTask<V> {
      * @throws RuntimeException if the underlying computation did so.
      */
     public final V join() {
-        for (;;) {
-            RuntimeException ex;
-            ForkJoinTask<?> t;
-            if ((ex = exception) != null)
-                throw ex;
-            if (status < 0)
-                return getResult();
-            if ((t = ForkJoinWorkerThread.pollTask()) != null)
-                t.exec();
-        }
+        // a bit faster to bypass static method
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).doJoinTask(this);
     }
 
     /**
@@ -276,14 +269,8 @@ public abstract class ForkJoinTask<V> {
      * null if this task completed normally.
      */
     public final RuntimeException quietlyJoin() {
-        for (;;) {
-            RuntimeException ex;
-            ForkJoinTask<?> t;
-            if ((ex = exception) != null || status < 0)
-                return ex;
-            if ((t = ForkJoinWorkerThread.pollTask()) != null)
-                t.exec();
-        }
+        // a bit faster to bypass static method
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).doQuietlyJoinTask(this);
     }
 
     /**

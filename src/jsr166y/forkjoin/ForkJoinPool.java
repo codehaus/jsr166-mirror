@@ -82,7 +82,15 @@ public class ForkJoinPool {
         defaultForkJoinWorkerThreadFactory = 
         new DefaultForkJoinWorkerThreadFactory();
 
-
+    /**
+     * Maximum supported value for all bounds used in this pool: pool
+     * size, maximum submission queue size, and maximum active
+     * submission bounds. The value of this constant is 65535.  This
+     * implementation-defined value is subject to increase in future
+     * releases.
+     */
+    public static final int CAPACITY = (1 << 16) - 1;
+    
     /**
      * Generator for assigning sequence numbers as thread names.
      */
@@ -115,7 +123,8 @@ public class ForkJoinPool {
      * work so well. But serializing the starting and stopping of
      * worker threads (its main purpose) helps enough in controlling
      * startup effects, contention vs dynamic compilation, etc to be
-     * better than alternatives.
+     * better than alternatives. See however, use of SubmissionState
+     * to evade locking in many common cases.
      */
     private final ReentrantLock lock;
 
@@ -132,11 +141,9 @@ public class ForkJoinPool {
     private final Condition workAvailable;
 
     /**
-     * Queue (actually a simple Treiber stack) of threads sleeping
-     * because they acannot find work even though there are active
-     * jobs running. Used internally by workers, not by pool.
+     * Sleep control used internally by workers.
      */
-    private final AtomicReference<ForkJoinWorkerThread> idleSleepQueue;
+    private final SleepControl sleepCtl;
 
     /**
      * Tracks whether pool is running, shutdown, etc. Modified
@@ -151,16 +158,9 @@ public class ForkJoinPool {
     static final int TERMINATED = 3;
 
     /**
-     * The number of submissions that are currently executing in the pool.
-     * This does not include those submissions that are still in job queue
-     * waiting to be taken by workers.
+     * Counter maintaining number submissions available to worker threads.
      */
-    private int runningSubmissions;
-
-    /**
-     * Maximum number of active submissions allowed to run;
-     */
-    private int maxRunningSubmissions;
+    private final SubmissionState submissionState;
 
     /**
      * Number of workers that are (probably) executing tasks.
@@ -168,15 +168,7 @@ public class ForkJoinPool {
      * decremented when worker has no tasks and cannot find any to
      * steal from other workers.
      */
-    private volatile int activeWorkers;
-
-    /**
-     * Updater to CAS activeWorkers
-     */
-    private static final 
-        AtomicIntegerFieldUpdater<ForkJoinPool> activeWorkersUpdater =
-        AtomicIntegerFieldUpdater.newUpdater(ForkJoinPool.class, "activeWorkers");
-    
+    private final AtomicInteger activeWorkerCounter;
 
     /** 
      * The number of workers that have not yet terminated 
@@ -192,7 +184,7 @@ public class ForkJoinPool {
     /**
      * True if dying workers should be replaced.
      */
-    private boolean continueOnError;
+    private volatile boolean continueOnError;
 
     /**
      * Pool number, just for assigning useful names to worker threads
@@ -249,27 +241,26 @@ public class ForkJoinPool {
      * @param poolSize the number of worker threads
      * @param factory the factory for creating new threads
      * @throws IllegalArgumentException if poolSize less than or
-     * equal to zero
+     * equal to zero or greater that capacity
      * @throws NullPointerException if factory is null
      */
     public ForkJoinPool(int poolSize, ForkJoinWorkerThreadFactory factory) {
-        if (poolSize <= 0) 
+        if (poolSize <= 0 || poolSize > CAPACITY) 
             throw new IllegalArgumentException();
         if (factory == null)
             throw new NullPointerException();
         this.factory = factory;
-        this.poolNumber = poolNumberGenerator.incrementAndGet();
-        this.maxRunningSubmissions = Integer.MAX_VALUE;
+        ForkJoinWorkerThread[] ws = new ForkJoinWorkerThread[poolSize];
+        this.workers = ws;
+        this.sleepCtl = new SleepControl(poolSize);
         this.lock = new ReentrantLock();
         this.termination = lock.newCondition();
         this.workAvailable = lock.newCondition();
-        this.idleSleepQueue = new AtomicReference<ForkJoinWorkerThread>();
+        this.activeWorkerCounter = new AtomicInteger();
+        this.submissionState = new SubmissionState(CAPACITY);
         this.submissions = new SubmissionQueue();
-        ForkJoinWorkerThread[] ws = new ForkJoinWorkerThread[poolSize];
-        for (int i = 0; i < ws.length; ++i)
-            ws[i] = createWorker(i);
-        this.workers = ws;
-        startWorkers(ws);
+        this.poolNumber = poolNumberGenerator.incrementAndGet();
+        createAndStartAll();
     }
 
     /**
@@ -284,7 +275,6 @@ public class ForkJoinPool {
         w.setName(name);
         if (ueh != null)
             w.setUncaughtExceptionHandler(ueh);
-        workerActive();
         return w;
     }
 
@@ -301,12 +291,15 @@ public class ForkJoinPool {
     }
 
     /**
-     * Start all workers in the given array.
+     * Create and start all workers in workers array.
      */
-    private void startWorkers(ForkJoinWorkerThread[] ws) {
+    private void createAndStartAll() {
+        ForkJoinWorkerThread[] ws = workers;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
+            for (int i = 0; i < ws.length; ++i)
+                ws[i] = createWorker(i);
             for (int i = 0; i < ws.length; ++i) 
                 startWorker(ws[i]);
         } finally {
@@ -350,13 +343,7 @@ public class ForkJoinPool {
      * @return true if pool should continue when one thread aborts
      */
     public boolean getContinueOnErrorPolicy() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            return continueOnError;
-        } finally {
-            lock.unlock();
-        }
+        return continueOnError;
     }
 
     /**
@@ -366,13 +353,7 @@ public class ForkJoinPool {
      * @param shouldContinue true if the pool should continue
      */
     public void setContinueOnErrorPolicy(boolean shouldContinue) {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            continueOnError = shouldContinue;
-        } finally {
-            lock.unlock();
-        }
+        continueOnError = shouldContinue;
     }
 
     /**
@@ -429,26 +410,68 @@ public class ForkJoinPool {
      * to increase the amount of parallelism available to tasks.
      * @return the index of the added worker thread.
      * @throws IllegalStateException if pool is terminating or
-     * terminated
+     * terminated or the pool size would exceed maximum capacity.
      */
     public int addWorker() {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            if (runState >= STOP)
-                throw new IllegalStateException();
             ForkJoinWorkerThread[] ws = workers;
             int len = ws.length;
-            ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[len+1];
+            int newlen = len + 1;
+            if (newlen > CAPACITY || runState >= STOP)
+                throw new IllegalStateException();
+            ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[newlen];
             System.arraycopy(ws, 0, nws, 0, len);
             ForkJoinWorkerThread w = createWorker(len);
             nws[len] = w;
             workers = nws;
+            sleepCtl.resetCap(newlen);
             startWorker(w);
             return len;
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * Arranges for (asynchronous) execution of the given task using a
+     * fresh worker thread that is guaranteed not to be executing any
+     * other task, and optionally exits upon its completion.
+     * @param task the task
+     * @param exitOnCompletion if true, the created worker will
+     * terminate upon completion of this task.
+     * @return a Future that can be used to get the task's results.
+     * @throws NullPointerException if task is null
+     * @throws IllegalStateException if pool is terminating or
+     * terminated or the pool size would exceed maximum capacity.
+     */
+    public <T> Future<T> submitUsingAddedWorker(ForkJoinTask<T> task,
+                                                boolean exitOnCompletion) {
+        if (task == null)
+            throw new NullPointerException();
+        Submission<T> job = new Submission<T>(task, this);
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            ForkJoinWorkerThread[] ws = workers;
+            int len = ws.length;
+            int newlen = len + 1;
+            if (newlen > CAPACITY || runState >= STOP)
+                throw new IllegalStateException();
+            ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[newlen];
+            System.arraycopy(ws, 0, nws, 0, len);
+            ForkJoinWorkerThread w = createWorker(len);
+            w.setFirstTask(job, exitOnCompletion);
+            nws[len] = w;
+            workers = nws;
+            submissionState.incRunning();
+            sleepCtl.resetCap(newlen);
+            startWorker(w);
+        } finally {
+            lock.unlock();
+        }
+        return job;
     }
 
     /**
@@ -471,8 +494,9 @@ public class ForkJoinPool {
             ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[newlen];
             System.arraycopy(ws, 0, nws, 0, newlen);
             workers = nws;
+            sleepCtl.resetCap(newlen);
             if (w != null) 
-                w.shouldStop();
+                w.setShutdown();
             return newlen;
         } finally {
             lock.unlock();
@@ -490,7 +514,8 @@ public class ForkJoinPool {
         lock.lock();
         try {
             if (runState < SHUTDOWN) {
-                if (runningSubmissions > 0 || !submissions.isEmpty())
+                if (submissionState.getRunningSubmissions() > 0 ||
+                    !submissions.isEmpty())
                     runState = SHUTDOWN;
                 else
                     terminate();
@@ -605,8 +630,10 @@ public class ForkJoinPool {
 
     private void cancelQueuedSubmissions() {
         Submission<?> task;
-        while ((task = submissions.poll()) != null)
+        while ((task = submissions.poll()) != null) {
+            submissionState.decQueueSize();
             task.cancel(false);
+        }
     }
 
     private void doCancelQueuedWorkerTasks(ForkJoinWorkerThread[] ws) {
@@ -629,7 +656,7 @@ public class ForkJoinPool {
         for (int i = 0; i < ws.length; ++i) {
             ForkJoinWorkerThread t = ws[i];
             if (t != null)
-                t.shouldStop();
+                t.setStop();
         }
     }
 
@@ -642,7 +669,7 @@ public class ForkJoinPool {
      * @return true is all threads are currently idle
      */
     public boolean isQuiescent() {
-        return activeWorkers == 0;
+        return activeWorkerCounter.get() == 0;
     }
 
     /**
@@ -651,7 +678,7 @@ public class ForkJoinPool {
      * @return the number of active threads.
      */
     public int getActiveThreadCount() {
-        return activeWorkers;
+        return activeWorkerCounter.get();
     }
 
     /**
@@ -668,6 +695,27 @@ public class ForkJoinPool {
             ForkJoinWorkerThread t = ws[i];
             if (t != null)
                 sum += t.getSteals();
+        }
+        return sum;
+    }
+
+    /**
+     * Returns the total number of times that worker threads have
+     * transiently slept waiting for other workers to produce tasks
+     * for them to run. This value is only an approximation, obtained
+     * by iterating across all threads in the pool, but may be useful
+     * for monitoring and tuning fork/join programs.  High values
+     * usually indicate that there is not enough parallelism for the
+     * given pool size.
+     * @return the number of sleeps.
+     */
+    public long getSleepCount() {
+        long sum = 0;
+        ForkJoinWorkerThread[] ws = workers;
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread t = ws[i];
+            if (t != null)
+                sum += t.getSleeps();
         }
         return sum;
     }
@@ -698,12 +746,7 @@ public class ForkJoinPool {
      * @return the number of tasks.
      */
     public int getQueuedSubmissionCount() {
-        lock.lock();
-        try {
-            return submissions.size();
-        } finally {
-            lock.unlock();
-        }
+        return submissionState.getQueueSize();
     }
 
     /**
@@ -713,27 +756,17 @@ public class ForkJoinPool {
      * @return the number of tasks.
      */
     public int getActiveSubmissionCount() {
-        lock.lock();
-        try {
-            return runningSubmissions;
-        } finally {
-            lock.unlock();
-        }
+        return submissionState.getRunningSubmissions();
     }
 
     /**
      * Returns the maximum number of submitted tasks that are allowed
-     * to concurrently execute. By default, the value is essentially
-     * unbounded (Integer.MAX_VALUE).
+     * to concurrently execute. By default, the value is the
+     * capacity of the pool.
      * @return the maximum number
      */
     public int getMaximumActiveSubmissionCount() {
-        lock.lock();
-        try {
-            return maxRunningSubmissions;
-        } finally {
-            lock.unlock();
-        }
+        return submissionState.getMaxRunningSubmissions();
     }
 
     /**
@@ -744,13 +777,15 @@ public class ForkJoinPool {
      * for sensible use of methods such as <tt>isQuiescent</tt>.
      * @param max the maximum
      * @throws IllegalArgumentException if max is not positive
+     * or if max is greater than capacity of pool
      */
     public void setMaximumActiveSubmissionCount(int max) {
-        if (max <= 0)
-            throw new IllegalArgumentException("max must be positive");
+        if (max <= 0 || max > CAPACITY)
+            throw new IllegalArgumentException("max out of range");
         lock.lock();
         try {
-            maxRunningSubmissions = max;
+            submissionState.setMaxRunning(max);
+            workAvailable.signalAll();
         } finally {
             lock.unlock();
         }
@@ -778,20 +813,6 @@ public class ForkJoinPool {
     // Methods callable from workers, along with other misc support
 
     /**
-     * Callback when worker is created or becomes active
-     */
-    final void workerActive() {
-        activeWorkersUpdater.incrementAndGet(this);
-    }
-
-    /**
-     * Callback when worker becomes inactive
-     */
-    final void workerIdle() {
-        activeWorkersUpdater.decrementAndGet(this);
-    }
-
-    /**
      * Return current workers array
      */
     final ForkJoinWorkerThread[] getWorkers() {
@@ -799,10 +820,17 @@ public class ForkJoinPool {
     }
 
     /**
-     * Return idle sleep queue
+     * Return counter (cached by workers)
      */
-    final AtomicReference<ForkJoinWorkerThread> getIdleSleepQueue() {
-        return idleSleepQueue;
+    final AtomicInteger getActiveWorkerCounter() {
+        return activeWorkerCounter;
+    }
+
+    /**
+     * Return idle sleep semaphore (cached by workers)
+     */
+    final SleepControl getSleepControl() {
+        return sleepCtl;
     }
 
     /**
@@ -815,6 +843,7 @@ public class ForkJoinPool {
         try {
             if (ok = (runState == RUNNING)) {
                 submissions.add(job);
+                submissionState.incQueueSize();
                 workAvailable.signalAll();
             }
         } finally {
@@ -828,72 +857,67 @@ public class ForkJoinPool {
      * Completion callback from externally submitted job.
      */
     final void submissionCompleted() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (--runningSubmissions <= 0) {
-                if (runState >= SHUTDOWN && submissions.isEmpty())
-                    terminate();
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Returns a job to run, or null if none available. Blocks if
-     * there are no available submissions. 
-     */
-    final ForkJoinTask<?> getSubmission() {
-        ForkJoinTask<?> task = null;
-        final ReentrantLock lock = this.lock;
-        if (lock.tryLock()) {
+        if (submissionState.decRunningOnCompletion() &&
+            runState >= SHUTDOWN) {
+            final ReentrantLock lock = this.lock;
+            lock.lock();
             try {
-                if (runState < STOP) {
-                    if (runningSubmissions < maxRunningSubmissions)
-                        task = submissions.poll();
-                    if (task == null && runningSubmissions == 0) {
-                        workAvailable.await();
-                        if (runState < STOP && 
-                            runningSubmissions < maxRunningSubmissions)
-                            task = submissions.poll();
-                    }
-                    if (task != null) {
-                        ++runningSubmissions;
-                        workAvailable.signalAll();
-                    }
-                }
-            } catch (InterruptedException ie) {
-                // ignore
+                // must recheck state
+                if (submissionState.getRunningSubmissions() == 0 &&
+                    runState >= SHUTDOWN && submissions.isEmpty())
+                    terminate();
             } finally {
                 lock.unlock();
             }
         }
-        return task;
     }
 
     /**
-     * Returns a job to run, or null if none available without blocking.
+     * Returns a job to run, or null if none available. May block if
+     * there are no available submissions. 
+     * @param canBlock true if caller should block if no jobs
+     * are running and the queue is empty.
      */
-    final ForkJoinTask<?> pollSubmission() {
+    final ForkJoinTask<?> getSubmission(boolean canBlock) {
+        /*
+         * The unusual loop here eliminates need for locking in common
+         * cases where we can tell from submission state that we can't
+         * get a task, and don't need to block for one.
+         */
+        ForkJoinTask<?> task = null;
         final ReentrantLock lock = this.lock;
-        lock.lock();
+        boolean locked = false;
         try {
-            if (runState < STOP && 
-                runningSubmissions < maxRunningSubmissions) {
-                ForkJoinTask<?> task = submissions.poll();
-                if (task != null) {
-                    ++runningSubmissions;
-                    workAvailable.signalAll();
-                    return task;
+            for (;;) {
+                long ss = submissionState.get();
+                int qs = SubmissionState.queueSizeOf(ss);
+                int max = SubmissionState.maxRunningOf(ss);
+                int running = SubmissionState.runningOf(ss);
+                if (running >= max || 
+                    (!canBlock && qs == 0) ||
+                    runState >= STOP)
+                    break;
+                if (!locked) {
+                    locked = lock.tryLock();
+                    continue;
                 }
+                if ((task = submissions.poll()) != null) {
+                    submissionState.incRunningOnPoll();
+                    workAvailable.signalAll();
+                    break;
+                }
+                if (!canBlock || running > 0)
+                    break;
+                workAvailable.await();
             }
-            return null;
+        } catch (InterruptedException ie) {
+            // ignore/swallow
         } finally {
-            lock.unlock();
+            if (locked) 
+                lock.unlock();
         }
+        return task;
     }
-
 
     /**
      * Callback from terminating worker.
@@ -981,7 +1005,7 @@ public class ForkJoinPool {
             int n = elements.length;
             int r = n - p;
             int newCapacity = n << 1;
-            if (newCapacity < 0)
+            if (newCapacity >= CAPACITY)
                 throw new IllegalStateException("Queue capacity exceeded");
             Submission<?>[] a = (Submission<?>[]) new Submission[newCapacity];
             System.arraycopy(elements, p, a, 0, r);
@@ -1124,5 +1148,230 @@ public class ForkJoinPool {
             return t.getResult();
         }
     }
+
+    /**
+     * Specialized capped form of a semaphore to control sleeps when
+     * workers cannot get tasks to run. See ForkJoinWorkerThread for
+     * explanation.
+     */
+    static final class SleepControl extends AbstractQueuedSynchronizer {
+        private static final long serialVersionUID = 1192457210091910933L;
+
+        /*
+         * Top 16 bits are capacity, bottom 16 are available permits.
+         * The three kinds of release are multiplexed via op
+         * codes. Positive codes are the capacity reset args.
+         */
+        static int capOf(int s)           { return s >>> 16; }
+        static int permitsOf(int s)       { return s & 0xffff; }
+        static int stateFor(int c, int p) { return (c << 16) | p; }
+
+        SleepControl(int cap)  { setState(stateFor(cap, cap));  }
+
+        int getPermits()       { return permitsOf(getState());  }
+        int getCap()           { return capOf(getState());  }
+        
+        static final int RELEASE_ONE =  0;
+        static final int RELEASE_ALL = -1;
+
+        void releaseOne()      { releaseShared(RELEASE_ONE); }
+        void releaseAll()      { releaseShared(RELEASE_ALL); }
+        void resetCap(int cap) { releaseShared(cap); }
+
+        /**
+         * Try to acquire. 
+         * @return -1 on timeout, 0 on success with no wait, 1 if wait
+         */
+        int acquire(long nanos) {
+            try {
+                if (tryAcquireShared(0) >= 0)
+                    return 0;
+                else if (tryAcquireSharedNanos(0, nanos))
+                    return 1;
+                else
+                    return -1;
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt(); // basically useless
+                return -1;
+            }
+        }
+
+        protected int tryAcquireShared(int ignore) {
+            // Need fairness for sake of releaseAll
+            Thread current = Thread.currentThread();
+            for (;;) {
+                Thread first = getFirstQueuedThread();
+                if (first != null && first != current)
+                    return -1;
+                int s = getState();
+                int c = capOf(s);
+                int remaining = permitsOf(s) - 1;
+                if (remaining < 0 ||
+                    compareAndSetState(s, stateFor(c, remaining)))
+                    return remaining;
+            }
+        }
+
+        protected boolean tryReleaseShared(int op) {
+            for (;;) {
+                int s = getState();
+                int c = capOf(s);
+                int p = permitsOf(s);
+                if (op <= 0 && p >= c) // can't add any more permits
+                    return false;
+                int next;
+                if (op == RELEASE_ONE) 
+                    next = stateFor(c, p+1);
+                else if (op == RELEASE_ALL)
+                    next = stateFor(c, c);
+                else // reset cap
+                    next = stateFor(op, op);
+                
+                if (compareAndSetState(s, next))
+                    return true;
+            }
+        }
+    }
+
+
+    /**
+     * Atomically maintains counts of running, max running, and
+     * queued counts.
+     */
+    static final class SubmissionState extends AtomicLong {
+
+        SubmissionState(int maxRunning) {
+            set(stateFor(0, maxRunning, 0, 0));
+        }
+
+        static final int ushortBits = 16;
+        static final int ushortMask  =  0xffff;
+        static final int uintMask    =  (1 << ushortBits) - 1;
+
+        static int runningOf(long s) { 
+            return (int)(s & 0xffff); 
+        }
+        static int queueSizeOf(long s) {
+            return (int)(s >>> 16) & 0xffff;
+        }
+        static int maxRunningOf(long s) {
+            return (int)(s >>> 32) & 0xffff;
+        }
+        static int tagOf(long s) {
+            return (int)(s >>> 48);
+        }
+        static long stateFor(int t, int m, int q, int r) {
+            return ((long)t << 48) | ((long)m << 32) | (q << 16) | r;
+        }
+
+        int getRunningSubmissions() {
+            return runningOf(get());
+        }
+
+        int getMaxRunningSubmissions() {
+            return maxRunningOf(get());
+        }
+
+        int getQueueSize() {
+            return queueSizeOf(get());
+        }
+
+        void setQueueSize(int queueSize) {
+            for (;;) {
+                long s = get();
+                int r = runningOf(s);
+                int m = maxRunningOf(s);
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, m, queueSize, r)))
+                    return;
+            }
+        }
+
+        int incQueueSize() {
+            for (;;) {
+                long s = get();
+                int r = runningOf(s);
+                int m = maxRunningOf(s);
+                int q = queueSizeOf(s) + 1;
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, m, q, r)))
+                    return q;
+            }
+        }
+
+        int decQueueSize() {
+            for (;;) {
+                long s = get();
+                int r = runningOf(s);
+                int m = maxRunningOf(s);
+                int q = queueSizeOf(s) - 1;
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, m, q, r)))
+                    return q;
+            }
+        }
+
+        void setMaxRunning(int maxRunning) {
+            for (;;) {
+                long s = get();
+                int r = runningOf(s);
+                int q = queueSizeOf(s);
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, maxRunning, q, r)))
+                    return;
+            }
+        }
+
+        int incRunningOnPoll() {
+            for (;;) {
+                long s = get();
+                int nextr = runningOf(s) + 1;
+                int m = maxRunningOf(s);
+                int q = queueSizeOf(s) - 1;
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, m, q, nextr)))
+                    return nextr;
+            }
+        }
+
+        int incRunning() {
+            for (;;) {
+                long s = get();
+                int nextr = runningOf(s) + 1;
+                int m = maxRunningOf(s);
+                int q = queueSizeOf(s);
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, m, q, nextr)))
+                    return nextr;
+            }
+        }
+
+        int decRunning() {
+            for (;;) {
+                long s = get();
+                int nextr = runningOf(s) - 1;
+                int m = maxRunningOf(s);
+                int q = queueSizeOf(s);
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, m, q, nextr)))
+                    return nextr;
+            }
+        }
+
+        boolean decRunningOnCompletion() {
+            for (;;) {
+                long s = get();
+                int nextr = runningOf(s) - 1;
+                int m = maxRunningOf(s);
+                int q = queueSizeOf(s);
+                int t = (tagOf(s) + 1) & 0xffff;
+                if (compareAndSet(s, stateFor(t, m, q, nextr)))
+                    return nextr == 0 && q == 0;
+            }
+        }
+
+    }
+
+
 
 }

@@ -585,6 +585,22 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
+    public boolean isEmpty() {
+        for (;;) {
+            QNode h = traversalHead();
+            QNode p = h.next;
+            if (p == null)
+                return true;
+            Object x = p.get();
+            if (p != x) {
+                if (!p.isData)
+                    return true;
+                if (x != null)
+                    return false;
+            }
+        }
+    }
+
     public boolean hasWaitingConsumer() {
         for (;;) {
             QNode h = traversalHead();

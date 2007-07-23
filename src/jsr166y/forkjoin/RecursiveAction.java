@@ -115,7 +115,6 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * computations. Attempts to invoke in other contexts result
      * in exceptions or errors including ClassCastException.
      * @throws NullPointerException if t1 or t2 are null.
-     * @throws RuntimeException if thrown in either task's compute methods
      */
     public static void coInvoke(RecursiveAction t1, RecursiveAction t2) {
         ((ForkJoinWorkerThread)(Thread.currentThread())).doCoInvoke(t1, t2);
@@ -129,11 +128,10 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * computations. Attempts to invoke in other contexts result
      * in exceptions or errors including ClassCastException.
      * @throws NullPointerException if array or any element of array are null
-     * @throws RuntimeException if thrown in any task's compute method
      */
     public static void coInvoke(RecursiveAction[] tasks) {
         int last = tasks.length - 1;
-        RuntimeException ex = null;
+        Throwable ex = null;
         for (int i = last; i >= 0; --i) {
             RecursiveAction t = tasks[i];
             if (t == null) {
@@ -160,7 +158,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
             }
         }
         if (ex != null)
-            throw ex;
+            rethrowException(ex);
     }
 
     /**
@@ -171,11 +169,10 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * computations. Attempts to invoke in other contexts result
      * in exceptions or errors including ClassCastException.
      * @throws NullPointerException if list or any element of list are null.
-     * @throws RuntimeException if thrown in any task's compute method
      */
     public static void coInvoke(List<? extends RecursiveAction> tasks) {
         int last = tasks.size() - 1;
-        RuntimeException ex = null;
+        Throwable ex = null;
         for (int i = last; i >= 0; --i) {
             RecursiveAction t = tasks.get(i);
             if (t == null) {
@@ -202,7 +199,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
             }
         }
         if (ex != null)
-            throw ex;
+            rethrowException(ex);
     }
 
     /**
@@ -214,28 +211,40 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     }
 
     public final Void invoke() {
-        try {
-            if (exception == null)
-                compute();
-        } catch(RuntimeException rex) {
-            exceptionUpdater.compareAndSet(this, null, rex);
-            throw rex;
-        }
-        RuntimeException ex = setDone();
-        if (ex != null)
-            throw ex;
-        return null;
-    }
-
-    public final RuntimeException exec() {
         if (exception == null) {
             try {
                 compute();
-            } catch(RuntimeException rex) {
-                exceptionUpdater.compareAndSet(this, null, rex);
+            } catch(Throwable rex) {
+                setDoneExceptionally(rex);
+            }
+        }
+        Throwable ex = setDone();
+        if (ex != null)
+            rethrowException(ex);
+        return null;
+    }
+
+    public final Throwable exec() {
+        if (exception == null) {
+            try {
+                compute();
+            } catch(Throwable rex) {
+                return setDoneExceptionally(rex);
             }
         }
         return setDone();
+    }
+
+    // Faster version for coInvoke
+    final Throwable execKnownLocal() {
+        if (exception == null) {
+            try {
+                compute();
+            } catch(Throwable rex) {
+                return setDoneExceptionally(rex);
+            }
+        }
+        return setDoneKnownLocal();
     }
 
     /**
@@ -249,8 +258,10 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
         setDone();
     }
 
-    public final void finishExceptionally(RuntimeException ex) {
-        casException(ex);
+    public final void finishExceptionally(Throwable ex) {
+        setDoneExceptionally(ex);
     }
+
+   
 
 }

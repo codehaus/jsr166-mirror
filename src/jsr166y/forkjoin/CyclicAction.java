@@ -87,7 +87,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
         return null; 
     }
 
-    public final RuntimeException exec() {
+    public final Throwable exec() {
         TaskBarrier b = barrier;
         if (isDone()) {
             b.arriveAndDeregister();
@@ -101,10 +101,9 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
             return setDone();
         try {
             compute();
-        } catch (RuntimeException rex) {
+        } catch (Throwable rex) {
             b.arriveAndDeregister();
-            casException(rex);
-            return setDone();
+            return setDoneExceptionally(rex);
         }
         b.arrive();
         this.fork();
@@ -128,8 +127,8 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
         setDone();
     }
 
-    public final void finishExceptionally(RuntimeException ex) {
-        casException(ex);
+    public final void finishExceptionally(Throwable ex) {
+        setDoneExceptionally(ex);
     }
 
 }

@@ -342,19 +342,21 @@ public class IntTasks {
             int g = gran;
             while (h - l > g) {
                 int mid = (l + h) >>> 1;
-                FJMapReducer<T> r = 
-                    new FJMapReducer<T>(list, mapper, reducer, 
-                                        base, mid, h, g);
-                r.fork();
+                FJMapReducer<T> r =new FJMapReducer<T>(list, mapper, reducer,
+                                                       base, mid, h, g);
                 r.next = right;
                 right = r;
                 h = mid;
+                r.fork();
             }
             int x = base;
             for (int i = l; i < h; ++i)
                 x = reducer.combine(x, mapper.map(list.get(i)));
             while (right != null) {
-                right.join();
+                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
+                    right.compute();
+                else 
+                    right.join();
                 x = reducer.combine(x, right.result);
                 right = right.next;
             }
@@ -969,7 +971,7 @@ public class IntTasks {
                     FJCumulator s = this;
                     FJCumulator p = parent;
                     while (p != null) {
-                        if (p.transitionTo(FINISHED))
+                        if (p.transitionTo(FINISHED)) 
                             return;
                         s = p;
                         p = p.parent;

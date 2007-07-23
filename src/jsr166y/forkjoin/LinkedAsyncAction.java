@@ -140,7 +140,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * The asynchronous part of the computation performed by this
      * task.  While you must define this method, you should not in
      * general call it directly (although you can invoke immediately
-     * via <tt>exec</tt>.) If this method throws a RuntimeException,
+     * via <tt>exec</tt>.) If this method throws a Throwable,
      * <tt>finishExceptionally</tt> is immediately invoked.
      */
     protected abstract void compute();
@@ -197,7 +197,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
             if (c == 0) {
                 try {
                     a.onCompletion();
-                } catch (RuntimeException rex) {
+                } catch (Throwable rex) {
                     a.finishExceptionally(rex);
                     return;
                 } 
@@ -219,14 +219,14 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * invocation.
      * @param ex the exception to throw when joining this task
      * @throws NullPointerException if ex is null
-     * @throws RuntimeException if any invocation of
+     * @throws Throwable if any invocation of
      * <tt>onException</tt> does so.
      */
-    public final void finishExceptionally(RuntimeException ex) {
+    public final void finishExceptionally(Throwable ex) {
         if (ex == null)
             throw new NullPointerException();
         LinkedAsyncAction a = this;
-        while (a.casException(ex)) {
+        while (a.setDoneExceptionally(ex) == ex) {
             boolean up = a.onException(); // abort if this throws
             a = a.parent;
             if (a == null)
@@ -321,11 +321,11 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
         return join();
     }
 
-    public final RuntimeException exec() {
+    public final Throwable exec() {
         if (exception == null) {
             try {
                 compute();
-            } catch(RuntimeException rex) {
+            } catch(Throwable rex) {
                 finishExceptionally(rex);
             }
         }

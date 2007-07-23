@@ -25,7 +25,7 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      * The asynchronous part of the computation performed by this
      * task.  While you must define this method, you should not in
      * general call it directly (although you can invoke immediately
-     * via <tt>exec</tt>.) If this method throws a RuntimeException,
+     * via <tt>exec</tt>.) If this method throws a Throwable,
      * <tt>finishExceptionally</tt> is immediately invoked.
      */
     protected abstract void compute();
@@ -41,8 +41,8 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         setDone();
     }
 
-    public final void finishExceptionally(RuntimeException ex) {
-        casException(ex);
+    public final void finishExceptionally(Throwable ex) {
+        setDoneExceptionally(ex);
     }
 
     /**
@@ -58,12 +58,12 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         return join();
     }
 
-    public final RuntimeException exec() {
+    public final Throwable exec() {
         if (exception == null) {
             try {
                 compute();
-            } catch(RuntimeException rex) {
-                finishExceptionally(rex);
+            } catch(Throwable rex) {
+                return setDoneExceptionally(rex);
             }
         }
         return exception;

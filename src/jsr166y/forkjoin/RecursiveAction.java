@@ -141,7 +141,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
             else if (ex != null)
                 t.cancel();
             else if (i != 0)
-                ForkJoinWorkerThread.addLocalTask(t);
+                t.fork();
             else
                 ex = t.exec();
         }
@@ -180,7 +180,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
                     ex = new NullPointerException();
             }
             else if (i != 0)
-                ForkJoinWorkerThread.addLocalTask(t);
+                t.fork();
             else if (ex != null)
                 t.cancel();
             else

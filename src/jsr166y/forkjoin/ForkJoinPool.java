@@ -18,19 +18,24 @@ import jsr166y.*;
  * ForkJoinTasks. It also provides the entry point for tasks submitted
  * from non-ForkJoinTasks, as well as other management and monitoring
  * operations.  Normally a single ForkJoinPool is used for a large
- * number of tasks. Otherwise, use would not always outweigh
- * construction overhead.
+ * number of submitted tasks. Otherwise, use would not always outweigh
+ * the construction overhead of creating a large set of threads.
  *
  * <p> Class ForkJoinPool does not implement the ExecutorService
  * interface because it only executes ForkJoinTasks, not arbitrary
  * Runnables. However, for the sake of uniformity, it supports
- * ExecutorService lifecycle control methods (such as shutdown).
+ * analogous lifecycle control methods such as shutdown.
  *
  * <p>A ForkJoinPool may be constructed with any number of worker
  * threads, and worker threads may be added and removed (one-by-one)
  * dynamically. However, as a general rule, using a pool size of the
  * number of processors on a given system, as arranged by the default
  * constructor) will result in the best performance.
+ *
+ * <p>In addition to execution and lifecycle control methods, this
+ * class provides methods (for example <tt>getStealCount</tt>) that
+ * are intended to aid in developing, tuning, and monitoring fork/join
+ * applications.
  */
 public class ForkJoinPool {
 
@@ -75,6 +80,24 @@ public class ForkJoinPool {
         defaultForkJoinWorkerThreadFactory =
         new DefaultForkJoinWorkerThreadFactory();
 
+
+    /**
+     * Permission required for callers of methods that may start or
+     * kill.threads.
+     */
+    private static final RuntimePermission modifyThreadPermission =
+        new RuntimePermission("modifyThread");
+
+    /**
+     * If there is a security manager, makes sure caller has
+     * permission to modify threads.
+     */
+    private static void checkPermission() {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null)
+            security.checkPermission(modifyThreadPermission);
+    }
+
     /**
      * Generator for assigning sequence numbers as thread names.
      */
@@ -89,9 +112,9 @@ public class ForkJoinPool {
     /**
      * Array holding all worker threads in the pool. Acts similarly to
      * a CopyOnWriteArrayList -- updates are protected by workerLock.
-     * But it additionally allows in-place nulling out of or
-     * replacements of slots upon termination.  All uses of this array
-     * should first assign as local, and must screen out nulls.
+     * But it additionally allows in-place nulling out or replacements
+     * of slots upon termination.  All uses of this array should first
+     * assign as local, and must screen out nulls.
      */
     private volatile ForkJoinWorkerThread[] workers;
 
@@ -106,6 +129,12 @@ public class ForkJoinPool {
     private final Condition termination;
 
     /**
+     * The number of workers that have started but not yet terminated
+     * Accessed only under workerLock.
+     */
+    private int runningWorkers;
+
+    /**
      * Queue of external submissions.
      */
     private final ConcurrentLinkedQueue<Submission<?>> submissionQueue;
@@ -116,9 +145,22 @@ public class ForkJoinPool {
     private final RunState runState;
 
     /**
-     * Pool wide event counter. Workers are enabled to look for work
-     * when the count is incremented. If they fail to find some, they
-     * may wait for next count.
+     * Pool wide synchronization control. Workers are enabled to look
+     * for work when the barrier's count is incremented. If they fail
+     * to find some, they may wait for next count. Sysnchronization
+     * events occur only in enough contexts to maintain overall
+     * liveness:
+     *
+     *   1. Changes to worker array
+     *   2. Changes to runState
+     *   3. Submission of a new task
+     *   4. A worker pushing a task on an empty per-worker queue
+     *   5. A worker completing a stolen or cancelled task
+     *
+     * So, signals and waits occur relatively rarely in normal
+     * fork/join processing, which minimizes contention on this global
+     * synchronizer. Even so, the EventBarrier is designed to minimize
+     * blockages by signallers (that have better things to do).
      */
     private final EventBarrier eventBarrier;
 
@@ -126,12 +168,6 @@ public class ForkJoinPool {
      * The number of submissions that are running in pool.
      */
     private final AtomicInteger runningSubmissions;
-
-    /**
-     * The number of workers that have started but not yet terminated
-     * Accessed only under workerLock.
-     */
-    private int runningWorkers;
 
     /**
      * Number of workers that are (probably) executing tasks.
@@ -155,6 +191,10 @@ public class ForkJoinPool {
      * Creates a ForkJoinPool with a pool size equal to the number of
      * processors available on the system and using the default
      * ForkJoinWorkerThreadFactory,
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public ForkJoinPool() {
         this(Runtime.getRuntime().availableProcessors(),
@@ -167,6 +207,10 @@ public class ForkJoinPool {
      * @param poolSize the number of worker threads
      * @throws IllegalArgumentException if poolSize less than or
      * equal to zero
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public ForkJoinPool(int poolSize) {
         this(poolSize, defaultForkJoinWorkerThreadFactory);
@@ -178,6 +222,10 @@ public class ForkJoinPool {
      * ForkJoinWorkerThreadFactory,
      * @param factory the factory for creating new threads
      * @throws NullPointerException if factory is null
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public ForkJoinPool(ForkJoinWorkerThreadFactory factory) {
         this(Runtime.getRuntime().availableProcessors(), factory);
@@ -188,7 +236,7 @@ public class ForkJoinPool {
      * threads and the given factory.
      *
      * <p> You can also add and remove threads while the pool is
-     * running, it is generally more efficient and leads to more
+     * running. But it is generally more efficient and leads to more
      * predictable performance to initialize the pool with a
      * sufficient number of threads to support the desired concurrency
      * level and leave this value fixed.
@@ -198,8 +246,13 @@ public class ForkJoinPool {
      * @throws IllegalArgumentException if poolSize less than or
      * equal to zero
      * @throws NullPointerException if factory is null
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public ForkJoinPool(int poolSize, ForkJoinWorkerThreadFactory factory) {
+        checkPermission();
         if (poolSize <= 0)
             throw new IllegalArgumentException();
         if (factory == null)
@@ -317,12 +370,17 @@ public class ForkJoinPool {
      * to unrecoverable errors encountered while executing tasks.
      * Unless set, the current default or ThreadGroup handler is used
      * as handler.
+     *
      * @param h the new handler
      * @return the old handler, or null if none
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public Thread.UncaughtExceptionHandler
         setUncaughtExceptionHandler(Thread.UncaughtExceptionHandler h) {
-
+        checkPermission();
         final ReentrantLock lock = this.workerLock;
         Thread.UncaughtExceptionHandler old = null;
         lock.lock();
@@ -363,6 +421,10 @@ public class ForkJoinPool {
      * to increase the amount of parallelism available to tasks.
      * @throws IllegalStateException if pool is terminating or
      * terminated
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public void addWorker() {
         doAddWorker(null, false);
@@ -379,6 +441,10 @@ public class ForkJoinPool {
      * @throws NullPointerException if task is null
      * @throws IllegalStateException if pool is terminating or
      * terminated
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public <T> Future<T> submitUsingAddedWorker(ForkJoinTask<T> task,
                                                 boolean exitOnCompletion) {
@@ -394,6 +460,7 @@ public class ForkJoinPool {
      */
     private ForkJoinWorkerThread doAddWorker(Submission<?> job,
                                              boolean exitOnCompletion) {
+        checkPermission();
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
@@ -425,8 +492,13 @@ public class ForkJoinPool {
      * to decrease the amount of parallelism available to tasks.
      * @throws IllegalStateException if pool is terminating or
      * terminated or the poolSize would become zero.
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public void removeWorker() {
+        checkPermission();
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
@@ -456,17 +528,31 @@ public class ForkJoinPool {
      * Initiates an orderly shutdown in which previously submitted
      * tasks are executed, but no new tasks will be accepted.
      * Invocation has no additional effect if already shut down.
+     * Tasks that are in the process of being submitted concurrently
+     * during the course of this method may or may not be rejected.
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public void shutdown() {
+        checkPermission();
         runState.transitionToShutdown();
         tryTerminateOnShutdown();
     }
 
     /**
      * Attempts to stop all actively executing tasks, and cancels all
-     * waiting tasks.
+     * waiting tasks.  Tasks that are in the process of being
+     * submitted or executed concurrently during the course of this
+     * method may or may not be rejected.
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public void shutdownNow() {
+        checkPermission();
         terminate();
     }
 
@@ -481,8 +567,6 @@ public class ForkJoinPool {
 
     /**
      * Returns <tt>true</tt> if all tasks have completed following shut down.
-     * Note that <tt>isTerminated</tt> is never <tt>true</tt> unless
-     * either <tt>shutdown</tt> or <tt>shutdownNow</tt> was called first.
      *
      * @return <tt>true</tt> if all tasks have completed following shut down
      */
@@ -530,24 +614,6 @@ public class ForkJoinPool {
     }
 
     /**
-     * Cancels all tasks that are currently held in any worker
-     * thread's local queues. This method may be useful for bulk
-     * cancellation of a set of tasks that may terminate when any one
-     * of them finds a solution. However, this applies only if you are
-     * sure that no other tasks have been submitted to, or are active
-     * in, the pool.
-     */
-    public void cancelQueuedWorkerTasks() {
-        ForkJoinWorkerThread[] ws = workers;
-        for (int i = 0; i < ws.length; ++i) {
-            ForkJoinWorkerThread t = ws[i];
-            if (t != null)
-                t.cancelTasks();
-        }
-        eventBarrier.signal();
-    }
-
-    /**
      * Initiate termination.
      */
     private void terminate() {
@@ -555,7 +621,7 @@ public class ForkJoinPool {
             stopAllWorkers();
             cancelQueuedSubmissions();
             cancelQueuedWorkerTasks();
-            interruptAllWorkers();
+            interruptUnterminatedWorkers();
         }
     }
 
@@ -570,8 +636,6 @@ public class ForkJoinPool {
             terminate();
     }
 
-
-
     /**
      * Clear out and cancel submissions
      */
@@ -582,8 +646,27 @@ public class ForkJoinPool {
     }
 
     /**
-     * Set each worker's status to stopping. Requires lock
-     * to avoid conflicts with add/remove
+     * Clean out worker queues.
+     */
+    private void cancelQueuedWorkerTasks() {
+        final ReentrantLock lock = this.workerLock;
+        lock.lock();
+        try {
+            ForkJoinWorkerThread[] ws = workers;
+            for (int i = 0; i < ws.length; ++i) {
+                ForkJoinWorkerThread t = ws[i];
+                if (t != null)
+                    t.cancelTasks();
+            }
+            eventBarrier.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Set each worker's status to stopping. Requires lock to avoid
+     * conflicts with add/remove
      */
     private void stopAllWorkers() {
         final ReentrantLock lock = this.workerLock;
@@ -605,30 +688,36 @@ public class ForkJoinPool {
 
     /**
      * Interrupt all unterminated workers.  This is not required for
-     * sake of internal control, but may help unstick user code.
+     * sake of internal control, but may help unstick user code during
+     * shutdown.
      */
-    private void interruptAllWorkers() {
+    private void interruptUnterminatedWorkers() {
         ForkJoinWorkerThread[] ws = workers;
         for (int i = 0; i < ws.length; ++i) {
             ForkJoinWorkerThread t = ws[i];
             if (t != null) {
                 RunState rs = t.getRunState();
-                if (!rs.isTerminated())
-                    t.interrupt();
+                if (!rs.isTerminated()) {
+                    try {
+                        t.interrupt();
+                    } catch (SecurityException ignore) {
+                    }
+                }
             }
         }
     }
-
 
     // Status queries
 
     /**
      * Returns true if all worker threads are currently idle. An idle
-     * worker is one that cannot obtain a task to execute.  This
-     * method is conservative: It might not return true immediately
-     * upon idleness of all threads, but will eventually become true
-     * if threads remain inactive.
-     * @return true is all threads are currently idle
+     * worker is one that cannot obtain a task to execute because none
+     * are available to steal from other threads, and there are no
+     * pending submissions to the pool. This method is conservative:
+     * It might not return true immediately upon idleness of all
+     * threads, but will eventually become true if threads remain
+     * inactive.
+     * @return true if all threads are currently idle
      */
     public boolean isQuiescent() {
         return activeWorkerCounter.get() == 0;
@@ -645,9 +734,11 @@ public class ForkJoinPool {
 
     /**
      * Returns the total number of tasks stolen from one thread's work
-     * queue by another. This value is only an approximation,
-     * obtained by iterating across all threads in the pool, but may
-     * be useful for monitoring and tuning fork/join programs.
+     * queue by another. This value is only an approximation, obtained
+     * by iterating across all threads in the pool, but may be useful
+     * for monitoring and tuning fork/join programs: In general, steal
+     * counts should be high enough to keep threads busy, but low
+     * enough to avoid overhead and contention across threads.
      * @return the number of steals.
      */
     public long getStealCount() {
@@ -662,11 +753,33 @@ public class ForkJoinPool {
     }
 
     /**
+     * Returns the total number of times that worker threads have
+     * globally synchronized (and possibly suspended) because there
+     * are no tasks available to execute.  This value is only an
+     * approximation, obtained by iterating across all threads in the
+     * pool. The reported value means little in isolation, but can be
+     * useful for monitoring and tuning fork/join programs: Smaller
+     * values indicate less stalling of threads while waiting for each
+     * other, which generally corresponds to better throughput.
+     * @return the number of synchronizations
+     */
+    public long getSyncCount() {
+        long sum = 0;
+        ForkJoinWorkerThread[] ws = workers;
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread t = ws[i];
+            if (t != null)
+                sum += t.getWorkerSyncCount();
+        }
+        return sum;
+    }
+
+    /**
      * Returns the total number of tasks currently held in queues by
      * worker threads (but not including tasks submitted to the pool
      * that have not begun executing). This value is only an
      * approximation, obtained by iterating across all threads in the
-     * pool.
+     * pool. This method may be useful for tuning task granularities.
      * @return the number of tasks.
      */
     public long getTotalPerThreadQueueSize() {
@@ -683,11 +796,23 @@ public class ForkJoinPool {
     /**
      * Returns the number of tasks that have been submitted (via
      * <tt>submit</tt> or <tt>invoke</tt>) but not have not yet begun
-     * execution.
+     * execution. Note that this method may be relatively slow
+     * because it may require a traveral of elements to compute size.
+     * You should prefer <tt>hasQueuedSubmissions</tt> when it 
+     * suffices.
      * @return the number of tasks.
      */
     public int getQueuedSubmissionCount() {
         return submissionQueue.size();
+    }
+
+    /**
+     * Returns true if there are any tasks submitted to this pool
+     * that have not yet begun executing.
+     * @return <tt>true</tt> if there are any queued submissions.
+     */
+    public boolean hasQueuedSubmissions() {
+        return !submissionQueue.isEmpty();
     }
 
     /**
@@ -732,20 +857,12 @@ public class ForkJoinPool {
         return eventBarrier;
     }
 
-
     /**
      * Completion callback from externally submitted job.
      */
     final void submissionCompleted() {
         if (runningSubmissions.decrementAndGet() == 0)
             tryTerminateOnShutdown();
-    }
-
-    /**
-     * Returns true if submission queue non-empty.
-     */
-    final boolean hasSubmissions() {
-        return !submissionQueue.isEmpty();
     }
 
     /**
@@ -819,64 +936,83 @@ public class ForkJoinPool {
         }
 
         /**
-         * Dequeue and signal all nodes with incomingCount less than
-         * given count.
-         * @return true if any nodes released
+         * Advance counter, waking up all waiting for change
+         * to new value.
          */
-        private boolean releaseWaiters(long count) {
+        final void signal() {
+            long count = counter.incrementAndGet();
             final AtomicReference<QNode> head = this.head;
             final AtomicReference<QNode> tail = this.tail;
-            boolean released = false;
             for (;;) {
                 QNode h = head.get();
                 QNode t = tail.get();
                 QNode first = h.get();
                 if (h == head.get()) {
                     if (first == null || count <= first.incomingCount)
-                        return released;
+                        return;
                     else if (h == t)
                         tail.compareAndSet(t, first);
-                    else if (head.compareAndSet(h, first)) {
+                    else if (head.compareAndSet(h, first))
                         LockSupport.unpark(first.thread);
-                        released = true;
-                    }
                 }
             }
-        }
-
-        /**
-         * Advance counter, waking up all waiting for change.
-         */
-        final void signal() {
-            releaseWaiters(counter.incrementAndGet());
         }
 
         /**
          * Possibly block until counter is advanced from given value.
          *
          * @param count incoming count
-         * @return outgoing count, which is at least (but may be equal
-         * to) incoming count
+         * @return count upon invocation of this method.
          */
         final long await(long count) {
-            if (count == counter.get() && !releaseWaiters(count)) {
+            final AtomicLong ctr = counter;
+            long current = ctr.get();
+            if (count == current && !releaseOneWaiter(count)) {
                 final AtomicReference<QNode> tail = this.tail;
                 QNode s = new QNode(Thread.currentThread(), count);
-                while (count == counter.get()) {
+                while (count == ctr.get()) {
                     QNode t = tail.get();
                     QNode last = t.get();
                     if (last != null)
                         tail.compareAndSet(t, last);
                     else if (t.compareAndSet(null, s)) {
                         tail.compareAndSet(t, s);
-                        if (count == counter.get())
-                            LockSupport.park(); // can only park once
-                        s.thread = null;        // avoid useless unparks
+                        if (count == ctr.get())
+                            LockSupport.park();     // can only park once
+                        s.thread = null;            // avoid useless unparks
                         break;
                     }
                 }
             }
-            return counter.get();
+            return current;
+        }
+
+        /**
+         * Dequeue and signal at most one node with incomingCount less
+         * than given count. This helps ensure progress when threads
+         * cannot wait yet because previous wakeups have stalled, but
+         * stopping with at most one per call avoids further wait
+         * queue contention.
+         * @return true if a node released
+         */
+        private boolean releaseOneWaiter(long count) {
+            final AtomicReference<QNode> head = this.head;
+            final AtomicReference<QNode> tail = this.tail;
+            for (;;) {
+                QNode h = head.get();
+                QNode t = tail.get();
+                QNode first = h.get();
+                if (h == head.get()) {
+                    if (first == null || count <= first.incomingCount)
+                        return false;
+                    else if (h == t)
+                        tail.compareAndSet(t, first);
+                    else if (head.compareAndSet(h, first)) {
+                        LockSupport.unpark(first.thread);
+                        return true;
+                    }
+                }
+            }
         }
     }
 
@@ -889,18 +1025,20 @@ public class ForkJoinPool {
         static final int STOPPING   = 2;
         static final int TERMINATED = 4;
 
-        boolean isRunning()    { return get() == RUNNING; }
-        boolean isShutdown()   { return get() == SHUTDOWN; }
-        boolean isStopping()   { return get() == STOPPING; }
-        boolean isTerminated() { return get() == TERMINATED; }
-
-        boolean isAtLeastShutdown()    { return get() >= SHUTDOWN; }
-        boolean isAtLeastStopping()    { return get() >= STOPPING; }
-
+        boolean isRunning()              { return get() == RUNNING; }
+        boolean isShutdown()             { return get() == SHUTDOWN; }
+        boolean isStopping()             { return get() == STOPPING; }
+        boolean isTerminated()           { return get() == TERMINATED; }
+        boolean isAtLeastShutdown()      { return get() >= SHUTDOWN; }
+        boolean isAtLeastStopping()      { return get() >= STOPPING; }
         boolean transitionToShutdown()   { return transitionTo(SHUTDOWN); }
         boolean transitionToStopping()   { return transitionTo(STOPPING); }
         boolean transitionToTerminated() { return transitionTo(TERMINATED); }
 
+        /**
+         * Transition to at least the given state. Return true if not
+         * already at least given state.
+         */
         boolean transitionTo(int state) {
             for (;;) {
                 int s = get();
@@ -910,7 +1048,6 @@ public class ForkJoinPool {
                     return true;
             }
         }
-
     }
 
     /**

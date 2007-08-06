@@ -225,11 +225,16 @@ public class IntTasks {
             return 0;
         if (n == 1)
             return array[0];
+        int gran;
         int threads = pool.getPoolSize();
-        //        int gran = 1 + n / ((threads << 3) - 7);
-        //        if (gran < 2048)
-        //            gran = 2048;
-        int gran = (threads == 1)? n : 4096;
+        if (threads == 1)
+            gran = n;
+        else
+            gran =  n / (threads << 3);
+        if (gran < 1024)
+            gran = 1024;
+        //        int gran = (threads == 1)? n : 4096;
+        //        int gran = (threads == 1)? n : 8192;
         FJCumulator.Ctl ctl = new FJCumulator.Ctl(array, gran);
         FJCumulator r = new FJCumulator(null, ctl, 0, n);
         pool.invoke(r);
@@ -884,18 +889,6 @@ public class IntTasks {
         static final AtomicIntegerFieldUpdater<FJCumulator> phaseUpdater =
             AtomicIntegerFieldUpdater.newUpdater(FJCumulator.class, "phase");
 
-        /**
-         * Sets phase to indicated bits, returning false if already
-         * set.
-         */
-        boolean transitionTo(int bits) {
-            int c;
-            while (((c = phase) & bits) != bits)
-                if (phaseUpdater.compareAndSet(this, c, c | bits))
-                    return true;
-            return false;
-        }
-
         FJCumulator(FJCumulator parent,
                     FJCumulator.Ctl ctl,
                     int lo, 
@@ -905,81 +898,128 @@ public class IntTasks {
             this.lo = lo; 
             this.hi = hi;
         }
-        
+
         public void compute() {
-            boolean cumulate = (phase & CUMULATE) != 0;
-
-            if (hi - lo > ctl.granularity) {
-                if (left == null) {
-                    int mid = (lo + hi) >>> 1;
-                    left =  new FJCumulator(this, ctl, lo, mid);
-                    right = new FJCumulator(this, ctl, mid, hi);
-                }
-                if (cumulate) { // push down sums
-                    int cin = in;
-                    left.in = cin;
-                    right.in = cin + left.out;
-                }
-                // Suppress second pass forks if already triggered
-                if (!cumulate || right.transitionTo(CUMULATE))
-                    right.fork();
-                if (!cumulate || left.transitionTo(CUMULATE))
-                    left.compute();
+            if (hi - lo <= ctl.granularity) {
+                int cb = establishLeafPhase();
+                leafSum(cb);
+                propagateLeafPhase(cb);
             }
+            else
+                spawnTasks();
+        }
+        
+        /**
+         * decide which leaf action to take - sum, cumulate, or both
+         * @return associated bit s
+         */
+        int establishLeafPhase() {
+            for (;;) {
+                int b = phase;
+                if ((b & FINISHED) != 0) // already done
+                    return 0;
+                int cb;
+                if ((b & CUMULATE) != 0)
+                    cb = FINISHED;
+                else if (lo == ctl.consecutiveIndex)
+                    cb = (SUMMED|FINISHED);
+                else 
+                    cb = SUMMED;
+                if (phaseUpdater.compareAndSet(this, b, b|cb))
+                    return cb;
+            }
+        }
 
-            else {
-                int[] array = ctl.array;
-                if (cumulate) {
-                    int sum = in;
-                    for (int i = lo; i < hi; ++i)
-                        sum = array[i] += sum;
+        void propagateLeafPhase(int cb) {
+            FJCumulator c = this;
+            FJCumulator p = parent;
+            for (;;) {
+                if (p == null) {
+                    if ((cb & FINISHED) != 0)
+                        c.finish();
+                    break;
                 }
-                else if (lo == ctl.consecutiveIndex) {
-                    if (!transitionTo(CUMULATE))
-                        return; // lost refork race
-                    int cin = ctl.consecutiveSum;
-                    int sum = cin;
-                    for (int i = lo; i < hi; ++i)
-                        sum = array[i] += sum;
-                    out = sum - cin;
-                    ctl.consecutiveSum = sum;
-                    ctl.consecutiveIndex = hi;
-                    cumulate = true;
+                int pb = p.phase;
+                if ((pb & cb & FINISHED) != 0) { // both finished
+                    c = p;
+                    p = p.parent;
                 }
-                else if (hi < array.length) { // skip rightmost
+                else if ((pb & cb & SUMMED) != 0) { // both summed
+                    int refork = 0;
+                    if ((pb & CUMULATE) == 0 && p.lo == 0)
+                        refork = CUMULATE;
+                    int next = pb|cb|refork;
+                    if (pb == next || 
+                        phaseUpdater.compareAndSet(p, pb, next)) {
+                        if (refork != 0)
+                            p.fork();
+                        cb = SUMMED; // drop finished bit
+                        c = p;
+                        p = p.parent;
+                    }
+                }
+                else if (phaseUpdater.compareAndSet(p, pb, pb|cb))
+                    break;
+            }
+        }
+
+        void leafSum(int cb) {
+            int[] array = ctl.array;
+            if (cb == SUMMED) {
+                if (hi < array.length) { // skip rightmost
                     int sum = 0;
                     for (int i = lo; i < hi; ++i)
                         sum += array[i];
                     out = sum;
                 }
-
-                // Propagate sums upward and trigger second pass
-                if (transitionTo(SUMMED)) {
-                    FJCumulator p = parent;
-                    while (p != null && !p.transitionTo(SUMMED)) {
-                        p.out = p.left.out + p.right.out;
-                        // lo is 0 for root and left spine subtrees
-                        if (p.lo == 0 && p.transitionTo(CUMULATE))
-                            p.fork();
-                        p = p.parent;
-                    }
-                }
-
-                // Propagate completion
-                if (cumulate) {
-                    transitionTo(FINISHED);
-                    FJCumulator s = this;
-                    FJCumulator p = parent;
-                    while (p != null) {
-                        if (p.transitionTo(FINISHED)) 
-                            return;
-                        s = p;
-                        p = p.parent;
-                    }
-                    s.finish(); // explicit finish() call only at root
-                }
+            }
+            else if (cb == FINISHED) {
+                int sum = in;
+                for (int i = lo; i < hi; ++i)
+                    sum = array[i] += sum;
+            }
+            else if (cb == (SUMMED|FINISHED)) {
+                int cin = ctl.consecutiveSum;
+                int sum = cin;
+                for (int i = lo; i < hi; ++i)
+                    sum = array[i] += sum;
+                out = sum - cin;
+                ctl.consecutiveSum = sum;
+                ctl.consecutiveIndex = hi;
             }
         }
+
+        /**
+         * Returns true if can CAS CUMULATE bit true
+         */
+        boolean transitionToCumulate() {
+            int c;
+            while (((c = phase) & CUMULATE) == 0)
+                if (phaseUpdater.compareAndSet(this, c, c | CUMULATE))
+                    return true;
+            return false;
+        }
+
+        void spawnTasks() {
+            if (left == null) {
+                int mid = (lo + hi) >>> 1;
+                left =  new FJCumulator(this, ctl, lo, mid);
+                right = new FJCumulator(this, ctl, mid, hi);
+            }
+
+            boolean cumulate = (phase & CUMULATE) != 0;
+            if (cumulate) { // push down sums
+                int cin = in;
+                left.in = cin;
+                right.in = cin + left.out;
+            }
+
+            if (!cumulate || right.transitionToCumulate())
+                right.fork();
+            if (!cumulate || left.transitionToCumulate())
+                left.compute();
+        }
+
     }
 
 

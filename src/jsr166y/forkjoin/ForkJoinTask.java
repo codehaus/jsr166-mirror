@@ -93,6 +93,7 @@ public abstract class ForkJoinTask<V> {
         rethrower.rethrow(ex);
     }
 
+
     /**
      * The exception thrown within compute method, or via cancellation.
      * Updated only via CAS, to arbitrate cancellations vs normal
@@ -109,38 +110,40 @@ public abstract class ForkJoinTask<V> {
         (ForkJoinTask.class, Throwable.class, "exception");
 
     /**
-     * Status becoming negative when task completes normally.  When a
-     * computation completes normally, status is set negative.  So a
-     * task is considered completed if the exception is non-null or
-     * status is negative (or both); and must always be checked
-     * accordingly. The status field need not be volatile so long as
-     * it is written in correct order.  Even though according to the
-     * JMM, writes to status (or other per-task fields) need not be
-     * immediately visible to other threads, they must eventually be
-     * so here: They will always be visible to any stealing thread,
-     * since these reads will be fresh. In other situations, in the
-     * worst case of not being seen earlier, since Worker threads
-     * eventually scan all other threads looking for work, any
-     * subsequent read must see any writes occuring before last
-     * volatile bookkeeping operation, which all workers must
-     * eventually perform. And on the issuing side, status is set
-     * after rechecking exception field which prevents premature
-     * writes.
+     * Status, taking values:
+     *    0: initial
+     *   <0: completed 
+     *   >0: stolen (or external)
+     *
+     * Status is set negative when task completes normally.  A task is
+     * considered completed if the exception is non-null or status is
+     * negative (or both); and must always be checked accordingly. The
+     * status field need not be volatile so long as it is written in
+     * correct order.  Even though according to the JMM, writes to
+     * status (or other per-task fields) need not be immediately
+     * visible to other threads, they must eventually be so here: They
+     * will always be visible to any stealing thread, since these
+     * reads will be fresh. In other situations, in the worst case of
+     * not being seen earlier, since Worker threads eventually scan
+     * all other threads looking for work, any subsequent read must
+     * see any writes occuring before last volatile bookkeeping
+     * operation, which all workers must eventually perform. And on
+     * the issuing side, status is set after rechecking exception
+     * field which prevents premature writes.
+     *
+     * The positive range could hold the pool index of the origin of
+     * non-complete stolen tasks but isn't currently done.
      */
     int status;
 
-    static final int TASK_DONE   = -1; // must be -1
-    static final int TASK_STOLEN =  1; // must not be negative
-
     /**
      * Sets status to indicate this task is done.
-     * @return the current exception
      */
     final Throwable setDone() {
         Throwable ex = exception;
         int s = status;
-        status = TASK_DONE;
-        if (s != 0) // conservatively signal on any change from 0
+        status = -1;
+        if (s != 0) // conservatively signal on any nonzero
             ForkJoinWorkerThread.signalTaskCompletion();
         return ex;
     }
@@ -153,21 +156,8 @@ public abstract class ForkJoinTask<V> {
         return setDone();
     }
 
-    /**
-     * Same as setDone, but bypasses stolen task check
-     */
-    final Throwable setDoneKnownLocal() {
-        Throwable ex = exception;
-        status = TASK_DONE;
-        return ex;
-    }
-
-    /**
-     * Set status field to indicate task was stolen. Set only inside
-     * Worker steal code.
-     */
     final void setStolen() {
-        status = TASK_STOLEN; // this can harmlessly race
+        status = 1;
     }
 
     /**
@@ -281,7 +271,7 @@ public abstract class ForkJoinTask<V> {
      * @return true is this task is stolen
      */
     public final boolean isStolen() {
-        return status == TASK_STOLEN;
+        return status > 0;
     }
 
     /**

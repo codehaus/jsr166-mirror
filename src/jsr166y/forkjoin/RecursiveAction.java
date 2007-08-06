@@ -211,12 +211,11 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     }
 
     public final Void invoke() {
-        if (exception == null) {
-            try {
+        try {
+            if (exception == null) 
                 compute();
-            } catch(Throwable rex) {
-                setDoneExceptionally(rex);
-            }
+        } catch(Throwable rex) {
+            setDoneExceptionally(rex);
         }
         Throwable ex = setDone();
         if (ex != null)
@@ -225,26 +224,13 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     }
 
     public final Throwable exec() {
-        if (exception == null) {
-            try {
+        try {
+            if (exception == null)
                 compute();
-            } catch(Throwable rex) {
-                return setDoneExceptionally(rex);
-            }
+        } catch(Throwable rex) {
+            return setDoneExceptionally(rex);
         }
         return setDone();
-    }
-
-    // Faster version for coInvoke
-    final Throwable execKnownLocal() {
-        if (exception == null) {
-            try {
-                compute();
-            } catch(Throwable rex) {
-                return setDoneExceptionally(rex);
-            }
-        }
-        return setDoneKnownLocal();
     }
 
     /**

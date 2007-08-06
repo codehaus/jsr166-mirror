@@ -824,53 +824,56 @@ public class ArrayTasks {
     }
 
     // Cutoff for when to use insertion-sort instead of quicksort
-    static final int INSERTION_SORT_THRESHOLD = 16;
+    static final int INSERTION_SORT_THRESHOLD = 8;
 
     /** A standard sequential quicksort */
     static <T extends Comparable<? super T>> void quickSort(T[] a, int lo, int hi) {
-        // If under threshold, use insertion sort
-        if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-            for (int i = lo + 1; i <= hi; i++) {
-                T t = a[i];
-                int j = i - 1;
-                while (j >= lo && t.compareTo(a[j]) < 0) {
-                    a[j+1] = a[j];
-                    --j;
+        for (;;) { // loop along one recursion path
+            // If under threshold, use insertion sort
+            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
+                for (int i = lo + 1; i <= hi; i++) {
+                    T t = a[i];
+                    int j = i - 1;
+                    while (j >= lo && t.compareTo(a[j]) < 0) {
+                        a[j+1] = a[j];
+                        --j;
+                    }
+                    a[j+1] = t;
                 }
-                a[j+1] = t;
+                return;
             }
-            return;
-        }
-        
-        //  Use median-of-three(lo, mid, hi) to pick a partition. 
-        //  Also swap them into relative order while we are at it.
-        int mid = (lo + hi) >>> 1;
-        if (a[lo].compareTo(a[mid]) > 0) {
-            T t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-        }
-        if (a[mid].compareTo(a[hi]) > 0) {
-            T t = a[mid]; a[mid] = a[hi]; a[hi] = t;
+            
+            //  Use median-of-three(lo, mid, hi) to pick a partition. 
+            //  Also swap them into relative order while we are at it.
+            int mid = (lo + hi) >>> 1;
             if (a[lo].compareTo(a[mid]) > 0) {
-                t = a[lo]; a[lo] = a[mid]; a[mid] = t;
+                T t = a[lo]; a[lo] = a[mid]; a[mid] = t;
             }
-        }
-        
-        T pivot = a[mid];
-        int left = lo+1; 
-        int right = hi-1;
-        for (;;) {
-            while (pivot.compareTo(a[right]) < 0) 
-                --right;
-            while (left < right && pivot.compareTo(a[left]) >= 0) 
-                ++left;
-            if (left < right) {
-                T t = a[left]; a[left] = a[right]; a[right] = t;
-                --right;
+            if (a[mid].compareTo(a[hi]) > 0) {
+                T t = a[mid]; a[mid] = a[hi]; a[hi] = t;
+                if (a[lo].compareTo(a[mid]) > 0) {
+                    t = a[lo]; a[lo] = a[mid]; a[mid] = t;
+                }
             }
-            else break;
+            
+            T pivot = a[mid];
+            int left = lo+1; 
+            int right = hi-1;
+            for (;;) {
+                while (pivot.compareTo(a[right]) < 0) 
+                    --right;
+                while (left < right && pivot.compareTo(a[left]) >= 0) 
+                    ++left;
+                if (left < right) {
+                    T t = a[left]; a[left] = a[right]; a[right] = t;
+                    --right;
+                }
+                else break;
+            }
+
+            quickSort(a, lo,    left);
+            lo = left + 1;
         }
-        quickSort(a, lo,    left);
-        quickSort(a, left+1, hi);
     }
 
 

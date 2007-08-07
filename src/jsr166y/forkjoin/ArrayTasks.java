@@ -19,99 +19,99 @@ public class ArrayTasks {
      * default granularity for divide-by-two tasks. Provides about
      * four times as many finest-grained tasks as there are CPUs.
      */
-    static int defaultGranularity(ForkJoinPool pool, int n) {
-        int threads = pool.getPoolSize();
+    static int defaultGranularity(ForkJoinExecutor ex, int n) {
+        int threads = ex.getParallelismLevel();
         return 1 + n / ((threads << 2) - 3);
     }
 
     /**
      * Applies the given procedure to each element of the array.
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param proc the procedure
      */
-    public static <T> void apply(ForkJoinPool pool,
+    public static <T> void apply(ForkJoinExecutor ex,
                                  T[] array, 
                                  Procedure<? super T> proc) {
         int n = array.length;
-        pool.invoke(new FJApplyer<T>(array, proc, 0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJApplyer<T>(array, proc, 0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Applies the given procedure to given elements of the array.
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param proc the procedure
      * @param fromIndex the lower (inclusive) index
      * @param toIndex the upper fence (exclusive) index
      */
-    public static <T> void apply(ForkJoinPool pool,
+    public static <T> void apply(ForkJoinExecutor ex,
                                  T[] array, 
                                  Procedure<? super T> proc,
                                  int fromIndex,
                                  int toIndex) {
-        pool.invoke(new FJApplyer<T>(array, proc, fromIndex, toIndex-1, 
-                                     defaultGranularity(pool, toIndex - fromIndex)));
+        ex.invoke(new FJApplyer<T>(array, proc, fromIndex, toIndex-1, 
+                                     defaultGranularity(ex, toIndex - fromIndex)));
     }
     
     /**
      * Returns reduction of given array
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param reducer the reducer
      * @param base the result for an empty array
      */
-    public static <T> T reduce(ForkJoinPool pool,
+    public static <T> T reduce(ForkJoinExecutor ex,
                                T[] array, 
                                Reducer<T> reducer,
                                T base) {
         int n = array.length;
-        return pool.invoke(new FJReducer<T>(array,reducer, base,
-                                              0, n-1, defaultGranularity(pool, n)));
+        return ex.invoke(new FJReducer<T>(array,reducer, base,
+                                              0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Returns reduction of given elements of array
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param reducer the reducer
      * @param base the result for an empty array
      * @param fromIndex the lower (inclusive) index
      * @param toIndex the upper fence (exclusive) index
      */
-    public static <T> T reduce(ForkJoinPool pool,
+    public static <T> T reduce(ForkJoinExecutor ex,
                                T[] array, 
                                Reducer<T> reducer,
                                T base,
                                int fromIndex,
                                int toIndex) {
-        return pool.invoke(new FJReducer<T>(array,reducer, base,
+        return ex.invoke(new FJReducer<T>(array,reducer, base,
                                             fromIndex, toIndex-1, 
-                                            defaultGranularity(pool, toIndex-fromIndex)));
+                                            defaultGranularity(ex, toIndex-fromIndex)));
     }
 
     /**
      * Applies mapper to each element of array and reduces result
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param mapper the mapper
      * @param reducer the reducer
      * @param base the result for an empty array
      */
-    public static <T, U> U reduce(ForkJoinPool pool,
+    public static <T, U> U reduce(ForkJoinExecutor ex,
                                   T[] array, 
                                   Mapper<? super T, ? extends U> mapper,
                                   Reducer<U> reducer,
                                   U base) {
         int n = array.length;
-        return pool.invoke(new FJMapReducer<T, U>(array, mapper, reducer, 
+        return ex.invoke(new FJMapReducer<T, U>(array, mapper, reducer, 
                                                   base,
-                                                  0, n-1, defaultGranularity(pool, n)));
+                                                  0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Applies mapper to given elements of array and reduces result
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param mapper the mapper
      * @param reducer the reducer
@@ -119,146 +119,146 @@ public class ArrayTasks {
      * @param fromIndex the lower (inclusive) index
      * @param toIndex the upper fence (exclusive) index
      */
-    public static <T, U> U reduce(ForkJoinPool pool,
+    public static <T, U> U reduce(ForkJoinExecutor ex,
                                   T[] array, 
                                   Mapper<? super T, ? extends U> mapper,
                                   Reducer<U> reducer,
                                   U base,
                                   int fromIndex,
                                   int toIndex) {
-        return pool.invoke(new FJMapReducer<T, U>(array, mapper, reducer, 
+        return ex.invoke(new FJMapReducer<T, U>(array, mapper, reducer, 
                                                   base,
                                                   fromIndex, toIndex-1, 
-                                                  defaultGranularity(pool, toIndex-fromIndex)));
+                                                  defaultGranularity(ex, toIndex-fromIndex)));
     }
 
     /**
      * Maps each element of given array using mapper to dest
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param mapper the mapper
      * @param dest the destination array
      */
-    public static <T, U> void map(ForkJoinPool pool,
+    public static <T, U> void map(ForkJoinExecutor ex,
                                   T[] array, 
                                   Mapper<? super T, ? extends U>  mapper,
                                   U[] dest) {
         int n = array.length;
-        pool.invoke(new FJMapper<T, U>(array, dest, mapper,  
-                                       0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJMapper<T, U>(array, dest, mapper,  
+                                       0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Returns an element of the array matching the given predicate, or
      * null if none
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param pred the predicate
      */
-    public static <T> T findAny(ForkJoinPool pool,
+    public static <T> T findAny(ForkJoinExecutor ex,
                                 T[] array, 
                                 Predicate<? super T>  pred) {
         int n = array.length;
         AtomicReference<T> result = new AtomicReference<T>();
-        pool.invoke(new FJFindAny<T>(array, pred, result,  
-                                     0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJFindAny<T>(array, pred, result,  
+                                     0, n-1, defaultGranularity(ex, n)));
         return result.get();
     }
 
     /**
      * Returns an element of the array range matching the given predicate, or
      * null if none
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param pred the predicate
      * @param fromIndex the lower (inclusive) index
      * @param toIndex the upper fence (exclusive) index
      */
-    public static <T> T findAny(ForkJoinPool pool,
+    public static <T> T findAny(ForkJoinExecutor ex,
                                 T[] array, 
                                 Predicate<? super T>  pred,
                                 int fromIndex,
                                 int toIndex) {
         AtomicReference<T> result = new AtomicReference<T>();
-        pool.invoke(new FJFindAny<T>(array, pred, result,  
+        ex.invoke(new FJFindAny<T>(array, pred, result,  
                                      fromIndex, toIndex-1, 
-                                     defaultGranularity(pool, toIndex-fromIndex)));
+                                     defaultGranularity(ex, toIndex-fromIndex)));
         return result.get();
     }
 
     /**
      * Returns a list of all elements of the array matching pred
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param pred the predicate
      */
-    public static <T> List<T> findAll(ForkJoinPool pool,
+    public static <T> List<T> findAll(ForkJoinExecutor ex,
                                       T[] array, 
                                       Predicate<? super T> pred) {
         int n = array.length;
         Vector<T> dest = new Vector<T>(); // todo: use smarter list
-        pool.invoke(new FJFindAll<T>(array, pred, dest,  
-                                     0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJFindAll<T>(array, pred, dest,  
+                                     0, n-1, defaultGranularity(ex, n)));
         return dest;
     }
 
     /**
      * Returns a list of all elements of the array range matching pred
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param pred the predicate
      * @param fromIndex the lower (inclusive) index
      * @param toIndex the upper fence (exclusive) index
      */
-    public static <T> List<T> findAll(ForkJoinPool pool,
+    public static <T> List<T> findAll(ForkJoinExecutor ex,
                                       T[] array, 
                                       Predicate<? super T> pred,
                                       int fromIndex,
                                       int toIndex) {
         Vector<T> dest = new Vector<T>(); // todo: use smarter list
-        pool.invoke(new FJFindAll<T>(array, pred, dest,  
+        ex.invoke(new FJFindAll<T>(array, pred, dest,  
                                      fromIndex, toIndex-1, 
-                                     defaultGranularity(pool, toIndex-fromIndex)));
+                                     defaultGranularity(ex, toIndex-fromIndex)));
         return dest;
     }
 
     /**
      * Sorts the given array
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      */
-    public static <T extends Comparable<? super T>> void sort(ForkJoinPool pool, T[] array) {
+    public static <T extends Comparable<? super T>> void sort(ForkJoinExecutor ex, T[] array) {
         int n = array.length;
-        int threads = pool.getPoolSize();
+        int threads = ex.getParallelismLevel();
         if (threads == 1) {
             quickSort(array, 0, n-1);
             return;
         }
         T[] workSpace = (T[])java.lang.reflect.Array.
             newInstance(array.getClass().getComponentType(), n);
-        pool.invoke(new FJSorter<T>(array, 0, workSpace, 0, n));
+        ex.invoke(new FJSorter<T>(array, 0, workSpace, 0, n));
     }
 
     /**
      * Returns the minimum of all elements, or null if empty
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      */
-    public static <T extends Comparable<? super T>> T min(ForkJoinPool pool,
+    public static <T extends Comparable<? super T>> T min(ForkJoinExecutor ex,
                                                           T[] array) {
         int n = array.length;
-        return pool.invoke(new FJMin<T>(array, 0, n-1, defaultGranularity(pool, n)));
+        return ex.invoke(new FJMin<T>(array, 0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Returns the maximum of all elements, or null if empty
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      */
-    public static <T extends Comparable<? super T>> T max(ForkJoinPool pool,
+    public static <T extends Comparable<? super T>> T max(ForkJoinExecutor ex,
                                                           T[] array) {
         int n = array.length;
-        return pool.invoke(new FJMax<T>(array, 0, n-1, defaultGranularity(pool, n)));
+        return ex.invoke(new FJMax<T>(array, 0, n-1, defaultGranularity(ex, n)));
     }
 
     /*

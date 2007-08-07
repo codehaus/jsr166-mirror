@@ -19,51 +19,51 @@ public class DoubleTasks {
      * default granularity for divide-by-two tasks. Provides about
      * four times as many finest-grained tasks as there are CPUs.
      */
-    static int defaultGranularity(ForkJoinPool pool, int n) {
-        int threads = pool.getPoolSize();
+    static int defaultGranularity(ForkJoinExecutor ex, int n) {
+        int threads = ex.getParallelismLevel();
         return 1 + n / ((threads << 2) - 3);
     }
 
     /**
      * Applies the given procedure to each element of the array.
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param proc the procedure
      */
-    public static <T> void apply(ForkJoinPool pool,
+    public static <T> void apply(ForkJoinExecutor ex,
                                  double[] array, 
                                  DoubleProcedure proc) {
         int n = array.length;
-        pool.invoke(new FJApplyer(array, proc, 0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJApplyer(array, proc, 0, n-1, defaultGranularity(ex, n)));
     }
     
     /**
      * Returns reduction of given array
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param reducer the reducer
      * @param base the result for an empty array
      */
-    public static double reduce(ForkJoinPool pool,
+    public static double reduce(ForkJoinExecutor ex,
                                 double[] array, 
                                 DoubleReducer reducer,
                                 double base) {
         int n = array.length;
         FJReducer r = new FJReducer(array,reducer, base,
-                                    0, n-1, defaultGranularity(pool, n));
-        pool.invoke(r);
+                                    0, n-1, defaultGranularity(ex, n));
+        ex.invoke(r);
         return r.result;
     }
 
     /**
      * Applies mapper to each element of list and reduces result
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      * @param mapper the mapper
      * @param reducer the reducer
      * @param base the result for an empty list
      */
-    public static <T> double reduce(ForkJoinPool pool,
+    public static <T> double reduce(ForkJoinExecutor ex,
                              List<T> list, 
                              MapperToDouble<T> mapper,
                              DoubleReducer reducer,
@@ -71,20 +71,20 @@ public class DoubleTasks {
         int n = list.size();
         FJMapReducer<T> r =
             new FJMapReducer<T>(list, mapper, reducer, base,
-                                0, n-1, defaultGranularity(pool, n));
-        pool.invoke(r);
+                                0, n-1, defaultGranularity(ex, n));
+        ex.invoke(r);
         return r.result;
     }
 
     /**
      * Applies mapper to each element of array and reduces result
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param mapper the mapper
      * @param reducer the reducer
      * @param base the result for an empty array
      */
-    public static <T> double reduce(ForkJoinPool pool,
+    public static <T> double reduce(ForkJoinExecutor ex,
                              double[] array, 
                              DoubleTransformer mapper,
                              DoubleReducer reducer,
@@ -92,43 +92,43 @@ public class DoubleTasks {
         int n = array.length;
         FJTransformReducer r =
             new FJTransformReducer(array, mapper, reducer, base,
-                                   0, n-1, defaultGranularity(pool, n));
-        pool.invoke(r);
+                                   0, n-1, defaultGranularity(ex, n));
+        ex.invoke(r);
         return r.result;
     }
 
     /**
      * Returns a array mapping each element of given array using mapper
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param mapper the mapper
      */
-    public static double[] map(ForkJoinPool pool,
+    public static double[] map(ForkJoinExecutor ex,
                                double[] array, 
                                DoubleTransformer mapper) {
         int n = array.length;
         double[] dest = new double[n];
-        pool.invoke(new FJMapper(array, dest, mapper,  
-                                 0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJMapper(array, dest, mapper,  
+                                 0, n-1, defaultGranularity(ex, n)));
         return dest;
     }
 
     /**
      * Returns an element of the array matching the given predicate, or
      * missing if none
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param pred the predicate
      * @param missing the value to return if no such element exists
      */
-    public static double findAny(ForkJoinPool pool,
+    public static double findAny(ForkJoinExecutor ex,
                               double[] array, 
                               DoublePredicate  pred,
                               double missing) {
         int n = array.length;
         VolatileDouble result = new VolatileDouble(missing);
-        pool.invoke(new FJFindAny(array, pred, result, missing,
-                                  0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJFindAny(array, pred, result, missing,
+                                  0, n-1, defaultGranularity(ex, n)));
         return result.value;
     }
 
@@ -139,85 +139,85 @@ public class DoubleTasks {
 
     /**
      * Returns a list of all elements of the array matching pred
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param pred the predicate
      */
-    public static List<Double> findAll(ForkJoinPool pool,
+    public static List<Double> findAll(ForkJoinExecutor ex,
                                         double[] array, 
                                         DoublePredicate pred) {
         int n = array.length;
         Vector<Double> dest = new Vector<Double>(); // todo: use smarter list
-        pool.invoke(new FJFindAll(array, pred, dest,  
-                                  0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJFindAll(array, pred, dest,  
+                                  0, n-1, defaultGranularity(ex, n)));
         return dest;
     }
 
     /**
      * Returns the sum of all elements
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      */
-    public static double sum(ForkJoinPool pool, 
+    public static double sum(ForkJoinExecutor ex, 
                              double[] array) {
         int n = array.length;
-        FJSum r = new FJSum(array, 0, n-1, defaultGranularity(pool, n));
-        pool.invoke(r);
+        FJSum r = new FJSum(array, 0, n-1, defaultGranularity(ex, n));
+        ex.invoke(r);
         return r.result;
     }
 
     /**
      * Returns the sum of all mapped elements
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      * @param mapper the mapper
      */
-    public static double sum(ForkJoinPool pool, 
+    public static double sum(ForkJoinExecutor ex, 
                              double[] array, 
                              DoubleTransformer mapper) {
         int n = array.length;
         FJTransformSum r = 
-            new FJTransformSum(array, mapper, 0, n-1, defaultGranularity(pool, n));
-        pool.invoke(r);
+            new FJTransformSum(array, mapper, 0, n-1, defaultGranularity(ex, n));
+        ex.invoke(r);
         return r.result;
     }
 
     /**
      * Returns the minimum of all elements, or MAX_VALUE if empty
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      */
-    public static double min(ForkJoinPool pool, 
+    public static double min(ForkJoinExecutor ex, 
                              double[] array) {
         int n = array.length;
-        FJMin r = new FJMin(array, 0, n-1, defaultGranularity(pool, n));
-        pool.invoke(r);
+        FJMin r = new FJMin(array, 0, n-1, defaultGranularity(ex, n));
+        ex.invoke(r);
         return r.result;
     }
 
     /**
      * Returns the maximum of all elements, or MIN_VALUE if empty
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      */
-    public static double max(ForkJoinPool pool, 
+    public static double max(ForkJoinExecutor ex, 
                              double[] array) {
         int n = array.length;
-        FJMax r = new FJMax(array, 0, n-1, defaultGranularity(pool, n));
-        pool.invoke(r);
+        FJMax r = new FJMax(array, 0, n-1, defaultGranularity(ex, n));
+        ex.invoke(r);
         return r.result;
     }
 
 
     /**
      * Sorts the given array
-     * @param pool the pool
+     * @param ex the executor
      * @param array the array
      */
-    public static void sort(ForkJoinPool pool, double[] array) {
+    public static void sort(ForkJoinExecutor ex, double[] array) {
         int n = array.length;
         double[] workSpace = new double[n];
-        pool.invoke(new FJSorter(array, 0, workSpace, 0, n));
+        ex.invoke(new FJSorter(array, 0, workSpace, 0, n));
     }
 
 

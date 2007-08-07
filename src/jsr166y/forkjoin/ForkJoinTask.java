@@ -112,7 +112,7 @@ public abstract class ForkJoinTask<V> {
     /**
      * Status, taking values:
      *    0: initial
-     *   <0: completed 
+     *   -1: completed 
      *   >0: stolen (or external)
      *
      * Status is set negative when task completes normally.  A task is
@@ -137,6 +137,14 @@ public abstract class ForkJoinTask<V> {
     int status;
 
     /**
+     * Sets status to stolen (or an external submission). Called only
+     * by task-stealing and submission code.
+     */
+    final void setStolen() {
+        status = 1;
+    }
+
+    /**
      * Sets status to indicate this task is done.
      */
     final Throwable setDone() {
@@ -153,11 +161,8 @@ public abstract class ForkJoinTask<V> {
      */
     final Throwable setDoneExceptionally(Throwable rex) {
         exceptionUpdater.compareAndSet(this, null, rex);
-        return setDone();
-    }
-
-    final void setStolen() {
-        status = 1;
+        ForkJoinWorkerThread.signalTaskCompletion();
+        return exception;
     }
 
     /**

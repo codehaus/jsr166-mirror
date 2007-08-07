@@ -19,128 +19,128 @@ public class ListTasks {
      * default granularity for divide-by-two tasks. Provides about
      * four times as many finest-grained tasks as there are CPUs.
      */
-    static int defaultGranularity(ForkJoinPool pool, int n) {
-        int threads = pool.getPoolSize();
+    static int defaultGranularity(ForkJoinExecutor ex, int n) {
+        int threads = ex.getParallelismLevel();
         return 1 + n / ((threads << 2) - 3);
     }
 
     /**
      * Applies the given procedure to each element of the list.
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      * @param proc the procedure
      */
-    public static <T> void apply(ForkJoinPool pool,
+    public static <T> void apply(ForkJoinExecutor ex,
                                  List<? extends T> list, 
                                  Procedure<? super T> proc) {
         int n = list.size();
-        pool.invoke(new FJApplyer<T>(list, proc, 0, n-1, defaultGranularity(pool, n), null));
+        ex.invoke(new FJApplyer<T>(list, proc, 0, n-1, defaultGranularity(ex, n), null));
     }
     
     /**
      * Returns reduction of given list
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      * @param reducer the reducer
      * @param base the result for an empty list
      */
-    public static <T> T reduce(ForkJoinPool pool,
+    public static <T> T reduce(ForkJoinExecutor ex,
                                List<? extends T> list, 
                                Reducer<T> reducer,
                                T base) {
         int n = list.size();
-        return pool.invoke(new FJReducer<T>(list,reducer, base,
-                                              0, n-1, defaultGranularity(pool, n)));
+        return ex.invoke(new FJReducer<T>(list,reducer, base,
+                                              0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Applies mapper to each element of list and reduces result
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      * @param mapper the mapper
      * @param reducer the reducer
      * @param base the result for an empty list
      */
-    public static <T, U> U reduce(ForkJoinPool pool,
+    public static <T, U> U reduce(ForkJoinExecutor ex,
                                   List<? extends T> list, 
                                   Mapper<? super T, ? extends U> mapper,
                                   Reducer<U> reducer,
                                   U base) {
         int n = list.size();
-        return pool.invoke(new FJMapReducer<T, U>(list, mapper, reducer, 
+        return ex.invoke(new FJMapReducer<T, U>(list, mapper, reducer, 
                                                   base,
-                                                  0, n-1, defaultGranularity(pool, n)));
+                                                  0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Returns a list mapping each element of given list using mapper
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      * @param mapper the mapper
      */
-    public static <T, U> List<U> map(ForkJoinPool pool,
+    public static <T, U> List<U> map(ForkJoinExecutor ex,
                                      List<? extends T> list, 
                                      Mapper<? super T, ? extends U>  mapper) {
         int n = list.size();
         List<U> dest = Arrays.asList((U[])new Object[n]);
-        pool.invoke(new FJMapper<T,U>(list, dest, mapper,  
-                                      0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJMapper<T,U>(list, dest, mapper,  
+                                      0, n-1, defaultGranularity(ex, n)));
         return dest;
     }
 
     /**
      * Returns an element of the list matching the given predicate, or
      * null if none
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      * @param pred the predicate
      */
-    public static <T> T findAny(ForkJoinPool pool,
+    public static <T> T findAny(ForkJoinExecutor ex,
                                 List<? extends T> list, 
                                 Predicate<? super T>  pred) {
         int n = list.size();
         AtomicReference<T> result = new AtomicReference<T>();
-        pool.invoke(new FJFindAny<T>(list, pred, result,  
-                                     0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJFindAny<T>(list, pred, result,  
+                                     0, n-1, defaultGranularity(ex, n)));
         return result.get();
     }
 
     /**
      * Returns a list of all elements of the list matching pred
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      * @param pred the predicate
      */
-    public static <T> List<T> findAll(ForkJoinPool pool,
+    public static <T> List<T> findAll(ForkJoinExecutor ex,
                                                 List<? extends T> list, 
                                                 Predicate<? super T> pred) {
         int n = list.size();
         Vector<T> dest = new Vector<T>(); // todo: use smarter list
-        pool.invoke(new FJFindAll<T>(list, pred, dest,  
-                                     0, n-1, defaultGranularity(pool, n)));
+        ex.invoke(new FJFindAll<T>(list, pred, dest,  
+                                     0, n-1, defaultGranularity(ex, n)));
         return dest;
     }
 
     /**
      * Returns the minimum of all elements, or null if empty
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      */
-    public static <T extends Comparable<? super T>> T min(ForkJoinPool pool,
+    public static <T extends Comparable<? super T>> T min(ForkJoinExecutor ex,
                                                           List<? extends T> list) {
         int n = list.size();
-        return pool.invoke(new FJMin<T>(list, 0, n-1, defaultGranularity(pool, n)));
+        return ex.invoke(new FJMin<T>(list, 0, n-1, defaultGranularity(ex, n)));
     }
 
     /**
      * Returns the maximum of all elements, or null if empty
-     * @param pool the pool
+     * @param ex the executor
      * @param list the list
      */
-    public static <T extends Comparable<? super T>> T max(ForkJoinPool pool,
+    public static <T extends Comparable<? super T>> T max(ForkJoinExecutor ex,
                                                           List<? extends T> list) {
         int n = list.size();
-        return pool.invoke(new FJMax<T>(list, 0, n-1, defaultGranularity(pool, n)));
+        return ex.invoke(new FJMax<T>(list, 0, n-1, defaultGranularity(ex, n)));
     }
 
     /*

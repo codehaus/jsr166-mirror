@@ -9,18 +9,16 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
-import jsr166y.*;
 
 
 /**
- * The host and external interface for ForkJoinTasks. A ForkJoinPool
- * manages a group of specialized ForkJoinWorkerThreads that perform
+ * Host for a group of ForkJoinWorkerThreads that perform
  * ForkJoinTasks. It also provides the entry point for tasks submitted
  * from non-ForkJoinTasks, as well as management and monitoring
  * operations.  Normally a single ForkJoinPool is used for a large
  * number of submitted tasks. Otherwise, use would not always outweigh
- * the construction overhead of creating a large set of threads
- * and the associated startup bookkeeping.
+ * the construction overhead of creating a large set of threads and
+ * the associated startup bookkeeping.
  *
  * <p> Class ForkJoinPool does not implement the ExecutorService
  * interface because it only executes ForkJoinTasks, not arbitrary
@@ -28,18 +26,19 @@ import jsr166y.*;
  * analogous lifecycle control methods such as shutdown.
  *
  * <p>A ForkJoinPool may be constructed with any number of worker
- * threads, and worker threads may be added and removed (one-by-one)
- * dynamically. However, as a general rule, using a pool size of the
- * number of processors on a given system, as arranged by the default
- * constructor) will result in the best performance.
+ * threads, and worker threads may be added and removed dynamically.
+ * However, as a general rule, using a pool size of the number of
+ * processors on a given system, as arranged by the default
+ * constructor) will result in the best performance. Resizing may be
+ * expensive and may cause transient imbalances and slow downs.
  *
  * <p>In addition to execution and lifecycle control methods, this
  * class provides status check methods (for example
  * <tt>getStealCount</tt>) that are intended to aid in developing,
  * tuning, and monitoring fork/join applications.
  */
-public class ForkJoinPool {
-
+public class ForkJoinPool implements ForkJoinExecutor {
+    
     /*
      * This is an overhauled version of the framework described in "A
      * Java Fork/Join Framework" by Doug Lea, in, Proceedings, ACM
@@ -165,10 +164,10 @@ public class ForkJoinPool {
      *
      * So, signals and waits occur relatively rarely during normal
      * processing, which minimizes contention on this global
-     * synchronizer. Even so, the EventBarrier is designed to minimize
+     * synchronizer. Even so, the PoolBarrier is designed to minimize
      * blockages by threads that have better things to do.
      */
-    private final EventBarrier eventBarrier;
+    private final PoolBarrier poolBarrier;
 
     /**
      * The number of submissions that are running in pool.
@@ -282,7 +281,7 @@ public class ForkJoinPool {
         this.poolSize = poolSize;
         this.factory = factory;
         this.poolNumber = poolNumberGenerator.incrementAndGet();
-        this.eventBarrier = new EventBarrier();
+        this.poolBarrier = new PoolBarrier();
         this.submissionQueue = new ConcurrentLinkedQueue<Submission<?>>();
         this.activeWorkerCounter = new AtomicInteger();
         this.runningSubmissions = new AtomicInteger();
@@ -318,7 +317,9 @@ public class ForkJoinPool {
     }
     
     /**
-     * Arranges for (asynchronous) execution of the given task.
+     * Arranges for (asynchronous) execution of the given task,
+     * returning a <tt>Future</tt> that may be used to obtain results
+     * upon completion.
      * @param task the task
      * @return a Future that can be used to get the task's results.
      * @throws NullPointerException if task is null
@@ -326,6 +327,16 @@ public class ForkJoinPool {
      */
     public <T> Future<T> submit(ForkJoinTask<T> task) {
         return doSubmit(task);
+    }
+
+    /**
+     * Arranges for (asynchronous) execution of the given task.
+     * @param task the task
+     * @throws NullPointerException if task is null
+     * @throws RejectedExecutionException if pool is shut down
+     */
+    public <T> void execute(ForkJoinTask<T> task) {
+        doSubmit(task);
     }
 
     /**
@@ -338,7 +349,7 @@ public class ForkJoinPool {
             throw new RejectedExecutionException();
         Submission<T> job = new Submission<T>(task, this);
         submissionQueue.add(job);
-        eventBarrier.poolSignal();
+        poolBarrier.poolSignal();
         return job;
     }
 
@@ -350,6 +361,15 @@ public class ForkJoinPool {
      * @return the number of worker threads in this pool
      */
     public int getPoolSize() {
+        return poolSize;
+    }
+
+    /**
+     * Equivalent to {@link #getPoolSize}.
+     *
+     * @return the number of worker threads in this pool
+     */
+    public int getParallelismLevel() {
         return poolSize;
     }
 
@@ -425,18 +445,142 @@ public class ForkJoinPool {
     }
 
     /**
-     * Adds a new worker thread to the pool. This method may be used
-     * to increase the amount of parallelism available to tasks.
-     * @throws IllegalStateException if pool is terminating or
-     * terminated
+     * Tries to adds the indicated number of new worker threads to the
+     * pool. This method may be used to increase the amount of
+     * parallelism available to tasks. The actual number of 
+     * threads added may be less than requested if the pool
+     * is terminating or terminated
+     * @return the number of threads added
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
      *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
-    public void addWorker() {
-        doAddWorker(null, false);
+    public int addWorkers(int numberToAdd) {
+        int nadded = 0;
+        checkPermission();
+        final ReentrantLock lock = this.workerLock;
+        lock.lock();
+        try {
+            if (!runState.isAtLeastStopping()) {
+                ForkJoinWorkerThread[] ws = workers;
+                int len = ws.length;
+                int newLen = len + numberToAdd;
+                ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[newLen];
+                System.arraycopy(ws, 0, nws, 0, len);
+                for (int i = len; i < newLen; ++i) 
+                    nws[i] = createWorker(i);
+                workers = nws;
+                for (int i = len; i < newLen; ++i) {
+                    nws[i].start();
+                    ++runningWorkers;
+                }
+                poolSize += numberToAdd;
+                nadded = numberToAdd;
+            }
+        } finally {
+            lock.unlock();
+        }
+        return nadded;
     }
+
+
+    /**
+     * Tries to remove the indicated number of worker threads from the
+     * pool. The workers will exit the next time they are idle. This
+     * method may be used to decrease the amount of parallelism
+     * available to tasks. The actual number of workers removed
+     * may be less than requested if the pool size would become
+     * zero or the pool is terminating or terminated.
+     * @return the number removed.
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     */
+    public int removeWorkers(int numberToRemove) {
+        int nremoved = 0;
+        checkPermission();
+        final ReentrantLock lock = this.workerLock;
+        lock.lock();
+        try {
+            // shutdown in rightmost order to enable shrinkage in
+            // workerTerminated
+            ForkJoinWorkerThread[] ws = workers;
+            int k = ws.length;  
+            while (!runState.isAtLeastStopping() &&
+                   --k > 0 && // don't kill ws[0]
+                   nremoved < numberToRemove) {
+                ForkJoinWorkerThread w = ws[k];
+                if (w != null) {
+                    RunState rs = w.getRunState();
+                    if (rs.transitionToShutdown()) {
+                        --poolSize;
+                        ++nremoved;
+                    }
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return nremoved;
+    }
+
+    /**
+     * Equivalent to removeWorkers(1).
+     * @return true if a worker was removed.
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     */
+    public boolean removeWorker() {
+        return removeWorkers(1) != 0;
+    }
+
+    /**
+     * Equivalent to addWorkers(1).
+     * @return true if a worker was added.
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     */
+    public boolean addWorker() {
+        return addWorkers(1) != 0;
+    }
+
+    /**
+     * Tries to add or remove workers to attain the given pool size.
+     * This may fail to attain the given target if the pool is
+     * terminating or terminated.
+     * @param newSize the target poolSize
+     * @return the pool size upon exit of this method
+     * @throws IllegalArgumentException if newSize less than or
+     * equal to zero
+     * @throws SecurityException if a security manager exists and
+     *         the caller is not permitted to modify threads
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
+     */
+    public int setPoolSize(int newSize) {
+        checkPermission();
+        if (newSize <= 0)
+            throw new IllegalArgumentException();
+        final ReentrantLock lock = this.workerLock;
+        lock.lock();
+        try {
+            int ps = poolSize;
+            if (newSize > ps) 
+                addWorkers(newSize - ps);
+            else if (newSize < ps)
+                removeWorkers(ps - newSize);
+        } finally {
+            lock.unlock();
+        }
+        return poolSize;
+    }
+                
 
     /**
      * Arranges for (asynchronous) execution of the given task using a
@@ -459,15 +603,6 @@ public class ForkJoinPool {
         if (task == null)
             throw new NullPointerException();
         Submission<T> job = new Submission<T>(task, this);
-        doAddWorker(job, exitOnCompletion);
-        return job;
-    }
-
-    /**
-     * Shared code for addWorker and variants
-     */
-    private void doAddWorker(Submission<?> job,
-                             boolean exitOnCompletion) {
         checkPermission();
         final ReentrantLock lock = this.workerLock;
         lock.lock();
@@ -477,8 +612,7 @@ public class ForkJoinPool {
             ForkJoinWorkerThread[] ws = workers;
             int len = ws.length;
             ForkJoinWorkerThread w = createWorker(len);
-            if (job != null)
-                w.setFirstTask(job, exitOnCompletion);
+            w.setFirstTask(job, exitOnCompletion);
             ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[len+1];
             System.arraycopy(ws, 0, nws, 0, len);
             nws[len] = w;
@@ -489,46 +623,7 @@ public class ForkJoinPool {
         } finally {
             lock.unlock();
         }
-    }
-
-    /**
-     * Tries to remove a worker thread from the pool. The worker will
-     * exit the next time it is idle. This method may be used
-     * to decrease the amount of parallelism available to tasks.
-     * @return true if a worker was removed, or false if the pool is
-     * terminating or terminated or the pool size would become zero.
-     * @throws SecurityException if a security manager exists and
-     *         the caller is not permitted to modify threads
-     *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
-     */
-    public boolean removeWorker() {
-        boolean removed = false;
-        checkPermission();
-        final ReentrantLock lock = this.workerLock;
-        lock.lock();
-        try {
-            if (!runState.isAtLeastStopping()) {
-                // shutdown the rightmost running worker
-                // (rightmost enables shrinkage in workerTerminated)
-                ForkJoinWorkerThread[] ws = workers;
-                int k = ws.length;
-                while (--k > 0) { // don't kill ws[0]
-                    ForkJoinWorkerThread w = ws[k];
-                    if (w != null) {
-                        RunState rs = w.getRunState();
-                        if (rs.transitionToShutdown()) {
-                            --poolSize;
-                            removed = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        } finally {
-            lock.unlock();
-        }
-        return removed;
+        return job;
     }
 
     /**
@@ -537,36 +632,42 @@ public class ForkJoinPool {
      * @param ex the exception causing abrupt termination, or null if
      * completed normally
      */
-    final void workerTerminated(ForkJoinWorkerThread w) {
-        final ReentrantLock lock = this.workerLock;
-        lock.lock();
+    final void workerTerminated(ForkJoinWorkerThread w, Throwable ex) {
         try {
-            if (!runState.isAtLeastStopping()) { // don't bother if stopping
-                // Null slot, and if end slots now null, shrink
-                int idx = w.getWorkerPoolIndex();
-                ForkJoinWorkerThread[] ws = workers;
-                int len = ws.length;
-                if (idx >= 0 && idx < len && ws[idx] == w) {
-                    ws[idx] = null;
-                    int newlen = len;
-                    while (newlen > 0 && ws[newlen-1] == null)
-                        --newlen;
-                    if (newlen < len) {
-                        ForkJoinWorkerThread[] nws = 
-                            new ForkJoinWorkerThread[newlen];
-                        System.arraycopy(ws, 0, nws, 0, newlen);
-                        workers = nws;
-                        eventBarrier.signal();
+            final ReentrantLock lock = this.workerLock;
+            lock.lock();
+            try {
+                // Unless stopping, null slot, and if rightmost slots
+                // now null, shrink
+                if (!runState.isAtLeastStopping()) { 
+                    int idx = w.getWorkerPoolIndex();
+                    ForkJoinWorkerThread[] ws = workers;
+                    int len = ws.length;
+                    if (idx >= 0 && idx < len && ws[idx] == w) {
+                        ws[idx] = null;
+                        int newlen = len;
+                        while (newlen > 0 && ws[newlen-1] == null)
+                            --newlen;
+                        if (newlen < len) {
+                            ForkJoinWorkerThread[] nws = 
+                                new ForkJoinWorkerThread[newlen];
+                            System.arraycopy(ws, 0, nws, 0, newlen);
+                            workers = nws;
+                            poolBarrier.signal();
+                        }
                     }
                 }
-            }
-            if (--runningWorkers == 0) {
-                terminate(); // no-op if already stopping
-                runState.transitionToTerminated();
-                termination.signalAll();
+                if (--runningWorkers == 0) {
+                    terminate(); // no-op if already stopping
+                    runState.transitionToTerminated();
+                    termination.signalAll();
+                }
+            } finally {
+                lock.unlock();
             }
         } finally {
-            lock.unlock();
+            if (ex != null)
+                ForkJoinTask.rethrowException(ex);
         }
     }
 
@@ -729,7 +830,7 @@ public class ForkJoinPool {
         } finally {
             lock.unlock();
         }
-        eventBarrier.poolSignal();
+        poolBarrier.poolSignal();
     }
 
     /**
@@ -781,10 +882,12 @@ public class ForkJoinPool {
     /**
      * Returns the total number of tasks stolen from one thread's work
      * queue by another. This value is only an approximation, obtained
-     * by iterating across all threads in the pool, but may be useful
-     * for monitoring and tuning fork/join programs: In general, steal
-     * counts should be high enough to keep threads busy, but low
-     * enough to avoid overhead and contention across threads.
+     * by iterating across all threads in the pool, and may lag the
+     * actual total number of steals when the pool is not
+     * quiescent. But the value is still useful for monitoring and
+     * tuning fork/join programs: In general, steal counts should be
+     * high enough to keep threads busy, but low enough to avoid
+     * overhead and contention across threads.
      * @return the number of steals.
      */
     public long getStealCount() {
@@ -877,8 +980,8 @@ public class ForkJoinPool {
     /**
      * Return counter (cached by workers)
      */
-    final EventBarrier getEventBarrier() {
-        return eventBarrier;
+    final PoolBarrier getPoolBarrier() {
+        return poolBarrier;
     }
 
     /**
@@ -888,149 +991,8 @@ public class ForkJoinPool {
         return submissionQueue.poll();
     }
 
-    /**
-     * A variant of a cyclic barrier that is advanced upon explicit
-     * signals representing event occurrences.
-     */
-    static final class EventBarrier {
-        /**
-         * Wait nodes for Treiber stack representing wait queue.
-         */
-        static final class EQNode {
-            EQNode next;
-            volatile ForkJoinWorkerThread thread; // nulled to cancel wait
-            final long count;
-            EQNode(ForkJoinWorkerThread t, long c) {
-                thread = t;
-                count = c;
-            }
-        }
+    // Callbacks from submissions
 
-        /**
-         * Head of Treiber stack. Even though this variable is very
-         * busy, it is not usually heavily contended because of
-         * signal/wait/release policies.
-         */
-        final AtomicReference<EQNode> head = new AtomicReference<EQNode>();
-
-        /**
-         * The event count
-         */
-        final AtomicLong counter = new AtomicLong();
-
-        /**
-         * Returns the current event count
-         */
-        long getCount() {
-            return counter.get();
-        }
-
-        /**
-         * Waits until event count advances from count, or some
-         * other thread arrives or is already waiting with a different
-         * count.
-         * @param count previous value returned by sync (or 0)
-         * @return current event count
-         */
-        long sync(ForkJoinWorkerThread thread, long count) {
-            long current = counter.get();
-            if (current == count) 
-                enqAndWait(thread, count);
-            if (head.get() != null)
-                releaseAll();
-            return current;
-        }
-
-        /**
-         * Ensures that event count on exit is greater than event
-         * count on entry, and that at least one thread waiting for
-         * count to change is signalled, (It will then in turn
-         * propagate other wakeups.) This lessens stalls by signallers
-         * when they want to be doing something more productive.
-         * However, on contention to release, wakes up all threads to
-         * help forestall further contention.  Note that the counter
-         * is not necessarily incremented by caller.  If attempted CAS
-         * fails, then some other thread already advanced from
-         * incoming value;
-         */
-        void signal() {
-            final AtomicLong counter = this.counter;
-            long c = counter.get();
-            counter.compareAndSet(c, c+1); 
-            final AtomicReference<EQNode> head = this.head;
-            EQNode h = head.get();
-            if (h != null) {
-                ForkJoinWorkerThread t;
-                if (head.compareAndSet(h, h.next) &&
-                    (t = h.thread) != null) {
-                    h.thread = null;
-                    LockSupport.unpark(t);
-                }
-                else if (head.get() != null)
-                    releaseAll();
-            }
-        }
-
-        /**
-         * Version of signal called from pool. Forces increment and
-         * releases all. It is OK if this is called by worker threads,
-         * but it is heavier than necessary for them.
-         */
-        void poolSignal() {
-            counter.incrementAndGet();
-            releaseAll();
-        }
-
-        /**
-         * Enqueues node and waits unless aborted or signalled.
-         */
-        private void enqAndWait(ForkJoinWorkerThread thread, long count) {
-            EQNode node = new EQNode(thread, count);
-            final AtomicReference<EQNode> head = this.head;
-            final AtomicLong counter = this.counter;
-            for (;;) {
-                EQNode h = head.get();
-                node.next = h;
-                if ((h != null && h.count != count) || 
-                    counter.get() != count)
-                    break;
-                if (head.compareAndSet(h, node)) {
-                    while (!thread.isInterrupted() &&
-                           node.thread != null &&
-                           counter.get() == count)
-                        LockSupport.park();
-                    node.thread = null;
-                    break;
-                }
-            }
-        }
-
-        /**
-         * Release all waiting threads. Called on exit from sync, as
-         * well as on contention in signal. Regardless of why sync'ing
-         * threads exit, other waiting threads must also recheck for
-         * tasks or completions before resync. Release by chopping off
-         * entire list, and then signalling. This both lessens
-         * contention and avoids unbounded enq/deq races.
-         */
-        private void releaseAll() {
-            final AtomicReference<EQNode> head = this.head;
-            EQNode p;
-            while ( (p = head.get()) != null) {
-                if (head.compareAndSet(p, null)) {
-                    do {
-                        ForkJoinWorkerThread t = p.thread;
-                        if (t != null) {
-                            p.thread = null;
-                            LockSupport.unpark(t);
-                        }
-                    } while ((p = p.next) != null);
-                    break;
-                }
-            }
-        }
-    }
-                
     /**
      * Callback on starting execution of externally submitted job.
      * @return true if task can execute
@@ -1049,209 +1011,6 @@ public class ForkJoinPool {
         if (runningSubmissions.decrementAndGet() == 0 &&
             runState.isAtLeastShutdown())
             tryTerminateOnShutdown();
-    }
-
-    /**
-     * Adapter class to allow submissions to act as Futures.  This
-     * entails three kinds of adaptation:
-     *
-     * (1) Unlike internal fork/join processing, get() must block, not
-     * help out processing tasks. We use a ReentrantLock condition
-     * to arrange this.
-     *
-     * (2) Regular Futures encase RuntimeExceptions within
-     * ExecutionExeptions, while internal tasks just throw them
-     * directly, so these must be trapped and wrapped.
-     *
-     * (3) External submissions are tracked for the sake of managing
-     * worker threads. The submissionStarting and submissionCompleted
-     * methods perform the associated bookkeeping.
-     */
-    static final class Submission<T> extends RecursiveTask<T> 
-        implements Future<T> {
-
-        private final ForkJoinTask<T> task;
-        private final ForkJoinPool pool;
-        private final ReentrantLock lock;
-        private final Condition ready;
-        private boolean started;
-        Submission(ForkJoinTask<T> t, ForkJoinPool p) {
-            t.setStolen(); // All submitted tasks treated as stolen
-            task = t;
-            pool = p;
-            lock = new ReentrantLock();
-            ready = lock.newCondition();
-        }
-
-        protected T compute() {
-            try {
-                if (tryStart())
-                    return task.invoke();
-                else {
-                    finishExceptionally(new CancellationException());
-                    return null; // will be trapped on get
-                }
-            } finally {
-                complete();
-            }
-        }
-        
-        private boolean tryStart() {
-            final ReentrantLock lock = this.lock;
-            lock.lock();
-            try {
-                if (started || !pool.submissionStarting())
-                    return false;
-                started = true;
-                return true;
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        private void complete() {
-            final ReentrantLock lock = this.lock;
-            lock.lock();
-            try {
-                if (started)
-                    pool.submissionCompleted();
-                ready.signalAll();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        /**
-         * ForkJoinTask version of cancel
-         */
-        public void cancel() {
-            final ReentrantLock lock = this.lock;
-            lock.lock();
-            try {
-                task.cancel();
-                // avoid recursive call to cancel
-                finishExceptionally(new CancellationException());
-                if (started)
-                    pool.submissionCompleted();
-                ready.signalAll();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        /**
-         * Future version of cancel
-         */
-        public boolean cancel(boolean ignore) {
-            this.cancel();
-            return isCancelled();
-        }
-
-        /**
-         * Return result or throw exception using Future conventions
-         */
-        static <T> T futureResult(ForkJoinTask<T> t)
-            throws ExecutionException {
-            T res = t.getResult();
-            Throwable ex = t.getException();
-            if (ex != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                else
-                    throw new ExecutionException(ex);
-            }
-            return res;
-        }
-
-        public T get() throws InterruptedException, ExecutionException {
-            final ForkJoinTask<T> t = this.task;
-            if (!t.isDone()) {
-                final ReentrantLock lock = this.lock;
-                lock.lock();
-                try {
-                    while (!t.isDone())
-                        ready.await();
-                } finally {
-                    lock.unlock();
-                }
-            }
-            return futureResult(t);
-        }
-
-        public T get(long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
-            final ForkJoinTask<T> t = this.task;
-            final ReentrantLock lock = this.lock;
-            lock.lock();
-            try {
-                long nanos = unit.toNanos(timeout);
-                while (!t.isDone()) {
-                    if (nanos <= 0)
-                        throw new TimeoutException();
-                    else
-                        nanos = ready.awaitNanos(nanos);
-                }
-                return futureResult(t);
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        /**
-         * Interrupt-less get for ForkJoinPool.invoke
-         */
-        public T awaitInvoke() {
-            final ForkJoinTask<T> t = this.task;
-            final ReentrantLock lock = this.lock;
-            lock.lock();
-            try {
-                while (!t.isDone())
-                    ready.awaitUninterruptibly();
-                T res = t.getResult();
-                Throwable ex = t.getException();
-                if (ex != null)
-                    ForkJoinTask.rethrowException(ex);
-                return res;
-            } finally {
-                lock.unlock();
-            }
-        }
-
-    }
-
-    /**
-     * Maintains lifecycle control for pool (also workers)
-     */
-    static final class RunState extends AtomicInteger {
-        // Order among values matters
-        static final int RUNNING    = 0;
-        static final int SHUTDOWN   = 1;
-        static final int STOPPING   = 2;
-        static final int TERMINATED = 4;
-
-        boolean isRunning()              { return get() == RUNNING; }
-        boolean isShutdown()             { return get() == SHUTDOWN; }
-        boolean isStopping()             { return get() == STOPPING; }
-        boolean isTerminated()           { return get() == TERMINATED; }
-        boolean isAtLeastShutdown()      { return get() >= SHUTDOWN; }
-        boolean isAtLeastStopping()      { return get() >= STOPPING; }
-        boolean transitionToShutdown()   { return transitionTo(SHUTDOWN); }
-        boolean transitionToStopping()   { return transitionTo(STOPPING); }
-        boolean transitionToTerminated() { return transitionTo(TERMINATED); }
-
-        /**
-         * Transition to at least the given state. Return true if not
-         * already at least given state.
-         */
-        boolean transitionTo(int state) {
-            for (;;) {
-                int s = get();
-                if (s >= state)
-                    return false;
-                if (compareAndSet(s, state))
-                    return true;
-            }
-        }
     }
 
 }

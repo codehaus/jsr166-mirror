@@ -105,15 +105,12 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
 
     /**
      * Forks both tasks and returns when <tt>isDone</tt> holds for
-     * both, cancelling one if the other encounters an exception. If
-     * both tasks encounter exceptions, only one of them (arbitrarily
-     * chosen) is thrown from this method.  You can check individual
-     * status using method <tt>getException</tt>, noting that if a
-     * cancelled task had not completed before the other failed, it
-     * may return a <tt>CancellationException</tt>.
-     * This method may be invoked only from within other ForkJoinTask
-     * computations. Attempts to invoke in other contexts result
-     * in exceptions or errors including ClassCastException.
+     * both.. If both tasks encounter exceptions, only one of them
+     * (arbitrarily chosen) is thrown from this method.  You can check
+     * individual status using method <tt>getException</tt>.  This
+     * method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result in
+     * exceptions or errors including ClassCastException.
      * @throws NullPointerException if t1 or t2 are null.
      */
     public static void coInvoke(RecursiveAction t1, RecursiveAction t2) {
@@ -123,10 +120,10 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     /**
      * Forks all tasks in the array, returning when <tt>isDone</tt>
      * holds for all of them. If any task encounters an exception,
-     * others are cancelled.
-     * This method may be invoked only from within other ForkJoinTask
-     * computations. Attempts to invoke in other contexts result
-     * in exceptions or errors including ClassCastException.
+     * others are cancelled.  This method may be invoked only from
+     * within other ForkJoinTask computations. Attempts to invoke in
+     * other contexts result in exceptions or errors including
+     * ClassCastException.
      * @throws NullPointerException if array or any element of array are null
      */
     public static void coInvoke(RecursiveAction[] tasks) {

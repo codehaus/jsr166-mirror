@@ -991,18 +991,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         return null;
     }
 
-    static class EmptyIterator<E> implements Iterator<E> {
-        public boolean hasNext() {
-            return false;
-        }
-        public E next() {
-            throw new NoSuchElementException();
-        }
-        public void remove() {
-            throw new IllegalStateException();
-        }
-    }
-
     /**
      * Returns an empty iterator in which <tt>hasNext</tt> always returns
      * <tt>false</tt>.
@@ -1010,7 +998,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @return an empty iterator
      */
     public Iterator<E> iterator() {
-        return new EmptyIterator<E>();
+        return Collections.emptyIterator();
     }
 
     /**

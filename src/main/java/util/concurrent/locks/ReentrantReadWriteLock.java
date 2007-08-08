@@ -25,7 +25,7 @@ import java.util.*;
  * <dt><b><i>Non-fair mode (default)</i></b>
  * <dd>When constructed as non-fair (the default), the order of entry
  * to the read and write lock is unspecified, subject to reentrancy
- * constraints.  A nonfair lock that is continously contended may
+ * constraints.  A nonfair lock that is continuously contended may
  * indefinitely postpone one or more reader or writer threads, but
  * will normally have higher throughput than a fair lock.
  * <p>
@@ -100,14 +100,16 @@ import java.util.*;
  * locks: a deserialized lock is in the unlocked state, regardless of
  * its state when serialized.
  *
- * <p><b>Sample usages</b>. Here is a code sketch showing how to exploit
- * reentrancy to perform lock downgrading after updating a cache (exception
- * handling is elided for simplicity):
- * <pre>
+ * <p><b>Sample usages</b>. Here is a code sketch showing how to perform
+ * lock downgrading after updating a cache (exception handling is
+ * particularly tricky when handling multiple locks in a non-nested
+ * fashion):
+ *
+ * <pre> {@code
  * class CachedData {
  *   Object data;
  *   volatile boolean cacheValid;
- *   ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+ *   final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
  *
  *   void processCachedData() {
  *     rwl.readLock().lock();
@@ -115,22 +117,27 @@ import java.util.*;
  *        // Must release read lock before acquiring write lock
  *        rwl.readLock().unlock();
  *        rwl.writeLock().lock();
- *        // Recheck state because another thread might have acquired
- *        //   write lock and changed state before we did.
- *        if (!cacheValid) {
- *          data = ...
- *          cacheValid = true;
+ *        try {
+ *          // Recheck state because another thread might have
+ *          // acquired write lock and changed state before we did.
+ *          if (!cacheValid) {
+ *            data = ...
+ *            cacheValid = true;
+ *          }
+ *          // Downgrade by acquiring read lock before releasing write lock
+ *          rwl.readLock().lock();
+ *        } finally  {
+ *          rwl.writeLock().unlock(); // Unlock write, still hold read
  *        }
- *        // Downgrade by acquiring read lock before releasing write lock
- *        rwl.readLock().lock();
- *        rwl.writeLock().unlock(); // Unlock write, still hold read
  *     }
  *
- *     use(data);
- *     rwl.readLock().unlock();
+ *     try {
+ *       use(data);
+ *     } finally {
+ *       rwl.readLock().unlock();
+ *     }
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * ReentrantReadWriteLocks can be used to improve concurrency in some
  * uses of some kinds of Collections. This is typically worthwhile
@@ -290,18 +297,18 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          */
 
         /**
-         * Returns {@code true} if a reader thread that is otherwise
-         * eligible for lock should block because of policy
-         * for overtaking other waiting threads.
+         * Returns true if the current thread, when trying to acquire
+         * the read lock, and otherwise eligible to do so, should block
+         * because of policy for overtaking other waiting threads.
          */
-        abstract boolean readerShouldBlock(Thread current);
+        abstract boolean readerShouldBlock();
 
         /**
-         * Returns {@code true} if a writer thread that is otherwise
-         * eligible for lock should block because of policy
-         * for overtaking other waiting threads.
+         * Returns true if the current thread, when trying to acquire
+         * the write lock, and otherwise eligible to do so, should block
+         * because of policy for overtaking other waiting threads.
          */
-        abstract boolean writerShouldBlock(Thread current);
+        abstract boolean writerShouldBlock();
 
         /*
          * Note that tryRelease and tryAcquire can be called by
@@ -311,17 +318,14 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
          */
 
         protected final boolean tryRelease(int releases) {
-            int nextc = getState() - releases;
-            if (Thread.currentThread() != getExclusiveOwnerThread())
+            if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
-            if (exclusiveCount(nextc) == 0) {
+            int nextc = getState() - releases;
+	    boolean free = exclusiveCount(nextc) == 0;
+	    if (free)
                 setExclusiveOwnerThread(null);
-                setState(nextc);
-                return true;
-            } else {
-                setState(nextc);
-                return false;
-            }
+	    setState(nextc);
+	    return free;
         }
 
         protected final boolean tryAcquire(int acquires) {
@@ -345,9 +349,12 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                     return false;
                 if (w + exclusiveCount(acquires) > MAX_COUNT)
                     throw new Error("Maximum lock count exceeded");
+		// Reentrant acquire
+		setState(c + acquires);
+		return true;
             }
-            if ((w == 0 && writerShouldBlock(current)) ||
-                !compareAndSetState(c, c + acquires))
+            if (writerShouldBlock() ||
+		!compareAndSetState(c, c + acquires))
                 return false;
             setExclusiveOwnerThread(current);
             return true;
@@ -371,8 +378,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
         protected final int tryAcquireShared(int unused) {
             /*
              * Walkthrough:
-             * 1. If write lock held by another thread, fail
-             * 2. If count saturated, throw error
+             * 1. If write lock held by another thread, fail.
+             * 2. If count saturated, throw error.
              * 3. Otherwise, this thread is eligible for
              *    lock wrt state, so ask if it should block
              *    because of queue policy. If not, try
@@ -392,8 +399,8 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 return -1;
             if (sharedCount(c) == MAX_COUNT)
                 throw new Error("Maximum lock count exceeded");
-            if (!readerShouldBlock(current) &&
-                compareAndSetState(c, c + SHARED_UNIT)) {
+            if (!readerShouldBlock() &&
+		compareAndSetState(c, c + SHARED_UNIT)) {
                 HoldCounter rh = cachedHoldCounter;
                 if (rh == null || rh.tid != current.getId())
                     cachedHoldCounter = rh = readHolds.get();
@@ -421,7 +428,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                 int c = getState();
                 int w = exclusiveCount(c);
                 if ((w != 0 && getExclusiveOwnerThread() != current) ||
-                    ((rh.count | w) == 0 && readerShouldBlock(current)))
+                    ((rh.count | w) == 0 && readerShouldBlock()))
                     return -1;
                 if (sharedCount(c) == MAX_COUNT)
                     throw new Error("Maximum lock count exceeded");
@@ -532,13 +539,13 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     final static class NonfairSync extends Sync {
         private static final long serialVersionUID = -8159625535654395037L;
-        final boolean writerShouldBlock(Thread current) {
+        final boolean writerShouldBlock() {
             return false; // writers can always barge
         }
-        final boolean readerShouldBlock(Thread current) {
+        final boolean readerShouldBlock() {
             /* As a heuristic to avoid indefinite writer starvation,
              * block if the thread that momentarily appears to be head
-             * of queue, if one exists, is a waiting writer. This is
+             * of queue, if one exists, is a waiting writer.  This is
              * only a probabilistic effect since a new reader will not
              * block if there is a waiting writer behind other enabled
              * readers that have not yet drained from the queue.
@@ -552,13 +559,11 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     final static class FairSync extends Sync {
         private static final long serialVersionUID = -2274990926593161451L;
-        final boolean writerShouldBlock(Thread current) {
-            // only proceed if queue is empty or current thread at head
-            return !isFirst(current);
+        final boolean writerShouldBlock() {
+            return hasQueuedPredecessors();
         }
-        final boolean readerShouldBlock(Thread current) {
-            // only proceed if queue is empty or current thread at head
-            return !isFirst(current);
+        final boolean readerShouldBlock() {
+            return hasQueuedPredecessors();
         }
     }
 

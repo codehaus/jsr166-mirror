@@ -328,6 +328,7 @@ public class CopyOnWriteArrayList<E>
      *         this list
      * @throws NullPointerException if the specified array is null
      */
+    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T a[]) {
         Object[] elements = getArray();
         int len = elements.length;
@@ -343,13 +344,18 @@ public class CopyOnWriteArrayList<E>
 
     // Positional Access Operations
 
+    @SuppressWarnings("unchecked")
+    private E get(Object[] a, int index) {
+	return (E) a[index];
+    }
+
     /**
      * {@inheritDoc}
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E get(int index) {
-        return (E)(getArray()[index]);
+        return get(getArray(), index);
     }
 
     /**
@@ -363,7 +369,7 @@ public class CopyOnWriteArrayList<E>
 	lock.lock();
 	try {
 	    Object[] elements = getArray();
-	    Object oldValue = elements[index];
+	    E oldValue = get(elements, index);
 
 	    if (oldValue != element) {
 		int len = elements.length;
@@ -374,7 +380,7 @@ public class CopyOnWriteArrayList<E>
 		// Not quite a no-op; ensures volatile write semantics
 		setArray(elements);
 	    }
-	    return (E)oldValue;
+	    return oldValue;
 	} finally {
 	    lock.unlock();
 	}
@@ -447,7 +453,7 @@ public class CopyOnWriteArrayList<E>
 	try {
 	    Object[] elements = getArray();
 	    int len = elements.length;
-	    Object oldValue = elements[index];
+	    E oldValue = get(elements, index);
 	    int numMoved = len - index - 1;
 	    if (numMoved == 0)
 		setArray(Arrays.copyOf(elements, len - 1));
@@ -458,7 +464,7 @@ public class CopyOnWriteArrayList<E>
 				 numMoved);
 		setArray(newElements);
 	    }
-	    return (E)oldValue;
+	    return oldValue;
 	} finally {
 	    lock.unlock();
 	}
@@ -521,9 +527,8 @@ public class CopyOnWriteArrayList<E>
      *
      * @param fromIndex index of first element to be removed
      * @param toIndex index after last element to be removed
-     * @throws IndexOutOfBoundsException if fromIndex or toIndex out of
-     *              range (fromIndex &lt; 0 || fromIndex &gt;= size() || toIndex
-     *              &gt; size() || toIndex &lt; fromIndex)
+     * @throws IndexOutOfBoundsException if fromIndex or toIndex out of range
+     *         (@code{fromIndex < 0 || toIndex > size() || toIndex < fromIndex})
      */
     private void removeRange(int fromIndex, int toIndex) {
 	final ReentrantLock lock = this.lock;
@@ -532,8 +537,7 @@ public class CopyOnWriteArrayList<E>
 	    Object[] elements = getArray();
 	    int len = elements.length;
 
-	    if (fromIndex < 0 || fromIndex >= len ||
-		toIndex > len || toIndex < fromIndex)
+	    if (fromIndex < 0 || toIndex > len || toIndex < fromIndex)
 		throw new IndexOutOfBoundsException();
 	    int newlen = len - (toIndex - fromIndex);
 	    int numMoved = len - toIndex;
@@ -984,12 +988,14 @@ public class CopyOnWriteArrayList<E>
             return cursor > 0;
         }
 
+	@SuppressWarnings("unchecked")
         public E next() {
 	    if (! hasNext())
                 throw new NoSuchElementException();
 	    return (E) snapshot[cursor++];
         }
 
+	@SuppressWarnings("unchecked")
         public E previous() {
 	    if (! hasPrevious())
                 throw new NoSuchElementException();
@@ -1036,16 +1042,11 @@ public class CopyOnWriteArrayList<E>
      * Returns a view of the portion of this list between
      * <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.
      * The returned list is backed by this list, so changes in the
-     * returned list are reflected in this list, and vice-versa.
-     * While mutative operations are supported, they are probably not
-     * very useful for CopyOnWriteArrayLists.
+     * returned list are reflected in this list.
      *
      * <p>The semantics of the list returned by this method become
-     * undefined if the backing list (i.e., this list) is
-     * <i>structurally modified</i> in any way other than via the
-     * returned list.  (Structural modifications are those that change
-     * the size of the list, or otherwise perturb it in such a fashion
-     * that iterations in progress may yield incorrect results.)
+     * undefined if the backing list (i.e., this list) is modified in
+     * any way other than via the returned list.
      *
      * @param fromIndex low endpoint (inclusive) of the subList
      * @param toIndex high endpoint (exclusive) of the subList
@@ -1058,7 +1059,7 @@ public class CopyOnWriteArrayList<E>
 	try {
 	    Object[] elements = getArray();
 	    int len = elements.length;
-	    if (fromIndex < 0 || toIndex > len  || fromIndex > toIndex)
+	    if (fromIndex < 0 || toIndex > len || fromIndex > toIndex)
 		throw new IndexOutOfBoundsException();
 	    return new COWSubList<E>(this, fromIndex, toIndex);
 	} finally {
@@ -1081,15 +1082,18 @@ public class CopyOnWriteArrayList<E>
      * AbstractList are already so slow on COW sublists that
      * adding a bit more space/time doesn't seem even noticeable.
      */
-    private static class COWSubList<E> extends AbstractList<E> {
+    private static class COWSubList<E>
+	extends AbstractList<E>
+	implements RandomAccess
+    {
         private final CopyOnWriteArrayList<E> l;
         private final int offset;
         private int size;
         private Object[] expectedArray;
 
         // only call this holding l's lock
-        private COWSubList(CopyOnWriteArrayList<E> list,
-			   int fromIndex, int toIndex) {
+        COWSubList(CopyOnWriteArrayList<E> list,
+		   int fromIndex, int toIndex) {
             l = list;
             expectedArray = l.getArray();
             offset = fromIndex;
@@ -1189,6 +1193,14 @@ public class CopyOnWriteArrayList<E>
 	    }
         }
 
+        public boolean remove(Object o) {
+	    int index = indexOf(o);
+	    if (index == -1)
+		return false;
+	    remove(index);
+	    return true;
+        }
+
         public Iterator<E> iterator() {
 	    final ReentrantLock lock = l.lock;
 	    lock.lock();
@@ -1236,8 +1248,9 @@ public class CopyOnWriteArrayList<E>
         private final int index;
         private final int offset;
         private final int size;
-        private COWSubListIterator(List<E> l, int index, int offset,
-				   int size) {
+
+	COWSubListIterator(List<E> l, int index, int offset,
+			   int size) {
             this.index = index;
             this.offset = offset;
             this.size = size;

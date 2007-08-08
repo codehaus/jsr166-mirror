@@ -1170,6 +1170,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         public int size() {
             return ConcurrentHashMap.this.size();
         }
+        public boolean isEmpty() {
+            return ConcurrentHashMap.this.isEmpty();
+        }
         public boolean contains(Object o) {
             return ConcurrentHashMap.this.containsKey(o);
         }
@@ -1187,6 +1190,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public int size() {
             return ConcurrentHashMap.this.size();
+        }
+        public boolean isEmpty() {
+            return ConcurrentHashMap.this.isEmpty();
         }
         public boolean contains(Object o) {
             return ConcurrentHashMap.this.containsValue(o);
@@ -1215,6 +1221,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public int size() {
             return ConcurrentHashMap.this.size();
+        }
+        public boolean isEmpty() {
+            return ConcurrentHashMap.this.isEmpty();
         }
         public void clear() {
             ConcurrentHashMap.this.clear();

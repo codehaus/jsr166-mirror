@@ -13,82 +13,96 @@ import java.util.concurrent.locks.*;
  * This entails three kinds of adaptation:
  *
  * (1) Unlike internal fork/join processing, get() must block, not
- * help out processing tasks. We use a ReentrantLock condition
- * to arrange this.
+ * help out processing tasks. We use a simpler variant of the
+ * mechanics used in FutureTask
  *
  * (2) Regular Futures encase RuntimeExceptions within
- * ExecutionExeptions, while internal tasks just throw them
- * directly, so these must be trapped and wrapped.
+ * ExecutionExeptions, while internal tasks just throw them directly,
+ * so these must be trapped and wrapped.
  *
  * (3) External submissions are tracked for the sake of managing
  * worker threads. The pool submissionStarting and submissionCompleted
  * methods perform the associated bookkeeping.
  */
 final class Submission<T> extends RecursiveTask<T> implements Future<T> {
+    
+    // status values for sync. We need to keep track of RUNNING status
+    // just to make sure callbacks to pool are balanced.
+    static final int INITIAL = 0;
+    static final int RUNNING = 1;
+    static final int DONE    = 2;
+
+    /**
+     * Stripped-down variant of FutureTask.sync
+     */
+    static final class Sync extends AbstractQueuedSynchronizer {
+        private static final long serialVersionUID = 4982264981922014374L;
+
+        public int tryAcquireShared(int acquires) {
+            return getState() == DONE? 1 : -1;
+        }
+
+        public boolean tryReleaseShared(int releases) { return true; }
+
+        public boolean isDone() { return getState() == DONE; }
+
+        public boolean transitionToRunning() {
+            return compareAndSetState(INITIAL, RUNNING);
+        }
+
+        /** Set status to DONE; return old state */
+        public int transitionToDone() {
+            for (;;) {
+                int c = getState();
+                if (c == DONE || compareAndSetState(c, DONE)) {
+                    releaseShared(0);
+                    return c;
+                }
+            }
+        }
+
+    }
+
     private final ForkJoinTask<T> task;
     private final ForkJoinPool pool;
-    private final ReentrantLock lock;
-    private final Condition ready;
-    private boolean started;
+    private final Sync sync;
 
     Submission(ForkJoinTask<T> t, ForkJoinPool p) {
         t.setStolen(); // All submitted tasks treated as stolen
         task = t;
         pool = p;
-        lock = new ReentrantLock();
-        ready = lock.newCondition();
+        sync = new Sync();
     }
-
+    
     protected T compute() {
         try {
-            if (tryStart())
-                return task.invoke();
-            else {
-                setDoneExceptionally(new CancellationException());
-                return null; // will be trapped on get
-            }
+            T result = null;
+            if (sync.transitionToRunning()) {
+                pool.submissionStarting();
+                result = task.invoke();
+            } // else was cancelled, so result doesn't matter
+            return result; 
         } finally {
-            complete();
-        }
-    }
-
-    private boolean tryStart() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            return !started && (started = pool.submissionStarting());
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    private void complete() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (started)
+            if (sync.transitionToDone() == RUNNING)
                 pool.submissionCompleted();
-            ready.signalAll();
-        } finally {
-            lock.unlock();
         }
     }
+   
 
     /**
      * ForkJoinTask version of cancel
      */
     public void cancel() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
         try {
-            task.cancel();
-            // avoid recursive call to cancel
-            setDoneExceptionally(new CancellationException());
-            if (started)
-                pool.submissionCompleted();
-            ready.signalAll();
+            // Don't bother trying to cancel if already done
+            if (getException() == null && !sync.isDone()) {
+                // avoid recursive call to cancel
+                setDoneExceptionally(new CancellationException());
+                task.cancel();
+            }
         } finally {
-            lock.unlock();
+            if (sync.transitionToDone() == RUNNING)
+                pool.submissionCompleted();
         }
     }
 
@@ -100,72 +114,24 @@ final class Submission<T> extends RecursiveTask<T> implements Future<T> {
         return isCancelled();
     }
 
-    /**
-     * Return result or throw exception using Future conventions
-     */
-    static <T> T futureResult(ForkJoinTask<T> t)
-        throws ExecutionException {
-        Throwable ex = t.getException();
-        if (ex != null) {
-            if (ex instanceof CancellationException)
-                throw (CancellationException)ex;
-            else
-                throw new ExecutionException(ex);
-        }
-        return t.getResult();
-    }
-
     public T get() throws InterruptedException, ExecutionException {
-        final ForkJoinTask<T> t = this.task;
-        if (!t.isDone()) {
-            final ReentrantLock lock = this.lock;
-            lock.lock();
-            try {
-                while (!t.isDone())
-                    ready.await();
-            } finally {
-                lock.unlock();
-            }
-        }
-        return futureResult(t);
+        sync.acquireSharedInterruptibly(1);
+        return task.reportAsFutureResult();
     }
 
     public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        final ForkJoinTask<T> t = this.task;
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            long nanos = unit.toNanos(timeout);
-            while (!t.isDone()) {
-                if (nanos <= 0)
-                    throw new TimeoutException();
-                else
-                    nanos = ready.awaitNanos(nanos);
-            }
-        } finally {
-            lock.unlock();
-        }
-        return futureResult(t);
+        if (!sync.tryAcquireSharedNanos(1, unit.toNanos(timeout)))
+            throw new TimeoutException();
+        return task.reportAsFutureResult();
     }
 
     /**
      * Interrupt-less get for ForkJoinPool.invoke
      */
     public T awaitInvoke() {
-        final ForkJoinTask<T> t = this.task;
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            while (!t.isDone())
-                ready.awaitUninterruptibly();
-        } finally {
-            lock.unlock();
-        }
-        Throwable ex = t.getException();
-        if (ex != null)
-            ForkJoinTask.rethrowException(ex);
-        return t.getResult();
+        sync.acquireShared(1);
+        return task.reportAsForkJoinResult();
     }
 }
 

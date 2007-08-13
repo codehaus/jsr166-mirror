@@ -136,6 +136,8 @@ public abstract class ForkJoinTask<V> {
      */
     int status;
 
+    // within-package utilities
+
     /**
      * Sets status to stolen (or an external submission). Called only
      * by task-stealing and submission code.
@@ -163,6 +165,34 @@ public abstract class ForkJoinTask<V> {
         exceptionUpdater.compareAndSet(this, null, rex);
         ForkJoinWorkerThread.signalTaskCompletion();
         return exception;
+    }
+
+
+    /**
+     * Returns result or throws exception. 
+     * Only call when isDone known to be true.
+     */
+    final V reportAsForkJoinResult() {
+        Throwable ex = getException();
+        if (ex != null)
+            rethrowException(ex);
+        return getResult();
+    }
+
+
+    /**
+     * Returns result or throws exception using j.u.c.Future conventions
+     * Only call when isDone known to be true.
+     */
+    final V reportAsFutureResult() throws ExecutionException {
+        Throwable ex = getException();
+        if (ex != null) {
+            if (ex instanceof CancellationException)
+                throw (CancellationException)ex;
+            else
+                throw new ExecutionException(ex);
+        }
+        return getResult();
     }
 
     /**

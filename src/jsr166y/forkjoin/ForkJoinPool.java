@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.*;
  * However, as a general rule, using a pool size of the number of
  * processors on a given system, as arranged by the default
  * constructor) will result in the best performance. Resizing may be
- * expensive and may cause transient imbalances and slow downs.
+ * expensive and may cause transient imbalances and slowdowns.
  *
  * <p>In addition to execution and lifecycle control methods, this
  * class provides status check methods (for example
@@ -143,7 +143,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     /**
      * Queue of external submissions.
      */
-    private final ConcurrentLinkedQueue<Submission<?>> submissionQueue;
+    private final SubmissionQueue submissionQueue;
 
     /**
      * Lifecycle control.
@@ -281,19 +281,25 @@ public class ForkJoinPool implements ForkJoinExecutor {
         this.poolSize = poolSize;
         this.factory = factory;
         this.poolNumber = poolNumberGenerator.incrementAndGet();
+        this.workers = new ForkJoinWorkerThread[poolSize];
         this.poolBarrier = new PoolBarrier();
-        this.submissionQueue = new ConcurrentLinkedQueue<Submission<?>>();
         this.activeWorkerCounter = new AtomicInteger();
         this.runningSubmissions = new AtomicInteger();
+        this.submissionQueue = new SubmissionQueue();
         this.runState = new RunState();
         this.workerLock = new ReentrantLock();
         this.termination = workerLock.newCondition();
-        ForkJoinWorkerThread[] ws = new ForkJoinWorkerThread[poolSize];
-        this.workers = ws;
+        createAndStartWorkers();
+    }
 
+    /**
+     * Initial worker startup
+     */
+    private void createAndStartWorkers() {
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
+            ForkJoinWorkerThread[] ws = workers;
             for (int i = 0; i < ws.length; ++i) 
                 ws[i] = createWorker(i);
             for (int i = 0; i < ws.length; ++i) {
@@ -466,7 +472,8 @@ public class ForkJoinPool implements ForkJoinExecutor {
                 ForkJoinWorkerThread[] ws = workers;
                 int len = ws.length;
                 int newLen = len + numberToAdd;
-                ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[newLen];
+                ForkJoinWorkerThread[] nws = 
+                    new ForkJoinWorkerThread[newLen];
                 System.arraycopy(ws, 0, nws, 0, len);
                 for (int i = len; i < newLen; ++i) 
                     nws[i] = createWorker(i);
@@ -483,7 +490,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
         }
         return nadded;
     }
-
 
     /**
      * Tries to remove the indicated number of worker threads from the
@@ -527,30 +533,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Equivalent to removeWorkers(1).
-     * @return true if a worker was removed.
-     * @throws SecurityException if a security manager exists and
-     *         the caller is not permitted to modify threads
-     *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
-     */
-    public boolean removeWorker() {
-        return removeWorkers(1) != 0;
-    }
-
-    /**
-     * Equivalent to addWorkers(1).
-     * @return true if a worker was added.
-     * @throws SecurityException if a security manager exists and
-     *         the caller is not permitted to modify threads
-     *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
-     */
-    public boolean addWorker() {
-        return addWorkers(1) != 0;
-    }
-
-    /**
      * Tries to add or remove workers to attain the given pool size.
      * This may fail to attain the given target if the pool is
      * terminating or terminated.
@@ -580,7 +562,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
         }
         return poolSize;
     }
-                
 
     /**
      * Arranges for (asynchronous) execution of the given task using a
@@ -780,7 +761,8 @@ public class ForkJoinPool implements ForkJoinExecutor {
     private void tryTerminateOnShutdown() {
         if (runState.isAtLeastShutdown() &&
             runningSubmissions.get() == 0 &&
-            submissionQueue.isEmpty())
+            submissionQueue.isEmpty() &&
+            runningSubmissions.get() == 0) // recheck
             terminate();
     }
 
@@ -789,7 +771,8 @@ public class ForkJoinPool implements ForkJoinExecutor {
      */
     private void cancelQueuedSubmissions() {
         Submission<?> task;
-        while ((task = submissionQueue.poll()) != null)
+        while (!submissionQueue.isEmpty() &&
+               (task = submissionQueue.poll()) != null)
             task.cancel(false);
     }
 
@@ -839,18 +822,24 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * shutdown.
      */
     private void interruptUnterminatedWorkers() {
-        ForkJoinWorkerThread[] ws = workers;
-        for (int i = 0; i < ws.length; ++i) {
-            ForkJoinWorkerThread t = ws[i];
-            if (t != null) {
-                RunState rs = t.getRunState();
-                if (!rs.isTerminated()) {
-                    try {
-                        t.interrupt();
-                    } catch (SecurityException ignore) {
+        final ReentrantLock lock = this.workerLock;
+        lock.lock();
+        try {
+            ForkJoinWorkerThread[] ws = workers;
+            for (int i = 0; i < ws.length; ++i) {
+                ForkJoinWorkerThread t = ws[i];
+                if (t != null) {
+                    RunState rs = t.getRunState();
+                    if (!rs.isTerminated()) {
+                        try {
+                            t.interrupt();
+                        } catch (SecurityException ignore) {
+                        }
                     }
                 }
             }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -921,25 +910,12 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Returns the number of tasks that have been submitted (via
-     * <tt>submit</tt> or <tt>invoke</tt>) but not have not yet begun
-     * execution. Note that this method may be relatively slow
-     * because it may require a traveral of elements to compute size.
-     * You should prefer <tt>hasQueuedSubmissions</tt> when it 
-     * suffices.
-     * @return the number of tasks.
-     */
-    public int getQueuedSubmissionCount() {
-        return submissionQueue.size();
-    }
-
-    /**
      * Returns true if there are any tasks submitted to this pool
      * that have not yet begun executing.
      * @return <tt>true</tt> if there are any queued submissions.
      */
     public boolean hasQueuedSubmissions() {
-        return submissionQueue.peek() == null;
+        return !submissionQueue.isEmpty();
     }
 
     /**
@@ -971,6 +947,13 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
+     * Return submission queue (not cached by workers)
+     */
+    final SubmissionQueue getSubmissionQueue() {
+        return submissionQueue;
+    }
+
+    /**
      * Return counter (cached by workers)
      */
     final AtomicInteger getActiveWorkerCounter() {
@@ -984,24 +967,13 @@ public class ForkJoinPool implements ForkJoinExecutor {
         return poolBarrier;
     }
 
-    /**
-     * Return a submission, or null if none
-     */
-    final Submission<?> pollSubmission() {
-        return submissionQueue.poll();
-    }
-
     // Callbacks from submissions
 
     /**
      * Callback on starting execution of externally submitted job.
-     * @return true if task can execute
      */
-    final boolean submissionStarting() {
-        if (runState.isAtLeastStopping())
-            return false;
+    final void submissionStarting() {
         runningSubmissions.incrementAndGet();
-        return true;
     }
 
     /**
@@ -1011,6 +983,111 @@ public class ForkJoinPool implements ForkJoinExecutor {
         if (runningSubmissions.decrementAndGet() == 0 &&
             runState.isAtLeastShutdown())
             tryTerminateOnShutdown();
+    }
+
+
+    /**
+     * SubmissionQueues hold submissions not yet started by
+     * workers. This is a variant of an M&S queue supporting
+     * a fast check for apparent emptiness.
+     */
+    static final class SubmissionQueue {
+
+        /** Opportunistically subclasses AtromicReference for next-field */
+        static final class SQNode extends AtomicReference<SQNode> {
+            Submission<?> submission;
+            SQNode(Submission<?> s) { submission = s; }
+        }
+
+        private volatile SQNode head;
+        private volatile SQNode tail;
+        
+        SubmissionQueue() {
+            SQNode dummy = new SQNode(null);
+            head = dummy;
+            tail = dummy;
+        }
+
+        private static final
+            AtomicReferenceFieldUpdater<SubmissionQueue, SQNode>
+            tailUpdater =
+            AtomicReferenceFieldUpdater.newUpdater
+            (SubmissionQueue.class, SQNode.class, "tail");
+        private static final
+            AtomicReferenceFieldUpdater<SubmissionQueue, SQNode>
+            headUpdater =
+            AtomicReferenceFieldUpdater.newUpdater
+            (SubmissionQueue.class,  SQNode.class, "head");
+
+        private boolean casTail(SQNode cmp, SQNode val) {
+            return tailUpdater.compareAndSet(this, cmp, val);
+        }
+        
+        private boolean casHead(SQNode cmp, SQNode val) {
+            return headUpdater.compareAndSet(this, cmp, val);
+        }
+
+        /**
+         * Quick check for likely non-emptiness.  Returns true if an
+         * add fully completed but not yet fully taken.
+         */
+        boolean isApparentlyNonEmpty() {
+            SQNode h = head;
+            SQNode t = tail;
+            return h != t;
+        }
+
+        boolean isEmpty() {
+            for (;;) {
+                SQNode h = head;
+                SQNode t = tail;
+                SQNode f = h.get();
+                if (h == head) {
+                    if (f == null)
+                        return true;
+                    else if (h != t)
+                        return false;
+                    else
+                        casTail(t, f);
+                }
+            }
+        }
+
+        void add(Submission<?> x) {
+            SQNode n = new SQNode(x);
+            for (;;) {
+                SQNode t = tail;
+                SQNode s = t.get();
+                if (t == tail) {
+                    if (s != null)
+                        casTail(t, s);
+                    else if (t.compareAndSet(s, n)) {
+                        casTail(t, n);
+                        return;
+                    }
+                }
+            }
+        }
+
+        Submission<?> poll() {
+            for (;;) {
+                SQNode h = head;
+                SQNode t = tail;
+                SQNode f = h.get();
+                if (h == head) {
+                    if (f == null)
+                        return null;
+                    else if (h == t) 
+                        casTail(t, f);
+                    else if (casHead(h, f)) {
+                        Submission<?> x = f.submission;
+                        f.submission = null;
+                        x.setStolen();
+                        return x;
+                    }
+                }
+            }
+        }
     }
 
 }

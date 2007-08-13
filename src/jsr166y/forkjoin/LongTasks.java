@@ -196,6 +196,33 @@ public class LongTasks {
     }
 
     /**
+     * Replaces each element with running cumulative sum.
+     * @param ex the executor
+     * @param array the array
+     * @return the sum of all elements
+     */
+    public static long cumulate(ForkJoinExecutor ex, long[] array) {
+        int n = array.length;
+        if (n == 0)
+            return 0;
+        if (n == 1)
+            return array[0];
+        int gran;
+        int threads = ex.getParallelismLevel();
+        if (threads == 1)
+            gran = n;
+        else
+            gran =  n / (threads << 3);
+        if (gran < 1024)
+            gran = 1024;
+        FJCumulator.Ctl ctl = new FJCumulator.Ctl(array, gran);
+        FJCumulator r = new FJCumulator(null, ctl, 0, n);
+        ex.invoke(r);
+        return array[n-1];
+    }
+
+
+    /**
      * Returns the minimum of all elements, or MAX_VALUE if empty
      * @param ex the executor
      * @param array the array
@@ -692,6 +719,229 @@ public class LongTasks {
         }
 
     }              
+
+    /**
+     * Fork/Join version of scan
+     *
+     * A basic version of scan is straightforward.
+     *  Keep dividing by two to threshold segment size, and then:
+     *   Pass 1: Create tree of partial sums for each segment
+     *   Pass 2: For each segment, cumulate with offset of left sibling
+     * See G. Blelloch's http://www.cs.cmu.edu/~scandal/alg/scan.html
+     *
+     * This version improves performance within FJ framework:
+     * a) It allows second pass of ready left-hand sides to proceed even 
+     *    if some right-hand side first passes are still executing.
+     * b) It collapses the first and second passes of segments for which
+     *    incoming cumulations are ready before summing.
+     * c) It skips first pass for rightmost segment (whose
+     *    result is not needed for second pass).
+     *
+     */
+    static final class FJCumulator extends AsyncAction {
+
+        /**
+         * Shared control across nodes
+         */
+        static final class Ctl {
+            final long[] array;
+            final int granularity;
+            /**
+             * The index of the max current consecutive
+             * cumulation starting from leftmost. Initially zero.
+             */
+            volatile int consecutiveIndex;
+            /**
+             * The current consecutive cumulation
+             */
+            long consecutiveSum;
+
+            Ctl(long[] array, int granularity) {
+                this.array = array;
+                this.granularity = granularity;
+            }
+        }
+
+        final FJCumulator parent;
+        final FJCumulator.Ctl ctl;
+        FJCumulator left, right;
+        final int lo;
+        final int hi;
+
+        /** Incoming cumulative sum */
+        long in;
+
+        /** Sum of this subtree */
+        long out;
+        
+        /**
+         * Phase/state control, updated only via transitionTo, for
+         * CUMULATE, SUMMED, and FINISHED bits.
+         */
+        volatile int phase;
+
+        /**
+         * Phase bit. When false, segments compute only their sum.
+         * When true, they cumulate array elements. CUMULATE is set at
+         * root at beginning of second pass and then propagated
+         * down. But it may also be set earlier in two cases when
+         * cumulations are known to be ready: (1) For subtrees with
+         * lo==0 (the left spine of tree) (2) Leaf nodes with
+         * completed predecessors.
+         */
+        static final int CUMULATE = 1;
+
+        /**
+         * One bit join count. For leafs, set when summed. For
+         * internal nodes, becomes true when one child is summed.
+         * When second child finishes summing, it then moves up tree
+         * to trigger cumulate phase.
+         */
+        static final int SUMMED   = 2;
+
+        /**
+         * One bit join count. For leafs, set when cumulated. For
+         * internal nodes, becomes true when one child is cumulated.
+         * When second child finishes cumulating, it then moves up
+         * tree, excecuting finish() at the root.
+         */
+        static final int FINISHED = 4;
+
+        static final AtomicIntegerFieldUpdater<FJCumulator> phaseUpdater =
+            AtomicIntegerFieldUpdater.newUpdater(FJCumulator.class, "phase");
+
+        FJCumulator(FJCumulator parent,
+                    FJCumulator.Ctl ctl,
+                    int lo, 
+                    int hi) {
+            this.parent = parent;
+            this.ctl = ctl;
+            this.lo = lo; 
+            this.hi = hi;
+        }
+
+        public void compute() {
+            if (hi - lo <= ctl.granularity) {
+                int cb = establishLeafPhase();
+                leafSum(cb);
+                propagateLeafPhase(cb);
+            }
+            else
+                spawnTasks();
+        }
+        
+        /**
+         * decide which leaf action to take - sum, cumulate, or both
+         * @return associated bit s
+         */
+        int establishLeafPhase() {
+            for (;;) {
+                int b = phase;
+                if ((b & FINISHED) != 0) // already done
+                    return 0;
+                int cb;
+                if ((b & CUMULATE) != 0)
+                    cb = FINISHED;
+                else if (lo == ctl.consecutiveIndex)
+                    cb = (SUMMED|FINISHED);
+                else 
+                    cb = SUMMED;
+                if (phaseUpdater.compareAndSet(this, b, b|cb))
+                    return cb;
+            }
+        }
+
+        void propagateLeafPhase(int cb) {
+            FJCumulator c = this;
+            FJCumulator p = parent;
+            for (;;) {
+                if (p == null) {
+                    if ((cb & FINISHED) != 0)
+                        c.finish();
+                    break;
+                }
+                int pb = p.phase;
+                if ((pb & cb & FINISHED) != 0) { // both finished
+                    c = p;
+                    p = p.parent;
+                }
+                else if ((pb & cb & SUMMED) != 0) { // both summed
+                    int refork = 0;
+                    if ((pb & CUMULATE) == 0 && p.lo == 0)
+                        refork = CUMULATE;
+                    int next = pb|cb|refork;
+                    if (pb == next || 
+                        phaseUpdater.compareAndSet(p, pb, next)) {
+                        if (refork != 0)
+                            p.fork();
+                        cb = SUMMED; // drop finished bit
+                        c = p;
+                        p = p.parent;
+                    }
+                }
+                else if (phaseUpdater.compareAndSet(p, pb, pb|cb))
+                    break;
+            }
+        }
+
+        void leafSum(int cb) {
+            long[] array = ctl.array;
+            if (cb == SUMMED) {
+                if (hi < array.length) { // skip rightmost
+                    long sum = 0;
+                    for (int i = lo; i < hi; ++i)
+                        sum += array[i];
+                    out = sum;
+                }
+            }
+            else if (cb == FINISHED) {
+                long sum = in;
+                for (int i = lo; i < hi; ++i)
+                    sum = array[i] += sum;
+            }
+            else if (cb == (SUMMED|FINISHED)) {
+                long cin = ctl.consecutiveSum;
+                long sum = cin;
+                for (int i = lo; i < hi; ++i)
+                    sum = array[i] += sum;
+                out = sum - cin;
+                ctl.consecutiveSum = sum;
+                ctl.consecutiveIndex = hi;
+            }
+        }
+
+        /**
+         * Returns true if can CAS CUMULATE bit true
+         */
+        boolean transitionToCumulate() {
+            int c;
+            while (((c = phase) & CUMULATE) == 0)
+                if (phaseUpdater.compareAndSet(this, c, c | CUMULATE))
+                    return true;
+            return false;
+        }
+
+        void spawnTasks() {
+            if (left == null) {
+                int mid = (lo + hi) >>> 1;
+                left =  new FJCumulator(this, ctl, lo, mid);
+                right = new FJCumulator(this, ctl, mid, hi);
+            }
+
+            boolean cumulate = (phase & CUMULATE) != 0;
+            if (cumulate) { // push down sums
+                long cin = in;
+                left.in = cin;
+                right.in = cin + left.out;
+            }
+
+            if (!cumulate || right.transitionToCumulate())
+                right.fork();
+            if (!cumulate || left.transitionToCumulate())
+                left.compute();
+        }
+
+    }
 
     /**
      * Fork/Join version of FindAny

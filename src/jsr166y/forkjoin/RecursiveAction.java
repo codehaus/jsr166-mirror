@@ -57,17 +57,17 @@ import java.util.concurrent.atomic.*;
  * double sumOfSquares(ForkJoinPool pool, double[] array) {
  *   int n = array.length;
  *   int seqSize = 1 + n / (4 * pool.getPoolSize() - 3);
- *   Applier a = new Applier(array, 0, n-1, seqSize, null);
+ *   Applyer a = new Applyer(array, 0, n-1, seqSize, null);
  *   pool.invoke(a);
  *   return a.result;
  * }
  *
- * class Applier extends RecursiveAction {
+ * class Applyer extends RecursiveAction {
  *   final double[] array;
  *   final int lo, hi, seqSize;
  *   int result;
- *   Applier next; // keeps track of right-hand-side tasks
- *   Applier(double[] array, int lo, int hi, int seqSize, Applier next) {
+ *   Applyer next; // keeps track of right-hand-side tasks
+ *   Applyer(double[] array, int lo, int hi, int seqSize, Applyer next) {
  *     this.array = array; this.lo = lo; this.hi = hi;
  *     this.seqSize = seqSize; this.next = next;
  *   }
@@ -75,10 +75,10 @@ import java.util.concurrent.atomic.*;
  *   protected void compute() {
  *     int l = lo;
  *     int h = hi;
- *     Applier right = null;
+ *     Applyer right = null;
  *     while (h - l &gt; seqSize) { // fork right-hand sides
  *        int mid = (l + h) &gt;&gt;&gt 1;
- *        right = new Applier(array, mid+1, h, seqSize, right);
+ *        right = new Applyer(array, mid+1, h, seqSize, right);
  *        right.fork();
  *        h = mid;
  *     }

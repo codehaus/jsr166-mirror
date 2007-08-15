@@ -236,7 +236,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
     }
 
     public long longValue() {
-	return (long)get();
+	return get();
     }
 
     public float floatValue() {

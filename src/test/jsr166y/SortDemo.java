@@ -13,8 +13,8 @@ class SortDemo {
     static final long NPS = (1000L * 1000 * 1000);
 
     public static void main (String[] args) throws Exception {
-        int n = 1 << 21;
-        int reps = 5;
+        int n = 1 << 20;
+        int reps = 9;
         System.out.printf("Sorting %d Longs, %d replications\n", n, reps);
         Long[] a = new Long[n];
         randomFill(a);
@@ -26,16 +26,19 @@ class SortDemo {
             System.out.printf("java.util.Arrays.sort time:  %7.3f\n", elapsed);
             checkSorted(a);
             shuffle(a);
+            //            System.gc();
         }
 
         ForkJoinPool fjpool = new ForkJoinPool();
+        ParallelArray<Long> pa = new ParallelArray<Long>(fjpool, a);
         for (int i = 0; i < reps; ++i) {
             long last = System.nanoTime();
-            ArrayTasks.sort(fjpool, a);
+            pa.sort();
             double elapsed = (double)(System.nanoTime() - last) / NPS;
             System.out.printf("ArrayTasks.sort time:        %7.3f\n", elapsed);
             checkSorted(a);
             shuffle(a);
+            //            System.gc();
         }
         fjpool.shutdown();
     }

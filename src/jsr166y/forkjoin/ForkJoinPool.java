@@ -564,50 +564,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Arranges for (asynchronous) execution of the given task using a
-     * fresh worker thread that is guaranteed not to be executing any
-     * other task, and optionally exits upon its completion.
-     * @param task the task
-     * @param exitOnCompletion if true, the created worker will
-     * terminate upon completion of this task.
-     * @return a Future that can be used to get the task's results.
-     * @throws NullPointerException if task is null
-     * @throws IllegalStateException if pool is terminating or
-     * terminated
-     * @throws SecurityException if a security manager exists and
-     *         the caller is not permitted to modify threads
-     *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
-     */
-    public <T> Future<T> submitUsingAddedWorker(ForkJoinTask<T> task,
-                                                boolean exitOnCompletion) {
-        if (task == null)
-            throw new NullPointerException();
-        Submission<T> job = new Submission<T>(task, this);
-        checkPermission();
-        final ReentrantLock lock = this.workerLock;
-        lock.lock();
-        try {
-            if (runState.isAtLeastStopping())
-                throw new IllegalStateException();
-            ForkJoinWorkerThread[] ws = workers;
-            int len = ws.length;
-            ForkJoinWorkerThread w = createWorker(len);
-            w.setFirstTask(job, exitOnCompletion);
-            ForkJoinWorkerThread[] nws = new ForkJoinWorkerThread[len+1];
-            System.arraycopy(ws, 0, nws, 0, len);
-            nws[len] = w;
-            workers = nws;
-            w.start();
-            ++runningWorkers;
-            ++poolSize;
-        } finally {
-            lock.unlock();
-        }
-        return job;
-    }
-
-    /**
      * Callback from terminating worker.
      * @param w the worker
      * @param ex the exception causing abrupt termination, or null if

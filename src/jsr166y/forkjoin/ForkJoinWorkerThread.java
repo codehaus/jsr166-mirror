@@ -62,11 +62,6 @@ public class ForkJoinWorkerThread extends Thread {
     private final RunState runState;
 
     /**
-     * Optional first task to run before main loop, set by pool
-     */
-    private ForkJoinTask<?> firstTask;
-
-    /**
      * Each thread's work-stealing queue is represented via the
      * resizable "queue" array plus base and sp indices.
      * Work-stealing queues are special forms of Deques that support
@@ -173,11 +168,6 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private int scans;
 
-    /**
-     * True if exit after first task completes, as set by pool
-     */
-    boolean exitOnFirstTaskCompletion;
-
     // Transient state indicators, used as argument, not field values.
 
     /**
@@ -210,7 +200,7 @@ public class ForkJoinWorkerThread extends Thread {
      * syncs may help wake up other threads that may allow further
      * progress. So the value should not be especially large either.
      */
-    private static final int IDLING_SCANS_PER_SYNC = 16; 
+    private static final int IDLING_SCANS_PER_SYNC = 32; 
     
     /**
      * Threshold for checking with PoolBarrier and possibly blocking
@@ -223,7 +213,7 @@ public class ForkJoinWorkerThread extends Thread {
      * programmer errors as well as to cope better when some worker
      * threads are making very slow progress.
      */
-    private static final int JOINING_SCANS_PER_SYNC = 256; 
+    private static final int JOINING_SCANS_PER_SYNC = 1024; 
 
     /**
      * Generator for per-thread randomSeeds
@@ -234,11 +224,6 @@ public class ForkJoinWorkerThread extends Thread {
 
     final void setWorkerPoolIndex(int i) { 
         poolIndex = i;
-    }
-
-    final void setFirstTask(ForkJoinTask<?> t, boolean exitOnCompletion) { 
-        firstTask = t;
-        exitOnFirstTaskCompletion = exitOnCompletion;
     }
 
     final int getWorkerPoolIndex() {
@@ -294,7 +279,6 @@ public class ForkJoinWorkerThread extends Thread {
         Throwable exception = null;
         try {
             onStart();
-            execFirstTask();
             while (runState.isRunning()) {
                 ForkJoinTask<?> t = getTask();
                 if (t == null)
@@ -661,19 +645,6 @@ public class ForkJoinWorkerThread extends Thread {
             return null;
         else
             return q[((int)s) & (q.length-1)];
-    }
-
-    /**
-     * Execute optional first task
-     */
-    private void execFirstTask() {
-        ForkJoinTask<?> t = firstTask;
-        if (t != null) {
-            firstTask = null;
-            t.exec();
-            if (exitOnFirstTaskCompletion)
-                runState.transitionToShutdown();
-        }
     }
 
     /**

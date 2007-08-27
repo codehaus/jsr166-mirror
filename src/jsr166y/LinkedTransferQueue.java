@@ -39,7 +39,7 @@ import java.io.*;
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @since 1.5
+ * @since 1.7
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  *

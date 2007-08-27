@@ -55,15 +55,7 @@ public class Ops {
     }
 
     /**
-     * A specialized Mapper that produces results of the same type as
-     * its argument.
-     */
-    public static interface Transformer<T> extends Mapper<T, T> {
-        public T map(T u);
-    }
-
-    /**
-     * On object with a function accepting pairs of objects, one of
+     * An object with a function accepting pairs of objects, one of
      * type T and one of type U, returning those of type V
      */
     public static interface Combiner<T, U, V> { 
@@ -147,8 +139,29 @@ public class Ops {
         public void apply(double t);
     }
 
+    /**
+     * A Mapper accepting a double argument and returning an int
+     */
+    public static interface MapperFromDoubleToInt {
+        public int map(double t);
+    }
+
+    /**
+     * A Mapper accepting a double argument and returning a long
+     */
+    public static interface MapperFromDoubleToLong {
+        public long map(double t);
+    }
+
+    /**
+     * A Mapper accepting a double argument and returning a double
+     */
+    public static interface MapperFromDoubleToDouble {
+        public double map(double t);
+    }
+
     /** A Transformer accepting and returing doubles */
-    public static interface DoubleTransformer {
+    public static interface DoubleTransformer extends MapperFromDoubleToDouble{
         public double map(double u);
     }
 
@@ -177,8 +190,29 @@ public class Ops {
         public void apply(long t);
     }
 
+    /**
+     * A Mapper accepting a long argument and returning an int
+     */
+    public static interface MapperFromLongToInt {
+        public int map(long t);
+    }
+
+    /**
+     * A Mapper accepting a long argument and returning a double
+     */
+    public static interface MapperFromLongToDouble {
+        public double map(long t);
+    }
+
+    /**
+     * A Mapper accepting a long argument and returning a long
+     */
+    public static interface MapperFromLongToLong {
+        public long map(long t);
+    }
+
     /** A Transformer accepting and returning longs */
-    public static interface LongTransformer {
+    public static interface LongTransformer extends MapperFromLongToLong {
         public long map(long u);
     }
 
@@ -207,38 +241,14 @@ public class Ops {
         public void apply(int t);
     }
 
-    /** A Transformer accepting and returning ints */
-    public static interface IntTransformer {
+    /** A map accepting an int and returning an int */
+    public static interface MapperFromIntToInt {
         public int map(int u);
     }
 
-    /** A Reducer accepting and returning ints */
-    public static interface IntReducer {
-        public int combine(int u, int v);
-    }
-
-    /** A Predicate accepting an int */
-    public static interface IntPredicate {
-        public boolean evaluate(int t);
-    }
-
-    /** A RelationalPredicate accepting int arguments */
-    public static interface IntRelationalPredicate {
-        public boolean evaluate(int t, int u);
-    }
-
-    /**
-     * A Mapper accepting a double argument and returning an int
-     */
-    public static interface MapperFromDoubleToInt {
-        public int map(double t);
-    }
-
-    /**
-     * A Mapper accepting a long argument and returning an int
-     */
-    public static interface MapperFromLongToInt {
-        public int map(long t);
+    /** A Transformer accepting and returning ints */
+    public static interface IntTransformer extends MapperFromIntToInt {
+        public int map(int u);
     }
 
     /**
@@ -255,130 +265,20 @@ public class Ops {
         public double map(int t);
     }
 
-    /**
-     * A Mapper accepting a long argument and returning a double
-     */
-    public static interface MapperFromLongToDouble {
-        public double map(long t);
+
+    /** A Reducer accepting and returning ints */
+    public static interface IntReducer {
+        public int combine(int u, int v);
     }
 
-    /**
-     * A Mapper accepting a double argument and returning a long
-     */
-    public static interface MapperFromDoubleToLong {
-        public long map(double t);
+    /** A Predicate accepting an int */
+    public static interface IntPredicate {
+        public boolean evaluate(int t);
     }
 
-    /**
-     * A reducer returning the maximum of two elements, using the
-     * given comparator, and treating null as less than any non-null
-     * element.
-     */
-    public static final class MaxReducer<T> implements Reducer<T> {
-        private final Comparator<? super T> comparator;
-        public MaxReducer(Comparator<? super T> comparator) {
-            this.comparator = comparator;
-        }
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null || comparator.compare(a, b) >= 0))? a : b;
-        }
-    }
-    
-    /**
-     * A reducer returning the minimum of two elements, using the
-     * given comparator, and treating null as greater than any non-null
-     * element.
-     */
-    public static final class MinReducer<T> implements Reducer<T> {
-        private final Comparator<? super T> comparator;
-        public MinReducer(Comparator<? super T> comparator) {
-            this.comparator = comparator;
-        }
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null || comparator.compare(a, b) <= 0))? a : b;
-        }
-    }
-    
-    /**
-     * A reducer returning the maximum of two Comparable elements,
-     * treating null as less than any non-null element.
-     */
-    public static final class 
-        ComparableMaxReducer<T extends Comparable<? super T>>
-        implements Reducer<T> {
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null || a.compareTo(b) >= 0))? a : b;
-        }
-    }
-
-    /**
-     * A reducer returning the minimum of two Comparable elements,
-     * treating null as less than any non-null element.
-     */
-    public static final class 
-        ComparableMinReducer<T extends Comparable<? super T>>
-        implements Reducer<T> {
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null || a.compareTo(b) <= 0))? a : b;
-        }
-    }
-    
-    /**
-     * A reducer returning the maximum of two double elements,
-     */
-    public static final class DoubleMaxReducer implements DoubleReducer {
-        /** Singleton reducer object */
-        public static final DoubleMaxReducer max = new DoubleMaxReducer();
-        public double combine(double a, double b) { return a >= b? a : b; }
-    }
-
-    /**
-     * A reducer returning the minimum of two double elements,
-     */
-    public static final class DoubleMinReducer implements DoubleReducer {
-        /** Singleton reducer object */
-        public static final DoubleMinReducer min = new DoubleMinReducer();
-        public double combine(double a, double b) { return a <= b? a : b; }
-    }
-
-    /**
-     * A reducer returning the maximum of two long elements,
-     */
-    public static final class LongMaxReducer implements LongReducer {
-        /** Singleton reducer object */
-        public static final LongMaxReducer max = new LongMaxReducer();
-        public long combine(long a, long b) { return a >= b? a : b; }
-    }
-
-    /**
-     * A reducer returning the minimum of two long elements,
-     */
-    public static final class LongMinReducer implements LongReducer {
-        /** Singleton reducer object */
-        public static final LongMinReducer min = new LongMinReducer();
-        public long combine(long a, long b) { return a <= b? a : b; }
-    }
-
-    /**
-     * A reducer returning the maximum of two int elements,
-     */
-    public static final class IntMaxReducer implements IntReducer {
-        /** Singleton reducer object */
-        public static final IntMaxReducer max = new IntMaxReducer();
-        public int combine(int a, int b) { return a >= b? a : b; }
-    }
-
-    /**
-     * A reducer returning the minimum of two int elements,
-     */
-    public static final class IntMinReducer implements IntReducer {
-        /** Singleton reducer object */
-        public static final IntMinReducer min = new IntMinReducer();
-        public int combine(int a, int b) { return a <= b? a : b; }
+    /** A RelationalPredicate accepting int arguments */
+    public static interface IntRelationalPredicate {
+        public boolean evaluate(int t, int u);
     }
 
     /**
@@ -407,6 +307,328 @@ public class Ops {
         public static final IntAdder adder = new IntAdder();
         public int combine(int a, int b) { return a + b; }
     }
+
+
+    // comparators
+
+    /** 
+     * A Comparator for doubles
+     */
+    public static interface DoubleComparator {
+        public int compare(double x, double y);
+    }
+
+    /** 
+     * A Comparator for longs
+     */
+    public static interface LongComparator {
+        public int compare(long x, long y);
+    }
+
+    /** 
+     * A Comparator for ints
+     */
+    public static interface IntComparator {
+        public int compare(int x, int y);
+    }
+
+    /**
+     * A Comparator for Comparable.objects
+     */
+    static final class NaturalComparator<T extends Comparable<? super T>> 
+        implements Comparator<T> {
+        /**
+         * Creates a NaturalComparator for the given element type
+         * @param type the type
+         */
+        NaturalComparator(Class<T> type) {}
+
+        public int compare(T a, T b) {
+            return a.compareTo(b);
+        }
+    }
+
+    /**
+     * A Reducer returning the maximum of two Comparable elements,
+     * treating null as less than any non-null element.
+     */
+    public static final class 
+        NaturalMaxReducer<T extends Comparable<? super T>>
+        implements Reducer<T> {
+        /**
+         * Creates a NaturalMaxReducer for the given element type
+         * @param type the type
+         */
+        NaturalMaxReducer(Class<T> type) {}
+        public T combine(T a, T b) {
+            return (a != null &&
+                    (b == null || a.compareTo(b) >= 0))? a : b;
+        }
+    }
+
+    /**
+     * A Reducer returning the minimum of two Comparable elements,
+     * treating null as less than any non-null element.
+     */
+    public static final class 
+        NaturalMinReducer<T extends Comparable<? super T>>
+        implements Reducer<T> {
+        /**
+         * Creates a NaturalMinReducer for the given element type
+         * @param type the type
+         */
+        NaturalMinReducer(Class<T> type) {}
+        public T combine(T a, T b) {
+            return (a != null &&
+                    (b == null || a.compareTo(b) <= 0))? a : b;
+        }
+    }
+    
+    /**
+     * A Reducer returning the maximum of two elements, using the
+     * given comparator, and treating null as less than any non-null
+     * element.
+     */
+    public static final class MaxReducer<T> implements Reducer<T> {
+        private final Comparator<? super T> comparator;
+        public MaxReducer(Comparator<? super T> comparator) {
+            this.comparator = comparator;
+        }
+        public T combine(T a, T b) {
+            return (a != null &&
+                    (b == null || comparator.compare(a, b) >= 0))? a : b;
+        }
+    }
+    
+    /**
+     * A Reducer returning the minimum of two elements, using the
+     * given comparator, and treating null as greater than any non-null
+     * element.
+     */
+    public static final class MinReducer<T> implements Reducer<T> {
+        private final Comparator<? super T> comparator;
+        public MinReducer(Comparator<? super T> comparator) {
+            this.comparator = comparator;
+        }
+        public T combine(T a, T b) {
+            return (a != null &&
+                    (b == null || comparator.compare(a, b) <= 0))? a : b;
+        }
+    }
+    
+    /**
+     * A comparator for doubles relying on natural ordering
+     */
+    public static final class NaturalDoubleComparator 
+        implements DoubleComparator {
+        /** Singleton comparator object */
+        static final NaturalDoubleComparator comparator = new
+            NaturalDoubleComparator();
+        public int compare(double a, double b) { 
+            return Double.compare(a, b);
+        }
+    }
+
+    /**
+     * A reducer returning the maximum of two double elements, using
+     * natural comparator
+     */
+    public static final class NaturalDoubleMaxReducer 
+        implements DoubleReducer {
+        /** Singleton reducer object */
+        public static final NaturalDoubleMaxReducer max = 
+            new NaturalDoubleMaxReducer();
+        public double combine(double a, double b) { return a >= b? a : b; }
+    }
+
+    /**
+     * A reducer returning the minimum of two double elements,
+     * using natural comparator
+     */
+    public static final class NaturalDoubleMinReducer 
+        implements DoubleReducer {
+        /** Singleton reducer object */
+        public static final NaturalDoubleMinReducer min = 
+            new NaturalDoubleMinReducer();
+        public double combine(double a, double b) { return a <= b? a : b; }
+    }
+
+    /**
+     * A reducer returning the maximum of two double elements,
+     * using the given comparator
+     */
+    public static final class DoubleMaxReducer implements DoubleReducer {
+        final DoubleComparator comparator;
+        /**
+         * Creates a DoubleMaxReducer using the given comparator
+         */
+        public DoubleMaxReducer(DoubleComparator comparator) {
+            this.comparator = comparator;
+        }
+        public double combine(double a, double b) { 
+            return (comparator.compare(a, b) >= 0)? a : b; 
+        }
+    }
+
+    /**
+     * A reducer returning the minimum of two double elements,
+     * using the given comparator
+     */
+    public static final class DoubleMinReducer implements DoubleReducer {
+        final DoubleComparator comparator;
+        /**
+         * Creates a DoubleMinReducer using the given comparator
+         */
+        public DoubleMinReducer(DoubleComparator comparator) {
+            this.comparator = comparator;
+        }
+        public double combine(double a, double b) { 
+            return (comparator.compare(a, b) <= 0)? a : b; 
+        }
+    }
+
+    /**
+     * A comparator for longs relying on natural ordering
+     */
+    public static final class NaturalLongComparator 
+        implements LongComparator {
+        /** Singleton comparator object */
+        static final NaturalLongComparator comparator = new
+            NaturalLongComparator();
+        public int compare(long a, long b) { 
+            return a < b? -1 : ((a > b)? 1 : 0);
+        }
+    }
+
+    /**
+     * A reducer returning the maximum of two long elements, using
+     * natural comparator
+     */
+    public static final class NaturalLongMaxReducer 
+        implements LongReducer {
+        /** Singleton reducer object */
+        public static final NaturalLongMaxReducer max = 
+            new NaturalLongMaxReducer();
+        public long combine(long a, long b) { return a >= b? a : b; }
+    }
+
+    /**
+     * A reducer returning the minimum of two long elements,
+     * using natural comparator
+     */
+    public static final class NaturalLongMinReducer 
+        implements LongReducer {
+        /** Singleton reducer object */
+        public static final NaturalLongMinReducer min = 
+            new NaturalLongMinReducer();
+        public long combine(long a, long b) { return a <= b? a : b; }
+    }
+
+    /**
+     * A reducer returning the maximum of two long elements,
+     * using the given comparator
+     */
+    public static final class LongMaxReducer implements LongReducer {
+        final LongComparator comparator;
+        /**
+         * Creates a LongMaxReducer using the given comparator
+         */
+        public LongMaxReducer(LongComparator comparator) {
+            this.comparator = comparator;
+        }
+        public long combine(long a, long b) { 
+            return (comparator.compare(a, b) >= 0)? a : b; 
+        }
+    }
+
+    /**
+     * A reducer returning the minimum of two long elements,
+     * using the given comparator
+     */
+    public static final class LongMinReducer implements LongReducer {
+        final LongComparator comparator;
+        /**
+         * Creates a LongMinReducer using the given comparator
+         */
+        public LongMinReducer(LongComparator comparator) {
+            this.comparator = comparator;
+        }
+        public long combine(long a, long b) { 
+            return (comparator.compare(a, b) <= 0)? a : b; 
+        }
+    }
+
+    /**
+     * A comparator for ints relying on natural ordering
+     */
+    public static final class NaturalIntComparator 
+        implements IntComparator {
+        /** Singleton comparator object */
+        static final NaturalIntComparator comparator = new
+            NaturalIntComparator();
+        public int compare(int a, int b) { 
+            return a < b? -1 : ((a > b)? 1 : 0);
+        }
+    }
+
+    /**
+     * A reducer returning the maximum of two int elements, using
+     * natural comparator
+     */
+    public static final class NaturalIntMaxReducer 
+        implements IntReducer {
+        /** Singleton reducer object */
+        public static final NaturalIntMaxReducer max = 
+            new NaturalIntMaxReducer();
+        public int combine(int a, int b) { return a >= b? a : b; }
+    }
+
+    /**
+     * A reducer returning the minimum of two int elements,
+     * using natural comparator
+     */
+    public static final class NaturalIntMinReducer 
+        implements IntReducer {
+        /** Singleton reducer object */
+        public static final NaturalIntMinReducer min = 
+            new NaturalIntMinReducer();
+        public int combine(int a, int b) { return a <= b? a : b; }
+    }
+
+    /**
+     * A reducer returning the maximum of two int elements,
+     * using the given comparator
+     */
+    public static final class IntMaxReducer implements IntReducer {
+        final IntComparator comparator;
+        /**
+         * Creates a IntMaxReducer using the given comparator
+         */
+        public IntMaxReducer(IntComparator comparator) {
+            this.comparator = comparator;
+        }
+        public int combine(int a, int b) { 
+            return (comparator.compare(a, b) >= 0)? a : b; 
+        }
+    }
+
+    /**
+     * A reducer returning the minimum of two int elements,
+     * using the given comparator
+     */
+    public static final class IntMinReducer implements IntReducer {
+        final IntComparator comparator;
+        /**
+         * Creates a IntMinReducer using the given comparator
+         */
+        public IntMinReducer(IntComparator comparator) {
+            this.comparator = comparator;
+        }
+        public int combine(int a, int b) { 
+            return (comparator.compare(a, b) <= 0)? a : b; 
+        }
+    }
+
 
 
 }

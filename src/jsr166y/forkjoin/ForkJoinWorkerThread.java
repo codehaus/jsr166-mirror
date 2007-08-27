@@ -216,6 +216,18 @@ public class ForkJoinWorkerThread extends Thread {
     private static final int JOINING_SCANS_PER_SYNC = 1024; 
 
     /**
+     * Seed for juRandom. Kept with worker fields to minimize
+     * cacheline sharing
+     */
+    long juRandomSeed;
+
+    /**
+     * Exported random numbers
+     */
+    final JURandom juRandom;
+
+
+    /**
      * Generator for per-thread randomSeeds
      */
     private static final Random randomSeedGenerator = new Random();
@@ -265,7 +277,9 @@ public class ForkJoinWorkerThread extends Thread {
         this.activeWorkerCounter = pool.getActiveWorkerCounter();
         this.poolBarrier = pool.getPoolBarrier();
         long seed = randomSeedGenerator.nextLong();
+        this.juRandomSeed = seed;
         this.randomSeed = (seed == 0)? 1 : seed; // must be nonzero
+        this.juRandom = new JURandom();
         this.runState = new RunState();
         this.queue = new ForkJoinTask<?>[INITIAL_CAPACITY];
     }
@@ -801,6 +815,144 @@ public class ForkJoinWorkerThread extends Thread {
         }
         t.exec();
         return true;
+    }
+
+    // per-worker exported random numbers
+
+    /**
+     * A workalike for java.util.Random, but specialized 
+     * for exporting to users of worker threads.
+     */
+    final class JURandom { // non-static, use worker seed
+        // Guarantee same constants as java.util.Random
+        final static long Multiplier = 0x5DEECE66DL;
+        final static long Addend = 0xBL;
+        final static long Mask = (1L << 48) - 1;
+        
+        int next(int bits) {
+            long next = (juRandomSeed * Multiplier + Addend) & Mask;
+            juRandomSeed = next;
+            return (int)(next >>> (48 - bits));
+        }
+
+        int nextInt() {
+            return next(32);
+        }
+        
+        int nextInt(int n) {
+            if (n <= 0)
+                throw new IllegalArgumentException("n must be positive");
+            int bits = next(31);
+            if ((n & -n) == n) 
+                return (int)((n * (long)bits) >> 31);
+            
+            for (;;) {
+                int val = bits % n;
+                if (bits - val + (n-1) >= 0)
+                    return val;
+                bits = next(31);
+            }
+        }
+
+        long nextLong() {
+            return ((long)(next(32)) << 32) + next(32);
+        }
+
+        
+        long nextLong(long n) {
+            if (n <= 0)
+                throw new IllegalArgumentException("n must be positive");
+            long offset = 0;
+            while (n >= Integer.MAX_VALUE) { // randomly pick half range
+                int bits = next(2); // 2nd bit for odd vs even split
+                long half = n >>> 1;
+                long nextn = ((bits & 2) == 0)? half : n - half;
+                if ((bits & 1) == 0)
+                    offset += n - nextn;
+                n = nextn;
+            }
+            return offset + nextInt((int)n);
+        }
+        
+        
+        double nextDouble() {
+            return (((long)(next(26)) << 27) + next(27))
+                / (double)(1L << 53);
+        }        
+    }
+
+    /**
+     * Returns a random integer using a per-worker random
+     * number generator with the same properties as
+     * {@link java.util.Random#nextInt}
+     * @return the next pseudorandom, uniformly distributed {@code int}
+     *         value from this worker's random number generator's sequence
+     */
+    public static int nextRandomInt() {
+        ForkJoinWorkerThread w = 
+            (ForkJoinWorkerThread)(Thread.currentThread());
+        return w.juRandom.nextInt();
+    }
+
+    /**
+     * Returns a random integer using a per-worker random
+     * number generator with the same properties as
+     * {@link java.util.Random#nextInt(int)}
+     * @param n the bound on the random number to be returned.  Must be
+     *	      positive.
+     * @return the next pseudorandom, uniformly distributed {@code int}
+     *         value between {@code 0} (inclusive) and {@code n} (exclusive)
+     *         from this worker's random number generator's sequence
+     * @throws IllegalArgumentException if n is not positive
+     */
+    public static int nextRandomInt(int n) {
+        ForkJoinWorkerThread w = 
+            (ForkJoinWorkerThread)(Thread.currentThread());
+        return w.juRandom.nextInt(n);
+    }
+
+    /**
+     * Returns a random long using a per-worker random
+     * number generator with the same properties as
+     * {@link java.util.Random#nextLong}
+     * @return the next pseudorandom, uniformly distributed {@code long}
+     *         value from this worker's random number generator's sequence
+     */
+    public static long nextRandomLong() {
+        ForkJoinWorkerThread w = 
+            (ForkJoinWorkerThread)(Thread.currentThread());
+        return w.juRandom.nextLong();
+    }
+
+    /**
+     * Returns a random integer using a per-worker random
+     * number generator with the same properties as
+     * {@link java.util.Random#nextInt(int)}
+     * @param n the bound on the random number to be returned.  Must be
+     *	      positive.
+     * @return the next pseudorandom, uniformly distributed {@code int}
+     *         value between {@code 0} (inclusive) and {@code n} (exclusive)
+     *         from this worker's random number generator's sequence
+     * @throws IllegalArgumentException if n is not positive
+     */
+    public static long nextRandomLong(long n) {
+        ForkJoinWorkerThread w = 
+            (ForkJoinWorkerThread)(Thread.currentThread());
+        return w.juRandom.nextLong(n);
+    }
+
+    /**
+     * Returns a random double using a per-worker random
+     * number generator with the same properties as
+     * {@link java.util.Random#nextDouble}
+     * @return the next pseudorandom, uniformly distributed {@code double}
+     *         value between {@code 0.0} and {@code 1.0} from this
+     *         worker's random number generator's sequence
+     */
+    public static double nextRandomDouble() {
+        ForkJoinWorkerThread w = 
+            (ForkJoinWorkerThread)(Thread.currentThread());
+        return w.juRandom.nextDouble();
     }
 
     // Package-local support for core ForkJoinTask methods

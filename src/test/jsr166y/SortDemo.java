@@ -14,35 +14,44 @@ class SortDemo {
 
     public static void main (String[] args) throws Exception {
         int n = 1 << 20;
-        int reps = 9;
-        System.out.printf("Sorting %d Longs, %d replications\n", n, reps);
+        int sreps = 4;
+        int reps = 10;
         Long[] a = new Long[n];
-        randomFill(a);
-
-        for (int i = 0; i < reps; ++i) {
-            long last = System.nanoTime();
-            java.util.Arrays.sort(a);
-            double elapsed = (double)(System.nanoTime() - last) / NPS;
-            System.out.printf("java.util.Arrays.sort time:  %7.3f\n", elapsed);
-            checkSorted(a);
-            shuffle(a);
-            //            System.gc();
-        }
-
         ForkJoinPool fjpool = new ForkJoinPool();
         ParallelArray<Long> pa = new ParallelArray<Long>(fjpool, a);
+
+        System.out.printf("Sorting %d Longs, %d replications\n", n, sreps);
+        for (int i = 0; i < sreps; ++i) {
+            pa.replaceWithGeneratedValue(rlg);
+            seqSort(a);
+            if (i == 0)
+                checkSorted(a);
+        }
+
+        System.out.printf("Sorting %d Longs, %d replications\n", n, reps);
         for (int i = 0; i < reps; ++i) {
-            long last = System.nanoTime();
-            pa.sort();
-            double elapsed = (double)(System.nanoTime() - last) / NPS;
-            System.out.printf("ArrayTasks.sort time:        %7.3f\n", elapsed);
-            checkSorted(a);
-            shuffle(a);
-            //            System.gc();
+            pa.replaceWithGeneratedValue(rlg);
+            parSort(pa);
+            if (i == 0)
+                checkSorted(a);
         }
         fjpool.shutdown();
     }
+    
+    static void seqSort(Long[] a) {
+        long last = System.nanoTime();
+        java.util.Arrays.sort(a);
+        double elapsed = (double)(System.nanoTime() - last) / NPS;
+        System.out.printf("java.util.Arrays.sort time:  %7.3f\n", elapsed);
+    }
 
+    static void parSort(ParallelArray<Long> pa) {
+        long last = System.nanoTime();
+        pa.sort();
+        double elapsed = (double)(System.nanoTime() - last) / NPS;
+        System.out.printf("ParallelArray.sort time:     %7.3f\n", elapsed);
+    }
+    
     static void checkSorted (Long[] a)  {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
@@ -52,20 +61,14 @@ class SortDemo {
         }
     }
     
-    static void randomFill(Long[] a) {
-        for (int i = 0; i < a.length; ++i)
-            a[i] = new Long(rng.nextLong());
-    }
-    
-    static void shuffle(Long[] a) {
-        int n = a.length;
-        for (int i = n; i > 1; --i) {
-            int r = rng.nextInt(i);
-            Long t = a[i-1];
-            a[i-1] = a[r];
-            a[r] = t;
+    static final class RandomLongGenerator implements Ops.Generator<Long> {
+        public Long generate() {
+            return new Long(ForkJoinWorkerThread.nextRandomLong());
         }
     }
+
+    static final RandomLongGenerator rlg = new RandomLongGenerator();
+
 
 
 }

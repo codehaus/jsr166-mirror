@@ -53,7 +53,7 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
      */
     protected abstract V compute();
 
-    public final V getResult() { 
+    public final V rawResult() { 
         return result; 
     }
 

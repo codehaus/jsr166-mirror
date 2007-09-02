@@ -258,7 +258,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * Always returns null.
      * @return null
      */
-    public final Void getResult() { 
+    public final Void rawResult() { 
         return null; 
     }
 

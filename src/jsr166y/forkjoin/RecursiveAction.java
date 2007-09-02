@@ -50,13 +50,13 @@ import java.util.concurrent.atomic.*;
  * by subdividing out only the right-hand-sides of repeated divisions
  * by two, and keeping track of them with a chain of <tt>next</tt>
  * references. It uses a common rule of thumb for granularity
- * settings, corresponding to about four times as many base tasks as
+ * settings, corresponding to about eight times as many base tasks as
  * there are threads in the pool.
  *
  * <pre>
  * double sumOfSquares(ForkJoinPool pool, double[] array) {
  *   int n = array.length;
- *   int seqSize = 1 + n / (4 * pool.getPoolSize() - 3);
+ *   int seqSize = 1 + n / (8 * pool.getParallelismLevel());
  *   Applyer a = new Applyer(array, 0, n-1, seqSize, null);
  *   pool.invoke(a);
  *   return a.result;
@@ -203,7 +203,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * Always returns null.
      * @return null
      */
-    public final Void getResult() { 
+    public final Void rawResult() { 
         return null; 
     }
 

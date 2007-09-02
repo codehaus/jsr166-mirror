@@ -168,6 +168,11 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private int scans;
 
+    /**
+     * Cached from pool
+     */
+    private int poolSize;
+
     // Transient state indicators, used as argument, not field values.
 
     /**
@@ -242,6 +247,10 @@ public class ForkJoinWorkerThread extends Thread {
         return poolIndex;
     }
 
+    final void setPoolSize(int ps) {
+        poolSize = ps;
+    }
+
     final long getWorkerStealCount() {
         return fullStealCount;
     }
@@ -276,6 +285,7 @@ public class ForkJoinWorkerThread extends Thread {
         this.pool = pool;
         this.activeWorkerCounter = pool.getActiveWorkerCounter();
         this.poolBarrier = pool.getPoolBarrier();
+        this.poolSize = pool.getPoolSize();
         long seed = randomSeedGenerator.nextLong();
         this.juRandomSeed = seed;
         this.randomSeed = (seed == 0)? 1 : seed; // must be nonzero
@@ -722,6 +732,20 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
+     * Returns an estimate of how many more locally queued tasks there
+     * are than idle worker threads that might steal them.  This value
+     * may be useful for heuristic decisions about whether to fork
+     * other tasks.
+     * @return the number of tasks
+     */
+    public static int getEstimatedSurplusTaskCount() {
+        ForkJoinWorkerThread w = 
+            (ForkJoinWorkerThread)(Thread.currentThread());
+        return (int)(w.sp - w.base) - 
+            (w.poolSize - w.activeWorkerCounter.get());
+    }
+
+    /**
      * Returns, but does not remove or execute, the next task locally
      * queued for execution by the current worker thread. There is no
      * guarantee that this task will be the next one actually returned
@@ -977,7 +1001,7 @@ public class ForkJoinWorkerThread extends Thread {
             if (ex != null)
                 ForkJoinTask.rethrowException(ex);
             if (joinMe.status < 0)
-                return joinMe.getResult();
+                return joinMe.rawResult();
             ForkJoinTask<?> t = getTask();
             if (t == null)
                 onEmptyScan(JOINING);

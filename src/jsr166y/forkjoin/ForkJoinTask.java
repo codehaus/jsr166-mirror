@@ -176,7 +176,7 @@ public abstract class ForkJoinTask<V> {
         Throwable ex = getException();
         if (ex != null)
             rethrowException(ex);
-        return getResult();
+        return rawResult();
     }
 
 
@@ -192,7 +192,7 @@ public abstract class ForkJoinTask<V> {
             else
                 throw new ExecutionException(ex);
         }
-        return getResult();
+        return rawResult();
     }
 
     /**
@@ -219,7 +219,8 @@ public abstract class ForkJoinTask<V> {
      * in exceptions or errors including ClassCastException.
      *
      * @return the computed result
-     * @throws Throwable if the underlying computation did so.
+     * @throws Throwable (a RuntimeException, Error, or unchecked
+     * exception) if the underlying computation did so.
      */
     public final V join() {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).doJoinTask(this);
@@ -228,6 +229,9 @@ public abstract class ForkJoinTask<V> {
     /**
      * Equivalent in effect to the sequence <tt>fork(); join();</tt>
      * but may be more efficient.
+     * @throws Throwable (a RuntimeException, Error, or unchecked
+     * exception) if the underlying computation did so.
+     * @return the computed result
      */
     public abstract V invoke();
 
@@ -280,7 +284,7 @@ public abstract class ForkJoinTask<V> {
      * extensions.
      * @return the result, or null if not completed.
      */
-    public abstract V getResult();
+    public abstract V rawResult();
 
     /**
      * Resets the internal bookkeeping state of this task, allowing a

@@ -132,7 +132,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * The current targetted pool size. Updated only under worker lock
      * but volatile to allow concurrent reads.
      */
-    private volatile int poolSize;
+    volatile int poolSize;
 
     /**
      * The number of workers that have started but not yet terminated
@@ -451,6 +451,19 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
+     * Update cached poolSize to all workers
+     */
+    private void broadcastPoolSize() {
+        int ps = poolSize;
+        ForkJoinWorkerThread[] ws = workers;
+        for (int i = 0; i < ws.length; ++i) {
+            ForkJoinWorkerThread w = ws[i];
+            if (w != null)
+                w.setPoolSize(ps);
+        }
+    }
+
+    /**
      * Tries to adds the indicated number of new worker threads to the
      * pool. This method may be used to increase the amount of
      * parallelism available to tasks. The actual number of 
@@ -488,8 +501,10 @@ public class ForkJoinPool implements ForkJoinExecutor {
         } finally {
             lock.unlock();
         }
+        broadcastPoolSize();
         return nadded;
     }
+
 
     /**
      * Tries to remove the indicated number of worker threads from the
@@ -529,6 +544,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
         } finally {
             lock.unlock();
         }
+        broadcastPoolSize();
         return nremoved;
     }
 
@@ -816,12 +832,23 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Returns the number of threads that are not currently idle
-     * waiting for tasks.
+     * Returns the approximate number of threads that are 
+     * currently executing tasks. This method may overestimate
+     * the number of active threads.
      * @return the number of active threads.
      */
     public int getActiveThreadCount() {
         return activeWorkerCounter.get();
+    }
+
+    /**
+     * Returns the approximate number of threads that are currently
+     * idle waiting for tasks. This method may underestimate the
+     * number of idel threads.
+     * @return the number of idle threads.
+     */
+    public int getIdleThreadCount() {
+        return poolSize - activeWorkerCounter.get();
     }
 
     /**

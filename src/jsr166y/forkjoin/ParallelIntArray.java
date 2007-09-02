@@ -420,13 +420,13 @@ public class ParallelIntArray {
     /**
      * Returns an operation prefix that causes a method to
      * operate only on the elements of the array between
-     * fromIndex (inclusive) and toIndex (exclusive).
-     * @param fromIndex the lower bound (inclusive)
-     * @param toIndex the upper bound (exclusive)
+     * firstIndex (inclusive) and upperBound (exclusive).
+     * @param firstIndex the lower bound (inclusive)
+     * @param upperBound the upper bound (exclusive)
      * @return operation prefix
      */
-    public WithBounds withBounds(int fromIndex, int toIndex) {
-        return new WithBounds(ex, array, fromIndex, toIndex);
+    public WithBounds withBounds(int firstIndex, int upperBound) {
+        return new WithBounds(ex, array, firstIndex, upperBound);
     }
 
     /**
@@ -495,23 +495,23 @@ public class ParallelIntArray {
     static abstract class Params {
         final ForkJoinExecutor ex;
         final int[] array;
-        final int fromIndex;
-        final int toIndex;
+        final int firstIndex;
+        final int upperBound;
         final int granularity;
-        Params(ForkJoinExecutor ex, int[] array, int fromIndex, int toIndex) {
+        Params(ForkJoinExecutor ex, int[] array, int firstIndex, int upperBound) {
             this.ex = ex;
             this.array = array;
-            this.fromIndex = fromIndex;
-            this.toIndex = toIndex;
+            this.firstIndex = firstIndex;
+            this.upperBound = upperBound;
             this.granularity = defaultGranularity(ex.getParallelismLevel(),
-                                                  toIndex - fromIndex);
+                                                  upperBound - firstIndex);
         }
 
         /**
          * default granularity for divide-by-two array tasks.
          */
         static int defaultGranularity(int threads, int n) {
-            return (threads > 1)? (1 + n / (threads << 4)) : n;
+            return (threads > 1)? (1 + n / (threads << 3)) : n;
         }
     }
 
@@ -522,8 +522,8 @@ public class ParallelIntArray {
     public static abstract class WithMapping<U>
         extends Params {
         WithMapping(ForkJoinExecutor ex, int[] array,
-                    int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                    int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -531,7 +531,7 @@ public class ParallelIntArray {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super U> procedure) {
-            ex.invoke(new FJApply<U>(this, fromIndex, toIndex, procedure));
+            ex.invoke(new FJApply<U>(this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -545,7 +545,7 @@ public class ParallelIntArray {
          */
         public U reduce(Reducer<U> reducer, U base) {
             FJReduce<U> f =
-                new FJReduce<U>(this, fromIndex, toIndex, reducer, base);
+                new FJReduce<U>(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -613,7 +613,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin(Comparator<? super U> comparator) {
             FJMinIndex<U> f = new FJMinIndex<U>
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -626,7 +626,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax(Comparator<? super U> comparator) {
             FJMinIndex<U> f = new FJMinIndex<U>
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -640,7 +640,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin() {
             FJMinIndex<U> f = new FJMinIndex<U>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  (Comparator<? super U>)(RawComparator.cmp), false);
             ex.invoke(f);
             return f.indexResult;
@@ -654,7 +654,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax() {
             FJMinIndex<U> f = new FJMinIndex<U>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  (Comparator<? super U>)(RawComparator.cmp), true);
             ex.invoke(f);
             return f.indexResult;
@@ -696,8 +696,8 @@ public class ParallelIntArray {
      */
     public static abstract class WithFilter extends WithIntMapping {
         WithFilter(ForkJoinExecutor ex, int[] array,
-                   int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                   int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -705,7 +705,7 @@ public class ParallelIntArray {
          * @param procedure the procedure
          */
         public void apply(IntProcedure procedure) {
-            ex.invoke(new FJIntApply(this, fromIndex, toIndex, procedure));
+            ex.invoke(new FJIntApply(this, firstIndex, upperBound, procedure));
         }
 
         /**
@@ -716,7 +716,7 @@ public class ParallelIntArray {
          */
         public int reduce(IntReducer reducer, int base) {
             FJIntReduce f =
-                new FJIntReduce(this, fromIndex, toIndex, reducer, base);
+                new FJIntReduce(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -773,7 +773,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin(IntComparator comparator) {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -786,7 +786,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax(IntComparator comparator) {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -800,7 +800,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin() {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalIntComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -814,7 +814,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax() {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalIntComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -833,7 +833,7 @@ public class ParallelIntArray {
          */
         public void replaceWithTransform
             (MapperFromIntToInt mapper) {
-            ex.invoke(new FJTransform(this, fromIndex, toIndex, mapper));
+            ex.invoke(new FJTransform(this, firstIndex, upperBound, mapper));
         }
 
         abstract void leafTransform
@@ -846,7 +846,7 @@ public class ParallelIntArray {
          */
         public void replaceWithMappedIndex
             (MapperFromIntToInt mapper) {
-            ex.invoke(new FJIndexMap(this, fromIndex, toIndex, mapper));
+            ex.invoke(new FJIndexMap(this, firstIndex, upperBound, mapper));
         }
 
         abstract void leafIndexMap
@@ -860,7 +860,7 @@ public class ParallelIntArray {
         public void replaceWithGeneratedValue
             (IntGenerator generator) {
             ex.invoke(new FJGenerate
-                      (this, fromIndex, toIndex, generator));
+                      (this, firstIndex, upperBound, generator));
         }
 
         /**
@@ -892,7 +892,7 @@ public class ParallelIntArray {
          * @param value the value
          */
         public void replaceWithValue(int value) {
-            ex.invoke(new FJFill(this, fromIndex, toIndex, value));
+            ex.invoke(new FJFill(this, firstIndex, upperBound, value));
         }
 
         abstract void leafFill(int lo, int hi, int value);
@@ -903,7 +903,7 @@ public class ParallelIntArray {
          * @param other the other array
          * @param combiner the combiner
          * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>toIndex</tt> elements.
+         * fewer than <tt>upperBound</tt> elements.
          */
         public void replaceWithCombination(ParallelIntArray other,
                                            IntReducer combiner) {
@@ -916,14 +916,14 @@ public class ParallelIntArray {
          * @param other the other array
          * @param combiner the combiner
          * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>toIndex</tt> elements.
+         * fewer than <tt>upperBound</tt> elements.
          */
         public void replaceWithCombination(int[] other,
                                            IntReducer combiner) {
-            if (other.length < toIndex)
+            if (other.length < upperBound)
                 throw new ArrayIndexOutOfBoundsException();
             ex.invoke(new FJCombineInPlace
-                      (this, fromIndex, toIndex, other, combiner));
+                      (this, firstIndex, upperBound, other, combiner));
         }
 
         abstract void leafCombineInPlace
@@ -986,16 +986,16 @@ public class ParallelIntArray {
      */
     public static final class WithBounds extends WithFilter {
         WithBounds(ForkJoinExecutor ex, int[] array,
-                   int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
-            if (fromIndex > toIndex)
+                   int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
+            if (firstIndex > upperBound)
                 throw new IllegalArgumentException
-                    ("fromIndex(" + fromIndex +
-                     ") > toIndex(" + toIndex+")");
-            if (fromIndex < 0)
-                throw new ArrayIndexOutOfBoundsException(fromIndex);
-            if (toIndex > array.length)
-                throw new ArrayIndexOutOfBoundsException(toIndex);
+                    ("firstIndex(" + firstIndex +
+                     ") > upperBound(" + upperBound+")");
+            if (firstIndex < 0)
+                throw new ArrayIndexOutOfBoundsException(firstIndex);
+            if (upperBound > array.length)
+                throw new ArrayIndexOutOfBoundsException(upperBound);
         }
 
         WithBounds(ForkJoinExecutor ex, int[] array) {
@@ -1011,7 +1011,7 @@ public class ParallelIntArray {
          */
         public WithFilter withFilter(IntPredicate selector) {
             return new WithBoundedFilter
-                (ex, array, fromIndex, toIndex, selector);
+                (ex, array, firstIndex, upperBound, selector);
         }
 
         /**
@@ -1023,7 +1023,7 @@ public class ParallelIntArray {
         public <U> WithMapping<U> withMapping
             (MapperFromInt<? extends U> mapper) {
             return new WithBoundedMapping<U>
-                (ex, array, fromIndex,toIndex, mapper);
+                (ex, array, firstIndex,upperBound, mapper);
         }
 
         /**
@@ -1035,7 +1035,7 @@ public class ParallelIntArray {
         public WithDoubleMapping withMapping
             (MapperFromIntToDouble mapper) {
             return new WithBoundedDoubleMapping
-                (ex, array, fromIndex, toIndex, mapper);
+                (ex, array, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1047,7 +1047,7 @@ public class ParallelIntArray {
         public WithLongMapping withMapping
             (MapperFromIntToLong mapper) {
             return new WithBoundedLongMapping
-                (ex, array, fromIndex, toIndex, mapper);
+                (ex, array, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1059,7 +1059,7 @@ public class ParallelIntArray {
         public WithIntMapping withMapping
             (MapperFromIntToInt mapper) {
             return new WithBoundedIntMapping
-                (ex, array, fromIndex, toIndex, mapper);
+                (ex, array, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1068,7 +1068,7 @@ public class ParallelIntArray {
          * @return index of matching element, or -1 if none.
          */
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         /**
@@ -1086,8 +1086,8 @@ public class ParallelIntArray {
              IntReducer combiner) {
             if (other.length < array.length)
                 throw new ArrayIndexOutOfBoundsException();
-            int[] dest = new int[toIndex];
-            ex.invoke(new FJCombine(this, fromIndex, toIndex,
+            int[] dest = new int[upperBound];
+            ex.invoke(new FJCombine(this, firstIndex, upperBound,
                                     other, dest, combiner));
             return new ParallelIntArray(ex, dest);
         }
@@ -1113,7 +1113,7 @@ public class ParallelIntArray {
          * @return the number of elements within bounds
          */
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
 
         /**
@@ -1124,11 +1124,11 @@ public class ParallelIntArray {
          */
         public void cumulate(IntReducer reducer, int base) {
             FJCumulateOp op = new FJCumulateOp
-                (ex, array, fromIndex, toIndex, reducer, base);
-            if (op.granularity >= toIndex - fromIndex)
-                op.sumAndCumulateLeaf(fromIndex, toIndex);
+                (ex, array, firstIndex, upperBound, reducer, base);
+            if (op.granularity >= upperBound - firstIndex)
+                op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
-                FJScan r = new FJScan(null, op, fromIndex, toIndex);
+                FJScan r = new FJScan(null, op, firstIndex, upperBound);
                 ex.invoke(r);
             }
         }
@@ -1138,11 +1138,11 @@ public class ParallelIntArray {
          */
         public void cumulateSum() {
             FJCumulateSumOp op = new FJCumulateSumOp
-                (ex, array, fromIndex, toIndex);
-            if (op.granularity >= toIndex - fromIndex)
-                op.sumAndCumulateLeaf(fromIndex, toIndex);
+                (ex, array, firstIndex, upperBound);
+            if (op.granularity >= upperBound - firstIndex)
+                op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
-                FJScan r = new FJScan(null, op, fromIndex, toIndex);
+                FJScan r = new FJScan(null, op, firstIndex, upperBound);
                 ex.invoke(r);
             }
         }
@@ -1157,11 +1157,11 @@ public class ParallelIntArray {
          */
         public int precumulate(IntReducer reducer, int base) {
             FJPrecumulateOp op = new FJPrecumulateOp
-                (ex, array, fromIndex, toIndex, reducer, base);
-            if (op.granularity >= toIndex - fromIndex)
-                return op.sumAndCumulateLeaf(fromIndex, toIndex);
+                (ex, array, firstIndex, upperBound, reducer, base);
+            if (op.granularity >= upperBound - firstIndex)
+                return op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
-                FJScan r = new FJScan(null, op, fromIndex, toIndex);
+                FJScan r = new FJScan(null, op, firstIndex, upperBound);
                 ex.invoke(r);
                 return r.out;
             }
@@ -1173,11 +1173,11 @@ public class ParallelIntArray {
          */
         public int precumulateSum() {
             FJPrecumulateSumOp op = new FJPrecumulateSumOp
-                (ex, array, fromIndex, toIndex);
-            if (op.granularity >= toIndex - fromIndex)
-                return op.sumAndCumulateLeaf(fromIndex, toIndex);
+                (ex, array, firstIndex, upperBound);
+            if (op.granularity >= upperBound - firstIndex)
+                return op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
-                FJScan r = new FJScan(null, op, fromIndex, toIndex);
+                FJScan r = new FJScan(null, op, firstIndex, upperBound);
                 ex.invoke(r);
                 return r.out;
             }
@@ -1189,9 +1189,9 @@ public class ParallelIntArray {
          * @param cmp the comparator to use
          */
         public void sort(IntComparator cmp) {
-            int n = toIndex - fromIndex;
-            int[] ws = new int[toIndex];
-            ex.invoke(new FJSorter(cmp, array, ws, fromIndex,
+            int n = upperBound - firstIndex;
+            int[] ws = new int[upperBound];
+            ex.invoke(new FJSorter(cmp, array, ws, firstIndex,
                                    n, granularity));
         }
 
@@ -1199,17 +1199,17 @@ public class ParallelIntArray {
          * Sorts the elements, using natural comparator
          */
         public void sort() {
-            int n = toIndex - fromIndex;
-            int[] ws = new int[toIndex];
-            ex.invoke(new FJIntSorter(array, ws, fromIndex,
+            int n = upperBound - firstIndex;
+            int[] ws = new int[upperBound];
+            ex.invoke(new FJIntSorter(array, ws, firstIndex,
                                       n, granularity));
         }
 
         public ParallelIntArray newArray() {
             // For now, avoid copyOf so people can compile with Java5
-            int size = toIndex - fromIndex;
+            int size = upperBound - firstIndex;
             int[] dest = new int[size];
-            System.arraycopy(array, fromIndex, dest, 0, size);
+            System.arraycopy(array, firstIndex, dest, 0, size);
             return new ParallelIntArray(ex, dest);
         }
 
@@ -1281,40 +1281,40 @@ public class ParallelIntArray {
     static final class WithBoundedFilter extends WithFilter {
         final IntPredicate selector;
         WithBoundedFilter(ForkJoinExecutor ex, int[] array,
-                          int fromIndex, int toIndex,
+                          int firstIndex, int upperBound,
                           IntPredicate selector) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
         }
 
         public <U> WithMapping<U> withMapping
             (MapperFromInt<? extends U> mapper) {
             return new WithBoundedFilteredMapping<U>
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public WithDoubleMapping withMapping
             (MapperFromIntToDouble mapper) {
             return new WithBoundedFilteredDoubleMapping
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public WithLongMapping withMapping
             (MapperFromIntToLong mapper) {
             return new WithBoundedFilteredLongMapping
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public WithIntMapping withMapping
             (MapperFromIntToInt mapper) {
             return new WithBoundedFilteredIntMapping
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny f =
-                new FJSelectAny(this, fromIndex, toIndex,
+                new FJSelectAny(this, firstIndex, upperBound,
                                 selector, result);
             ex.invoke(f);
             return result.get();
@@ -1322,7 +1322,7 @@ public class ParallelIntArray {
 
         public int size() {
             FJCountAll f = new FJCountAll
-                (this, fromIndex, toIndex, selector);
+                (this, firstIndex, upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -1433,42 +1433,42 @@ public class ParallelIntArray {
     static final class WithBoundedMapping<U> extends WithMapping<U> {
         final MapperFromInt<? extends U> mapper;
         WithBoundedMapping(ForkJoinExecutor ex, int[] array,
-                           int fromIndex, int toIndex,
+                           int firstIndex, int upperBound,
                            MapperFromInt<? extends U> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelArray<U> newArray() {
-            int n = toIndex - fromIndex;
+            int n = upperBound - firstIndex;
             U[] dest = (U[])new Object[n];
             FJMap<U> f =
-                new FJMap<U>(this, fromIndex, toIndex, dest, mapper);
+                new FJMap<U>(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelArray<U>(ex, dest);
         }
 
         public ParallelArray<U> newArray(Class<? super U> elementType) {
-            int n = toIndex - fromIndex;
+            int n = upperBound - firstIndex;
             U[] dest = (U[])
                 java.lang.reflect.Array.newInstance(elementType, n);
             FJMap<U> f =
-                new FJMap<U>(this, fromIndex, toIndex, dest, mapper);
+                new FJMap<U>(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelArray<U>(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
 
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         public U any() {
-            return (fromIndex < toIndex)?
-                mapper.map(array[fromIndex]) : null;
+            return (firstIndex < upperBound)?
+                mapper.map(array[firstIndex]) : null;
         }
 
         void leafApply(int lo, int hi, Procedure<? super U>  procedure) {
@@ -1514,10 +1514,10 @@ public class ParallelIntArray {
         final IntPredicate selector;
         final MapperFromInt<? extends U> mapper;
         WithBoundedFilteredMapping(ForkJoinExecutor ex, int[] array,
-                                   int fromIndex, int toIndex,
+                                   int firstIndex, int upperBound,
                                    IntPredicate selector,
                                    MapperFromInt<? extends U> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -1539,7 +1539,7 @@ public class ParallelIntArray {
 
         public int size() {
             FJCountAll f = new FJCountAll
-                (this, fromIndex, toIndex, selector);
+                (this, firstIndex, upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -1547,7 +1547,7 @@ public class ParallelIntArray {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny f =
-                new FJSelectAny(this, fromIndex, toIndex,
+                new FJSelectAny(this, firstIndex, upperBound,
                                 selector, result);
             ex.invoke(f);
             return result.get();
@@ -1586,7 +1586,7 @@ public class ParallelIntArray {
 
         void leafRefMap(int lo, int hi,
                         U[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -1624,8 +1624,8 @@ public class ParallelIntArray {
     public static abstract class WithDoubleMapping
         extends Params {
         WithDoubleMapping(ForkJoinExecutor ex, int[] array,
-                          int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                          int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -1634,7 +1634,7 @@ public class ParallelIntArray {
          */
         public void apply(DoubleProcedure procedure) {
             ex.invoke(new FJDoubleApply
-                      (this, fromIndex, toIndex, procedure));
+                      (this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -1649,7 +1649,7 @@ public class ParallelIntArray {
         public double reduce(DoubleReducer reducer, double base) {
             FJDoubleReduce f =
                 new FJDoubleReduce
-                (this, fromIndex, toIndex, reducer, base);
+                (this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -1676,21 +1676,21 @@ public class ParallelIntArray {
         }
 
         /**
-         * Returns the maximum element, or Double.MIN_VALUE if empty
-         * @return maximum element, or Double.MIN_VALUE if empty
+         * Returns the maximum element, or -Double.MAX_VALUE if empty
+         * @return maximum element, or -Double.MAX_VALUE if empty
          */
         public double max() {
-            return reduce(NaturalDoubleMaxReducer.max, Double.MIN_VALUE);
+            return reduce(NaturalDoubleMaxReducer.max, -Double.MAX_VALUE);
         }
 
         /**
-         * Returns the maximum element, or Double.MIN_VALUE if empty
+         * Returns the maximum element, or -Double.MAX_VALUE if empty
          * @param comparator the comparator
-         * @return maximum element, or Double.MIN_VALUE if empty
+         * @return maximum element, or -Double.MAX_VALUE if empty
          */
         public double max(DoubleComparator comparator) {
             return reduce(new DoubleMaxReducer(comparator),
-                          Double.MIN_VALUE);
+                          -Double.MAX_VALUE);
         }
 
         /**
@@ -1708,7 +1708,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin() {
             FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalDoubleComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -1721,7 +1721,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax() {
             FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalDoubleComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -1735,7 +1735,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin(DoubleComparator comparator) {
             FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -1748,7 +1748,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax(DoubleComparator comparator) {
             FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -1793,22 +1793,22 @@ public class ParallelIntArray {
         extends WithDoubleMapping {
         final MapperFromIntToDouble mapper;
         WithBoundedDoubleMapping(ForkJoinExecutor ex, int[] array,
-                                 int fromIndex, int toIndex,
+                                 int firstIndex, int upperBound,
                                  MapperFromIntToDouble mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelDoubleArray newArray() {
-            double[] dest = new double[toIndex - fromIndex];
+            double[] dest = new double[upperBound - firstIndex];
             FJDoubleMap f =
-                new FJDoubleMap(this, fromIndex, toIndex, dest, mapper);
+                new FJDoubleMap(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelDoubleArray(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
 
         void leafApply(int lo, int hi, DoubleProcedure procedure) {
@@ -1818,7 +1818,7 @@ public class ParallelIntArray {
 
         void leafMap(int lo, int hi,
                      double[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -1837,7 +1837,7 @@ public class ParallelIntArray {
                           DoubleComparator comparator,
                           boolean reverse,
                           FJDoubleMinIndex task) {
-            double best = reverse? Double.MIN_VALUE : Double.MAX_VALUE;
+            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
             int bestIndex = -1;
             for (int i = lo; i < hi; ++i) {
                 double x = mapper.map(array[i]);
@@ -1855,13 +1855,13 @@ public class ParallelIntArray {
             task.indexResult = bestIndex;
         }
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         public double any() {
-            if (fromIndex >= toIndex)
+            if (firstIndex >= upperBound)
                 throw new NoSuchElementException();
-            return mapper.map(array[fromIndex]);
+            return mapper.map(array[firstIndex]);
         }
 
     }
@@ -1872,10 +1872,10 @@ public class ParallelIntArray {
         final MapperFromIntToDouble mapper;
         WithBoundedFilteredDoubleMapping
             (ForkJoinExecutor ex, int[] array,
-             int fromIndex, int toIndex,
+             int firstIndex, int upperBound,
              IntPredicate selector,
              MapperFromIntToDouble mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -1889,7 +1889,7 @@ public class ParallelIntArray {
 
         public int size() {
             FJCountAll f = new FJCountAll
-                (this, fromIndex, toIndex, selector);
+                (this, firstIndex, upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -1925,7 +1925,7 @@ public class ParallelIntArray {
                           DoubleComparator comparator,
                           boolean reverse,
                           FJDoubleMinIndex task) {
-            double best = reverse? Double.MIN_VALUE : Double.MAX_VALUE;
+            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
             int bestIndex = -1;
             for (int i = lo; i < hi; ++i) {
                 int t = array[i];
@@ -1948,7 +1948,7 @@ public class ParallelIntArray {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny f =
-                new FJSelectAny(this, fromIndex, toIndex,
+                new FJSelectAny(this, firstIndex, upperBound,
                                 selector, result);
             ex.invoke(f);
             return result.get();
@@ -1970,8 +1970,8 @@ public class ParallelIntArray {
     public static abstract class WithLongMapping
         extends Params {
         WithLongMapping(ForkJoinExecutor ex, int[] array,
-                        int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                        int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -1980,7 +1980,7 @@ public class ParallelIntArray {
          */
         public void apply(LongProcedure procedure) {
             ex.invoke(new FJLongApply
-                      (this, fromIndex, toIndex, procedure));
+                      (this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -1995,7 +1995,7 @@ public class ParallelIntArray {
          */
         public long reduce(LongReducer reducer, long base) {
             FJLongReduce f =
-                new FJLongReduce(this, fromIndex, toIndex, reducer, base);
+                new FJLongReduce(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -2054,7 +2054,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin() {
             FJLongMinIndex f = new FJLongMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalLongComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -2067,7 +2067,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax() {
             FJLongMinIndex f = new FJLongMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalLongComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -2081,7 +2081,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin(LongComparator comparator) {
             FJLongMinIndex f = new FJLongMinIndex
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2094,7 +2094,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax(LongComparator comparator) {
             FJLongMinIndex f = new FJLongMinIndex
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2139,22 +2139,22 @@ public class ParallelIntArray {
         extends WithLongMapping {
         final MapperFromIntToLong mapper;
         WithBoundedLongMapping(ForkJoinExecutor ex, int[] array,
-                               int fromIndex, int toIndex,
+                               int firstIndex, int upperBound,
                                MapperFromIntToLong mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelLongArray newArray() {
-            long[] dest = new long[toIndex - fromIndex];
+            long[] dest = new long[upperBound - firstIndex];
             FJLongMap f =
-                new FJLongMap(this, fromIndex, toIndex, dest, mapper);
+                new FJLongMap(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelLongArray(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
         void leafApply(int lo, int hi, LongProcedure procedure) {
             for (int i = lo; i < hi; ++i)
@@ -2164,7 +2164,7 @@ public class ParallelIntArray {
 
         void leafMap(int lo, int hi,
                      long[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -2200,12 +2200,12 @@ public class ParallelIntArray {
         }
 
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
         public long any() {
-            if (fromIndex >= toIndex)
+            if (firstIndex >= upperBound)
                 throw new NoSuchElementException();
-            return mapper.map(array[fromIndex]);
+            return mapper.map(array[firstIndex]);
         }
 
     }
@@ -2216,10 +2216,10 @@ public class ParallelIntArray {
         final MapperFromIntToLong mapper;
         WithBoundedFilteredLongMapping
             (ForkJoinExecutor ex, int[] array,
-             int fromIndex, int toIndex,
+             int firstIndex, int upperBound,
              IntPredicate selector,
              MapperFromIntToLong mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -2231,8 +2231,8 @@ public class ParallelIntArray {
         }
 
         public int size() {
-            FJCountAll f = new FJCountAll(this, fromIndex,
-                                          toIndex, selector);
+            FJCountAll f = new FJCountAll(this, firstIndex,
+                                          upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -2291,7 +2291,7 @@ public class ParallelIntArray {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny f =
-                new FJSelectAny(this, fromIndex, toIndex,
+                new FJSelectAny(this, firstIndex, upperBound,
                                 selector, result);
             ex.invoke(f);
             return result.get();
@@ -2313,8 +2313,8 @@ public class ParallelIntArray {
     public static abstract class WithIntMapping
         extends Params {
         WithIntMapping(ForkJoinExecutor ex, int[] array,
-                       int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                       int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -2323,7 +2323,7 @@ public class ParallelIntArray {
          */
         public void apply(IntProcedure procedure) {
             ex.invoke(new FJIntApply
-                      (this, fromIndex, toIndex, procedure));
+                      (this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -2337,7 +2337,7 @@ public class ParallelIntArray {
          */
         public int reduce(IntReducer reducer, int base) {
             FJIntReduce f =
-                new FJIntReduce(this, fromIndex, toIndex, reducer, base);
+                new FJIntReduce(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -2396,7 +2396,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin() {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalIntComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -2409,7 +2409,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax() {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalIntComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -2423,7 +2423,7 @@ public class ParallelIntArray {
          */
         public int indexOfMin(IntComparator comparator) {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2436,7 +2436,7 @@ public class ParallelIntArray {
          */
         public int indexOfMax(IntComparator comparator) {
             FJIntMinIndex f = new FJIntMinIndex
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2480,26 +2480,26 @@ public class ParallelIntArray {
         extends WithIntMapping {
         final MapperFromIntToInt mapper;
         WithBoundedIntMapping(ForkJoinExecutor ex, int[] array,
-                              int fromIndex, int toIndex,
+                              int firstIndex, int upperBound,
                               MapperFromIntToInt mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelIntArray newArray() {
-            int[] dest = new int[toIndex - fromIndex];
+            int[] dest = new int[upperBound - firstIndex];
             FJIntMap f =
-                new FJIntMap(this, fromIndex, toIndex, dest, mapper);
+                new FJIntMap(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelIntArray(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
         void leafMap(int lo, int hi,
                      int[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -2540,12 +2540,12 @@ public class ParallelIntArray {
         }
 
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
         public int any() {
-            if (fromIndex >= toIndex)
+            if (firstIndex >= upperBound)
                 throw new NoSuchElementException();
-            return mapper.map(array[fromIndex]);
+            return mapper.map(array[firstIndex]);
         }
 
     }
@@ -2556,10 +2556,10 @@ public class ParallelIntArray {
         final MapperFromIntToInt mapper;
         WithBoundedFilteredIntMapping
             (ForkJoinExecutor ex, int[] array,
-             int fromIndex, int toIndex,
+             int firstIndex, int upperBound,
              IntPredicate selector,
              MapperFromIntToInt mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -2571,8 +2571,8 @@ public class ParallelIntArray {
         }
 
         public int size() {
-            FJCountAll f = new FJCountAll(this, fromIndex,
-                                          toIndex, selector);
+            FJCountAll f = new FJCountAll(this, firstIndex,
+                                          upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -2632,7 +2632,7 @@ public class ParallelIntArray {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny f =
-                new FJSelectAny(this, fromIndex, toIndex,
+                new FJSelectAny(this, firstIndex, upperBound,
                                 selector, result);
             ex.invoke(f);
             return result.get();
@@ -2757,7 +2757,7 @@ public class ParallelIntArray {
 
         void leafMap(int l, int h) {
             int[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -3047,7 +3047,7 @@ public class ParallelIntArray {
 
         void  leafCombine(int l, int h) {
             int[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = combiner.combine(array[i], other[i]);
         }
@@ -3237,7 +3237,7 @@ public class ParallelIntArray {
 
         void leafMap(int l, int h) {
             int[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -3424,7 +3424,7 @@ public class ParallelIntArray {
 
         void leafMap(int l, int h) {
             int[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -3613,7 +3613,7 @@ public class ParallelIntArray {
 
         void leafMap(int l, int h) {
             int[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -3871,7 +3871,7 @@ public class ParallelIntArray {
 
         protected final void compute() {
             FJSelectAll r = new FJSelectAll
-                (this, params.fromIndex, params.toIndex);
+                (this, params.firstIndex, params.upperBound);
             r.compute();
             createResults(r.nmatches);
             phase = 1;
@@ -4515,10 +4515,10 @@ public class ParallelIntArray {
         final int base;
 
         FJScanOp(ForkJoinExecutor ex, int[] array,
-                 int fromIndex, int toIndex,
+                 int firstIndex, int upperBound,
                  IntReducer reducer,
                  int base) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.reducer = reducer;
             this.base = base;
         }
@@ -4531,15 +4531,15 @@ public class ParallelIntArray {
 
     static final class FJCumulateOp extends FJScanOp {
         FJCumulateOp(ForkJoinExecutor ex, int[] array,
-                     int fromIndex, int toIndex,
+                     int firstIndex, int upperBound,
                      IntReducer reducer,
                      int base) {
-            super(ex, array, fromIndex, toIndex, reducer, base);
+            super(ex, array, firstIndex, upperBound, reducer, base);
         }
 
         int sumLeaf(int lo, int hi) {
             int sum = base;
-            if (hi != toIndex) {
+            if (hi != upperBound) {
                 for (int i = lo; i < hi; ++i)
                     sum = reducer.combine(sum, array[i]);
             }
@@ -4562,14 +4562,14 @@ public class ParallelIntArray {
 
     static final class FJCumulateSumOp extends FJScanOp {
         FJCumulateSumOp(ForkJoinExecutor ex, int[] array,
-                        int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex,
+                        int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound,
                   IntAdder.adder, 0);
         }
 
         int sumLeaf(int lo, int hi) {
             int sum = base;
-            if (hi != toIndex) {
+            if (hi != upperBound) {
                 for (int i = lo; i < hi; ++i)
                     sum += array[i];
             }
@@ -4592,10 +4592,10 @@ public class ParallelIntArray {
 
     static final class FJPrecumulateOp extends FJScanOp {
         FJPrecumulateOp(ForkJoinExecutor ex, int[] array,
-                        int fromIndex, int toIndex,
+                        int firstIndex, int upperBound,
                         IntReducer reducer,
                         int base) {
-            super(ex, array, fromIndex, toIndex, reducer, base);
+            super(ex, array, firstIndex, upperBound, reducer, base);
         }
 
         int sumLeaf(int lo, int hi) {
@@ -4627,8 +4627,8 @@ public class ParallelIntArray {
 
     static final class FJPrecumulateSumOp extends FJScanOp {
         FJPrecumulateSumOp(ForkJoinExecutor ex, int[] array,
-                           int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex,
+                           int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound,
                   IntAdder.adder, 0);
         }
 
@@ -4681,7 +4681,7 @@ public class ParallelIntArray {
      * main phase bit. When false, segments compute only their sum.
      * When true, they cumulate array elements. CUMULATE is set at
      * root at beginning of second pass and then propagated down. But
-     * it may also be set earlier for subtrees with lo==fromIndex (the
+     * it may also be set earlier for subtrees with lo==firstIndex (the
      * left spine of tree). SUMMED is a one bit join count. For leafs,
      * set when summed. For internal nodes, becomes true when one
      * child is summed.  When second child finishes summing, it then
@@ -4754,7 +4754,7 @@ public class ParallelIntArray {
                         return;
                     if ((b & CUMULATE) != 0)
                         cb = FINISHED;
-                    else if (lo == op.fromIndex) // combine leftmost
+                    else if (lo == op.firstIndex) // combine leftmost
                         cb = (SUMMED|FINISHED);
                     else
                         cb = SUMMED;
@@ -4788,7 +4788,7 @@ public class ParallelIntArray {
                         par.out = op.reducer.combine(par.left.out,
                                                      par.right.out);
                         int refork = ((pb & CUMULATE) == 0 &&
-                                      par.lo == op.fromIndex)? CUMULATE : 0;
+                                      par.lo == op.firstIndex)? CUMULATE : 0;
                         int nextPhase = pb|cb|refork;
                         if (pb == nextPhase ||
                             phaseUpdater.compareAndSet(par, pb, nextPhase)) {

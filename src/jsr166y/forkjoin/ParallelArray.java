@@ -84,7 +84,7 @@ import java.util.concurrent.atomic.*;
  *     public boolean evaluate(Student s) { return s.credits &gt; 90; }
  *   }
  *   static final IsSenior isSenior = new IsSenior();
- *   static final class GpaField implements MappertoDouble&lt;Student&gt {
+ *   static final class GpaField implements MapperToDouble&lt;Student&gt {
  *     public double map(Student s) { return s.gpa; }
  *   }
  *   static final GpaField gpaField = new GpaField();
@@ -532,13 +532,13 @@ public class ParallelArray<T> implements Iterable<T> {
     /**
      * Returns an operation prefix that causes a method to
      * operate only on the elements of the array between
-     * fromIndex (inclusive) and toIndex (exclusive).
-     * @param fromIndex the lower bound (inclusive)
-     * @param toIndex the upper bound (exclusive)
+     * firstIndex (inclusive) and upperBound (exclusive).
+     * @param firstIndex the lower bound (inclusive)
+     * @param upperBound the upper bound (exclusive)
      * @return operation prefix
      */
-    public WithBounds<T> withBounds(int fromIndex, int toIndex) {
-        return new WithBounds<T>(ex, array, fromIndex, toIndex);
+    public WithBounds<T> withBounds(int firstIndex, int upperBound) {
+        return new WithBounds<T>(ex, array, firstIndex, upperBound);
     }
 
     /**
@@ -607,23 +607,23 @@ public class ParallelArray<T> implements Iterable<T> {
     static abstract class Params<T> {
         final ForkJoinExecutor ex;
         final T[] array;
-        final int fromIndex;
-        final int toIndex;
+        final int firstIndex;
+        final int upperBound;
         final int granularity;
-        Params(ForkJoinExecutor ex, T[] array, int fromIndex, int toIndex) {
+        Params(ForkJoinExecutor ex, T[] array, int firstIndex, int upperBound) {
             this.ex = ex;
             this.array = array;
-            this.fromIndex = fromIndex;
-            this.toIndex = toIndex;
+            this.firstIndex = firstIndex;
+            this.upperBound = upperBound;
             this.granularity = defaultGranularity(ex.getParallelismLevel(),
-                                                  toIndex - fromIndex);
+                                                  upperBound - firstIndex);
         }
 
         /**
          * default granularity for divide-by-two array tasks.
          */
         static int defaultGranularity(int threads, int n) {
-            return (threads > 1)? (1 + n / (threads << 4)) : n;
+            return (threads > 1)? (1 + n / (threads << 3)) : n;
         }
     }
 
@@ -634,8 +634,8 @@ public class ParallelArray<T> implements Iterable<T> {
     public static abstract class WithMapping<T,U>
         extends Params<T> {
         WithMapping(ForkJoinExecutor ex, T[] array,
-                    int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                    int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -643,7 +643,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super U> procedure) {
-            ex.invoke(new FJApply<T,U>(this, fromIndex, toIndex, procedure));
+            ex.invoke(new FJApply<T,U>(this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -657,7 +657,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public U reduce(Reducer<U> reducer, U base) {
             FJReduce<T,U> f =
-                new FJReduce<T,U>(this, fromIndex, toIndex, reducer, base);
+                new FJReduce<T,U>(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -725,7 +725,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(Comparator<? super U> comparator) {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -738,7 +738,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(Comparator<? super U> comparator) {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -752,7 +752,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  (Comparator<? super U>)(RawComparator.cmp), false);
             ex.invoke(f);
             return f.indexResult;
@@ -766,7 +766,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  (Comparator<? super U>)(RawComparator.cmp), true);
             ex.invoke(f);
             return f.indexResult;
@@ -800,6 +800,15 @@ public class ParallelArray<T> implements Iterable<T> {
                                    boolean reverse,
                                    FJMinIndex<T,U> task);
 
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper
+         * applied to current mapper's results
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T, V> withMapping
+            (Mapper<? super U, ? extends V> mapper);
     }
 
     /**
@@ -808,8 +817,8 @@ public class ParallelArray<T> implements Iterable<T> {
      */
     public static abstract class WithFilter<T> extends WithMapping<T,T>{
         WithFilter(ForkJoinExecutor ex, T[] array,
-                   int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                   int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -817,7 +826,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super T> procedure) {
-            ex.invoke(new FJApply<T,T>(this, fromIndex, toIndex, procedure));
+            ex.invoke(new FJApply<T,T>(this, firstIndex, upperBound, procedure));
         }
 
         /**
@@ -828,7 +837,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public T reduce(Reducer<T> reducer, T base) {
             FJReduce<T,T> f =
-                new FJReduce<T,T>(this, fromIndex, toIndex, reducer, base);
+                new FJReduce<T,T>(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -886,7 +895,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(Comparator<? super T> comparator) {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -899,7 +908,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(Comparator<? super T> comparator) {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -913,7 +922,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  (Comparator<? super T>)(RawComparator.cmp), false);
             ex.invoke(f);
             return f.indexResult;
@@ -927,7 +936,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  (Comparator<? super T>)(RawComparator.cmp), true);
             ex.invoke(f);
             return f.indexResult;
@@ -955,7 +964,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void replaceWithTransform
             (Mapper<? super T, ? extends T> mapper) {
-            ex.invoke(new FJTransform<T>(this, fromIndex, toIndex, mapper));
+            ex.invoke(new FJTransform<T>(this, firstIndex, upperBound, mapper));
         }
 
         abstract void leafTransform
@@ -968,7 +977,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void replaceWithMappedIndex
             (MapperFromInt<? extends T> mapper) {
-            ex.invoke(new FJIndexMap<T>(this, fromIndex, toIndex, mapper));
+            ex.invoke(new FJIndexMap<T>(this, firstIndex, upperBound, mapper));
         }
 
         abstract void leafIndexMap
@@ -982,7 +991,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public void replaceWithGeneratedValue
             (Generator<? extends T> generator) {
             ex.invoke(new FJGenerate<T>
-                      (this, fromIndex, toIndex, generator));
+                      (this, firstIndex, upperBound, generator));
         }
 
         abstract void leafGenerate
@@ -993,7 +1002,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param value the value
          */
         public void replaceWithValue(T value) {
-            ex.invoke(new FJFill<T>(this, fromIndex, toIndex, value));
+            ex.invoke(new FJFill<T>(this, firstIndex, upperBound, value));
         }
 
         abstract void leafFill(int lo, int hi, T value);
@@ -1004,7 +1013,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param other the other array
          * @param combiner the combiner
          * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>toIndex</tt> elements.
+         * fewer than <tt>upperBound</tt> elements.
          */
         public void replaceWithCombination(ParallelArray<? extends T> other,
                                            Reducer<T> combiner) {
@@ -1017,14 +1026,14 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param other the other array
          * @param combiner the combiner
          * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>toIndex</tt> elements.
+         * fewer than <tt>upperBound</tt> elements.
          */
         public void replaceWithCombination(T[] other,
                                            Reducer<T> combiner) {
-            if (other.length < toIndex)
+            if (other.length < upperBound)
                 throw new ArrayIndexOutOfBoundsException();
             ex.invoke(new FJCombineInPlace<T>
-                      (this, fromIndex, toIndex, other, combiner));
+                      (this, firstIndex, upperBound, other, combiner));
         }
 
         abstract void leafCombineInPlace
@@ -1074,16 +1083,16 @@ public class ParallelArray<T> implements Iterable<T> {
      */
     public static final class WithBounds<T> extends WithFilter<T> {
         WithBounds(ForkJoinExecutor ex, T[] array,
-                   int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
-            if (fromIndex > toIndex)
+                   int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
+            if (firstIndex > upperBound)
                 throw new IllegalArgumentException
-                    ("fromIndex(" + fromIndex +
-                     ") > toIndex(" + toIndex+")");
-            if (fromIndex < 0)
-                throw new ArrayIndexOutOfBoundsException(fromIndex);
-            if (toIndex > array.length)
-                throw new ArrayIndexOutOfBoundsException(toIndex);
+                    ("firstIndex(" + firstIndex +
+                     ") > upperBound(" + upperBound+")");
+            if (firstIndex < 0)
+                throw new ArrayIndexOutOfBoundsException(firstIndex);
+            if (upperBound > array.length)
+                throw new ArrayIndexOutOfBoundsException(upperBound);
         }
 
         WithBounds(ForkJoinExecutor ex, T[] array) {
@@ -1099,7 +1108,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public WithFilter<T> withFilter(Predicate<? super T> selector) {
             return new WithBoundedFilter<T>
-                (ex, array, fromIndex, toIndex, selector);
+                (ex, array, firstIndex, upperBound, selector);
         }
 
         /**
@@ -1111,7 +1120,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public <U> WithMapping<T, U> withMapping
             (Mapper<? super T, ? extends U> mapper) {
             return new WithBoundedMapping<T,U>
-                (ex, array, fromIndex,toIndex, mapper);
+                (ex, array, firstIndex,upperBound, mapper);
         }
 
         /**
@@ -1123,7 +1132,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public WithDoubleMapping<T> withMapping
             (MapperToDouble<? super T> mapper) {
             return new WithBoundedDoubleMapping<T>
-                (ex, array, fromIndex, toIndex, mapper);
+                (ex, array, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1135,7 +1144,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public WithLongMapping<T> withMapping
             (MapperToLong<? super T> mapper) {
             return new WithBoundedLongMapping<T>
-                (ex, array, fromIndex, toIndex, mapper);
+                (ex, array, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1147,7 +1156,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public WithIntMapping<T> withMapping
             (MapperToInt<? super T> mapper) {
             return new WithBoundedIntMapping<T>
-                (ex, array, fromIndex, toIndex, mapper);
+                (ex, array, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1156,7 +1165,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return index of matching element, or -1 if none.
          */
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         /**
@@ -1165,7 +1174,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return matching element, or null if none.
          */
         public T any() {
-            return (fromIndex < toIndex)? array[fromIndex] : null;
+            return (firstIndex < upperBound)? array[firstIndex] : null;
         }
 
         /**
@@ -1183,8 +1192,8 @@ public class ParallelArray<T> implements Iterable<T> {
              Combiner<? super T, ? super U, ? extends V> combiner) {
             if (other.length < array.length)
                 throw new ArrayIndexOutOfBoundsException();
-            V[] dest = (V[])new Object[toIndex];
-            ex.invoke(new FJCombine<T,U,V>(this, fromIndex, toIndex,
+            V[] dest = (V[])new Object[upperBound];
+            ex.invoke(new FJCombine<T,U,V>(this, firstIndex, upperBound,
                                            other, dest, combiner));
             return new ParallelArray<V>(ex, dest);
         }
@@ -1207,8 +1216,8 @@ public class ParallelArray<T> implements Iterable<T> {
             if (other.length < array.length)
                 throw new ArrayIndexOutOfBoundsException();
             V[] dest = (V[])
-                java.lang.reflect.Array.newInstance(elementType, toIndex);
-            ex.invoke(new FJCombine<T,U,V>(this, fromIndex, toIndex,
+                java.lang.reflect.Array.newInstance(elementType, upperBound);
+            ex.invoke(new FJCombine<T,U,V>(this, firstIndex, upperBound,
                                            other, dest, combiner));
             return new ParallelArray<V>(ex, dest);
         }
@@ -1254,10 +1263,10 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public ParallelArray<T> newArray() {
             // For now, avoid copyOf so people can compile with Java5
-            int size = toIndex - fromIndex;
+            int size = upperBound - firstIndex;
             T[] dest = (T[])java.lang.reflect.Array.newInstance
                 (array.getClass().getComponentType(), size);
-            System.arraycopy(array, fromIndex, dest, 0, size);
+            System.arraycopy(array, firstIndex, dest, 0, size);
             return new ParallelArray<T>(ex, dest);
         }
 
@@ -1268,10 +1277,10 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return a new ParallelArray holding elements
          */
         public ParallelArray<T> newArray(Class<? super T> elementType) {
-            int size = toIndex - fromIndex;
+            int size = upperBound - firstIndex;
             T[] dest = (T[])java.lang.reflect.Array.newInstance
                 (elementType, size);
-            System.arraycopy(array, fromIndex, dest, 0, size);
+            System.arraycopy(array, firstIndex, dest, 0, size);
             return new ParallelArray<T>(ex, dest);
         }
 
@@ -1280,7 +1289,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return the number of elements within bounds
          */
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
 
         /**
@@ -1291,11 +1300,11 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void cumulate(Reducer<T> reducer, T base) {
             FJCumulateOp<T> op = new FJCumulateOp<T>
-                (ex, array, fromIndex, toIndex, reducer, base);
-            if (op.granularity >= toIndex - fromIndex)
-                op.sumAndCumulateLeaf(fromIndex, toIndex);
+                (ex, array, firstIndex, upperBound, reducer, base);
+            if (op.granularity >= upperBound - firstIndex)
+                op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
-                FJScan<T> r = new FJScan<T>(null, op, fromIndex, toIndex);
+                FJScan<T> r = new FJScan<T>(null, op, firstIndex, upperBound);
                 ex.invoke(r);
             }
         }
@@ -1310,11 +1319,11 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public T precumulate(Reducer<T> reducer, T base) {
             FJPrecumulateOp<T> op = new FJPrecumulateOp<T>
-                (ex, array, fromIndex, toIndex, reducer, base);
-            if (op.granularity >= toIndex - fromIndex)
-                return op.sumAndCumulateLeaf(fromIndex, toIndex);
+                (ex, array, firstIndex, upperBound, reducer, base);
+            if (op.granularity >= upperBound - firstIndex)
+                return op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
-                FJScan<T> r = new FJScan<T>(null, op, fromIndex, toIndex);
+                FJScan<T> r = new FJScan<T>(null, op, firstIndex, upperBound);
                 ex.invoke(r);
                 return r.out;
             }
@@ -1328,10 +1337,10 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param cmp the comparator to use
          */
         public void sort(Comparator<? super T> cmp) {
-            int n = toIndex - fromIndex;
+            int n = upperBound - firstIndex;
             T[] ws = (T[])java.lang.reflect.Array.
-                newInstance(array.getClass().getComponentType(), toIndex);
-            ex.invoke(new FJSorter<T>(cmp, array, ws, fromIndex,
+                newInstance(array.getClass().getComponentType(), upperBound);
+            ex.invoke(new FJSorter<T>(cmp, array, ws, firstIndex,
                                       n, granularity));
         }
 
@@ -1347,10 +1356,10 @@ public class ParallelArray<T> implements Iterable<T> {
             if (!Comparable.class.isAssignableFrom(tclass))
                 sort((Comparator<? super T>)(RawComparator.cmp));
             Comparable[] ca = (Comparable[])array;
-            int n = toIndex - fromIndex;
+            int n = upperBound - firstIndex;
             Comparable[] ws = (Comparable[])java.lang.reflect.Array.
                 newInstance(tclass, n);
-            ex.invoke(new FJComparableSorter(ca, ws, fromIndex,
+            ex.invoke(new FJComparableSorter(ca, ws, firstIndex,
                                              n, granularity));
         }
 
@@ -1423,40 +1432,40 @@ public class ParallelArray<T> implements Iterable<T> {
     static final class WithBoundedFilter<T> extends WithFilter<T> {
         final Predicate<? super T> selector;
         WithBoundedFilter(ForkJoinExecutor ex, T[] array,
-                          int fromIndex, int toIndex,
+                          int firstIndex, int upperBound,
                           Predicate<? super T> selector) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
         }
 
         public <U> WithMapping<T, U> withMapping
             (Mapper<? super T, ? extends U> mapper) {
             return new WithBoundedFilteredMapping<T,U>
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public WithDoubleMapping<T> withMapping
             (MapperToDouble<? super T> mapper) {
             return new WithBoundedFilteredDoubleMapping<T>
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public WithLongMapping<T> withMapping
             (MapperToLong<? super T> mapper) {
             return new WithBoundedFilteredLongMapping<T>
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public WithIntMapping<T> withMapping
             (MapperToInt<? super T> mapper) {
             return new WithBoundedFilteredIntMapping<T>
-                (ex, array, fromIndex, toIndex, selector, mapper);
+                (ex, array, firstIndex, upperBound, selector, mapper);
         }
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny<T> f =
-                new FJSelectAny<T>(this, fromIndex, toIndex,
+                new FJSelectAny<T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -1487,7 +1496,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         public int size() {
             FJCountAll<T> f = new FJCountAll<T>
-                (this, fromIndex, toIndex, selector);
+                (this, firstIndex, upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -1588,42 +1597,42 @@ public class ParallelArray<T> implements Iterable<T> {
     static final class WithBoundedMapping<T,U> extends WithMapping<T,U> {
         final Mapper<? super T, ? extends U> mapper;
         WithBoundedMapping(ForkJoinExecutor ex, T[] array,
-                           int fromIndex, int toIndex,
+                           int firstIndex, int upperBound,
                            Mapper<? super T, ? extends U> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelArray<U> newArray() {
-            int n = toIndex - fromIndex;
+            int n = upperBound - firstIndex;
             U[] dest = (U[])new Object[n];
             FJMap<T,U> f =
-                new FJMap<T,U>(this, fromIndex, toIndex, dest, mapper);
+                new FJMap<T,U>(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelArray<U>(ex, dest);
         }
 
         public ParallelArray<U> newArray(Class<? super U> elementType) {
-            int n = toIndex - fromIndex;
+            int n = upperBound - firstIndex;
             U[] dest = (U[])
                 java.lang.reflect.Array.newInstance(elementType, n);
             FJMap<T,U> f =
-                new FJMap<T,U>(this, fromIndex, toIndex, dest, mapper);
+                new FJMap<T,U>(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelArray<U>(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
 
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         public U any() {
-            return (fromIndex < toIndex)?
-                mapper.map(array[fromIndex]) : null;
+            return (firstIndex < upperBound)?
+                mapper.map(array[firstIndex]) : null;
         }
 
         void leafApply(int lo, int hi, Procedure<? super U>  procedure) {
@@ -1662,6 +1671,14 @@ public class ParallelArray<T> implements Iterable<T> {
             task.result = best;
             task.indexResult = bestIndex;
         }
+
+        public <V> WithMapping<T, V> withMapping
+            (Mapper<? super U, ? extends V> mapper) {
+            return new WithBoundedMapping<T,V>
+            (ex, array, 0, array.length, 
+             new CompoundMapper<T,U,V>(this.mapper, mapper));
+        }
+
     }
 
     static final class WithBoundedFilteredMapping<T,U>
@@ -1669,10 +1686,10 @@ public class ParallelArray<T> implements Iterable<T> {
         final Predicate<? super T> selector;
         final Mapper<? super T, ? extends U> mapper;
         WithBoundedFilteredMapping(ForkJoinExecutor ex, T[] array,
-                                   int fromIndex, int toIndex,
+                                   int firstIndex, int upperBound,
                                    Predicate<? super T> selector,
                                    Mapper<? super T, ? extends U> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -1694,7 +1711,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         public int size() {
             FJCountAll<T> f = new FJCountAll<T>
-                (this, fromIndex, toIndex, selector);
+                (this, firstIndex, upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -1702,7 +1719,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny<T> f =
-                new FJSelectAny<T>(this, fromIndex, toIndex,
+                new FJSelectAny<T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -1741,7 +1758,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void leafRefMap(int lo, int hi,
                         U[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -1770,6 +1787,12 @@ public class ParallelArray<T> implements Iterable<T> {
             task.result = best;
             task.indexResult = bestIndex;
         }
+        public <V> WithMapping<T, V> withMapping
+            (Mapper<? super U, ? extends V> mapper) {
+            return new WithBoundedMapping<T,V>
+            (ex, array, 0, array.length, 
+             new CompoundMapper<T,U,V>(this.mapper, mapper));
+        }
     }
 
     /**
@@ -1779,8 +1802,8 @@ public class ParallelArray<T> implements Iterable<T> {
     public static abstract class WithDoubleMapping<T>
         extends Params<T> {
         WithDoubleMapping(ForkJoinExecutor ex, T[] array,
-                          int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                          int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -1789,7 +1812,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void apply(DoubleProcedure procedure) {
             ex.invoke(new FJDoubleApply<T>
-                      (this, fromIndex, toIndex, procedure));
+                      (this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -1804,7 +1827,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public double reduce(DoubleReducer reducer, double base) {
             FJDoubleReduce<T> f =
                 new FJDoubleReduce<T>
-                (this, fromIndex, toIndex, reducer, base);
+                (this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -1831,21 +1854,21 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         /**
-         * Returns the maximum element, or Double.MIN_VALUE if empty
-         * @return maximum element, or Double.MIN_VALUE if empty
+         * Returns the maximum element, or -Double.MAX_VALUE if empty
+         * @return maximum element, or -Double.MAX_VALUE if empty
          */
         public double max() {
-            return reduce(NaturalDoubleMaxReducer.max, Double.MIN_VALUE);
+            return reduce(NaturalDoubleMaxReducer.max, -Double.MAX_VALUE);
         }
 
         /**
-         * Returns the maximum element, or Double.MIN_VALUE if empty
+         * Returns the maximum element, or -Double.MAX_VALUE if empty
          * @param comparator the comparator
-         * @return maximum element, or Double.MIN_VALUE if empty
+         * @return maximum element, or -Double.MAX_VALUE if empty
          */
         public double max(DoubleComparator comparator) {
             return reduce(new DoubleMaxReducer(comparator),
-                          Double.MIN_VALUE);
+                          -Double.MAX_VALUE);
         }
 
         /**
@@ -1863,7 +1886,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalDoubleComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -1876,7 +1899,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalDoubleComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -1890,7 +1913,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(DoubleComparator comparator) {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -1903,7 +1926,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(DoubleComparator comparator) {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -1948,22 +1971,22 @@ public class ParallelArray<T> implements Iterable<T> {
         extends WithDoubleMapping<T> {
         final MapperToDouble<? super T> mapper;
         WithBoundedDoubleMapping(ForkJoinExecutor ex, T[] array,
-                                 int fromIndex, int toIndex,
+                                 int firstIndex, int upperBound,
                                  MapperToDouble<? super T> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelDoubleArray newArray() {
-            double[] dest = new double[toIndex - fromIndex];
+            double[] dest = new double[upperBound - firstIndex];
             FJDoubleMap<T> f =
-                new FJDoubleMap<T>(this, fromIndex, toIndex, dest, mapper);
+                new FJDoubleMap<T>(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelDoubleArray(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
 
         void leafApply(int lo, int hi, DoubleProcedure procedure) {
@@ -1973,7 +1996,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void leafMap(int lo, int hi,
                      double[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -1992,7 +2015,7 @@ public class ParallelArray<T> implements Iterable<T> {
                           DoubleComparator comparator,
                           boolean reverse,
                           FJDoubleMinIndex<T> task) {
-            double best = reverse? Double.MIN_VALUE : Double.MAX_VALUE;
+            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
             int bestIndex = -1;
             for (int i = lo; i < hi; ++i) {
                 double x = mapper.map(array[i]);
@@ -2011,13 +2034,13 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         public double any() {
-            if (fromIndex >= toIndex)
+            if (firstIndex >= upperBound)
                 throw new NoSuchElementException();
-            return mapper.map(array[fromIndex]);
+            return mapper.map(array[firstIndex]);
         }
 
 
@@ -2029,10 +2052,10 @@ public class ParallelArray<T> implements Iterable<T> {
         final MapperToDouble<? super T> mapper;
         WithBoundedFilteredDoubleMapping
             (ForkJoinExecutor ex, T[] array,
-             int fromIndex, int toIndex,
+             int firstIndex, int upperBound,
              Predicate<? super T> selector,
              MapperToDouble<? super T> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -2045,7 +2068,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         public int size() {
             FJCountAll<T> f = new FJCountAll<T>
-                (this, fromIndex, toIndex, selector);
+                (this, firstIndex, upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -2081,7 +2104,7 @@ public class ParallelArray<T> implements Iterable<T> {
                           DoubleComparator comparator,
                           boolean reverse,
                           FJDoubleMinIndex<T> task) {
-            double best = reverse? Double.MIN_VALUE : Double.MAX_VALUE;
+            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
             int bestIndex = -1;
             for (int i = lo; i < hi; ++i) {
                 T t = array[i];
@@ -2105,7 +2128,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny<T> f =
-                new FJSelectAny<T>(this, fromIndex, toIndex,
+                new FJSelectAny<T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -2128,8 +2151,8 @@ public class ParallelArray<T> implements Iterable<T> {
     public static abstract class WithLongMapping<T>
         extends Params<T> {
         WithLongMapping(ForkJoinExecutor ex, T[] array,
-                        int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                        int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -2138,7 +2161,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void apply(LongProcedure procedure) {
             ex.invoke(new FJLongApply<T>
-                      (this, fromIndex, toIndex, procedure));
+                      (this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -2153,7 +2176,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public long reduce(LongReducer reducer, long base) {
             FJLongReduce<T> f =
-                new FJLongReduce<T>(this, fromIndex, toIndex, reducer, base);
+                new FJLongReduce<T>(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -2212,7 +2235,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalLongComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -2225,7 +2248,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalLongComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -2239,7 +2262,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(LongComparator comparator) {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2252,7 +2275,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(LongComparator comparator) {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2297,22 +2320,22 @@ public class ParallelArray<T> implements Iterable<T> {
         extends WithLongMapping<T> {
         final MapperToLong<? super T> mapper;
         WithBoundedLongMapping(ForkJoinExecutor ex, T[] array,
-                               int fromIndex, int toIndex,
+                               int firstIndex, int upperBound,
                                MapperToLong<? super T> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelLongArray newArray() {
-            long[] dest = new long[toIndex - fromIndex];
+            long[] dest = new long[upperBound - firstIndex];
             FJLongMap<T> f =
-                new FJLongMap<T>(this, fromIndex, toIndex, dest, mapper);
+                new FJLongMap<T>(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelLongArray(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
         void leafApply(int lo, int hi, LongProcedure procedure) {
             for (int i = lo; i < hi; ++i)
@@ -2322,7 +2345,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void leafMap(int lo, int hi,
                      long[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -2358,13 +2381,13 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         public long any() {
-            if (fromIndex >= toIndex)
+            if (firstIndex >= upperBound)
                 throw new NoSuchElementException();
-            return mapper.map(array[fromIndex]);
+            return mapper.map(array[firstIndex]);
         }
 
     }
@@ -2375,10 +2398,10 @@ public class ParallelArray<T> implements Iterable<T> {
         final MapperToLong<? super T> mapper;
         WithBoundedFilteredLongMapping
             (ForkJoinExecutor ex, T[] array,
-             int fromIndex, int toIndex,
+             int firstIndex, int upperBound,
              Predicate<? super T> selector,
              MapperToLong<? super T> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -2390,8 +2413,8 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public int size() {
-            FJCountAll<T> f = new FJCountAll<T>(this, fromIndex,
-                                                toIndex, selector);
+            FJCountAll<T> f = new FJCountAll<T>(this, firstIndex,
+                                                upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -2450,7 +2473,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny<T> f =
-                new FJSelectAny<T>(this, fromIndex, toIndex,
+                new FJSelectAny<T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -2471,8 +2494,8 @@ public class ParallelArray<T> implements Iterable<T> {
     public static abstract class WithIntMapping<T>
         extends Params<T> {
         WithIntMapping(ForkJoinExecutor ex, T[] array,
-                       int fromIndex, int toIndex) {
-            super(ex, array, fromIndex, toIndex);
+                       int firstIndex, int upperBound) {
+            super(ex, array, firstIndex, upperBound);
         }
 
         /**
@@ -2481,7 +2504,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void apply(IntProcedure procedure) {
             ex.invoke(new FJIntApply<T>
-                      (this, fromIndex, toIndex, procedure));
+                      (this, firstIndex, upperBound, procedure));
         }
 
         abstract void leafApply(int lo, int hi,
@@ -2495,7 +2518,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int reduce(IntReducer reducer, int base) {
             FJIntReduce<T> f =
-                new FJIntReduce<T>(this, fromIndex, toIndex, reducer, base);
+                new FJIntReduce<T>(this, firstIndex, upperBound, reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -2554,7 +2577,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalIntComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -2567,7 +2590,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, fromIndex, toIndex,
+                (this, firstIndex, upperBound,
                  NaturalIntComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -2581,7 +2604,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(IntComparator comparator) {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, fromIndex, toIndex, comparator, false);
+                (this, firstIndex, upperBound, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2594,7 +2617,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(IntComparator comparator) {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, fromIndex, toIndex, comparator, true);
+                (this, firstIndex, upperBound, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2638,26 +2661,26 @@ public class ParallelArray<T> implements Iterable<T> {
         extends WithIntMapping<T> {
         final MapperToInt<? super T> mapper;
         WithBoundedIntMapping(ForkJoinExecutor ex, T[] array,
-                              int fromIndex, int toIndex,
+                              int firstIndex, int upperBound,
                               MapperToInt<? super T> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
         public ParallelIntArray newArray() {
-            int[] dest = new int[toIndex - fromIndex];
+            int[] dest = new int[upperBound - firstIndex];
             FJIntMap<T> f =
-                new FJIntMap<T>(this, fromIndex, toIndex, dest, mapper);
+                new FJIntMap<T>(this, firstIndex, upperBound, dest, mapper);
             ex.invoke(f);
             return new ParallelIntArray(ex, dest);
         }
 
         public int size() {
-            return toIndex - fromIndex;
+            return upperBound - firstIndex;
         }
         void leafMap(int lo, int hi,
                      int[] dest) {
-            int k = lo - fromIndex;
+            int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -2697,13 +2720,13 @@ public class ParallelArray<T> implements Iterable<T> {
             task.indexResult = bestIndex;
         }
         public int anyIndex() {
-            return (fromIndex < toIndex)? fromIndex : -1;
+            return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         public int any() {
-            if (fromIndex >= toIndex)
+            if (firstIndex >= upperBound)
                 throw new NoSuchElementException();
-            return mapper.map(array[fromIndex]);
+            return mapper.map(array[firstIndex]);
         }
 
     }
@@ -2714,10 +2737,10 @@ public class ParallelArray<T> implements Iterable<T> {
         final MapperToInt<? super T> mapper;
         WithBoundedFilteredIntMapping
             (ForkJoinExecutor ex, T[] array,
-             int fromIndex, int toIndex,
+             int firstIndex, int upperBound,
              Predicate<? super T> selector,
              MapperToInt<? super T> mapper) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
@@ -2729,8 +2752,8 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public int size() {
-            FJCountAll<T> f = new FJCountAll<T>(this, fromIndex,
-                                                toIndex, selector);
+            FJCountAll<T> f = new FJCountAll<T>(this, firstIndex,
+                                                upperBound, selector);
             ex.invoke(f);
             return f.result;
         }
@@ -2790,7 +2813,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
             FJSelectAny<T> f =
-                new FJSelectAny<T>(this, fromIndex, toIndex,
+                new FJSelectAny<T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -2915,7 +2938,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void leafMap(int l, int h) {
             T[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -3205,7 +3228,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void  leafCombine(int l, int h) {
             T[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = combiner.combine(array[i], other[i]);
         }
@@ -3395,7 +3418,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void leafMap(int l, int h) {
             T[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -3582,7 +3605,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void leafMap(int l, int h) {
             T[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -3771,7 +3794,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void leafMap(int l, int h) {
             T[] array = params.array;
-            int k = l - params.fromIndex;
+            int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
@@ -4029,7 +4052,7 @@ public class ParallelArray<T> implements Iterable<T> {
 
         protected final void compute() {
             FJSelectAll<T> r = new FJSelectAll<T>
-                (this, params.fromIndex, params.toIndex);
+                (this, params.firstIndex, params.upperBound);
             r.compute();
             createResults(r.nmatches);
             phase = 1;
@@ -4598,10 +4621,10 @@ public class ParallelArray<T> implements Iterable<T> {
         final T base;
 
         FJScanOp(ForkJoinExecutor ex, T[] array,
-                 int fromIndex, int toIndex,
+                 int firstIndex, int upperBound,
                  Reducer<T> reducer,
                  T base) {
-            super(ex, array, fromIndex, toIndex);
+            super(ex, array, firstIndex, upperBound);
             this.reducer = reducer;
             this.base = base;
         }
@@ -4614,15 +4637,15 @@ public class ParallelArray<T> implements Iterable<T> {
 
     static final class FJCumulateOp<T> extends FJScanOp<T> {
         FJCumulateOp(ForkJoinExecutor ex, T[] array,
-                     int fromIndex, int toIndex,
+                     int firstIndex, int upperBound,
                      Reducer<T> reducer,
                      T base) {
-            super(ex, array, fromIndex, toIndex, reducer, base);
+            super(ex, array, firstIndex, upperBound, reducer, base);
         }
 
         T sumLeaf(int lo, int hi) {
             T sum = base;
-            if (hi != toIndex) {
+            if (hi != upperBound) {
                 for (int i = lo; i < hi; ++i)
                     sum = reducer.combine(sum, array[i]);
             }
@@ -4645,10 +4668,10 @@ public class ParallelArray<T> implements Iterable<T> {
 
     static final class FJPrecumulateOp<T> extends FJScanOp<T> {
         FJPrecumulateOp(ForkJoinExecutor ex, T[] array,
-                        int fromIndex, int toIndex,
+                        int firstIndex, int upperBound,
                         Reducer<T> reducer,
                         T base) {
-            super(ex, array, fromIndex, toIndex, reducer, base);
+            super(ex, array, firstIndex, upperBound, reducer, base);
         }
 
         T sumLeaf(int lo, int hi) {
@@ -4700,7 +4723,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * main phase bit. When false, segments compute only their sum.
      * When true, they cumulate array elements. CUMULATE is set at
      * root at beginning of second pass and then propagated down. But
-     * it may also be set earlier for subtrees with lo==fromIndex (the
+     * it may also be set earlier for subtrees with lo==firstIndex (the
      * left spine of tree). SUMMED is a one bit join count. For leafs,
      * set when summed. For internal nodes, becomes true when one
      * child is summed.  When second child finishes summing, it then
@@ -4773,7 +4796,7 @@ public class ParallelArray<T> implements Iterable<T> {
                         return;
                     if ((b & CUMULATE) != 0)
                         cb = FINISHED;
-                    else if (lo == op.fromIndex) // combine leftmost
+                    else if (lo == op.firstIndex) // combine leftmost
                         cb = (SUMMED|FINISHED);
                     else
                         cb = SUMMED;
@@ -4807,7 +4830,7 @@ public class ParallelArray<T> implements Iterable<T> {
                         par.out = op.reducer.combine(par.left.out,
                                                      par.right.out);
                         int refork = ((pb & CUMULATE) == 0 &&
-                                      par.lo == op.fromIndex)? CUMULATE : 0;
+                                      par.lo == op.firstIndex)? CUMULATE : 0;
                         int nextPhase = pb|cb|refork;
                         if (pb == nextPhase ||
                             phaseUpdater.compareAndSet(par, pb, nextPhase)) {

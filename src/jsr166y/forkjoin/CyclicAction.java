@@ -83,7 +83,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
      * Always returns null.
      * @return null
      */
-    public final Void getResult() { 
+    public final Void rawResult() { 
         return null; 
     }
 

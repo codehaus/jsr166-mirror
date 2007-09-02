@@ -51,7 +51,7 @@ public class Ops {
      * returning those of type U
      */
     public static interface Mapper<T, U> {
-        public U map(T u);
+        public U map(T t);
     }
 
     /**
@@ -63,14 +63,14 @@ public class Ops {
     }
 
     /**
-     * A specialized Combiner that is associative and accepts pairs of
+     * A specialized combiner that is associative and accepts pairs of
      * objects of the same type and returning one of the same
      * type. Like for example, an addition operation, a Reducer must
      * be (left) associative: combine(a, combine(b, c)) should have
      * the same result as combine(conbine(a, b), c).
      */
     public static interface Reducer<T> extends Combiner<T, T, T> {
-        public T combine(T u, T v); 
+        public T combine(T t, T v); 
     }
 
     /**
@@ -88,155 +88,145 @@ public class Ops {
     }
 
     /**
-     *  A Mapper returning an int
+     *  A mapper returning an int
      */
     public static interface MapperToInt<T> {
         public int map(T t);
     }
 
     /**
-     * A Mapper returning a double
+     * A mapper returning a double
      */
     public static interface MapperToDouble<T> {
         public double map(T t);
     }
 
     /**
-     * A Mapper returning a long
+     * A mapper returning a long
      */
     public static interface MapperToLong<T> {
         public long map(T t);
     }
 
     /**
-     * A Mapper accepting an int
+     * A mapper accepting an int
      */
     public static interface MapperFromInt<T> {
         public T map(int t);
     }
 
     /**
-     * A Mapper accepting a double
+     * A mapper accepting a double
      */
     public static interface MapperFromDouble<T> {
         public T map(double t);
     }
 
     /**
-     * A Mapper accepting a long argument
+     * A mapper accepting a long argument
      */
     public static interface MapperFromLong<T> {
         public T map(long t);
     }
 
-    /** A Generator of doubles */
+    /** A generator of doubles */
     public static interface DoubleGenerator { 
         public double generate();               
     }
 
-    /** A Procedure accepting a double */
+    /** A procedure accepting a double */
     public static interface DoubleProcedure {
         public void apply(double t);
     }
 
     /**
-     * A Mapper accepting a double argument and returning an int
+     * A mapper accepting a double argument and returning an int
      */
     public static interface MapperFromDoubleToInt {
         public int map(double t);
     }
 
     /**
-     * A Mapper accepting a double argument and returning a long
+     * A mapper accepting a double argument and returning a long
      */
     public static interface MapperFromDoubleToLong {
         public long map(double t);
     }
 
     /**
-     * A Mapper accepting a double argument and returning a double
+     * A mapper accepting a double argument and returning a double
      */
     public static interface MapperFromDoubleToDouble {
         public double map(double t);
     }
 
-    /** A Transformer accepting and returing doubles */
-    public static interface DoubleTransformer extends MapperFromDoubleToDouble{
-        public double map(double u);
-    }
-
-    /** A Reducer accepting and returning doubles */
+    /** A reducer accepting and returning doubles */
     public static interface DoubleReducer {
         public double combine(double u, double v);
     }
 
-    /** A Predicate accepting a double argument */
+    /** A predicate accepting a double argument */
     public static interface DoublePredicate {
         public boolean evaluate(double t);
     }
 
-    /** A RelationalPredicate accepting double arguments */
+    /** A relationalPredicate accepting double arguments */
     public static interface DoubleRelationalPredicate {
         public boolean evaluate(double t, double u);
     }
 
-    /** A Generator of longs */
+    /** A generator of longs */
     public static interface LongGenerator { 
         public long generate();               
     }
 
-    /** A Procedure accepting a long */
+    /** A procedure accepting a long */
     public static interface LongProcedure {
         public void apply(long t);
     }
 
     /**
-     * A Mapper accepting a long argument and returning an int
+     * A mapper accepting a long argument and returning an int
      */
     public static interface MapperFromLongToInt {
         public int map(long t);
     }
 
     /**
-     * A Mapper accepting a long argument and returning a double
+     * A mapper accepting a long argument and returning a double
      */
     public static interface MapperFromLongToDouble {
         public double map(long t);
     }
 
     /**
-     * A Mapper accepting a long argument and returning a long
+     * A mapper accepting a long argument and returning a long
      */
     public static interface MapperFromLongToLong {
         public long map(long t);
     }
 
-    /** A Transformer accepting and returning longs */
-    public static interface LongTransformer extends MapperFromLongToLong {
-        public long map(long u);
-    }
-
-    /** A Reducer accepting and returning longs */
+    /** A reducer accepting and returning longs */
     public static interface LongReducer {
         public long combine(long u, long v);
     }
 
-    /** A Predicate accepting a long argument */
+    /** A predicate accepting a long argument */
     public static interface LongPredicate {
         public boolean evaluate(long t);
     }
 
-    /** A RelationalPredicate accepting long arguments */
+    /** A relationalPredicate accepting long arguments */
     public static interface LongRelationalPredicate {
         public boolean evaluate(long t, long u);
     }
 
-    /** A Generator of ints */
+    /** A generator of ints */
     public static interface IntGenerator { 
         public int generate();               
     }
 
-    /** A Procedure accepting an int */
+    /** A procedure accepting an int */
     public static interface IntProcedure {
         public void apply(int t);
     }
@@ -246,37 +236,32 @@ public class Ops {
         public int map(int u);
     }
 
-    /** A Transformer accepting and returning ints */
-    public static interface IntTransformer extends MapperFromIntToInt {
-        public int map(int u);
-    }
-
     /**
-     * A Mapper accepting an int argument and returning a long
+     * A mapper accepting an int argument and returning a long
      */
     public static interface MapperFromIntToLong {
         public long map(int t);
     }
 
     /**
-     * A Mapper accepting an int argument and returning a double
+     * A mapper accepting an int argument and returning a double
      */
     public static interface MapperFromIntToDouble {
         public double map(int t);
     }
 
 
-    /** A Reducer accepting and returning ints */
+    /** A reducer accepting and returning ints */
     public static interface IntReducer {
         public int combine(int u, int v);
     }
 
-    /** A Predicate accepting an int */
+    /** A predicate accepting an int */
     public static interface IntPredicate {
         public boolean evaluate(int t);
     }
 
-    /** A RelationalPredicate accepting int arguments */
+    /** A relationalPredicate accepting int arguments */
     public static interface IntRelationalPredicate {
         public boolean evaluate(int t, int u);
     }
@@ -349,7 +334,7 @@ public class Ops {
     }
 
     /**
-     * A Reducer returning the maximum of two Comparable elements,
+     * A reducer returning the maximum of two Comparable elements,
      * treating null as less than any non-null element.
      */
     public static final class 
@@ -367,7 +352,7 @@ public class Ops {
     }
 
     /**
-     * A Reducer returning the minimum of two Comparable elements,
+     * A reducer returning the minimum of two Comparable elements,
      * treating null as less than any non-null element.
      */
     public static final class 
@@ -385,7 +370,7 @@ public class Ops {
     }
     
     /**
-     * A Reducer returning the maximum of two elements, using the
+     * A reducer returning the maximum of two elements, using the
      * given comparator, and treating null as less than any non-null
      * element.
      */
@@ -401,7 +386,7 @@ public class Ops {
     }
     
     /**
-     * A Reducer returning the minimum of two elements, using the
+     * A reducer returning the minimum of two elements, using the
      * given comparator, and treating null as greater than any non-null
      * element.
      */
@@ -629,6 +614,22 @@ public class Ops {
         }
     }
 
-
+    /**
+     * A composite mapper that applies a second mapper to the results
+     * of applying the first one
+     */
+    public static final class CompoundMapper<T,U,V> implements Mapper<T,V>{
+        final Mapper<? super T, ? extends U> first;
+        final Mapper<? super U, ? extends V> second;
+        public CompoundMapper
+            (Mapper<? super T, ? extends U> first,
+             Mapper<? super U, ? extends V> second) {
+            this.first = first;
+            this.second = second;
+        }
+        /** Returns <tt>second.map(first.map(t))</tt> */
+        public V map(T t) { return second.map(first.map(t)); }
+    }
+        
 
 }

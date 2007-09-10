@@ -238,7 +238,7 @@ public class ScheduledThreadPoolExecutor
         public boolean cancel(boolean mayInterruptIfRunning) {
             boolean cancelled = super.cancel(mayInterruptIfRunning);
             if (cancelled && removeOnCancel && heapIndex >= 0)
-                remove(this); 
+                remove(this);
             return cancelled;
         }
 
@@ -452,7 +452,7 @@ public class ScheduledThreadPoolExecutor
         if (delay < 0) delay = 0;
         long triggerTime = now() + unit.toNanos(delay);
         RunnableScheduledFuture<?> t = decorateTask(command,
-            new ScheduledFutureTask<Boolean>(command, null, triggerTime));
+            new ScheduledFutureTask<Void>(command, null, triggerTime));
         delayedExecute(t);
         return t;
     }
@@ -514,7 +514,7 @@ public class ScheduledThreadPoolExecutor
         if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
         RunnableScheduledFuture<?> t = decorateTask(command,
-            new ScheduledFutureTask<Boolean>(command,
+            new ScheduledFutureTask<Void>(command,
                                              null,
                                              triggerTime,
                                              unit.toNanos(-delay)));
@@ -638,11 +638,10 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Sets the policy on whether to cancellation of a a task should
-     * remove it from the work queue.  This value is
-     * by default {@code false}.
+     * Sets the policy on whether cancellation of a task should remove
+     * it from the work queue.  This value is by default {@code false}.
      *
-     * @param value if {@code true}, remove on cancellation, else don't.
+     * @param value if {@code true}, remove on cancellation, else don't
      * @see #getRemoveOnCancelPolicy
      */
     public void setRemoveOnCancelPolicy(boolean value) {
@@ -650,11 +649,10 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Gets the policy on whether to cancellation of a a task should
-     * remove it from the work queue.
-     * This value is by default {@code false}.
+     * Gets the policy on whether cancellation of a task should remove
+     * it from the work queue.  This value is by default {@code false}.
      *
-     * @return {@code true} if cancelled tasks are removed from the queue.
+     * @return {@code true} if cancelled tasks are removed from the queue
      * @see #setRemoveOnCancelPolicy
      */
     public boolean getRemoveOnCancelPolicy() {
@@ -716,7 +714,7 @@ public class ScheduledThreadPoolExecutor
     /**
      * Specialized delay queue. To mesh with TPE declarations, this
      * class must be declared as a BlockingQueue<Runnable> even though
-     * it can only hold RunnableScheduledFutures
+     * it can only hold RunnableScheduledFutures.
      */
     static class DelayedWorkQueue extends AbstractQueue<Runnable>
         implements BlockingQueue<Runnable> {
@@ -753,7 +751,7 @@ public class ScheduledThreadPoolExecutor
 
 
         /**
-         * Set f's heapIndex if it is a ScheduledFutureTask
+         * Set f's heapIndex if it is a ScheduledFutureTask.
          */
         private void setIndex(Object f, int idx) {
             if (f instanceof ScheduledFutureTask)
@@ -761,7 +759,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Sift element added at bottom up to its heap-ordered spot
+         * Sift element added at bottom up to its heap-ordered spot.
          * Call only when holding lock.
          */
         private void siftUp(int k, RunnableScheduledFuture key) {
@@ -779,13 +777,13 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Sift element added at top down to its heap-ordered spot
+         * Sift element added at top down to its heap-ordered spot.
          * Call only when holding lock.
          */
         private void siftDown(int k, RunnableScheduledFuture key) {
-            int half = size >>> 1;        
+            int half = size >>> 1;
             while (k < half) {
-                int child = (k << 1) + 1; 
+                int child = (k << 1) + 1;
                 RunnableScheduledFuture c = queue[child];
                 int right = child + 1;
                 if (right < size && c.compareTo(queue[right]) > 0)
@@ -880,8 +878,8 @@ public class ScheduledThreadPoolExecutor
             return s;
         }
 
-        public boolean isEmpty() { 
-            return size() == 0; 
+        public boolean isEmpty() {
+            return size() == 0;
         }
 
         public int remainingCapacity() {
@@ -938,7 +936,7 @@ public class ScheduledThreadPoolExecutor
         public boolean offer(Runnable e, long timeout, TimeUnit unit) {
             return offer(e);
         }
-        
+
         public RunnableScheduledFuture poll() {
             final ReentrantLock lock = this.lock;
             lock.lock();
@@ -946,7 +944,7 @@ public class ScheduledThreadPoolExecutor
                 RunnableScheduledFuture first = queue[0];
                 if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
                     return null;
-                else 
+                else
                     return finishPoll(first);
             } finally {
                 lock.unlock();
@@ -959,13 +957,13 @@ public class ScheduledThreadPoolExecutor
             try {
                 for (;;) {
                     RunnableScheduledFuture first = queue[0];
-                    if (first == null) 
+                    if (first == null)
                         available.await();
                     else {
                         long delay =  first.getDelay(TimeUnit.NANOSECONDS);
                         if (delay > 0)
                             available.awaitNanos(delay);
-                        else 
+                        else
                             return finishPoll(first);
                     }
                 }
@@ -974,7 +972,7 @@ public class ScheduledThreadPoolExecutor
             }
         }
 
-        public RunnableScheduledFuture poll(long timeout, TimeUnit unit) 
+        public RunnableScheduledFuture poll(long timeout, TimeUnit unit)
             throws InterruptedException {
             long nanos = unit.toNanos(timeout);
             final ReentrantLock lock = this.lock;
@@ -996,7 +994,7 @@ public class ScheduledThreadPoolExecutor
                                 delay = nanos;
                             long timeLeft = available.awaitNanos(delay);
                             nanos -= delay - timeLeft;
-                        } else 
+                        } else
                             return finishPoll(first);
                     }
                 }
@@ -1028,7 +1026,7 @@ public class ScheduledThreadPoolExecutor
          */
         private RunnableScheduledFuture pollExpired() {
             RunnableScheduledFuture first = queue[0];
-            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0) 
+            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
                 return null;
             setIndex(first, -1);
             int s = --size;
@@ -1121,7 +1119,7 @@ public class ScheduledThreadPoolExecutor
         public Iterator<Runnable> iterator() {
             return new Itr(toArray());
         }
-        
+
         /**
          * Snapshot iterator that works off copy of underlying q array.
          */
@@ -1129,23 +1127,23 @@ public class ScheduledThreadPoolExecutor
             final Object[] array; // Array of all elements
             int cursor;           // index of next element to return;
             int lastRet;          // index of last element, or -1 if no such
-            
+
             Itr(Object[] array) {
                 lastRet = -1;
                 this.array = array;
             }
-            
+
             public boolean hasNext() {
                 return cursor < array.length;
             }
-            
+
             public Runnable next() {
                 if (cursor >= array.length)
                     throw new NoSuchElementException();
                 lastRet = cursor;
                 return (Runnable)array[cursor++];
             }
-            
+
             public void remove() {
                 if (lastRet < 0)
                     throw new IllegalStateException();

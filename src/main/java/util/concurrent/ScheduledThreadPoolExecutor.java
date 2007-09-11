@@ -21,7 +21,7 @@ import java.util.*;
  * without any real-time guarantees about when, after they are
  * enabled, they will commence. Tasks scheduled for exactly the same
  * execution time are enabled in first-in-first-out (FIFO) order of
- * submission. If {@link #setRemoveOnCancelPolicy} is set {@code true}
+ * submission. If {@link #setRemoveOnCancelPolicy} is set {@code true},
  * cancelled tasks are automatically removed from the work queue.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
@@ -643,6 +643,7 @@ public class ScheduledThreadPoolExecutor
      *
      * @param value if {@code true}, remove on cancellation, else don't
      * @see #getRemoveOnCancelPolicy
+     * @since 1.7
      */
     public void setRemoveOnCancelPolicy(boolean value) {
         removeOnCancel = value;
@@ -654,6 +655,7 @@ public class ScheduledThreadPoolExecutor
      *
      * @return {@code true} if cancelled tasks are removed from the queue
      * @see #setRemoveOnCancelPolicy
+     * @since 1.7
      */
     public boolean getRemoveOnCancelPolicy() {
         return removeOnCancel;

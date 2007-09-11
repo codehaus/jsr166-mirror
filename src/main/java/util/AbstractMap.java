@@ -1,5 +1,5 @@
 /*
- * Copyright 1997-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright 1997-2007 Sun Microsystems, Inc.  All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -340,6 +340,14 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 		    return AbstractMap.this.size();
 		}
 
+		public boolean isEmpty() {
+		    return AbstractMap.this.isEmpty();
+		}
+
+		public void clear() {
+		    AbstractMap.this.clear();
+		}
+
 		public boolean contains(Object k) {
 		    return AbstractMap.this.containsKey(k);
 		}
@@ -386,6 +394,14 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 
 		public int size() {
 		    return AbstractMap.this.size();
+		}
+
+		public boolean isEmpty() {
+		    return AbstractMap.this.isEmpty();
+		}
+
+		public void clear() {
+		    AbstractMap.this.clear();
 		}
 
 		public boolean contains(Object v) {

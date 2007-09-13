@@ -44,6 +44,10 @@
   <property name="build.jsr166xlib.dir"        location="${build.dir}/jsr166xlib"/>
   <property name="build.jsr166xjavadocs.dir"   location="${build.dir}/jsr166xjavadocs"/>
 
+  <property name="build.jsr166y.dir"    location="${build.dir}/jsr166y"/>
+  <property name="build.jsr166ylib.dir"        location="${build.dir}/jsr166ylib"/>
+  <property name="build.jsr166yjavadocs.dir"   location="${build.dir}/jsr166yjavadocs"/>
+
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
   <property name="test.src.dir"         location="${basedir}/src/test"/>
@@ -57,14 +61,17 @@
   <property name="dist.dir"             location="${basedir}/dist"/>
   <property name="topsrc.dir"           location="${basedir}/src"/>
   <property name="jsr166xsrc.dir"       location="${basedir}/src/jsr166x"/>
+  <property name="jsr166ysrc.dir"       location="${basedir}/src/jsr166y"/>
 
   <!-- Distribution locations -->
   <property name="dist.javadocs.dir"    location="${dist.dir}/docs"/>
   <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
+  <property name="dist.jsr166yjavadocs.dir"    location="${dist.dir}/jsr166ydocs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
   <property name="jsr166xproduct.jar"   location="${build.jsr166xlib.dir}/jsr166x.jar"/>
+  <property name="jsr166yproduct.jar"   location="${build.jsr166ylib.dir}/jsr166y.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
   <property name="concurrent.jar"       location="${lib.dir}/concurrent.jar"/>
 
@@ -111,6 +118,8 @@
              fork="true">
 
       <include name="**/*.java"/>
+      <compilerarg value="-XDignore.symbol.file"/>
+
 <!--
       <exclude name="java/lang/**"/>
       <compilerarg line="${build.args}"/>
@@ -150,7 +159,7 @@
     <mkdir dir="${build.javadocs.dir}"/>
 
     <javadoc destdir="${build.javadocs.dir}"
-                link="http://java.sun.com/j2se/1.5.0/docs/api"
+                link="http://java.sun.com/javase/6/docs/api/"
             overview="${src.dir}/intro.html"
             sourcepath="${src.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
     >           
@@ -258,19 +267,29 @@
     <mkdir dir="${dist.javadocs.dir}"/>
 
     <javadoc destdir="${dist.javadocs.dir}"
-              link="http://java.sun.com/j2se/1.5.0/docs/api"
+            link="http://java.sun.com/javase/6/docs/api/"
             overview="${src.dir}/intro.html"
 
             sourcepath="${src.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
      >
+<!--
       <packageset dir="${src.dir}" defaultexcludes="yes">
       <include name="java/util/concurrent"/>
       <include name="java/util/concurrent/atomic"/>
       <include name="java/util/concurrent/locks"/>
       </packageset>
+-->
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">
+      <include name="main/java/util/concurrent/*.java"/>
+      <include name="main/java/util/concurrent/atomic/*.java"/>
+      <include name="main/java/util/concurrent/locks/*.java"/>
       <include name="main/java/util/*.java"/>
+<!--
+      <include name="main/java/util/concurrent/*.html"/>
+      <include name="main/java/util/concurrent/atomic/*.html"/>
+      <include name="main/java/util/concurrent/locks/*.html"/>
       <include name="main/java/util/*.html"/>
+-->
 <!--      <include name="jsr166x/*.java"/> -->
       </fileset>
     </javadoc>
@@ -1011,7 +1030,8 @@
     <mkdir dir="${build.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
-                link="http://java.sun.com/j2se/1.5.0/docs/api/"
+             link="http://java.sun.com/javase/6/docs/api/"
+
             sourcepath="${jsr166xsrc.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
 
     >
@@ -1055,7 +1075,7 @@
     <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166xjavadocs.dir}"
-                link="http://java.sun.com/j2se/1.5.0/docs/api/"
+                link="http://java.sun.com/javase/6/docs/api/"
               source="${build.sourcelevel}">
 
       <packageset dir="${topsrc.dir}" defaultexcludes="yes">
@@ -1070,6 +1090,115 @@
           depends="jsr166xclean, jsr166xjar">
 
     <copy file="${jsr166xproduct.jar}" todir="${dist.dir}"/>
+
+  </target>
+
+  <!-- jsr166y -->
+
+
+  <target name="jsr166ycompile"
+          depends="init, configure-compiler"
+          description="Compiles jsr166y sources">
+
+    <mkdir dir="${build.jsr166y.dir}"/>
+
+    <javac srcdir="${jsr166ysrc.dir}"
+          destdir="${build.jsr166y.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="${build.sourcelevel}"
+             fork="true">
+
+      <include name="**/*.java"/>
+      <compilerarg line="${build.args}"/>
+      <compilerarg value="${bootclasspath.args}"/>
+
+<!--       <compilerarg line="-Xlint -Xmaxwarns 1000"/> -->
+
+    </javac>
+
+  </target>
+
+
+
+  <target name="jsr166yjar"
+          depends="jsr166ycompile"
+          description="Builds library jar from compiled sources">
+
+    <mkdir dir="${build.jsr166ylib.dir}"/>
+
+    <jar destfile="${jsr166yproduct.jar}">
+      <fileset dir="${build.jsr166y.dir}"/>
+    </jar>
+
+  </target>
+
+
+
+  <target name="jsr166ydocs"
+          description="Builds javadocs with custom tags to build folder">
+
+    <delete dir="${build.jsr166yjavadocs.dir}"/>
+    <mkdir dir="${build.jsr166yjavadocs.dir}"/>
+
+    <javadoc destdir="${build.jsr166yjavadocs.dir}"
+                link="http://java.sun.com/javase/6/docs/api/"
+            sourcepath="${jsr166ysrc.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+
+    >
+      <packageset dir="${topsrc.dir}" defaultexcludes="no">
+      <include name="jsr166y"/>
+      </packageset>
+
+
+    </javadoc>
+
+  </target>
+
+
+  <target name="jsr166ydist"
+          depends="jsr166ydist-clean, jsr166ydist-jar, jsr166ydist-docs"
+          description="Puts all distributable products in single hierarchy"/>
+
+
+
+  <target name="jsr166yclean"
+          description="Removes all build products">
+
+    <delete dir="${build.jsr166y.dir}"/>
+    <delete dir="${build.jsr166ylib.dir}"/>
+
+  </target>
+
+
+
+  <target name="jsr166ydist-clean"
+          description="Removes all build and distribution products">
+
+  </target>
+
+  <target name="jsr166ydist-docs"
+          description="Builds javadocs without custom tags to dist folder">
+
+    <delete dir="${dist.jsr166yjavadocs.dir}"/>
+    <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
+
+    <javadoc destdir="${dist.jsr166yjavadocs.dir}"
+                link="http://java.sun.com/javase/6/docs/api/"
+              source="${build.sourcelevel}">
+      <fileset dir="${topsrc.dir}" defaultexcludes="yes">
+      <include name="jsr166y/*.java"/>
+      <include name="jsr166y/forkjoin/*.java"/>
+            </fileset>
+    </javadoc>
+
+  </target>
+
+  <target name="jsr166ydist-jar"
+          depends="jsr166yclean, jsr166yjar">
+
+    <copy file="${jsr166yproduct.jar}" todir="${dist.dir}"/>
 
   </target>
 

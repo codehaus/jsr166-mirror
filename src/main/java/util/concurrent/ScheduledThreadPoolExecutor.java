@@ -145,8 +145,10 @@ public class ScheduledThreadPoolExecutor
 
         /** Sequence number to break ties FIFO */
         private final long sequenceNumber;
+
         /** The time the task is enabled to execute in nanoTime units */
         private long time;
+
         /**
          * Period in nanoseconds for repeating tasks.  A positive
          * value indicates fixed-rate execution.  A negative value
@@ -154,6 +156,9 @@ public class ScheduledThreadPoolExecutor
          * non-repeating task.
          */
         private final long period;
+
+	/** The actual task to be re-enqueued by reExecutePeriodic */
+	RunnableScheduledFuture<V> outerTask = this;
 
         /**
          * Index into delay queue, to support faster cancellation.
@@ -253,7 +258,7 @@ public class ScheduledThreadPoolExecutor
                 ScheduledFutureTask.super.run();
             else if (ScheduledFutureTask.super.runAndReset()) {
                 setNextRunTime();
-                reExecutePeriodic(this);
+                reExecutePeriodic(outerTask);
             }
         }
     }
@@ -489,11 +494,13 @@ public class ScheduledThreadPoolExecutor
             throw new IllegalArgumentException();
         if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
-        RunnableScheduledFuture<?> t = decorateTask(command,
-            new ScheduledFutureTask<Object>(command,
-                                            null,
-                                            triggerTime,
-                                            unit.toNanos(period)));
+	ScheduledFutureTask<Void> sft =
+	    new ScheduledFutureTask<Void>(command,
+					  null,
+					  triggerTime,
+					  unit.toNanos(period));
+        RunnableScheduledFuture<Void> t = decorateTask(command, sft);
+	sft.outerTask = t;
         delayedExecute(t);
         return t;
     }
@@ -513,11 +520,13 @@ public class ScheduledThreadPoolExecutor
             throw new IllegalArgumentException();
         if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
-        RunnableScheduledFuture<?> t = decorateTask(command,
-            new ScheduledFutureTask<Void>(command,
-                                             null,
-                                             triggerTime,
-                                             unit.toNanos(-delay)));
+	ScheduledFutureTask<Void> sft =
+	    new ScheduledFutureTask<Void>(command,
+					  null,
+					  triggerTime,
+					  unit.toNanos(-delay));
+        RunnableScheduledFuture<Void> t = decorateTask(command, sft);
+	sft.outerTask = t;
         delayedExecute(t);
         return t;
     }

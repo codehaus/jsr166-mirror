@@ -31,9 +31,11 @@ public class IntMapReduceDemo {
     // sample functions
     static final class NextRand implements MapperFromIntToInt {
         public int map(int seed) {
-            seed ^= seed >>> 3; 
-            seed ^= (seed << 10);
-            return seed;
+            int x = seed;
+            x ^= x << 13; 
+            x ^= x >>> 7; 
+            x ^= (x << 17);
+            return x;
         }
     }
     
@@ -41,10 +43,12 @@ public class IntMapReduceDemo {
 
     static final class Accum implements IntReducer {
         public int combine(int x, int y) {
-            for (int i = 0; i < (1 << 10); ++i) {
-                x = 36969 * (x & 65535) + (x >> 16);
-                y =  y * 134775813 + 1;
-            }
+            y ^= y << 6; 
+            y ^= y >>> 21; 
+            y ^= (y << 7);
+            x ^= x << 6; 
+            x ^= x >>> 21; 
+            x ^= (x << 7);
             return x + y;
         }
     }
@@ -55,7 +59,8 @@ public class IntMapReduceDemo {
     static final long NPS = (1000L * 1000 * 1000);
 
     public static void main(String[] args) throws Exception {
-        int n = 1 << 21;
+        int n = 1 << 20;
+        int reps = 1 << 8;
         int[] array = new int[n];
         ForkJoinPool fjp = new ForkJoinPool(1);
         ParallelIntArray pa = new ParallelIntArray(fjp, array);
@@ -65,26 +70,42 @@ public class IntMapReduceDemo {
         double elapsed;
         last = System.nanoTime();
         int sum = 0;
-        for (int k = 0; k < 3; ++k) {
+        for (int j = 0; j < 2; ++j) {
             pa.randomFill();
-            sum += seqMapReduce(array, nextRand, accum, zero);
+            for (int k = 0; k < reps; ++k) {
+                sum += seqMapReduce(array, nextRand, accum, zero);
+                array[k] = sum;
+            }
             now = System.nanoTime();
             elapsed = (double)(now - last) / NPS;
             last = now;
-            System.out.printf("seq:    %7.3f\n", elapsed);
-        }
-
-        for (int i = 1; i <= NCPU; i <<= 1) {
-            fjp.setPoolSize(i);
-            pa.randomFill();
-            last = System.nanoTime();
-            for (int k = 0; k < 3; ++k) {
-                sum += pa.withMapping(nextRand).reduce(accum, zero);
+            System.out.printf("sequential:    %7.3f\n", elapsed);
+            
+            for (int i = 2; i <= NCPU; i <<= 1) {
+                fjp.setPoolSize(i);
+                last = System.nanoTime();
+                for (int k = 0; k < reps; ++k) {
+                    sum += pa.withMapping(nextRand).reduce(accum, zero);
+                    array[k] = sum;
+                }
                 now = System.nanoTime();
                 elapsed = (double)(now - last) / NPS;
                 last = now;
-                System.out.printf("ps %2d:  %7.3f\n", i, elapsed);
+                System.out.printf("poolSize %3d:  %7.3f\n", i, elapsed);
             }
+            for (int i = NCPU; i >= 1; i >>>= 1) {
+                fjp.setPoolSize(i);
+                last = System.nanoTime();
+                for (int k = 0; k < reps; ++k) {
+                    sum += pa.withMapping(nextRand).reduce(accum, zero);
+                    array[k] = sum;
+                }
+                now = System.nanoTime();
+                elapsed = (double)(now - last) / NPS;
+                last = now;
+                System.out.printf("poolSize %3d:  %7.3f\n", i, elapsed);
+            }
+
         }
         fjp.shutdown();
         if (sum == 0) System.out.print(" ");

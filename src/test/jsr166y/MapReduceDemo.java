@@ -38,10 +38,12 @@ public class MapReduceDemo {
         public Integer combine(Integer a, Integer b) {
             int x = a;
             int y = b;
-            for (int i = 0; i < (1 << 10); ++i) {
-                x = 36969 * (x & 65535) + (x >> 16);
-                y =  y * 134775813 + 1;
-            }
+            x ^= x << 6; 
+            x ^= x >>> 21; 
+            x ^= (x << 7);
+            y ^= y << 6; 
+            y ^= y >>> 21; 
+            y ^= (y << 7);
             return x + y;
         }
     }
@@ -50,36 +52,49 @@ public class MapReduceDemo {
     static final long NPS = (1000L * 1000 * 1000);
 
     public static void main(String[] args) throws Exception {
-        int n = 1 << 21;
+        int n = 1 << 18;
+        int reps = 1 << 8;
         Rand[] array = new Rand[n];
         for (int i = 0; i < n; ++i) 
-            array[i] = new Rand(i);
+            array[i] = new Rand(i+1);
+        ForkJoinPool fjp = new ForkJoinPool(1);
+        ParallelArray<Rand> pa = new ParallelArray<Rand>(fjp, array);
         final Ops.Mapper<Rand, Integer> getNext = new GetNext();
         final Ops.Reducer<Integer> accum = new Accum();
         final Integer zero = 0;
         long last, now;
         double elapsed;
-        last = System.nanoTime();
         int sum = 0;
-        for (int k = 0; k < 2; ++k) {
-            sum += seqMapReduce(array, getNext, accum, zero);
+        for (int j = 0; j < 2; ++j) {
+            last = System.nanoTime();
+            for (int k = 0; k < reps; ++k) {
+                sum += seqMapReduce(array, getNext, accum, zero);
+            }
             now = System.nanoTime();
             elapsed = (double)(now - last) / NPS;
             last = now;
-            System.out.printf("seq:    %7.3f\n", elapsed);
-        }
-        Thread.sleep(100);
-        ForkJoinPool fjp = new ForkJoinPool(1);
-        ParallelArray<Rand> pa = new ParallelArray<Rand>(fjp, array);
-        for (int i = 1; i <= NCPU; i <<= 1) {
-            fjp.setPoolSize(i);
-            last = System.nanoTime();
-            for (int k = 0; k < 2; ++k) {
-                sum += pa.withMapping(getNext).reduce(accum, zero);
+            System.out.printf("sequential:    %7.3f\n", elapsed);
+            for (int i = 2; i <= NCPU; i <<= 1) {
+                fjp.setPoolSize(i);
+                last = System.nanoTime();
+                for (int k = 0; k < reps; ++k) {
+                    sum += pa.withMapping(getNext).reduce(accum, zero);
+                }
                 now = System.nanoTime();
                 elapsed = (double)(now - last) / NPS;
                 last = now;
-                System.out.printf("ps %2d:  %7.3f\n", i, elapsed);
+                System.out.printf("poolSize %3d:  %7.3f\n", i, elapsed);
+            }
+            for (int i = NCPU; i >= 1; i >>>= 1) {
+                fjp.setPoolSize(i);
+                last = System.nanoTime();
+                for (int k = 0; k < reps; ++k) {
+                    sum += pa.withMapping(getNext).reduce(accum, zero);
+                }
+                now = System.nanoTime();
+                elapsed = (double)(now - last) / NPS;
+                last = now;
+                System.out.printf("poolSize %3d:  %7.3f\n", i, elapsed);
             }
         }
         fjp.shutdownNow();
@@ -89,21 +104,20 @@ public class MapReduceDemo {
     }
 
     /**
-     * Unsynchronized version of java.util.Random algorithm.
+     * Xorshift Random algorithm.
      */
     public static final class Rand {
-        private final static long multiplier = 0x5DEECE66DL;
-        private final static long addend = 0xBL;
-        private final static long mask = (1L << 48) - 1;
-        private long seed;
-
-        Rand(long s) {
+        private int seed;
+        Rand(int s) {
             seed = s;
         }
         public int next() {
-            long nextseed = (seed * multiplier + addend) & mask;
-            seed = nextseed;
-            return ((int)(nextseed >>> 17)) & 0x7FFFFFFF;
+            int x = seed;
+            x ^= x << 13; 
+            x ^= x >>> 7; 
+            x ^= (x << 17);
+            seed = x;
+            return x;
         }
     }
 

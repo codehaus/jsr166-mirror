@@ -8,6 +8,8 @@ package jsr166y.forkjoin;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import sun.misc.Unsafe;
+import java.lang.reflect.*;
 
 /**
  * Abstract base class for tasks that run within a ForkJoinPool.  A
@@ -67,32 +69,6 @@ public abstract class ForkJoinTask<V> {
      * class is mainly responsible for maintaining its exception and
      * status fields.
      */
-
-    /**
-     * Workaround for not being able to rethrow unchecked exceptions.
-     */
-    static final class Rethrower<T extends Throwable> {
-        void rethrow(Throwable ex) throws T { 
-            if (ex != null) {
-                if (ex instanceof RuntimeException)
-                    throw (RuntimeException)ex;
-                else if (ex instanceof Error)
-                    throw (Error)ex;
-                else // exploit erasure
-                    throw (T) ex; 
-            }
-        }
-    }
-
-    /**
-     * Global rethrower
-     */
-    static final Rethrower<Error> rethrower = new Rethrower<Error>();
-
-    static void rethrowException(Throwable ex) {
-        rethrower.rethrow(ex);
-    }
-
 
     /**
      * The exception thrown within compute method, or via cancellation.
@@ -353,5 +329,33 @@ public abstract class ForkJoinTask<V> {
      * statically enforced, this must be a RuntimeException or Error.
      */
     public abstract void finishExceptionally(Throwable ex);
+
+
+    // Temporary Unsafe mechanics for preliminary release
+ 
+    private static Unsafe getUnsafe() {
+        try {
+            if (ForkJoinTask.class.getClassLoader() != null) {
+                Field f = Unsafe.class.getDeclaredField("theUnsafe");
+                f.setAccessible(true);
+                return (Unsafe)f.get(null);
+            }
+            else
+                return Unsafe.getUnsafe();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not initialize intrinsics",
+                                       e);
+        }
+    }
+
+    private static final Unsafe _unsafe = getUnsafe();
+
+    /**
+     * Workaround for not being able to rethrow unchecked exceptions.
+     */
+    static final void rethrowException(Throwable ex) {
+        if (ex != null)
+            _unsafe.throwException(ex);
+    }
 
 }

@@ -604,27 +604,79 @@ public class ParallelArray<T> implements Iterable<T> {
     /**
      * Base of prefix classes
      */
-    static abstract class Params<T> {
+    static abstract class Params<T,U> {
         final ForkJoinExecutor ex;
         final T[] array;
         final int firstIndex;
         final int upperBound;
-        final int granularity;
-        Params(ForkJoinExecutor ex, T[] array, int firstIndex, int upperBound) {
+        Params(ForkJoinExecutor ex, T[] array, 
+               int firstIndex, int upperBound) {
             this.ex = ex;
             this.array = array;
             this.firstIndex = firstIndex;
             this.upperBound = upperBound;
-            this.granularity = defaultGranularity(ex.getParallelismLevel(),
-                                                  upperBound - firstIndex);
         }
 
         /**
-         * default granularity for divide-by-two array tasks.
+         * Divide-and conquer split control. Returns true if subtask
+         * of size n should be split in half. Arranges that there are
+         * at least 2 * ex.getParallelismLevel leaf tasks, but allows
+         * more if there are few stealable tasks.
          */
-        static int defaultGranularity(int threads, int n) {
-            return (threads > 1)? (1 + n / (threads << 3)) : n;
+        final boolean shouldSplit(int n) {
+            int p;
+            if (n < 2 || (p = ex.getParallelismLevel()) < 2)
+                return false;
+            long np = p * (long)n;
+            int half = (upperBound - firstIndex) >>> 1;
+            if (np > half)
+                return true;
+            if (np <= half >>> 8)
+                return false;
+            return ForkJoinWorkerThread.getLocalQueueSize() <= 2;
         }
+        
+        abstract void leafApply(int lo, int hi,
+                                Procedure<? super U> procedure);
+        abstract U leafReduce(int lo, int hi,
+                              Reducer<U> reducer, U base);
+        abstract void leafMinIndex(int lo, int hi,
+                                   Comparator<? super U> comparator,
+                                   boolean reverse,
+                                   FJMinIndex<T,U> task);
+        abstract void leafTransform
+            (int lo, int hi, Mapper<? super T, ? extends T> mapper);
+        abstract void leafIndexMap
+            (int lo, int hi, MapperFromInt<? extends T> mapper);
+        abstract void leafGenerate
+            (int lo, int hi, Generator<? extends T> generator);
+        abstract void leafFill(int lo, int hi, T value);
+        abstract void leafCombineInPlace
+            (int lo, int hi, T[] other, Reducer<T> combiner);
+        abstract void leafApply(int lo, int hi,
+                                DoubleProcedure procedure);
+        abstract double leafReduce
+            (int lo, int hi, DoubleReducer reducer, double base);
+        abstract void leafMinIndex(int lo, int hi,
+                                   DoubleComparator comparator,
+                                   boolean reverse,
+                                   FJDoubleMinIndex<T> task);
+        abstract void leafApply(int lo, int hi,
+                                LongProcedure procedure);
+        abstract long leafReduce(int lo, int hi,
+                                 LongReducer reducer, long base);
+        abstract void leafMinIndex(int lo, int hi,
+                                   LongComparator comparator,
+                                   boolean reverse,
+                                   FJLongMinIndex<T> task);
+        abstract void leafApply(int lo, int hi,
+                                IntProcedure procedure);
+        abstract int leafReduce(int lo, int hi,
+                                IntReducer reducer, int base);
+        abstract void leafMinIndex(int lo, int hi,
+                                   IntComparator comparator,
+                                   boolean reverse,
+                                   FJIntMinIndex<T> task);
     }
 
     /**
@@ -632,7 +684,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * of elements, not to the elements themselves
      */
     public static abstract class WithMapping<T,U>
-        extends Params<T> {
+        extends Params<T,U> {
         WithMapping(ForkJoinExecutor ex, T[] array,
                     int firstIndex, int upperBound) {
             super(ex, array, firstIndex, upperBound);
@@ -643,11 +695,9 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super U> procedure) {
-            ex.invoke(new FJApply<T,U>(this, firstIndex, upperBound, procedure));
+            ex.invoke(new FJApply<T,U>(this, firstIndex, upperBound, null,
+                                       procedure));
         }
-
-        abstract void leafApply(int lo, int hi,
-                                Procedure<? super U> procedure);
 
         /**
          * Returns reduction of mapped elements
@@ -657,13 +707,14 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public U reduce(Reducer<U> reducer, U base) {
             FJReduce<T,U> f =
-                new FJReduce<T,U>(this, firstIndex, upperBound, reducer, base);
-            ex.invoke(f);
+                new FJReduce<T,U>(this, firstIndex, upperBound, null,
+                                  reducer, base);
+            if (ex.getParallelismLevel() < 2)
+                leafReduce(firstIndex, upperBound, reducer, base);
+            else
+                ex.invoke(f);
             return f.result;
         }
-
-        abstract U leafReduce(int lo, int hi,
-                              Reducer<U> reducer, U base);
 
         /**
          * Returns the index of some element matching bound and filter
@@ -725,7 +776,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(Comparator<? super U> comparator) {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, firstIndex, upperBound, comparator, false);
+                (this, firstIndex, upperBound, null, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -738,7 +789,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(Comparator<? super U> comparator) {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, firstIndex, upperBound, comparator, true);
+                (this, firstIndex, upperBound, null, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -752,7 +803,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  (Comparator<? super U>)(RawComparator.cmp), false);
             ex.invoke(f);
             return f.indexResult;
@@ -766,7 +817,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJMinIndex<T,U> f = new FJMinIndex<T,U>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  (Comparator<? super U>)(RawComparator.cmp), true);
             ex.invoke(f);
             return f.indexResult;
@@ -795,11 +846,6 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public abstract int size();
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   Comparator<? super U> comparator,
-                                   boolean reverse,
-                                   FJMinIndex<T,U> task);
-
         /**
          * Returns an operation prefix that causes a method to operate
          * on mapped elements of the array using the given mapper
@@ -809,6 +855,35 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public abstract <V> WithMapping<T, V> withMapping
             (Mapper<? super U, ? extends V> mapper);
+
+
+        void leafApply(int lo, int hi,
+                DoubleProcedure procedure) {}
+        double leafReduce
+            (int lo, int hi, DoubleReducer reducer, double base) { return 0.0; }
+        void leafMinIndex(int lo, int hi,
+                          DoubleComparator comparator,
+                          boolean reverse,
+                          FJDoubleMinIndex<T> task) {}
+        void leafApply(int lo, int hi,
+            LongProcedure procedure) {}
+        
+        long leafReduce(int lo, int hi,
+            LongReducer reducer, long base) { return 0L; }
+        
+        void leafMinIndex(int lo, int hi,
+                          LongComparator comparator,
+                          boolean reverse,
+                          FJLongMinIndex<T> task) {}
+        void leafApply(int lo, int hi,
+                       IntProcedure procedure) {}
+        int leafReduce(int lo, int hi,
+                       IntReducer reducer, int base) { return 0; }
+        void leafMinIndex(int lo, int hi,
+                          IntComparator comparator,
+                          boolean reverse,
+                          FJIntMinIndex<T> task) {}
+
     }
 
     /**
@@ -826,7 +901,8 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super T> procedure) {
-            ex.invoke(new FJApply<T,T>(this, firstIndex, upperBound, procedure));
+            ex.invoke(new FJApply<T,T>(this, firstIndex, upperBound, null,
+                                       procedure));
         }
 
         /**
@@ -837,7 +913,8 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public T reduce(Reducer<T> reducer, T base) {
             FJReduce<T,T> f =
-                new FJReduce<T,T>(this, firstIndex, upperBound, reducer, base);
+                new FJReduce<T,T>(this, firstIndex, upperBound, null,
+                                  reducer, base);
             ex.invoke(f);
             return f.result;
         }
@@ -895,7 +972,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(Comparator<? super T> comparator) {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, firstIndex, upperBound, comparator, false);
+                (this, firstIndex, upperBound, null, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -908,7 +985,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(Comparator<? super T> comparator) {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, firstIndex, upperBound, comparator, true);
+                (this, firstIndex, upperBound, null, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -922,7 +999,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  (Comparator<? super T>)(RawComparator.cmp), false);
             ex.invoke(f);
             return f.indexResult;
@@ -936,7 +1013,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJMinIndex<T,T> f = new FJMinIndex<T,T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  (Comparator<? super T>)(RawComparator.cmp), true);
             ex.invoke(f);
             return f.indexResult;
@@ -964,11 +1041,8 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void replaceWithTransform
             (Mapper<? super T, ? extends T> mapper) {
-            ex.invoke(new FJTransform<T>(this, firstIndex, upperBound, mapper));
+            ex.invoke(new FJTransform<T>(this, firstIndex, upperBound, null, mapper));
         }
-
-        abstract void leafTransform
-            (int lo, int hi, Mapper<? super T, ? extends T> mapper);
 
         /**
          * Replaces elements with the results of applying the given
@@ -977,11 +1051,8 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void replaceWithMappedIndex
             (MapperFromInt<? extends T> mapper) {
-            ex.invoke(new FJIndexMap<T>(this, firstIndex, upperBound, mapper));
+            ex.invoke(new FJIndexMap<T>(this, firstIndex, upperBound, null, mapper));
         }
-
-        abstract void leafIndexMap
-            (int lo, int hi, MapperFromInt<? extends T> mapper);
 
         /**
          * Replaces elements with results of applying the given
@@ -991,21 +1062,16 @@ public class ParallelArray<T> implements Iterable<T> {
         public void replaceWithGeneratedValue
             (Generator<? extends T> generator) {
             ex.invoke(new FJGenerate<T>
-                      (this, firstIndex, upperBound, generator));
+                      (this, firstIndex, upperBound, null, generator));
         }
-
-        abstract void leafGenerate
-            (int lo, int hi, Generator<? extends T> generator);
 
         /**
          * Replaces elements with the given value.
          * @param value the value
          */
         public void replaceWithValue(T value) {
-            ex.invoke(new FJFill<T>(this, firstIndex, upperBound, value));
+            ex.invoke(new FJFill<T>(this, firstIndex, upperBound, null, value));
         }
-
-        abstract void leafFill(int lo, int hi, T value);
 
         /**
          * Replaces elements with results of applying
@@ -1033,11 +1099,8 @@ public class ParallelArray<T> implements Iterable<T> {
             if (other.length < upperBound)
                 throw new ArrayIndexOutOfBoundsException();
             ex.invoke(new FJCombineInPlace<T>
-                      (this, firstIndex, upperBound, other, combiner));
+                      (this, firstIndex, upperBound, null, other, combiner));
         }
-
-        abstract void leafCombineInPlace
-            (int lo, int hi, T[] other, Reducer<T> combiner);
 
         /**
          * Returns an operation prefix that causes a method to operate
@@ -1194,7 +1257,7 @@ public class ParallelArray<T> implements Iterable<T> {
                 throw new ArrayIndexOutOfBoundsException();
             V[] dest = (V[])new Object[upperBound];
             ex.invoke(new FJCombine<T,U,V>(this, firstIndex, upperBound,
-                                           other, dest, combiner));
+                                           null, other, dest, combiner));
             return new ParallelArray<V>(ex, dest);
         }
 
@@ -1218,10 +1281,9 @@ public class ParallelArray<T> implements Iterable<T> {
             V[] dest = (V[])
                 java.lang.reflect.Array.newInstance(elementType, upperBound);
             ex.invoke(new FJCombine<T,U,V>(this, firstIndex, upperBound,
-                                           other, dest, combiner));
+                                           null, other, dest, combiner));
             return new ParallelArray<V>(ex, dest);
         }
-
 
         /**
          * Returns a ParallelArray containing results of
@@ -1301,7 +1363,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public void cumulate(Reducer<T> reducer, T base) {
             FJCumulateOp<T> op = new FJCumulateOp<T>
                 (ex, array, firstIndex, upperBound, reducer, base);
-            if (op.granularity >= upperBound - firstIndex)
+            if (ex.getParallelismLevel() < 2)
                 op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
                 FJScan<T> r = new FJScan<T>(null, op, firstIndex, upperBound);
@@ -1320,7 +1382,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public T precumulate(Reducer<T> reducer, T base) {
             FJPrecumulateOp<T> op = new FJPrecumulateOp<T>
                 (ex, array, firstIndex, upperBound, reducer, base);
-            if (op.granularity >= upperBound - firstIndex)
+            if (ex.getParallelismLevel() < 2)
                 return op.sumAndCumulateLeaf(firstIndex, upperBound);
             else {
                 FJScan<T> r = new FJScan<T>(null, op, firstIndex, upperBound);
@@ -1338,6 +1400,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void sort(Comparator<? super T> cmp) {
             int n = upperBound - firstIndex;
+            int granularity = 1 + n / (ex.getParallelismLevel() << 3);
             T[] ws = (T[])java.lang.reflect.Array.
                 newInstance(array.getClass().getComponentType(), upperBound);
             ex.invoke(new FJSorter<T>(cmp, array, ws, firstIndex,
@@ -1357,6 +1420,7 @@ public class ParallelArray<T> implements Iterable<T> {
                 sort((Comparator<? super T>)(RawComparator.cmp));
             Comparable[] ca = (Comparable[])array;
             int n = upperBound - firstIndex;
+            int granularity = 1 + n / (ex.getParallelismLevel() << 3);
             Comparable[] ws = (Comparable[])java.lang.reflect.Array.
                 newInstance(tclass, n);
             ex.invoke(new FJComparableSorter(ca, ws, firstIndex,
@@ -1464,8 +1528,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny<T> f =
-                new FJSelectAny<T>(this, firstIndex, upperBound,
+            FJSelectAny<T,T> f =
+                new FJSelectAny<T,T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -1479,26 +1543,26 @@ public class ParallelArray<T> implements Iterable<T> {
         public ParallelArray<T> newArray() {
             Class<? super T> elementType =
                 (Class<? super T>)array.getClass().getComponentType();
-            FJPlainRefSelectAllDriver<T> r =
-                new FJPlainRefSelectAllDriver<T>
+            FJPlainRefSelectAllDriver<T,T> r =
+                new FJPlainRefSelectAllDriver<T,T>
                 (this, selector, elementType);
             ex.invoke(r);
             return new ParallelArray<T>(ex, r.results);
         }
 
         public ParallelArray<T> newArray(Class<? super T> elementType) {
-            FJPlainRefSelectAllDriver<T> r =
-                new FJPlainRefSelectAllDriver<T>
+            FJPlainRefSelectAllDriver<T,T> r =
+                new FJPlainRefSelectAllDriver<T,T>
                 (this, selector, elementType);
             ex.invoke(r);
             return new ParallelArray<T>(ex, r.results);
         }
 
         public int size() {
-            FJCountAll<T> f = new FJCountAll<T>
-                (this, firstIndex, upperBound, selector);
+            FJCountAll<T,T> f = new FJCountAll<T,T>
+                (this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
         void leafApply(int lo, int hi, Procedure<? super T>  procedure) {
@@ -1607,7 +1671,8 @@ public class ParallelArray<T> implements Iterable<T> {
             int n = upperBound - firstIndex;
             U[] dest = (U[])new Object[n];
             FJMap<T,U> f =
-                new FJMap<T,U>(this, firstIndex, upperBound, dest, mapper);
+                new FJMap<T,U>(this, firstIndex, upperBound, null,
+                               dest, mapper);
             ex.invoke(f);
             return new ParallelArray<U>(ex, dest);
         }
@@ -1617,7 +1682,8 @@ public class ParallelArray<T> implements Iterable<T> {
             U[] dest = (U[])
                 java.lang.reflect.Array.newInstance(elementType, n);
             FJMap<T,U> f =
-                new FJMap<T,U>(this, firstIndex, upperBound, dest, mapper);
+                new FJMap<T,U>(this, firstIndex, upperBound, null,
+                               dest, mapper);
             ex.invoke(f);
             return new ParallelArray<U>(ex, dest);
         }
@@ -1679,6 +1745,16 @@ public class ParallelArray<T> implements Iterable<T> {
              new CompoundMapper<T,U,V>(this.mapper, mapper));
         }
 
+        void leafTransform
+            (int lo, int hi, Mapper<? super T, ? extends T> mapper) {}
+        void leafIndexMap
+            (int lo, int hi, MapperFromInt<? extends T> mapper) {}
+        void leafGenerate
+            (int lo, int hi, Generator<? extends T> generator) {}
+        void leafFill(int lo, int hi, T value) {}
+        void leafCombineInPlace
+            (int lo, int hi, T[] other, Reducer<T> combiner) {}
+
     }
 
     static final class WithBoundedFilteredMapping<T,U>
@@ -1710,16 +1786,16 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public int size() {
-            FJCountAll<T> f = new FJCountAll<T>
-                (this, firstIndex, upperBound, selector);
+            FJCountAll<T,U> f = new FJCountAll<T,U>
+                (this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny<T> f =
-                new FJSelectAny<T>(this, firstIndex, upperBound,
+            FJSelectAny<T,U> f =
+                new FJSelectAny<T,U>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -1793,6 +1869,17 @@ public class ParallelArray<T> implements Iterable<T> {
             (ex, array, 0, array.length, 
              new CompoundMapper<T,U,V>(this.mapper, mapper));
         }
+
+        void leafTransform
+            (int lo, int hi, Mapper<? super T, ? extends T> mapper) {}
+        void leafIndexMap
+            (int lo, int hi, MapperFromInt<? extends T> mapper) {}
+        void leafGenerate
+            (int lo, int hi, Generator<? extends T> generator) {}
+        void leafFill(int lo, int hi, T value) {}
+        void leafCombineInPlace
+            (int lo, int hi, T[] other, Reducer<T> combiner) {}
+
     }
 
     /**
@@ -1800,7 +1887,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * of elements to doubles, not to the elements themselves
      */
     public static abstract class WithDoubleMapping<T>
-        extends Params<T> {
+        extends Params<T,T> {
         WithDoubleMapping(ForkJoinExecutor ex, T[] array,
                           int firstIndex, int upperBound) {
             super(ex, array, firstIndex, upperBound);
@@ -1812,11 +1899,9 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void apply(DoubleProcedure procedure) {
             ex.invoke(new FJDoubleApply<T>
-                      (this, firstIndex, upperBound, procedure));
+                      (this, firstIndex, upperBound, null, procedure));
         }
 
-        abstract void leafApply(int lo, int hi,
-                                DoubleProcedure procedure);
 
         /**
          * Returns reduction of mapped elements
@@ -1827,13 +1912,10 @@ public class ParallelArray<T> implements Iterable<T> {
         public double reduce(DoubleReducer reducer, double base) {
             FJDoubleReduce<T> f =
                 new FJDoubleReduce<T>
-                (this, firstIndex, upperBound, reducer, base);
+                (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return f.result;
         }
-
-        abstract double leafReduce
-            (int lo, int hi, DoubleReducer reducer, double base);
 
         /**
          * Returns the minimum element, or Double.MAX_VALUE if empty
@@ -1886,7 +1968,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  NaturalDoubleComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -1899,7 +1981,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  NaturalDoubleComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -1913,7 +1995,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(DoubleComparator comparator) {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, firstIndex, upperBound, comparator, false);
+                (this, firstIndex, upperBound, null, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -1926,7 +2008,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(DoubleComparator comparator) {
             FJDoubleMinIndex<T> f = new FJDoubleMinIndex<T>
-                (this, firstIndex, upperBound, comparator, true);
+                (this, firstIndex, upperBound, null, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -1960,11 +2042,43 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public abstract double any();
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   DoubleComparator comparator,
-                                   boolean reverse,
-                                   FJDoubleMinIndex<T> task);
 
+        void leafApply(int lo, int hi,
+            Procedure<? super T> procedure) {}
+        T leafReduce(int lo, int hi,
+                     Reducer<T> reducer, T base) { return null; }
+        void leafMinIndex(int lo, int hi,
+                          Comparator<? super T> comparator,
+                          boolean reverse,
+                          FJMinIndex<T,T> task) {}
+        void leafTransform
+            (int lo, int hi, Mapper<? super T, ? extends T> mapper) {}
+        void leafIndexMap
+            (int lo, int hi, MapperFromInt<? extends T> mapper) {}
+        void leafGenerate
+            (int lo, int hi, Generator<? extends T> generator) {}
+        void leafFill(int lo, int hi, T value) {}
+        void leafCombineInPlace
+            (int lo, int hi, T[] other, Reducer<T> combiner) {}
+
+        void leafApply(int lo, int hi,
+            LongProcedure procedure) {}
+        
+        long leafReduce(int lo, int hi,
+            LongReducer reducer, long base) { return 0L; }
+        
+        void leafMinIndex(int lo, int hi,
+                          LongComparator comparator,
+                          boolean reverse,
+                          FJLongMinIndex<T> task) {}
+        void leafApply(int lo, int hi,
+                       IntProcedure procedure) {}
+        int leafReduce(int lo, int hi,
+                       IntReducer reducer, int base) { return 0; }
+        void leafMinIndex(int lo, int hi,
+                          IntComparator comparator,
+                          boolean reverse,
+                          FJIntMinIndex<T> task) {}
     }
 
     static final class WithBoundedDoubleMapping<T>
@@ -1980,7 +2094,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public ParallelDoubleArray newArray() {
             double[] dest = new double[upperBound - firstIndex];
             FJDoubleMap<T> f =
-                new FJDoubleMap<T>(this, firstIndex, upperBound, dest, mapper);
+                new FJDoubleMap<T>(this, firstIndex, upperBound, null, dest, mapper);
             ex.invoke(f);
             return new ParallelDoubleArray(ex, dest);
         }
@@ -2060,17 +2174,17 @@ public class ParallelArray<T> implements Iterable<T> {
             this.mapper = mapper;
         }
         public ParallelDoubleArray  newArray() {
-            FJDoubleMapSelectAllDriver<T> r =
-                new FJDoubleMapSelectAllDriver<T>(this, selector, mapper);
+            FJDoubleMapSelectAllDriver<T,T> r =
+                new FJDoubleMapSelectAllDriver<T,T>(this, selector, mapper);
             ex.invoke(r);
             return new ParallelDoubleArray(ex, r.results);
         }
 
         public int size() {
-            FJCountAll<T> f = new FJCountAll<T>
-                (this, firstIndex, upperBound, selector);
+            FJCountAll<T,T> f = new FJCountAll<T,T>
+                (this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
         double leafReduce(int lo, int hi,
@@ -2127,8 +2241,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny<T> f =
-                new FJSelectAny<T>(this, firstIndex, upperBound,
+            FJSelectAny<T,T> f =
+                new FJSelectAny<T,T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -2149,7 +2263,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * of elements to longs, not to the elements themselves
      */
     public static abstract class WithLongMapping<T>
-        extends Params<T> {
+        extends Params<T,T> {
         WithLongMapping(ForkJoinExecutor ex, T[] array,
                         int firstIndex, int upperBound) {
             super(ex, array, firstIndex, upperBound);
@@ -2161,12 +2275,8 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void apply(LongProcedure procedure) {
             ex.invoke(new FJLongApply<T>
-                      (this, firstIndex, upperBound, procedure));
+                      (this, firstIndex, upperBound, null, procedure));
         }
-
-        abstract void leafApply(int lo, int hi,
-                                LongProcedure procedure);
-
 
         /**
          * Returns reduction of mapped elements
@@ -2176,13 +2286,10 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public long reduce(LongReducer reducer, long base) {
             FJLongReduce<T> f =
-                new FJLongReduce<T>(this, firstIndex, upperBound, reducer, base);
+                new FJLongReduce<T>(this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return f.result;
         }
-
-        abstract long leafReduce(int lo, int hi,
-                                 LongReducer reducer, long base);
 
         /**
          * Returns the minimum element, or Long.MAX_VALUE if empty
@@ -2235,7 +2342,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  NaturalLongComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -2248,7 +2355,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  NaturalLongComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -2262,7 +2369,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(LongComparator comparator) {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, firstIndex, upperBound, comparator, false);
+                (this, firstIndex, upperBound, null, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2275,7 +2382,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(LongComparator comparator) {
             FJLongMinIndex<T> f = new FJLongMinIndex<T>
-                (this, firstIndex, upperBound, comparator, true);
+                (this, firstIndex, upperBound, null, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2309,10 +2416,41 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public abstract long any();
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   LongComparator comparator,
-                                   boolean reverse,
-                                   FJLongMinIndex<T> task);
+
+        void leafApply(int lo, int hi,
+            Procedure<? super T> procedure) {}
+        T leafReduce(int lo, int hi,
+                     Reducer<T> reducer, T base) { return null; }
+        void leafMinIndex(int lo, int hi,
+                          Comparator<? super T> comparator,
+                          boolean reverse,
+                          FJMinIndex<T,T> task) {}
+        void leafTransform
+            (int lo, int hi, Mapper<? super T, ? extends T> mapper) {}
+        void leafIndexMap
+            (int lo, int hi, MapperFromInt<? extends T> mapper) {}
+        void leafGenerate
+            (int lo, int hi, Generator<? extends T> generator) {}
+        void leafFill(int lo, int hi, T value) {}
+        void leafCombineInPlace
+            (int lo, int hi, T[] other, Reducer<T> combiner) {}
+        void leafApply(int lo, int hi,
+                       DoubleProcedure procedure) {}
+        double leafReduce
+            (int lo, int hi, DoubleReducer reducer, double base) { return 0.0; }
+        void leafMinIndex(int lo, int hi,
+                          DoubleComparator comparator,
+                          boolean reverse,
+                          FJDoubleMinIndex<T> task) {}
+        
+        void leafApply(int lo, int hi,
+                       IntProcedure procedure) {}
+        int leafReduce(int lo, int hi,
+                       IntReducer reducer, int base) { return 0; }
+        void leafMinIndex(int lo, int hi,
+                          IntComparator comparator,
+                          boolean reverse,
+                          FJIntMinIndex<T> task) {}
 
     }
 
@@ -2329,7 +2467,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public ParallelLongArray newArray() {
             long[] dest = new long[upperBound - firstIndex];
             FJLongMap<T> f =
-                new FJLongMap<T>(this, firstIndex, upperBound, dest, mapper);
+                new FJLongMap<T>(this, firstIndex, upperBound, null, dest, mapper);
             ex.invoke(f);
             return new ParallelLongArray(ex, dest);
         }
@@ -2406,17 +2544,18 @@ public class ParallelArray<T> implements Iterable<T> {
             this.mapper = mapper;
         }
         public ParallelLongArray  newArray() {
-            FJLongMapSelectAllDriver<T> r =
-                new FJLongMapSelectAllDriver<T>(this, selector, mapper);
+            FJLongMapSelectAllDriver<T,T> r =
+                new FJLongMapSelectAllDriver<T,T>(this, selector, mapper);
             ex.invoke(r);
             return new ParallelLongArray(ex, r.results);
         }
 
         public int size() {
-            FJCountAll<T> f = new FJCountAll<T>(this, firstIndex,
-                                                upperBound, selector);
+            FJCountAll<T,T> f = 
+                new FJCountAll<T,T>(this, firstIndex, upperBound, 
+                                    null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
         void leafApply(int lo, int hi, LongProcedure procedure) {
@@ -2472,8 +2611,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny<T> f =
-                new FJSelectAny<T>(this, firstIndex, upperBound,
+            FJSelectAny<T,T> f =
+                new FJSelectAny<T,T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -2492,7 +2631,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * of elements to ints, not to the elements themselves
      */
     public static abstract class WithIntMapping<T>
-        extends Params<T> {
+        extends Params<T,T> {
         WithIntMapping(ForkJoinExecutor ex, T[] array,
                        int firstIndex, int upperBound) {
             super(ex, array, firstIndex, upperBound);
@@ -2504,11 +2643,8 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void apply(IntProcedure procedure) {
             ex.invoke(new FJIntApply<T>
-                      (this, firstIndex, upperBound, procedure));
+                      (this, firstIndex, upperBound, null, procedure));
         }
-
-        abstract void leafApply(int lo, int hi,
-                                IntProcedure procedure);
 
         /**
          * Returns reduction of mapped elements
@@ -2518,13 +2654,10 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int reduce(IntReducer reducer, int base) {
             FJIntReduce<T> f =
-                new FJIntReduce<T>(this, firstIndex, upperBound, reducer, base);
+                new FJIntReduce<T>(this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return f.result;
         }
-
-        abstract int leafReduce(int lo, int hi,
-                                IntReducer reducer, int base);
 
         /**
          * Returns the minimum element, or Integer.MAX_VALUE if empty
@@ -2577,7 +2710,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin() {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  NaturalIntComparator.comparator, false);
             ex.invoke(f);
             return f.indexResult;
@@ -2590,7 +2723,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax() {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, firstIndex, upperBound,
+                (this, firstIndex, upperBound, null,
                  NaturalIntComparator.comparator, true);
             ex.invoke(f);
             return f.indexResult;
@@ -2604,7 +2737,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMin(IntComparator comparator) {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, firstIndex, upperBound, comparator, false);
+                (this, firstIndex, upperBound, null, comparator, false);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2617,7 +2750,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOfMax(IntComparator comparator) {
             FJIntMinIndex<T> f = new FJIntMinIndex<T>
-                (this, firstIndex, upperBound, comparator, true);
+                (this, firstIndex, upperBound, null, comparator, true);
             ex.invoke(f);
             return f.indexResult;
         }
@@ -2651,10 +2784,42 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public abstract int any();
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   IntComparator comparator,
-                                   boolean reverse,
-                                   FJIntMinIndex<T> task);
+        void leafApply(int lo, int hi,
+            Procedure<? super T> procedure) {}
+        T leafReduce(int lo, int hi,
+                     Reducer<T> reducer, T base) { return null; }
+        void leafMinIndex(int lo, int hi,
+                          Comparator<? super T> comparator,
+                          boolean reverse,
+                          FJMinIndex<T,T> task) {}
+        void leafTransform
+            (int lo, int hi, Mapper<? super T, ? extends T> mapper) {}
+        void leafIndexMap
+            (int lo, int hi, MapperFromInt<? extends T> mapper) {}
+        void leafGenerate
+            (int lo, int hi, Generator<? extends T> generator) {}
+        void leafFill(int lo, int hi, T value) {}
+        void leafCombineInPlace
+            (int lo, int hi, T[] other, Reducer<T> combiner) {}
+
+        void leafApply(int lo, int hi,
+                DoubleProcedure procedure) {}
+        double leafReduce
+            (int lo, int hi, DoubleReducer reducer, double base) { return 0.0; }
+        void leafMinIndex(int lo, int hi,
+                          DoubleComparator comparator,
+                          boolean reverse,
+                          FJDoubleMinIndex<T> task) {}
+        void leafApply(int lo, int hi,
+            LongProcedure procedure) {}
+        
+        long leafReduce(int lo, int hi,
+            LongReducer reducer, long base) { return 0L; }
+        
+        void leafMinIndex(int lo, int hi,
+                          LongComparator comparator,
+                          boolean reverse,
+                          FJLongMinIndex<T> task) {}
     }
 
     static final class WithBoundedIntMapping<T>
@@ -2670,7 +2835,7 @@ public class ParallelArray<T> implements Iterable<T> {
         public ParallelIntArray newArray() {
             int[] dest = new int[upperBound - firstIndex];
             FJIntMap<T> f =
-                new FJIntMap<T>(this, firstIndex, upperBound, dest, mapper);
+                new FJIntMap<T>(this, firstIndex, upperBound, null, dest, mapper);
             ex.invoke(f);
             return new ParallelIntArray(ex, dest);
         }
@@ -2745,17 +2910,17 @@ public class ParallelArray<T> implements Iterable<T> {
             this.mapper = mapper;
         }
         public ParallelIntArray  newArray() {
-            FJIntMapSelectAllDriver<T> r =
-                new FJIntMapSelectAllDriver<T>(this, selector, mapper);
+            FJIntMapSelectAllDriver<T,T> r =
+                new FJIntMapSelectAllDriver<T,T>(this, selector, mapper);
             ex.invoke(r);
             return new ParallelIntArray(ex, r.results);
         }
 
         public int size() {
-            FJCountAll<T> f = new FJCountAll<T>(this, firstIndex,
-                                                upperBound, selector);
+            FJCountAll<T,T> f = 
+                new FJCountAll<T,T>(this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
         void leafApply(int lo, int hi, IntProcedure procedure) {
@@ -2812,8 +2977,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny<T> f =
-                new FJSelectAny<T>(this, firstIndex, upperBound,
+            FJSelectAny<T,T> f =
+                new FJSelectAny<T,T>(this, firstIndex, upperBound,
                                    selector, result);
             ex.invoke(f);
             return result.get();
@@ -2828,1056 +2993,564 @@ public class ParallelArray<T> implements Iterable<T> {
 
     }
 
-    /*
-     * ForkJoin Implementations. There are a bunch of them,
-     * all just a little different than others.
-     */
-
     /**
-     * ForkJoin tasks for Apply. Like other divide-and-conquer tasks
-     * used for computing ParallelArray operations, rather than pure
-     * recursion, it link right-hand-sides and then joins up the tree,
-     * exploiting cases where tasks aren't stolen.  This generates and
-     * joins tasks with a bit less overhead than pure recursive style.
+     * Base for most FJ divide-and-conquer tasks used for computing
+     * ParallelArray operations. Rather than pure recursion, it links
+     * right-hand-sides and then joins up the tree, exploiting cases
+     * where tasks aren't stolen.  This generates and joins tasks with
+     * a bit less overhead than pure recursive style.
      */
-    static final class FJApply<T,U> extends RecursiveAction {
-        final WithMapping<T,U> params;
+    static abstract class FJBase<T,U> extends RecursiveAction {
+        final Params<T,U> params;
         final int lo;
         final int hi;
-        final Procedure<? super U> procedure;
-        FJApply<T,U> next;
-        FJApply(WithMapping<T,U> params, int lo, int hi,
-                Procedure<? super U> procedure) {
+        FJBase<T,U> next;
+        FJBase(Params<T,U> params, int lo, int hi, FJBase<T,U> next) {
             this.params = params;
             this.lo = lo;
             this.hi = hi;
-            this.procedure = procedure;
+            this.next = next;
         }
-        protected void compute() {
-            FJApply<T,U> right = null;
-            int l = lo;
+
+        abstract FJBase<T,U> createRight(int l, int h, FJBase<T,U> r);
+        abstract void leafAction(int l, int h);
+        abstract void reduceAction(FJBase<T,U> right);
+        
+        protected final void compute() {
+            FJBase<T,U> r = null;
             int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJApply<T,U> r =
-                    new FJApply<T,U>(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
+            while (params.shouldSplit(h - lo)) {
+                int rh = h;
+                h = (lo + h) >>> 1;
+                (r = createRight(h, rh, r)).fork();
             }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
+            leafAction(lo, h);
+            while (r != null) {
+                if (ForkJoinWorkerThread.removeIfNextLocalTask(r))
+                    r.compute();
                 else
-                    right.join();
-                right = right.next;
+                    r.join();
+                reduceAction(r);
+                r = r.next;
             }
         }
     }
 
-    static final class FJReduce<T,U> extends RecursiveAction {
-        final WithMapping<T,U> params;
-        final int lo;
-        final int hi;
+    static final class FJApply<T,U> extends FJBase<T,U> {
+        final Procedure<? super U> procedure;
+        FJApply(Params<T,U> params, int lo, int hi, FJBase<T,U> next,
+                Procedure<? super U> procedure) {
+            super(params, lo, hi, next);
+            this.procedure = procedure;
+        }
+        FJBase<T,U> createRight(int l, int h, FJBase<T,U> r) {
+            return new FJApply<T,U>(params, l, h, r, procedure);
+        }
+        void leafAction(int l, int h) {
+            params.leafApply(l, h, procedure);
+        }
+        void reduceAction(FJBase<T,U> right) {}
+    }
+
+    static final class FJReduce<T,U> extends FJBase<T,U> {
         final Reducer<U> reducer;
         U result;
-        FJReduce<T,U> next;
-        FJReduce(WithMapping<T,U> params, int lo, int hi,
+        FJReduce(Params<T,U> params, int lo, int hi, FJBase<T,U> next,
                  Reducer<U> reducer, U base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.reducer = reducer;
             this.result = base;
         }
-        protected void compute() {
-            FJReduce<T,U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJReduce<T,U> r =
-                    new FJReduce<T,U>(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,U> createRight(int l, int h, FJBase<T,U> r) {
+            return new FJReduce<T,U>(params, l, h, r, reducer, result);
+        }
+        void leafAction(int l, int h) {
             result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
+        }
+        void reduceAction(FJBase<T,U> right) {
+            result = reducer.combine(result, ((FJReduce<T,U>)right).result);
         }
     }
 
-    static final class FJMap<T,U> extends RecursiveAction {
-        final Params<T> params;
+    static final class FJMap<T,U> extends FJBase<T,U> {
         final U[] dest;
         final Mapper<? super T, ? extends U> mapper;
-        final int lo;
-        final int hi;
-        FJMap<T,U> next;
-        FJMap(Params<T> params, int lo, int hi,
-              U[] dest,
-              Mapper<? super T, ? extends U> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        FJMap(Params<T,U> params, int lo, int hi, FJBase<T,U> next,
+              U[] dest, Mapper<? super T, ? extends U> mapper) {
+            super(params, lo, hi, next);
             this.dest = dest;
             this.mapper = mapper;
         }
-
-        void leafMap(int l, int h) {
+        FJBase<T,U> createRight(int l, int h, FJBase<T,U> r) {
+            return new FJMap<T,U>(params, l, h, r, dest, mapper);
+        }
+        void leafAction(int l, int h) {
             T[] array = params.array;
             int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
-
-        protected void compute() {
-            FJMap<T,U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJMap<T,U> r =
-                    new FJMap<T,U>(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
+        void reduceAction(FJBase<T,U> right) {}
     }
 
-    static final class FJTransform<T> extends RecursiveAction {
-        final WithFilter<T> params;
-        final int lo;
-        final int hi;
+    static final class FJTransform<T> extends FJBase<T,T> {
         final Mapper<? super T, ? extends T> mapper;
-        FJTransform<T> next;
-        FJTransform(WithFilter<T> params, int lo, int hi,
+        FJTransform(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                     Mapper<? super T, ? extends T> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.mapper = mapper;
         }
-        protected void compute() {
-            FJTransform<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJTransform<T> r =
-                    new FJTransform<T>(params, mid, h, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJTransform<T>(params, l, h, r, mapper);
+        }
+        void leafAction(int l, int h) {
             params.leafTransform(l, h, mapper);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
         }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJIndexMap<T> extends RecursiveAction {
-        final WithFilter<T> params;
-        final int lo;
-        final int hi;
+    static final class FJIndexMap<T> extends FJBase<T,T> {
         final MapperFromInt<? extends T> mapper;
-        FJIndexMap<T> next;
-        FJIndexMap(WithFilter<T> params, int lo, int hi,
+        FJIndexMap(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                    MapperFromInt<? extends T> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.mapper = mapper;
         }
-        protected void compute() {
-            FJIndexMap<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIndexMap<T> r =
-                    new FJIndexMap<T>(params, mid, h, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafIndexMap(l, h, mapper);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJIndexMap<T>(params, l, h, r, mapper);
         }
+        void leafAction(int l, int h) {
+            params.leafIndexMap(l, h, mapper);
+        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJGenerate<T> extends RecursiveAction {
-        final WithFilter<T> params;
-        final int lo;
-        final int hi;
+    static final class FJGenerate<T> extends FJBase<T,T> {
         final Generator<? extends T> generator;
-        FJGenerate<T> next;
-        FJGenerate(WithFilter<T> params, int lo, int hi,
+        FJGenerate(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                    Generator<? extends T> generator) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.generator = generator;
         }
-        protected void compute() {
-            FJGenerate<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJGenerate<T> r =
-                    new FJGenerate<T>(params, mid, h, generator);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafGenerate(l, h, generator);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJGenerate<T>(params, l, h, r, generator);
         }
+        void leafAction(int l, int h) {
+            params.leafGenerate(l, h, generator);
+        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJFill<T> extends RecursiveAction {
-        final WithFilter<T> params;
-        final int lo;
-        final int hi;
+    static final class FJFill<T> extends FJBase<T,T> {
         final T value;
-        FJFill<T> next;
-        FJFill(WithFilter<T> params, int lo, int hi,
+        FJFill(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                T value) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.value = value;
         }
-        protected void compute() {
-            FJFill<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJFill<T> r =
-                    new FJFill<T>(params, mid, h, value);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafFill(l, h, value);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJFill<T>(params, l, h, r, value);
         }
+        void leafAction(int l, int h) {
+            params.leafFill(l, h, value);
+        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJCombineInPlace<T> extends RecursiveAction {
-        final WithFilter<T> params;
-        final int lo;
-        final int hi;
+    static final class FJCombineInPlace<T> extends FJBase<T,T> {
         final T[] other;
         final Reducer<T> combiner;
-        FJCombineInPlace<T> next;
-        FJCombineInPlace(WithFilter<T> params, int lo, int hi,
+        FJCombineInPlace(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                          T[] other, Reducer<T> combiner) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.other = other;
             this.combiner = combiner;
         }
-        protected void compute() {
-            FJCombineInPlace<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCombineInPlace<T> r =
-                    new FJCombineInPlace<T>(params, mid, h, other, combiner);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafCombineInPlace(l, h, other, combiner);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJCombineInPlace<T>(params, l, h, r, other, combiner);
         }
+        void leafAction(int l, int h) {
+            params.leafCombineInPlace(l, h, other, combiner);
+        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJCountAll<T> extends RecursiveAction {
-        final Params<T> params;
+    static final class FJCountAll<T,U> extends FJBase<T,U> {
         final Predicate<? super T> selector;
-        final int lo;
-        final int hi;
-        int result;
-        FJCountAll<T> next;
-        FJCountAll(Params<T> params, int lo, int hi,
+        int count;
+        FJCountAll(Params<T,U> params, int lo, int hi, FJBase<T,U> next,
                    Predicate<? super T> selector) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.selector = selector;
         }
-        protected void compute() {
-            FJCountAll<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCountAll<T> r =
-                    new FJCountAll<T>(params, mid, h, selector);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,U> createRight(int l, int h, FJBase<T,U> r) {
+            return new FJCountAll<T,U>(params, l, h, r, selector);
+        }
+        void leafAction(int l, int h) {
             T[] array = params.array;
             int n = 0;
             for (int i = lo; i < hi; ++i) {
                 if (selector.evaluate(array[i]))
                     ++n;
             }
-            result = n;
-
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result += right.result;
-                right = right.next;
-            }
+            count = n;
+        }
+        void reduceAction(FJBase<T,U> right) {
+            count += ((FJCountAll<T,U>)right).count;
         }
     }
 
-    static final class FJCombine<T,U,V> extends RecursiveAction {
-        final Params<T> params;
+    static final class FJCombine<T,U,V> extends FJBase<T,T> {
         final U[] other;
         final V[] dest;
         final Combiner<? super T, ? super U, ? extends V> combiner;
-        final int lo;
-        final int hi;
-        FJCombine<T,U,V> next;
-        FJCombine(Params<T> params, int lo, int hi,
+        FJCombine(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                   U[] other, V[] dest,
                   Combiner<? super T, ? super U, ? extends V> combiner) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.other = other;
             this.dest = dest;
             this.combiner = combiner;
         }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJCombine<T,U,V>(params, l, h, r, other, dest, combiner);
+        }
 
-        void  leafCombine(int l, int h) {
+        void  leafAction(int l, int h) {
             T[] array = params.array;
             int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = combiner.combine(array[i], other[i]);
         }
 
-        protected void compute() {
-            FJCombine<T,U,V> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCombine<T,U,V> r =
-                    new FJCombine<T,U,V>(params, mid, h, other,
-                                         dest, combiner);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-
-            leafCombine(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJMinIndex<T,U> extends RecursiveAction {
-        final WithMapping<T,U> params;
-        final int lo;
-        final int hi;
+    static final class FJMinIndex<T,U> extends FJBase<T,U> {
         final Comparator<? super U> comparator;
         final boolean reverse;
         U result;
         int indexResult;
-        FJMinIndex<T,U> next;
-        FJMinIndex(WithMapping<T,U> params, int lo, int hi,
+        FJMinIndex(Params<T,U> params, int lo, int hi, FJBase<T,U> next,
                    Comparator<? super U> comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.comparator = comparator;
             this.reverse = reverse;
         }
-        protected void compute() {
-            FJMinIndex<T,U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJMinIndex<T,U> r =
-                    new FJMinIndex<T,U>(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,U> createRight(int l, int h, FJBase<T,U> r) {
+            return new FJMinIndex<T,U>(params, l, h, r, comparator, reverse);
+        }
+        void  leafAction(int l, int h) {
             params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
+        }
+        void reduceAction(FJBase<T,U> right) {
+            FJMinIndex<T,U> r = (FJMinIndex<T,U>)right;
+            int ridx = r.indexResult;
+            if (ridx > 0) {
+                if (indexResult < 0) {
+                    indexResult = ridx;
+                    result = r.result;
+                }
+                else {
+                    U rbest = r.result;
+                    int c = comparator.compare(result, rbest);
+                    if (reverse) c = -c;
+                    if (c > 0) {
                         indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        U rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
                             result = rbest;
-                        }
                     }
                 }
-                right = right.next;
             }
         }
     }
 
-    // Versions for Double mappings
-
-    static final class FJDoubleApply<T> extends RecursiveAction {
-        final WithDoubleMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJDoubleApply<T> extends FJBase<T,T> {
         final DoubleProcedure procedure;
-        FJDoubleApply<T> next;
-        FJDoubleApply(WithDoubleMapping<T> params, int lo, int hi,
+        FJDoubleApply(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                       DoubleProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.procedure = procedure;
         }
-        protected void compute() {
-            FJDoubleApply<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleApply<T> r =
-                    new FJDoubleApply<T>(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJDoubleApply<T>(params, l, h, r, procedure);
         }
+        void leafAction(int l, int h) {
+            params.leafApply(l, h, procedure);
+        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJDoubleReduce<T> extends RecursiveAction {
-        final WithDoubleMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJDoubleReduce<T> extends FJBase<T,T> {
         final DoubleReducer reducer;
         double result;
-        FJDoubleReduce<T> next;
-        FJDoubleReduce(WithDoubleMapping<T> params, int lo, int hi,
+        FJDoubleReduce(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                        DoubleReducer reducer, double base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.reducer = reducer;
             this.result = base;
         }
-        protected void compute() {
-            FJDoubleReduce<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleReduce<T> r =
-                    new FJDoubleReduce<T>(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJDoubleReduce<T>(params, l, h, r, reducer, result);
+        }
+        void leafAction(int l, int h) {
             result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
+        }
+        void reduceAction(FJBase<T,T> right) {
+            result = reducer.combine(result, ((FJDoubleReduce<T>)right).result);
         }
     }
 
-    static final class FJDoubleMap<T> extends RecursiveAction {
-        final Params<T> params;
+    static final class FJDoubleMap<T> extends FJBase<T,T> {
         final double[] dest;
-        MapperToDouble<? super T> mapper;
-        final int lo;
-        final int hi;
-        FJDoubleMap<T> next;
-        FJDoubleMap(Params<T> params, int lo, int hi,
+        final MapperToDouble<? super T> mapper;
+        FJDoubleMap(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                     double[] dest,
                     MapperToDouble<? super T> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.dest = dest;
             this.mapper = mapper;
         }
-
-        void leafMap(int l, int h) {
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJDoubleMap<T>(params, l, h, r, dest, mapper);
+        }
+        
+        void leafAction(int l, int h) {
             T[] array = params.array;
             int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
-
-        protected void compute() {
-            FJDoubleMap<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleMap<T> r =
-                    new FJDoubleMap<T>(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
+        void reduceAction(FJBase<T,T> right) {}
     }
-    static final class FJDoubleMinIndex<T> extends RecursiveAction {
-        final WithDoubleMapping<T> params;
-        final int lo;
-        final int hi;
+
+    static final class FJDoubleMinIndex<T> extends FJBase<T,T> {
         final DoubleComparator comparator;
         final boolean reverse;
         double result;
         int indexResult;
-        FJDoubleMinIndex<T> next;
-        FJDoubleMinIndex(WithDoubleMapping<T> params, int lo, int hi,
+        FJDoubleMinIndex(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
                          DoubleComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+            super(params, lo, hi, next);
             this.comparator = comparator;
             this.reverse = reverse;
         }
-        protected void compute() {
-            FJDoubleMinIndex<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleMinIndex<T> r =
-                    new FJDoubleMinIndex<T>(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJDoubleMinIndex<T>(params, l, h, r, comparator, reverse);
+        }
+        void  leafAction(int l, int h) {
             params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
+        }
+        void reduceAction(FJBase<T,T> right) {
+            FJDoubleMinIndex<T> r = (FJDoubleMinIndex<T>)right;
+            int ridx = r.indexResult;
+            if (ridx > 0) {
+                if (indexResult < 0) {
+                    indexResult = ridx;
+                    result = r.result;
+                }
+                else {
+                    double rbest = r.result;
+                    int c = comparator.compare(result, rbest);
+                    if (reverse) c = -c;
+                    if (c > 0) {
                         indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        double rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
+                        result = rbest;
                     }
                 }
-                right = right.next;
             }
         }
     }
 
-    // Versions for Long mappings
-
-    static final class FJLongApply<T> extends RecursiveAction {
-        final WithLongMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJLongApply<T> extends FJBase<T,T> {
         final LongProcedure procedure;
-        FJLongApply<T> next;
-        FJLongApply(WithLongMapping<T> params, int lo, int hi,
-                    LongProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        FJLongApply(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                      LongProcedure procedure) {
+            super(params, lo, hi, next);
             this.procedure = procedure;
         }
-        protected void compute() {
-            FJLongApply<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongApply<T> r =
-                    new FJLongApply<T>(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJLongApply<T>(params, l, h, r, procedure);
         }
+        void leafAction(int l, int h) {
+            params.leafApply(l, h, procedure);
+        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJLongReduce<T> extends RecursiveAction {
-        final WithLongMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJLongReduce<T> extends FJBase<T,T> {
         final LongReducer reducer;
         long result;
-        FJLongReduce<T> next;
-        FJLongReduce(WithLongMapping<T> params, int lo, int hi,
-                     LongReducer reducer, long base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        FJLongReduce(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                       LongReducer reducer, long base) {
+            super(params, lo, hi, next);
             this.reducer = reducer;
             this.result = base;
         }
-        protected void compute() {
-            FJLongReduce<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongReduce<T> r =
-                    new FJLongReduce<T>(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJLongReduce<T>(params, l, h, r, reducer, result);
+        }
+        void leafAction(int l, int h) {
             result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
+        }
+        void reduceAction(FJBase<T,T> right) {
+            result = reducer.combine(result, ((FJLongReduce<T>)right).result);
         }
     }
 
-    static final class FJLongMap<T> extends RecursiveAction {
-        final Params<T> params;
+    static final class FJLongMap<T> extends FJBase<T,T> {
         final long[] dest;
-        MapperToLong<? super T> mapper;
-        final int lo;
-        final int hi;
-        FJLongMap<T> next;
-        FJLongMap(Params<T> params, int lo, int hi,
-                  long[] dest,
-                  MapperToLong<? super T> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        final MapperToLong<? super T> mapper;
+        FJLongMap(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                    long[] dest,
+                    MapperToLong<? super T> mapper) {
+            super(params, lo, hi, next);
             this.dest = dest;
             this.mapper = mapper;
         }
-
-        void leafMap(int l, int h) {
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJLongMap<T>(params, l, h, r, dest, mapper);
+        }
+        
+        void leafAction(int l, int h) {
             T[] array = params.array;
             int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
-
-        protected void compute() {
-            FJLongMap<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongMap<T> r =
-                    new FJLongMap<T>(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJLongMinIndex<T> extends RecursiveAction {
-        final WithLongMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJLongMinIndex<T> extends FJBase<T,T> {
         final LongComparator comparator;
         final boolean reverse;
         long result;
         int indexResult;
-        FJLongMinIndex<T> next;
-        FJLongMinIndex(WithLongMapping<T> params, int lo, int hi,
-                       LongComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        FJLongMinIndex(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                         LongComparator comparator, boolean reverse) {
+            super(params, lo, hi, next);
             this.comparator = comparator;
             this.reverse = reverse;
         }
-        protected void compute() {
-            FJLongMinIndex<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongMinIndex<T> r =
-                    new FJLongMinIndex<T>(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJLongMinIndex<T>(params, l, h, r, comparator, reverse);
+        }
+        void  leafAction(int l, int h) {
             params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
+        }
+        void reduceAction(FJBase<T,T> right) {
+            FJLongMinIndex<T> r = (FJLongMinIndex<T>)right;
+            int ridx = r.indexResult;
+            if (ridx > 0) {
+                if (indexResult < 0) {
+                    indexResult = ridx;
+                    result = r.result;
+                }
+                else {
+                    long rbest = r.result;
+                    int c = comparator.compare(result, rbest);
+                    if (reverse) c = -c;
+                    if (c > 0) {
                         indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        long rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
+                        result = rbest;
                     }
                 }
-                right = right.next;
             }
         }
     }
 
-
-    // Versions for Int mappings
-
-    static final class FJIntApply<T> extends RecursiveAction {
-        final WithIntMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJIntApply<T> extends FJBase<T,T> {
         final IntProcedure procedure;
-        FJIntApply<T> next;
-        FJIntApply(WithIntMapping<T> params, int lo, int hi,
-                   IntProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        FJIntApply(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                      IntProcedure procedure) {
+            super(params, lo, hi, next);
             this.procedure = procedure;
         }
-        protected void compute() {
-            FJIntApply<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntApply<T> r =
-                    new FJIntApply<T>(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJIntApply<T>(params, l, h, r, procedure);
         }
+        void leafAction(int l, int h) {
+            params.leafApply(l, h, procedure);
+        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJIntReduce<T> extends RecursiveAction {
-        final WithIntMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJIntReduce<T> extends FJBase<T,T> {
         final IntReducer reducer;
         int result;
-        FJIntReduce<T> next;
-        FJIntReduce(WithIntMapping<T> params, int lo, int hi,
-                    IntReducer reducer, int base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        FJIntReduce(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                       IntReducer reducer, int base) {
+            super(params, lo, hi, next);
             this.reducer = reducer;
             this.result = base;
         }
-        protected void compute() {
-            FJIntReduce<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntReduce<T> r =
-                    new FJIntReduce<T>(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJIntReduce<T>(params, l, h, r, reducer, result);
+        }
+        void leafAction(int l, int h) {
             result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
+        }
+        void reduceAction(FJBase<T,T> right) {
+            result = reducer.combine(result, ((FJIntReduce<T>)right).result);
         }
     }
 
-    static final class FJIntMap<T> extends RecursiveAction {
-        final Params<T> params;
+    static final class FJIntMap<T> extends FJBase<T,T> {
         final int[] dest;
-        MapperToInt<? super T> mapper;
-        final int lo;
-        final int hi;
-        FJIntMap<T> next;
-        FJIntMap(Params<T> params, int lo, int hi,
-                 int[] dest,
-                 MapperToInt<? super T> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        final MapperToInt<? super T> mapper;
+        FJIntMap(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                    int[] dest,
+                    MapperToInt<? super T> mapper) {
+            super(params, lo, hi, next);
             this.dest = dest;
             this.mapper = mapper;
         }
-
-        void leafMap(int l, int h) {
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJIntMap<T>(params, l, h, r, dest, mapper);
+        }
+        
+        void leafAction(int l, int h) {
             T[] array = params.array;
             int k = l - params.firstIndex;
             for (int i = l; i < h; ++i)
                 dest[k++] = mapper.map(array[i]);
         }
-
-        protected void compute() {
-            FJIntMap<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntMap<T> r =
-                    new FJIntMap<T>(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
+        void reduceAction(FJBase<T,T> right) {}
     }
 
-    static final class FJIntMinIndex<T> extends RecursiveAction {
-        final WithIntMapping<T> params;
-        final int lo;
-        final int hi;
+    static final class FJIntMinIndex<T> extends FJBase<T,T> {
         final IntComparator comparator;
         final boolean reverse;
         int result;
         int indexResult;
-        FJIntMinIndex<T> next;
-        FJIntMinIndex(WithIntMapping<T> params, int lo, int hi,
-                      IntComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
+        FJIntMinIndex(Params<T,T> params, int lo, int hi, FJBase<T,T> next,
+                         IntComparator comparator, boolean reverse) {
+            super(params, lo, hi, next);
             this.comparator = comparator;
             this.reverse = reverse;
         }
-        protected void compute() {
-            FJIntMinIndex<T> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntMinIndex<T> r =
-                    new FJIntMinIndex<T>(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
+        FJBase<T,T> createRight(int l, int h, FJBase<T,T> r) {
+            return new FJIntMinIndex<T>(params, l, h, r, comparator, reverse);
+        }
+        void  leafAction(int l, int h) {
             params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
+        }
+        void reduceAction(FJBase<T,T> right) {
+            FJIntMinIndex<T> r = (FJIntMinIndex<T>)right;
+            int ridx = r.indexResult;
+            if (ridx > 0) {
+                if (indexResult < 0) {
+                    indexResult = ridx;
+                    result = r.result;
+                }
+                else {
+                    int rbest = r.result;
+                    int c = comparator.compare(result, rbest);
+                    if (reverse) c = -c;
+                    if (c > 0) {
                         indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        int rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
+                        result = rbest;
                     }
                 }
-                right = right.next;
             }
         }
     }
@@ -3885,15 +3558,15 @@ public class ParallelArray<T> implements Iterable<T> {
     /**
      * ForkJoin task for SelectAny; relies on cancellation
      */
-    static final class FJSelectAny<T> extends RecursiveAction {
-        final Params<T> params;
+    static final class FJSelectAny<T,U> extends RecursiveAction {
+        final Params<T,U> params;
         final int lo;
         final int hi;
         final Predicate<? super T> selector;
         final AtomicInteger result;
-        FJSelectAny<T> next;
+        FJSelectAny<T,U> next;
 
-        FJSelectAny(Params<T> params, int lo, int hi,
+        FJSelectAny(Params<T,U> params, int lo, int hi,
                     Predicate<? super T> selector,
                     AtomicInteger result) {
             this.params = params;
@@ -3919,14 +3592,13 @@ public class ParallelArray<T> implements Iterable<T> {
             AtomicInteger res = result;
             if (res.get() >= 0)
                 return;
-            FJSelectAny<T> right = null;
+            FJSelectAny<T,U> right = null;
             int l = lo;
             int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
+            while (params.shouldSplit(h - l)) {
                 int mid = (l + h) >>> 1;
-                FJSelectAny<T> r =
-                    new FJSelectAny<T>(params, mid, h, selector, res);
+                FJSelectAny<T,U> r =
+                    new FJSelectAny<T,U>(params, mid, h, selector, res);
                 h = mid;
                 r.next = right;
                 right = r;
@@ -3958,16 +3630,17 @@ public class ParallelArray<T> implements Iterable<T> {
      * and sparse result sets, the matches array is allocated only on
      * demand, and subtask calls for empty subtrees are suppressed.
      */
-    static final class FJSelectAll<T> extends RecursiveAction {
-        final FJSelectAllDriver<T> driver;
+    static final class FJSelectAll<T,U> extends RecursiveAction {
+        final FJSelectAllDriver<T,U> driver;
         final int lo;
         final int hi;
         int[] matches;
         int nmatches;
         int offset;
-        FJSelectAll<T> left, right;
+        FJSelectAll<T,U> left, right;
+        boolean isLeaf;
 
-        FJSelectAll(FJSelectAllDriver<T> driver, int lo, int hi) {
+        FJSelectAll(FJSelectAllDriver<T,U> driver, int lo, int hi) {
             this.driver = driver;
             this.lo = lo;
             this.hi = hi;
@@ -3975,16 +3648,18 @@ public class ParallelArray<T> implements Iterable<T> {
 
         protected void compute() {
             if (driver.phase == 0) {
-                if (hi - lo < driver.params.granularity)
-                    leafPhase0();
-                else
+                if (driver.params.shouldSplit(hi - lo))
                     internalPhase0();
+                else {
+                    isLeaf = true;
+                    leafPhase0();
+                }
             }
             else if (nmatches != 0) {
-                if (hi - lo < driver.params.granularity)
-                    driver.leafPhase1(offset, nmatches, matches);
-                else
+                if (!isLeaf) 
                     internalPhase1();
+                else
+                    driver.leafPhase1(offset, nmatches, matches);
             }
         }
 
@@ -4006,8 +3681,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
         void internalPhase0() {
             int mid = (lo + hi) >>> 1;
-            FJSelectAll<T> l = new FJSelectAll<T>(driver, lo, mid);
-            FJSelectAll<T> r = new FJSelectAll<T>(driver, mid, hi);
+            FJSelectAll<T,U> l = new FJSelectAll<T,U>(driver, lo, mid);
+            FJSelectAll<T,U> r = new FJSelectAll<T,U>(driver, mid, hi);
             coInvoke(l, r);
             int lnm = l.nmatches;
             if (lnm != 0)
@@ -4039,19 +3714,19 @@ public class ParallelArray<T> implements Iterable<T> {
         }
     }
 
-    static abstract class FJSelectAllDriver<T> extends RecursiveAction {
-        final Params<T> params;
+    static abstract class FJSelectAllDriver<T,U> extends RecursiveAction {
+        final Params<T,U> params;
         final Predicate<? super T> selector;
         int nresults;
         int phase;
-        FJSelectAllDriver(Params<T> params,
+        FJSelectAllDriver(Params<T,U> params,
                           Predicate<? super T> selector) {
             this.params = params;
             this.selector = selector;
         }
 
         protected final void compute() {
-            FJSelectAll<T> r = new FJSelectAll<T>
+            FJSelectAll<T,U> r = new FJSelectAll<T,U>
                 (this, params.firstIndex, params.upperBound);
             r.compute();
             createResults(r.nmatches);
@@ -4064,10 +3739,10 @@ public class ParallelArray<T> implements Iterable<T> {
     }
 
     static abstract class FJRefSelectAllDriver<T,U>
-        extends FJSelectAllDriver<T> {
+        extends FJSelectAllDriver<T,U> {
         final Class<? super U> elementType; // null for Object
         U[] results;
-        FJRefSelectAllDriver(Params<T> params,
+        FJRefSelectAllDriver(Params<T,U> params,
                              Predicate<? super T> selector,
                              Class<? super U> elementType) {
             super(params, selector);
@@ -4082,9 +3757,9 @@ public class ParallelArray<T> implements Iterable<T> {
         }
     }
 
-    static final class FJPlainRefSelectAllDriver<T>
+    static final class FJPlainRefSelectAllDriver<T,U>
         extends FJRefSelectAllDriver<T,T> {
-        FJPlainRefSelectAllDriver(Params<T> params,
+        FJPlainRefSelectAllDriver(Params<T,T> params,
                                   Predicate<? super T> selector,
                                   Class<? super T> elementType) {
             super(params, selector, elementType);
@@ -4103,7 +3778,7 @@ public class ParallelArray<T> implements Iterable<T> {
     static final class FJMapRefSelectAllDriver<T,U>
         extends FJRefSelectAllDriver<T, U> {
         final Mapper<? super T, ? extends U> mapper;
-        FJMapRefSelectAllDriver(Params<T> params,
+        FJMapRefSelectAllDriver(Params<T,U> params,
                                 Predicate<? super T> selector,
                                 Class<? super U> elementType,
                                 Mapper<? super T, ? extends U> mapper) {
@@ -4121,11 +3796,11 @@ public class ParallelArray<T> implements Iterable<T> {
         }
     }
 
-    static final class FJDoubleMapSelectAllDriver<T>
-        extends FJSelectAllDriver<T> {
+    static final class FJDoubleMapSelectAllDriver<T,U>
+        extends FJSelectAllDriver<T,U> {
         double[] results;
         final MapperToDouble<? super T> mapper;
-        FJDoubleMapSelectAllDriver(Params<T> params,
+        FJDoubleMapSelectAllDriver(Params<T,U> params,
                                    Predicate<? super T> selector,
                                    MapperToDouble<? super T> mapper) {
             super(params, selector);
@@ -4145,11 +3820,11 @@ public class ParallelArray<T> implements Iterable<T> {
         }
     }
 
-    static final class FJLongMapSelectAllDriver<T>
-        extends FJSelectAllDriver<T> {
+    static final class FJLongMapSelectAllDriver<T,U>
+        extends FJSelectAllDriver<T,U> {
         long[] results;
         final MapperToLong<? super T> mapper;
-        FJLongMapSelectAllDriver(Params<T> params,
+        FJLongMapSelectAllDriver(Params<T,U> params,
                                  Predicate<? super T> selector,
                                  MapperToLong<? super T> mapper) {
             super(params, selector);
@@ -4169,11 +3844,11 @@ public class ParallelArray<T> implements Iterable<T> {
         }
     }
 
-    static final class FJIntMapSelectAllDriver<T>
-        extends FJSelectAllDriver<T> {
+    static final class FJIntMapSelectAllDriver<T,U>
+        extends FJSelectAllDriver<T,U> {
         int[] results;
         final MapperToInt<? super T> mapper;
-        FJIntMapSelectAllDriver(Params<T> params,
+        FJIntMapSelectAllDriver(Params<T,U> params,
                                 Predicate<? super T> selector,
                                 MapperToInt<? super T> mapper) {
             super(params, selector);
@@ -4616,7 +4291,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
     // Scan (cumulate) operations
 
-    static abstract class FJScanOp<T> extends Params<T> {
+    static abstract class FJScanOp<T> extends Params<T,T> {
+        final int granularity;
         final Reducer<T> reducer;
         final T base;
 
@@ -4627,12 +4303,57 @@ public class ParallelArray<T> implements Iterable<T> {
             super(ex, array, firstIndex, upperBound);
             this.reducer = reducer;
             this.base = base;
+            this.granularity = 1 + 
+                (upperBound - firstIndex) / (ex.getParallelismLevel() << 3);
         }
 
         abstract T sumLeaf(int lo, int hi);
         abstract void cumulateLeaf(int lo, int hi, T in);
         abstract T sumAndCumulateLeaf(int lo, int hi);
 
+        void leafApply(int lo, int hi,
+            Procedure<? super T> procedure) {}
+        T leafReduce(int lo, int hi,
+                     Reducer<T> reducer, T base) { return null; }
+        void leafMinIndex(int lo, int hi,
+                          Comparator<? super T> comparator,
+                          boolean reverse,
+                          FJMinIndex<T,T> task) {}
+        void leafTransform
+            (int lo, int hi, Mapper<? super T, ? extends T> mapper) {}
+        void leafIndexMap
+            (int lo, int hi, MapperFromInt<? extends T> mapper) {}
+        void leafGenerate
+            (int lo, int hi, Generator<? extends T> generator) {}
+        void leafFill(int lo, int hi, T value) {}
+        void leafCombineInPlace
+            (int lo, int hi, T[] other, Reducer<T> combiner) {}
+        void leafApply(int lo, int hi,
+                DoubleProcedure procedure) {}
+        double leafReduce
+            (int lo, int hi, DoubleReducer reducer, double base) { return 0.0; }
+        void leafMinIndex(int lo, int hi,
+                          DoubleComparator comparator,
+                          boolean reverse,
+                          FJDoubleMinIndex<T> task) {}
+        void leafApply(int lo, int hi,
+            LongProcedure procedure) {}
+        
+        long leafReduce(int lo, int hi,
+            LongReducer reducer, long base) { return 0L; }
+        
+        void leafMinIndex(int lo, int hi,
+                          LongComparator comparator,
+                          boolean reverse,
+                          FJLongMinIndex<T> task) {}
+        void leafApply(int lo, int hi,
+                       IntProcedure procedure) {}
+        int leafReduce(int lo, int hi,
+                       IntReducer reducer, int base) { return 0; }
+        void leafMinIndex(int lo, int hi,
+                          IntComparator comparator,
+                          boolean reverse,
+                          FJIntMinIndex<T> task) {}
     }
 
     static final class FJCumulateOp<T> extends FJScanOp<T> {

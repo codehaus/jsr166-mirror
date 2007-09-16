@@ -68,7 +68,7 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
         }
         Throwable ex = setDone();
         if (ex != null)
-            rethrower.rethrow(ex);
+            rethrowException(ex);
         return v;
     }
 

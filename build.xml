@@ -30,16 +30,10 @@
   <property name="build.dir"            location="build"/>
   <property name="build.classes.dir"    location="${build.dir}/classes"/>
   <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
-  <property name="build.j1.dir"         location="${build.dir}/j1"/>
   <property name="build.loops.dir"      location="${build.dir}/loops"/>
   <property name="build.lib.dir"        location="${build.dir}/lib"/>
-  <property name="build.ant.dir"        location="${build.dir}/ant"/>
   <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
   <property name="build.reports.dir"    location="${build.dir}/reports"/>
-  <property name="build.checkstyle.dir" location="${build.dir}/checkstyle"/>
-  <property name="build.doccheck.dir"   location="${build.dir}/doccheck"/>
-  <property name="build.filter.src.dir" location="${build.dir}/filtersrc"/>
-  <property name="build.dc-filter.dir"  location="${build.dir}/filterdocchk"/>
   <property name="build.jsr166x.dir"    location="${build.dir}/jsr166x"/>
   <property name="build.jsr166xlib.dir"        location="${build.dir}/jsr166xlib"/>
   <property name="build.jsr166xjavadocs.dir"   location="${build.dir}/jsr166xjavadocs"/>
@@ -51,12 +45,9 @@
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
   <property name="test.src.dir"         location="${basedir}/src/test"/>
-  <property name="j1.src.dir"           location="${basedir}/src/javaone"/>
   <property name="loops.src.dir"        location="${basedir}/src/loops"/>
   <property name="tck.src.dir"          location="${test.src.dir}/tck"/>
   <property name="jtreg.src.dir"        location="${test.src.dir}/jtreg"/>
-  <property name="ant.src.dir"          location="${basedir}/etc/ant"/>
-  <property name="stylesheet.dir"       location="${basedir}/etc/xsl"/>
   <property name="lib.dir"              location="${basedir}/lib"/>
   <property name="dist.dir"             location="${basedir}/dist"/>
   <property name="topsrc.dir"           location="${basedir}/src"/>
@@ -73,7 +64,6 @@
   <property name="jsr166xproduct.jar"   location="${build.jsr166xlib.dir}/jsr166x.jar"/>
   <property name="jsr166yproduct.jar"   location="${build.jsr166ylib.dir}/jsr166y.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
-  <property name="concurrent.jar"       location="${lib.dir}/concurrent.jar"/>
 
   <!-- Bootclasspath argument -->
   <property name="bootclasspath.args"   value="-Xbootclasspath/p:${product.jar}"/>
@@ -87,16 +77,6 @@
   <!-- ALoops classpath -->
   <path id="loops.classpath">
     <pathelement location="${build.loops.dir}"/>
-  </path>
-
-  <!-- J1 classpath -->
-  <path id="j1.classpath">
-    <pathelement location="${build.classes.dir}"/>
-    <pathelement location="${build.j1.dir}"/>
-    <pathelement location="${junit.jar}"/>
-
-    <!-- Include dl.u.c for BoundedBuffer comparison -->
-    <pathelement location="${concurrent.jar}"/>
   </path>
 
 
@@ -167,48 +147,6 @@
       <packageset dir="${src.dir}"/>
 
     </javadoc>
-
-  </target>
-
-
-
-  <target name="doccheck"
-          depends="filter-doccheck"
-          description="Reports on javadoc style errors">
-
-    <delete dir="${build.doccheck.dir}"/>
-    <mkdir dir="${build.doccheck.dir}"/>
-
-    <javadoc doclet="com.sun.tools.doclets.doccheck.DocCheck"
-         docletpath="${lib.dir}/doccheck.jar"
-            destdir="${build.doccheck.dir}">
-      <packageset dir="${build.dc-filter.dir}"/>
-    </javadoc>
-
-    <echo>DocCheck output is in ${build.doccheck.dir}</echo>
-
-  </target>
-
-
-
-  <target name="checkstyle"
-          depends="filter-src"
-          description="Reports on style errors in Java source (verbose, mostly chaff)">
-
-    <taskdef resource="checkstyletask.properties"
-            classpath="${lib.dir}/checkstyle-all-3.1.jar"/>
-
-    <mkdir dir="${build.checkstyle.dir}"/>
-
-    <checkstyle config="etc/checkstyle/sun_checks.xml"
-       failOnViolation="false">
-      <formatter type="xml" toFile="${build.checkstyle.dir}/checkstyle-report.xml"/>
-      <fileset dir="${build.filter.src.dir}" includes="**/*.java"/>
-    </checkstyle>
-
-    <style in="${build.checkstyle.dir}/checkstyle-report.xml"
-          out="${build.checkstyle.dir}/checkstyle-report.html"
-        style="${stylesheet.dir}/checkstyle-frames.xsl"/>
 
   </target>
 
@@ -315,117 +253,6 @@
           depends="clean, jar">
 
     <copy file="${product.jar}" todir="${dist.dir}"/>
-
-  </target>
-
-
-  <target name="compile-ant-filter"
-          depends="init">
-
-    <mkdir dir="${build.ant.dir}"/>
-
-    <javac srcdir="${ant.src.dir}"
-          destdir="${build.ant.dir}"
-           source="1.4"/>
-
-  </target>
-
-
-  <target name="filter-src"
-          depends="compile-ant-filter">
-
-    <mkdir dir="${build.filter.src.dir}"/>
-
-    <copy todir="${build.filter.src.dir}">
-      <fileset dir="${src.dir}">
-        <include name="**/*.html"/>
-      </fileset>
-    </copy>
-
-    <copy todir="${build.filter.src.dir}">
-      <fileset dir="${src.dir}">
-        <exclude name="**/*.html"/>
-        <!-- Files excluded from dist-docs -->
-        <exclude name="java/util/Random.*"/>
-        <exclude name="sun/misc/Unsafe.*"/>
-      </fileset>
-      <!--
-      <filterchain>
-      -->
-
-        <!--
-         # This filter gets rid of angle-bracketed type parameters
-         # so that javadoc can run on the result. The following
-         # heuristic seems to work:
-         #
-         # For all lines not starting with space(s)-asterisk-space(s),
-         #   replace <something> with a space, where there may be more
-         #   than one right angle bracket at the end, and "something"
-         #   must not contain parens or pipes. (This may need some
-         #   tweaking.)
-         -->
-
-        <!--
-        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
-                      classpath="${build.ant.dir}">
-          <param name="notmatching" value="^\s+\*\s.*$"/>
-          <param name="pattern"     value="&lt;[^|>()]+?>+"/>
-          <param name="replacement" value=" "/>
-        </filterreader>
-        -->
-
-      <!--
-      </filterchain>
-      -->
-    </copy>
-
-  </target>
-
-
-  <target name="filter-doccheck"
-          depends="filter-src">
-
-    <mkdir dir="${build.dc-filter.dir}"/>
-
-    <copy todir="${build.dc-filter.dir}">
-      <fileset dir="${build.filter.src.dir}">
-        <include name="**/*.html"/>
-      </fileset>
-    </copy>
-
-    <property name="generic.declarations"
-             value="/** Fake type parameter. */ public interface E {} /** Fake type parameter. */ public interface T {} /** Fake type parameter. */ public interface K {} /** Fake type parameter. */ public interface V {}"
-    />
-
-    <copy todir="${build.dc-filter.dir}">
-      <fileset dir="${build.filter.src.dir}">
-        <exclude name="**/*.html"/>
-      </fileset>
-      <filterchain>
-        <!--
-         # These two filters try to make the source look like
-         # something that doccheck can process. The first removes
-         # -source 1.4 assertions and the second adds in a bunch
-         # of single letter public nested marker interfaces so that
-         # the generic type parameters are recognized.
-         -->
-
-        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
-                      classpath="${build.ant.dir}">
-          <param name="matching"    value="^\s*assert[\s ].*$"/>
-          <param name="pattern"     value="assert"/>
-          <param name="replacement" value="//assert"/>
-        </filterreader>
-
-        <filterreader classname="jsr166.ant.filters.ReplaceFilter"
-                      classpath="${build.ant.dir}">
-          <param name="matching"    value="^([^*]*(class|interface|implements) .*|)\{.*$"/>
-          <param name="pattern"     value="$"/>
-          <param name="replacement" value=" ${generic.declarations}"/>
-        </filterreader>
-
-      </filterchain>
-    </copy>
 
   </target>
 
@@ -550,9 +377,7 @@
       <fileset dir="${build.reports.dir}">
         <include name="TEST-*.xml"/>
       </fileset>
-      <report styledir="${stylesheet.dir}"
-                format="${junit.report.format}"
-                 todir="${build.reports.dir}"
+      <report format="${junit.report.format}" todir="${build.reports.dir}"
       />
     </junitreport>
 
@@ -602,88 +427,7 @@
   </target>
 
 
-
-  <!-- Anthill targets -->
-
-  <target name="anthill-build">
-
-    <!-- Override this in user.properties -->
-    <property name="tiger.home" location="e:/j2sdk1.5.0"/>
-
-    <exec resultproperty="result.property" dir="${basedir}" executable="${tiger.home}/bin/java">
-      <arg value="-Xmx256000000"/>
-      <!-- classpath of new JVM -->
-      <arg value="-classpath"/> <arg path="${java.class.path}"/>
-      <!-- location of Ant home directory -->
-      <arg value="-Dant.home=${ant.home}"/>
-      <!-- the Ant main class -->
-      <arg value="org.apache.tools.ant.Main"/>
-      <!-- The build file -->
-      <arg value="-buildfile"/>  <arg value="build.xml"/>
-      <!-- the target to build on the new Ant instance -->
-      <arg value="-DJAVA_HOME=${tiger.home}"/>
-      <arg value="do-anthill-build"/>
-    </exec>
-  </target>
-
-  <target name="do-anthill-build"
-          depends="jar, test, docs, dist-docs"/>
-
-  <target name="anthill-publish">
-
-    <copy todir="${deployDir}/docs/private">
-      <fileset dir="${build.javadocs.dir}"/>
-    </copy>
-
-    <copy todir="${deployDir}/docs/public">
-      <fileset dir="${dist.javadocs.dir}"/>
-    </copy>
-
-    <copy tofile="${deployDir}/index.html"
-          file="${basedir}/etc/anthill-index.html"/>
-
-    <copy todir="${deployDir}/notes">
-      <fileset dir="${basedir}/etc/notes"/>
-    </copy>
-
-  </target>
-
-
-
   <!-- Various demos and test programs -->
-
-
-  <target name="sample" depends="init, configure-compiler"
-          description="Standalone demo program">
-
-    <mkdir dir="${build.testcases.dir}"/>
-
-    <javac srcdir="${test.src.dir}"
-          destdir="${build.testcases.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
-
-      <include name="jsr166/test/Sample.java"/>
-
-    </javac>
-
-    <copy todir="${build.testcases.dir}">
-      <fileset dir="${test.src.dir}">
-        <include name="**/*.properties"/>
-      </fileset>
-    </copy>
-
-
-    <java classname="jsr166.test.Sample" fork="true">
-      <classpath refid="test.classpath"/>
-      <!-- <jvmarg value="-ea"/> -->
-      <!-- <jvmarg value="-server"/> -->
-      <!-- <arg value="1000"/> -->
-    </java>
-  </target>
 
 
   <target name="loops" depends="init, configure-compiler"
@@ -710,278 +454,6 @@
 
   </target>
 
-
-  <target name="compile-j1" depends="init, configure-compiler, compile">
-
-    <mkdir dir="${build.j1.dir}"/>
-
-    <javac srcdir="${j1.src.dir}"
-          destdir="${build.j1.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}" >
-
-      <include name="**/*.java"/>
-      <exclude name="**/dijkstra/**"/>
-
-      <compilerarg line="${build.args}"/>
-      <classpath refid="j1.classpath"/>
-
-    </javac>
-
-  </target>
-
-
-  <target name="sw" depends="compile-j1"
-          description="Runs the SwingWorker demo">
-
-    <!--
-    <java classname="jsr166.swing.SwingWorkerDemo" fork="true">
-      <classpath refid="j1.classpath"/>
-    </java>
-    -->
-
-    <copy todir="${build.j1.dir}" file="${j1.src.dir}/jsr166/swing/SwingWorker.html"/>
-
-    <exec dir="${build.j1.dir}" executable="appletviewer.exe">
-      <arg value="${build.j1.dir}/SwingWorker.html"/>
-    </exec>
-
-  </target>
-
-  <target name="j1" depends="compile-j1"
-          description="Runs a standalone JavaOne program">
-
-    <java classname="${j1.test}" fork="true">
-      <classpath refid="j1.classpath"/>
-      <jvmarg value="-client"/>
-
-      <!-- TestPseudoRandom args -->
-      <arg value="2"/>
-      <arg value="25"/>
-      <arg value="100000"/>
-
-      <!-- WebCrawler args -->
-      <!--
-      <arg value="jsr166.webcrawler.WebCrawler3"/>
-      <arg value="http://www.priorartisans.com"/>
-      <arg value="25"/>
-      -->
-
-    </java>
-
-  </target>
-
-
-  <target name="test-j1" depends="compile-j1"
-          description="Runs testcases from the JavaOne source directories">
-
-    <junit printsummary="true"
-             showoutput="true"
-          errorProperty="junit.failed"
-        failureProperty="junit.failed"
-                    dir="${build.j1.dir}"
-                   fork="true">
-
-      <!-- <jvmarg value="-server"/> -->
-      <classpath refid="j1.classpath"/>
-      <formatter type="xml"/>
-
-      <batchtest todir="${build.j1.dir}">
-        <fileset dir="${j1.src.dir}">
-          <include name="**/*Test.java"/>
-        </fileset>
-      </batchtest>
-
-    </junit>
-
-    <available property="junit.report.format"
-                  value="frames"
-              classname="org.apache.xalan.lib.Redirect"/>
-    <property name="junit.report.format" value="noframes"/>
-
-    <junitreport todir="${build.j1.dir}">
-      <fileset dir="${build.j1.dir}">
-        <include name="TEST-*.xml"/>
-      </fileset>
-      <report styledir="${stylesheet.dir}"
-                format="${junit.report.format}"
-                 todir="${build.j1.dir}"
-      />
-    </junitreport>
-
-    <fail message="Test Cases Failed" if="junit.failed"/>
-
-  </target>
-
-
-
-  <!-- C++ and JNI definitions and demos -->
-
-  <target name="configure-cpp">
-
-    <!-- Define tasks and types -->
-
-    <path id="cpptasks.path">
-      <pathelement location="${lib.dir}/cpptasks.jar"/>
-    </path>
-    <taskdef resource="cpptasks.tasks" classpathref="cpptasks.path"/>
-    <typedef resource="cpptasks.types" classpathref="cpptasks.path"/>
-
-    <!-- Set platform property for JNI includes -->
-
-    <condition property="platform" value="linux">
-      <os name="Linux"/>
-    </condition>
-    <condition property="platform" value="win32">
-      <os family="windows"/>
-    </condition>
-    <condition property="platform" value="solaris">
-      <os name="SunOS"/>
-    </condition>
-
-  </target>
-
-
-  <target name="cppdemo" depends="configure-cpp">
-
-    <mkdir dir="${build.dir}"/>
-
-    <cc multithreaded="true"
-                 name="g++"
-               objdir="${build.dir}"
-              outfile="${build.dir}/CppDemo">
-      <fileset dir="${test.src.dir}" includes="CppDemo.cpp"/>
-      <libset libs="stdc++"/>
-    </cc>
-
-    <exec executable="${build.dir}/CppDemo">
-      <arg line="count in word frequency of word in command line count"/>
-    </exec>
-
-  </target>
-
-
-  <target name="jnidemo" depends="init, configure-compiler, configure-cpp">
-
-    <mkdir dir="${build.testcases.dir}"/>
-
-    <javac srcdir="${test.src.dir}"
-          destdir="${build.testcases.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
-      <compilerarg value="${bootclasspath.args}"/>
-      <compilerarg line="${build.args}"/>
-      <classpath refid="test.classpath"/>
-      <include name="JniDemo.java"/>
-    </javac>
-
-    <javah destdir="${build.testcases.dir}"
-      classpathref="test.classpath">
-      <class name="JniDemo"/>
-    </javah>
-
-    <cc multithreaded="true"
-                 name="g++"
-               objdir="${build.dir}"
-              outfile="${build.dir}/JniDemo"
-              outtype="shared">
-
-      <compiler>
-        <defineset>
-          <define name="__int64" value="long long"/>
-        </defineset>
-        <includepath location="${java.home}/../include"/>
-        <includepath location="${java.home}/../include/${platform}"/>
-        <compilerarg value="-mno-cygwin"/>
-      </compiler>
-
-      <linker>
-        <linkerarg value="--add-stdcall-alias"/>
-      </linker>
-
-      <includepath location="${build.testcases.dir}"/>
-
-      <fileset dir="${test.src.dir}" includes="JniDemo.cpp"/>
-
-      <libset libs="stdc++"/>
-
-    </cc>
-
-    <!-- Necessary if windows, harmless if not -->
-    <copy file="${build.dir}/libJniDemo.so" tofile="${build.dir}/JniDemo.dll"/>
-
-    <java classname="JniDemo" fork="true">
-      <!-- Watch out: path separator hardwired to semicolon here! -->
-      <sysproperty key="java.library.path" path="${java.library.path};${build.dir}"/>
-      <classpath refid="test.classpath"/>
-      <arg line="count in word frequency of word in command line count"/>
-    </java>
-
-  </target>
-
-
-
-  <!-- Backward compatibility, work in progress (some files not checked in) -->
-
-
-
-  <property name="pretiger.src.dir"     location="${build.dir}/pretiger/src"/>
-  <property name="build.pretiger.dir"   location="${build.dir}/pretiger/classes"/>
-  <property name="pretiger.jar"         location="${build.lib.dir}/jsr166-pretiger.jar"/>
-  <property name="pretiger.sourcelevel" value="1.4"/>
-
-  <target name="defang"
-       depends="init"
-   description="Generates pre-Tiger compatible source">
-
-    <delete dir="${pretiger.src.dir}"/>
-    <mkdir dir="${pretiger.src.dir}"/>
-
-    <exec executable="perl">
-      <arg file="etc/defang.pl"/>
-      <!-- <arg value="-v"/> -->
-      <arg value="-s"/> <arg file="${src.dir}"/>
-      <arg value="-t"/> <arg file="${pretiger.src.dir}"/>
-    </exec>
-
-  </target>
-
-  <target name="compile-pretiger"
-          depends="init, configure-compiler, defang"
-          description="Compiles pre-Tiger sources to build folder">
-
-    <mkdir dir="${build.pretiger.dir}"/>
-
-    <javac srcdir="${pretiger.src.dir}"
-          destdir="${build.pretiger.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${pretiger.sourcelevel}"
-             fork="true">
-
-      <compilerarg line="${build.args}"/>
-      <exclude name="**/Thread.java"/>
-
-    </javac>
-
-  </target>
-
-  <target name="pretiger" depends="compile-pretiger">
-
-    <mkdir dir="${build.lib.dir}"/>
-
-    <jar destfile="${pretiger.jar}">
-      <fileset dir="${build.pretiger.dir}">
-      </fileset>
-    </jar>
-
-  </target>
 
   <!-- jsr166x -->
 

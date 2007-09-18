@@ -764,7 +764,7 @@ public class ScheduledThreadPoolExecutor
         /**
          * Set f's heapIndex if it is a ScheduledFutureTask.
          */
-        private void setIndex(Object f, int idx) {
+        private void setIndex(RunnableScheduledFuture f, int idx) {
             if (f instanceof ScheduledFutureTask)
                 ((ScheduledFutureTask)f).heapIndex = idx;
         }
@@ -843,50 +843,62 @@ public class ScheduledThreadPoolExecutor
          */
         private int indexOf(Object x) {
             if (x != null) {
-                for (int i = 0; i < size; i++)
-                    if (x.equals(queue[i]))
-                        return i;
+		if (x instanceof ScheduledFutureTask) {
+		    int i = ((ScheduledFutureTask) x).heapIndex;
+		    // Sanity check; x could conceivably be a
+		    // ScheduledFutureTask from some other pool.
+		    if (i >= 0 && i < size && queue[i] == x)
+			return i;
+		} else {
+		    for (int i = 0; i < size; i++)
+			if (x.equals(queue[i]))
+			    return i;
+		}
             }
             return -1;
         }
 
-        public boolean remove(Object x) {
-            boolean removed;
-            final ReentrantLock lock = this.lock;
+	public boolean contains(Object x) {
+	    final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-                int i;
-                if (x instanceof ScheduledFutureTask)
-                    i = ((ScheduledFutureTask)x).heapIndex;
-                else
-                    i = indexOf(x);
-                if (removed = (i >= 0 && i < size && queue[i] == x)) {
-                    setIndex(x, -1);
-                    int s = --size;
-                    RunnableScheduledFuture replacement = queue[s];
-                    queue[s] = null;
-                    if (s != i) {
-                        siftDown(i, replacement);
-                        if (queue[i] == replacement)
-                            siftUp(i, replacement);
-                    }
-                }
+		return indexOf(x) != -1;
             } finally {
                 lock.unlock();
             }
-            return removed;
+	}
+
+        public boolean remove(Object x) {
+            final ReentrantLock lock = this.lock;
+            lock.lock();
+            try {
+                int i = indexOf(x);
+		if (i < 0)
+		    return false;
+
+		setIndex(queue[i], -1);
+		int s = --size;
+		RunnableScheduledFuture replacement = queue[s];
+		queue[s] = null;
+		if (s != i) {
+		    siftDown(i, replacement);
+		    if (queue[i] == replacement)
+			siftUp(i, replacement);
+		}
+		return true;
+            } finally {
+                lock.unlock();
+            }
         }
 
         public int size() {
-            int s;
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-                s = size;
+                return size;
             } finally {
                 lock.unlock();
             }
-            return s;
         }
 
         public boolean isEmpty() {
@@ -918,17 +930,13 @@ public class ScheduledThreadPoolExecutor
                 if (i >= queue.length)
                     grow();
                 size = i + 1;
-                boolean notify;
                 if (i == 0) {
-                    notify = true;
                     queue[0] = e;
                     setIndex(e, 0);
-                }
-                else {
-                    notify = e.compareTo(queue[0]) < 0;
+                } else {
                     siftUp(i, e);
                 }
-                if (notify)
+                if (queue[0] == e)
                     available.signalAll();
             } finally {
                 lock.unlock();
@@ -971,7 +979,7 @@ public class ScheduledThreadPoolExecutor
                     if (first == null)
                         available.await();
                     else {
-                        long delay =  first.getDelay(TimeUnit.NANOSECONDS);
+                        long delay = first.getDelay(TimeUnit.NANOSECONDS);
                         if (delay > 0)
                             available.awaitNanos(delay);
                         else
@@ -1056,18 +1064,12 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
+		RunnableScheduledFuture first;
                 int n = 0;
-                for (;;) {
-                    RunnableScheduledFuture first = pollExpired();
-                    if (first != null) {
-                        c.add(first);
-                        ++n;
-                    }
-                    else
-                        break;
-                }
-                if (n > 0)
-                    available.signalAll();
+                while ((first = pollExpired()) != null) {
+		    c.add(first);
+		    ++n;
+		}
                 return n;
             } finally {
                 lock.unlock();
@@ -1084,18 +1086,12 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
+		RunnableScheduledFuture first;
                 int n = 0;
-                while (n < maxElements) {
-                    RunnableScheduledFuture first = pollExpired();
-                    if (first != null) {
-                        c.add(first);
-                        ++n;
-                    }
-                    else
-                        break;
-                }
-                if (n > 0)
-                    available.signalAll();
+                while (n < maxElements && (first = pollExpired()) != null) {
+		    c.add(first);
+		    ++n;
+		}
                 return n;
             } finally {
                 lock.unlock();
@@ -1106,12 +1102,13 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-                return Arrays.copyOf(queue, size);
+                return Arrays.copyOf(queue, size, Object[].class);
             } finally {
                 lock.unlock();
             }
         }
 
+	@SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             final ReentrantLock lock = this.lock;
             lock.lock();
@@ -1128,19 +1125,18 @@ public class ScheduledThreadPoolExecutor
         }
 
         public Iterator<Runnable> iterator() {
-            return new Itr(toArray());
+            return new Itr(Arrays.copyOf(queue, size));
         }
 
         /**
          * Snapshot iterator that works off copy of underlying q array.
          */
         private class Itr implements Iterator<Runnable> {
-            final Object[] array; // Array of all elements
-            int cursor;           // index of next element to return;
-            int lastRet;          // index of last element, or -1 if no such
+            final RunnableScheduledFuture[] array;
+            int cursor = 0;	// index of next element to return
+            int lastRet = -1;	// index of last element, or -1 if no such
 
-            Itr(Object[] array) {
-                lastRet = -1;
+            Itr(RunnableScheduledFuture[] array) {
                 this.array = array;
             }
 
@@ -1152,7 +1148,7 @@ public class ScheduledThreadPoolExecutor
                 if (cursor >= array.length)
                     throw new NoSuchElementException();
                 lastRet = cursor;
-                return (Runnable)array[cursor++];
+                return array[cursor++];
             }
 
             public void remove() {

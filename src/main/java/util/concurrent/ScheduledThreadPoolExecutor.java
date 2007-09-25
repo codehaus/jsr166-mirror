@@ -17,12 +17,20 @@ import java.util.*;
  * flexibility or capabilities of {@link ThreadPoolExecutor} (which
  * this class extends) are required.
  *
- * <p> Delayed tasks execute no sooner than they are enabled, but
+ * <p>Delayed tasks execute no sooner than they are enabled, but
  * without any real-time guarantees about when, after they are
  * enabled, they will commence. Tasks scheduled for exactly the same
  * execution time are enabled in first-in-first-out (FIFO) order of
- * submission. If {@link #setRemoveOnCancelPolicy} is set {@code true},
- * cancelled tasks are automatically removed from the work queue.
+ * submission.
+ *
+ * <p>When a submitted task is cancelled before it is run, execution
+ * is suppressed. By default, such a cancelled task is not
+ * automatically removed from the work queue until its delay
+ * elapses. While this enables further inspection and monitoring, it
+ * may also cause unbounded retention of cancelled tasks. To avoid
+ * this, set {@link #setRemoveOnCancelPolicy} to {@code true}, which
+ * causes tasks to be immediately removed from the work queue at
+ * time of cancellation.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not useful for it. In
@@ -84,21 +92,11 @@ public class ScheduledThreadPoolExecutor
      *    ScheduledExecutorService methods) which are treated as
      *    delayed tasks with a delay of zero.
      *
-     * 2. Using a custom queue (DelayedWorkQueue) based on an
+     * 2. Using a custom queue (DelayedWorkQueue), a variant of
      *    unbounded DelayQueue. The lack of capacity constraint and
      *    the fact that corePoolSize and maximumPoolSize are
      *    effectively identical simplifies some execution mechanics
-     *    (see delayedExecute) compared to ThreadPoolExecutor
-     *    version.
-     *
-     *    The DelayedWorkQueue class is defined below for the sake of
-     *    ensuring that all elements are instances of
-     *    RunnableScheduledFuture.  Since DelayQueue otherwise
-     *    requires type be Delayed, but not necessarily Runnable, and
-     *    the workQueue requires the opposite, we need to explicitly
-     *    define a class that requires both to ensure that users don't
-     *    add objects that aren't RunnableScheduledFutures via
-     *    getQueue().add() etc.
+     *    (see delayedExecute) compared to ThreadPoolExecutor.
      *
      * 3. Supporting optional run-after-shutdown parameters, which
      *    leads to overrides of shutdown methods to remove and cancel
@@ -647,8 +645,9 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Sets the policy on whether cancellation of a task should remove
-     * it from the work queue.  This value is by default {@code false}.
+     * Sets the policy on whether cancelled tasks should be immediately
+     * removed from the work queue at time of cancellation.  This value is
+     * by default {@code false}.
      *
      * @param value if {@code true}, remove on cancellation, else don't
      * @see #getRemoveOnCancelPolicy
@@ -659,10 +658,12 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Gets the policy on whether cancellation of a task should remove
-     * it from the work queue.  This value is by default {@code false}.
+     * Gets the policy on whether cancelled tasks should be immediately
+     * removed from the work queue at time of cancellation.  This value is
+     * by default {@code false}.
      *
-     * @return {@code true} if cancelled tasks are removed from the queue
+     * @return {@code true} if cancelled tasks are immediately removed
+     *         from the queue
      * @see #setRemoveOnCancelPolicy
      * @since 1.7
      */
@@ -753,13 +754,35 @@ public class ScheduledThreadPoolExecutor
          * identified by heapIndex.
          */
 
-        private static final int INITIAL_CAPACITY = 64;
-        private transient RunnableScheduledFuture[] queue =
+        private static final int INITIAL_CAPACITY = 16;
+        private RunnableScheduledFuture[] queue =
             new RunnableScheduledFuture[INITIAL_CAPACITY];
-        private transient final ReentrantLock lock = new ReentrantLock();
-        private transient final Condition available = lock.newCondition();
+        private final ReentrantLock lock = new ReentrantLock();
         private int size = 0;
 
+	/**
+	 * Thread designated to wait for the task at the head of the
+	 * queue.  This variant of the Leader-Follower pattern
+	 * (http://www.cs.wustl.edu/~schmidt/POSA/POSA2/) serves to
+	 * minimize unnecessary timed waiting.  When a thread becomes
+	 * the leader, it waits only for the next delay to elapse, but
+	 * other threads await indefinitely.  The leader thread must
+	 * signal some other thread before returning from take() or
+	 * poll(...), unless some other thread becomes leader in the
+	 * interim.  Whenever the head of the queue is replaced with a
+	 * task with an earlier expiration time, the leader field is
+	 * invalidated by being reset to null, and some waiting
+	 * thread, but not necessarily the current leader, is
+	 * signalled.  So waiting threads must be prepared to acquire
+	 * and lose leadership while waiting.
+	 */
+	private Thread leader = null;
+
+	/**
+	 * Condition signalled when a newer task becomes available at the
+	 * head of the queue or a new thread may need to become leader.
+	 */
+	private final Condition available = lock.newCondition();
 
         /**
          * Set f's heapIndex if it is a ScheduledFutureTask.
@@ -807,24 +830,6 @@ public class ScheduledThreadPoolExecutor
             }
             queue[k] = key;
             setIndex(key, k);
-        }
-
-        /**
-         * Performs common bookkeeping for poll and take: Replaces
-         * first element with last; sifts it down, and signals any
-         * waiting consumers.  Call only when holding lock.
-         * @param f the task to remove and return
-         */
-        private RunnableScheduledFuture finishPoll(RunnableScheduledFuture f) {
-            int s = --size;
-            RunnableScheduledFuture x = queue[s];
-            queue[s] = null;
-            if (s != 0) {
-                siftDown(0, x);
-                available.signalAll();
-            }
-            setIndex(f, -1);
-            return f;
         }
 
         /**
@@ -936,8 +941,10 @@ public class ScheduledThreadPoolExecutor
                 } else {
                     siftUp(i, e);
                 }
-                if (queue[0] == e)
-                    available.signalAll();
+                if (queue[0] == e) {
+		    leader = null;
+                    available.signal();
+		}
             } finally {
                 lock.unlock();
             }
@@ -954,6 +961,22 @@ public class ScheduledThreadPoolExecutor
 
         public boolean offer(Runnable e, long timeout, TimeUnit unit) {
             return offer(e);
+        }
+
+        /**
+         * Performs common bookkeeping for poll and take: Replaces
+         * first element with last; sifts it down, and signals another
+         * waiting consumer.  Call only when holding lock.
+         * @param f the task to remove and return
+         */
+        private RunnableScheduledFuture finishPoll(RunnableScheduledFuture f) {
+            int s = --size;
+            RunnableScheduledFuture x = queue[s];
+            queue[s] = null;
+            if (s != 0)
+                siftDown(0, x);
+            setIndex(f, -1);
+            return f;
         }
 
         public RunnableScheduledFuture poll() {
@@ -979,14 +1002,26 @@ public class ScheduledThreadPoolExecutor
                     if (first == null)
                         available.await();
                     else {
-                        long delay = first.getDelay(TimeUnit.NANOSECONDS);
-                        if (delay > 0)
-                            available.awaitNanos(delay);
-                        else
-                            return finishPoll(first);
+			long delay = first.getDelay(TimeUnit.NANOSECONDS);
+			if (delay <= 0)
+			    return finishPoll(first);
+			else if (leader != null)
+			    available.await();
+			else {
+			    Thread thisThread = Thread.currentThread();
+			    leader = thisThread;
+			    try {
+				available.awaitNanos(delay);
+			    } finally {
+				if (leader == thisThread)
+				    leader = null;
+			    }
+			}
                     }
                 }
             } finally {
+		if (leader == null && queue[0] != null)
+		    available.signal();
                 lock.unlock();
             }
         }
@@ -1006,18 +1041,28 @@ public class ScheduledThreadPoolExecutor
                             nanos = available.awaitNanos(nanos);
                     } else {
                         long delay = first.getDelay(TimeUnit.NANOSECONDS);
-                        if (delay > 0) {
-                            if (nanos <= 0)
-                                return null;
-                            if (delay > nanos)
-                                delay = nanos;
-                            long timeLeft = available.awaitNanos(delay);
-                            nanos -= delay - timeLeft;
-                        } else
+			if (delay <= 0)
                             return finishPoll(first);
-                    }
-                }
+			if (nanos <= 0)
+			    return null;
+			if (nanos < delay || leader != null)
+			    nanos = available.awaitNanos(nanos);
+			else {
+			    Thread thisThread = Thread.currentThread();
+			    leader = thisThread;
+			    try {
+				long timeLeft = available.awaitNanos(delay);
+				nanos -= delay - timeLeft;
+			    } finally {
+				if (leader == thisThread)
+				    leader = null;
+			    }
+			}
+		    }
+		}
             } finally {
+		if (leader == null && queue[0] != null)
+		    available.signal();
                 lock.unlock();
             }
         }
@@ -1047,13 +1092,7 @@ public class ScheduledThreadPoolExecutor
             RunnableScheduledFuture first = queue[0];
             if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
                 return null;
-            setIndex(first, -1);
-            int s = --size;
-            RunnableScheduledFuture x = queue[s];
-            queue[s] = null;
-            if (s != 0)
-                siftDown(0, x);
-            return first;
+	    return finishPoll(first);
         }
 
         public int drainTo(Collection<? super Runnable> c) {

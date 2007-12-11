@@ -3912,9 +3912,9 @@ public class ParallelArray<T> implements Iterable<T> {
                 coInvoke
                     (new FJSubSorter<T>
                      (new FJSorter<T>(cmp, a, w, origin,   q,   g),
-                      new FJSorter<T>(cmp, a, w, origin+q, q,   g),
+                      new FJSorter<T>(cmp, a, w, origin+q, h-q, g),
                       new FJMerger<T>(cmp, a, w, origin,   q,
-                                      origin+q, q, origin, g)
+                                      origin+q, h-q, origin, g)
                       ),
                      new FJSubSorter<T>
                      (new FJSorter<T>(cmp, a, w, origin+h, q,   g),
@@ -4122,9 +4122,9 @@ public class ParallelArray<T> implements Iterable<T> {
                 coInvoke
                     (new FJComparableSubSorter<T>
                      (new FJComparableSorter<T>(a, w, origin,   q,   g),
-                      new FJComparableSorter<T>(a, w, origin+q, q,   g),
+                      new FJComparableSorter<T>(a, w, origin+q, h-q, g),
                       new FJComparableMerger<T>(a, w, origin,   q,
-                                                origin+q, q, origin, g)
+                                                origin+q, h-q, origin, g)
                       ),
                      new FJComparableSubSorter<T>
                      (new FJComparableSorter<T>(a, w, origin+h, q,   g),

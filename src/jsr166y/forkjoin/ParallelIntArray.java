@@ -4120,9 +4120,9 @@ public class ParallelIntArray {
                 coInvoke
                     (new FJSubSorter
                      (new FJSorter(cmp, a, w, origin,   q,   g),
-                      new FJSorter(cmp, a, w, origin+q, q,   g),
+                      new FJSorter(cmp, a, w, origin+q, h-q, g),
                       new FJMerger(cmp, a, w, origin,   q,
-                                   origin+q, q, origin, g)
+                                   origin+q, h-q, origin, g)
                       ),
                      new FJSubSorter
                      (new FJSorter(cmp, a, w, origin+h, q,   g),
@@ -4328,9 +4328,9 @@ public class ParallelIntArray {
                 coInvoke
                     (new FJIntSubSorter
                      (new FJIntSorter(a, w, origin,   q,   g),
-                      new FJIntSorter(a, w, origin+q, q,   g),
+                      new FJIntSorter(a, w, origin+q, h-q,   g),
                       new FJIntMerger(a, w, origin,   q,
-                                      origin+q, q, origin, g)
+                                      origin+q, h-q, origin, g)
                       ),
                      new FJIntSubSorter
                      (new FJIntSorter(a, w, origin+h, q,   g),

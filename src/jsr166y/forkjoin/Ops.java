@@ -66,8 +66,8 @@ public class Ops {
      * A specialized combiner that is associative and accepts pairs of
      * objects of the same type and returning one of the same
      * type. Like for example, an addition operation, a Reducer must
-     * be (left) associative: combine(a, combine(b, c)) should have
-     * the same result as combine(conbine(a, b), c).
+     * be associative: combine(a, combine(b, c)) should have
+     * the same result as combine(combine(a, b), c).
      */
     public static interface Reducer<T> extends Combiner<T, T, T> {
         public T combine(T t, T v); 

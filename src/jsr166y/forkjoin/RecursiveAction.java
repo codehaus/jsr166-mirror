@@ -33,16 +33,37 @@ import java.util.concurrent.atomic.*;
  *     else {
  *       int mid = (lo + hi) &gt;&gt;&gt; 1;
  *       coInvoke(new SortTask(array, lo, mid),
- *                new SortTask(array, mid+1, hi));
+ *                new SortTask(array, mid, hi));
  *       merge(array, lo, hi);
  *     }
- *     return null;
  *   }
  * }
  * </pre>
  *
  * You could then sort anArray by creating <tt>new SortTask(anArray, 0,
  * anArray.length-1) </tt> and invoking it in a ForkJoinPool. 
+ * As a more concrete simple example, the following task increments
+ * each element of an array:
+ * <pre>
+ * class IncrementTask extends RecursiveAction {
+ *   final long[] array; final int lo; final int hi;
+ *   IncrementTask(long[] array, int lo, int hi) {
+ *     this.array = array; this.lo = lo; this.hi = hi;
+ *   }
+ *   protected void compute() {
+ *     if (hi - lo &lt; THRESHOLD) {
+ *       for (int i = lo; i &lt; hi; ++i)
+ *         array[i]++;
+ *     }
+ *     else {
+ *       int mid = (lo + hi) &gt;&gt;&gt; 1;
+ *       coInvoke(new IncrementTask(array, lo, mid),
+ *                new IncrementTask(array, mid, hi));
+ *     }
+ *   }
+ * }
+ * </pre>
+ *
  *
  * <p>RecursiveActions need not be fully recursive, so long as they
  * maintain the basic divide-and-conquer approach. For example, here
@@ -78,12 +99,12 @@ import java.util.concurrent.atomic.*;
  *     Applyer right = null;
  *     while (h - l &gt; seqSize) { // fork right-hand sides
  *        int mid = (l + h) &gt;&gt;&gt 1;
- *        right = new Applyer(array, mid+1, h, seqSize, right);
+ *        right = new Applyer(array, mid, h, seqSize, right);
  *        right.fork();
  *        h = mid;
  *     }
  *     double sum = 0;
- *     for (int i = l; i &lt;= h; ++i) // perform leftmost base step
+ *     for (int i = l; i &lt; h; ++i) // perform leftmost base step
  *       sum += array[i] * array[i];
  *     while (right != null) {  // join right-hand sides
  *       right.join();

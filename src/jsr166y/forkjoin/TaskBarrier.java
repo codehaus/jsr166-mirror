@@ -75,8 +75,8 @@ import java.util.concurrent.atomic.*;
  *        result = n;
  *     else {
  *        TaskBarrier childBarrier = new TaskBarrier(1);
- *        Fibonacci f1 = new Fibonacci(n - 1, childBarrier);
- *        Fibonacci f2 = new Fibonacci(n - 2, childBarrier);
+ *        BarrierFibonacci f1 = new BarrierFibonacci(n - 1, childBarrier);
+ *        BarrierFibonacci f2 = new BarrierFibonacci(n - 2, childBarrier);
  *        f1.fork();
  *        f2.fork();
  *        childBarrier.arriveAndAwait();

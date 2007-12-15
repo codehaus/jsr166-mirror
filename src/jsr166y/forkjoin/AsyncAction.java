@@ -25,7 +25,7 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      * The asynchronous part of the computation performed by this
      * task.  While you must define this method, you should not in
      * general call it directly (although you can invoke immediately
-     * via <tt>exec</tt>.) If this method throws a Throwable,
+     * via <tt>exec</tt>.) If this method throws an excaption,
      * <tt>finishExceptionally</tt> is immediately invoked.
      */
     protected abstract void compute();

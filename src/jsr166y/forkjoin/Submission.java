@@ -10,11 +10,14 @@ import java.util.concurrent.locks.*;
 
 /**
  * Adapter class to allow tasks submitted to a pool to act as Futures.
- * This entails three kinds of adaptation:
+ * Methods are implemented in the same way as in the RecursiveTask
+ * class, but with extra bookkeeping and signalling to cover three
+ * kinds of adaptation:
  *
- * (1) Unlike internal fork/join processing, get() must block, not
- * help out processing tasks. We use a simpler variant of the
- * mechanics used in FutureTask
+ * (1) Unlike internal fork/join processing, get() must block if the
+ * caller is a normal thread (not FJ worker thread). We use a simpler
+ * variant of the mechanics used in FutureTask, but bypass them and
+ * use helping joins if the caller is itself a ForkJoinWorkerThread.
  *
  * (2) Regular Futures encase RuntimeExceptions within
  * ExecutionExeptions, while internal tasks just throw them directly,
@@ -22,11 +25,14 @@ import java.util.concurrent.locks.*;
  *
  * (3) External submissions are tracked for the sake of managing
  * worker threads. The pool submissionStarting and submissionCompleted
- * methods perform the associated bookkeeping.
+ * methods perform the associated bookkeeping. This requires some care
+ * with cancellation and early termination -- the completion signal
+ * can be issued only if a start signal ever was.
+ *
  */
-final class Submission<T> extends RecursiveTask<T> implements Future<T> {
+final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
     
-    // status values for sync. We need to keep track of RUNNING status
+    // Status values for sync. We need to keep track of RUNNING status
     // just to make sure callbacks to pool are balanced.
     static final int INITIAL = 0;
     static final int RUNNING = 1;
@@ -43,14 +49,14 @@ final class Submission<T> extends RecursiveTask<T> implements Future<T> {
         }
 
         public boolean tryReleaseShared(int releases) { return true; }
-
+        public void reset() { setState(INITIAL); }
         public boolean isDone() { return getState() == DONE; }
 
         public boolean transitionToRunning() {
             return compareAndSetState(INITIAL, RUNNING);
         }
 
-        /** Set status to DONE; return old state */
+        /** Set status to DONE, release waiters, and return old state */
         public int transitionToDone() {
             for (;;) {
                 int c = getState();
@@ -60,34 +66,41 @@ final class Submission<T> extends RecursiveTask<T> implements Future<T> {
                 }
             }
         }
-
     }
 
-    private final ForkJoinTask<T> task;
+    private final ForkJoinTask<V> task;
     private final ForkJoinPool pool;
     private final Sync sync;
+    private volatile V result;
 
-    Submission(ForkJoinTask<T> t, ForkJoinPool p) {
+    Submission(ForkJoinTask<V> t, ForkJoinPool p) {
         t.setStolen(); // All submitted tasks treated as stolen
         task = t;
         pool = p;
         sync = new Sync();
     }
+
+    /**
+     * Transition sync and notify pool.that task finished, only if it
+     * was initially notified that task started.
+     */
+    private void complete() {
+        if (sync.transitionToDone() == RUNNING)
+            pool.submissionCompleted();
+    }
     
-    protected T compute() {
+    protected V compute() {
         try {
-            T result = null;
+            V ret = null;
             if (sync.transitionToRunning()) {
                 pool.submissionStarting();
-                result = task.invoke();
+                ret = task.invoke();
             } // else was cancelled, so result doesn't matter
-            return result; 
+            return ret; 
         } finally {
-            if (sync.transitionToDone() == RUNNING)
-                pool.submissionCompleted();
+            complete();
         }
     }
-   
 
     /**
      * ForkJoinTask version of cancel
@@ -101,8 +114,7 @@ final class Submission<T> extends RecursiveTask<T> implements Future<T> {
                 task.cancel();
             }
         } finally {
-            if (sync.transitionToDone() == RUNNING)
-                pool.submissionCompleted();
+            complete();
         }
     }
 
@@ -114,14 +126,27 @@ final class Submission<T> extends RecursiveTask<T> implements Future<T> {
         return isCancelled();
     }
 
-    public T get() throws InterruptedException, ExecutionException {
+    public V get() throws InterruptedException, ExecutionException {
+        // If caller is FJ worker, help instead of block, but fall
+        // through.to acquire, to preserve Submission sync guarantees
+        Thread t = Thread.currentThread();
+        if (t instanceof ForkJoinWorkerThread)
+            quietlyJoin(); 
         sync.acquireSharedInterruptibly(1);
         return task.reportAsFutureResult();
     }
 
-    public T get(long timeout, TimeUnit unit)
+    public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        if (!sync.tryAcquireSharedNanos(1, unit.toNanos(timeout)))
+        long nanos = unit.toNanos(timeout);
+        Thread t = Thread.currentThread();
+        if (t instanceof ForkJoinWorkerThread) {
+            if(!((ForkJoinWorkerThread)t).doTimedJoinTask(this, nanos))
+                throw new TimeoutException();
+            //  Preserve Submission sync guarantees
+            sync.acquireSharedInterruptibly(1);
+        }
+        else if (!sync.tryAcquireSharedNanos(1, nanos))
             throw new TimeoutException();
         return task.reportAsFutureResult();
     }
@@ -129,10 +154,68 @@ final class Submission<T> extends RecursiveTask<T> implements Future<T> {
     /**
      * Interrupt-less get for ForkJoinPool.invoke
      */
-    public T awaitInvoke() {
+    public V awaitInvoke() {
+        Thread t = Thread.currentThread();
+        if (t instanceof ForkJoinWorkerThread)
+            quietlyJoin(); 
         sync.acquireShared(1);
         return task.reportAsForkJoinResult();
     }
+
+    public void finish(V result) { 
+        try {
+            this.result = result;
+            setDone();
+        } finally {
+            complete();
+        }
+    }
+
+    public void finishExceptionally(Throwable ex) {
+        try {
+            setDoneExceptionally(ex);
+            task.setDoneExceptionally(ex);
+        } finally {
+            complete();
+        }
+    }
+
+    public V invoke() {
+        V v = null;
+        if (exception == null) {
+            try {
+                result = v = compute();
+            } catch(Throwable rex) {
+                finishExceptionally(rex);
+            }
+        }
+        Throwable ex = setDone();
+        if (ex != null)
+            rethrowException(ex);
+        return v;
+    }
+
+    public Throwable exec() {
+        if (exception == null) {
+            try {
+                result = compute();
+            } catch(Throwable rex) {
+                return setDoneExceptionally(rex);
+            }
+        }
+        return setDone();
+    }
+
+    public V rawResult() { 
+        return result; 
+    }
+
+    public void reinitialize() { // Of dubious value.
+        result = null;
+        sync.reset();
+        super.reinitialize();
+    }
+
 }
 
 

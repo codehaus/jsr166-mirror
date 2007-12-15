@@ -213,7 +213,14 @@ public abstract class ForkJoinTask<V> {
 
     /**
      * Returns true if the computation performed by this task has
-     * completed (or has been cancelled).
+     * completed (or has been cancelled). This method will eventually
+     * return true upon task completion, but return values are not
+     * otherwise guaranteed to be uniform across observers.  Thus,
+     * when task <tt>t</tt> finishes, concurrent invocations of
+     * <tt>t.isDone()</tt> from other tasks or threads on may
+     * transiently return different results, but on repeated
+     * invocation, will eventually agree that <tt>t.isDone()</tt>.
+     * @return true if this computation has completed
      */
     public final boolean isDone() {
         return exception != null || status < 0;
@@ -221,6 +228,7 @@ public abstract class ForkJoinTask<V> {
 
     /**
      * Returns true if this task was cancelled.
+     * @return true if this task was cancelled
      */
     public final boolean isCancelled() {
         return exception instanceof CancellationException;
@@ -255,9 +263,10 @@ public abstract class ForkJoinTask<V> {
 
     /**
      * Returns the result that would be returned by <tt>join</tt>, or
-     * null if this task has not yet completed.  This method is
-     * designed primarily to aid debugging, as well as to support
-     * extensions.
+     * null if this task is not known to have been completed.  This
+     * method is designed to aid debugging, as well as to support
+     * extensions. Its use in any other context is strongly
+     * discouraged.
      * @return the result, or null if not completed.
      */
     public abstract V rawResult();
@@ -290,7 +299,7 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Joins this task, without returning its result or throwing
+     * Joins this task, without returning its result or throwing an
      * exception, but returning the exception that <tt>join</tt> would
      * throw. This method may be useful when processing collections of
      * tasks when some have been cancelled or otherwise known to have
@@ -316,7 +325,10 @@ public abstract class ForkJoinTask<V> {
     /**
      * Completes this task, and if not already aborted or cancelled,
      * returning the given result upon <tt>join</tt> and related
-     * operations. 
+     * operations. This method may be used to provide results, mainly
+     * for asynchronous tasks. Upon invocation, the task itself, if
+     * running, must exit (return) in a small finite number
+     * of steps.
      * @param result the result to return
      */
     public abstract void finish(V result);
@@ -324,7 +336,9 @@ public abstract class ForkJoinTask<V> {
     /**
      * Completes this task abnormally, and if not already aborted or
      * cancelled, causes it to throw the given exception upon
-     * <tt>join</tt> and related operations.
+     * <tt>join</tt> and related operations. Upon invocation, the task
+     * itself, if running, must exit (return) in a small finite number
+     * of steps.
      * @param ex the exception to throw. While not necessarily
      * statically enforced, this must be a RuntimeException or Error.
      */

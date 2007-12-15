@@ -13,12 +13,12 @@ import java.util.concurrent.atomic.*;
 
 /**
  * Host for a group of ForkJoinWorkerThreads that perform
- * ForkJoinTasks. It also provides the entry point for tasks submitted
- * from non-ForkJoinTasks, as well as management and monitoring
- * operations.  Normally a single ForkJoinPool is used for a large
- * number of submitted tasks. Otherwise, use would not always outweigh
- * the construction overhead of creating a large set of threads and
- * the associated startup bookkeeping.
+ * ForkJoinTasks. A ForkJoinPool also provides the entry point for
+ * tasks submitted from non-ForkJoinTasks, as well as management and
+ * monitoring operations.  Normally a single ForkJoinPool is used for
+ * a large number of submitted tasks. Otherwise, use would not always
+ * outweigh the construction overhead of creating a large set of
+ * threads and the associated startup bookkeeping.
  *
  * <p> Class ForkJoinPool does not implement the ExecutorService
  * interface because it only executes ForkJoinTasks, not arbitrary
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.*;
  * <p>A ForkJoinPool may be constructed with any number of worker
  * threads, and worker threads may be added and removed dynamically.
  * However, as a general rule, using a pool size of the number of
- * processors on a given system, as arranged by the default
+ * processors on a given system (as arranged by the default
  * constructor) will result in the best performance. Resizing may be
  * expensive and may cause transient imbalances and slowdowns.
  *

@@ -83,8 +83,7 @@ final class PoolBarrier {
         EQNode h = head.get();
         if (h != null) {
             ForkJoinWorkerThread t;
-            if (head.compareAndSet(h, h.next) &&
-                (t = h.thread) != null) {
+            if (head.compareAndSet(h, h.next) && (t = h.thread) != null) {
                 h.thread = null;
                 LockSupport.unpark(t);
             }

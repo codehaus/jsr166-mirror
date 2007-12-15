@@ -951,6 +951,25 @@ public class ForkJoinWorkerThread extends Thread {
                 t.exec();
         }
     }
+
+    /**
+     * Timeout version of join for Submissions.
+     * Returns false if timed out before complated
+     */
+    final boolean doTimedJoinTask(ForkJoinTask<?> joinMe, long nanos) {
+        long startTime = System.nanoTime();
+        for (;;) {
+            if (joinMe.exception != null || joinMe.status < 0)
+                return true;
+            if (nanos - (System.nanoTime() - startTime) <= 0)
+                return false;
+            ForkJoinTask<?> t;
+            if ((t = getTask()) == null)
+                onEmptyScan(JOINING);
+            else
+                t.exec();
+        }
+    }
     
     final void doCoInvoke(RecursiveAction t1, RecursiveAction t2) {
         int touch = t1.status + t2.status; // force null pointer check

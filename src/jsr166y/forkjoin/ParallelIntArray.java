@@ -3827,7 +3827,7 @@ public class ParallelIntArray {
             int mid = (lo + hi) >>> 1;
             FJSelectAll l = new FJSelectAll(driver, lo, mid);
             FJSelectAll r = new FJSelectAll(driver, mid, hi);
-            coInvoke(l, r);
+            forkJoin(l, r);
             int lnm = l.nmatches;
             if (lnm != 0)
                 left = l;
@@ -3846,7 +3846,7 @@ public class ParallelIntArray {
                 if (right != null) {
                     right.offset = k + lnm;
                     right.reinitialize();
-                    coInvoke(left, right);
+                    forkJoin(left, right);
                 }
                 else
                     left.compute();
@@ -4117,7 +4117,7 @@ public class ParallelIntArray {
                 int h = n >>> 1; // half
                 int q = n >>> 2; // lower quarter index
                 int u = h + q;   // upper quarter
-                coInvoke
+                forkJoin
                     (new FJSubSorter
                      (new FJSorter(cmp, a, w, origin,   q,   g),
                       new FJSorter(cmp, a, w, origin+q, h-q, g),
@@ -4325,7 +4325,7 @@ public class ParallelIntArray {
                 int h = n >>> 1; // half
                 int q = n >>> 2; // lower quarter index
                 int u = h + q;   // upper quarter
-                coInvoke
+                forkJoin
                     (new FJIntSubSorter
                      (new FJIntSorter(a, w, origin,   q,   g),
                       new FJIntSorter(a, w, origin+q, h-q,   g),

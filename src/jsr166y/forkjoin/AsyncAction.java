@@ -53,7 +53,7 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
         return null; 
     }
 
-    public final Void invoke() {
+    public final Void forkJoin() {
         exec();
         return join();
     }

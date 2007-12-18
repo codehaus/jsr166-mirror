@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.*;
  *     Fibonacci f1 = new Fibonacci(n - 1);
  *     f1.fork();
  *     Fibonacci f2 = new Fibonacci(n - 2);
- *     return f2.invoke() + f1.join();
+ *     return f2.forkJoin() + f1.join();
  *   }
  * }
  * </pre>
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.*;
  * is the case for nearly all fork/join applications, you'd pick some
  * minimum granularity size (for example 10 here) for which you always
  * sequentially solve rather than subdividing.  Note also the use of
- * <tt>f2.invoke()</tt> instead of <tt>f2.fork(); f2.join()</tt>,
+ * <tt>f2.forkJoin()</tt> instead of <tt>f2.fork(); f2.join()</tt>,
  * which is both more convenient and more efficient.
  *
  */
@@ -57,7 +57,7 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
         return result; 
     }
 
-    public final V invoke() {
+    public final V forkJoin() {
         V v = null;
         if (exception == null) {
             try {

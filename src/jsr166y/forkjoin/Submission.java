@@ -94,7 +94,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
             V ret = null;
             if (sync.transitionToRunning()) {
                 pool.submissionStarting();
-                ret = task.invoke();
+                ret = task.forkJoin();
             } // else was cancelled, so result doesn't matter
             return ret; 
         } finally {
@@ -180,7 +180,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         }
     }
 
-    public V invoke() {
+    public V forkJoin() {
         V v = null;
         if (exception == null) {
             try {

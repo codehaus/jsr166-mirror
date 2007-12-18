@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.*;
  * method and related methods use <tt>void</tt>.  RecursiveActions
  * normally proceed via parallel divide and conquer; very often using
  * the convenient (and typically more efficient) combined method
- * <tt>coInvoke</tt>.  Here is a sketch of a ForkJoin sort that sorts
+ * <tt>forkJoin</tt>.  Here is a sketch of a ForkJoin sort that sorts
  * a given <tt>long[]</tt> array:
  *
  *
@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.*;
  *       sequentiallySort(array, lo, hi);
  *     else {
  *       int mid = (lo + hi) &gt;&gt;&gt; 1;
- *       coInvoke(new SortTask(array, lo, mid),
+ *       forkJoin(new SortTask(array, lo, mid),
  *                new SortTask(array, mid, hi));
  *       merge(array, lo, hi);
  *     }
@@ -57,7 +57,7 @@ import java.util.concurrent.atomic.*;
  *     }
  *     else {
  *       int mid = (lo + hi) &gt;&gt;&gt; 1;
- *       coInvoke(new IncrementTask(array, lo, mid),
+ *       forkJoin(new IncrementTask(array, lo, mid),
  *                new IncrementTask(array, mid, hi));
  *     }
  *   }
@@ -134,8 +134,8 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * exceptions or errors including ClassCastException.
      * @throws NullPointerException if t1 or t2 are null.
      */
-    public static void coInvoke(RecursiveAction t1, RecursiveAction t2) {
-        ((ForkJoinWorkerThread)(Thread.currentThread())).doCoInvoke(t1, t2);
+    public static void forkJoin(RecursiveAction t1, RecursiveAction t2) {
+        ((ForkJoinWorkerThread)(Thread.currentThread())).doForkJoin(t1, t2);
     }
 
     /**
@@ -147,7 +147,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * ClassCastException.
      * @throws NullPointerException if array or any element of array are null
      */
-    public static void coInvoke(RecursiveAction[] tasks) {
+    public static void forkJoin(RecursiveAction[] tasks) {
         int last = tasks.length - 1;
         Throwable ex = null;
         for (int i = last; i >= 0; --i) {
@@ -188,7 +188,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * in exceptions or errors including ClassCastException.
      * @throws NullPointerException if list or any element of list are null.
      */
-    public static void coInvoke(List<? extends RecursiveAction> tasks) {
+    public static void forkJoin(List<? extends RecursiveAction> tasks) {
         int last = tasks.size() - 1;
         Throwable ex = null;
         for (int i = last; i >= 0; --i) {
@@ -228,7 +228,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
         return null; 
     }
 
-    public final Void invoke() {
+    public final Void forkJoin() {
         try {
             if (exception == null) 
                 compute();

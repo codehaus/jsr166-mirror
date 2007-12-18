@@ -111,7 +111,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     }
 
 
-    public final Void invoke() {
+    public final Void forkJoin() {
         exec();
         return join();
     }

@@ -209,7 +209,7 @@ public abstract class ForkJoinTask<V> {
      * exception) if the underlying computation did so.
      * @return the computed result
      */
-    public abstract V invoke();
+    public abstract V forkJoin();
 
     /**
      * Returns true if the computation performed by this task has

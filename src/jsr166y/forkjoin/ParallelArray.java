@@ -3682,7 +3682,7 @@ public class ParallelArray<T> implements Iterable<T> {
             int mid = (lo + hi) >>> 1;
             FJSelectAll<T,U> l = new FJSelectAll<T,U>(driver, lo, mid);
             FJSelectAll<T,U> r = new FJSelectAll<T,U>(driver, mid, hi);
-            coInvoke(l, r);
+            forkJoin(l, r);
             int lnm = l.nmatches;
             if (lnm != 0)
                 left = l;
@@ -3701,7 +3701,7 @@ public class ParallelArray<T> implements Iterable<T> {
                 if (right != null) {
                     right.offset = k + lnm;
                     right.reinitialize();
-                    coInvoke(left, right);
+                    forkJoin(left, right);
                 }
                 else
                     left.compute();
@@ -3908,7 +3908,7 @@ public class ParallelArray<T> implements Iterable<T> {
                 int h = n >>> 1; // half
                 int q = n >>> 2; // lower quarter index
                 int u = h + q;   // upper quarter
-                coInvoke
+                forkJoin
                     (new FJSubSorter<T>
                      (new FJSorter<T>(cmp, a, w, origin,   q,   g),
                       new FJSorter<T>(cmp, a, w, origin+q, h-q, g),
@@ -4118,7 +4118,7 @@ public class ParallelArray<T> implements Iterable<T> {
                 int h = n >>> 1; // half
                 int q = n >>> 2; // lower quarter index
                 int u = h + q;   // upper quarter
-                coInvoke
+                forkJoin
                     (new FJComparableSubSorter<T>
                      (new FJComparableSorter<T>(a, w, origin,   q,   g),
                       new FJComparableSorter<T>(a, w, origin+q, h-q, g),

@@ -971,7 +971,7 @@ public class ForkJoinWorkerThread extends Thread {
         }
     }
     
-    final void doCoInvoke(RecursiveAction t1, RecursiveAction t2) {
+    final void doForkJoin(RecursiveAction t1, RecursiveAction t2) {
         int touch = t1.status + t2.status; // force null pointer check
         pushTask(t2);
         Throwable ex1 = t1.exec();

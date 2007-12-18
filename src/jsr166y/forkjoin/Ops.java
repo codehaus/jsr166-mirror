@@ -423,7 +423,7 @@ public class Ops {
         /** Singleton reducer object */
         public static final NaturalDoubleMaxReducer max = 
             new NaturalDoubleMaxReducer();
-        public double combine(double a, double b) { return a >= b? a : b; }
+        public double combine(double a, double b) { return Math.max(a, b); }
     }
 
     /**
@@ -435,7 +435,7 @@ public class Ops {
         /** Singleton reducer object */
         public static final NaturalDoubleMinReducer min = 
             new NaturalDoubleMinReducer();
-        public double combine(double a, double b) { return a <= b? a : b; }
+        public double combine(double a, double b) { return Math.min(a, b); }
     }
 
     /**

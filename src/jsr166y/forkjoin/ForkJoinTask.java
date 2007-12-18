@@ -325,10 +325,11 @@ public abstract class ForkJoinTask<V> {
     /**
      * Completes this task, and if not already aborted or cancelled,
      * returning the given result upon <tt>join</tt> and related
-     * operations. This method may be used to provide results, mainly
-     * for asynchronous tasks. Upon invocation, the task itself, if
-     * running, must exit (return) in a small finite number
-     * of steps.
+     * operations. This method may be invoked only from within other
+     * ForkJoinTask computations. This method may be used to provide
+     * results, mainly for asynchronous tasks. Upon invocation, the
+     * task itself, if running, must exit (return) in a small finite
+     * number of steps.
      * @param result the result to return
      */
     public abstract void finish(V result);

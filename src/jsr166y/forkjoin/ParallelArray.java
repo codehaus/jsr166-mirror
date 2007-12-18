@@ -300,7 +300,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * the same length as this array.
      */
     public <U,V> ParallelArray<V> combine
-        (ParallelArray<U> other,
+        (ParallelArray<? extends U> other,
          Combiner<? super T, ? super U, ? extends V> combiner) {
         return new WithBounds<T>(ex, array).combine(other.array, combiner);
     }
@@ -336,7 +336,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * the same length as this array.
      */
     public <U,V> ParallelArray<V> combine
-        (ParallelArray<U> other,
+        (ParallelArray<? extends U> other,
          Combiner<? super T, ? super U, ? extends V> combiner,
          Class<? super V> elementType) {
         return new WithBounds<T>(ex, array).combine(other.array,
@@ -706,13 +706,12 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return reduction
          */
         public U reduce(Reducer<U> reducer, U base) {
+            if (ex.getParallelismLevel() < 2)
+                return leafReduce(firstIndex, upperBound, reducer, base);
             FJReduce<T,U> f =
                 new FJReduce<T,U>(this, firstIndex, upperBound, null,
                                   reducer, base);
-            if (ex.getParallelismLevel() < 2)
-                leafReduce(firstIndex, upperBound, reducer, base);
-            else
-                ex.invoke(f);
+            ex.invoke(f);
             return f.result;
         }
 
@@ -1296,7 +1295,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * shorter than this array.
          */
         public <U,V> ParallelArray<V> combine
-            (ParallelArray<U> other,
+            (ParallelArray<? extends U> other,
              Combiner<? super T, ? super U, ? extends V> combiner) {
             return combine(other.array, combiner);
         }
@@ -1313,7 +1312,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * shorter than this array.
          */
         public <U,V> ParallelArray<V> combine
-            (ParallelArray<U> other,
+            (ParallelArray<? extends U> other,
              Combiner<? super T, ? super U, ? extends V> combiner,
              Class<? super V> elementType) {
             return combine(other.array, combiner, elementType);

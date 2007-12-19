@@ -3009,7 +3009,7 @@ public class ParallelIntArray {
             }
             int[] array = params.array;
             int n = 0;
-            for (int i = lo; i < hi; ++i) {
+            for (int i = l; i < h; ++i) {
                 if (selector.evaluate(array[i]))
                     ++n;
             }

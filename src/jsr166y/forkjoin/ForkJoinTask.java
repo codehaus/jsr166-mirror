@@ -71,6 +71,12 @@ public abstract class ForkJoinTask<V> {
      */
 
     /**
+     * Disallow direct construction outside this package.
+     */
+    ForkJoinTask() {
+    }
+
+    /**
      * The exception thrown within compute method, or via cancellation.
      * Updated only via CAS, to arbitrate cancellations vs normal
      * exceptions.  

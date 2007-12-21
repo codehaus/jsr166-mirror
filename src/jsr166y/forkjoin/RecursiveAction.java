@@ -120,7 +120,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     /**
      * The main computation performed by this task.  While you must
      * define this method, you should not in general call it directly.
-     * To immediately perform the computation, use <tt>invoke</tt>.
+     * To immediately perform the computation, use <tt>forkJoin</tt>.
      */
     protected abstract void compute();
 

@@ -8,62 +8,155 @@ package jsr166y.forkjoin;
 import static jsr166y.forkjoin.Ops.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.lang.reflect.Array;
 
 /**
  * An array of longs supporting parallel operations.  This class
  * provides methods supporting the same operations as {@link
- * ParallelArray}, but specialized for scalar long integers. It
- * additionally provides a few methods specific to numerical values.
+ * ParallelArray}, but specialized for scalar longs. It additionally
+ * provides a few methods specific to numerical values.
  */
 public class ParallelLongArray {
-    final long[] array;
+    // Same internals as ParallelArray, but specialized for longs
+    long[] array;
     final ForkJoinExecutor ex;
+    int limit;
+    AsList listView;
+
+    /**
+     * Returns a common default executor for use in ParallelArrays.
+     * This executor arranges enough parallelism to use most, but not
+     * necessarily all, of the avaliable processors on this system.
+     * @return the executor
+     */
+    public static ForkJoinExecutor defaultExecutor() {
+        return PAS.defaultExecutor();
+    }
+
+    /**
+     * Constructor for use by subclasses to create a new ParallelLongArray
+     * using the given executor, and initially using the supplied
+     * array, with effective size bound by the given limit. This
+     * constructor is designed to enable extensions via
+     * subclassing. To create a ParallelLongArray, use {@link #create},
+     * {@link #createEmpty}, {@link #createUsingHandoff} or {@link
+     * #createFromCopy}.
+     * @param executor the executor
+     * @param array the array
+     * @param limit the upper bound limit
+     */
+    protected ParallelLongArray(ForkJoinExecutor executor, long[] array,
+                                int limit) {
+        if (executor == null || array == null)
+            throw new NullPointerException();
+        if (limit < 0 || limit > array.length)
+            throw new IllegalArgumentException();
+        this.ex = executor;
+        this.array = array;
+        this.limit = limit;
+    }
+
+    /**
+     * Trusted internal version of protected constructor.
+     */
+    ParallelLongArray(ForkJoinExecutor executor, long[] array) {
+        this.ex = executor;
+        this.array = array;
+        this.limit = array.length;
+    }
 
     /**
      * Creates a new ParallelLongArray using the given executor and
-     * array. In general, the handed off array should not be used for
-     * other purposes once constructing this ParallelLongArray.
+     * an array of the given size
+     * @param size the array size
      * @param executor the executor
+     */
+    public static ParallelLongArray create
+        (int size, ForkJoinExecutor executor) {
+        long[] array = new long[size];
+        return new ParallelLongArray(executor, array, size);
+    }
+
+    /**
+     * Creates a new ParallelLongArray initially using the given array and
+     * executor. In general, the handed off array should not be used
+     * for other purposes once constructing this ParallelLongArray.  The
+     * given array may be internally replaced by another array in the
+     * course of methods that add or remove elements.
      * @param handoff the array
-     */
-    public ParallelLongArray(ForkJoinExecutor executor,
-                             long[] handoff) {
-        if (executor == null || handoff == null)
-            throw new NullPointerException();
-        this.ex = executor;
-        this.array = handoff;
-    }
-
-    /**
-     * Creates a new ParallelLongArray using the given executor and an
-     * array of the given size, initially holding copies of the given
-     * source truncated or padded with zero to obtain the specified
-     * length.
      * @param executor the executor
-     * @param size the array size
-     * @param sourceToCopy the source of initial elements
      */
-    public ParallelLongArray(ForkJoinExecutor executor, int size,
-                             long[] sourceToCopy) {
-        if (executor == null)
-            throw new NullPointerException();
-        this.ex = executor;
-        this.array = new long[size];
-        System.arraycopy(sourceToCopy, 0, array, 0,
-                         Math.min(sourceToCopy.length, size));
+    public static ParallelLongArray createUsingHandoff
+        (long[] handoff, ForkJoinExecutor executor) {
+        return new ParallelLongArray(executor, handoff, handoff.length);
     }
 
     /**
      * Creates a new ParallelLongArray using the given executor and
-     * an array of the given size.
+     * initially holding copies of the given
+     * source elements.
+     * @param source the source of initial elements
      * @param executor the executor
-     * @param size the array size
      */
-    public ParallelLongArray(ForkJoinExecutor executor, int size) {
-        if (executor == null)
-            throw new NullPointerException();
-        this.ex = executor;
-        this.array = new long[size];
+    public static ParallelLongArray createFromCopy
+        (long[] source, ForkJoinExecutor executor) {
+        // For now, avoid copyOf so people can compile with Java5
+        int size = source.length;
+        long[] array = new long[size];
+        System.arraycopy(source, 0, array, 0, size);
+        return new ParallelLongArray(executor, array, size);
+    }
+
+    /**
+     * Creates a new ParallelLongArray using an array of the given size,
+     * initially holding copies of the given source truncated or
+     * padded with zeros to obtain the specified length.
+     * @param source the source of initial elements
+     * @param size the array size
+     * @param executor the executor
+     */
+    public static ParallelLongArray createFromCopy
+        (int size, long[] source, ForkJoinExecutor executor) {
+        // For now, avoid copyOf so people can compile with Java5
+        long[] array = new long[size];
+        System.arraycopy(source, 0, array, 0,
+                         Math.min(source.length, size));
+        return new ParallelLongArray(executor, array, size);
+    }
+
+    /**
+     * Creates a new ParallelLongArray using the given executor and
+     * an array of the given size, but with an initial effective size
+     * of zero, enabling incremental insertion via {@link
+     * ParallelLongArray#asList} operations.
+     * @param size the array size
+     * @param executor the executor
+     */
+    public static ParallelLongArray createEmpty
+        (int size, ForkJoinExecutor executor) {
+        long[] array = new long[size];
+        return new ParallelLongArray(executor, array, 0);
+    }
+
+    /**
+     * Summary statistics for a possibly bounded, filtered, and/or
+     * mapped ParallelLongArray.
+     */
+    public static interface SummaryStatistics {
+        /** Return the number of elements */
+        public int size();
+        /** Return the minimum element, or Long.MAX_VALUE if empty */
+        public long min();
+        /** Return the maximum element, or Long.MIN_VALUE if empty */
+        public long max();
+        /** Return the index of the minimum element, or -1 if empty */
+        public int indexOfMin();
+        /** Return the index of the maximum element, or -1 if empty */
+        public int indexOfMax();
+        /** Return the sum of all elements */
+        public long sum();
+        /** Return the arithmetic average of all elements */
+        public double average();
     }
 
     /**
@@ -73,79 +166,11 @@ public class ParallelLongArray {
     public ForkJoinExecutor getExecutor() { return ex; }
 
     /**
-     * Returns the underlying array used for computations
-     * @return the array
-     */
-    public long[] getArray() { return array; }
-
-    /**
-     * Returns the length of the underlying array
-     * @return the length of the underlying array
-     */
-    public int size() { return array.length;  }
-
-    /**
-     * Returns the element of the array at the given index
-     * @param i the index
-     * @return the element of the array at the given index
-     */
-    public long get(int i) { return array[i]; }
-
-    /**
-     * Sets the element of the array at the given index to the given value
-     * @param i the index
-     * @param x the value
-     */
-    public void set(int i, long x) { array[i] = x; }
-
-    static final class LongRandomGenerator implements LongGenerator {
-        public long generate() {
-            return ForkJoinWorkerThread.nextRandomLong();
-        }
-    }
-
-    static final class LongBoundedRandomGenerator implements LongGenerator {
-        final long bound;
-        LongBoundedRandomGenerator(long bound) { this.bound = bound; }
-        public long generate() {
-            return ForkJoinWorkerThread.nextRandomLong(bound);
-        }
-    }
-
-    /**
-     * A comparator relying on arguments being Comparable.
-     * Uses raw types to simplify coercions.
-     */
-    static final class RawComparator implements Comparator {
-        static final RawComparator cmp = new RawComparator();
-        public int compare(Object a, Object b) {
-            return ((Comparable)a).compareTo((Comparable)b);
-        }
-    }
-
-    static final class RawMaxReducer<T> implements Reducer<T> {
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null ||
-                     ((Comparable)a).compareTo((Comparable)b) >= 0))? a : b;
-        }
-    }
-
-    static final class RawMinReducer<T> implements Reducer<T> {
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null ||
-                     ((Comparable)a).compareTo((Comparable)b) <= 0))? a : b;
-        }
-    }
-
-
-    /**
      * Applies the given procedure to elements
      * @param procedure the procedure
      */
     public void apply(LongProcedure procedure) {
-        new WithBounds(ex, array).apply(procedure);
+        new WithBounds(this).apply(procedure);
     }
 
     /**
@@ -155,20 +180,19 @@ public class ParallelLongArray {
      * @return reduction
      */
     public long reduce(LongReducer reducer, long base) {
-        return new WithBounds(ex, array).reduce(reducer, base);
+        return new WithBounds(this).reduce(reducer, base);
     }
 
     /**
-     * Returns a new ParallelArray holding elements
-     * @return a new ParallelArray holding elements
+     * Returns a new ParallelLongArray holding all elements
+     * @return a new ParallelLongArray holding all elements
      */
-    public ParallelLongArray newArray() {
-        return new WithBounds(ex, array).newArray();
+    public ParallelLongArray all() {
+        return new WithBounds(this).all();
     }
 
-
     /**
-     * Returns a ParallelArray containing results of
+     * Returns a ParallelLongArray containing results of
      * applying <tt>combine(thisElement, otherElement)</tt>
      * for each element.
      * @param other the other array
@@ -177,14 +201,12 @@ public class ParallelLongArray {
      * @throws ArrayIndexOutOfBoundsException if other array is
      * shorter than this array.
      */
-    public ParallelLongArray combine
-        (long[] other,
-         LongReducer combiner) {
-        return new WithBounds(ex, array).combine(other, combiner);
+    public ParallelLongArray combine(long[] other, LongReducer combiner) {
+        return new WithBounds(this).combine(other, combiner);
     }
 
     /**
-     * Returns a ParallelArray containing results of
+     * Returns a ParallelLongArray containing results of
      * applying <tt>combine(thisElement, otherElement)</tt>
      * for each element.
      * @param other the other array
@@ -193,10 +215,24 @@ public class ParallelLongArray {
      * @throws ArrayIndexOutOfBoundsException if other array is not
      * the same length as this array.
      */
-    public ParallelLongArray combine
-        (ParallelLongArray other,
-         LongReducer combiner) {
-        return new WithBounds(ex, array).combine(other.array, combiner);
+    public <U,V> ParallelLongArray combine(ParallelLongArray other,
+                                           LongReducer combiner) {
+        return new WithBounds(this).combine(other, combiner);
+    }
+
+    /**
+     * Returns a ParallelLongArray containing results of
+     * applying <tt>combine(thisElement, otherElement)</tt>
+     * for each element.
+     * @param other the other array segment
+     * @param combiner the combiner
+     * @return the array of mappings
+     * @throws ArrayIndexOutOfBoundsException if other segment is
+     * shorter than this array.
+     */
+    public <U,V> ParallelLongArray combine(ParallelLongArray.WithBounds other,
+                                           LongReducer combiner) {
+        return new WithBounds(this).combine(other, combiner);
     }
 
     /**
@@ -204,8 +240,8 @@ public class ParallelLongArray {
      * to their current values.
      * @param mapper the mapper
      */
-    public void replaceWithTransform(MapperFromLongToLong mapper) {
-        new WithBounds(ex, array).replaceWithTransform(mapper);
+    public void replaceWithTransform(LongMapper  mapper) {
+        new WithBounds(this).replaceWithTransform(mapper);
     }
 
     /**
@@ -214,34 +250,18 @@ public class ParallelLongArray {
      * @param mapper the mapper
      */
     public void replaceWithMappedIndex(MapperFromIntToLong mapper) {
-        new WithBounds(ex, array).replaceWithMappedIndex(mapper);
+        new WithBounds(this).replaceWithMappedIndex(mapper);
     }
 
     /**
      * Replaces elements with the results of applying the given
-     * generator.
+     * generator. For example, to fill the array with uniform random
+     * values, use
+     * <tt>replaceWithGeneratedValue(Ops.longRandom())</tt>
      * @param generator the generator
      */
     public void replaceWithGeneratedValue(LongGenerator generator) {
-        new WithBounds(ex, array).replaceWithGeneratedValue(generator);
-    }
-
-    /**
-     * Sets each element to a uniform random value having the
-     * same properties as {@link java.util.Random#nextLong}
-     */
-    public void randomFill() {
-        new WithBounds(ex, array).randomFill();
-    }
-
-    /**
-     * Sets each element to a uniform random value having the
-     * same properties as {@link java.util.Random#nextInt(int)}
-     * @param bound the upper bound of each random value
-     * @throws IllegalArgumentException if bound less than or equal to zero
-     */
-    public void randomFill(long bound) {
-        new WithBounds(ex, array).randomFill(bound);
+        new WithBounds(this).replaceWithGeneratedValue(generator);
     }
 
     /**
@@ -249,7 +269,7 @@ public class ParallelLongArray {
      * @param value the value
      */
     public void replaceWithValue(long value) {
-        new WithBounds(ex, array).replaceWithValue(value);
+        new WithBounds(this).replaceWithValue(value);
     }
 
     /**
@@ -262,8 +282,7 @@ public class ParallelLongArray {
      */
     public void replaceWithCombination
         (ParallelLongArray other, LongReducer combiner) {
-        new WithBounds(ex, array).replaceWithCombination(other.array,
-                                                         combiner);
+        new WithBounds(this).replaceWithCombination(other.array, combiner);
     }
 
     /**
@@ -275,43 +294,99 @@ public class ParallelLongArray {
      * fewer elements than this array.
      */
     public void replaceWithCombination(long[] other, LongReducer combiner) {
-        new WithBounds(ex, array).replaceWithCombination(other, combiner);
+        new WithBounds(this).replaceWithCombination(other, combiner);
     }
 
     /**
-     * Returns the index of the least element , or -1 if empty
+     * Replaces elements with results of applying
+     * <tt>combine(thisElement, otherElement)</tt>
+     * @param other the other array segment
+     * @param combiner the combiner
+     * @throws ArrayIndexOutOfBoundsException if other segment has
+     * fewer elements.than this array,
+     */
+    public void replaceWithCombination
+        (ParallelLongArray.WithBounds other,
+         LongReducer combiner) {
+        new WithBounds(this).replaceWithCombination(other, combiner);
+    }
+
+    /**
+     * Returns the index of some element equal to given target, or -1
+     * if not present
+     * @param target the element to search for
+     * @return the index or -1 if not present
+     */
+    public int indexOf(long target) {
+        return new WithBounds(this).indexOf(target);
+    }
+
+    /**
+     * Assuming this array is sorted, returns the index of an element
+     * equal to given target, or -1 if not present. If the array
+     * is not sorted, the results are undefined.
+     * @param target the element to search for
+     * @return the index or -1 if not present
+     */
+    public int binarySearch(long target) {
+        int lo = 0;
+        int hi = limit - 1;
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            long m = array[mid];
+            if (target == m)
+                return mid;
+            else if (target < m)
+                hi = mid - 1;
+            else
+                lo = mid + 1;
+        }
+        return -1;
+    }
+
+    /**
+     * Assuming this array is sorted with respect to the given
+     * comparator, returns the index of an element equal to given
+     * target, or -1 if not present. If the array is not sorted, the
+     * results are undefined.
+     * @param target the element to search for
      * @param comparator the comparator
-     * @return the index of least element or -1 if empty.
+     * @return the index or -1 if not present
      */
-    public int indexOfMin(LongComparator comparator) {
-        return new WithBounds(ex, array).indexOfMin(comparator);
+    public int binarySearch(long target, LongComparator comparator) {
+        int lo = 0;
+        int hi = limit - 1;
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            int c = comparator.compare(target, array[mid]);
+            if (c == 0)
+                return mid;
+            else if (c < 0)
+                hi = mid - 1;
+            else
+                lo = mid + 1;
+        }
+        return -1;
     }
 
     /**
-     * Returns the index of the greatest element , or -1 if empty
-     * @param comparator the comparator
-     * @return the index of greatest element or -1 if empty.
+     * Returns summary statistics, using the given comparator
+     * to locate minimum and maximum elements.
+     * @param comparator the comparator to use for
+     * locating minimum and maximum elements
+     * @return the summary.
      */
-    public int indexOfMax(LongComparator comparator) {
-        return new WithBounds(ex, array).indexOfMax(comparator);
+    public ParallelLongArray.SummaryStatistics summary
+        (LongComparator comparator) {
+        return new WithBounds(this).summary(comparator);
     }
 
     /**
-     * Returns the index of the least element , or -1 if empty
-     * assuming that all elements are Comparables
-     * @return the index of least element or -1 if empty.
+     * Returns summary statistics, using natural comparator
+     * @return the summary.
      */
-    public int indexOfMin() {
-        return new WithBounds(ex, array).indexOfMin();
-    }
-
-    /**
-     * Returns the index of the greatest element , or -1 if empty
-     * assuming that all elements are Comparables
-     * @return the index of greatest element or -1 if empty.
-     */
-    public int indexOfMax() {
-        return new WithBounds(ex, array).indexOfMax();
+    public ParallelLongArray.SummaryStatistics summary() {
+        return new WithBounds(this).summary();
     }
 
     /**
@@ -320,16 +395,15 @@ public class ParallelLongArray {
      * @return minimum element, or Long.MAX_VALUE if empty
      */
     public long min(LongComparator comparator) {
-        return reduce(new LongMinReducer(comparator), Long.MAX_VALUE);
+        return new WithBounds(this).min(comparator);
     }
 
     /**
      * Returns the minimum element, or Long.MAX_VALUE if empty,
-     * assuming that all elements are Comparables
      * @return minimum element, or Long.MAX_VALUE if empty
      */
     public long min() {
-        return reduce(NaturalLongMinReducer.min, Long.MAX_VALUE);
+        return new WithBounds(this).min();
     }
 
     /**
@@ -338,24 +412,15 @@ public class ParallelLongArray {
      * @return maximum element, or Long.MIN_VALUE if empty
      */
     public long max(LongComparator comparator) {
-        return reduce(new LongMaxReducer(comparator), Long.MIN_VALUE);
+        return new WithBounds(this).max(comparator);
     }
 
     /**
      * Returns the maximum element, or Long.MIN_VALUE if empty
-     * assuming that all elements are Comparables
      * @return maximum element, or Long.MIN_VALUE if empty
      */
     public long max() {
-        return reduce(NaturalLongMaxReducer.max, Long.MIN_VALUE);
-    }
-
-    /**
-     * Returns the sum of elements
-     * @return the sum of elements
-     */
-    public long sum() {
-        return reduce(LongAdder.adder, 0);
+        return new WithBounds(this).max();
     }
 
     /**
@@ -368,7 +433,7 @@ public class ParallelLongArray {
      * @param base the result for an empty array
      */
     public void cumulate(LongReducer reducer, long base) {
-        new WithBounds(ex, array).cumulate(reducer, base);
+        new WithBounds(this).cumulate(reducer, base);
     }
 
     /**
@@ -384,14 +449,61 @@ public class ParallelLongArray {
      * @return the total reduction
      */
     public long precumulate(LongReducer reducer, long base) {
-        return new WithBounds(ex, array).precumulate(reducer, base);
+        return new WithBounds(this).precumulate(reducer, base);
+    }
+
+    /**
+     * Sorts the array. Unlike Arrays.sort, this sort does
+     * not guarantee that elements with equal keys maintain their
+     * relative position in the array.
+     * @param comparator the comparator to use
+     */
+    public void sort(LongComparator comparator) {
+        new WithBounds(this).sort(comparator);
+    }
+
+    /**
+     * Sorts the array, assuming all elements are Comparable. Unlike
+     * Arrays.sort, this sort does not guarantee that elements
+     * with equal keys maintain their relative position in the array.
+     * @throws ClassCastException if any element is not Comparable.
+     */
+    public void sort() {
+        new WithBounds(this).sort();
+    }
+
+    /**
+     * Removes consecutive elements that are equal,
+     * shifting others leftward, and possibly decreasing size.  This
+     * method may be used after sorting to ensure that this
+     * ParallelLongArray contains a set of unique elements.
+     */
+    public void removeConsecutiveDuplicates() {
+        new WithBounds(this).removeConsecutiveDuplicates();
+    }
+
+    /**
+     * Returns a new ParallelLongArray containing only the unique
+     * elements of this array (that is, without any duplicates).
+     * @return the new ParallelLongArray
+     */
+    public ParallelLongArray allUniqueElements() {
+        return new WithBounds(this).allUniqueElements();
+    }
+
+    /**
+     * Returns the sum of elements
+     * @return the sum of elements
+     */
+    public long sum() {
+        return new WithBounds(this).sum();
     }
 
     /**
      * Replaces each element with the running sum
      */
     public void cumulateSum() {
-        new WithBounds(ex, array).cumulateSum();
+        new WithBounds(this).cumulateSum();
     }
 
     /**
@@ -399,22 +511,7 @@ public class ParallelLongArray {
      * @return the total sum
      */
     public long precumulateSum() {
-        return new WithBounds(ex, array).precumulateSum();
-    }
-
-    /**
-     * Sorts the array
-     * @param comparator the comparator to use
-     */
-    public void sort(LongComparator comparator) {
-        new WithBounds(ex, array).sort(comparator);
-    }
-
-    /**
-     * Sorts the array, using natural comparator.
-     */
-    public void sort() {
-        new WithBounds(ex, array).sort();
+        return new WithBounds(this).precumulateSum();
     }
 
     /**
@@ -426,7 +523,15 @@ public class ParallelLongArray {
      * @return operation prefix
      */
     public WithBounds withBounds(int firstIndex, int upperBound) {
-        return new WithBounds(ex, array, firstIndex, upperBound);
+        if (firstIndex > upperBound)
+            throw new IllegalArgumentException
+                ("firstIndex(" + firstIndex +
+                 ") > upperBound(" + upperBound+")");
+        if (firstIndex < 0)
+            throw new ArrayIndexOutOfBoundsException(firstIndex);
+        if (upperBound > this.limit)
+            throw new ArrayIndexOutOfBoundsException(upperBound);
+        return new WithBounds(this, firstIndex, upperBound);
     }
 
     /**
@@ -437,8 +542,7 @@ public class ParallelLongArray {
      * @return operation prefix
      */
     public WithFilter withFilter(LongPredicate selector) {
-        return new WithBoundedFilter
-            (ex, array, 0, array.length, selector);
+        return new WithBoundedFilter(this, 0, limit, selector);
     }
 
     /**
@@ -447,10 +551,8 @@ public class ParallelLongArray {
      * @param mapper the mapper
      * @return operation prefix
      */
-    public <U> WithMapping<U> withMapping
-        (MapperFromLong<? extends U> mapper) {
-        return new WithBoundedMapping<U>
-            (ex, array, 0, array.length, mapper);
+    public <U> WithMapping<U> withMapping(MapperFromLong<? extends U> mapper) {
+        return new WithBoundedMapping<U>(this, 0, limit, mapper);
     }
 
     /**
@@ -459,10 +561,8 @@ public class ParallelLongArray {
      * @param mapper the mapper
      * @return operation prefix
      */
-    public WithDoubleMapping withMapping
-        (MapperFromLongToDouble mapper) {
-        return new WithBoundedDoubleMapping
-            (ex, array, 0, array.length, mapper);
+    public WithLongMapping withMapping(LongMapper mapper) {
+        return new WithBoundedLongMapping(this, 0, limit, mapper);
     }
 
     /**
@@ -471,59 +571,20 @@ public class ParallelLongArray {
      * @param mapper the mapper
      * @return operation prefix
      */
-    public WithLongMapping withMapping
-        (MapperFromLongToLong mapper) {
-        return new WithBoundedLongMapping
-            (ex, array, 0, array.length, mapper);
-    }
-
-    /**
-     * Returns an operation prefix that causes a method to operate
-     * on mapped elements of the array using the given mapper.
-     * @param mapper the mapper
-     * @return operation prefix
-     */
-    public WithIntMapping withMapping(MapperFromLongToInt mapper) {
-        return new WithBoundedIntMapping
-            (ex, array, 0, array.length, mapper);
-    }
-
-
-    /**
-     * Base of prefix classes
-     */
-    static abstract class Params {
-        final ForkJoinExecutor ex;
-        final long[] array;
-        final int firstIndex;
-        final int upperBound;
-        final int granularity;
-        Params(ForkJoinExecutor ex, long[] array, int firstIndex, int upperBound) {
-            this.ex = ex;
-            this.array = array;
-            this.firstIndex = firstIndex;
-            this.upperBound = upperBound;
-            this.granularity = defaultGranularity(ex.getParallelismLevel(),
-                                                  upperBound - firstIndex);
-        }
-
-        /**
-         * default granularity for divide-by-two array tasks.
-         */
-        static int defaultGranularity(int threads, int n) {
-            return (threads > 1)? (1 + n / (threads << 3)) : n;
-        }
+    public WithDoubleMapping withMapping(MapperFromLongToDouble mapper) {
+        return new WithBoundedDoubleMapping(this, 0, limit, mapper);
     }
 
     /**
      * A modifier for parallel array operations to apply to mappings
      * of elements, not to the elements themselves
      */
-    public static abstract class WithMapping<U>
-        extends Params {
-        WithMapping(ForkJoinExecutor ex, long[] array,
-                    int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+    public static abstract class WithMapping<U> extends PAS.LPrefix {
+        final MapperFromLong<? extends U> mapper;
+        WithMapping(ParallelLongArray pa, int firstIndex, int upperBound,
+                    MapperFromLong<? extends U> mapper) {
+            super(pa, firstIndex, upperBound);
+            this.mapper = mapper;
         }
 
         /**
@@ -531,11 +592,9 @@ public class ParallelLongArray {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super U> procedure) {
-            ex.invoke(new FJApply<U>(this, firstIndex, upperBound, procedure));
+            ex.invoke(new PAS.FJRApply
+                      (this, firstIndex, upperBound, null, procedure));
         }
-
-        abstract void leafApply(int lo, int hi,
-                                Procedure<? super U> procedure);
 
         /**
          * Returns reduction of mapped elements
@@ -544,14 +603,11 @@ public class ParallelLongArray {
          * @return reduction
          */
         public U reduce(Reducer<U> reducer, U base) {
-            FJReduce<U> f =
-                new FJReduce<U>(this, firstIndex, upperBound, reducer, base);
+            PAS.FJRReduce f = new PAS.FJRReduce
+                (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
-            return f.result;
+            return (U)(f.result);
         }
-
-        abstract U leafReduce(int lo, int hi,
-                              Reducer<U> reducer, U base);
 
         /**
          * Returns the index of some element matching bound and filter
@@ -573,7 +629,7 @@ public class ParallelLongArray {
          * @return minimum mapped element, or null if empty
          */
         public U min(Comparator<? super U> comparator) {
-            return reduce(new MinReducer<U>(comparator), null);
+            return reduce(Ops.<U>minReducer(comparator), null);
         }
 
         /**
@@ -583,7 +639,7 @@ public class ParallelLongArray {
          * @throws ClassCastException if any element is not Comparable.
          */
         public U min() {
-            return reduce(new RawMinReducer<U>(), null);
+            return reduce((Reducer<U>)(Ops.castedMinReducer()), null);
         }
 
         /**
@@ -592,7 +648,7 @@ public class ParallelLongArray {
          * @return maximum mapped element, or null if empty
          */
         public U max(Comparator<? super U> comparator) {
-            return reduce(new MaxReducer<U>(comparator), null);
+            return reduce(Ops.<U>maxReducer(comparator), null);
         }
 
         /**
@@ -602,78 +658,50 @@ public class ParallelLongArray {
          * @throws ClassCastException if any element is not Comparable.
          */
         public U max() {
-            return reduce(new RawMaxReducer<U>(), null);
+            return reduce((Reducer<U>)(Ops.castedMaxReducer()), null);
         }
 
         /**
-         * Returns the index corresponding to the least mapped element
-         * or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least mapped element or -1 if empty.
+         * Returns summary statistics, using the given comparator
+         * to locate minimum and maximum elements.
+         * @param comparator the comparator to use for
+         * locating minimum and maximum elements
+         * @return the summary.
          */
-        public int indexOfMin(Comparator<? super U> comparator) {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound, comparator, false);
+        public ParallelArray.SummaryStatistics<U> summary
+            (Comparator<? super U> comparator) {
+            PAS.FJRStats f = new PAS.FJRStats
+                (this, firstIndex, upperBound, null, comparator);
             ex.invoke(f);
-            return f.indexResult;
+            return (ParallelArray.SummaryStatistics<U>)f;
         }
 
         /**
-         * Returns the index corresponding to the greatest mapped
-         * element, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest mapped element or -1 if empty.
+         * Returns summary statistics, assuming that all elements are
+         * Comparables
+         * @return the summary.
          */
-        public int indexOfMax(Comparator<? super U> comparator) {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound, comparator, true);
+        public ParallelArray.SummaryStatistics<U> summary() {
+            PAS.FJRStats f = new PAS.FJRStats
+                (this, firstIndex, upperBound, null,
+                 (Comparator<? super U>)(Ops.castedComparator()));
             ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the least mapped element
-         * or -1 if empty,
-         * assuming that all elements are Comparables
-         * @return the index of least element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
-         */
-        public int indexOfMin() {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound,
-                 (Comparator<? super U>)(RawComparator.cmp), false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the greatest mapped element or
-         * -1 if empty, assuming that all elements are Comparables
-         * @return the index of greatest mapped element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
-         */
-        public int indexOfMax() {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound,
-                 (Comparator<? super U>)(RawComparator.cmp), true);
-            ex.invoke(f);
-            return f.indexResult;
+            return (ParallelArray.SummaryStatistics<U>)f;
         }
 
         /**
          * Returns a new ParallelArray holding mapped elements
          * @return a new ParallelArray holding mapped elements
          */
-        public abstract ParallelArray<U> newArray();
+        public abstract ParallelArray<U> all();
 
         /**
-         * Returns a new ParallelArray with the given element type
-         * holding mapped elements
+         * Returns a new ParallelArray with the given element type holding
+         * all elements
          * @param elementType the type of the elements
-         * @return a new ParallelArray holding mapped elements
+         * @return a new ParallelArray holding all elements
          */
-        public abstract ParallelArray<U> newArray
-            (Class<? super U> elementType);
+        public abstract ParallelArray<U> all(Class<? super U> elementType);
 
         /**
          * Return the number of elements selected using bound or
@@ -683,29 +711,301 @@ public class ParallelLongArray {
          */
         public abstract int size();
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   Comparator<? super U> comparator,
-                                   boolean reverse,
-                                   FJMinIndex<U> task);
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper
+         * applied to current mapper's results
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<V> withMapping
+            (Mapper<? super U, ? extends V> mapper);
 
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper
+         * applied to current mapper's results
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithLongMapping withMapping
+            (MapperToLong<? super U> mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper
+         * applied to current mapper's results
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping withMapping
+            (MapperToDouble<? super U> mapper);
+
+
+        final void leafTransfer(int lo, int hi, Object[] dest, int offset) {
+            final long[] array = pa.array;
+            final MapperFromLong mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       Object[] dest, int offset) {
+            final long[] array = pa.array;
+            final MapperFromLong mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = mpr.map(array[indices[i]]);
+        }
+    }
+
+    static final class WithBoundedMapping<U> extends WithMapping<U> {
+        WithBoundedMapping(ParallelLongArray pa,
+                           int firstIndex, int upperBound,
+                           MapperFromLong<? extends U> mapper) {
+            super(pa, firstIndex, upperBound, mapper);
+        }
+
+        public ParallelArray<U> all() {
+            int n = upperBound - firstIndex;
+            U[] dest = (U[])new Object[n];
+            PAS.FJRMap f = new PAS.FJRMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
+            ex.invoke(f);
+            return new ParallelArray<U>(ex, dest);
+        }
+
+        public ParallelArray<U> all(Class<? super U> elementType) {
+            int n = upperBound - firstIndex;
+            U[] dest = (U[])Array.newInstance(elementType, n);
+            PAS.FJRMap f = new PAS.FJRMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
+            ex.invoke(f);
+            return new ParallelArray<U>(ex, dest);
+        }
+
+        public int size() {
+            return upperBound - firstIndex;
+        }
+
+        public int anyIndex() {
+            return (firstIndex < upperBound)? firstIndex : -1;
+        }
+
+        public U any() {
+            final MapperFromLong mpr = mapper;
+            final long[] array = pa.array;
+            return (firstIndex < upperBound)?
+                (U)(mpr.map(array[firstIndex])) : null;
+        }
+
+        public <V> WithMapping<V> withMapping
+            (Mapper<? super U, ? extends V> mapper) {
+            return new WithBoundedMapping<V>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping
+            (MapperToLong<? super U> mapper) {
+            return new WithBoundedLongMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithDoubleMapping withMapping
+            (MapperToDouble<? super U> mapper) {
+            return new WithBoundedDoubleMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, Procedure  procedure) {
+            final long[] array = pa.array;
+            final MapperFromLong mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                procedure.apply(mpr.map(array[i]));
+        }
+
+        Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
+            if (lo >= hi)
+                return base;
+            final long[] array = pa.array;
+            final MapperFromLong mpr = mapper;
+            Object r = mpr.map(array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.combine(r, mpr.map(array[i]));
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJRStats task) {
+            final long[] array = pa.array;
+            final MapperFromLong mpr = mapper;
+            task.size = hi - lo;
+            for (int i = lo; i < hi; ++i) {
+                Object x = mpr.map(array[i]);
+                task.updateMin(i, x);
+                task.updateMax(i, x);
+            }
+        }
+    }
+
+    static final class WithBoundedFilteredMapping<U>
+        extends WithMapping<U> {
+        final LongPredicate selector;
+        WithBoundedFilteredMapping(ParallelLongArray pa,
+                                   int firstIndex, int upperBound,
+                                   LongPredicate selector,
+                                   MapperFromLong<? extends U> mapper) {
+            super(pa, firstIndex, upperBound, mapper);
+            this.selector = selector;
+        }
+
+        public ParallelArray<U> all() {
+            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
+                (this, Object.class);
+            ex.invoke(r);
+            return new ParallelArray<U>(ex, (U[])(r.results));
+        }
+
+        public ParallelArray<U> all(Class<? super U> elementType) {
+            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
+                (this, elementType);
+            ex.invoke(r);
+            return new ParallelArray<U>(ex, (U[])(r.results));
+        }
+
+        public int size() {
+            PAS.FJLCountSelected f = new PAS.FJLCountSelected
+                (this, firstIndex, upperBound, null, selector);
+            ex.invoke(f);
+            return f.count;
+        }
+
+        public int anyIndex() {
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJLSelectAny f = new PAS.FJLSelectAny
+                (this, firstIndex, upperBound, null, result, selector);
+            ex.invoke(f);
+            return result.get();
+        }
+
+        public U any() {
+            int idx = anyIndex();
+            final long[] array = pa.array;
+            final MapperFromLong mpr = mapper;
+            return (idx < 0)?  null : (U)(mpr.map(array[idx]));
+        }
+
+        public <V> WithMapping<V> withMapping
+            (Mapper<? super U, ? extends V> mapper) {
+            return new WithBoundedFilteredMapping<V>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping
+            (MapperToLong<? super U> mapper) {
+            return new WithBoundedFilteredLongMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithDoubleMapping withMapping
+            (MapperToDouble<? super U> mapper) {
+            return new WithBoundedFilteredDoubleMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, Procedure  procedure) {
+            final LongPredicate sel = selector;
+            final MapperFromLong mpr = mapper;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long x = array[i];
+                if (sel.evaluate(x))
+                    procedure.apply(mpr.map(x));
+            }
+        }
+
+        Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
+            final LongPredicate sel = selector;
+            final MapperFromLong mpr = mapper;
+            boolean gotFirst = false;
+            Object r = base;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long x = array[i];
+                if (sel.evaluate(x)) {
+                    Object y = mpr.map(x);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = y;
+                    }
+                    else
+                        r = reducer.combine(r, y);
+                }
+            }
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJRStats task) {
+            final LongPredicate sel = selector;
+            final MapperFromLong mpr = mapper;
+            final long[] array = pa.array;
+            int count = 0;
+            for (int i = lo; i < hi; ++i) {
+                long t = array[i];
+                if (sel.evaluate(t)) {
+                    Object x = mpr.map(t);
+                    ++count;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
+                }
+            }
+            task.size = count;
+        }
+
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long t = array[i];
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
     }
 
     /**
-     * A restriction of parallel array operations to apply only to
-     * elements for which a selector returns true
+     * A modifier for parallel array operations to apply to mappings
+     * of elements to longs, not to the elements themselves
      */
-    public static abstract class WithFilter extends WithLongMapping {
-        WithFilter(ForkJoinExecutor ex, long[] array,
-                   int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+    public static abstract class WithLongMapping extends PAS.LPrefix {
+        WithLongMapping(ParallelLongArray pa,
+                        int firstIndex, int upperBound) {
+            super(pa, firstIndex, upperBound);
         }
 
         /**
-         * Applies the given procedure
+         * Applies the given procedure to elements
          * @param procedure the procedure
          */
         public void apply(LongProcedure procedure) {
-            ex.invoke(new FJLongApply(this, firstIndex, upperBound, procedure));
+            ex.invoke(new PAS.FJLApply
+                      (this, firstIndex, upperBound, null, procedure));
         }
 
         /**
@@ -715,18 +1015,18 @@ public class ParallelLongArray {
          * @return reduction
          */
         public long reduce(LongReducer reducer, long base) {
-            FJLongReduce f =
-                new FJLongReduce(this, firstIndex, upperBound, reducer, base);
+            PAS.FJLReduce f = new PAS.FJLReduce
+                (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return f.result;
         }
 
         /**
-         * Returns the sum of elements
-         * @return the sum of elements
+         * Returns the minimum element, or Long.MAX_VALUE if empty
+         * @return minimum element, or Long.MAX_VALUE if empty
          */
-        public long sum() {
-            return reduce(LongAdder.adder, 0);
+        public long min() {
+            return reduce(naturalLongMinReducer(), Long.MAX_VALUE);
         }
 
         /**
@@ -735,16 +1035,15 @@ public class ParallelLongArray {
          * @return minimum element, or Long.MAX_VALUE if empty
          */
         public long min(LongComparator comparator) {
-            return reduce(new LongMinReducer(comparator), Long.MAX_VALUE);
+            return reduce(longMinReducer(comparator), Long.MAX_VALUE);
         }
 
         /**
-         * Returns the minimum element, or Long.MAX_VALUE if empty,
-         * assuming that all elements are Comparables
-         * @return minimum element, or Long.MAX_VALUE if empty
+         * Returns the maximum element, or Long.MIN_VALUE if empty
+         * @return maximum element, or Long.MIN_VALUE if empty
          */
-        public long min() {
-            return reduce(NaturalLongMinReducer.min, Long.MAX_VALUE);
+        public long max() {
+            return reduce(naturalLongMaxReducer(), Long.MIN_VALUE);
         }
 
         /**
@@ -753,194 +1052,63 @@ public class ParallelLongArray {
          * @return maximum element, or Long.MIN_VALUE if empty
          */
         public long max(LongComparator comparator) {
-            return reduce(new LongMaxReducer(comparator), Long.MIN_VALUE);
+            return reduce(longMaxReducer(comparator), Long.MIN_VALUE);
         }
 
         /**
-         * Returns the maximum element, or Long.MIN_VALUE if empty
-         * assuming that all elements are Comparables
-         * @return maximum element, or Long.MIN_VALUE if empty
+         * Returns the sum of elements
+         * @return the sum of elements
          */
-        public long max() {
-            return reduce(NaturalLongMaxReducer.max, Long.MIN_VALUE);
+        public long sum() {
+            return reduce(Ops.longAdder(), 0L);
         }
 
         /**
-         * Returns the index corresponding to the least element
-         * or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
+         * Returns summary statistics
+         * @param comparator the comparator to use for
+         * locating minimum and maximum elements
+         * @return the summary.
          */
-        public int indexOfMin(LongComparator comparator) {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound, comparator, false);
+        public ParallelLongArray.SummaryStatistics summary
+            (LongComparator comparator) {
+            PAS.FJLStats f = new PAS.FJLStats
+                (this, firstIndex, upperBound, null, comparator);
             ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
-         * Returns the index corresponding to the greatest
-         * element, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
+         * Returns summary statistics, using natural comparator
+         * @return the summary.
          */
-        public int indexOfMax(LongComparator comparator) {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound, comparator, true);
+        public ParallelLongArray.SummaryStatistics summary() {
+            PAS.FJLStats f = new PAS.FJLStats
+                (this, firstIndex, upperBound, null,
+                 naturalLongComparator());
             ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
-         * Returns the index corresponding to the least element
-         * or -1 if empty,
-         * assuming that all elements are Comparables
-         * @return the index of least element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
+         * Returns a new ParallelLongArray holding elements
+         * @return a new ParallelLongArray holding elements
          */
-        public int indexOfMin() {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalLongComparator.comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
+        public abstract ParallelLongArray all();
 
         /**
-         * Returns the index corresponding to the greatest element or
-         * -1 if empty, assuming that all elements are Comparables
-         * @return the index of greatest element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
+         * Return the number of elements selected using bound or
+         * filter restrictions. Note that this method must evaluate
+         * all selectors to return its result.
+         * @return the number of elements
          */
-        public int indexOfMax() {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalLongComparator.comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
+        public abstract int size();
 
         /**
-         * Returns a new ParallelArray holding elements
-         * @return a new ParallelArray holding elements
+         * Returns the index of some element matching bound and filter
+         * constraints, or -1 if none.
+         * @return index of matching element, or -1 if none.
          */
-        public abstract ParallelLongArray newArray();
-
-        /**
-         * Replaces elements with the results of applying the given
-         * mapper to their current values.
-         * @param mapper the mapper
-         */
-        public void replaceWithTransform
-            (MapperFromLongToLong mapper) {
-            ex.invoke(new FJTransform(this, firstIndex, upperBound, mapper));
-        }
-
-        abstract void leafTransform
-            (int lo, int hi, MapperFromLongToLong mapper);
-
-        /**
-         * Replaces elements with the results of applying the given
-         * mapper to their indices
-         * @param mapper the mapper
-         */
-        public void replaceWithMappedIndex
-            (MapperFromIntToLong mapper) {
-            ex.invoke(new FJIndexMap(this, firstIndex, upperBound, mapper));
-        }
-
-        abstract void leafIndexMap
-            (int lo, int hi, MapperFromIntToLong mapper);
-
-        /**
-         * Replaces elements with results of applying the given
-         * generator.
-         * @param generator the generator
-         */
-        public void replaceWithGeneratedValue
-            (LongGenerator generator) {
-            ex.invoke(new FJGenerate
-                      (this, firstIndex, upperBound, generator));
-        }
-
-        /**
-         * Sets each element to a uniform random value having the
-         * same properties as {@link java.util.Random#nextLong}
-         */
-        public void randomFill() {
-            replaceWithGeneratedValue(new LongRandomGenerator());
-        }
-
-        /**
-         * Sets each element to a uniform random value having the
-         * same properties as {@link java.util.Random#nextInt(int)}
-         * @param bound the upper bound of each random value
-         * @throws IllegalArgumentException if bound less than or
-         * equal to zero
-         */
-        public void randomFill(long bound) {
-            if (bound <= 0)
-                throw new IllegalArgumentException();
-            replaceWithGeneratedValue(new LongBoundedRandomGenerator(bound));
-        }
-
-        abstract void leafGenerate
-            (int lo, int hi, LongGenerator generator);
-
-        /**
-         * Replaces elements with the given value.
-         * @param value the value
-         */
-        public void replaceWithValue(long value) {
-            ex.invoke(new FJFill(this, firstIndex, upperBound, value));
-        }
-
-        abstract void leafFill(int lo, int hi, long value);
-
-        /**
-         * Replaces elements with results of applying
-         * <tt>combine(thisElement, otherElement)</tt>
-         * @param other the other array
-         * @param combiner the combiner
-         * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>upperBound</tt> elements.
-         */
-        public void replaceWithCombination(ParallelLongArray other,
-                                           LongReducer combiner) {
-            replaceWithCombination(other.array, combiner);
-        }
-
-        /**
-         * Replaces elements with results of applying
-         * <tt>combine(thisElement, otherElement)</tt>
-         * @param other the other array
-         * @param combiner the combiner
-         * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>upperBound</tt> elements.
-         */
-        public void replaceWithCombination(long[] other,
-                                           LongReducer combiner) {
-            if (other.length < upperBound)
-                throw new ArrayIndexOutOfBoundsException();
-            ex.invoke(new FJCombineInPlace
-                      (this, firstIndex, upperBound, other, combiner));
-        }
-
-        abstract void leafCombineInPlace
-            (int lo, int hi, long[] other, LongReducer combiner);
-
-        /**
-         * Returns some element matching bound and filter
-         * constraints
-         * @return matching element
-         * @throws NoSuchElementException if empty
-         */
-        public long any() {
-            int idx = anyIndex();
-            if (idx < 0)
-                throw new NoSuchElementException();
-            return array[idx];
-        }
+        public abstract int anyIndex();
 
         /**
          * Returns an operation prefix that causes a method to operate
@@ -948,8 +1116,7 @@ public class ParallelLongArray {
          * @param mapper the mapper
          * @return operation prefix
          */
-        public abstract <U> WithMapping<U> withMapping
-            (MapperFromLong<? extends U> mapper);
+        public abstract WithLongMapping withMapping(LongMapper mapper);
 
         /**
          * Returns an operation prefix that causes a method to operate
@@ -966,17 +1133,152 @@ public class ParallelLongArray {
          * @param mapper the mapper
          * @return operation prefix
          */
-        public abstract WithLongMapping withMapping
-            (MapperFromLongToLong mapper);
+        public abstract <U> WithMapping<U> withMapping
+            (MapperFromLong<? extends U> mapper);
+    }
+
+    /**
+     * A restriction of parallel array operations to apply only to
+     * elements for which a selector returns true
+     */
+    public static abstract class WithFilter extends WithLongMapping {
+        WithFilter(ParallelLongArray pa, int firstIndex, int upperBound) {
+            super(pa, firstIndex, upperBound);
+        }
+
+        /**
+         * Replaces elements with the results of applying the given
+         * mapper to their current values.
+         * @param mapper the mapper
+         */
+        public void replaceWithTransform(LongMapper  mapper) {
+            ex.invoke(new PAS.FJLTransform
+                      (this, firstIndex, upperBound, null, mapper));
+        }
+
+        /**
+         * Replaces elements with the results of applying the given
+         * mapper to their indices
+         * @param mapper the mapper
+         */
+        public void replaceWithMappedIndex(MapperFromIntToLong mapper) {
+            ex.invoke(new PAS.FJLIndexMap
+                      (this, firstIndex, upperBound, null, mapper));
+        }
+
+        /**
+         * Replaces elements with results of applying the given
+         * generator.
+         * @param generator the generator
+         */
+        public void replaceWithGeneratedValue(LongGenerator generator) {
+            ex.invoke(new PAS.FJLGenerate
+                      (this, firstIndex, upperBound, null, generator));
+        }
+
+        /**
+         * Replaces elements with the given value.
+         * @param value the value
+         */
+        public void replaceWithValue(long value) {
+            ex.invoke(new PAS.FJLFill
+                      (this, firstIndex, upperBound, null, value));
+        }
+
+        /**
+         * Replaces elements with results of applying
+         * <tt>combine(thisElement, otherElement)</tt>
+         * @param other the other array
+         * @param combiner the combiner
+         * @throws ArrayIndexOutOfBoundsException if other array has
+         * fewer than <tt>upperBound</tt> elements.
+         */
+        public void replaceWithCombination(ParallelLongArray other,
+                                           LongReducer combiner) {
+            if (other.size() < size())
+                throw new ArrayIndexOutOfBoundsException();
+            ex.invoke(new PAS.FJLCombineInPlace
+                      (this, firstIndex, upperBound, null,
+                       other.array, 0, combiner));
+        }
+
+        /**
+         * Replaces elements with results of applying
+         * <tt>combine(thisElement, otherElement)</tt>
+         * @param other the other array segment
+         * @param combiner the combiner
+         * @throws ArrayIndexOutOfBoundsException if other array has
+         * fewer than <tt>upperBound</tt> elements.
+         */
+        public void replaceWithCombination
+            (ParallelLongArray.WithBounds other, LongReducer combiner) {
+            if (other.size() < size())
+                throw new ArrayIndexOutOfBoundsException();
+            ex.invoke(new PAS.FJLCombineInPlace
+                      (this, firstIndex, upperBound, null,
+                       other.pa.array, other.firstIndex-firstIndex, combiner));
+        }
+
+        /**
+         * Replaces elements with results of applying
+         * <tt>combine(thisElement, otherElement)</tt>
+         * @param other the other array
+         * @param combiner the combiner
+         * @throws ArrayIndexOutOfBoundsException if other array has
+         * fewer than <tt>upperBound</tt> elements.
+         */
+        public void replaceWithCombination(long[] other,
+                                           LongReducer combiner) {
+            if (other.length < size())
+                throw new ArrayIndexOutOfBoundsException();
+            ex.invoke(new PAS.FJLCombineInPlace
+                      (this, firstIndex, upperBound, null, other,
+                       -firstIndex, combiner));
+        }
+
+        /**
+         * Removes from the array all elements matching bound and/or
+         * filter constraints.
+         */
+        public abstract void removeAll();
+
+        /**
+         * Returns a new ParallelLongArray containing only unique
+         * elements (that is, without any duplicates).
+         * @return the new ParallelLongArray
+         */
+        public abstract ParallelLongArray allUniqueElements();
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
+         * only on elements for which the current selector (if
+         * present) and the given selector returns true
+         * @param selector the selector
          * @return operation prefix
          */
-        public abstract WithIntMapping withMapping
-            (MapperFromLongToInt mapper);
+        public abstract WithFilter withFilter(LongPredicate selector);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * only on elements for which the current selector (if
+         * present) or the given selector returns true
+         * @param selector the selector
+         * @return operation prefix
+         */
+        public abstract WithFilter orFilter(LongPredicate selector);
+
+        final void leafTransfer(int lo, int hi, long[] dest, int offset) {
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = (array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       long[] dest, int offset) {
+            final long[] array = pa.array;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = (array[indices[i]]);
+        }
 
     }
 
@@ -985,94 +1287,73 @@ public class ParallelLongArray {
      * a given range of indices.
      */
     public static final class WithBounds extends WithFilter {
-        WithBounds(ForkJoinExecutor ex, long[] array,
-                   int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+        WithBounds(ParallelLongArray pa, int firstIndex, int upperBound) {
+            super(pa, firstIndex, upperBound);
+        }
+
+        WithBounds(ParallelLongArray pa) {
+            super(pa, 0, pa.limit);
+        }
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * only on the elements of the array between firstIndex
+         * (inclusive) and upperBound (exclusive).  The bound
+         * arguments are relative to the current bounds.  For example
+         * <tt>pa.withBounds(2, 8).withBounds(3, 5)</tt> indexes the
+         * 5th (= 2+3) and 6th elements of pa. However, indices
+         * returned by methods such as <tt>indexOf</tt> are
+         * with respect to the underlying ParallelLongArray.
+         * @param firstIndex the lower bound (inclusive)
+         * @param upperBound the upper bound (exclusive)
+         * @return operation prefix
+         */
+        public WithBounds withBounds(int firstIndex, int upperBound) {
             if (firstIndex > upperBound)
                 throw new IllegalArgumentException
                     ("firstIndex(" + firstIndex +
                      ") > upperBound(" + upperBound+")");
             if (firstIndex < 0)
                 throw new ArrayIndexOutOfBoundsException(firstIndex);
-            if (upperBound > array.length)
+            if (upperBound - firstIndex > this.upperBound - this.firstIndex)
                 throw new ArrayIndexOutOfBoundsException(upperBound);
+            return new WithBounds(pa,
+                                  this.firstIndex + firstIndex,
+                                  this.firstIndex + upperBound);
         }
 
-        WithBounds(ForkJoinExecutor ex, long[] array) {
-            super(ex, array, 0, array.length);
-        }
-
-        /**
-         * Returns an operation prefix that causes a method to operate
-         * only on the elements of the array for which the given selector
-         * returns true
-         * @param selector the selector
-         * @return operation prefix
-         */
         public WithFilter withFilter(LongPredicate selector) {
             return new WithBoundedFilter
-                (ex, array, firstIndex, upperBound, selector);
+                (pa, firstIndex, upperBound, selector);
         }
 
-        /**
-         * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
-         * @return operation prefix
-         */
         public <U> WithMapping<U> withMapping
             (MapperFromLong<? extends U> mapper) {
             return new WithBoundedMapping<U>
-                (ex, array, firstIndex,upperBound, mapper);
+                (pa, firstIndex, upperBound, mapper);
         }
 
-        /**
-         * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
-         * @return operation prefix
-         */
-        public WithDoubleMapping withMapping
-            (MapperFromLongToDouble mapper) {
-            return new WithBoundedDoubleMapping
-                (ex, array, firstIndex, upperBound, mapper);
-        }
-
-        /**
-         * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
-         * @return operation prefix
-         */
-        public WithLongMapping withMapping
-            (MapperFromLongToLong mapper) {
+        public WithLongMapping withMapping(LongMapper mapper) {
             return new WithBoundedLongMapping
-                (ex, array, firstIndex, upperBound, mapper);
+                (pa, firstIndex, upperBound, mapper);
         }
 
-        /**
-         * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
-         * @return operation prefix
-         */
-        public WithIntMapping withMapping
-            (MapperFromLongToInt mapper) {
-            return new WithBoundedIntMapping
-                (ex, array, firstIndex, upperBound, mapper);
+        public WithDoubleMapping withMapping(MapperFromLongToDouble mapper) {
+            return new WithBoundedDoubleMapping
+                (pa, firstIndex, upperBound, mapper);
         }
 
-        /**
-         * Returns the index of some element matching bound
-         * filter constraints, or -1 if none.
-         * @return index of matching element, or -1 if none.
-         */
+        public WithFilter orFilter(LongPredicate selector) {
+            return new WithBoundedFilter
+                (pa, firstIndex, upperBound, selector);
+        }
+
         public int anyIndex() {
             return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         /**
-         * Returns a ParallelArray containing results of
+         * Returns a ParallelLongArray containing results of
          * applying <tt>combine(thisElement, otherElement)</tt>
          * for each element.
          * @param other the other array
@@ -1081,19 +1362,20 @@ public class ParallelLongArray {
          * @throws ArrayIndexOutOfBoundsException if other array is
          * shorter than this array.
          */
-        public  ParallelLongArray combine
-            (long[] other,
-             LongReducer combiner) {
-            if (other.length < array.length)
+        public ParallelLongArray combine(long[] other, LongReducer combiner) {
+            int size = upperBound - firstIndex;
+            if (other.length < size)
                 throw new ArrayIndexOutOfBoundsException();
-            long[] dest = new long[upperBound];
-            ex.invoke(new FJCombine(this, firstIndex, upperBound,
-                                    other, dest, combiner));
+            long[] dest = new long[size];
+            ex.invoke(new PAS.FJLCombine
+                      (this, firstIndex, upperBound,
+                       null, other, -firstIndex,
+                       dest, combiner));
             return new ParallelLongArray(ex, dest);
         }
 
         /**
-         * Returns a ParallelArray containing results of
+         * Returns a ParallelLongArray containing results of
          * applying <tt>combine(thisElement, otherElement)</tt>
          * for each element.
          * @param other the other array
@@ -1102,16 +1384,127 @@ public class ParallelLongArray {
          * @throws ArrayIndexOutOfBoundsException if other array is
          * shorter than this array.
          */
-        public ParallelLongArray combine
-            (ParallelLongArray other,
-             LongReducer combiner) {
-            return combine(other.array, combiner);
+        public ParallelLongArray combine(ParallelLongArray other,
+                                         LongReducer combiner) {
+            int size = upperBound - firstIndex;
+            if (other.size() < size)
+                throw new ArrayIndexOutOfBoundsException();
+            long[] dest = new long[size];
+            ex.invoke(new PAS.FJLCombine
+                      (this, firstIndex, upperBound,
+                       null, other.array,
+                       -firstIndex,
+                       dest, combiner));
+            return new ParallelLongArray(ex, dest);
         }
 
         /**
-         * Returns the number of elements within bounds
-         * @return the number of elements within bounds
+         * Returns a ParallelLongArray containing results of
+         * applying <tt>combine(thisElement, otherElement)</tt>
+         * for each element.
+         * @param other the other array segment
+         * @param combiner the combiner
+         * @return the array of mappings
+         * @throws ArrayIndexOutOfBoundsException if other segment is
+         * shorter than this array.
          */
+        public <U,V> ParallelLongArray combine
+            (ParallelLongArray.WithBounds other, LongReducer combiner) {
+            int size = upperBound - firstIndex;
+            if (other.size() < size)
+                throw new ArrayIndexOutOfBoundsException();
+            long[] dest = new long[size];
+            ex.invoke(new PAS.FJLCombine
+                      (this, firstIndex, upperBound,
+                       null, other.pa.array,
+                       other.firstIndex - firstIndex,
+                       dest, combiner));
+            return new ParallelLongArray(ex, dest);
+        }
+
+        public ParallelLongArray all() {
+            final long[] array = pa.array;
+            // For now, avoid copyOf so people can compile with Java5
+            int size = upperBound - firstIndex;
+            long[] dest = new long[size];
+            System.arraycopy(array, firstIndex, dest, 0, size);
+            return new ParallelLongArray(ex, dest);
+        }
+
+        public ParallelLongArray allUniqueElements() {
+            PAS.LUniquifierTable tab = new PAS.LUniquifierTable
+                (upperBound - firstIndex, pa.array, null);
+            PAS.FJUniquifier f = new PAS.FJUniquifier
+                (this, firstIndex, upperBound, null, tab);
+            ex.invoke(f);
+            long[] res = tab.uniqueElements(f.count);
+            return new ParallelLongArray(ex, res);
+        }
+
+        /**
+         * Returns the index of some element equal to given target, or
+         * -1 if not present
+         * @param target the element to search for
+         * @return the index or -1 if not present
+         */
+        public int indexOf(long target) {
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJLIndexOf f = new PAS.FJLIndexOf
+                (this, firstIndex, upperBound, null, result, target);
+            ex.invoke(f);
+            return result.get();
+        }
+
+        /**
+         * Assuming this array is sorted, returns the index of an
+         * element equal to given target, or -1 if not present. If the
+         * array is not sorted, the results are undefined.
+         * @param target the element to search for
+         * @return the index or -1 if not present
+         */
+        public int binarySearch(long target) {
+            final long[] array = pa.array;
+            int lo = firstIndex;
+            int hi = upperBound - 1;
+            while (lo <= hi) {
+                int mid = (lo + hi) >>> 1;
+                long m = array[mid];
+                if (target == m)
+                    return mid;
+                else if (target < m)
+                    hi = mid - 1;
+                else
+                    lo = mid + 1;
+            }
+            return -1;
+        }
+
+        /**
+         * Assuming this array is sorted with respect to the given
+         * comparator, returns the index of an element equal to given
+         * target, or -1 if not present. If the array is not sorted,
+         * the results are undefined.
+         * @param target the element to search for
+         * @param comparator the comparator
+         * @return the index or -1 if not present
+         */
+        public int binarySearch(long target, LongComparator comparator) {
+            final long[] array = pa.array;
+            int lo = firstIndex;
+            int hi = upperBound - 1;
+            while (lo <= hi) {
+                int mid = (lo + hi) >>> 1;
+                int c = comparator.compare(target, array[mid]);
+                if (c == 0)
+                    return mid;
+                else if (c < 0)
+                    hi = mid - 1;
+                else
+                    lo = mid + 1;
+            }
+            return -1;
+        }
+
         public int size() {
             return upperBound - firstIndex;
         }
@@ -1123,28 +1516,18 @@ public class ParallelLongArray {
          * @param base the result for an empty array
          */
         public void cumulate(LongReducer reducer, long base) {
-            FJCumulateOp op = new FJCumulateOp
-                (ex, array, firstIndex, upperBound, reducer, base);
-            if (op.granularity >= upperBound - firstIndex)
-                op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-            }
+            PAS.FJLCumulateOp op = new PAS.FJLCumulateOp(this, reducer, base);
+            PAS.FJLScan r = new PAS.FJLScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
         }
 
         /**
          * Replaces each element with the running sum
          */
         public void cumulateSum() {
-            FJCumulateSumOp op = new FJCumulateSumOp
-                (ex, array, firstIndex, upperBound);
-            if (op.granularity >= upperBound - firstIndex)
-                op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-            }
+            PAS.FJLCumulatePlusOp op = new PAS.FJLCumulatePlusOp(this);
+            PAS.FJLScan r = new PAS.FJLScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
         }
 
         /**
@@ -1156,15 +1539,11 @@ public class ParallelLongArray {
          * @return the total reduction
          */
         public long precumulate(LongReducer reducer, long base) {
-            FJPrecumulateOp op = new FJPrecumulateOp
-                (ex, array, firstIndex, upperBound, reducer, base);
-            if (op.granularity >= upperBound - firstIndex)
-                return op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-                return r.out;
-            }
+            PAS.FJLPrecumulateOp op = new PAS.FJLPrecumulateOp
+                (this, reducer, base);
+            PAS.FJLScan r = new PAS.FJLScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
+            return r.out;
         }
 
         /**
@@ -1172,290 +1551,342 @@ public class ParallelLongArray {
          * @return the total sum
          */
         public long precumulateSum() {
-            FJPrecumulateSumOp op = new FJPrecumulateSumOp
-                (ex, array, firstIndex, upperBound);
-            if (op.granularity >= upperBound - firstIndex)
-                return op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-                return r.out;
-            }
+            PAS.FJLPrecumulatePlusOp op = new PAS.FJLPrecumulatePlusOp(this);
+            PAS.FJLScan r = new PAS.FJLScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
+            return r.out;
         }
-
 
         /**
          * Sorts the elements.
+         * Unlike Arrays.sort, this sort does
+         * not guarantee that elements with equal keys maintain their
+         * relative position in the array.
          * @param cmp the comparator to use
          */
         public void sort(LongComparator cmp) {
-            int n = upperBound - firstIndex;
-            long[] ws = new long[upperBound];
-            ex.invoke(new FJSorter(cmp, array, ws, firstIndex,
-                                   n, granularity));
+            ex.invoke(new PAS.FJLSorter
+                      (cmp, pa.array, new long[upperBound],
+                       firstIndex, upperBound - firstIndex, threshold));
         }
 
         /**
-         * Sorts the elements, using natural comparator
+         * Sorts the elements, assuming all elements are
+         * Comparable. Unlike Arrays.sort, this sort does not
+         * guarantee that elements with equal keys maintain their relative
+         * position in the array.
+         * @throws ClassCastException if any element is not Comparable.
          */
         public void sort() {
-            int n = upperBound - firstIndex;
-            long[] ws = new long[upperBound];
-            ex.invoke(new FJLongSorter(array, ws, firstIndex,
-                                       n, granularity));
+            ex.invoke(new PAS.FJLCSorter
+                      (pa.array, new long[upperBound],
+                       firstIndex, upperBound - firstIndex, threshold));
         }
 
-        public ParallelLongArray newArray() {
-            // For now, avoid copyOf so people can compile with Java5
-            int size = upperBound - firstIndex;
-            long[] dest = new long[size];
-            System.arraycopy(array, firstIndex, dest, 0, size);
-            return new ParallelLongArray(ex, dest);
+        public void removeAll() {
+            pa.removeSlotsAt(firstIndex, upperBound);
+        }
+
+        /**
+         * Removes consecutive elements that are equal (or null),
+         * shifting others leftward, and possibly decreasing size.  This
+         * method may be used after sorting to ensure that this
+         * ParallelLongArray contains a set of unique elements.
+         */
+        public void removeConsecutiveDuplicates() {
+            // Sequential implementation for now
+            int k = firstIndex;
+            int n = upperBound;
+            if (k < n) {
+                long[] arr = pa.array;
+                long last = arr[k++];
+                for (int i = k; i < n; ++i) {
+                    long x = arr[i];
+                    if (last != x)
+                        arr[k++] = last = x;
+                }
+                pa.removeSlotsAt(k, n);
+            }
         }
 
         void leafApply(int lo, int hi, LongProcedure procedure) {
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i)
                 procedure.apply(array[i]);
         }
 
-        void leafTransform(int lo, int hi,
-                           MapperFromLongToLong mapper) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = mapper.map(array[i]);
-        }
-
-        void leafIndexMap(int lo, int hi,
-                          MapperFromIntToLong mapper) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = mapper.map(i);
-        }
-
-        void leafGenerate(int lo, int hi,
-                          LongGenerator generator) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = generator.generate();
-        }
-        void leafFill(int lo, int hi,
-                      long value) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = value;
-        }
-        void leafCombineInPlace(int lo, int hi,
-                                long[] other, LongReducer combiner) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = combiner.combine(array[i], other[i]);
-        }
-
-        long leafReduce(int lo, int hi,
-                        LongReducer reducer, long base) {
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
             if (lo >= hi)
                 return base;
+            final long[] array = pa.array;
             long r = array[lo];
             for (int i = lo+1; i < hi; ++i)
                 r = reducer.combine(r, array[i]);
             return r;
         }
-        void leafMinIndex(int lo, int hi,
-                          LongComparator comparator,
-                          boolean reverse,
-                          FJLongMinIndex task) {
-            long best = reverse? Long.MIN_VALUE : Long.MAX_VALUE;
-            int bestIndex = -1;
+
+        void leafStats(int lo, int hi, PAS.FJLStats task) {
+            final long[] array = pa.array;
+            task.size = hi - lo;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
+                task.sum += x;
+                task.updateMin(i, x);
+                task.updateMax(i, x);
             }
-            task.result = best;
-            task.indexResult = bestIndex;
+        }
+
+        void leafTransform(int lo, int hi, LongMapper  mapper) {
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = mapper.map(array[i]);
+        }
+
+        void leafIndexMap(int lo, int hi, MapperFromIntToLong mapper) {
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = mapper.map(i);
+        }
+
+        void leafGenerate(int lo, int hi, LongGenerator generator) {
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = generator.generate();
+        }
+
+        void leafFillValue(int lo, int hi, long value) {
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = value;
+        }
+
+        void leafCombineInPlace(int lo, int hi, long[] other,
+                                int otherOffset, LongReducer combiner) {
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = combiner.combine(array[i], other[i+otherOffset]);
+        }
+
+        void leafCombine(int lo, int hi, long[] other, int otherOffset,
+                         long[] dest, LongReducer combiner) {
+            final long[] array = pa.array;
+            int k = lo - firstIndex;
+            for (int i = lo; i < hi; ++i) {
+                dest[k] = combiner.combine(array[i], other[i + otherOffset]);
+                ++k;
+            }
         }
     }
 
     static final class WithBoundedFilter extends WithFilter {
         final LongPredicate selector;
-        WithBoundedFilter(ForkJoinExecutor ex, long[] array,
+        WithBoundedFilter(ParallelLongArray pa,
                           int firstIndex, int upperBound,
                           LongPredicate selector) {
-            super(ex, array, firstIndex, upperBound);
+            super(pa, firstIndex, upperBound);
             this.selector = selector;
+        }
+
+        public WithFilter withFilter(LongPredicate selector) {
+            return new WithBoundedFilter
+                (pa, firstIndex, upperBound,
+                 Ops.andPredicate(this.selector, selector));
+        }
+
+        public WithFilter orFilter(LongPredicate selector) {
+            return new WithBoundedFilter
+                (pa, firstIndex, upperBound,
+                 Ops.orPredicate(this.selector, selector));
         }
 
         public <U> WithMapping<U> withMapping
             (MapperFromLong<? extends U> mapper) {
             return new WithBoundedFilteredMapping<U>
-                (ex, array, firstIndex, upperBound, selector, mapper);
+                (pa, firstIndex, upperBound, selector, mapper);
+        }
+
+        public WithLongMapping withMapping
+            (LongMapper mapper) {
+            return new WithBoundedFilteredLongMapping
+                (pa, firstIndex, upperBound, selector, mapper);
         }
 
         public WithDoubleMapping withMapping
             (MapperFromLongToDouble mapper) {
             return new WithBoundedFilteredDoubleMapping
-                (ex, array, firstIndex, upperBound, selector, mapper);
-        }
-
-        public WithLongMapping withMapping
-            (MapperFromLongToLong mapper) {
-            return new WithBoundedFilteredLongMapping
-                (ex, array, firstIndex, upperBound, selector, mapper);
-        }
-
-        public WithIntMapping withMapping
-            (MapperFromLongToInt mapper) {
-            return new WithBoundedFilteredIntMapping
-                (ex, array, firstIndex, upperBound, selector, mapper);
+                (pa, firstIndex, upperBound, selector, mapper);
         }
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
+            PAS.FJLSelectAny f = new PAS.FJLSelectAny
+                (this, firstIndex, upperBound, null, result, selector);
             ex.invoke(f);
             return result.get();
         }
 
-        public int size() {
-            FJCountAll f = new FJCountAll
-                (this, firstIndex, upperBound, selector);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        public ParallelLongArray  newArray() {
-            FJLongPlainSelectAllDriver r =
-                new FJLongPlainSelectAllDriver(this, selector);
+        public ParallelLongArray all() {
+            PAS.FJLSelectAllDriver r = new PAS.FJLSelectAllDriver(this);
             ex.invoke(r);
             return new ParallelLongArray(ex, r.results);
         }
 
-        long leafReduce(int lo, int hi,
-                        LongReducer reducer, long base) {
+        public int size() {
+            PAS.FJLCountSelected f = new PAS.FJLCountSelected
+                (this, firstIndex, upperBound, null, selector);
+            ex.invoke(f);
+            return f.count;
+        }
+
+        public ParallelLongArray allUniqueElements() {
+            PAS.LUniquifierTable tab = new PAS.LUniquifierTable
+                (upperBound - firstIndex, pa.array, selector);
+            PAS.FJUniquifier f = new PAS.FJUniquifier
+                (this, firstIndex, upperBound, null, tab);
+            ex.invoke(f);
+            long[] res = tab.uniqueElements(f.count);
+            return new ParallelLongArray(ex, res);
+        }
+
+        public void removeAll() {
+            PAS.FJRemoveAllDriver f = new PAS.FJRemoveAllDriver
+                (this, firstIndex, upperBound);
+            ex.invoke(f);
+            pa.removeSlotsAt(f.offset, upperBound);
+        }
+
+        void leafApply(int lo, int hi, LongProcedure  procedure) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long x = array[i];
+                if (sel.evaluate(x))
+                    procedure.apply(x);
+            }
+        }
+
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
+            final LongPredicate sel = selector;
             boolean gotFirst = false;
             long r = base;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
-                long t = array[i];
-                if (selector.evaluate(t)) {
-                    long y = t;
+                long x = array[i];
+                if (sel.evaluate(x)) {
                     if (!gotFirst) {
                         gotFirst = true;
-                        r = y;
+                        r = x;
                     }
                     else
-                        r = reducer.combine(r, y);
+                        r = reducer.combine(r, x);
                 }
             }
             return r;
         }
 
-        void leafApply(int lo, int hi, LongProcedure procedure) {
+        void leafStats(int lo, int hi, PAS.FJLStats task) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            int count = 0;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(x);
-            }
-        }
-
-        void leafMinIndex(int lo, int hi,
-                          LongComparator comparator,
-                          boolean reverse,
-                          FJLongMinIndex task) {
-            long best = reverse? Long.MIN_VALUE : Long.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                long t = array[i];
-                if (selector.evaluate(t)) {
-                    long x = t;
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
+                if (sel.evaluate(x)) {
+                    ++count;
+                    task.sum += x;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
                 }
             }
-            task.result = best;
-            task.indexResult = bestIndex;
+            task.size = count;
         }
 
-        void leafTransform(int lo, int hi,
-                           MapperFromLongToLong mapper) {
+        void leafTransform(int lo, int hi, LongMapper  mapper) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     array[i] = mapper.map(x);
             }
         }
-        void leafIndexMap(int lo, int hi,
-                          MapperFromIntToLong mapper) {
+        void leafIndexMap(int lo, int hi, MapperFromIntToLong mapper) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     array[i] = mapper.map(i);
             }
         }
 
-        void leafGenerate(int lo, int hi,
-                          LongGenerator generator) {
+        void leafGenerate(int lo, int hi, LongGenerator generator) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     array[i] = generator.generate();
             }
         }
-        void leafFill(int lo, int hi,
-                      long value) {
+
+        void leafFillValue(int lo, int hi, long value) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     array[i] = value;
             }
         }
-        void leafCombineInPlace(int lo, int hi,
-                                long[] other, LongReducer combiner) {
+        void leafCombineInPlace(int lo, int hi, long[] other,
+                                int otherOffset, LongReducer combiner) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
-                    array[i] = combiner.combine(x, other[i]);
+                if (sel.evaluate(x))
+                    array[i] = combiner.combine(x, other[i+otherOffset]);
             }
+        }
+
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long t = array[i];
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
         }
 
     }
 
-    static final class WithBoundedMapping<U> extends WithMapping<U> {
-        final MapperFromLong<? extends U> mapper;
-        WithBoundedMapping(ForkJoinExecutor ex, long[] array,
-                           int firstIndex, int upperBound,
-                           MapperFromLong<? extends U> mapper) {
-            super(ex, array, firstIndex, upperBound);
+    static final class WithBoundedLongMapping extends WithLongMapping {
+        final LongMapper mapper;
+        WithBoundedLongMapping(ParallelLongArray pa, int firstIndex,
+                               int upperBound, LongMapper mapper) {
+            super(pa, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
-        public ParallelArray<U> newArray() {
-            int n = upperBound - firstIndex;
-            U[] dest = (U[])new Object[n];
-            FJMap<U> f =
-                new FJMap<U>(this, firstIndex, upperBound, dest, mapper);
+        public ParallelLongArray all() {
+            long[] dest = new long[upperBound - firstIndex];
+            PAS.FJLMap f = new PAS.FJLMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
             ex.invoke(f);
-            return new ParallelArray<U>(ex, dest);
-        }
-
-        public ParallelArray<U> newArray(Class<? super U> elementType) {
-            int n = upperBound - firstIndex;
-            U[] dest = (U[])
-                java.lang.reflect.Array.newInstance(elementType, n);
-            FJMap<U> f =
-                new FJMap<U>(this, firstIndex, upperBound, dest, mapper);
-            ex.invoke(f);
-            return new ParallelArray<U>(ex, dest);
+            return new ParallelLongArray(ex, dest);
         }
 
         public int size() {
@@ -1466,113 +1897,144 @@ public class ParallelLongArray {
             return (firstIndex < upperBound)? firstIndex : -1;
         }
 
-        public U any() {
-            return (firstIndex < upperBound)?
-                mapper.map(array[firstIndex]) : null;
+        public WithLongMapping withMapping(LongMapper mapper) {
+            return new WithBoundedLongMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure<? super U>  procedure) {
+        public WithDoubleMapping withMapping(MapperFromLongToDouble mapper) {
+            return new WithBoundedDoubleMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromLong<? extends U> mapper) {
+            return new WithBoundedMapping<U>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, LongProcedure procedure) {
+            final LongMapper mpr = mapper;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
+                procedure.apply(mpr.map(array[i]));
         }
 
-        U leafReduce(int lo, int hi,
-                     Reducer<U> reducer, U base) {
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
             if (lo >= hi)
                 return base;
-            U r = mapper.map(array[lo]);
+            final long[] array = pa.array;
+            final LongMapper mpr = mapper;
+            long r = mpr.map(array[lo]);
             for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
+                r = reducer.combine(r, mpr.map(array[i]));
             return r;
         }
 
-        void leafMinIndex(int lo, int hi,
-                          Comparator<? super U> comparator,
-                          boolean reverse,
-                          FJMinIndex<U> task) {
-            U best = null;
-            int bestIndex = -1;
+        void leafStats(int lo, int hi, PAS.FJLStats task) {
+            task.size = hi - lo;
+            final long[] array = pa.array;
+            final LongMapper mpr = mapper;
             for (int i = lo; i < hi; ++i) {
-                U x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
+                long x = mpr.map(array[i]);
+                task.sum += x;
+                task.updateMin(i, x);
+                task.updateMax(i, x);
             }
-            task.result = best;
-            task.indexResult = bestIndex;
         }
+
+        final void leafTransfer(int lo, int hi, long[] dest, int offset) {
+            final long[] array = pa.array;
+            final LongMapper mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       long[] dest, int offset) {
+            final long[] array = pa.array;
+            final LongMapper mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = mpr.map(array[indices[i]]);
+        }
+
     }
 
-    static final class WithBoundedFilteredMapping<U>
-        extends WithMapping<U> {
+    static final class WithBoundedFilteredLongMapping extends WithLongMapping {
         final LongPredicate selector;
-        final MapperFromLong<? extends U> mapper;
-        WithBoundedFilteredMapping(ForkJoinExecutor ex, long[] array,
-                                   int firstIndex, int upperBound,
-                                   LongPredicate selector,
-                                   MapperFromLong<? extends U> mapper) {
-            super(ex, array, firstIndex, upperBound);
+        final LongMapper mapper;
+        WithBoundedFilteredLongMapping
+            (ParallelLongArray pa, int firstIndex, int upperBound,
+             LongPredicate selector, LongMapper mapper) {
+            super(pa, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
-        public ParallelArray<U> newArray() {
-            FJMapRefSelectAllDriver<U> r =
-                new FJMapRefSelectAllDriver<U>
-                (this, selector, null, mapper);
-            ex.invoke(r);
-            return new ParallelArray<U>(ex, r.results);
-        }
 
-        public ParallelArray<U> newArray(Class<? super U> elementType) {
-            FJMapRefSelectAllDriver<U> r =
-                new FJMapRefSelectAllDriver<U>
-                (this, selector, elementType, mapper);
+        public ParallelLongArray all() {
+            PAS.FJLSelectAllDriver r = new PAS.FJLSelectAllDriver(this);
             ex.invoke(r);
-            return new ParallelArray<U>(ex, r.results);
+            return new ParallelLongArray(ex, r.results);
         }
 
         public int size() {
-            FJCountAll f = new FJCountAll
-                (this, firstIndex, upperBound, selector);
+            PAS.FJLCountSelected f = new PAS.FJLCountSelected
+                (this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
+            PAS.FJLSelectAny f = new PAS.FJLSelectAny
+                (this, firstIndex, upperBound, null, result, selector);
             ex.invoke(f);
             return result.get();
         }
 
-        public U any() {
-            int idx = anyIndex();
-            return (idx < 0)?  null : mapper.map(array[idx]);
+        public WithLongMapping withMapping(LongMapper mapper) {
+            return new WithBoundedFilteredLongMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure<? super U>  procedure) {
+        public WithDoubleMapping withMapping(MapperFromLongToDouble mapper) {
+            return new WithBoundedFilteredDoubleMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromLong<? extends U> mapper) {
+            return new WithBoundedFilteredMapping<U>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, LongProcedure procedure) {
+            final LongPredicate sel = selector;
+            final LongMapper mpr = mapper;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
+                if (sel.evaluate(x))
+                    procedure.apply(mpr.map(x));
             }
         }
-        U leafReduce(int lo, int hi,
-                     Reducer<U> reducer, U base) {
+
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
+            final LongPredicate sel = selector;
+            final LongMapper mpr = mapper;
             boolean gotFirst = false;
-            U r = base;
+            long r = base;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
-                long x = array[i];
-                if (selector.evaluate(x)) {
-                    U y = mapper.map(x);
+                long t = array[i];
+                if (sel.evaluate(t)) {
+                    long y = mpr.map(t);
                     if (!gotFirst) {
                         gotFirst = true;
                         r = y;
@@ -1584,48 +2046,74 @@ public class ParallelLongArray {
             return r;
         }
 
-        void leafRefMap(int lo, int hi,
-                        U[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        void leafMinIndex(int lo, int hi,
-                          Comparator<? super U> comparator,
-                          boolean reverse,
-                          FJMinIndex<U> task) {
-            U best = null;
-            int bestIndex = -1;
+        void leafStats(int lo, int hi, PAS.FJLStats task) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            final LongMapper mpr = mapper;
+            int count = 0;
             for (int i = lo; i < hi; ++i) {
                 long t = array[i];
-                if (selector.evaluate(t)) {
-                    U x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
+                if (sel.evaluate(t)) {
+                    ++count;
+                    long x = mpr.map(t);
+                    task.sum += x;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
                 }
             }
-            task.result = best;
-            task.indexResult = bestIndex;
+            task.size = count;
         }
+
+        final void leafTransfer(int lo, int hi, long[] dest, int offset) {
+            final long[] array = pa.array;
+            final LongMapper mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       long[] dest, int offset) {
+            final long[] array = pa.array;
+            final LongMapper mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = mpr.map(array[indices[i]]);
+        }
+
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long t = array[i];
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
+
     }
 
     /**
      * A modifier for parallel array operations to apply to mappings
      * of elements to doubles, not to the elements themselves
      */
-    public static abstract class WithDoubleMapping
-        extends Params {
-        WithDoubleMapping(ForkJoinExecutor ex, long[] array,
-                          int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+    public static abstract class WithDoubleMapping extends PAS.LPrefix {
+        final MapperFromLongToDouble mapper;
+        WithDoubleMapping(ParallelLongArray pa,
+                          int firstIndex, int upperBound,
+                          MapperFromLongToDouble mapper) {
+            super(pa, firstIndex, upperBound);
+            this.mapper = mapper;
         }
 
         /**
@@ -1633,12 +2121,9 @@ public class ParallelLongArray {
          * @param procedure the procedure
          */
         public void apply(DoubleProcedure procedure) {
-            ex.invoke(new FJDoubleApply
-                      (this, firstIndex, upperBound, procedure));
+            ex.invoke(new PAS.FJDApply
+                      (this, firstIndex, upperBound, null, procedure));
         }
-
-        abstract void leafApply(int lo, int hi,
-                                DoubleProcedure procedure);
 
         /**
          * Returns reduction of mapped elements
@@ -1647,22 +2132,18 @@ public class ParallelLongArray {
          * @return reduction
          */
         public double reduce(DoubleReducer reducer, double base) {
-            FJDoubleReduce f =
-                new FJDoubleReduce
-                (this, firstIndex, upperBound, reducer, base);
+            PAS.FJDReduce f = new PAS.FJDReduce
+                (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return f.result;
         }
-
-        abstract double leafReduce
-            (int lo, int hi, DoubleReducer reducer, double base);
 
         /**
          * Returns the minimum element, or Double.MAX_VALUE if empty
          * @return minimum element, or Double.MAX_VALUE if empty
          */
         public double min() {
-            return reduce(NaturalDoubleMinReducer.min, Double.MAX_VALUE);
+            return reduce(naturalDoubleMinReducer(), Double.MAX_VALUE);
         }
 
         /**
@@ -1671,7 +2152,7 @@ public class ParallelLongArray {
          * @return minimum element, or Double.MAX_VALUE if empty
          */
         public double min(DoubleComparator comparator) {
-            return reduce(new DoubleMinReducer(comparator),
+            return reduce(doubleMinReducer(comparator),
                           Double.MAX_VALUE);
         }
 
@@ -1680,7 +2161,7 @@ public class ParallelLongArray {
          * @return maximum element, or -Double.MAX_VALUE if empty
          */
         public double max() {
-            return reduce(NaturalDoubleMaxReducer.max, -Double.MAX_VALUE);
+            return reduce(naturalDoubleMaxReducer(), -Double.MAX_VALUE);
         }
 
         /**
@@ -1689,75 +2170,49 @@ public class ParallelLongArray {
          * @return maximum element, or -Double.MAX_VALUE if empty
          */
         public double max(DoubleComparator comparator) {
-            return reduce(new DoubleMaxReducer(comparator),
+            return reduce(doubleMaxReducer(comparator),
                           -Double.MAX_VALUE);
         }
 
         /**
-         * Returns the sum of mapped elements
-         * @return the sum of mapped elements
+         * Returns the sum of elements
+         * @return the sum of elements
          */
         public double sum() {
-            return reduce(DoubleAdder.adder, 0);
+            return reduce(Ops.doubleAdder(), 0);
         }
 
         /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @return the index of least element or -1 if empty.
+         * Returns summary statistics
+         * @param comparator the comparator to use for
+         * locating minimum and maximum elements
+         * @return the summary.
          */
-        public int indexOfMin() {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalDoubleComparator.comparator, false);
+        public ParallelDoubleArray.SummaryStatistics summary
+            (DoubleComparator comparator) {
+            PAS.FJDStats f = new PAS.FJDStats
+                (this, firstIndex, upperBound, null, comparator);
             ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @return the index of greatest element or -1 if empty.
+         * Returns summary statistics, using natural comparator
+         * @return the summary.
          */
-        public int indexOfMax() {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalDoubleComparator.comparator, true);
+        public ParallelDoubleArray.SummaryStatistics summary() {
+            PAS.FJDStats f = new PAS.FJDStats
+                (this, firstIndex, upperBound, null,
+                 naturalDoubleComparator());
             ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin(DoubleComparator comparator) {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound, comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax(DoubleComparator comparator) {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound, comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
          * Returns a new ParallelDoubleArray holding mappings
          * @return a new ParallelDoubleArray holding mappings
          */
-        public abstract ParallelDoubleArray newArray();
+        public abstract ParallelDoubleArray all();
 
         /**
          * Return the number of elements selected using bound or
@@ -1775,34 +2230,60 @@ public class ParallelLongArray {
         public abstract int anyIndex();
 
         /**
-         * Returns mapping of some element matching bound and filter
-         * constraints
-         * @return mapping of matching element
-         * @throws NoSuchElementException if empty
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper.
+         * @param mapper the mapper
+         * @return operation prefix
          */
-        public abstract double any();
+        public abstract WithLongMapping withMapping
+            (MapperFromDoubleToLong mapper);
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   DoubleComparator comparator,
-                                   boolean reverse,
-                                   FJDoubleMinIndex task);
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping withMapping(DoubleMapper mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <U> WithMapping<U> withMapping
+            (MapperFromDouble<? extends U> mapper);
+
+        final void leafTransfer(int lo, int hi, double[] dest, int offset) {
+            final long[] array = pa.array;
+            final MapperFromLongToDouble mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       double[] dest, int offset) {
+            final long[] array = pa.array;
+            final MapperFromLongToDouble mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = mpr.map(array[indices[i]]);
+        }
 
     }
 
     static final class WithBoundedDoubleMapping
         extends WithDoubleMapping {
-        final MapperFromLongToDouble mapper;
-        WithBoundedDoubleMapping(ForkJoinExecutor ex, long[] array,
+        WithBoundedDoubleMapping(ParallelLongArray pa,
                                  int firstIndex, int upperBound,
                                  MapperFromLongToDouble mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.mapper = mapper;
+            super(pa, firstIndex, upperBound, mapper);
         }
 
-        public ParallelDoubleArray newArray() {
+        public ParallelDoubleArray all() {
             double[] dest = new double[upperBound - firstIndex];
-            FJDoubleMap f =
-                new FJDoubleMap(this, firstIndex, upperBound, dest, mapper);
+            PAS.FJDMap f = new PAS.FJDMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
             ex.invoke(f);
             return new ParallelDoubleArray(ex, dest);
         }
@@ -1811,789 +2292,132 @@ public class ParallelLongArray {
             return upperBound - firstIndex;
         }
 
-        void leafApply(int lo, int hi, DoubleProcedure procedure) {
-            for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
-        }
-
-        void leafMap(int lo, int hi,
-                     double[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        double leafReduce(int lo, int hi,
-                          DoubleReducer reducer, double base) {
-            if (lo >= hi)
-                return base;
-            double r = mapper.map(array[lo]);
-            for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
-            return r;
-        }
-
-        void leafMinIndex(int lo, int hi,
-                          DoubleComparator comparator,
-                          boolean reverse,
-                          FJDoubleMinIndex task) {
-            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                double x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-
         public int anyIndex() {
             return (firstIndex < upperBound)? firstIndex : -1;
         }
 
-        public double any() {
-            if (firstIndex >= upperBound)
-                throw new NoSuchElementException();
-            return mapper.map(array[firstIndex]);
+        public WithLongMapping withMapping(MapperFromDoubleToLong mapper) {
+            return new WithBoundedLongMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
         }
+
+        public WithDoubleMapping withMapping(DoubleMapper mapper) {
+            return new WithBoundedDoubleMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromDouble<? extends U> mapper) {
+            return new WithBoundedMapping<U>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            final MapperFromLongToDouble mpr = mapper;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                procedure.apply(mpr.map(array[i]));
+        }
+
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            if (lo >= hi)
+                return base;
+            final long[] array = pa.array;
+            final MapperFromLongToDouble mpr = mapper;
+            double r = mpr.map(array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.combine(r, mpr.map(array[i]));
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJDStats task) {
+            final long[] array = pa.array;
+            final MapperFromLongToDouble mpr = mapper;
+            task.size = hi - lo;
+            for (int i = lo; i < hi; ++i) {
+                double x = mpr.map(array[i]);
+                task.sum += x;
+                task.updateMin(i, x);
+                task.updateMax(i, x);
+            }
+        }
+
     }
 
     static final class WithBoundedFilteredDoubleMapping
         extends WithDoubleMapping {
         final LongPredicate selector;
-        final MapperFromLongToDouble mapper;
         WithBoundedFilteredDoubleMapping
-            (ForkJoinExecutor ex, long[] array,
-             int firstIndex, int upperBound,
-             LongPredicate selector,
-             MapperFromLongToDouble mapper) {
-            super(ex, array, firstIndex, upperBound);
+            (ParallelLongArray pa, int firstIndex, int upperBound,
+             LongPredicate selector, MapperFromLongToDouble mapper) {
+            super(pa, firstIndex, upperBound, mapper);
             this.selector = selector;
-            this.mapper = mapper;
         }
 
-        public ParallelDoubleArray  newArray() {
-            FJDoubleMapSelectAllDriver r =
-                new FJDoubleMapSelectAllDriver(this, selector, mapper);
+        public ParallelDoubleArray all() {
+            PAS.FJDSelectAllDriver r = new PAS.FJDSelectAllDriver(this);
             ex.invoke(r);
             return new ParallelDoubleArray(ex, r.results);
         }
 
         public int size() {
-            FJCountAll f = new FJCountAll
-                (this, firstIndex, upperBound, selector);
+            PAS.FJLCountSelected f = new PAS.FJLCountSelected
+                (this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
-        double leafReduce(int lo, int hi,
-                          DoubleReducer reducer, double base) {
-            boolean gotFirst = false;
-            double r = base;
-            for (int i = lo; i < hi; ++i) {
-                long t = array[i];
-                if (selector.evaluate(t)) {
-                    double y = mapper.map(t);
-                    if (!gotFirst) {
-                        gotFirst = true;
-                        r = y;
-                    }
-                    else
-                        r = reducer.combine(r, y);
-                }
-            }
-            return r;
+        public int anyIndex() {
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJLSelectAny f = new PAS.FJLSelectAny
+                (this, firstIndex, upperBound, null, result, selector);
+            ex.invoke(f);
+            return result.get();
+        }
+
+        public WithLongMapping withMapping(MapperFromDoubleToLong mapper) {
+            return new WithBoundedFilteredLongMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithDoubleMapping withMapping(DoubleMapper mapper) {
+            return new WithBoundedFilteredDoubleMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromDouble<? extends U> mapper) {
+            return new WithBoundedFilteredMapping<U>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
         }
 
         void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            final MapperFromLongToDouble mpr = mapper;
             for (int i = lo; i < hi; ++i) {
                 long x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
+                if (sel.evaluate(x))
+                    procedure.apply(mpr.map(x));
             }
         }
 
-        void leafMinIndex(int lo, int hi,
-                          DoubleComparator comparator,
-                          boolean reverse,
-                          FJDoubleMinIndex task) {
-            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                long t = array[i];
-                if (selector.evaluate(t)) {
-                    double x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
-            ex.invoke(f);
-            return result.get();
-        }
-
-        public double any() {
-            int idx = anyIndex();
-            if (idx < 0)
-                throw new NoSuchElementException();
-            return mapper.map(array[idx]);
-        }
-
-    }
-
-    /**
-     * A modifier for parallel array operations to apply to mappings
-     * of elements to longs, not to the elements themselves
-     */
-    public static abstract class WithLongMapping
-        extends Params {
-        WithLongMapping(ForkJoinExecutor ex, long[] array,
-                        int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
-        }
-
-        /**
-         * Applies the given procedure
-         * @param procedure the procedure
-         */
-        public void apply(LongProcedure procedure) {
-            ex.invoke(new FJLongApply
-                      (this, firstIndex, upperBound, procedure));
-        }
-
-        abstract void leafApply(int lo, int hi,
-                                LongProcedure procedure);
-
-
-        /**
-         * Returns reduction of mapped elements
-         * @param reducer the reducer
-         * @param base the result for an empty array
-         * @return reduction
-         */
-        public long reduce(LongReducer reducer, long base) {
-            FJLongReduce f =
-                new FJLongReduce(this, firstIndex, upperBound, reducer, base);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        abstract long leafReduce(int lo, int hi,
-                                 LongReducer reducer, long base);
-
-        /**
-         * Returns the minimum element, or Long.MAX_VALUE if empty
-         * @return minimum element, or Long.MAX_VALUE if empty
-         */
-        public long min() {
-            return reduce(NaturalLongMinReducer.min, Long.MAX_VALUE);
-        }
-
-        /**
-         * Returns the minimum element, or Long.MAX_VALUE if empty
-         * @param comparator the comparator
-         * @return minimum element, or Long.MAX_VALUE if empty
-         */
-        public long min(LongComparator comparator) {
-            return reduce(new LongMinReducer(comparator),
-                          Long.MAX_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or Long.MIN_VALUE if empty
-         * @return maximum element, or Long.MIN_VALUE if empty
-         */
-        public long max() {
-            return reduce(NaturalLongMaxReducer.max, Long.MIN_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or Long.MIN_VALUE if empty
-         * @param comparator the comparator
-         * @return maximum element, or Long.MIN_VALUE if empty
-         */
-        public long max(LongComparator comparator) {
-            return reduce(new LongMaxReducer(comparator),
-                          Long.MIN_VALUE);
-        }
-
-        /**
-         * Returns the sum of elements
-         * @return the sum of elements
-         */
-        public long sum() {
-            return reduce(LongAdder.adder, 0);
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin() {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalLongComparator.comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax() {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalLongComparator.comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin(LongComparator comparator) {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound, comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax(LongComparator comparator) {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound, comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns a new ParallelLongArray holding mappings
-         * @return a new ParallelLongArray holding mappings
-         */
-        public abstract ParallelLongArray newArray();
-
-        /**
-         * Return the number of elements selected using bound or
-         * filter restrictions. Note that this method must evaluate
-         * all selectors to return its result.
-         * @return the number of elements
-         */
-        public abstract int size();
-
-        /**
-         * Returns the index of some element matching bound and filter
-         * constraints, or -1 if none.
-         * @return index of matching element, or -1 if none.
-         */
-        public abstract int anyIndex();
-
-        /**
-         * Returns mapping of some element matching bound and filter
-         * constraints
-         * @return mapping of matching element
-         * @throws NoSuchElementException if empty
-         */
-        public abstract long any();
-
-        abstract void leafMinIndex(int lo, int hi,
-                                   LongComparator comparator,
-                                   boolean reverse,
-                                   FJLongMinIndex task);
-
-    }
-
-    static final class WithBoundedLongMapping
-        extends WithLongMapping {
-        final MapperFromLongToLong mapper;
-        WithBoundedLongMapping(ForkJoinExecutor ex, long[] array,
-                               int firstIndex, int upperBound,
-                               MapperFromLongToLong mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.mapper = mapper;
-        }
-
-        public ParallelLongArray newArray() {
-            long[] dest = new long[upperBound - firstIndex];
-            FJLongMap f =
-                new FJLongMap(this, firstIndex, upperBound, dest, mapper);
-            ex.invoke(f);
-            return new ParallelLongArray(ex, dest);
-        }
-
-        public int size() {
-            return upperBound - firstIndex;
-        }
-        void leafApply(int lo, int hi, LongProcedure procedure) {
-            for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
-        }
-
-
-        void leafMap(int lo, int hi,
-                     long[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-        long leafReduce(int lo, int hi,
-                        LongReducer reducer, long base) {
-            if (lo >= hi)
-                return base;
-            long r = mapper.map(array[lo]);
-            for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
-            return r;
-        }
-        void leafMinIndex(int lo, int hi,
-                          LongComparator comparator,
-                          boolean reverse,
-                          FJLongMinIndex task) {
-            long best = reverse? Long.MIN_VALUE : Long.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                long x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
-        }
-
-        public long any() {
-            if (firstIndex >= upperBound)
-                throw new NoSuchElementException();
-            return mapper.map(array[firstIndex]);
-        }
-
-    }
-
-    static final class WithBoundedFilteredLongMapping
-        extends WithLongMapping {
-        final LongPredicate selector;
-        final MapperFromLongToLong mapper;
-        WithBoundedFilteredLongMapping
-            (ForkJoinExecutor ex, long[] array,
-             int firstIndex, int upperBound,
-             LongPredicate selector,
-             MapperFromLongToLong mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.selector = selector;
-            this.mapper = mapper;
-        }
-        public ParallelLongArray  newArray() {
-            FJLongMapSelectAllDriver r =
-                new FJLongMapSelectAllDriver(this, selector, mapper);
-            ex.invoke(r);
-            return new ParallelLongArray(ex, r.results);
-        }
-
-        public int size() {
-            FJCountAll f = new FJCountAll(this, firstIndex,
-                                          upperBound, selector);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        void leafApply(int lo, int hi, LongProcedure procedure) {
-            for (int i = lo; i < hi; ++i) {
-                long x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
-            }
-        }
-
-        long leafReduce(int lo, int hi,
-                        LongReducer reducer, long base) {
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            final LongPredicate sel = selector;
+            final MapperFromLongToDouble mpr = mapper;
             boolean gotFirst = false;
-            long r = base;
+            double r = base;
+            final long[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 long t = array[i];
-                if (selector.evaluate(t)) {
-                    long y = mapper.map(t);
-                    if (!gotFirst) {
-                        gotFirst = true;
-                        r = y;
-                    }
-                    else
-                        r = reducer.combine(r, y);
-                }
-            }
-            return r;
-        }
-        void leafMinIndex(int lo, int hi,
-                          LongComparator comparator,
-                          boolean reverse,
-                          FJLongMinIndex task) {
-            long best = reverse? Long.MIN_VALUE : Long.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                long t = array[i];
-                if (selector.evaluate(t)) {
-                    long x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
-            ex.invoke(f);
-            return result.get();
-        }
-
-        public long any() {
-            int idx = anyIndex();
-            if (idx < 0)
-                throw new NoSuchElementException();
-            return mapper.map(array[idx]);
-        }
-
-    }
-
-    /**
-     * A modifier for parallel array operations to apply to mappings
-     * of elements to ints, not to the elements themselves
-     */
-    public static abstract class WithIntMapping
-        extends Params {
-        WithIntMapping(ForkJoinExecutor ex, long[] array,
-                       int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
-        }
-
-        /**
-         * Applies the given procedure
-         * @param procedure the procedure
-         */
-        public void apply(IntProcedure procedure) {
-            ex.invoke(new FJIntApply
-                      (this, firstIndex, upperBound, procedure));
-        }
-
-        abstract void leafApply(int lo, int hi,
-                                IntProcedure procedure);
-
-        /**
-         * Returns reduction of mapped elements
-         * @param reducer the reducer
-         * @param base the result for an empty array
-         * @return reduction
-         */
-        public int reduce(IntReducer reducer, int base) {
-            FJIntReduce f =
-                new FJIntReduce(this, firstIndex, upperBound, reducer, base);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        abstract int leafReduce(int lo, int hi,
-                                IntReducer reducer, int base);
-
-        /**
-         * Returns the minimum element, or Integer.MAX_VALUE if empty
-         * @return minimum element, or Integer.MAX_VALUE if empty
-         */
-        public int min() {
-            return reduce(NaturalIntMinReducer.min, Integer.MAX_VALUE);
-        }
-
-        /**
-         * Returns the minimum element, or Integer.MAX_VALUE if empty
-         * @param comparator the comparator
-         * @return minimum element, or Integer.MAX_VALUE if empty
-         */
-        public int min(IntComparator comparator) {
-            return reduce(new IntMinReducer(comparator),
-                          Integer.MAX_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or Integer.MIN_VALUE if empty
-         * @return maximum element, or Integer.MIN_VALUE if empty
-         */
-        public int max() {
-            return reduce(NaturalIntMaxReducer.max, Integer.MIN_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or Integer.MIN_VALUE if empty
-         * @param comparator the comparator
-         * @return maximum element, or Integer.MIN_VALUE if empty
-         */
-        public int max(IntComparator comparator) {
-            return reduce(new IntMaxReducer(comparator),
-                          Integer.MIN_VALUE);
-        }
-
-        /**
-         * Returns the sum of elements
-         * @return the sum of elements
-         */
-        public int sum() {
-            return reduce(IntAdder.adder, 0);
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin() {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalIntComparator.comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax() {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalIntComparator.comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin(IntComparator comparator) {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound, comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax(IntComparator comparator) {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound, comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns a new ParallelIntArray holding mappings
-         * @return a new ParallelIntArray holding mappings
-         */
-        public abstract ParallelIntArray newArray();
-
-        /**
-         * Return the number of elements selected using bound or
-         * filter restrictions. Note that this method must evaluate
-         * all selectors to return its result.
-         * @return the number of elements
-         */
-        public abstract int size();
-
-        /**
-         * Returns the index of some element matching bound and filter
-         * constraints, or -1 if none.
-         * @return index of matching element, or -1 if none.
-         */
-        public abstract int anyIndex();
-
-        /**
-         * Returns mapping of some element matching bound and filter
-         * constraints
-         * @return mapping of matching element
-         * @throws NoSuchElementException if empty
-         */
-        public abstract int any();
-
-        abstract void leafMinIndex(int lo, int hi,
-                                   IntComparator comparator,
-                                   boolean reverse,
-                                   FJIntMinIndex task);
-    }
-
-    static final class WithBoundedIntMapping
-        extends WithIntMapping {
-        final MapperFromLongToInt mapper;
-        WithBoundedIntMapping(ForkJoinExecutor ex, long[] array,
-                              int firstIndex, int upperBound,
-                              MapperFromLongToInt mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.mapper = mapper;
-        }
-
-        public ParallelIntArray newArray() {
-            int[] dest = new int[upperBound - firstIndex];
-            FJIntMap f =
-                new FJIntMap(this, firstIndex, upperBound, dest, mapper);
-            ex.invoke(f);
-            return new ParallelIntArray(ex, dest);
-        }
-
-        public int size() {
-            return upperBound - firstIndex;
-        }
-        void leafMap(int lo, int hi,
-                     int[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-        void leafApply(int lo, int hi, IntProcedure procedure) {
-            for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
-        }
-
-        int leafReduce(int lo, int hi,
-                       IntReducer reducer, int base) {
-            if (lo >= hi)
-                return base;
-            int r = mapper.map(array[lo]);
-            for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
-            return r;
-        }
-        void leafMinIndex(int lo, int hi,
-                          IntComparator comparator,
-                          boolean reverse,
-                          FJIntMinIndex task) {
-            int best = reverse? Integer.MIN_VALUE : Integer.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                int x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
-        }
-
-        public int any() {
-            if (firstIndex >= upperBound)
-                throw new NoSuchElementException();
-            return mapper.map(array[firstIndex]);
-        }
-    }
-
-    static final class WithBoundedFilteredIntMapping
-        extends WithIntMapping {
-        final LongPredicate selector;
-        final MapperFromLongToInt mapper;
-        WithBoundedFilteredIntMapping
-            (ForkJoinExecutor ex, long[] array,
-             int firstIndex, int upperBound,
-             LongPredicate selector,
-             MapperFromLongToInt mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.selector = selector;
-            this.mapper = mapper;
-        }
-        public ParallelIntArray  newArray() {
-            FJIntMapSelectAllDriver r =
-                new FJIntMapSelectAllDriver(this, selector, mapper);
-            ex.invoke(r);
-            return new ParallelIntArray(ex, r.results);
-        }
-
-        public int size() {
-            FJCountAll f = new FJCountAll(this, firstIndex,
-                                          upperBound, selector);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        void leafApply(int lo, int hi, IntProcedure procedure) {
-            for (int i = lo; i < hi; ++i) {
-                long x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
-            }
-        }
-
-        int leafReduce(int lo, int hi,
-                       IntReducer reducer, int base) {
-            boolean gotFirst = false;
-            int r = base;
-            for (int i = lo; i < hi; ++i) {
-                long t = array[i];
-                if (selector.evaluate(t)) {
-                    int y = mapper.map(t);
+                if (sel.evaluate(t)) {
+                    double y = mpr.map(t);
                     if (!gotFirst) {
                         gotFirst = true;
                         r = y;
@@ -2605,2203 +2429,456 @@ public class ParallelLongArray {
             return r;
         }
 
-        void leafMinIndex(int lo, int hi,
-                          IntComparator comparator,
-                          boolean reverse,
-                          FJIntMinIndex task) {
-            int best = reverse? Integer.MIN_VALUE : Integer.MAX_VALUE;
-            int bestIndex = -1;
+        void leafStats(int lo, int hi, PAS.FJDStats task) {
+            final LongPredicate sel = selector;
+            final MapperFromLongToDouble mpr = mapper;
+            final long[] array = pa.array;
+            int count = 0;
             for (int i = lo; i < hi; ++i) {
                 long t = array[i];
-                if (selector.evaluate(t)) {
-                    int x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
+                if (sel.evaluate(t)) {
+                    ++count;
+                    double x = mpr.map(t);
+                    task.sum += x;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
                 }
             }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
-            ex.invoke(f);
-            return result.get();
+            task.size = count;
         }
 
-        public int any() {
-            int idx = anyIndex();
-            if (idx < 0)
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final LongPredicate sel = selector;
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long t = array[i];
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
+    }
+
+    /**
+     * Returns an iterator stepping through each element of the array
+     * up to the current limit. This iterator does <em>not</em>
+     * support the remove operation. However, a full
+     * <tt>ListIterator</tt> supporting add, remove, and set
+     * operations is available via {@link #asList}.
+     * @return an iterator stepping through each element.
+     */
+    public Iterator<Long> iterator() {
+        return new ParallelLongArrayIterator(array, limit);
+    }
+
+    static final class ParallelLongArrayIterator implements Iterator<Long> {
+        int cursor;
+        final long[] arr;
+        final int hi;
+        ParallelLongArrayIterator(long[] a, int limit) { arr = a; hi = limit; }
+        public boolean hasNext() { return cursor < hi; }
+        public Long next() {
+            if (cursor >= hi)
                 throw new NoSuchElementException();
-            return mapper.map(array[idx]);
+            return Long.valueOf(arr[cursor++]);
+        }
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 
-    /*
-     * ForkJoin Implementations. There are a bunch of them,
-     * all just a little different than others.
-     */
+    // List support
 
     /**
-     * ForkJoin tasks for Apply. Like other divide-and-conquer tasks
-     * used for computing ParallelArray operations, rather than pure
-     * recursion, it link right-hand-sides and then joins up the tree,
-     * exploiting cases where tasks aren't stolen.  This generates and
-     * joins tasks with a bit less overhead than pure recursive style.
+     * Returns a view of this ParallelLongArray as a List. This List has
+     * the same structural and performance characteristics as {@link
+     * ArrayList}, and may be used to modify, replace or extend the
+     * bounds of the array underlying this ParallelLongArray.  The methods
+     * supported by this list view are <em>not</em> in general
+     * implemented as parallel operations. This list is also not
+     * itself thread-safe.  In particular, performing list updates
+     * while other parallel operations are in progress has undefined
+     * (and surely undesired) effects.
+     * @return a list view
      */
-    static final class FJApply<U> extends RecursiveAction {
-        final WithMapping<U> params;
-        final int lo;
-        final int hi;
-        final Procedure<? super U> procedure;
-        FJApply<U> next;
-        FJApply(WithMapping<U> params, int lo, int hi,
-                Procedure<? super U> procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJApply<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJApply<U> r =
-                    new FJApply<U>(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJReduce<U> extends RecursiveAction {
-        final WithMapping<U> params;
-        final int lo;
-        final int hi;
-        final Reducer<U> reducer;
-        U result;
-        FJReduce<U> next;
-        FJReduce(WithMapping<U> params, int lo, int hi,
-                 Reducer<U> reducer, U base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJReduce<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJReduce<U> r =
-                    new FJReduce<U>(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJMap<U> extends RecursiveAction {
-        final Params params;
-        final U[] dest;
-        final MapperFromLong<? extends U> mapper;
-        final int lo;
-        final int hi;
-        FJMap<U> next;
-        FJMap(Params params, int lo, int hi,
-              U[] dest,
-              MapperFromLong<? extends U> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            long[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJMap<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJMap<U> r =
-                    new FJMap<U>(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJTransform extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final MapperFromLongToLong mapper;
-        FJTransform next;
-        FJTransform(WithFilter params, int lo, int hi,
-                    MapperFromLongToLong mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.mapper = mapper;
-        }
-        protected void compute() {
-            FJTransform right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJTransform r =
-                    new FJTransform(params, mid, h, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafTransform(l, h, mapper);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIndexMap extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final MapperFromIntToLong mapper;
-        FJIndexMap next;
-        FJIndexMap(WithFilter params, int lo, int hi,
-                   MapperFromIntToLong mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.mapper = mapper;
-        }
-        protected void compute() {
-            FJIndexMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIndexMap r =
-                    new FJIndexMap(params, mid, h, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafIndexMap(l, h, mapper);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJGenerate extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final LongGenerator generator;
-        FJGenerate next;
-        FJGenerate(WithFilter params, int lo, int hi,
-                   LongGenerator generator) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.generator = generator;
-        }
-        protected void compute() {
-            FJGenerate right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJGenerate r =
-                    new FJGenerate(params, mid, h, generator);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafGenerate(l, h, generator);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJFill extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final long value;
-        FJFill next;
-        FJFill(WithFilter params, int lo, int hi,
-               long value) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.value = value;
-        }
-        protected void compute() {
-            FJFill right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJFill r =
-                    new FJFill(params, mid, h, value);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafFill(l, h, value);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJCombineInPlace extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final long[] other;
-        final LongReducer combiner;
-        FJCombineInPlace next;
-        FJCombineInPlace(WithFilter params, int lo, int hi,
-                         long[] other, LongReducer combiner) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.other = other;
-            this.combiner = combiner;
-        }
-        protected void compute() {
-            FJCombineInPlace right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCombineInPlace r =
-                    new FJCombineInPlace(params, mid, h, other, combiner);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafCombineInPlace(l, h, other, combiner);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJCountAll extends RecursiveAction {
-        final Params params;
-        final LongPredicate selector;
-        final int lo;
-        final int hi;
-        int result;
-        FJCountAll next;
-        FJCountAll(Params params, int lo, int hi,
-                   LongPredicate selector) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.selector = selector;
-        }
-        protected void compute() {
-            FJCountAll right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCountAll r =
-                    new FJCountAll(params, mid, h, selector);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            long[] array = params.array;
-            int n = 0;
-            for (int i = l; i < h; ++i) {
-                if (selector.evaluate(array[i]))
-                    ++n;
-            }
-            result = n;
-
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result += right.result;
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJCombine extends RecursiveAction {
-        final Params params;
-        final long[] other;
-        final long[] dest;
-        final LongReducer combiner;
-        final int lo;
-        final int hi;
-        FJCombine next;
-        FJCombine(Params params, int lo, int hi,
-                  long[] other, long[] dest,
-                  LongReducer combiner) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.other = other;
-            this.dest = dest;
-            this.combiner = combiner;
-        }
-
-        void  leafCombine(int l, int h) {
-            long[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = combiner.combine(array[i], other[i]);
-        }
-
-        protected void compute() {
-            FJCombine right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCombine r =
-                    new FJCombine(params, mid, h, other,
-                                  dest, combiner);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-
-            leafCombine(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJMinIndex<U> extends RecursiveAction {
-        final WithMapping<U> params;
-        final int lo;
-        final int hi;
-        final Comparator<? super U> comparator;
-        final boolean reverse;
-        U result;
-        int indexResult;
-        FJMinIndex<U> next;
-        FJMinIndex(WithMapping<U> params, int lo, int hi,
-                   Comparator<? super U> comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJMinIndex<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJMinIndex<U> r =
-                    new FJMinIndex<U>(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        U rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
-    }
-
-    // Versions for Double mappings
-
-    static final class FJDoubleApply extends RecursiveAction {
-        final WithDoubleMapping params;
-        final int lo;
-        final int hi;
-        final DoubleProcedure procedure;
-        FJDoubleApply next;
-        FJDoubleApply(WithDoubleMapping params, int lo, int hi,
-                      DoubleProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJDoubleApply right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleApply r =
-                    new FJDoubleApply(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJDoubleReduce extends RecursiveAction {
-        final WithDoubleMapping params;
-        final int lo;
-        final int hi;
-        final DoubleReducer reducer;
-        double result;
-        FJDoubleReduce next;
-        FJDoubleReduce(WithDoubleMapping params, int lo, int hi,
-                       DoubleReducer reducer, double base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJDoubleReduce right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleReduce r =
-                    new FJDoubleReduce(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJDoubleMap extends RecursiveAction {
-        final Params params;
-        final double[] dest;
-        MapperFromLongToDouble mapper;
-        final int lo;
-        final int hi;
-        FJDoubleMap next;
-        FJDoubleMap(Params params, int lo, int hi,
-                    double[] dest,
-                    MapperFromLongToDouble mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            long[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJDoubleMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleMap r =
-                    new FJDoubleMap(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-    static final class FJDoubleMinIndex extends RecursiveAction {
-        final WithDoubleMapping params;
-        final int lo;
-        final int hi;
-        final DoubleComparator comparator;
-        final boolean reverse;
-        double result;
-        int indexResult;
-        FJDoubleMinIndex next;
-        FJDoubleMinIndex(WithDoubleMapping params, int lo, int hi,
-                         DoubleComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJDoubleMinIndex right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleMinIndex r =
-                    new FJDoubleMinIndex(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        double rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
-    }
-
-    // Versions for Long mappings
-
-    static final class FJLongApply extends RecursiveAction {
-        final WithLongMapping params;
-        final int lo;
-        final int hi;
-        final LongProcedure procedure;
-        FJLongApply next;
-        FJLongApply(WithLongMapping params, int lo, int hi,
-                    LongProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJLongApply right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongApply r =
-                    new FJLongApply(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJLongReduce extends RecursiveAction {
-        final WithLongMapping params;
-        final int lo;
-        final int hi;
-        final LongReducer reducer;
-        long result;
-        FJLongReduce next;
-        FJLongReduce(WithLongMapping params, int lo, int hi,
-                     LongReducer reducer, long base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJLongReduce right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongReduce r =
-                    new FJLongReduce(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJLongMap extends RecursiveAction {
-        final Params params;
-        final long[] dest;
-        MapperFromLongToLong mapper;
-        final int lo;
-        final int hi;
-        FJLongMap next;
-        FJLongMap(Params params, int lo, int hi,
-                  long[] dest,
-                  MapperFromLongToLong mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            long[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJLongMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongMap r =
-                    new FJLongMap(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJLongMinIndex extends RecursiveAction {
-        final WithLongMapping params;
-        final int lo;
-        final int hi;
-        final LongComparator comparator;
-        final boolean reverse;
-        long result;
-        int indexResult;
-        FJLongMinIndex next;
-        FJLongMinIndex(WithLongMapping params, int lo, int hi,
-                       LongComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJLongMinIndex right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongMinIndex r =
-                    new FJLongMinIndex(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        long rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
-    }
-
-
-    // Versions for Int mappings
-
-    static final class FJIntApply extends RecursiveAction {
-        final WithIntMapping params;
-        final int lo;
-        final int hi;
-        final IntProcedure procedure;
-        FJIntApply next;
-        FJIntApply(WithIntMapping params, int lo, int hi,
-                   IntProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJIntApply right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntApply r =
-                    new FJIntApply(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIntReduce extends RecursiveAction {
-        final WithIntMapping params;
-        final int lo;
-        final int hi;
-        final IntReducer reducer;
-        int result;
-        FJIntReduce next;
-        FJIntReduce(WithIntMapping params, int lo, int hi,
-                    IntReducer reducer, int base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJIntReduce right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntReduce r =
-                    new FJIntReduce(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIntMap extends RecursiveAction {
-        final Params params;
-        final int[] dest;
-        MapperFromLongToInt mapper;
-        final int lo;
-        final int hi;
-        FJIntMap next;
-        FJIntMap(Params params, int lo, int hi,
-                 int[] dest,
-                 MapperFromLongToInt mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            long[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJIntMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntMap r =
-                    new FJIntMap(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIntMinIndex extends RecursiveAction {
-        final WithIntMapping params;
-        final int lo;
-        final int hi;
-        final IntComparator comparator;
-        final boolean reverse;
-        int result;
-        int indexResult;
-        FJIntMinIndex next;
-        FJIntMinIndex(WithIntMapping params, int lo, int hi,
-                      IntComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJIntMinIndex right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntMinIndex r =
-                    new FJIntMinIndex(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        int rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
+    public List<Long> asList() {
+        AsList lv = listView;
+        if (lv == null)
+            listView = lv = new AsList();
+        return lv;
     }
 
     /**
-     * ForkJoin task for SelectAny; relies on cancellation
+     * Returns the effective size of the underlying array. The
+     * effective size is the current limit, if used (see {@link
+     * #setLimit}), or the length of the array otherwise.
+     * @return the effective size of array
      */
-    static final class FJSelectAny extends RecursiveAction {
-        final Params params;
-        final int lo;
-        final int hi;
-        final LongPredicate selector;
-        final AtomicInteger result;
-        FJSelectAny next;
+    public int size() { return limit; }
 
-        FJSelectAny(Params params, int lo, int hi,
-                    LongPredicate selector,
-                    AtomicInteger result) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.selector = selector;
-            this.result = result;
-        }
+    /**
+     * Returns the underlying array used for computations
+     * @return the array
+     */
+    public long[] getArray() { return array; }
 
-        void leafSelectAny(int l, int h) {
-            long[] array = params.array;
-            LongPredicate sel = this.selector;
-            AtomicInteger res = this.result;
-            for (int i = l; i < h && res.get() < 0; ++i) {
-                if (sel.evaluate(array[i])) {
-                    res.compareAndSet(-1, i);
-                    break;
-                }
-            }
-        }
+    /**
+     * Returns the element of the array at the given index
+     * @param i the index
+     * @return the element of the array at the given index
+     */
+    public long get(int i) { return array[i]; }
 
-        protected void compute() {
-            AtomicInteger res = result;
-            if (res.get() >= 0)
-                return;
-            FJSelectAny right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJSelectAny r =
-                    new FJSelectAny(params, mid, h, selector, res);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafSelectAny(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right)) {
-                    if (res.get() < 0)
-                        right.compute();
-                }
-                else if (res.get() >= 0)
-                    right.cancel();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
+    /**
+     * Sets the element of the array at the given index to the given value
+     * @param i the index
+     * @param x the value
+     */
+    public void set(int i, long x) { array[i] = x; }
+
+    /**
+     * Equivalent to <tt>asList().toString()</tt>
+     * @return a string representation
+     */
+    public String toString() {
+        return asList().toString();
     }
 
     /**
-     * SelectAll proceeds in two passes. In the first pass, indices of
-     * matching elements are recorded in match array.  In second pass,
-     * once the size of results is known and result array is
-     * constructed in driver, the matching elements are placed into
-     * corresponding result positions.
-     *
-     * As a compromise to get good performance in cases of both dense
-     * and sparse result sets, the matches array is allocated only on
-     * demand, and subtask calls for empty subtrees are suppressed.
+     * Equivalent to <tt>AsList.addAll</tt> but specialized for array
+     * arguments and likely to be more efficient.
+     * @param other the elements to add
      */
-    static final class FJSelectAll extends RecursiveAction {
-        final FJSelectAllDriver driver;
-        final int lo;
-        final int hi;
-        int[] matches;
-        int nmatches;
-        int offset;
-        FJSelectAll left, right;
-
-        FJSelectAll(FJSelectAllDriver driver, int lo, int hi) {
-            this.driver = driver;
-            this.lo = lo;
-            this.hi = hi;
-        }
-
-        protected void compute() {
-            if (driver.phase == 0) {
-                if (hi - lo < driver.params.granularity)
-                    leafPhase0();
-                else
-                    internalPhase0();
-            }
-            else if (nmatches != 0) {
-                if (hi - lo < driver.params.granularity)
-                    driver.leafPhase1(offset, nmatches, matches);
-                else
-                    internalPhase1();
-            }
-        }
-
-        void leafPhase0() {
-            long[] array = driver.params.array;
-            LongPredicate selector = driver.selector;
-            int[] m = null; // only construct if find at least one match
-            int n = 0;
-            for (int j = lo; j < hi; ++j) {
-                if (selector.evaluate(array[j])) {
-                    if (m == null)
-                        m = new int[hi - j];
-                    m[n++] = j;
-                }
-            }
-            nmatches = n;
-            matches = m;
-        }
-
-        void internalPhase0() {
-            int mid = (lo + hi) >>> 1;
-            FJSelectAll l = new FJSelectAll(driver, lo, mid);
-            FJSelectAll r = new FJSelectAll(driver, mid, hi);
-            forkJoin(l, r);
-            int lnm = l.nmatches;
-            if (lnm != 0)
-                left = l;
-            int rnm = r.nmatches;
-            if (rnm != 0)
-                right = r;
-            nmatches = lnm + rnm;
-        }
-
-        void internalPhase1() {
-            int k = offset;
-            if (left != null) {
-                int lnm = left.nmatches;
-                left.offset = k;
-                left.reinitialize();
-                if (right != null) {
-                    right.offset = k + lnm;
-                    right.reinitialize();
-                    forkJoin(left, right);
-                }
-                else
-                    left.compute();
-            }
-            else if (right != null) {
-                right.offset = k;
-                right.compute();
-            }
-        }
-    }
-
-    static abstract class FJSelectAllDriver extends RecursiveAction {
-        final Params params;
-        final LongPredicate selector;
-        int nresults;
-        int phase;
-        FJSelectAllDriver(Params params,
-                          LongPredicate selector) {
-            this.params = params;
-            this.selector = selector;
-        }
-
-        protected final void compute() {
-            FJSelectAll r = new FJSelectAll
-                (this, params.firstIndex, params.upperBound);
-            r.compute();
-            createResults(r.nmatches);
-            phase = 1;
-            r.compute();
-        }
-
-        abstract void createResults(int size);
-        abstract void leafPhase1(int offset, int nmatches, int[] m);
-    }
-
-    static abstract class FJRefSelectAllDriver<U>
-        extends FJSelectAllDriver {
-        final Class<? super U> elementType; // null for Object
-        U[] results;
-        FJRefSelectAllDriver(Params params,
-                             LongPredicate selector,
-                             Class<? super U> elementType) {
-            super(params, selector);
-            this.elementType = elementType;
-        }
-        final void createResults(int size) {
-            if (elementType == null)
-                results = (U[])new Object[size];
-            else
-                results = (U[])
-                    java.lang.reflect.Array.newInstance(elementType, size);
-        }
-    }
-
-    static final class FJMapRefSelectAllDriver<U>
-        extends FJRefSelectAllDriver<U> {
-        final MapperFromLong<? extends U> mapper;
-        FJMapRefSelectAllDriver(Params params,
-                                LongPredicate selector,
-                                Class<? super U> elementType,
-                                MapperFromLong<? extends U> mapper) {
-            super(params, selector, elementType);
-            this.mapper = mapper;
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                long[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
-    }
-
-    static abstract class FJDoubleSelectAllDriver
-        extends FJSelectAllDriver {
-        double[] results;
-        FJDoubleSelectAllDriver(Params params,
-                                LongPredicate selector) {
-            super(params, selector);
-        }
-        final void createResults(int size) {
-            results = new double[size];
-        }
-    }
-
-    /*
-      static final class FJDoublePlainSelectAllDriver
-      extends FJDoubleSelectAllDriver {
-      FJDoublePlainSelectAllDriver(Params params,
-      LongPredicate selector) {
-      super(params, selector);
-      }
-      final void leafPhase1(int offset, int nmatches, int[] m) {
-      if (m != null) {
-      int n = nmatches;
-      int k = offset;
-      long[] array = params.array;
-      for (int i = 0; i < n; ++i)
-      results[k++] = array[m[i]];
-      }
-      }
-      }
-    */
-
-    static final class FJDoubleMapSelectAllDriver
-        extends FJDoubleSelectAllDriver {
-        final MapperFromLongToDouble mapper;
-        FJDoubleMapSelectAllDriver(Params params,
-                                   LongPredicate selector,
-                                   MapperFromLongToDouble mapper) {
-            super(params, selector);
-            this.mapper = mapper;
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                long[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
-    }
-
-
-    static abstract class FJLongSelectAllDriver
-        extends FJSelectAllDriver {
-        long[] results;
-        FJLongSelectAllDriver(Params params,
-                              LongPredicate selector) {
-            super(params, selector);
-        }
-        final void createResults(int size) {
-            results = new long[size];
-        }
-    }
-
-    static final class FJLongPlainSelectAllDriver
-        extends FJLongSelectAllDriver {
-        FJLongPlainSelectAllDriver(Params params,
-                                   LongPredicate selector) {
-            super(params, selector);
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                long[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = array[m[i]];
-            }
-        }
-    }
-
-    static final class FJLongMapSelectAllDriver
-        extends FJLongSelectAllDriver {
-        final MapperFromLongToLong mapper;
-        FJLongMapSelectAllDriver(Params params,
-                                 LongPredicate selector,
-                                 MapperFromLongToLong mapper) {
-            super(params, selector);
-            this.mapper = mapper;
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                long[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
-    }
-
-
-    static abstract class FJIntSelectAllDriver
-        extends FJSelectAllDriver {
-        int[] results;
-        FJIntSelectAllDriver(Params params,
-                             LongPredicate selector) {
-            super(params, selector);
-        }
-        final void createResults(int size) {
-            results = new int[size];
-        }
-    }
-
-    /*
-      static final class FJIntPlainSelectAllDriver
-      extends FJIntSelectAllDriver {
-      FJIntPlainSelectAllDriver(Params params,
-      LongPredicate selector) {
-      super(params, selector);
-      }
-      final void leafPhase1(int offset, int nmatches, int[] m) {
-      if (m != null) {
-      int n = nmatches;
-      int k = offset;
-      long[] array = params.array;
-      for (int i = 0; i < n; ++i)
-      results[k++] = array[m[i]];
-      }
-      }
-      }
-    */
-
-    static final class FJIntMapSelectAllDriver
-        extends FJIntSelectAllDriver {
-        final MapperFromLongToInt mapper;
-        FJIntMapSelectAllDriver(Params params,
-                                LongPredicate selector,
-                                MapperFromLongToInt mapper) {
-            super(params, selector);
-            this.mapper = mapper;
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                long[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
-    }
-
-
-    /**
-     * Sorter based mainly on CilkSort
-     * <A href="http://supertech.lcs.mit.edu/cilk/"> Cilk</A>:
-     * if array size is small, just use a sequential quicksort
-     *         Otherwise:
-     *         1. Break array in half.
-     *         2. For each half,
-     *             a. break the half in half (i.e., quarters),
-     *             b. sort the quarters
-     *             c. merge them together
-     *         3. merge together the two halves.
-     *
-     * One reason for splitting in quarters is that this guarantees
-     * that the final sort is in the main array, not the workspace array.
-     * (workspace and main swap roles on each subsort step.)
-     *
-     */
-    static final class FJSorter extends RecursiveAction {
-        /** Cutoff for when to use insertion-sort instead of quicksort */
-        static final int INSERTION_SORT_THRESHOLD = 8;
-
-        final LongComparator cmp;
-        final long[] a;       //  to be sorted.
-        final long[] w;       // workspace for merge
-        final int origin;  // origin of the part of array we deal with
-        final int n;       // Number of elements in (sub)arrays.
-        final int granularity;
-
-        FJSorter(LongComparator cmp,
-                 long[] a, long[] w, int origin, int n, int granularity) {
-            this.cmp = cmp;
-            this.a = a; this.w = w; this.origin = origin; this.n = n;
-            this.granularity = granularity;
-        }
-
-        protected void compute()  {
-            int g = granularity;
-            if (n > g) {
-                int h = n >>> 1; // half
-                int q = n >>> 2; // lower quarter index
-                int u = h + q;   // upper quarter
-                forkJoin
-                    (new FJSubSorter
-                     (new FJSorter(cmp, a, w, origin,   q,   g),
-                      new FJSorter(cmp, a, w, origin+q, h-q, g),
-                      new FJMerger(cmp, a, w, origin,   q,
-                                   origin+q, h-q, origin, g)
-                      ),
-                     new FJSubSorter
-                     (new FJSorter(cmp, a, w, origin+h, q,   g),
-                      new FJSorter(cmp, a, w, origin+u, n-u, g),
-                      new FJMerger(cmp, a, w, origin+h, q,
-                                   origin+u, n-u, origin+h, g)
-                      )
-                     );
-                new FJMerger(cmp, w, a, origin, h,
-                             origin+h, n-h, origin, g).compute();
-            }
-            else
-                quickSort(origin, origin+n-1);
-        }
-
-        /**
-         * Sequential quicksort. Uses insertion sort if under
-         * threshold.  Otherwise uses median of three to pick
-         * pivot. Loops rather than recurses along left path
-         */
-        void quickSort(int lo, int hi) {
-            for (;;) {
-                if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                    for (int i = lo + 1; i <= hi; i++) {
-                        long t = a[i];
-                        int j = i - 1;
-                        while (j >= lo && cmp.compare(t, a[j]) < 0) {
-                            a[j+1] = a[j];
-                            --j;
-                        }
-                        a[j+1] = t;
-                    }
-                    return;
-                }
-
-                int mid = (lo + hi) >>> 1;
-                if (cmp.compare(a[lo], a[mid]) > 0) {
-                    long t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                }
-                if (cmp.compare(a[mid], a[hi]) > 0) {
-                    long t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                    if (cmp.compare(a[lo], a[mid]) > 0) {
-                        t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                    }
-                }
-
-                long pivot = a[mid];
-                int left = lo+1;
-                int right = hi-1;
-                for (;;) {
-                    while (cmp.compare(pivot, a[right]) < 0)
-                        --right;
-                    while (left < right && cmp.compare(pivot, a[left]) >= 0)
-                        ++left;
-                    if (left < right) {
-                        long t = a[left]; a[left] = a[right]; a[right] = t;
-                        --right;
-                    }
-                    else break;
-                }
-
-                quickSort(lo, left);
-                lo = left + 1;
-            }
-        }
-    }
-
-    /** Utility class to sort half a partitioned array */
-    static final class FJSubSorter extends RecursiveAction {
-        final FJSorter left;
-        final FJSorter right;
-        final FJMerger merger;
-        FJSubSorter(FJSorter left, FJSorter right, FJMerger merger){
-            this.left = left; this.right = right; this.merger = merger;
-        }
-        protected void compute() {
-            right.fork();
-            left.compute();
-            if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                right.compute();
-            else
-                right.join();
-            merger.compute();
-        }
+    public void addAll(long[] other) {
+        int csize = other.length;
+        int end = limit;
+        insertSlotsAt(end, csize);
+        System.arraycopy(other, 0, array, end, csize);
     }
 
     /**
-     * Merger for FJ sort. If partitions are small, then just
-     * sequentially merges.  Otherwise: Splits Left partition in half,
-     * Finds the greatest point in Right partition less than the
-     * beginning of the second half of left via binary search, And
-     * then, in parallel, merges left half of L with elements of R up
-     * to split point, and merges right half of L with elements of R
-     * past split point
+     * Equivalent to <tt>AsList.addAll</tt> but specialized for
+     * ParallelLongArray arguments and likely to be more efficient.
+     * @param other the elements to add
      */
-    static final class FJMerger extends RecursiveAction {
-        final LongComparator cmp;
-        final long[] a;      // partitioned  array.
-        final long[] w;      // Output array.
-        final int lo;     // relative origin of left side of a
-        final int ln;     // number of elements on left of a
-        final int ro;     // relative origin of right side of a
-        final int rn;     // number of elements on right of a
-        final int wo;     // origin for output
-        final int granularity;
-        FJMerger next;
-
-        FJMerger(LongComparator cmp, long[] a, long[] w,
-                 int lo, int ln, int ro, int rn, int wo, int granularity) {
-            this.cmp = cmp;
-            this.a = a;    this.w = w;
-            this.lo = lo;  this.ln = ln;
-            this.ro = ro;  this.rn = rn;
-            this.wo = wo;
-            this.granularity = granularity;
-        }
-
-        protected void compute() {
-            FJMerger rights = null;
-            int lln = ln;
-            int lrn = rn;
-            while (lln > granularity) {
-                int lh = lln >>> 1;
-                int ls = lo + lh;   // index of split
-                long split = a[ls];
-                int rl = 0;
-                int rh = lrn;
-                while (rl < rh) {
-                    int mid = (rl + rh) >>> 1;
-                    if (cmp.compare(split, a[ro + mid]) <= 0)
-                        rh = mid;
-                    else
-                        rl = mid + 1;
-                }
-                FJMerger rm =
-                    new FJMerger(cmp, a, w, ls, lln-lh, ro+rh,
-                                 lrn-rh, wo+lh+rh, granularity);
-                lln = lh;
-                lrn = rh;
-                rm.next = rights;
-                rights = rm;
-                rm.fork();
-            }
-            merge(lo+lln, ro+lrn);
-            while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
-                    rights.compute();
-                else
-                    rights.join();
-                rights = rights.next;
-            }
-        }
-
-        /** a standard sequential merge */
-        void merge(int lFence, int rFence) {
-            int l = lo;
-            int r = ro;
-            int k = wo;
-            while (l < lFence && r < rFence) {
-                long al = a[l];
-                long ar = a[r];
-                long t;
-                if (cmp.compare(al, ar) <= 0) {
-                    ++l;
-                    t = al;
-                }
-                else {
-                    ++r;
-                    t = ar;
-                }
-                w[k++] = t;
-            }
-            while (l < lFence)
-                w[k++] = a[l++];
-            while (r < rFence)
-                w[k++] = a[r++];
-        }
-    }
-
-    // Version for natual comparisons
-    static final class FJLongSorter extends RecursiveAction {
-        /** Cutoff for when to use insertion-sort instead of quicksort */
-        static final int INSERTION_SORT_THRESHOLD = 8;
-
-        final long[] a;       //  to be sorted.
-        final long[] w;       // workspace for merge
-        final int origin;  // origin of the part of array we deal with
-        final int n;       // Number of elements in (sub)arrays.
-        final int granularity;
-
-        FJLongSorter(
-                     long[] a, long[] w, int origin, int n, int granularity) {
-            this.a = a; this.w = w; this.origin = origin; this.n = n;
-            this.granularity = granularity;
-        }
-
-        protected void compute()  {
-            int g = granularity;
-            if (n > g) {
-                int h = n >>> 1; // half
-                int q = n >>> 2; // lower quarter index
-                int u = h + q;   // upper quarter
-                forkJoin
-                    (new FJLongSubSorter
-                     (new FJLongSorter(a, w, origin,   q,   g),
-                      new FJLongSorter(a, w, origin+q, h-q, g),
-                      new FJLongMerger(a, w, origin,   q,
-                                       origin+q, h-q, origin, g)
-                      ),
-                     new FJLongSubSorter
-                     (new FJLongSorter(a, w, origin+h, q,   g),
-                      new FJLongSorter(a, w, origin+u, n-u, g),
-                      new FJLongMerger(a, w, origin+h, q,
-                                       origin+u, n-u, origin+h, g)
-                      )
-                     );
-                new FJLongMerger(w, a, origin, h,
-                                 origin+h, n-h, origin, g).compute();
-            }
-            else
-                quickSort(origin, origin+n-1);
-        }
-
-        /**
-         * Sequential quicksort. Uses insertion sort if under
-         * threshold.  Otherwise uses median of three to pick
-         * pivot. Loops rather than recurses along left path
-         */
-        void quickSort(int lo, int hi) {
-            for (;;) {
-                if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                    for (int i = lo + 1; i <= hi; i++) {
-                        long t = a[i];
-                        int j = i - 1;
-                        while (j >= lo && t < a[j]) {
-                            a[j+1] = a[j];
-                            --j;
-                        }
-                        a[j+1] = t;
-                    }
-                    return;
-                }
-
-                int mid = (lo + hi) >>> 1;
-                if (a[lo] > a[mid]) {
-                    long t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                }
-                if (a[mid] > a[hi]) {
-                    long t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                    if (a[lo] > a[mid]) {
-                        t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                    }
-                }
-
-                long pivot = a[mid];
-                int left = lo+1;
-                int right = hi-1;
-                for (;;) {
-                    while (pivot < a[right])
-                        --right;
-                    while (left < right && pivot >= a[left])
-                        ++left;
-                    if (left < right) {
-                        long t = a[left]; a[left] = a[right]; a[right] = t;
-                        --right;
-                    }
-                    else break;
-                }
-
-                quickSort(lo, left);
-                lo = left + 1;
-            }
-        }
-    }
-
-    /** Utility class to sort half a partitioned array */
-    static final class FJLongSubSorter extends RecursiveAction {
-        final FJLongSorter left;
-        final FJLongSorter right;
-        final FJLongMerger merger;
-        FJLongSubSorter(FJLongSorter left, FJLongSorter right, FJLongMerger merger){
-            this.left = left; this.right = right; this.merger = merger;
-        }
-        protected void compute() {
-            right.fork();
-            left.compute();
-            if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                right.compute();
-            else
-                right.join();
-            merger.compute();
-        }
+    public void addAll(ParallelLongArray other) {
+        int csize = other.size();
+        int end = limit;
+        insertSlotsAt(end, csize);
+        System.arraycopy(other.array, 0, array, end, csize);
     }
 
     /**
-     * Merger for FJLong sort. If partitions are small, then just
-     * sequentially merges.  Otherwise: Splits Left partition in half,
-     * Finds the greatest point in Right partition less than the
-     * beginning of the second half of left via binary search, And
-     * then, in parallel, merges left half of L with elements of R up
-     * to split point, and merges right half of L with elements of R
-     * past split point
+     * Equivalent to <tt>AsList.addAll</tt> but specialized for
+     * ParallelLongArray arguments and likely to be more efficient.
+     * @param other the elements to add
      */
-    static final class FJLongMerger extends RecursiveAction {
-        final long[] a;      // partitioned  array.
-        final long[] w;      // Output array.
-        final int lo;     // relative origin of left side of a
-        final int ln;     // number of elements on left of a
-        final int ro;     // relative origin of right side of a
-        final int rn;     // number of elements on right of a
-        final int wo;     // origin for output
-        final int granularity;
-        FJLongMerger next;
-
-        FJLongMerger(long[] a, long[] w,
-                     int lo, int ln, int ro, int rn, int wo, int granularity) {
-            this.a = a;    this.w = w;
-            this.lo = lo;  this.ln = ln;
-            this.ro = ro;  this.rn = rn;
-            this.wo = wo;
-            this.granularity = granularity;
-        }
-
-        protected void compute() {
-            FJLongMerger rights = null;
-            int lln = ln;
-            int lrn = rn;
-            while (lln > granularity) {
-                int lh = lln >>> 1;
-                int ls = lo + lh;   // index of split
-                long split = a[ls];
-                int rl = 0;
-                int rh = lrn;
-                while (rl < rh) {
-                    int mid = (rl + rh) >>> 1;
-                    if (split <= a[ro + mid])
-                        rh = mid;
-                    else
-                        rl = mid + 1;
-                }
-                FJLongMerger rm =
-                    new FJLongMerger(a, w, ls, lln-lh, ro+rh,
-                                     lrn-rh, wo+lh+rh, granularity);
-                lln = lh;
-                lrn = rh;
-                rm.next = rights;
-                rights = rm;
-                rm.fork();
-            }
-            merge(lo+lln, ro+lrn);
-            while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
-                    rights.compute();
-                else
-                    rights.join();
-                rights = rights.next;
-            }
-        }
-
-        /** a standard sequential merge */
-        void merge(int lFence, int rFence) {
-            int l = lo;
-            int r = ro;
-            int k = wo;
-            while (l < lFence && r < rFence) {
-                long al = a[l];
-                long ar = a[r];
-                long t;
-                if (al <= ar) {
-                    ++l;
-                    t = al;
-                }
-                else {
-                    ++r;
-                    t = ar;
-                }
-                w[k++] = t;
-            }
-            while (l < lFence)
-                w[k++] = a[l++];
-            while (r < rFence)
-                w[k++] = a[r++];
-        }
+    public void addAll(ParallelLongArray.WithBounds other) {
+        int csize = other.size();
+        int end = limit;
+        insertSlotsAt(end, csize);
+        System.arraycopy(other.pa.array, other.firstIndex, array, end, csize);
     }
-
-    // Scan (cumulate) operations
-
-    static abstract class FJScanOp extends Params {
-        final LongReducer reducer;
-        final long base;
-
-        FJScanOp(ForkJoinExecutor ex, long[] array,
-                 int firstIndex, int upperBound,
-                 LongReducer reducer,
-                 long base) {
-            super(ex, array, firstIndex, upperBound);
-            this.reducer = reducer;
-            this.base = base;
-        }
-
-        abstract long sumLeaf(int lo, int hi);
-        abstract void cumulateLeaf(int lo, int hi, long in);
-        abstract long sumAndCumulateLeaf(int lo, int hi);
-
-    }
-
-    static final class FJCumulateOp extends FJScanOp {
-        FJCumulateOp(ForkJoinExecutor ex, long[] array,
-                     int firstIndex, int upperBound,
-                     LongReducer reducer,
-                     long base) {
-            super(ex, array, firstIndex, upperBound, reducer, base);
-        }
-
-        long sumLeaf(int lo, int hi) {
-            long sum = base;
-            if (hi != upperBound) {
-                for (int i = lo; i < hi; ++i)
-                    sum = reducer.combine(sum, array[i]);
-            }
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, long in) {
-            long sum = in;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum = reducer.combine(sum, array[i]);
-        }
-
-        long sumAndCumulateLeaf(int lo, int hi) {
-            long sum = base;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum = reducer.combine(sum, array[i]);
-            return sum;
-        }
-    }
-
-    static final class FJCumulateSumOp extends FJScanOp {
-        FJCumulateSumOp(ForkJoinExecutor ex, long[] array,
-                        int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound,
-                  LongAdder.adder, 0);
-        }
-
-        long sumLeaf(int lo, int hi) {
-            long sum = base;
-            if (hi != upperBound) {
-                for (int i = lo; i < hi; ++i)
-                    sum += array[i];
-            }
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, long in) {
-            long sum = in;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum += array[i];
-        }
-
-        long sumAndCumulateLeaf(int lo, int hi) {
-            long sum = base;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum += array[i];
-            return sum;
-        }
-    }
-
-    static final class FJPrecumulateOp extends FJScanOp {
-        FJPrecumulateOp(ForkJoinExecutor ex, long[] array,
-                        int firstIndex, int upperBound,
-                        LongReducer reducer,
-                        long base) {
-            super(ex, array, firstIndex, upperBound, reducer, base);
-        }
-
-        long sumLeaf(int lo, int hi) {
-            long sum = base;
-            for (int i = lo; i < hi; ++i)
-                sum = reducer.combine(sum, array[i]);
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, long in) {
-            long sum = in;
-            for (int i = lo; i < hi; ++i) {
-                long x = array[i];
-                array[i] = sum;
-                sum = reducer.combine(sum, x);
-            }
-        }
-
-        long sumAndCumulateLeaf(int lo, int hi) {
-            long sum = base;
-            for (int i = lo; i < hi; ++i) {
-                long x = array[i];
-                array[i] = sum;
-                sum = reducer.combine(sum, x);
-            }
-            return sum;
-        }
-    }
-
-    static final class FJPrecumulateSumOp extends FJScanOp {
-        FJPrecumulateSumOp(ForkJoinExecutor ex, long[] array,
-                           int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound,
-                  LongAdder.adder, 0);
-        }
-
-        long sumLeaf(int lo, int hi) {
-            long sum = base;
-            for (int i = lo; i < hi; ++i)
-                sum += array[i];
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, long in) {
-            long sum = in;
-            for (int i = lo; i < hi; ++i) {
-                long x = array[i];
-                array[i] = sum;
-                sum += x;
-            }
-        }
-
-        long sumAndCumulateLeaf(int lo, int hi) {
-            long sum = base;
-            for (int i = lo; i < hi; ++i) {
-                long x = array[i];
-                array[i] = sum;
-                sum += x;
-            }
-            return sum;
-        }
-    }
-
 
     /**
-     * Cumulative scan
-     *
-     * A basic version of scan is straightforward.
-     *  Keep dividing by two to threshold segment size, and then:
-     *   Pass 1: Create tree of partial sums for each segment
-     *   Pass 2: For each segment, cumulate with offset of left sibling
-     * See G. Blelloch's http://www.cs.cmu.edu/~scandal/alg/scan.html
-     *
-     * This version improves performance within FJ framework mainly by
-     * allowing second pass of ready left-hand sides to proceed even
-     * if some right-hand side first passes are still executing.  It
-     * also combines first and second pass for leftmost segment, and
-     * for cumulate (not precumulate) also skips first pass for
-     * rightmost segment (whose result is not needed for second pass).
-     *
-     * To manage this, it relies on "phase" phase/state control field
-     * maintaining bits CUMULATE, SUMMED, and FINISHED. CUMULATE is
-     * main phase bit. When false, segments compute only their sum.
-     * When true, they cumulate array elements. CUMULATE is set at
-     * root at beginning of second pass and then propagated down. But
-     * it may also be set earlier for subtrees with lo==firstIndex (the
-     * left spine of tree). SUMMED is a one bit join count. For leafs,
-     * set when summed. For internal nodes, becomes true when one
-     * child is summed.  When second child finishes summing, it then
-     * moves up tree to trigger cumulate phase. FINISHED is also a one
-     * bit join count. For leafs, it is set when cumulated. For
-     * internal nodes, it becomes true when one child is cumulated.
-     * When second child finishes cumulating, it then moves up tree,
-     * excecuting finish() at the root.
+     * Ensures that the underlying array can be accessed up to the
+     * given upper bound, reallocating and copying the underlying
+     * array to expand if necessary. Or, if the given limit is less
+     * than the length of the underlying array, causes computations to
+     * ignore elements past the given limit.
+     * @param newLimit the new upper bound
+     * @throws IllegalArgumentException if newLimit less than zero.
      */
-    static final class FJScan extends AsyncAction {
-        static final int CUMULATE = 1;
-        static final int SUMMED   = 2;
-        static final int FINISHED = 4;
+    public final void setLimit(int newLimit) {
+        if (newLimit < 0)
+            throw new IllegalArgumentException();
+        int cap = array.length;
+        if (newLimit > cap)
+            resizeArray(newLimit);
+        limit = newLimit;
+    }
 
-        final FJScan parent;
-        final FJScanOp op;
-        FJScan left, right;
-        volatile int phase;  // phase/state
-        final int lo;
-        final int hi;
-        long in;           // Incoming cumulation
-        long out;          // Outgoing cumulation of this subtree
+    final void replaceElementsWith(long[] a) {
+        System.arraycopy(a, 0, array, 0, a.length);
+        limit = a.length;
+    }
 
-        static final AtomicIntegerFieldUpdater<FJScan> phaseUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(FJScan.class, "phase");
+    final void resizeArray(int newCap) {
+        int cap = array.length;
+        if (newCap > cap) {
+            long[] a = new long[newCap];
+            System.arraycopy(array, 0, a, 0, cap);
+            array = a;
+        }
+    }
 
-        FJScan(FJScan parent, FJScanOp op, int lo, int hi) {
-            this.parent = parent;
-            this.op = op;
-            this.lo = lo;
-            this.hi = hi;
-            this.in = op.base;
-            this.out = op.base;
+    final void insertElementAt(int index, long e) {
+        int hi = limit++;
+        if (hi >= array.length)
+            resizeArray((hi * 3)/2 + 1);
+        if (hi > index)
+            System.arraycopy(array, index, array, index+1, hi - index);
+        array[index] = e;
+    }
+
+    final void appendElement(long e) {
+        int hi = limit++;
+        if (hi >= array.length)
+            resizeArray((hi * 3)/2 + 1);
+        array[hi] = e;
+    }
+
+    /**
+     * Make len slots available at index
+     */
+    final void insertSlotsAt(int index, int len) {
+        if (len <= 0)
+            return;
+        int cap = array.length;
+        int newSize = limit + len;
+        if (cap < newSize) {
+            cap = (cap * 3)/2 + 1;
+            if (cap < newSize)
+                cap = newSize;
+            resizeArray(cap);
+        }
+        if (index < limit)
+            System.arraycopy(array, index, array, index + len, limit - index);
+        limit = newSize;
+    }
+
+    final void removeSlotAt(int index) {
+        System.arraycopy(array, index + 1, array, index, limit - index - 1);
+        --limit;
+    }
+
+    final void removeSlotsAt(int fromIndex, int toIndex) {
+        if (fromIndex < toIndex) {
+            int size = limit;
+            System.arraycopy(array, toIndex, array, fromIndex, size - toIndex);
+            int newSize = size - (toIndex - fromIndex);
+            limit = newSize;
+        }
+    }
+
+    final int seqIndexOf(long target) {
+        long[] arr = array;
+        int fence = limit;
+        for (int i = 0; i < fence; i++)
+            if (target == arr[i])
+                return i;
+        return -1;
+    }
+
+    final int seqLastIndexOf(long target) {
+        long[] arr = array;
+        for (int i = limit - 1; i >= 0; i--)
+            if (target == arr[i])
+                return i;
+        return -1;
+    }
+
+    final class ListIter implements ListIterator<Long> {
+        int cursor;
+        int lastRet;
+        long[] arr; // cache array and bound
+        int hi;
+        ListIter(int lo) {
+            this.cursor = lo;
+            this.lastRet = -1;
+            this.arr = ParallelLongArray.this.array;
+            this.hi = ParallelLongArray.this.limit;
         }
 
-        /** Returns true if can CAS CUMULATE bit true */
-        boolean transitionToCumulate() {
-            int c;
-            while (((c = phase) & CUMULATE) == 0)
-                if (phaseUpdater.compareAndSet(this, c, c | CUMULATE))
-                    return true;
-            return false;
+        public boolean hasNext() {
+            return cursor < hi;
         }
 
-        public void compute() {
-            if (hi - lo > op.granularity) {
-                if (left == null) { // first pass
-                    int mid = (lo + hi) >>> 1;
-                    left =  new FJScan(this, op, lo, mid);
-                    right = new FJScan(this, op, mid, hi);
-                }
+        public Long next() {
+            int i = cursor;
+            if (i < 0 || i >= hi)
+                throw new NoSuchElementException();
+            long next = arr[i];
+            lastRet = i;
+            cursor = i + 1;
+            return Long.valueOf(next);
+        }
 
-                boolean cumulate = (phase & CUMULATE) != 0;
-                if (cumulate) { // push down sums
-                    long cin = in;
-                    left.in = cin;
-                    right.in = op.reducer.combine(cin, left.out);
-                }
+        public void remove() {
+            int k = lastRet;
+            if (k < 0)
+                throw new IllegalStateException();
+            ParallelLongArray.this.removeSlotAt(k);
+            hi = ParallelLongArray.this.limit;
+            if (lastRet < cursor)
+                cursor--;
+            lastRet = -1;
+        }
 
-                if (!cumulate || right.transitionToCumulate())
-                    right.fork();
-                if (!cumulate || left.transitionToCumulate())
-                    left.compute();
-            }
-            else {
-                int cb;
-                for (;;) { // Establish action: sum, cumulate, or both
-                    int b = phase;
-                    if ((b & FINISHED) != 0) // already done
-                        return;
-                    if ((b & CUMULATE) != 0)
-                        cb = FINISHED;
-                    else if (lo == op.firstIndex) // combine leftmost
-                        cb = (SUMMED|FINISHED);
-                    else
-                        cb = SUMMED;
-                    if (phaseUpdater.compareAndSet(this, b, b|cb))
-                        break;
-                }
+        public boolean hasPrevious() {
+            return cursor > 0;
+        }
 
-                // perform the action
-                if (cb == SUMMED)
-                    out = op.sumLeaf(lo, hi);
-                else if (cb == FINISHED)
-                    op.cumulateLeaf(lo, hi, in);
-                else if (cb == (SUMMED|FINISHED))
-                    out = op.sumAndCumulateLeaf(lo, hi);
+        public Long previous() {
+            int i = cursor - 1;
+            if (i < 0 || i >= hi)
+                throw new NoSuchElementException();
+            long previous = arr[i];
+            lastRet = cursor = i;
+            return Long.valueOf(previous);
+        }
 
-                // propagate up
-                FJScan ch = this;
-                FJScan par = parent;
-                for (;;) {
-                    if (par == null) {
-                        if ((cb & FINISHED) != 0)
-                            ch.finish();
-                        break;
-                    }
-                    int pb = par.phase;
-                    if ((pb & cb & FINISHED) != 0) { // both finished
-                        ch = par;
-                        par = par.parent;
-                    }
-                    else if ((pb & cb & SUMMED) != 0) { // both summed
-                        par.out = op.reducer.combine(par.left.out,
-                                                     par.right.out);
-                        int refork = ((pb & CUMULATE) == 0 &&
-                                      par.lo == op.firstIndex)? CUMULATE : 0;
-                        int nextPhase = pb|cb|refork;
-                        if (pb == nextPhase ||
-                            phaseUpdater.compareAndSet(par, pb, nextPhase)) {
-                            if (refork != 0)
-                                par.fork();
-                            cb = SUMMED; // drop finished bit
-                            ch = par;
-                            par = par.parent;
-                        }
-                    }
-                    else if (phaseUpdater.compareAndSet(par, pb, pb|cb))
-                        break;
-                }
-            }
+        public int nextIndex() {
+            return cursor;
+        }
+
+        public int previousIndex() {
+            return cursor - 1;
+        }
+
+        public void set(Long e) {
+            int i = lastRet;
+            if (i < 0 || i >= hi)
+                throw new NoSuchElementException();
+            arr[i] = e.longValue();
+        }
+
+        public void add(Long e) {
+            int i = cursor;
+            ParallelLongArray.this.insertElementAt(i, e.longValue());
+            arr = ParallelLongArray.this.array;
+            hi = ParallelLongArray.this.limit;
+            lastRet = -1;
+            cursor = i + 1;
+        }
+    }
+
+    final class AsList extends AbstractList<Long> implements RandomAccess {
+        public Long get(int i) {
+            if (i >= limit)
+                throw new IndexOutOfBoundsException();
+            return Long.valueOf(array[i]);
+        }
+
+        public Long set(int i, Long x) {
+            if (i >= limit)
+                throw new IndexOutOfBoundsException();
+            long[] arr = array;
+            Long t = Long.valueOf(arr[i]);
+            arr[i] = x.longValue();
+            return t;
+        }
+
+        public boolean isEmpty() {
+            return limit == 0;
+        }
+
+        public int size() {
+            return limit;
+        }
+
+        public Iterator<Long> iterator() {
+            return new ListIter(0);
+        }
+
+        public ListIterator<Long> listIterator() {
+            return new ListIter(0);
+        }
+
+        public ListIterator<Long> listIterator(int index) {
+            if (index < 0 || index > limit)
+                throw new IndexOutOfBoundsException();
+            return new ListIter(index);
+        }
+
+        public boolean add(Long e) {
+            appendElement(e.longValue());
+            return true;
+        }
+
+        public void add(int index, Long e) {
+            if (index < 0 || index > limit)
+                throw new IndexOutOfBoundsException();
+            insertElementAt(index, e.longValue());
+        }
+
+        public boolean addAll(Collection<? extends Long> c) {
+            int csize = c.size();
+            if (csize == 0)
+                return false;
+            int hi = limit;
+            setLimit(hi + csize);
+            long[] arr = array;
+            for (Long e : c)
+                arr[hi++] = e.longValue();
+            return true;
+        }
+
+        public boolean addAll(int index, Collection<? extends Long> c) {
+            if (index < 0 || index > limit)
+                throw new IndexOutOfBoundsException();
+            int csize = c.size();
+            if (csize == 0)
+                return false;
+            insertSlotsAt(index, csize);
+            long[] arr = array;
+            for (Long e : c)
+                arr[index++] = e.longValue();
+            return true;
+        }
+
+        public void clear() {
+            limit = 0;
+        }
+
+        public boolean remove(Object o) {
+            if (!(o instanceof Long))
+                return false;
+            int idx = seqIndexOf(((Long)o).longValue());
+            if (idx < 0)
+                return false;
+            removeSlotAt(idx);
+            return true;
+        }
+
+        public Long remove(int index) {
+            Long oldValue = get(index);
+            removeSlotAt(index);
+            return oldValue;
+        }
+
+        protected void removeRange(int fromIndex, int toIndex) {
+            removeSlotsAt(fromIndex, toIndex);
+        }
+
+        public boolean contains(Object o) {
+            if (!(o instanceof Long))
+                return false;
+            return seqIndexOf(((Long)o).longValue()) >= 0;
+        }
+
+        public int indexOf(Object o) {
+            if (!(o instanceof Long))
+                return -1;
+            return seqIndexOf(((Long)o).longValue());
+        }
+
+        public int lastIndexOf(Object o) {
+            if (!(o instanceof Long))
+                return -1;
+            return seqLastIndexOf(((Long)o).longValue());
         }
     }
 }
+

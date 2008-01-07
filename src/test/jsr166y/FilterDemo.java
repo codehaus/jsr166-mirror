@@ -82,11 +82,11 @@ public class FilterDemo {
         int pass = 0;
         int ps = 2;
         ForkJoinPool fjp = new ForkJoinPool(ps);
-        ParallelArray<Rand> pa = new ParallelArray<Rand>(fjp, array);
+        ParallelArray<Rand> pa = ParallelArray.createUsingHandoff(array, fjp);
         for (;;) {
             last = System.nanoTime();
             for (int k = 0; k < 4; ++k) {
-                List<Rand> result = pa.withFilter(pred).newArray().asList();
+                List<Rand> result = pa.withFilter(pred).all().asList();
                 now = System.nanoTime();
                 if (!checked) {
                     checked = true;

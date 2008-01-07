@@ -8,6 +8,8 @@ package jsr166y.forkjoin;
 import static jsr166y.forkjoin.Ops.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.lang.reflect.Array;
+
 
 /**
  * An array of doubles supporting parallel operations.  This class
@@ -16,54 +18,146 @@ import java.util.concurrent.atomic.*;
  * provides a few methods specific to numerical values.
  */
 public class ParallelDoubleArray {
-    final double[] array;
+    // Same internals as ParallelArray, but specialized for doubles
+    double[] array;
     final ForkJoinExecutor ex;
+    int limit;
+    AsList listView; // lazily constructed
+
+    /**
+     * Returns a common default executor for use in ParallelArrays.
+     * This executor arranges enough parallelism to use most, but not
+     * necessarily all, of the avaliable processors on this system.
+     * @return the executor
+     */
+    public static ForkJoinExecutor defaultExecutor() {
+        return PAS.defaultExecutor();
+    }
+
+    /**
+     * Constructor for use by subclasses to create a new ParallelDoubleArray
+     * using the given executor, and initially using the supplied
+     * array, with effective size bound by the given limit. This
+     * constructor is designed to enable extensions via
+     * subclassing. To create a ParallelDoubleArray, use {@link #create},
+     * {@link #createEmpty}, {@link #createUsingHandoff} or {@link
+     * #createFromCopy}.
+     * @param executor the executor
+     * @param array the array
+     * @param limit the upper bound limit
+     */
+    protected ParallelDoubleArray(ForkJoinExecutor executor, double[] array,
+                                  int limit) {
+        if (executor == null || array == null)
+            throw new NullPointerException();
+        if (limit < 0 || limit > array.length)
+            throw new IllegalArgumentException();
+        this.ex = executor;
+        this.array = array;
+        this.limit = limit;
+    }
+
+    /**
+     * Trusted internal version of protected constructor.
+     */
+    ParallelDoubleArray(ForkJoinExecutor executor, double[] array) {
+        this.ex = executor;
+        this.array = array;
+        this.limit = array.length;
+    }
 
     /**
      * Creates a new ParallelDoubleArray using the given executor and
-     * array. In general, the handed off array should not be used for
-     * other purposes once constructing this ParallelDoubleArray.
+     * an array of the given size
+     * @param size the array size
      * @param executor the executor
+     */
+    public static ParallelDoubleArray create
+        (int size, ForkJoinExecutor executor) {
+        double[] array = new double[size];
+        return new ParallelDoubleArray(executor, array, size);
+    }
+
+    /**
+     * Creates a new ParallelDoubleArray initially using the given array and
+     * executor. In general, the handed off array should not be used
+     * for other purposes once constructing this ParallelDoubleArray.  The
+     * given array may be internally replaced by another array in the
+     * course of methods that add or remove elements.
      * @param handoff the array
-     */
-    public ParallelDoubleArray(ForkJoinExecutor executor,
-                               double[] handoff) {
-        if (executor == null || handoff == null)
-            throw new NullPointerException();
-        this.ex = executor;
-        this.array = handoff;
-    }
-
-    /**
-     * Creates a new ParallelDoubleArray using the given executor and an
-     * array of the given size, initially holding copies of the given
-     * source truncated or padded with zero to obtain the specified
-     * length.
      * @param executor the executor
-     * @param size the array size
-     * @param sourceToCopy the source of initial elements
      */
-    public ParallelDoubleArray(ForkJoinExecutor executor, int size,
-                               double[] sourceToCopy) {
-        if (executor == null)
-            throw new NullPointerException();
-        this.ex = executor;
-        this.array = new double[size];
-        System.arraycopy(sourceToCopy, 0, array, 0,
-                         Math.min(sourceToCopy.length, size));
+    public static ParallelDoubleArray createUsingHandoff
+        (double[] handoff, ForkJoinExecutor executor) {
+        return new ParallelDoubleArray(executor, handoff, handoff.length);
     }
 
     /**
      * Creates a new ParallelDoubleArray using the given executor and
-     * an array of the given size.
+     * initially holding copies of the given
+     * source elements.
+     * @param source the source of initial elements
      * @param executor the executor
-     * @param size the array size
      */
-    public ParallelDoubleArray(ForkJoinExecutor executor, int size) {
-        if (executor == null)
-            throw new NullPointerException();
-        this.ex = executor;
-        this.array = new double[size];
+    public static ParallelDoubleArray createFromCopy
+        (double[] source, ForkJoinExecutor executor) {
+        // For now, avoid copyOf so people can compile with Java5
+        int size = source.length;
+        double[] array = new double[size];
+        System.arraycopy(source, 0, array, 0, size);
+        return new ParallelDoubleArray(executor, array, size);
+    }
+
+    /**
+     * Creates a new ParallelDoubleArray using an array of the given size,
+     * initially holding copies of the given source truncated or
+     * padded with zeros to obtain the specified length.
+     * @param source the source of initial elements
+     * @param size the array size
+     * @param executor the executor
+     */
+    public static ParallelDoubleArray createFromCopy
+        (int size, double[] source, ForkJoinExecutor executor) {
+        // For now, avoid copyOf so people can compile with Java5
+        double[] array = new double[size];
+        System.arraycopy(source, 0, array, 0,
+                         Math.min(source.length, size));
+        return new ParallelDoubleArray(executor, array, size);
+    }
+
+    /**
+     * Creates a new ParallelDoubleArray using the given executor and
+     * an array of the given size, but with an initial effective size
+     * of zero, enabling incremental insertion via {@link
+     * ParallelDoubleArray#asList} operations.
+     * @param size the array size
+     * @param executor the executor
+     */
+    public static ParallelDoubleArray createEmpty
+        (int size, ForkJoinExecutor executor) {
+        double[] array = new double[size];
+        return new ParallelDoubleArray(executor, array, 0);
+    }
+
+    /**
+     * Summary statistics for a possibly bounded, filtered, and/or
+     * mapped ParallelDoubleArray.
+     */
+    public static interface SummaryStatistics {
+        /** Return the number of elements */
+        public int size();
+        /** Return the minimum element, or Double.MAX_VALUE if empty */
+        public double min();
+        /** Return the maximum element, or -Double.MAX_VALUE if empty */
+        public double max();
+        /** Return the index of the minimum element, or -1 if empty */
+        public int indexOfMin();
+        /** Return the index of the maximum element, or -1 if empty */
+        public int indexOfMax();
+        /** Return the sum of all elements */
+        public double sum();
+        /** Return the arithmetic average of all elements */
+        public double average();
     }
 
     /**
@@ -73,72 +167,11 @@ public class ParallelDoubleArray {
     public ForkJoinExecutor getExecutor() { return ex; }
 
     /**
-     * Returns the underlying array used for computations
-     * @return the array
-     */
-    public double[] getArray() { return array; }
-
-    /**
-     * Returns the length of the underlying array
-     * @return the length of the underlying array
-     */
-    public int size() { return array.length;  }
-
-    /**
-     * Returns the element of the array at the given index
-     * @param i the index
-     * @return the element of the array at the given index
-     */
-    public double get(int i) { return array[i]; }
-
-    /**
-     * Sets the element of the array at the given index to the given value
-     * @param i the index
-     * @param x the value
-     */
-    public void set(int i, double x) { array[i] = x; }
-
-
-    static final class DoubleRandomGenerator implements DoubleGenerator {
-        public double generate() {
-            return ForkJoinWorkerThread.nextRandomDouble();
-        }
-    }
-
-    /**
-     * A comparator relying on arguments being Comparable.
-     * Uses raw types to simplify coercions.
-     */
-    static final class RawComparator implements Comparator {
-        static final RawComparator cmp = new RawComparator();
-        public int compare(Object a, Object b) {
-            return ((Comparable)a).compareTo((Comparable)b);
-        }
-    }
-
-    static final class RawMaxReducer<T> implements Reducer<T> {
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null ||
-                     ((Comparable)a).compareTo((Comparable)b) >= 0))? a : b;
-        }
-    }
-
-    static final class RawMinReducer<T> implements Reducer<T> {
-        public T combine(T a, T b) {
-            return (a != null &&
-                    (b == null ||
-                     ((Comparable)a).compareTo((Comparable)b) <= 0))? a : b;
-        }
-    }
-
-
-    /**
      * Applies the given procedure to elements
      * @param procedure the procedure
      */
     public void apply(DoubleProcedure procedure) {
-        new WithBounds(ex, array).apply(procedure);
+        new WithBounds(this).apply(procedure);
     }
 
     /**
@@ -148,20 +181,19 @@ public class ParallelDoubleArray {
      * @return reduction
      */
     public double reduce(DoubleReducer reducer, double base) {
-        return new WithBounds(ex, array).reduce(reducer, base);
+        return new WithBounds(this).reduce(reducer, base);
     }
 
     /**
-     * Returns a new ParallelArray holding elements
-     * @return a new ParallelArray holding elements
+     * Returns a new ParallelDoubleArray holding all elements
+     * @return a new ParallelDoubleArray holding all elements
      */
-    public ParallelDoubleArray newArray() {
-        return new WithBounds(ex, array).newArray();
+    public ParallelDoubleArray all() {
+        return new WithBounds(this).all();
     }
 
-
     /**
-     * Returns a ParallelArray containing results of
+     * Returns a ParallelDoubleArray containing results of
      * applying <tt>combine(thisElement, otherElement)</tt>
      * for each element.
      * @param other the other array
@@ -173,11 +205,11 @@ public class ParallelDoubleArray {
     public ParallelDoubleArray combine
         (double[] other,
          DoubleReducer combiner) {
-        return new WithBounds(ex, array).combine(other, combiner);
+        return new WithBounds(this).combine(other, combiner);
     }
 
     /**
-     * Returns a ParallelArray containing results of
+     * Returns a ParallelDoubleArray containing results of
      * applying <tt>combine(thisElement, otherElement)</tt>
      * for each element.
      * @param other the other array
@@ -186,10 +218,26 @@ public class ParallelDoubleArray {
      * @throws ArrayIndexOutOfBoundsException if other array is not
      * the same length as this array.
      */
-    public ParallelDoubleArray combine
+    public <U,V> ParallelDoubleArray combine
         (ParallelDoubleArray other,
          DoubleReducer combiner) {
-        return new WithBounds(ex, array).combine(other.array, combiner);
+        return new WithBounds(this).combine(other, combiner);
+    }
+
+    /**
+     * Returns a ParallelDoubleArray containing results of
+     * applying <tt>combine(thisElement, otherElement)</tt>
+     * for each element.
+     * @param other the other array segment
+     * @param combiner the combiner
+     * @return the array of mappings
+     * @throws ArrayIndexOutOfBoundsException if other segment is
+     * shorter than this array.
+     */
+    public <U,V> ParallelDoubleArray combine
+        (ParallelDoubleArray.WithBounds other,
+         DoubleReducer combiner) {
+        return new WithBounds(this).combine(other, combiner);
     }
 
     /**
@@ -197,8 +245,8 @@ public class ParallelDoubleArray {
      * to their current values.
      * @param mapper the mapper
      */
-    public void replaceWithTransform(MapperFromDoubleToDouble mapper) {
-        new WithBounds(ex, array).replaceWithTransform(mapper);
+    public void replaceWithTransform(DoubleMapper  mapper) {
+        new WithBounds(this).replaceWithTransform(mapper);
     }
 
     /**
@@ -207,24 +255,18 @@ public class ParallelDoubleArray {
      * @param mapper the mapper
      */
     public void replaceWithMappedIndex(MapperFromIntToDouble mapper) {
-        new WithBounds(ex, array).replaceWithMappedIndex(mapper);
+        new WithBounds(this).replaceWithMappedIndex(mapper);
     }
 
     /**
      * Replaces elements with the results of applying the given
-     * generator.
+     * generator. For example, to fill the array with uniform random
+     * values, use
+     * <tt>replaceWithGeneratedValue(Ops.doubleRandom())</tt>
      * @param generator the generator
      */
     public void replaceWithGeneratedValue(DoubleGenerator generator) {
-        new WithBounds(ex, array).replaceWithGeneratedValue(generator);
-    }
-
-    /**
-     * Sets each element to a uniform random value having the
-     * same properties as {@link java.util.Random#nextDouble}
-     */
-    public void randomFill() {
-        new WithBounds(ex, array).randomFill();
+        new WithBounds(this).replaceWithGeneratedValue(generator);
     }
 
     /**
@@ -232,7 +274,7 @@ public class ParallelDoubleArray {
      * @param value the value
      */
     public void replaceWithValue(double value) {
-        new WithBounds(ex, array).replaceWithValue(value);
+        new WithBounds(this).replaceWithValue(value);
     }
 
     /**
@@ -245,8 +287,7 @@ public class ParallelDoubleArray {
      */
     public void replaceWithCombination
         (ParallelDoubleArray other, DoubleReducer combiner) {
-        new WithBounds(ex, array).replaceWithCombination(other.array,
-                                                         combiner);
+        new WithBounds(this).replaceWithCombination(other.array, combiner);
     }
 
     /**
@@ -258,43 +299,99 @@ public class ParallelDoubleArray {
      * fewer elements than this array.
      */
     public void replaceWithCombination(double[] other, DoubleReducer combiner) {
-        new WithBounds(ex, array).replaceWithCombination(other, combiner);
+        new WithBounds(this).replaceWithCombination(other, combiner);
     }
 
     /**
-     * Returns the index of the least element , or -1 if empty
+     * Replaces elements with results of applying
+     * <tt>combine(thisElement, otherElement)</tt>
+     * @param other the other array segment
+     * @param combiner the combiner
+     * @throws ArrayIndexOutOfBoundsException if other segment has
+     * fewer elements.than this array,
+     */
+    public void replaceWithCombination
+        (ParallelDoubleArray.WithBounds other,
+         DoubleReducer combiner) {
+        new WithBounds(this).replaceWithCombination(other, combiner);
+    }
+
+    /**
+     * Returns the index of some element equal to given target, or -1
+     * if not present
+     * @param target the element to search for
+     * @return the index or -1 if not present
+     */
+    public int indexOf(double target) {
+        return new WithBounds(this).indexOf(target);
+    }
+
+    /**
+     * Assuming this array is sorted, returns the index of an element
+     * equal to given target, or -1 if not present. If the array
+     * is not sorted, the results are undefined.
+     * @param target the element to search for
+     * @return the index or -1 if not present
+     */
+    public int binarySearch(double target) {
+        int lo = 0;
+        int hi = limit - 1;
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            double m = array[mid];
+            if (target == m)
+                return mid;
+            else if (target < m)
+                hi = mid - 1;
+            else
+                lo = mid + 1;
+        }
+        return -1;
+    }
+
+    /**
+     * Assuming this array is sorted with respect to the given
+     * comparator, returns the index of an element equal to given
+     * target, or -1 if not present. If the array is not sorted, the
+     * results are undefined.
+     * @param target the element to search for
      * @param comparator the comparator
-     * @return the index of least element or -1 if empty.
+     * @return the index or -1 if not present
      */
-    public int indexOfMin(DoubleComparator comparator) {
-        return new WithBounds(ex, array).indexOfMin(comparator);
+    public int binarySearch(double target, DoubleComparator comparator) {
+        int lo = 0;
+        int hi = limit - 1;
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            int c = comparator.compare(target, array[mid]);
+            if (c == 0)
+                return mid;
+            else if (c < 0)
+                hi = mid - 1;
+            else
+                lo = mid + 1;
+        }
+        return -1;
     }
 
     /**
-     * Returns the index of the greatest element , or -1 if empty
-     * @param comparator the comparator
-     * @return the index of greatest element or -1 if empty.
+     * Returns summary statistics, using the given comparator
+     * to locate minimum and maximum elements.
+     * @param comparator the comparator to use for
+     * locating minimum and maximum elements
+     * @return the summary.
      */
-    public int indexOfMax(DoubleComparator comparator) {
-        return new WithBounds(ex, array).indexOfMax(comparator);
+    public ParallelDoubleArray.SummaryStatistics summary
+        (DoubleComparator comparator) {
+        return new WithBounds(this).summary(comparator);
     }
 
     /**
-     * Returns the index of the least element , or -1 if empty
-     * assuming that all elements are Comparables
-     * @return the index of least element or -1 if empty.
+     * Returns summary statistics, using natural comparator
+     * @return the summary.
      */
-    public int indexOfMin() {
-        return new WithBounds(ex, array).indexOfMin();
-    }
-
-    /**
-     * Returns the index of the greatest element , or -1 if empty
-     * assuming that all elements are Comparables
-     * @return the index of greatest element or -1 if empty.
-     */
-    public int indexOfMax() {
-        return new WithBounds(ex, array).indexOfMax();
+    public ParallelDoubleArray.SummaryStatistics summary() {
+        return new WithBounds(this).summary();
     }
 
     /**
@@ -303,16 +400,15 @@ public class ParallelDoubleArray {
      * @return minimum element, or Double.MAX_VALUE if empty
      */
     public double min(DoubleComparator comparator) {
-        return reduce(new DoubleMinReducer(comparator), Double.MAX_VALUE);
+        return new WithBounds(this).min(comparator);
     }
 
     /**
      * Returns the minimum element, or Double.MAX_VALUE if empty,
-     * assuming that all elements are Comparables
      * @return minimum element, or Double.MAX_VALUE if empty
      */
     public double min() {
-        return reduce(NaturalDoubleMinReducer.min, Double.MAX_VALUE);
+        return new WithBounds(this).min();
     }
 
     /**
@@ -321,24 +417,15 @@ public class ParallelDoubleArray {
      * @return maximum element, or -Double.MAX_VALUE if empty
      */
     public double max(DoubleComparator comparator) {
-        return reduce(new DoubleMaxReducer(comparator), -Double.MAX_VALUE);
+        return new WithBounds(this).max(comparator);
     }
 
     /**
      * Returns the maximum element, or -Double.MAX_VALUE if empty
-     * assuming that all elements are Comparables
      * @return maximum element, or -Double.MAX_VALUE if empty
      */
     public double max() {
-        return reduce(NaturalDoubleMaxReducer.max, -Double.MAX_VALUE);
-    }
-
-    /**
-     * Returns the sum of elements
-     * @return the sum of elements
-     */
-    public double sum() {
-        return reduce(DoubleAdder.adder, 0);
+        return new WithBounds(this).max();
     }
 
     /**
@@ -351,7 +438,7 @@ public class ParallelDoubleArray {
      * @param base the result for an empty array
      */
     public void cumulate(DoubleReducer reducer, double base) {
-        new WithBounds(ex, array).cumulate(reducer, base);
+        new WithBounds(this).cumulate(reducer, base);
     }
 
     /**
@@ -367,14 +454,61 @@ public class ParallelDoubleArray {
      * @return the total reduction
      */
     public double precumulate(DoubleReducer reducer, double base) {
-        return new WithBounds(ex, array).precumulate(reducer, base);
+        return new WithBounds(this).precumulate(reducer, base);
+    }
+
+    /**
+     * Sorts the array. Unlike Arrays.sort, this sort does
+     * not guarantee that elements with equal keys maintain their
+     * relative position in the array.
+     * @param comparator the comparator to use
+     */
+    public void sort(DoubleComparator comparator) {
+        new WithBounds(this).sort(comparator);
+    }
+
+    /**
+     * Sorts the array, assuming all elements are Comparable. Unlike
+     * Arrays.sort, this sort does not guarantee that elements
+     * with equal keys maintain their relative position in the array.
+     * @throws ClassCastException if any element is not Comparable.
+     */
+    public void sort() {
+        new WithBounds(this).sort();
+    }
+
+    /**
+     * Removes consecutive elements that are equal,
+     * shifting others leftward, and possibly decreasing size.  This
+     * method may be used after sorting to ensure that this
+     * ParallelDoubleArray contains a set of unique elements.
+     */
+    public void removeConsecutiveDuplicates() {
+        new WithBounds(this).removeConsecutiveDuplicates();
+    }
+
+    /**
+     * Returns a new ParallelDoubleArray containing only the unique
+     * elements of this array (that is, without any duplicates).
+     * @return the new ParallelDoubleArray
+     */
+    public ParallelDoubleArray allUniqueElements() {
+        return new WithBounds(this).allUniqueElements();
+    }
+
+    /**
+     * Returns the sum of elements
+     * @return the sum of elements
+     */
+    public double sum() {
+        return new WithBounds(this).sum();
     }
 
     /**
      * Replaces each element with the running sum
      */
     public void cumulateSum() {
-        new WithBounds(ex, array).cumulateSum();
+        new WithBounds(this).cumulateSum();
     }
 
     /**
@@ -382,22 +516,7 @@ public class ParallelDoubleArray {
      * @return the total sum
      */
     public double precumulateSum() {
-        return new WithBounds(ex, array).precumulateSum();
-    }
-
-    /**
-     * Sorts the array
-     * @param comparator the comparator to use
-     */
-    public void sort(DoubleComparator comparator) {
-        new WithBounds(ex, array).sort(comparator);
-    }
-
-    /**
-     * Sorts the array, using natural comparator.
-     */
-    public void sort() {
-        new WithBounds(ex, array).sort();
+        return new WithBounds(this).precumulateSum();
     }
 
     /**
@@ -409,7 +528,15 @@ public class ParallelDoubleArray {
      * @return operation prefix
      */
     public WithBounds withBounds(int firstIndex, int upperBound) {
-        return new WithBounds(ex, array, firstIndex, upperBound);
+        if (firstIndex > upperBound)
+            throw new IllegalArgumentException
+                ("firstIndex(" + firstIndex +
+                 ") > upperBound(" + upperBound+")");
+        if (firstIndex < 0)
+            throw new ArrayIndexOutOfBoundsException(firstIndex);
+        if (upperBound > this.limit)
+            throw new ArrayIndexOutOfBoundsException(upperBound);
+        return new WithBounds(this, firstIndex, upperBound);
     }
 
     /**
@@ -420,8 +547,7 @@ public class ParallelDoubleArray {
      * @return operation prefix
      */
     public WithFilter withFilter(DoublePredicate selector) {
-        return new WithBoundedFilter
-            (ex, array, 0, array.length, selector);
+        return new WithBoundedFilter(this, 0, limit, selector);
     }
 
     /**
@@ -432,8 +558,7 @@ public class ParallelDoubleArray {
      */
     public <U> WithMapping<U> withMapping
         (MapperFromDouble<? extends U> mapper) {
-        return new WithBoundedMapping<U>
-            (ex, array, 0, array.length, mapper);
+        return new WithBoundedMapping<U>(this, 0, limit, mapper);
     }
 
     /**
@@ -442,10 +567,8 @@ public class ParallelDoubleArray {
      * @param mapper the mapper
      * @return operation prefix
      */
-    public WithDoubleMapping withMapping
-        (MapperFromDoubleToDouble mapper) {
-        return new WithBoundedDoubleMapping
-            (ex, array, 0, array.length, mapper);
+    public WithDoubleMapping withMapping(DoubleMapper mapper) {
+        return new WithBoundedDoubleMapping(this, 0, limit, mapper);
     }
 
     /**
@@ -454,59 +577,21 @@ public class ParallelDoubleArray {
      * @param mapper the mapper
      * @return operation prefix
      */
-    public WithLongMapping withMapping
-        (MapperFromDoubleToLong mapper) {
-        return new WithBoundedLongMapping
-            (ex, array, 0, array.length, mapper);
-    }
-
-    /**
-     * Returns an operation prefix that causes a method to operate
-     * on mapped elements of the array using the given mapper.
-     * @param mapper the mapper
-     * @return operation prefix
-     */
-    public WithIntMapping withMapping(MapperFromDoubleToInt mapper) {
-        return new WithBoundedIntMapping
-            (ex, array, 0, array.length, mapper);
-    }
-
-
-    /**
-     * Base of prefix classes
-     */
-    static abstract class Params {
-        final ForkJoinExecutor ex;
-        final double[] array;
-        final int firstIndex;
-        final int upperBound;
-        final int granularity;
-        Params(ForkJoinExecutor ex, double[] array, int firstIndex, int upperBound) {
-            this.ex = ex;
-            this.array = array;
-            this.firstIndex = firstIndex;
-            this.upperBound = upperBound;
-            this.granularity = defaultGranularity(ex.getParallelismLevel(),
-                                                  upperBound - firstIndex);
-        }
-
-        /**
-         * default granularity for divide-by-two array tasks.
-         */
-        static int defaultGranularity(int threads, int n) {
-            return (threads > 1)? (1 + n / (threads << 2)) : n;
-        }
+    public WithLongMapping withMapping(MapperFromDoubleToLong mapper) {
+        return new WithBoundedLongMapping(this, 0, limit, mapper);
     }
 
     /**
      * A modifier for parallel array operations to apply to mappings
      * of elements, not to the elements themselves
      */
-    public static abstract class WithMapping<U>
-        extends Params {
-        WithMapping(ForkJoinExecutor ex, double[] array,
-                    int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+    public static abstract class WithMapping<U> extends PAS.DPrefix {
+        final MapperFromDouble<? extends U> mapper;
+        WithMapping(ParallelDoubleArray pa,
+                    int firstIndex, int upperBound,
+                    MapperFromDouble<? extends U> mapper) {
+            super(pa, firstIndex, upperBound);
+            this.mapper = mapper;
         }
 
         /**
@@ -514,11 +599,9 @@ public class ParallelDoubleArray {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super U> procedure) {
-            ex.invoke(new FJApply<U>(this, firstIndex, upperBound, procedure));
+            ex.invoke(new PAS.FJRApply(this, firstIndex, upperBound, null,
+                                       procedure));
         }
-
-        abstract void leafApply(int lo, int hi,
-                                Procedure<? super U> procedure);
 
         /**
          * Returns reduction of mapped elements
@@ -527,14 +610,11 @@ public class ParallelDoubleArray {
          * @return reduction
          */
         public U reduce(Reducer<U> reducer, U base) {
-            FJReduce<U> f =
-                new FJReduce<U>(this, firstIndex, upperBound, reducer, base);
+            PAS.FJRReduce f = new PAS.FJRReduce
+                (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
-            return f.result;
+            return (U)(f.result);
         }
-
-        abstract U leafReduce(int lo, int hi,
-                              Reducer<U> reducer, U base);
 
         /**
          * Returns the index of some element matching bound and filter
@@ -556,7 +636,7 @@ public class ParallelDoubleArray {
          * @return minimum mapped element, or null if empty
          */
         public U min(Comparator<? super U> comparator) {
-            return reduce(new MinReducer<U>(comparator), null);
+            return reduce(Ops.<U>minReducer(comparator), null);
         }
 
         /**
@@ -566,7 +646,7 @@ public class ParallelDoubleArray {
          * @throws ClassCastException if any element is not Comparable.
          */
         public U min() {
-            return reduce(new RawMinReducer<U>(), null);
+            return reduce((Reducer<U>)(Ops.castedMinReducer()), null);
         }
 
         /**
@@ -575,7 +655,7 @@ public class ParallelDoubleArray {
          * @return maximum mapped element, or null if empty
          */
         public U max(Comparator<? super U> comparator) {
-            return reduce(new MaxReducer<U>(comparator), null);
+            return reduce(Ops.<U>maxReducer(comparator), null);
         }
 
         /**
@@ -585,78 +665,50 @@ public class ParallelDoubleArray {
          * @throws ClassCastException if any element is not Comparable.
          */
         public U max() {
-            return reduce(new RawMaxReducer<U>(), null);
+            return reduce((Reducer<U>)(Ops.castedMaxReducer()), null);
         }
 
         /**
-         * Returns the index corresponding to the least mapped element
-         * or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least mapped element or -1 if empty.
+         * Returns summary statistics, using the given comparator
+         * to locate minimum and maximum elements.
+         * @param comparator the comparator to use for
+         * locating minimum and maximum elements
+         * @return the summary.
          */
-        public int indexOfMin(Comparator<? super U> comparator) {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound, comparator, false);
+        public ParallelArray.SummaryStatistics<U> summary
+            (Comparator<? super U> comparator) {
+            PAS.FJRStats f = new PAS.FJRStats
+                (this, firstIndex, upperBound, null, comparator);
             ex.invoke(f);
-            return f.indexResult;
+            return (ParallelArray.SummaryStatistics<U>)f;
         }
 
         /**
-         * Returns the index corresponding to the greatest mapped
-         * element, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest mapped element or -1 if empty.
+         * Returns summary statistics, assuming that all elements are
+         * Comparables
+         * @return the summary.
          */
-        public int indexOfMax(Comparator<? super U> comparator) {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound, comparator, true);
+        public ParallelArray.SummaryStatistics<U> summary() {
+            PAS.FJRStats f = new PAS.FJRStats
+                (this, firstIndex, upperBound, null,
+                 (Comparator<? super U>)(Ops.castedComparator()));
             ex.invoke(f);
-            return f.indexResult;
+            return (ParallelArray.SummaryStatistics<U>)f;
         }
 
         /**
-         * Returns the index corresponding to the least mapped element
-         * or -1 if empty,
-         * assuming that all elements are Comparables
-         * @return the index of least element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
+         * Returns a new ParallelArray holding elements
+         * @return a new ParallelArray holding elements
          */
-        public int indexOfMin() {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound,
-                 (Comparator<? super U>)(RawComparator.cmp), false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
+        public abstract ParallelArray<U> all();
 
         /**
-         * Returns the index corresponding to the greatest mapped element or
-         * -1 if empty, assuming that all elements are Comparables
-         * @return the index of greatest mapped element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
-         */
-        public int indexOfMax() {
-            FJMinIndex<U> f = new FJMinIndex<U>
-                (this, firstIndex, upperBound,
-                 (Comparator<? super U>)(RawComparator.cmp), true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns a new ParallelArray holding mapped elements
-         * @return a new ParallelArray holding mapped elements
-         */
-        public abstract ParallelArray<U> newArray();
-
-        /**
-         * Returns a new ParallelArray with the given element type
-         * holding mapped elements
+         * Returns a new ParallelArray with the given element type holding
+         * elements
          * @param elementType the type of the elements
-         * @return a new ParallelArray holding mapped elements
+         * @return a new ParallelArray holding elements
          */
-        public abstract ParallelArray<U> newArray
-            (Class<? super U> elementType);
+        public abstract ParallelArray<U> all(Class<? super U> elementType);
 
         /**
          * Return the number of elements selected using bound or
@@ -666,29 +718,298 @@ public class ParallelDoubleArray {
          */
         public abstract int size();
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   Comparator<? super U> comparator,
-                                   boolean reverse,
-                                   FJMinIndex<U> task);
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper
+         * applied to current mapper's results
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<V> withMapping
+            (Mapper<? super U, ? extends V> mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper
+         * applied to current mapper's results
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping withMapping
+            (MapperToDouble<? super U> mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper
+         * applied to current mapper's results
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithLongMapping withMapping
+            (MapperToLong<? super U> mapper);
+
+        final void leafTransfer(int lo, int hi, Object[] dest, int offset) {
+            final double[] array = pa.array;
+            final MapperFromDouble mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       Object[] dest, int offset) {
+            final double[] array = pa.array;
+            final MapperFromDouble mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = mpr.map(array[indices[i]]);
+        }
+    }
+
+    static final class WithBoundedMapping<U> extends WithMapping<U> {
+        WithBoundedMapping(ParallelDoubleArray pa,
+                           int firstIndex, int upperBound,
+                           MapperFromDouble<? extends U> mapper) {
+            super(pa, firstIndex, upperBound, mapper);
+        }
+
+        public ParallelArray<U> all() {
+            int n = upperBound - firstIndex;
+            U[] dest = (U[])new Object[n];
+            PAS.FJRMap f = new PAS.FJRMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
+            ex.invoke(f);
+            return new ParallelArray<U>(ex, dest);
+        }
+
+        public ParallelArray<U> all(Class<? super U> elementType) {
+            int n = upperBound - firstIndex;
+            U[] dest = (U[])Array.newInstance(elementType, n);
+            PAS.FJRMap f = new PAS.FJRMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
+            ex.invoke(f);
+            return new ParallelArray<U>(ex, dest);
+        }
+
+        public int size() {
+            return upperBound - firstIndex;
+        }
+
+        public int anyIndex() {
+            return (firstIndex < upperBound)? firstIndex : -1;
+        }
+
+        public U any() {
+            final double[] array = pa.array;
+            final MapperFromDouble mpr = mapper;
+            return (firstIndex < upperBound)?
+                (U)(mpr.map(array[firstIndex])) : null;
+        }
+
+        public <V> WithMapping<V> withMapping
+            (Mapper<? super U, ? extends V> mapper) {
+            return new WithBoundedMapping<V>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithDoubleMapping withMapping(MapperToDouble<? super U> mapper){
+            return new WithBoundedDoubleMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping(MapperToLong<? super U> mapper) {
+            return new WithBoundedLongMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, Procedure  procedure) {
+            final double[] array = pa.array;
+            final MapperFromDouble mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                procedure.apply(mpr.map(array[i]));
+        }
+
+        Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
+            if (lo >= hi)
+                return base;
+            final double[] array = pa.array;
+            final MapperFromDouble mpr = mapper;
+            Object r = mpr.map(array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.combine(r, mpr.map(array[i]));
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJRStats task) {
+            final double[] array = pa.array;
+            final MapperFromDouble mpr = mapper;
+            task.size = hi - lo;
+            for (int i = lo; i < hi; ++i) {
+                Object x = mpr.map(array[i]);
+                task.updateMin(i, x);
+                task.updateMax(i, x);
+            }
+        }
 
     }
 
+    static final class WithBoundedFilteredMapping<U>
+        extends WithMapping<U> {
+        final DoublePredicate selector;
+        WithBoundedFilteredMapping(ParallelDoubleArray pa,
+                                   int firstIndex, int upperBound,
+                                   DoublePredicate selector,
+                                   MapperFromDouble<? extends U> mapper) {
+            super(pa, firstIndex, upperBound, mapper);
+            this.selector = selector;
+        }
+
+        public ParallelArray<U> all() {
+            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
+                (this, Object.class);
+            ex.invoke(r);
+            return new ParallelArray<U>(ex, (U[])(r.results));
+        }
+
+        public ParallelArray<U> all(Class<? super U> elementType) {
+            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
+                (this, elementType);
+            ex.invoke(r);
+            return new ParallelArray<U>(ex, (U[])(r.results));
+        }
+
+        public int size() {
+            PAS.FJDCountSelected f = new PAS.FJDCountSelected
+                (this, firstIndex, upperBound, null, selector);
+            ex.invoke(f);
+            return f.count;
+        }
+
+        public int anyIndex() {
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJDSelectAny f = new PAS.FJDSelectAny
+                (this, firstIndex, upperBound, null, result, selector);
+            ex.invoke(f);
+            return result.get();
+        }
+
+        public U any() {
+            int idx = anyIndex();
+            final double[] array = pa.array;
+            final MapperFromDouble mpr = mapper;
+            return (idx < 0)?  null : (U)(mpr.map(array[idx]));
+        }
+
+        public <V> WithMapping<V> withMapping
+            (Mapper<? super U, ? extends V> mapper) {
+            return new WithBoundedFilteredMapping<V>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithDoubleMapping withMapping
+            (MapperToDouble<? super U> mapper) {
+            return new WithBoundedFilteredDoubleMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping
+            (MapperToLong<? super U> mapper) {
+            return new WithBoundedFilteredLongMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+        void leafApply(int lo, int hi, Procedure  procedure) {
+            final DoublePredicate sel = selector;
+            final MapperFromDouble mpr = mapper;
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double x = array[i];
+                if (sel.evaluate(x))
+                    procedure.apply(mpr.map(x));
+            }
+        }
+
+        Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
+            boolean gotFirst = false;
+            Object r = base;
+            final DoublePredicate sel = selector;
+            final MapperFromDouble mpr = mapper;
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double x = array[i];
+                if (sel.evaluate(x)) {
+                    Object y = mpr.map(x);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = y;
+                    }
+                    else
+                        r = reducer.combine(r, y);
+                }
+            }
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJRStats task) {
+            final double[] array = pa.array;
+            final DoublePredicate sel = selector;
+            final MapperFromDouble mpr = mapper;
+            int count = 0;
+            for (int i = lo; i < hi; ++i) {
+                double t = array[i];
+                if (sel.evaluate(t)) {
+                    Object x = mpr.map(t);
+                    ++count;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
+                }
+            }
+            task.size = count;
+        }
+
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double t = array[i];
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
+    }
+
     /**
-     * A restriction of parallel array operations to apply only to
-     * elements for which a selector returns true
+     * A modifier for parallel array operations to apply to mappings
+     * of elements to doubles, not to the elements themselves
      */
-    public static abstract class WithFilter extends WithDoubleMapping {
-        WithFilter(ForkJoinExecutor ex, double[] array,
-                   int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+    public static abstract class WithDoubleMapping extends PAS.DPrefix {
+        WithDoubleMapping(ParallelDoubleArray pa,
+                          int firstIndex, int upperBound) {
+            super(pa, firstIndex, upperBound);
         }
 
         /**
-         * Applies the given procedure
+         * Applies the given procedure to elements
          * @param procedure the procedure
          */
         public void apply(DoubleProcedure procedure) {
-            ex.invoke(new FJDoubleApply(this, firstIndex, upperBound, procedure));
+            ex.invoke(new PAS.FJDApply
+                      (this, firstIndex, upperBound, null, procedure));
         }
 
         /**
@@ -698,18 +1019,18 @@ public class ParallelDoubleArray {
          * @return reduction
          */
         public double reduce(DoubleReducer reducer, double base) {
-            FJDoubleReduce f =
-                new FJDoubleReduce(this, firstIndex, upperBound, reducer, base);
+            PAS.FJDReduce f = new PAS.FJDReduce
+                (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return f.result;
         }
 
         /**
-         * Returns the sum of elements
-         * @return the sum of elements
+         * Returns the minimum element, or Double.MAX_VALUE if empty
+         * @return minimum element, or Double.MAX_VALUE if empty
          */
-        public double sum() {
-            return reduce(DoubleAdder.adder, 0);
+        public double min() {
+            return reduce(naturalDoubleMinReducer(), Double.MAX_VALUE);
         }
 
         /**
@@ -718,16 +1039,15 @@ public class ParallelDoubleArray {
          * @return minimum element, or Double.MAX_VALUE if empty
          */
         public double min(DoubleComparator comparator) {
-            return reduce(new DoubleMinReducer(comparator), Double.MAX_VALUE);
+            return reduce(doubleMinReducer(comparator), Double.MAX_VALUE);
         }
 
         /**
-         * Returns the minimum element, or Double.MAX_VALUE if empty,
-         * assuming that all elements are Comparables
-         * @return minimum element, or Double.MAX_VALUE if empty
+         * Returns the maximum element, or -Double.MAX_VALUE if empty
+         * @return maximum element, or -Double.MAX_VALUE if empty
          */
-        public double min() {
-            return reduce(NaturalDoubleMinReducer.min, Double.MAX_VALUE);
+        public double max() {
+            return reduce(naturalDoubleMaxReducer(), -Double.MAX_VALUE);
         }
 
         /**
@@ -736,182 +1056,62 @@ public class ParallelDoubleArray {
          * @return maximum element, or -Double.MAX_VALUE if empty
          */
         public double max(DoubleComparator comparator) {
-            return reduce(new DoubleMaxReducer(comparator), -Double.MAX_VALUE);
+            return reduce(doubleMaxReducer(comparator), -Double.MAX_VALUE);
         }
 
         /**
-         * Returns the maximum element, or -Double.MAX_VALUE if empty
-         * assuming that all elements are Comparables
-         * @return maximum element, or -Double.MAX_VALUE if empty
+         * Returns the sum of elements
+         * @return the sum of elements
          */
-        public double max() {
-            return reduce(NaturalDoubleMaxReducer.max, -Double.MAX_VALUE);
+        public double sum() {
+            return reduce(Ops.doubleAdder(), 0);
         }
 
         /**
-         * Returns the index corresponding to the least element
-         * or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
+         * Returns summary statistics
+         * @param comparator the comparator to use for
+         * locating minimum and maximum elements
+         * @return the summary.
          */
-        public int indexOfMin(DoubleComparator comparator) {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound, comparator, false);
+        public ParallelDoubleArray.SummaryStatistics summary
+            (DoubleComparator comparator) {
+            PAS.FJDStats f = new PAS.FJDStats
+                (this, firstIndex, upperBound, null, comparator);
             ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
-         * Returns the index corresponding to the greatest
-         * element, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
+         * Returns summary statistics, using natural comparator
+         * @return the summary.
          */
-        public int indexOfMax(DoubleComparator comparator) {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound, comparator, true);
+        public ParallelDoubleArray.SummaryStatistics summary() {
+            PAS.FJDStats f = new PAS.FJDStats
+                (this, firstIndex, upperBound, null,naturalDoubleComparator());
             ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
-         * Returns the index corresponding to the least element
-         * or -1 if empty,
-         * assuming that all elements are Comparables
-         * @return the index of least element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
+         * Returns a new ParallelDoubleArray holding elements
+         * @return a new ParallelDoubleArray holding elements
          */
-        public int indexOfMin() {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalDoubleComparator.comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
+        public abstract ParallelDoubleArray all();
 
         /**
-         * Returns the index corresponding to the greatest element or
-         * -1 if empty, assuming that all elements are Comparables
-         * @return the index of greatest element or -1 if empty.
-         * @throws ClassCastException if any element is not Comparable.
+         * Return the number of elements selected using bound or
+         * filter restrictions. Note that this method must evaluate
+         * all selectors to return its result.
+         * @return the number of elements
          */
-        public int indexOfMax() {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalDoubleComparator.comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
+        public abstract int size();
 
         /**
-         * Returns a new ParallelArray holding elements
-         * @return a new ParallelArray holding elements
+         * Returns the index of some element matching bound and filter
+         * constraints, or -1 if none.
+         * @return index of matching element, or -1 if none.
          */
-        public abstract ParallelDoubleArray newArray();
-
-        /**
-         * Replaces elements with the results of applying the given
-         * mapper to their current values.
-         * @param mapper the mapper
-         */
-        public void replaceWithTransform
-            (MapperFromDoubleToDouble mapper) {
-            ex.invoke(new FJTransform(this, firstIndex, upperBound, mapper));
-        }
-
-        abstract void leafTransform
-            (int lo, int hi, MapperFromDoubleToDouble mapper);
-
-        /**
-         * Replaces elements with the results of applying the given
-         * mapper to their indices
-         * @param mapper the mapper
-         */
-        public void replaceWithMappedIndex
-            (MapperFromIntToDouble mapper) {
-            ex.invoke(new FJIndexMap(this, firstIndex, upperBound, mapper));
-        }
-
-        abstract void leafIndexMap
-            (int lo, int hi, MapperFromIntToDouble mapper);
-
-        /**
-         * Replaces elements with results of applying the given
-         * generator.
-         * @param generator the generator
-         */
-        public void replaceWithGeneratedValue
-            (DoubleGenerator generator) {
-            ex.invoke(new FJGenerate
-                      (this, firstIndex, upperBound, generator));
-        }
-
-        /**
-         * Sets each element to a uniform random value having the
-         * same properties as {@link java.util.Random#nextDouble}
-         */
-        public void randomFill() {
-            replaceWithGeneratedValue(new DoubleRandomGenerator());
-        }
-
-        abstract void leafGenerate
-            (int lo, int hi, DoubleGenerator generator);
-
-        /**
-         * Replaces elements with the given value.
-         * @param value the value
-         */
-        public void replaceWithValue(double value) {
-            ex.invoke(new FJFill(this, firstIndex, upperBound, value));
-        }
-
-        abstract void leafFill(int lo, int hi, double value);
-
-        /**
-         * Replaces elements with results of applying
-         * <tt>combine(thisElement, otherElement)</tt>
-         * @param other the other array
-         * @param combiner the combiner
-         * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>upperBound</tt> elements.
-         */
-        public void replaceWithCombination(ParallelDoubleArray other,
-                                           DoubleReducer combiner) {
-            replaceWithCombination(other.array, combiner);
-        }
-
-        /**
-         * Replaces elements with results of applying
-         * <tt>combine(thisElement, otherElement)</tt>
-         * @param other the other array
-         * @param combiner the combiner
-         * @throws ArrayIndexOutOfBoundsException if other array has
-         * fewer than <tt>upperBound</tt> elements.
-         */
-        public void replaceWithCombination(double[] other,
-                                           DoubleReducer combiner) {
-            if (other.length < upperBound)
-                throw new ArrayIndexOutOfBoundsException();
-            ex.invoke(new FJCombineInPlace
-                      (this, firstIndex, upperBound, other, combiner));
-        }
-
-        abstract void leafCombineInPlace
-            (int lo, int hi, double[] other, DoubleReducer combiner);
-
-
-        /**
-         * Returns some element matching bound and filter
-         * constraints
-         * @return matching element
-         * @throws NoSuchElementException if empty
-         */
-        public double any() {
-            int idx = anyIndex();
-            if (idx < 0)
-                throw new NoSuchElementException();
-            return array[idx];
-        }
+        public abstract int anyIndex();
 
         /**
          * Returns an operation prefix that causes a method to operate
@@ -919,17 +1119,7 @@ public class ParallelDoubleArray {
          * @param mapper the mapper
          * @return operation prefix
          */
-        public abstract <U> WithMapping<U> withMapping
-            (MapperFromDouble<? extends U> mapper);
-
-        /**
-         * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
-         * @return operation prefix
-         */
-        public abstract WithDoubleMapping withMapping
-            (MapperFromDoubleToDouble mapper);
+        public abstract WithDoubleMapping withMapping(DoubleMapper mapper);
 
         /**
          * Returns an operation prefix that causes a method to operate
@@ -946,8 +1136,154 @@ public class ParallelDoubleArray {
          * @param mapper the mapper
          * @return operation prefix
          */
-        public abstract WithIntMapping withMapping
-            (MapperFromDoubleToInt mapper);
+        public abstract <U> WithMapping<U> withMapping
+            (MapperFromDouble<? extends U> mapper);
+    }
+
+    /**
+     * A restriction of parallel array operations to apply only to
+     * elements for which a selector returns true
+     */
+    public static abstract class WithFilter extends WithDoubleMapping {
+        WithFilter(ParallelDoubleArray pa, int firstIndex, int upperBound) {
+            super(pa, firstIndex, upperBound);
+        }
+
+        /**
+         * Replaces elements with the results of applying the given
+         * mapper to their current values.
+         * @param mapper the mapper
+         */
+        public void replaceWithTransform
+            (DoubleMapper  mapper) {
+            ex.invoke(new PAS.FJDTransform(this, firstIndex,
+                                           upperBound, null, mapper));
+        }
+
+        /**
+         * Replaces elements with the results of applying the given
+         * mapper to their indices
+         * @param mapper the mapper
+         */
+        public void replaceWithMappedIndex(MapperFromIntToDouble mapper) {
+            ex.invoke(new PAS.FJDIndexMap(this, firstIndex, upperBound,
+                                          null, mapper));
+        }
+
+        /**
+         * Replaces elements with results of applying the given
+         * generator.
+         * @param generator the generator
+         */
+        public void replaceWithGeneratedValue(DoubleGenerator generator) {
+            ex.invoke(new PAS.FJDGenerate
+                      (this, firstIndex, upperBound, null, generator));
+        }
+
+        /**
+         * Replaces elements with the given value.
+         * @param value the value
+         */
+        public void replaceWithValue(double value) {
+            ex.invoke(new PAS.FJDFill(this, firstIndex, upperBound,
+                                      null, value));
+        }
+
+        /**
+         * Replaces elements with results of applying
+         * <tt>combine(thisElement, otherElement)</tt>
+         * @param other the other array
+         * @param combiner the combiner
+         * @throws ArrayIndexOutOfBoundsException if other array has
+         * fewer than <tt>upperBound</tt> elements.
+         */
+        public void replaceWithCombination(ParallelDoubleArray other,
+                                           DoubleReducer combiner) {
+            if (other.size() < size())
+                throw new ArrayIndexOutOfBoundsException();
+            ex.invoke(new PAS.FJDCombineInPlace
+                      (this, firstIndex, upperBound, null,
+                       other.array, 0, combiner));
+        }
+
+        /**
+         * Replaces elements with results of applying
+         * <tt>combine(thisElement, otherElement)</tt>
+         * @param other the other array segment
+         * @param combiner the combiner
+         * @throws ArrayIndexOutOfBoundsException if other array has
+         * fewer than <tt>upperBound</tt> elements.
+         */
+        public void replaceWithCombination
+            (ParallelDoubleArray.WithBounds other,
+             DoubleReducer combiner) {
+            if (other.size() < size())
+                throw new ArrayIndexOutOfBoundsException();
+            ex.invoke(new PAS.FJDCombineInPlace
+                      (this, firstIndex, upperBound, null,
+                       other.pa.array, other.firstIndex - firstIndex, combiner));
+        }
+
+        /**
+         * Replaces elements with results of applying
+         * <tt>combine(thisElement, otherElement)</tt>
+         * @param other the other array
+         * @param combiner the combiner
+         * @throws ArrayIndexOutOfBoundsException if other array has
+         * fewer than <tt>upperBound</tt> elements.
+         */
+        public void replaceWithCombination(double[] other,
+                                           DoubleReducer combiner) {
+            if (other.length < size())
+                throw new ArrayIndexOutOfBoundsException();
+            ex.invoke(new PAS.FJDCombineInPlace
+                      (this, firstIndex, upperBound, null, other,
+                       -firstIndex, combiner));
+        }
+
+        /**
+         * Removes from the array all elements matching bound and/or
+         * filter constraints.
+         */
+        public abstract void removeAll();
+
+        /**
+         * Returns a new ParallelDoubleArray containing only unique
+         * elements (that is, without any duplicates).
+         * @return the new ParallelDoubleArray
+         */
+        public abstract ParallelDoubleArray allUniqueElements();
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * only on elements for which the current selector (if
+         * present) and the given selector returns true
+         * @param selector the selector
+         * @return operation prefix
+         */
+        public abstract WithFilter withFilter(DoublePredicate selector);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * only on elements for which the current selector (if
+         * present) or the given selector returns true
+         * @param selector the selector
+         * @return operation prefix
+         */
+        public abstract WithFilter orFilter(DoublePredicate selector);
+
+        final void leafTransfer(int lo, int hi, double[] dest, int offset) {
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = (array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       double[] dest, int offset) {
+            final double[] array = pa.array;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = (array[indices[i]]);
+        }
 
     }
 
@@ -956,21 +1292,39 @@ public class ParallelDoubleArray {
      * a given range of indices.
      */
     public static final class WithBounds extends WithFilter {
-        WithBounds(ForkJoinExecutor ex, double[] array,
-                   int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+        WithBounds(ParallelDoubleArray pa, int firstIndex, int upperBound) {
+            super(pa, firstIndex, upperBound);
+        }
+
+        WithBounds(ParallelDoubleArray pa) {
+            super(pa, 0, pa.limit);
+        }
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * only on the elements of the array between firstIndex
+         * (inclusive) and upperBound (exclusive).  The bound
+         * arguments are relative to the current bounds.  For example
+         * <tt>pa.withBounds(2, 8).withBounds(3, 5)</tt> indexes the
+         * 5th (= 2+3) and 6th elements of pa. However, indices
+         * returned by methods such as <tt>indexOf</tt> are
+         * with respect to the underlying ParallelDoubleArray.
+         * @param firstIndex the lower bound (inclusive)
+         * @param upperBound the upper bound (exclusive)
+         * @return operation prefix
+         */
+        public WithBounds withBounds(int firstIndex, int upperBound) {
             if (firstIndex > upperBound)
                 throw new IllegalArgumentException
                     ("firstIndex(" + firstIndex +
                      ") > upperBound(" + upperBound+")");
             if (firstIndex < 0)
                 throw new ArrayIndexOutOfBoundsException(firstIndex);
-            if (upperBound > array.length)
+            if (upperBound - firstIndex > this.upperBound - this.firstIndex)
                 throw new ArrayIndexOutOfBoundsException(upperBound);
-        }
-
-        WithBounds(ForkJoinExecutor ex, double[] array) {
-            super(ex, array, 0, array.length);
+            return new WithBounds(pa,
+                                  this.firstIndex + firstIndex,
+                                  this.firstIndex + upperBound);
         }
 
         /**
@@ -982,7 +1336,7 @@ public class ParallelDoubleArray {
          */
         public WithFilter withFilter(DoublePredicate selector) {
             return new WithBoundedFilter
-                (ex, array, firstIndex, upperBound, selector);
+                (pa, firstIndex, upperBound, selector);
         }
 
         /**
@@ -994,7 +1348,7 @@ public class ParallelDoubleArray {
         public <U> WithMapping<U> withMapping
             (MapperFromDouble<? extends U> mapper) {
             return new WithBoundedMapping<U>
-                (ex, array, firstIndex,upperBound, mapper);
+                (pa, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1003,10 +1357,9 @@ public class ParallelDoubleArray {
          * @param mapper the mapper
          * @return operation prefix
          */
-        public WithDoubleMapping withMapping
-            (MapperFromDoubleToDouble mapper) {
+        public WithDoubleMapping withMapping(DoubleMapper mapper) {
             return new WithBoundedDoubleMapping
-                (ex, array, firstIndex, upperBound, mapper);
+                (pa, firstIndex, upperBound, mapper);
         }
 
         /**
@@ -1015,35 +1368,22 @@ public class ParallelDoubleArray {
          * @param mapper the mapper
          * @return operation prefix
          */
-        public WithLongMapping withMapping
-            (MapperFromDoubleToLong mapper) {
+        public WithLongMapping withMapping(MapperFromDoubleToLong mapper) {
             return new WithBoundedLongMapping
-                (ex, array, firstIndex, upperBound, mapper);
+                (pa, firstIndex, upperBound, mapper);
         }
 
-        /**
-         * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
-         * @return operation prefix
-         */
-        public WithIntMapping withMapping
-            (MapperFromDoubleToInt mapper) {
-            return new WithBoundedIntMapping
-                (ex, array, firstIndex, upperBound, mapper);
+        public WithFilter orFilter(DoublePredicate selector) {
+            return new WithBoundedFilter
+                (pa, firstIndex, upperBound, selector);
         }
 
-        /**
-         * Returns the index of some element matching bound
-         * filter constraints, or -1 if none.
-         * @return index of matching element, or -1 if none.
-         */
         public int anyIndex() {
             return (firstIndex < upperBound)? firstIndex : -1;
         }
 
         /**
-         * Returns a ParallelArray containing results of
+         * Returns a ParallelDoubleArray containing results of
          * applying <tt>combine(thisElement, otherElement)</tt>
          * for each element.
          * @param other the other array
@@ -1052,19 +1392,21 @@ public class ParallelDoubleArray {
          * @throws ArrayIndexOutOfBoundsException if other array is
          * shorter than this array.
          */
-        public  ParallelDoubleArray combine
-            (double[] other,
-             DoubleReducer combiner) {
-            if (other.length < array.length)
+        public ParallelDoubleArray combine(double[] other,
+                                           DoubleReducer combiner) {
+            int size = upperBound - firstIndex;
+            if (other.length < size)
                 throw new ArrayIndexOutOfBoundsException();
-            double[] dest = new double[upperBound];
-            ex.invoke(new FJCombine(this, firstIndex, upperBound,
-                                    other, dest, combiner));
+            double[] dest = new double[size];
+            ex.invoke(new PAS.FJDCombine
+                      (this, firstIndex, upperBound,
+                       null, other, -firstIndex,
+                       dest, combiner));
             return new ParallelDoubleArray(ex, dest);
         }
 
         /**
-         * Returns a ParallelArray containing results of
+         * Returns a ParallelDoubleArray containing results of
          * applying <tt>combine(thisElement, otherElement)</tt>
          * for each element.
          * @param other the other array
@@ -1073,10 +1415,126 @@ public class ParallelDoubleArray {
          * @throws ArrayIndexOutOfBoundsException if other array is
          * shorter than this array.
          */
-        public ParallelDoubleArray combine
-            (ParallelDoubleArray other,
+        public ParallelDoubleArray combine(ParallelDoubleArray other,
+                                           DoubleReducer combiner) {
+            int size = upperBound - firstIndex;
+            if (other.size() < size)
+                throw new ArrayIndexOutOfBoundsException();
+            double[] dest = new double[size];
+            ex.invoke(new PAS.FJDCombine
+                      (this, firstIndex, upperBound,
+                       null, other.array,
+                       -firstIndex,
+                       dest, combiner));
+            return new ParallelDoubleArray(ex, dest);
+        }
+
+        /**
+         * Returns a ParallelDoubleArray containing results of
+         * applying <tt>combine(thisElement, otherElement)</tt>
+         * for each element.
+         * @param other the other array segment
+         * @param combiner the combiner
+         * @return the array of mappings
+         * @throws ArrayIndexOutOfBoundsException if other segment is
+         * shorter than this array.
+         */
+        public <U,V> ParallelDoubleArray combine
+            (ParallelDoubleArray.WithBounds other,
              DoubleReducer combiner) {
-            return combine(other.array, combiner);
+            int size = upperBound - firstIndex;
+            if (other.size() < size)
+                throw new ArrayIndexOutOfBoundsException();
+            double[] dest = new double[size];
+            ex.invoke(new PAS.FJDCombine
+                      (this, firstIndex, upperBound,
+                       null, other.pa.array,
+                       other.firstIndex - firstIndex,
+                       dest, combiner));
+            return new ParallelDoubleArray(ex, dest);
+        }
+
+        public ParallelDoubleArray all() {
+            final double[] array = pa.array;
+            // For now, avoid copyOf so people can compile with Java5
+            int size = upperBound - firstIndex;
+            double[] dest = new double[size];
+            System.arraycopy(array, firstIndex, dest, 0, size);
+            return new ParallelDoubleArray(ex, dest);
+        }
+
+        public ParallelDoubleArray allUniqueElements() {
+            PAS.DUniquifierTable tab = new PAS.DUniquifierTable
+                (upperBound - firstIndex, pa.array, null);
+            PAS.FJUniquifier f = new PAS.FJUniquifier
+                (this, firstIndex, upperBound, null, tab);
+            ex.invoke(f);
+            double[] res = tab.uniqueElements(f.count);
+            return new ParallelDoubleArray(ex, res);
+        }
+
+        /**
+         * Returns the index of some element equal to given target,
+         * or -1 if not present
+         * @param target the element to search for
+         * @return the index or -1 if not present
+         */
+        public int indexOf(double target) {
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJDIndexOf f = new PAS.FJDIndexOf
+                (this, firstIndex, upperBound, null, result, target);
+            ex.invoke(f);
+            return result.get();
+        }
+
+        /**
+         * Assuming this array is sorted, returns the index of an
+         * element equal to given target, or -1 if not present. If the
+         * array is not sorted, the results are undefined.
+         * @param target the element to search for
+         * @return the index or -1 if not present
+         */
+        public int binarySearch(double target) {
+            final double[] array = pa.array;
+            int lo = firstIndex;
+            int hi = upperBound - 1;
+            while (lo <= hi) {
+                int mid = (lo + hi) >>> 1;
+                double m = array[mid];
+                if (target == m)
+                    return mid;
+                else if (target < m)
+                    hi = mid - 1;
+                else
+                    lo = mid + 1;
+            }
+            return -1;
+        }
+
+        /**
+         * Assuming this array is sorted with respect to the given
+         * comparator, returns the index of an element equal to given
+         * target, or -1 if not present. If the array is not sorted,
+         * the results are undefined.
+         * @param target the element to search for
+         * @param comparator the comparator
+         * @return the index or -1 if not present
+         */
+        public int binarySearch(double target, DoubleComparator comparator) {
+            final double[] array = pa.array;
+            int lo = firstIndex;
+            int hi = upperBound - 1;
+            while (lo <= hi) {
+                int mid = (lo + hi) >>> 1;
+                int c = comparator.compare(target, array[mid]);
+                if (c == 0)
+                    return mid;
+                else if (c < 0)
+                    hi = mid - 1;
+                else
+                    lo = mid + 1;
+            }
+            return -1;
         }
 
         /**
@@ -1094,28 +1552,18 @@ public class ParallelDoubleArray {
          * @param base the result for an empty array
          */
         public void cumulate(DoubleReducer reducer, double base) {
-            FJCumulateOp op = new FJCumulateOp
-                (ex, array, firstIndex, upperBound, reducer, base);
-            if (op.granularity >= upperBound - firstIndex)
-                op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-            }
+            PAS.FJDCumulateOp op = new PAS.FJDCumulateOp(this, reducer, base);
+            PAS.FJDScan r = new PAS.FJDScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
         }
 
         /**
          * Replaces each element with the running sum
          */
         public void cumulateSum() {
-            FJCumulateSumOp op = new FJCumulateSumOp
-                (ex, array, firstIndex, upperBound);
-            if (op.granularity >= upperBound - firstIndex)
-                op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-            }
+            PAS.FJDCumulatePlusOp op = new PAS.FJDCumulatePlusOp(this);
+            PAS.FJDScan r = new PAS.FJDScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
         }
 
         /**
@@ -1127,15 +1575,11 @@ public class ParallelDoubleArray {
          * @return the total reduction
          */
         public double precumulate(DoubleReducer reducer, double base) {
-            FJPrecumulateOp op = new FJPrecumulateOp
-                (ex, array, firstIndex, upperBound, reducer, base);
-            if (op.granularity >= upperBound - firstIndex)
-                return op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-                return r.out;
-            }
+            PAS.FJDPrecumulateOp op = new PAS.FJDPrecumulateOp
+                (this, reducer, base);
+            PAS.FJDScan r = new PAS.FJDScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
+            return r.out;
         }
 
         /**
@@ -1143,637 +1587,340 @@ public class ParallelDoubleArray {
          * @return the total sum
          */
         public double precumulateSum() {
-            FJPrecumulateSumOp op = new FJPrecumulateSumOp
-                (ex, array, firstIndex, upperBound);
-            if (op.granularity >= upperBound - firstIndex)
-                return op.sumAndCumulateLeaf(firstIndex, upperBound);
-            else {
-                FJScan r = new FJScan(null, op, firstIndex, upperBound);
-                ex.invoke(r);
-                return r.out;
-            }
+            PAS.FJDPrecumulatePlusOp op = new PAS.FJDPrecumulatePlusOp(this);
+            PAS.FJDScan r = new PAS.FJDScan(null, op, firstIndex, upperBound);
+            ex.invoke(r);
+            return r.out;
         }
-
 
         /**
          * Sorts the elements.
+         * Unlike Arrays.sort, this sort does
+         * not guarantee that elements with equal keys maintain their
+         * relative position in the array.
          * @param cmp the comparator to use
          */
         public void sort(DoubleComparator cmp) {
-            int n = upperBound - firstIndex;
-            double[] ws = new double[upperBound];
-            ex.invoke(new FJSorter(cmp, array, ws, firstIndex,
-                                   n, granularity));
+            ex.invoke(new PAS.FJDSorter
+                      (cmp, pa.array, new double[upperBound],
+                       firstIndex, upperBound - firstIndex, threshold));
         }
 
         /**
-         * Sorts the elements, using natural comparator
+         * Sorts the elements, assuming all elements are
+         * Comparable. Unlike Arrays.sort, this sort does not
+         * guarantee that elements with equal keys maintain their relative
+         * position in the array.
+         * @throws ClassCastException if any element is not Comparable.
          */
         public void sort() {
-            int n = upperBound - firstIndex;
-            double[] ws = new double[upperBound];
-            ex.invoke(new FJDoubleSorter(array, ws, firstIndex,
-                                         n, granularity));
+            ex.invoke(new PAS.FJDCSorter
+                      (pa.array, new double[upperBound],
+                       firstIndex, upperBound - firstIndex, threshold));
         }
 
-        public ParallelDoubleArray newArray() {
-            // For now, avoid copyOf so people can compile with Java5
-            int size = upperBound - firstIndex;
-            double[] dest = new double[size];
-            System.arraycopy(array, firstIndex, dest, 0, size);
-            return new ParallelDoubleArray(ex, dest);
+        public void removeAll() {
+            pa.removeSlotsAt(firstIndex, upperBound);
+        }
+
+        /**
+         * Removes consecutive elements that are equal (or null),
+         * shifting others leftward, and possibly decreasing size.  This
+         * method may be used after sorting to ensure that this
+         * ParallelDoubleArray contains a set of unique elements.
+         */
+        public void removeConsecutiveDuplicates() {
+            // Sequential implementation for now
+            int k = firstIndex;
+            int n = upperBound;
+            if (k < n) {
+                double[] arr = pa.array;
+                double last = arr[k++];
+                for (int i = k; i < n; ++i) {
+                    double x = arr[i];
+                    if (last != x)
+                        arr[k++] = last = x;
+                }
+                pa.removeSlotsAt(k, n);
+            }
         }
 
         void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i)
                 procedure.apply(array[i]);
         }
 
-        void leafTransform(int lo, int hi,
-                           MapperFromDoubleToDouble mapper) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = mapper.map(array[i]);
-        }
-
-        void leafIndexMap(int lo, int hi,
-                          MapperFromIntToDouble mapper) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = mapper.map(i);
-        }
-
-        void leafGenerate(int lo, int hi,
-                          DoubleGenerator generator) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = generator.generate();
-        }
-        void leafFill(int lo, int hi,
-                      double value) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = value;
-        }
-        void leafCombineInPlace(int lo, int hi,
-                                double[] other, DoubleReducer combiner) {
-            for (int i = lo; i < hi; ++i)
-                array[i] = combiner.combine(array[i], other[i]);
-        }
-
-        double leafReduce(int lo, int hi,
-                          DoubleReducer reducer, double base) {
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
             if (lo >= hi)
                 return base;
+            final double[] array = pa.array;
             double r = array[lo];
             for (int i = lo+1; i < hi; ++i)
                 r = reducer.combine(r, array[i]);
             return r;
         }
-        void leafMinIndex(int lo, int hi,
-                          DoubleComparator comparator,
-                          boolean reverse,
-                          FJDoubleMinIndex task) {
-            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
-            int bestIndex = -1;
+
+        void leafStats(int lo, int hi, PAS.FJDStats task) {
+            final double[] array = pa.array;
+            task.size = hi - lo;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
+                task.sum += x;
+                task.updateMin(i, x);
+                task.updateMax(i, x);
             }
-            task.result = best;
-            task.indexResult = bestIndex;
+        }
+
+        void leafTransform(int lo, int hi, DoubleMapper  mapper) {
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = mapper.map(array[i]);
+        }
+
+        void leafIndexMap(int lo, int hi, MapperFromIntToDouble mapper) {
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = mapper.map(i);
+        }
+
+        void leafGenerate(int lo, int hi, DoubleGenerator generator) {
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = generator.generate();
+        }
+        void leafFillValue(int lo, int hi, double value) {
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = value;
+        }
+        void leafCombineInPlace(int lo, int hi, double[] other,
+                                int otherOffset, DoubleReducer combiner) {
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                array[i] = combiner.combine(array[i], other[i+otherOffset]);
+        }
+
+        void leafCombine(int lo, int hi, double[] other, int otherOffset,
+                         double[] dest, DoubleReducer combiner) {
+            final double[] array = pa.array;
+            int k = lo - firstIndex;
+            for (int i = lo; i < hi; ++i) {
+                dest[k] = combiner.combine(array[i], other[i + otherOffset]);
+                ++k;
+            }
         }
     }
 
     static final class WithBoundedFilter extends WithFilter {
         final DoublePredicate selector;
-        WithBoundedFilter(ForkJoinExecutor ex, double[] array,
+        WithBoundedFilter(ParallelDoubleArray pa,
                           int firstIndex, int upperBound,
                           DoublePredicate selector) {
-            super(ex, array, firstIndex, upperBound);
+            super(pa, firstIndex, upperBound);
             this.selector = selector;
+        }
+
+        public WithFilter withFilter(DoublePredicate selector) {
+            return new WithBoundedFilter
+                (pa, firstIndex, upperBound,
+                 Ops.andPredicate(this.selector, selector));
+        }
+
+        public WithFilter orFilter(DoublePredicate selector) {
+            return new WithBoundedFilter
+                (pa, firstIndex, upperBound,
+                 Ops.orPredicate(this.selector, selector));
         }
 
         public <U> WithMapping<U> withMapping
             (MapperFromDouble<? extends U> mapper) {
             return new WithBoundedFilteredMapping<U>
-                (ex, array, firstIndex, upperBound, selector, mapper);
+                (pa, firstIndex, upperBound, selector, mapper);
         }
 
-        public WithDoubleMapping withMapping
-            (MapperFromDoubleToDouble mapper) {
+        public WithDoubleMapping withMapping(DoubleMapper mapper) {
             return new WithBoundedFilteredDoubleMapping
-                (ex, array, firstIndex, upperBound, selector, mapper);
+                (pa, firstIndex, upperBound, selector, mapper);
         }
 
-        public WithLongMapping withMapping
-            (MapperFromDoubleToLong mapper) {
+        public WithLongMapping withMapping(MapperFromDoubleToLong mapper) {
             return new WithBoundedFilteredLongMapping
-                (ex, array, firstIndex, upperBound, selector, mapper);
-        }
-
-        public WithIntMapping withMapping
-            (MapperFromDoubleToInt mapper) {
-            return new WithBoundedFilteredIntMapping
-                (ex, array, firstIndex, upperBound, selector, mapper);
+                (pa, firstIndex, upperBound, selector, mapper);
         }
 
         public int anyIndex() {
             AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
+            PAS.FJDSelectAny f =
+                new PAS.FJDSelectAny(this, firstIndex, upperBound,
+                                     null, result, selector);
             ex.invoke(f);
             return result.get();
         }
 
-        public int size() {
-            FJCountAll f = new FJCountAll
-                (this, firstIndex, upperBound, selector);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        public ParallelDoubleArray  newArray() {
-            FJDoublePlainSelectAllDriver r =
-                new FJDoublePlainSelectAllDriver(this, selector);
+        public ParallelDoubleArray all() {
+            PAS.FJDSelectAllDriver r = new PAS.FJDSelectAllDriver(this);
             ex.invoke(r);
             return new ParallelDoubleArray(ex, r.results);
         }
 
-        double leafReduce(int lo, int hi,
-                          DoubleReducer reducer, double base) {
-            boolean gotFirst = false;
-            double r = base;
-            for (int i = lo; i < hi; ++i) {
-                double t = array[i];
-                if (selector.evaluate(t)) {
-                    double y = t;
-                    if (!gotFirst) {
-                        gotFirst = true;
-                        r = y;
-                    }
-                    else
-                        r = reducer.combine(r, y);
-                }
-            }
-            return r;
+        public int size() {
+            PAS.FJDCountSelected f = new PAS.FJDCountSelected
+                (this, firstIndex, upperBound, null, selector);
+            ex.invoke(f);
+            return f.count;
         }
 
-        void leafApply(int lo, int hi, DoubleProcedure procedure) {
+        public ParallelDoubleArray allUniqueElements() {
+            PAS.DUniquifierTable tab = new PAS.DUniquifierTable
+                (upperBound - firstIndex, pa.array, selector);
+            PAS.FJUniquifier f = new PAS.FJUniquifier
+                (this, firstIndex, upperBound, null, tab);
+            ex.invoke(f);
+            double[] res = tab.uniqueElements(f.count);
+            return new ParallelDoubleArray(ex, res);
+        }
+
+        public void removeAll() {
+            PAS.FJRemoveAllDriver f = new PAS.FJRemoveAllDriver
+                (this, firstIndex, upperBound);
+            ex.invoke(f);
+            pa.removeSlotsAt(f.offset, upperBound);
+        }
+
+        void leafApply(int lo, int hi, DoubleProcedure  procedure) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     procedure.apply(x);
             }
         }
 
-        void leafMinIndex(int lo, int hi,
-                          DoubleComparator comparator,
-                          boolean reverse,
-                          FJDoubleMinIndex task) {
-            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                double t = array[i];
-                if (selector.evaluate(t)) {
-                    double x = t;
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-
-        void leafTransform(int lo, int hi,
-                           MapperFromDoubleToDouble mapper) {
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            final DoublePredicate sel = selector;
+            boolean gotFirst = false;
+            double r = base;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x)) {
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = x;
+                    }
+                    else
+                        r = reducer.combine(r, x);
+                }
+            }
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJDStats task) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            int count = 0;
+            for (int i = lo; i < hi; ++i) {
+                double x = array[i];
+                if (sel.evaluate(x)) {
+                    ++count;
+                    task.sum += x;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
+                }
+            }
+            task.size = count;
+        }
+
+        void leafTransform(int lo, int hi, DoubleMapper  mapper) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double x = array[i];
+                if (sel.evaluate(x))
                     array[i] = mapper.map(x);
             }
         }
-        void leafIndexMap(int lo, int hi,
-                          MapperFromIntToDouble mapper) {
+
+        void leafIndexMap(int lo, int hi, MapperFromIntToDouble mapper) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     array[i] = mapper.map(i);
             }
         }
 
-        void leafGenerate(int lo, int hi,
-                          DoubleGenerator generator) {
+        void leafGenerate(int lo, int hi, DoubleGenerator generator) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     array[i] = generator.generate();
             }
         }
-        void leafFill(int lo, int hi,
-                      double value) {
+
+        void leafFillValue(int lo, int hi, double value) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                if (selector.evaluate(x))
+                if (sel.evaluate(x))
                     array[i] = value;
             }
         }
-        void leafCombineInPlace(int lo, int hi,
-                                double[] other, DoubleReducer combiner) {
+
+        void leafCombineInPlace(int lo, int hi, double[] other,
+                                int otherOffset, DoubleReducer combiner) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                if (selector.evaluate(x))
-                    array[i] = combiner.combine(x, other[i]);
+                if (sel.evaluate(x))
+                    array[i] = combiner.combine(x, other[i+otherOffset]);
             }
         }
 
-    }
-
-    static final class WithBoundedMapping<U> extends WithMapping<U> {
-        final MapperFromDouble<? extends U> mapper;
-        WithBoundedMapping(ForkJoinExecutor ex, double[] array,
-                           int firstIndex, int upperBound,
-                           MapperFromDouble<? extends U> mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.mapper = mapper;
-        }
-
-        public ParallelArray<U> newArray() {
-            int n = upperBound - firstIndex;
-            U[] dest = (U[])new Object[n];
-            FJMap<U> f =
-                new FJMap<U>(this, firstIndex, upperBound, dest, mapper);
-            ex.invoke(f);
-            return new ParallelArray<U>(ex, dest);
-        }
-
-        public ParallelArray<U> newArray(Class<? super U> elementType) {
-            int n = upperBound - firstIndex;
-            U[] dest = (U[])
-                java.lang.reflect.Array.newInstance(elementType, n);
-            FJMap<U> f =
-                new FJMap<U>(this, firstIndex, upperBound, dest, mapper);
-            ex.invoke(f);
-            return new ParallelArray<U>(ex, dest);
-        }
-
-        public int size() {
-            return upperBound - firstIndex;
-        }
-
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
-        }
-
-        public U any() {
-            return (firstIndex < upperBound)?
-                mapper.map(array[firstIndex]) : null;
-        }
-
-        void leafApply(int lo, int hi, Procedure<? super U>  procedure) {
-            for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
-        }
-
-        U leafReduce(int lo, int hi,
-                     Reducer<U> reducer, U base) {
-            if (lo >= hi)
-                return base;
-            U r = mapper.map(array[lo]);
-            for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
-            return r;
-        }
-
-        void leafMinIndex(int lo, int hi,
-                          Comparator<? super U> comparator,
-                          boolean reverse,
-                          FJMinIndex<U> task) {
-            U best = null;
-            int bestIndex = -1;
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            int k = 0;
             for (int i = lo; i < hi; ++i) {
-                U x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
             }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-    }
-
-    static final class WithBoundedFilteredMapping<U>
-        extends WithMapping<U> {
-        final DoublePredicate selector;
-        final MapperFromDouble<? extends U> mapper;
-        WithBoundedFilteredMapping(ForkJoinExecutor ex, double[] array,
-                                   int firstIndex, int upperBound,
-                                   DoublePredicate selector,
-                                   MapperFromDouble<? extends U> mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.selector = selector;
-            this.mapper = mapper;
-        }
-        public ParallelArray<U> newArray() {
-            FJMapRefSelectAllDriver<U> r =
-                new FJMapRefSelectAllDriver<U>
-                (this, selector, null, mapper);
-            ex.invoke(r);
-            return new ParallelArray<U>(ex, r.results);
+            return k;
         }
 
-        public ParallelArray<U> newArray(Class<? super U> elementType) {
-            FJMapRefSelectAllDriver<U> r =
-                new FJMapRefSelectAllDriver<U>
-                (this, selector, elementType, mapper);
-            ex.invoke(r);
-            return new ParallelArray<U>(ex, r.results);
-        }
-
-        public int size() {
-            FJCountAll f = new FJCountAll
-                (this, firstIndex, upperBound, selector);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
-            ex.invoke(f);
-            return result.get();
-        }
-
-        public U any() {
-            int idx = anyIndex();
-            return (idx < 0)?  null : mapper.map(array[idx]);
-        }
-
-        void leafApply(int lo, int hi, Procedure<? super U>  procedure) {
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
-            }
-        }
-        U leafReduce(int lo, int hi,
-                     Reducer<U> reducer, U base) {
-            boolean gotFirst = false;
-            U r = base;
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                if (selector.evaluate(x)) {
-                    U y = mapper.map(x);
-                    if (!gotFirst) {
-                        gotFirst = true;
-                        r = y;
-                    }
-                    else
-                        r = reducer.combine(r, y);
-                }
-            }
-            return r;
-        }
-
-        void leafRefMap(int lo, int hi,
-                        U[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        void leafMinIndex(int lo, int hi,
-                          Comparator<? super U> comparator,
-                          boolean reverse,
-                          FJMinIndex<U> task) {
-            U best = null;
-            int bestIndex = -1;
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double t = array[i];
-                if (selector.evaluate(t)) {
-                    U x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
-                }
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
             }
-            task.result = best;
-            task.indexResult = bestIndex;
+            return offset;
         }
-    }
-
-    /**
-     * A modifier for parallel array operations to apply to mappings
-     * of elements to doubles, not to the elements themselves
-     */
-    public static abstract class WithDoubleMapping
-        extends Params {
-        WithDoubleMapping(ForkJoinExecutor ex, double[] array,
-                          int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
-        }
-
-        /**
-         * Applies the given procedure
-         * @param procedure the procedure
-         */
-        public void apply(DoubleProcedure procedure) {
-            ex.invoke(new FJDoubleApply
-                      (this, firstIndex, upperBound, procedure));
-        }
-
-        abstract void leafApply(int lo, int hi,
-                                DoubleProcedure procedure);
-
-        /**
-         * Returns reduction of mapped elements
-         * @param reducer the reducer
-         * @param base the result for an empty array
-         * @return reduction
-         */
-        public double reduce(DoubleReducer reducer, double base) {
-            FJDoubleReduce f =
-                new FJDoubleReduce
-                (this, firstIndex, upperBound, reducer, base);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        abstract double leafReduce
-            (int lo, int hi, DoubleReducer reducer, double base);
-
-        /**
-         * Returns the minimum element, or Double.MAX_VALUE if empty
-         * @return minimum element, or Double.MAX_VALUE if empty
-         */
-        public double min() {
-            return reduce(NaturalDoubleMinReducer.min, Double.MAX_VALUE);
-        }
-
-        /**
-         * Returns the minimum element, or Double.MAX_VALUE if empty
-         * @param comparator the comparator
-         * @return minimum element, or Double.MAX_VALUE if empty
-         */
-        public double min(DoubleComparator comparator) {
-            return reduce(new DoubleMinReducer(comparator),
-                          Double.MAX_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or -Double.MAX_VALUE if empty
-         * @return maximum element, or -Double.MAX_VALUE if empty
-         */
-        public double max() {
-            return reduce(NaturalDoubleMaxReducer.max, -Double.MAX_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or -Double.MAX_VALUE if empty
-         * @param comparator the comparator
-         * @return maximum element, or -Double.MAX_VALUE if empty
-         */
-        public double max(DoubleComparator comparator) {
-            return reduce(new DoubleMaxReducer(comparator),
-                          -Double.MAX_VALUE);
-        }
-
-        /**
-         * Returns the sum of mapped elements
-         * @return the sum of mapped elements
-         */
-        public double sum() {
-            return reduce(DoubleAdder.adder, 0);
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin() {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalDoubleComparator.comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax() {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalDoubleComparator.comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin(DoubleComparator comparator) {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound, comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax(DoubleComparator comparator) {
-            FJDoubleMinIndex f = new FJDoubleMinIndex
-                (this, firstIndex, upperBound, comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns a new ParallelDoubleArray holding mappings
-         * @return a new ParallelDoubleArray holding mappings
-         */
-        public abstract ParallelDoubleArray newArray();
-
-        /**
-         * Return the number of elements selected using bound or
-         * filter restrictions. Note that this method must evaluate
-         * all selectors to return its result.
-         * @return the number of elements
-         */
-        public abstract int size();
-
-        /**
-         * Returns the index of some element matching bound and filter
-         * constraints, or -1 if none.
-         * @return index of matching element, or -1 if none.
-         */
-        public abstract int anyIndex();
-
-        /**
-         * Returns mapping of some element matching bound and filter
-         * constraints
-         * @return mapping of matching element
-         * @throws NoSuchElementException if empty
-         */
-        public abstract double any();
-
-        abstract void leafMinIndex(int lo, int hi,
-                                   DoubleComparator comparator,
-                                   boolean reverse,
-                                   FJDoubleMinIndex task);
 
     }
 
-    static final class WithBoundedDoubleMapping
-        extends WithDoubleMapping {
-        final MapperFromDoubleToDouble mapper;
-        WithBoundedDoubleMapping(ForkJoinExecutor ex, double[] array,
+    static final class WithBoundedDoubleMapping extends WithDoubleMapping {
+        final DoubleMapper mapper;
+        WithBoundedDoubleMapping(ParallelDoubleArray pa,
                                  int firstIndex, int upperBound,
-                                 MapperFromDoubleToDouble mapper) {
-            super(ex, array, firstIndex, upperBound);
+                                 DoubleMapper mapper) {
+            super(pa, firstIndex, upperBound);
             this.mapper = mapper;
         }
 
-        public ParallelDoubleArray newArray() {
+        public ParallelDoubleArray all() {
             double[] dest = new double[upperBound - firstIndex];
-            FJDoubleMap f =
-                new FJDoubleMap(this, firstIndex, upperBound, dest, mapper);
+            PAS.FJDMap f = new PAS.FJDMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
             ex.invoke(f);
             return new ParallelDoubleArray(ex, dest);
         }
@@ -1782,58 +1929,72 @@ public class ParallelDoubleArray {
             return upperBound - firstIndex;
         }
 
-        void leafApply(int lo, int hi, DoubleProcedure procedure) {
-            for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
-        }
-
-        void leafMap(int lo, int hi,
-                     double[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        double leafReduce(int lo, int hi,
-                          DoubleReducer reducer, double base) {
-            if (lo >= hi)
-                return base;
-            double r = mapper.map(array[lo]);
-            for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
-            return r;
-        }
-
-        void leafMinIndex(int lo, int hi,
-                          DoubleComparator comparator,
-                          boolean reverse,
-                          FJDoubleMinIndex task) {
-            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                double x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-
         public int anyIndex() {
             return (firstIndex < upperBound)? firstIndex : -1;
         }
 
-        public double any() {
-            if (firstIndex >= upperBound)
-                throw new NoSuchElementException();
-            return mapper.map(array[firstIndex]);
+        public WithDoubleMapping withMapping(DoubleMapper mapper) {
+            return new WithBoundedDoubleMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping(MapperFromDoubleToLong mapper) {
+            return new WithBoundedLongMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromDouble<? extends U> mapper) {
+            return new WithBoundedMapping<U>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                procedure.apply(mpr.map(array[i]));
+        }
+
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            if (lo >= hi)
+                return base;
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            double r = mpr.map(array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.combine(r, mpr.map(array[i]));
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJDStats task) {
+            task.size = hi - lo;
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            for (int i = lo; i < hi; ++i) {
+                double x = mpr.map(array[i]);
+                task.sum += x;
+                task.updateMin(i, x);
+                task.updateMax(i, x);
+            }
+        }
+
+        void leafTransfer(int lo, int hi, double[] dest, int offset) {
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       double[] dest, int offset) {
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = (array[indices[i]]);
         }
 
     }
@@ -1841,39 +2002,76 @@ public class ParallelDoubleArray {
     static final class WithBoundedFilteredDoubleMapping
         extends WithDoubleMapping {
         final DoublePredicate selector;
-        final MapperFromDoubleToDouble mapper;
+        final DoubleMapper mapper;
         WithBoundedFilteredDoubleMapping
-            (ForkJoinExecutor ex, double[] array,
-             int firstIndex, int upperBound,
-             DoublePredicate selector,
-             MapperFromDoubleToDouble mapper) {
-            super(ex, array, firstIndex, upperBound);
+            (ParallelDoubleArray pa, int firstIndex, int upperBound,
+             DoublePredicate selector, DoubleMapper mapper) {
+            super(pa, firstIndex, upperBound);
             this.selector = selector;
             this.mapper = mapper;
         }
 
-        public ParallelDoubleArray  newArray() {
-            FJDoubleMapSelectAllDriver r =
-                new FJDoubleMapSelectAllDriver(this, selector, mapper);
+        public ParallelDoubleArray all() {
+            PAS.FJDSelectAllDriver r = new PAS.FJDSelectAllDriver(this);
             ex.invoke(r);
             return new ParallelDoubleArray(ex, r.results);
         }
 
         public int size() {
-            FJCountAll f = new FJCountAll
-                (this, firstIndex, upperBound, selector);
+            PAS.FJDCountSelected f = new PAS.FJDCountSelected
+                (this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
         }
 
-        double leafReduce(int lo, int hi,
-                          DoubleReducer reducer, double base) {
+        public int anyIndex() {
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJDSelectAny f = new PAS.FJDSelectAny
+                (this, firstIndex, upperBound, null, result, selector);
+            ex.invoke(f);
+            return result.get();
+        }
+
+        public WithDoubleMapping withMapping(DoubleMapper mapper) {
+            return new WithBoundedFilteredDoubleMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping(MapperFromDoubleToLong mapper) {
+            return new WithBoundedFilteredLongMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromDouble<? extends U> mapper) {
+            return new WithBoundedFilteredMapping<U>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            final DoublePredicate sel = selector;
+            final DoubleMapper mpr = mapper;
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double x = array[i];
+                if (sel.evaluate(x))
+                    procedure.apply(mpr.map(x));
+            }
+        }
+
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            final DoublePredicate sel = selector;
             boolean gotFirst = false;
             double r = base;
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
             for (int i = lo; i < hi; ++i) {
                 double t = array[i];
-                if (selector.evaluate(t)) {
-                    double y = mapper.map(t);
+                if (sel.evaluate(t)) {
+                    double y = mpr.map(t);
                     if (!gotFirst) {
                         gotFirst = true;
                         r = y;
@@ -1885,53 +2083,59 @@ public class ParallelDoubleArray {
             return r;
         }
 
-        void leafApply(int lo, int hi, DoubleProcedure procedure) {
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
-            }
-        }
-
-        void leafMinIndex(int lo, int hi,
-                          DoubleComparator comparator,
-                          boolean reverse,
-                          FJDoubleMinIndex task) {
-            double best = reverse? -Double.MAX_VALUE : Double.MAX_VALUE;
-            int bestIndex = -1;
+        void leafStats(int lo, int hi, PAS.FJDStats task) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            int count = 0;
             for (int i = lo; i < hi; ++i) {
                 double t = array[i];
-                if (selector.evaluate(t)) {
-                    double x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
+                if (sel.evaluate(t)) {
+                    ++count;
+                    double x = mpr.map(t);
+                    task.sum += x;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
                 }
             }
-            task.result = best;
-            task.indexResult = bestIndex;
+            task.size = count;
         }
 
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
-            ex.invoke(f);
-            return result.get();
+        void leafTransfer(int lo, int hi, double[] dest, int offset) {
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
         }
 
-        public double any() {
-            int idx = anyIndex();
-            if (idx < 0)
-                throw new NoSuchElementException();
-            return mapper.map(array[idx]);
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       double[] dest, int offset) {
+            final double[] array = pa.array;
+            final DoubleMapper mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = (array[indices[i]]);
+        }
+
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double t = array[i];
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
         }
     }
 
@@ -1939,11 +2143,13 @@ public class ParallelDoubleArray {
      * A modifier for parallel array operations to apply to mappings
      * of elements to longs, not to the elements themselves
      */
-    public static abstract class WithLongMapping
-        extends Params {
-        WithLongMapping(ForkJoinExecutor ex, double[] array,
-                        int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
+    public static abstract class WithLongMapping extends PAS.DPrefix {
+        final MapperFromDoubleToLong mapper;
+        WithLongMapping(ParallelDoubleArray pa,
+                        int firstIndex, int upperBound,
+                        MapperFromDoubleToLong mapper) {
+            super(pa, firstIndex, upperBound);
+            this.mapper = mapper;
         }
 
         /**
@@ -1951,13 +2157,9 @@ public class ParallelDoubleArray {
          * @param procedure the procedure
          */
         public void apply(LongProcedure procedure) {
-            ex.invoke(new FJLongApply
-                      (this, firstIndex, upperBound, procedure));
+            ex.invoke(new PAS.FJLApply
+                      (this, firstIndex, upperBound, null, procedure));
         }
-
-        abstract void leafApply(int lo, int hi,
-                                LongProcedure procedure);
-
 
         /**
          * Returns reduction of mapped elements
@@ -1966,21 +2168,18 @@ public class ParallelDoubleArray {
          * @return reduction
          */
         public long reduce(LongReducer reducer, long base) {
-            FJLongReduce f =
-                new FJLongReduce(this, firstIndex, upperBound, reducer, base);
+            PAS.FJLReduce f = new PAS.FJLReduce
+                (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return f.result;
         }
-
-        abstract long leafReduce(int lo, int hi,
-                                 LongReducer reducer, long base);
 
         /**
          * Returns the minimum element, or Long.MAX_VALUE if empty
          * @return minimum element, or Long.MAX_VALUE if empty
          */
         public long min() {
-            return reduce(NaturalLongMinReducer.min, Long.MAX_VALUE);
+            return reduce(naturalLongMinReducer(), Long.MAX_VALUE);
         }
 
         /**
@@ -1989,7 +2188,7 @@ public class ParallelDoubleArray {
          * @return minimum element, or Long.MAX_VALUE if empty
          */
         public long min(LongComparator comparator) {
-            return reduce(new LongMinReducer(comparator),
+            return reduce(longMinReducer(comparator),
                           Long.MAX_VALUE);
         }
 
@@ -1998,7 +2197,7 @@ public class ParallelDoubleArray {
          * @return maximum element, or Long.MIN_VALUE if empty
          */
         public long max() {
-            return reduce(NaturalLongMaxReducer.max, Long.MIN_VALUE);
+            return reduce(naturalLongMaxReducer(), Long.MIN_VALUE);
         }
 
         /**
@@ -2007,7 +2206,7 @@ public class ParallelDoubleArray {
          * @return maximum element, or Long.MIN_VALUE if empty
          */
         public long max(LongComparator comparator) {
-            return reduce(new LongMaxReducer(comparator),
+            return reduce(longMaxReducer(comparator),
                           Long.MIN_VALUE);
         }
 
@@ -2016,66 +2215,40 @@ public class ParallelDoubleArray {
          * @return the sum of elements
          */
         public long sum() {
-            return reduce(LongAdder.adder, 0);
+            return reduce(Ops.longAdder(), 0);
         }
 
         /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @return the index of least element or -1 if empty.
+         * Returns summary statistics
+         * @param comparator the comparator to use for
+         * locating minimum and maximum elements
+         * @return the summary.
          */
-        public int indexOfMin() {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalLongComparator.comparator, false);
+        public ParallelLongArray.SummaryStatistics summary
+            (LongComparator comparator) {
+            PAS.FJLStats f = new PAS.FJLStats
+                (this, firstIndex, upperBound, null, comparator);
             ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @return the index of greatest element or -1 if empty.
+         * Returns summary statistics, using natural comparator
+         * @return the summary.
          */
-        public int indexOfMax() {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalLongComparator.comparator, true);
+        public ParallelLongArray.SummaryStatistics summary() {
+            PAS.FJLStats f = new PAS.FJLStats
+                (this, firstIndex, upperBound, null,
+                 naturalLongComparator());
             ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin(LongComparator comparator) {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound, comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax(LongComparator comparator) {
-            FJLongMinIndex f = new FJLongMinIndex
-                (this, firstIndex, upperBound, comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
+            return f;
         }
 
         /**
          * Returns a new ParallelLongArray holding mappings
          * @return a new ParallelLongArray holding mappings
          */
-        public abstract ParallelLongArray newArray();
+        public abstract ParallelLongArray all();
 
         /**
          * Return the number of elements selected using bound or
@@ -2093,34 +2266,60 @@ public class ParallelDoubleArray {
         public abstract int anyIndex();
 
         /**
-         * Returns mapping of some element matching bound and filter
-         * constraints
-         * @return mapping of matching element
-         * @throws NoSuchElementException if empty
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper.
+         * @param mapper the mapper
+         * @return operation prefix
          */
-        public abstract long any();
+        public abstract WithDoubleMapping withMapping
+            (MapperFromLongToDouble mapper);
 
-        abstract void leafMinIndex(int lo, int hi,
-                                   LongComparator comparator,
-                                   boolean reverse,
-                                   FJLongMinIndex task);
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithLongMapping withMapping
+            (LongMapper mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mapped elements of the array using the given mapper.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <U> WithMapping<U> withMapping
+            (MapperFromLong<? extends U> mapper);
+
+        final void leafTransfer(int lo, int hi, long[] dest, int offset) {
+            final double[] array = pa.array;
+            final MapperFromDoubleToLong mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = mpr.map(array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       long[] dest, int offset) {
+            final double[] array = pa.array;
+            final MapperFromDoubleToLong mpr = mapper;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = mpr.map(array[indices[i]]);
+        }
 
     }
 
-    static final class WithBoundedLongMapping
-        extends WithLongMapping {
-        final MapperFromDoubleToLong mapper;
-        WithBoundedLongMapping(ForkJoinExecutor ex, double[] array,
+    static final class WithBoundedLongMapping extends WithLongMapping {
+        WithBoundedLongMapping(ParallelDoubleArray pa,
                                int firstIndex, int upperBound,
                                MapperFromDoubleToLong mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.mapper = mapper;
+            super(pa, firstIndex, upperBound, mapper);
         }
 
-        public ParallelLongArray newArray() {
+        public ParallelLongArray all() {
             long[] dest = new long[upperBound - firstIndex];
-            FJLongMap f =
-                new FJLongMap(this, firstIndex, upperBound, dest, mapper);
+            PAS.FJLMap f = new PAS.FJLMap
+                (this, firstIndex, upperBound, null, dest, firstIndex);
             ex.invoke(f);
             return new ParallelLongArray(ex, dest);
         }
@@ -2128,442 +2327,138 @@ public class ParallelDoubleArray {
         public int size() {
             return upperBound - firstIndex;
         }
-        void leafApply(int lo, int hi, LongProcedure procedure) {
-            for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
-        }
 
-
-        void leafMap(int lo, int hi,
-                     long[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-        long leafReduce(int lo, int hi,
-                        LongReducer reducer, long base) {
-            if (lo >= hi)
-                return base;
-            long r = mapper.map(array[lo]);
-            for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
-            return r;
-        }
-        void leafMinIndex(int lo, int hi,
-                          LongComparator comparator,
-                          boolean reverse,
-                          FJLongMinIndex task) {
-            long best = reverse? Long.MIN_VALUE : Long.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                long x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
         public int anyIndex() {
             return (firstIndex < upperBound)? firstIndex : -1;
         }
 
-        public long any() {
-            if (firstIndex >= upperBound)
-                throw new NoSuchElementException();
-            return mapper.map(array[firstIndex]);
+        public WithDoubleMapping withMapping
+            (MapperFromLongToDouble mapper) {
+            return new WithBoundedDoubleMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping
+            (LongMapper mapper) {
+            return new WithBoundedLongMapping
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromLong<? extends U> mapper) {
+            return new WithBoundedMapping<U>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundMapper(this.mapper, mapper));
         }
 
 
+        void leafApply(int lo, int hi, LongProcedure procedure) {
+            final double[] array = pa.array;
+            final MapperFromDoubleToLong mpr = mapper;
+            for (int i = lo; i < hi; ++i)
+                procedure.apply(mpr.map(array[i]));
+        }
+
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
+            if (lo >= hi)
+                return base;
+            final double[] array = pa.array;
+            final MapperFromDoubleToLong mpr = mapper;
+            long r = mpr.map(array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.combine(r, mpr.map(array[i]));
+            return r;
+        }
+
+        void leafStats(int lo, int hi, PAS.FJLStats task) {
+            final double[] array = pa.array;
+            final MapperFromDoubleToLong mpr = mapper;
+            task.size = hi - lo;
+            for (int i = lo; i < hi; ++i) {
+                long x = mpr.map(array[i]);
+                task.sum += x;
+                task.updateMin(i, x);
+                task.updateMax(i, x);
+            }
+        }
     }
 
-    static final class WithBoundedFilteredLongMapping
-        extends WithLongMapping {
+    static final class WithBoundedFilteredLongMapping extends WithLongMapping {
         final DoublePredicate selector;
-        final MapperFromDoubleToLong mapper;
         WithBoundedFilteredLongMapping
-            (ForkJoinExecutor ex, double[] array,
+            (ParallelDoubleArray pa,
              int firstIndex, int upperBound,
              DoublePredicate selector,
              MapperFromDoubleToLong mapper) {
-            super(ex, array, firstIndex, upperBound);
+            super(pa, firstIndex, upperBound, mapper);
             this.selector = selector;
-            this.mapper = mapper;
         }
-        public ParallelLongArray  newArray() {
-            FJLongMapSelectAllDriver r =
-                new FJLongMapSelectAllDriver(this, selector, mapper);
+
+        public ParallelLongArray all() {
+            PAS.FJLSelectAllDriver r = new PAS.FJLSelectAllDriver(this);
             ex.invoke(r);
             return new ParallelLongArray(ex, r.results);
         }
 
         public int size() {
-            FJCountAll f = new FJCountAll(this, firstIndex,
-                                          upperBound, selector);
+            PAS.FJDCountSelected f = new PAS.FJDCountSelected
+                (this, firstIndex, upperBound, null, selector);
             ex.invoke(f);
-            return f.result;
+            return f.count;
+        }
+        public int anyIndex() {
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJDSelectAny f = new PAS.FJDSelectAny
+                (this, firstIndex, upperBound, null, result, selector);
+            ex.invoke(f);
+            return result.get();
+        }
+
+
+        public WithDoubleMapping withMapping
+            (MapperFromLongToDouble mapper) {
+            return new WithBoundedFilteredDoubleMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public WithLongMapping withMapping
+            (LongMapper mapper) {
+            return new WithBoundedFilteredLongMapping
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
+        }
+
+        public <U> WithMapping<U> withMapping
+            (MapperFromLong<? extends U> mapper) {
+            return new WithBoundedFilteredMapping<U>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundMapper(this.mapper, mapper));
         }
 
         void leafApply(int lo, int hi, LongProcedure procedure) {
+            final DoublePredicate sel = selector;
+            final MapperFromDoubleToLong mpr = mapper;
+            final double[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 double x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
+                if (sel.evaluate(x))
+                    procedure.apply(mpr.map(x));
             }
         }
 
-        long leafReduce(int lo, int hi,
-                        LongReducer reducer, long base) {
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
             boolean gotFirst = false;
             long r = base;
+            final double[] array = pa.array;
+            final DoublePredicate sel = selector;
+            final MapperFromDoubleToLong mpr = mapper;
             for (int i = lo; i < hi; ++i) {
                 double t = array[i];
-                if (selector.evaluate(t)) {
-                    long y = mapper.map(t);
-                    if (!gotFirst) {
-                        gotFirst = true;
-                        r = y;
-                    }
-                    else
-                        r = reducer.combine(r, y);
-                }
-            }
-            return r;
-        }
-        void leafMinIndex(int lo, int hi,
-                          LongComparator comparator,
-                          boolean reverse,
-                          FJLongMinIndex task) {
-            long best = reverse? Long.MIN_VALUE : Long.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                double t = array[i];
-                if (selector.evaluate(t)) {
-                    long x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
-            ex.invoke(f);
-            return result.get();
-        }
-
-        public long any() {
-            int idx = anyIndex();
-            if (idx < 0)
-                throw new NoSuchElementException();
-            return mapper.map(array[idx]);
-        }
-
-    }
-
-    /**
-     * A modifier for parallel array operations to apply to mappings
-     * of elements to ints, not to the elements themselves
-     */
-    public static abstract class WithIntMapping
-        extends Params {
-        WithIntMapping(ForkJoinExecutor ex, double[] array,
-                       int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound);
-        }
-
-        /**
-         * Applies the given procedure
-         * @param procedure the procedure
-         */
-        public void apply(IntProcedure procedure) {
-            ex.invoke(new FJIntApply
-                      (this, firstIndex, upperBound, procedure));
-        }
-
-        abstract void leafApply(int lo, int hi,
-                                IntProcedure procedure);
-
-        /**
-         * Returns reduction of mapped elements
-         * @param reducer the reducer
-         * @param base the result for an empty array
-         * @return reduction
-         */
-        public int reduce(IntReducer reducer, int base) {
-            FJIntReduce f =
-                new FJIntReduce(this, firstIndex, upperBound, reducer, base);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        abstract int leafReduce(int lo, int hi,
-                                IntReducer reducer, int base);
-
-        /**
-         * Returns the minimum element, or Integer.MAX_VALUE if empty
-         * @return minimum element, or Integer.MAX_VALUE if empty
-         */
-        public int min() {
-            return reduce(NaturalIntMinReducer.min, Integer.MAX_VALUE);
-        }
-
-        /**
-         * Returns the minimum element, or Integer.MAX_VALUE if empty
-         * @param comparator the comparator
-         * @return minimum element, or Integer.MAX_VALUE if empty
-         */
-        public int min(IntComparator comparator) {
-            return reduce(new IntMinReducer(comparator),
-                          Integer.MAX_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or Integer.MIN_VALUE if empty
-         * @return maximum element, or Integer.MIN_VALUE if empty
-         */
-        public int max() {
-            return reduce(NaturalIntMaxReducer.max, Integer.MIN_VALUE);
-        }
-
-        /**
-         * Returns the maximum element, or Integer.MIN_VALUE if empty
-         * @param comparator the comparator
-         * @return maximum element, or Integer.MIN_VALUE if empty
-         */
-        public int max(IntComparator comparator) {
-            return reduce(new IntMaxReducer(comparator),
-                          Integer.MIN_VALUE);
-        }
-
-        /**
-         * Returns the sum of elements
-         * @return the sum of elements
-         */
-        public int sum() {
-            return reduce(IntAdder.adder, 0);
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin() {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalIntComparator.comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax() {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound,
-                 NaturalIntComparator.comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is least, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of least element or -1 if empty.
-         */
-        public int indexOfMin(IntComparator comparator) {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound, comparator, false);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns the index corresponding to the element for which
-         * the given mapping is greatest, or -1 if empty
-         * @param comparator the comparator
-         * @return the index of greatest element or -1 if empty.
-         */
-        public int indexOfMax(IntComparator comparator) {
-            FJIntMinIndex f = new FJIntMinIndex
-                (this, firstIndex, upperBound, comparator, true);
-            ex.invoke(f);
-            return f.indexResult;
-        }
-
-        /**
-         * Returns a new ParallelIntArray holding mappings
-         * @return a new ParallelIntArray holding mappings
-         */
-        public abstract ParallelIntArray newArray();
-
-        /**
-         * Return the number of elements selected using bound or
-         * filter restrictions. Note that this method must evaluate
-         * all selectors to return its result.
-         * @return the number of elements
-         */
-        public abstract int size();
-
-        /**
-         * Returns the index of some element matching bound and filter
-         * constraints, or -1 if none.
-         * @return index of matching element, or -1 if none.
-         */
-        public abstract int anyIndex();
-
-        /**
-         * Returns mapping of some element matching bound and filter
-         * constraints
-         * @return mapping of matching element
-         * @throws NoSuchElementException if empty
-         */
-        public abstract int any();
-
-        abstract void leafMinIndex(int lo, int hi,
-                                   IntComparator comparator,
-                                   boolean reverse,
-                                   FJIntMinIndex task);
-    }
-
-    static final class WithBoundedIntMapping
-        extends WithIntMapping {
-        final MapperFromDoubleToInt mapper;
-        WithBoundedIntMapping(ForkJoinExecutor ex, double[] array,
-                              int firstIndex, int upperBound,
-                              MapperFromDoubleToInt mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.mapper = mapper;
-        }
-
-        public ParallelIntArray newArray() {
-            int[] dest = new int[upperBound - firstIndex];
-            FJIntMap f =
-                new FJIntMap(this, firstIndex, upperBound, dest, mapper);
-            ex.invoke(f);
-            return new ParallelIntArray(ex, dest);
-        }
-
-        public int size() {
-            return upperBound - firstIndex;
-        }
-        void leafMap(int lo, int hi,
-                     int[] dest) {
-            int k = lo - firstIndex;
-            for (int i = lo; i < hi; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-        void leafApply(int lo, int hi, IntProcedure procedure) {
-            for (int i = lo; i < hi; ++i)
-                procedure.apply(mapper.map(array[i]));
-        }
-
-        int leafReduce(int lo, int hi,
-                       IntReducer reducer, int base) {
-            if (lo >= hi)
-                return base;
-            int r = mapper.map(array[lo]);
-            for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mapper.map(array[i]));
-            return r;
-        }
-        void leafMinIndex(int lo, int hi,
-                          IntComparator comparator,
-                          boolean reverse,
-                          FJIntMinIndex task) {
-            int best = reverse? Integer.MIN_VALUE : Integer.MAX_VALUE;
-            int bestIndex = -1;
-            for (int i = lo; i < hi; ++i) {
-                int x = mapper.map(array[i]);
-                int c = 1;
-                if (bestIndex >= 0) {
-                    c = comparator.compare(best, x);
-                    if (reverse) c = -c;
-                }
-                if (c > 0) {
-                    bestIndex = i;
-                    best = x;
-                }
-            }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
-        }
-
-        public int any() {
-            if (firstIndex >= upperBound)
-                throw new NoSuchElementException();
-            return mapper.map(array[firstIndex]);
-        }
-    }
-
-    static final class WithBoundedFilteredIntMapping
-        extends WithIntMapping {
-        final DoublePredicate selector;
-        final MapperFromDoubleToInt mapper;
-        WithBoundedFilteredIntMapping
-            (ForkJoinExecutor ex, double[] array,
-             int firstIndex, int upperBound,
-             DoublePredicate selector,
-             MapperFromDoubleToInt mapper) {
-            super(ex, array, firstIndex, upperBound);
-            this.selector = selector;
-            this.mapper = mapper;
-        }
-        public ParallelIntArray  newArray() {
-            FJIntMapSelectAllDriver r =
-                new FJIntMapSelectAllDriver(this, selector, mapper);
-            ex.invoke(r);
-            return new ParallelIntArray(ex, r.results);
-        }
-
-        public int size() {
-            FJCountAll f = new FJCountAll(this, firstIndex,
-                                          upperBound, selector);
-            ex.invoke(f);
-            return f.result;
-        }
-
-        void leafApply(int lo, int hi, IntProcedure procedure) {
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                if (selector.evaluate(x))
-                    procedure.apply(mapper.map(x));
-            }
-        }
-
-        int leafReduce(int lo, int hi,
-                       IntReducer reducer, int base) {
-            boolean gotFirst = false;
-            int r = base;
-            for (int i = lo; i < hi; ++i) {
-                double t = array[i];
-                if (selector.evaluate(t)) {
-                    int y = mapper.map(t);
+                if (sel.evaluate(t)) {
+                    long y = mpr.map(t);
                     if (!gotFirst) {
                         gotFirst = true;
                         r = y;
@@ -2575,2147 +2470,457 @@ public class ParallelDoubleArray {
             return r;
         }
 
-        void leafMinIndex(int lo, int hi,
-                          IntComparator comparator,
-                          boolean reverse,
-                          FJIntMinIndex task) {
-            int best = reverse? Integer.MIN_VALUE : Integer.MAX_VALUE;
-            int bestIndex = -1;
+        void leafStats(int lo, int hi, PAS.FJLStats task) {
+            final double[] array = pa.array;
+            final DoublePredicate sel = selector;
+            final MapperFromDoubleToLong mpr = mapper;
+            int count = 0;
             for (int i = lo; i < hi; ++i) {
                 double t = array[i];
-                if (selector.evaluate(t)) {
-                    int x = mapper.map(t);
-                    int c = 1;
-                    if (bestIndex >= 0) {
-                        c = comparator.compare(best, x);
-                        if (reverse) c = -c;
-                    }
-                    if (c > 0) {
-                        bestIndex = i;
-                        best = x;
-                    }
+                if (sel.evaluate(t)) {
+                    ++count;
+                    long x = mpr.map(t);
+                    task.sum += x;
+                    task.updateMin(i, x);
+                    task.updateMax(i, x);
                 }
             }
-            task.result = best;
-            task.indexResult = bestIndex;
-        }
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            FJSelectAny f =
-                new FJSelectAny(this, firstIndex, upperBound,
-                                selector, result);
-            ex.invoke(f);
-            return result.get();
+            task.size = count;
         }
 
-        public int any() {
-            int idx = anyIndex();
-            if (idx < 0)
+        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (sel.evaluate(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
+            final DoublePredicate sel = selector;
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double t = array[i];
+                if (sel.evaluate(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
+    }
+
+    /**
+     * Returns an iterator stepping through each element of the array
+     * up to the current limit. This iterator does <em>not</em>
+     * support the remove operation. However, a full
+     * <tt>ListIterator</tt> supporting add, remove, and set
+     * operations is available via {@link #asList}.
+     * @return an iterator stepping through each element.
+     */
+    public Iterator<Double> iterator() {
+        return new ParallelDoubleArrayIterator(array, limit);
+    }
+
+    static final class ParallelDoubleArrayIterator
+        implements Iterator<Double> {
+        int cursor;
+        final double[] arr;
+        final int hi;
+        ParallelDoubleArrayIterator(double[] a, int limit) { arr = a; hi = limit; }
+        public boolean hasNext() { return cursor < hi; }
+        public Double next() {
+            if (cursor >= hi)
                 throw new NoSuchElementException();
-            return mapper.map(array[idx]);
+            return Double.valueOf(arr[cursor++]);
         }
-
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
     }
 
-    /*
-     * ForkJoin Implementations. There are a bunch of them,
-     * all just a little different than others.
-     */
+    // List support
 
     /**
-     * ForkJoin tasks for Apply. Like other divide-and-conquer tasks
-     * used for computing ParallelArray operations, rather than pure
-     * recursion, it link right-hand-sides and then joins up the tree,
-     * exploiting cases where tasks aren't stolen.  This generates and
-     * joins tasks with a bit less overhead than pure recursive style.
+     * Returns a view of this ParallelDoubleArray as a List. This List
+     * has the same structural and performance characteristics as
+     * {@link ArrayList}, and may be used to modify, replace or extend
+     * the bounds of the array underlying this ParallelDoubleArray.
+     * The methods supported by this list view are <em>not</em> in
+     * general implemented as parallel operations. This list is also
+     * not itself thread-safe.  In particular, performing list updates
+     * while other parallel operations are in progress has undefined
+     * (and surely undesired) effects.
+     * @return a list view
      */
-    static final class FJApply<U> extends RecursiveAction {
-        final WithMapping<U> params;
-        final int lo;
-        final int hi;
-        final Procedure<? super U> procedure;
-        FJApply<U> next;
-        FJApply(WithMapping<U> params, int lo, int hi,
-                Procedure<? super U> procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJApply<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJApply<U> r =
-                    new FJApply<U>(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJReduce<U> extends RecursiveAction {
-        final WithMapping<U> params;
-        final int lo;
-        final int hi;
-        final Reducer<U> reducer;
-        U result;
-        FJReduce<U> next;
-        FJReduce(WithMapping<U> params, int lo, int hi,
-                 Reducer<U> reducer, U base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJReduce<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJReduce<U> r =
-                    new FJReduce<U>(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJMap<U> extends RecursiveAction {
-        final Params params;
-        final U[] dest;
-        final MapperFromDouble<? extends U> mapper;
-        final int lo;
-        final int hi;
-        FJMap<U> next;
-        FJMap(Params params, int lo, int hi,
-              U[] dest,
-              MapperFromDouble<? extends U> mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            double[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJMap<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJMap<U> r =
-                    new FJMap<U>(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJTransform extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final MapperFromDoubleToDouble mapper;
-        FJTransform next;
-        FJTransform(WithFilter params, int lo, int hi,
-                    MapperFromDoubleToDouble mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.mapper = mapper;
-        }
-        protected void compute() {
-            FJTransform right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJTransform r =
-                    new FJTransform(params, mid, h, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafTransform(l, h, mapper);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIndexMap extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final MapperFromIntToDouble mapper;
-        FJIndexMap next;
-        FJIndexMap(WithFilter params, int lo, int hi,
-                   MapperFromIntToDouble mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.mapper = mapper;
-        }
-        protected void compute() {
-            FJIndexMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIndexMap r =
-                    new FJIndexMap(params, mid, h, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafIndexMap(l, h, mapper);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJGenerate extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final DoubleGenerator generator;
-        FJGenerate next;
-        FJGenerate(WithFilter params, int lo, int hi,
-                   DoubleGenerator generator) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.generator = generator;
-        }
-        protected void compute() {
-            FJGenerate right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJGenerate r =
-                    new FJGenerate(params, mid, h, generator);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafGenerate(l, h, generator);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJFill extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final double value;
-        FJFill next;
-        FJFill(WithFilter params, int lo, int hi,
-               double value) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.value = value;
-        }
-        protected void compute() {
-            FJFill right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJFill r =
-                    new FJFill(params, mid, h, value);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafFill(l, h, value);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJCombineInPlace extends RecursiveAction {
-        final WithFilter params;
-        final int lo;
-        final int hi;
-        final double[] other;
-        final DoubleReducer combiner;
-        FJCombineInPlace next;
-        FJCombineInPlace(WithFilter params, int lo, int hi,
-                         double[] other, DoubleReducer combiner) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.other = other;
-            this.combiner = combiner;
-        }
-        protected void compute() {
-            FJCombineInPlace right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCombineInPlace r =
-                    new FJCombineInPlace(params, mid, h, other, combiner);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafCombineInPlace(l, h, other, combiner);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJCountAll extends RecursiveAction {
-        final Params params;
-        final DoublePredicate selector;
-        final int lo;
-        final int hi;
-        int result;
-        FJCountAll next;
-        FJCountAll(Params params, int lo, int hi,
-                   DoublePredicate selector) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.selector = selector;
-        }
-        protected void compute() {
-            FJCountAll right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCountAll r =
-                    new FJCountAll(params, mid, h, selector);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            double[] array = params.array;
-            int n = 0;
-            for (int i = l; i < h; ++i) {
-                if (selector.evaluate(array[i]))
-                    ++n;
-            }
-            result = n;
-
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result += right.result;
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJCombine extends RecursiveAction {
-        final Params params;
-        final double[] other;
-        final double[] dest;
-        final DoubleReducer combiner;
-        final int lo;
-        final int hi;
-        FJCombine next;
-        FJCombine(Params params, int lo, int hi,
-                  double[] other, double[] dest,
-                  DoubleReducer combiner) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.other = other;
-            this.dest = dest;
-            this.combiner = combiner;
-        }
-
-        void  leafCombine(int l, int h) {
-            double[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = combiner.combine(array[i], other[i]);
-        }
-
-        protected void compute() {
-            FJCombine right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJCombine r =
-                    new FJCombine(params, mid, h, other,
-                                  dest, combiner);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-
-            leafCombine(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJMinIndex<U> extends RecursiveAction {
-        final WithMapping<U> params;
-        final int lo;
-        final int hi;
-        final Comparator<? super U> comparator;
-        final boolean reverse;
-        U result;
-        int indexResult;
-        FJMinIndex<U> next;
-        FJMinIndex(WithMapping<U> params, int lo, int hi,
-                   Comparator<? super U> comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJMinIndex<U> right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJMinIndex<U> r =
-                    new FJMinIndex<U>(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        U rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
-    }
-
-    // Versions for Double mappings
-
-    static final class FJDoubleApply extends RecursiveAction {
-        final WithDoubleMapping params;
-        final int lo;
-        final int hi;
-        final DoubleProcedure procedure;
-        FJDoubleApply next;
-        FJDoubleApply(WithDoubleMapping params, int lo, int hi,
-                      DoubleProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJDoubleApply right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleApply r =
-                    new FJDoubleApply(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJDoubleReduce extends RecursiveAction {
-        final WithDoubleMapping params;
-        final int lo;
-        final int hi;
-        final DoubleReducer reducer;
-        double result;
-        FJDoubleReduce next;
-        FJDoubleReduce(WithDoubleMapping params, int lo, int hi,
-                       DoubleReducer reducer, double base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJDoubleReduce right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleReduce r =
-                    new FJDoubleReduce(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJDoubleMap extends RecursiveAction {
-        final Params params;
-        final double[] dest;
-        MapperFromDoubleToDouble mapper;
-        final int lo;
-        final int hi;
-        FJDoubleMap next;
-        FJDoubleMap(Params params, int lo, int hi,
-                    double[] dest,
-                    MapperFromDoubleToDouble mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            double[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJDoubleMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleMap r =
-                    new FJDoubleMap(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-    static final class FJDoubleMinIndex extends RecursiveAction {
-        final WithDoubleMapping params;
-        final int lo;
-        final int hi;
-        final DoubleComparator comparator;
-        final boolean reverse;
-        double result;
-        int indexResult;
-        FJDoubleMinIndex next;
-        FJDoubleMinIndex(WithDoubleMapping params, int lo, int hi,
-                         DoubleComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJDoubleMinIndex right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJDoubleMinIndex r =
-                    new FJDoubleMinIndex(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        double rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
-    }
-
-    // Versions for Long mappings
-
-    static final class FJLongApply extends RecursiveAction {
-        final WithLongMapping params;
-        final int lo;
-        final int hi;
-        final LongProcedure procedure;
-        FJLongApply next;
-        FJLongApply(WithLongMapping params, int lo, int hi,
-                    LongProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJLongApply right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongApply r =
-                    new FJLongApply(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJLongReduce extends RecursiveAction {
-        final WithLongMapping params;
-        final int lo;
-        final int hi;
-        final LongReducer reducer;
-        long result;
-        FJLongReduce next;
-        FJLongReduce(WithLongMapping params, int lo, int hi,
-                     LongReducer reducer, long base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJLongReduce right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongReduce r =
-                    new FJLongReduce(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJLongMap extends RecursiveAction {
-        final Params params;
-        final long[] dest;
-        MapperFromDoubleToLong mapper;
-        final int lo;
-        final int hi;
-        FJLongMap next;
-        FJLongMap(Params params, int lo, int hi,
-                  long[] dest,
-                  MapperFromDoubleToLong mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            double[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJLongMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongMap r =
-                    new FJLongMap(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJLongMinIndex extends RecursiveAction {
-        final WithLongMapping params;
-        final int lo;
-        final int hi;
-        final LongComparator comparator;
-        final boolean reverse;
-        long result;
-        int indexResult;
-        FJLongMinIndex next;
-        FJLongMinIndex(WithLongMapping params, int lo, int hi,
-                       LongComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJLongMinIndex right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJLongMinIndex r =
-                    new FJLongMinIndex(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        long rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
-    }
-
-
-    // Versions for Int mappings
-
-    static final class FJIntApply extends RecursiveAction {
-        final WithIntMapping params;
-        final int lo;
-        final int hi;
-        final IntProcedure procedure;
-        FJIntApply next;
-        FJIntApply(WithIntMapping params, int lo, int hi,
-                   IntProcedure procedure) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.procedure = procedure;
-        }
-        protected void compute() {
-            FJIntApply right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntApply r =
-                    new FJIntApply(params, mid, h, procedure);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafApply(l, h, procedure);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIntReduce extends RecursiveAction {
-        final WithIntMapping params;
-        final int lo;
-        final int hi;
-        final IntReducer reducer;
-        int result;
-        FJIntReduce next;
-        FJIntReduce(WithIntMapping params, int lo, int hi,
-                    IntReducer reducer, int base) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.reducer = reducer;
-            this.result = base;
-        }
-        protected void compute() {
-            FJIntReduce right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntReduce r =
-                    new FJIntReduce(params, mid, h, reducer, result);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            result = params.leafReduce(l, h, reducer, result);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                result = reducer.combine(result, right.result);
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIntMap extends RecursiveAction {
-        final Params params;
-        final int[] dest;
-        MapperFromDoubleToInt mapper;
-        final int lo;
-        final int hi;
-        FJIntMap next;
-        FJIntMap(Params params, int lo, int hi,
-                 int[] dest,
-                 MapperFromDoubleToInt mapper) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.dest = dest;
-            this.mapper = mapper;
-        }
-
-        void leafMap(int l, int h) {
-            double[] array = params.array;
-            int k = l - params.firstIndex;
-            for (int i = l; i < h; ++i)
-                dest[k++] = mapper.map(array[i]);
-        }
-
-        protected void compute() {
-            FJIntMap right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntMap r =
-                    new FJIntMap(params, mid, h, dest, mapper);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafMap(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
-    }
-
-    static final class FJIntMinIndex extends RecursiveAction {
-        final WithIntMapping params;
-        final int lo;
-        final int hi;
-        final IntComparator comparator;
-        final boolean reverse;
-        int result;
-        int indexResult;
-        FJIntMinIndex next;
-        FJIntMinIndex(WithIntMapping params, int lo, int hi,
-                      IntComparator comparator, boolean reverse) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.comparator = comparator;
-            this.reverse = reverse;
-        }
-        protected void compute() {
-            FJIntMinIndex right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJIntMinIndex r =
-                    new FJIntMinIndex(params, mid, h, comparator, reverse);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            params.leafMinIndex(l, h, comparator, reverse, this);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                    right.compute();
-                else
-                    right.join();
-                int ridx = right.indexResult;
-                if (ridx > 0) {
-                    if (indexResult < 0) {
-                        indexResult = ridx;
-                        result = right.result;
-                    }
-                    else {
-                        int rbest = right.result;
-                        int c = comparator.compare(result, rbest);
-                        if (reverse) c = -c;
-                        if (c > 0) {
-                            indexResult = ridx;
-                            result = rbest;
-                        }
-                    }
-                }
-                right = right.next;
-            }
-        }
+    public List<Double> asList() {
+        AsList lv = listView;
+        if (lv == null)
+            listView = lv = new AsList();
+        return lv;
     }
 
     /**
-     * ForkJoin task for SelectAny; relies on cancellation
+     * Returns the effective size of the underlying array. The
+     * effective size is the current limit, if used (see {@link
+     * #setLimit}), or the length of the array otherwise.
+     * @return the effective size of array
      */
-    static final class FJSelectAny extends RecursiveAction {
-        final Params params;
-        final int lo;
-        final int hi;
-        final DoublePredicate selector;
-        final AtomicInteger result;
-        FJSelectAny next;
+    public int size() { return limit; }
 
-        FJSelectAny(Params params, int lo, int hi,
-                    DoublePredicate selector,
-                    AtomicInteger result) {
-            this.params = params;
-            this.lo = lo;
-            this.hi = hi;
-            this.selector = selector;
-            this.result = result;
-        }
+    /**
+     * Returns the underlying array used for computations
+     * @return the array
+     */
+    public double[] getArray() { return array; }
 
-        void leafSelectAny(int l, int h) {
-            double[] array = params.array;
-            DoublePredicate sel = this.selector;
-            AtomicInteger res = this.result;
-            for (int i = l; i < h && res.get() < 0; ++i) {
-                if (sel.evaluate(array[i])) {
-                    res.compareAndSet(-1, i);
-                    break;
-                }
-            }
-        }
+    /**
+     * Returns the element of the array at the given index
+     * @param i the index
+     * @return the element of the array at the given index
+     */
+    public double get(int i) { return array[i]; }
 
-        protected void compute() {
-            AtomicInteger res = result;
-            if (res.get() >= 0)
-                return;
-            FJSelectAny right = null;
-            int l = lo;
-            int h = hi;
-            int g = params.granularity;
-            while (h - l > g) {
-                int mid = (l + h) >>> 1;
-                FJSelectAny r =
-                    new FJSelectAny(params, mid, h, selector, res);
-                h = mid;
-                r.next = right;
-                right = r;
-                right.fork();
-            }
-            leafSelectAny(l, h);
-            while (right != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(right)) {
-                    if (res.get() < 0)
-                        right.compute();
-                }
-                else if (res.get() >= 0)
-                    right.cancel();
-                else
-                    right.join();
-                right = right.next;
-            }
-        }
+    /**
+     * Sets the element of the array at the given index to the given value
+     * @param i the index
+     * @param x the value
+     */
+    public void set(int i, double x) { array[i] = x; }
+
+    /**
+     * Equivalent to <tt>asList().toString()</tt>
+     * @return a string representation
+     */
+    public String toString() {
+        return asList().toString();
     }
 
     /**
-     * SelectAll proceeds in two passes. In the first pass, indices of
-     * matching elements are recorded in match array.  In second pass,
-     * once the size of results is known and result array is
-     * constructed in driver, the matching elements are placed into
-     * corresponding result positions.
-     *
-     * As a compromise to get good performance in cases of both dense
-     * and sparse result sets, the matches array is allocated only on
-     * demand, and subtask calls for empty subtrees are suppressed.
+     * Equivalent to <tt>AsList.addAll</tt> but specialized for array
+     * arguments and likely to be more efficient.
+     * @param other the elements to add
      */
-    static final class FJSelectAll extends RecursiveAction {
-        final FJSelectAllDriver driver;
-        final int lo;
-        final int hi;
-        int[] matches;
-        int nmatches;
-        int offset;
-        FJSelectAll left, right;
-
-        FJSelectAll(FJSelectAllDriver driver, int lo, int hi) {
-            this.driver = driver;
-            this.lo = lo;
-            this.hi = hi;
-        }
-
-        protected void compute() {
-            if (driver.phase == 0) {
-                if (hi - lo < driver.params.granularity)
-                    leafPhase0();
-                else
-                    internalPhase0();
-            }
-            else if (nmatches != 0) {
-                if (hi - lo < driver.params.granularity)
-                    driver.leafPhase1(offset, nmatches, matches);
-                else
-                    internalPhase1();
-            }
-        }
-
-        void leafPhase0() {
-            double[] array = driver.params.array;
-            DoublePredicate selector = driver.selector;
-            int[] m = null; // only construct if find at least one match
-            int n = 0;
-            for (int j = lo; j < hi; ++j) {
-                if (selector.evaluate(array[j])) {
-                    if (m == null)
-                        m = new int[hi - j];
-                    m[n++] = j;
-                }
-            }
-            nmatches = n;
-            matches = m;
-        }
-
-        void internalPhase0() {
-            int mid = (lo + hi) >>> 1;
-            FJSelectAll l = new FJSelectAll(driver, lo, mid);
-            FJSelectAll r = new FJSelectAll(driver, mid, hi);
-            forkJoin(l, r);
-            int lnm = l.nmatches;
-            if (lnm != 0)
-                left = l;
-            int rnm = r.nmatches;
-            if (rnm != 0)
-                right = r;
-            nmatches = lnm + rnm;
-        }
-
-        void internalPhase1() {
-            int k = offset;
-            if (left != null) {
-                int lnm = left.nmatches;
-                left.offset = k;
-                left.reinitialize();
-                if (right != null) {
-                    right.offset = k + lnm;
-                    right.reinitialize();
-                    forkJoin(left, right);
-                }
-                else
-                    left.compute();
-            }
-            else if (right != null) {
-                right.offset = k;
-                right.compute();
-            }
-        }
-    }
-
-    static abstract class FJSelectAllDriver extends RecursiveAction {
-        final Params params;
-        final DoublePredicate selector;
-        int nresults;
-        int phase;
-        FJSelectAllDriver(Params params,
-                          DoublePredicate selector) {
-            this.params = params;
-            this.selector = selector;
-        }
-
-        protected final void compute() {
-            FJSelectAll r = new FJSelectAll
-                (this, params.firstIndex, params.upperBound);
-            r.compute();
-            createResults(r.nmatches);
-            phase = 1;
-            r.compute();
-        }
-
-        abstract void createResults(int size);
-        abstract void leafPhase1(int offset, int nmatches, int[] m);
-    }
-
-    static abstract class FJRefSelectAllDriver<U>
-        extends FJSelectAllDriver {
-        final Class<? super U> elementType; // null for Object
-        U[] results;
-        FJRefSelectAllDriver(Params params,
-                             DoublePredicate selector,
-                             Class<? super U> elementType) {
-            super(params, selector);
-            this.elementType = elementType;
-        }
-        final void createResults(int size) {
-            if (elementType == null)
-                results = (U[])new Object[size];
-            else
-                results = (U[])
-                    java.lang.reflect.Array.newInstance(elementType, size);
-        }
-    }
-
-    static final class FJMapRefSelectAllDriver<U>
-        extends FJRefSelectAllDriver<U> {
-        final MapperFromDouble<? extends U> mapper;
-        FJMapRefSelectAllDriver(Params params,
-                                DoublePredicate selector,
-                                Class<? super U> elementType,
-                                MapperFromDouble<? extends U> mapper) {
-            super(params, selector, elementType);
-            this.mapper = mapper;
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                double[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
-    }
-
-    static abstract class FJDoubleSelectAllDriver
-        extends FJSelectAllDriver {
-        double[] results;
-        FJDoubleSelectAllDriver(Params params,
-                                DoublePredicate selector) {
-            super(params, selector);
-        }
-        final void createResults(int size) {
-            results = new double[size];
-        }
-    }
-
-    static final class FJDoublePlainSelectAllDriver
-        extends FJDoubleSelectAllDriver {
-        FJDoublePlainSelectAllDriver(Params params,
-                                     DoublePredicate selector) {
-            super(params, selector);
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                double[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = array[m[i]];
-            }
-        }
-    }
-
-    static final class FJDoubleMapSelectAllDriver
-        extends FJDoubleSelectAllDriver {
-        final MapperFromDoubleToDouble mapper;
-        FJDoubleMapSelectAllDriver(Params params,
-                                   DoublePredicate selector,
-                                   MapperFromDoubleToDouble mapper) {
-            super(params, selector);
-            this.mapper = mapper;
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                double[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
-    }
-
-    static final class FJLongMapSelectAllDriver
-        extends FJSelectAllDriver {
-        long[] results;
-        final MapperFromDoubleToLong mapper;
-        FJLongMapSelectAllDriver(Params params,
-                                 DoublePredicate selector,
-                                 MapperFromDoubleToLong mapper) {
-            super(params, selector);
-            this.mapper = mapper;
-        }
-        final void createResults(int size) {
-            results = new long[size];
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                double[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
-    }
-
-    static final class FJIntMapSelectAllDriver
-        extends FJSelectAllDriver {
-        int[] results;
-        final MapperFromDoubleToInt mapper;
-        FJIntMapSelectAllDriver(Params params,
-                                DoublePredicate selector,
-                                MapperFromDoubleToInt mapper) {
-            super(params, selector);
-            this.mapper = mapper;
-        }
-        final void createResults(int size) {
-            results = new int[size];
-        }
-        final void leafPhase1(int offset, int nmatches, int[] m) {
-            if (m != null) {
-                int n = nmatches;
-                int k = offset;
-                double[] array = params.array;
-                for (int i = 0; i < n; ++i)
-                    results[k++] = mapper.map(array[m[i]]);
-            }
-        }
+    public void addAll(double[] other) {
+        int csize = other.length;
+        int end = limit;
+        insertSlotsAt(end, csize);
+        System.arraycopy(other, 0, array, end, csize);
     }
 
     /**
-     * Sorter based mainly on CilkSort
-     * <A href="http://supertech.lcs.mit.edu/cilk/"> Cilk</A>:
-     * if array size is small, just use a sequential quicksort
-     *         Otherwise:
-     *         1. Break array in half.
-     *         2. For each half,
-     *             a. break the half in half (i.e., quarters),
-     *             b. sort the quarters
-     *             c. merge them together
-     *         3. merge together the two halves.
-     *
-     * One reason for splitting in quarters is that this guarantees
-     * that the final sort is in the main array, not the workspace array.
-     * (workspace and main swap roles on each subsort step.)
-     *
+     * Equivalent to <tt>AsList.addAll</tt> but specialized for
+     * ParallelDoubleArray arguments and likely to be more efficient.
+     * @param other the elements to add
      */
-    static final class FJSorter extends RecursiveAction {
-        /** Cutoff for when to use insertion-sort instead of quicksort */
-        static final int INSERTION_SORT_THRESHOLD = 8;
-
-        final DoubleComparator cmp;
-        final double[] a;       //  to be sorted.
-        final double[] w;       // workspace for merge
-        final int origin;  // origin of the part of array we deal with
-        final int n;       // Number of elements in (sub)arrays.
-        final int granularity;
-
-        FJSorter(DoubleComparator cmp,
-                 double[] a, double[] w, int origin, int n, int granularity) {
-            this.cmp = cmp;
-            this.a = a; this.w = w; this.origin = origin; this.n = n;
-            this.granularity = granularity;
-        }
-
-        protected void compute()  {
-            int g = granularity;
-            if (n > g) {
-                int h = n >>> 1; // half
-                int q = n >>> 2; // lower quarter index
-                int u = h + q;   // upper quarter
-                forkJoin
-                    (new FJSubSorter
-                     (new FJSorter(cmp, a, w, origin,   q,   g),
-                      new FJSorter(cmp, a, w, origin+q, h-q, g),
-                      new FJMerger(cmp, a, w, origin,   q,
-                                   origin+q, h-q, origin, g)
-                      ),
-                     new FJSubSorter
-                     (new FJSorter(cmp, a, w, origin+h, q,   g),
-                      new FJSorter(cmp, a, w, origin+u, n-u, g),
-                      new FJMerger(cmp, a, w, origin+h, q,
-                                   origin+u, n-u, origin+h, g)
-                      )
-                     );
-                new FJMerger(cmp, w, a, origin, h,
-                             origin+h, n-h, origin, g).compute();
-            }
-            else
-                quickSort(origin, origin+n-1);
-        }
-
-        /**
-         * Sequential quicksort. Uses insertion sort if under
-         * threshold.  Otherwise uses median of three to pick
-         * pivot. Loops rather than recurses along left path
-         */
-        void quickSort(int lo, int hi) {
-            for (;;) {
-                if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                    for (int i = lo + 1; i <= hi; i++) {
-                        double t = a[i];
-                        int j = i - 1;
-                        while (j >= lo && cmp.compare(t, a[j]) < 0) {
-                            a[j+1] = a[j];
-                            --j;
-                        }
-                        a[j+1] = t;
-                    }
-                    return;
-                }
-
-                int mid = (lo + hi) >>> 1;
-                if (cmp.compare(a[lo], a[mid]) > 0) {
-                    double t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                }
-                if (cmp.compare(a[mid], a[hi]) > 0) {
-                    double t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                    if (cmp.compare(a[lo], a[mid]) > 0) {
-                        t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                    }
-                }
-
-                double pivot = a[mid];
-                int left = lo+1;
-                int right = hi-1;
-                for (;;) {
-                    while (cmp.compare(pivot, a[right]) < 0)
-                        --right;
-                    while (left < right && cmp.compare(pivot, a[left]) >= 0)
-                        ++left;
-                    if (left < right) {
-                        double t = a[left]; a[left] = a[right]; a[right] = t;
-                        --right;
-                    }
-                    else break;
-                }
-
-                quickSort(lo, left);
-                lo = left + 1;
-            }
-        }
-    }
-
-    /** Utility class to sort half a partitioned array */
-    static final class FJSubSorter extends RecursiveAction {
-        final FJSorter left;
-        final FJSorter right;
-        final FJMerger merger;
-        FJSubSorter(FJSorter left, FJSorter right, FJMerger merger){
-            this.left = left; this.right = right; this.merger = merger;
-        }
-        protected void compute() {
-            right.fork();
-            left.compute();
-            if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                right.compute();
-            else
-                right.join();
-            merger.compute();
-        }
+    public void addAll(ParallelDoubleArray other) {
+        int csize = other.size();
+        int end = limit;
+        insertSlotsAt(end, csize);
+        System.arraycopy(other.array, 0, array, end, csize);
     }
 
     /**
-     * Merger for FJ sort. If partitions are small, then just
-     * sequentially merges.  Otherwise: Splits Left partition in half,
-     * Finds the greatest point in Right partition less than the
-     * beginning of the second half of left via binary search, And
-     * then, in parallel, merges left half of L with elements of R up
-     * to split point, and merges right half of L with elements of R
-     * past split point
+     * Equivalent to <tt>AsList.addAll</tt> but specialized for
+     * ParallelDoubleArray arguments and likely to be more efficient.
+     * @param other the elements to add
      */
-    static final class FJMerger extends RecursiveAction {
-        final DoubleComparator cmp;
-        final double[] a;      // partitioned  array.
-        final double[] w;      // Output array.
-        final int lo;     // relative origin of left side of a
-        final int ln;     // number of elements on left of a
-        final int ro;     // relative origin of right side of a
-        final int rn;     // number of elements on right of a
-        final int wo;     // origin for output
-        final int granularity;
-        FJMerger next;
-
-        FJMerger(DoubleComparator cmp, double[] a, double[] w,
-                 int lo, int ln, int ro, int rn, int wo, int granularity) {
-            this.cmp = cmp;
-            this.a = a;    this.w = w;
-            this.lo = lo;  this.ln = ln;
-            this.ro = ro;  this.rn = rn;
-            this.wo = wo;
-            this.granularity = granularity;
-        }
-
-        protected void compute() {
-            FJMerger rights = null;
-            int lln = ln;
-            int lrn = rn;
-            while (lln > granularity) {
-                int lh = lln >>> 1;
-                int ls = lo + lh;   // index of split
-                double split = a[ls];
-                int rl = 0;
-                int rh = lrn;
-                while (rl < rh) {
-                    int mid = (rl + rh) >>> 1;
-                    if (cmp.compare(split, a[ro + mid]) <= 0)
-                        rh = mid;
-                    else
-                        rl = mid + 1;
-                }
-                FJMerger rm =
-                    new FJMerger(cmp, a, w, ls, lln-lh, ro+rh,
-                                 lrn-rh, wo+lh+rh, granularity);
-                lln = lh;
-                lrn = rh;
-                rm.next = rights;
-                rights = rm;
-                rm.fork();
-            }
-            merge(lo+lln, ro+lrn);
-            while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
-                    rights.compute();
-                else
-                    rights.join();
-                rights = rights.next;
-            }
-        }
-
-        /** a standard sequential merge */
-        void merge(int lFence, int rFence) {
-            int l = lo;
-            int r = ro;
-            int k = wo;
-            while (l < lFence && r < rFence) {
-                double al = a[l];
-                double ar = a[r];
-                double t;
-                if (cmp.compare(al, ar) <= 0) {
-                    ++l;
-                    t = al;
-                }
-                else {
-                    ++r;
-                    t = ar;
-                }
-                w[k++] = t;
-            }
-            while (l < lFence)
-                w[k++] = a[l++];
-            while (r < rFence)
-                w[k++] = a[r++];
-        }
-    }
-
-    // Version for natual comparisons
-    static final class FJDoubleSorter extends RecursiveAction {
-        /** Cutoff for when to use insertion-sort instead of quicksort */
-        static final int INSERTION_SORT_THRESHOLD = 8;
-
-        final double[] a;       //  to be sorted.
-        final double[] w;       // workspace for merge
-        final int origin;  // origin of the part of array we deal with
-        final int n;       // Number of elements in (sub)arrays.
-        final int granularity;
-
-        FJDoubleSorter(
-                       double[] a, double[] w, int origin, int n, int granularity) {
-            this.a = a; this.w = w; this.origin = origin; this.n = n;
-            this.granularity = granularity;
-        }
-
-        protected void compute()  {
-            int g = granularity;
-            if (n > g) {
-                int h = n >>> 1; // half
-                int q = n >>> 2; // lower quarter index
-                int u = h + q;   // upper quarter
-                forkJoin
-                    (new FJDoubleSubSorter
-                     (new FJDoubleSorter(a, w, origin,   q,   g),
-                      new FJDoubleSorter(a, w, origin+q, h-q, g),
-                      new FJDoubleMerger(a, w, origin,   q,
-                                         origin+q, h-q, origin, g)
-                      ),
-                     new FJDoubleSubSorter
-                     (new FJDoubleSorter(a, w, origin+h, q,   g),
-                      new FJDoubleSorter(a, w, origin+u, n-u, g),
-                      new FJDoubleMerger(a, w, origin+h, q,
-                                         origin+u, n-u, origin+h, g)
-                      )
-                     );
-                new FJDoubleMerger(w, a, origin, h,
-                                   origin+h, n-h, origin, g).compute();
-            }
-            else
-                quickSort(origin, origin+n-1);
-        }
-
-        /**
-         * Sequential quicksort. Uses insertion sort if under
-         * threshold.  Otherwise uses median of three to pick
-         * pivot. Loops rather than recurses along left path
-         */
-        void quickSort(int lo, int hi) {
-            for (;;) {
-                if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                    for (int i = lo + 1; i <= hi; i++) {
-                        double t = a[i];
-                        int j = i - 1;
-                        while (j >= lo && t < a[j]) {
-                            a[j+1] = a[j];
-                            --j;
-                        }
-                        a[j+1] = t;
-                    }
-                    return;
-                }
-
-                int mid = (lo + hi) >>> 1;
-                if (a[lo] > a[mid]) {
-                    double t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                }
-                if (a[mid] > a[hi]) {
-                    double t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                    if (a[lo] > a[mid]) {
-                        t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-                    }
-                }
-
-                double pivot = a[mid];
-                int left = lo+1;
-                int right = hi-1;
-                for (;;) {
-                    while (pivot < a[right])
-                        --right;
-                    while (left < right && pivot >= a[left])
-                        ++left;
-                    if (left < right) {
-                        double t = a[left]; a[left] = a[right]; a[right] = t;
-                        --right;
-                    }
-                    else break;
-                }
-
-                quickSort(lo, left);
-                lo = left + 1;
-            }
-        }
-    }
-
-    /** Utility class to sort half a partitioned array */
-    static final class FJDoubleSubSorter extends RecursiveAction {
-        final FJDoubleSorter left;
-        final FJDoubleSorter right;
-        final FJDoubleMerger merger;
-        FJDoubleSubSorter(FJDoubleSorter left, FJDoubleSorter right, FJDoubleMerger merger){
-            this.left = left; this.right = right; this.merger = merger;
-        }
-        protected void compute() {
-            right.fork();
-            left.compute();
-            if (ForkJoinWorkerThread.removeIfNextLocalTask(right))
-                right.compute();
-            else
-                right.join();
-            merger.compute();
-        }
+    public void addAll(ParallelDoubleArray.WithBounds other) {
+        int csize = other.size();
+        int end = limit;
+        insertSlotsAt(end, csize);
+        System.arraycopy(other.pa.array, other.firstIndex, array, end, csize);
     }
 
     /**
-     * Merger for FJDouble sort. If partitions are small, then just
-     * sequentially merges.  Otherwise: Splits Left partition in half,
-     * Finds the greatest point in Right partition less than the
-     * beginning of the second half of left via binary search, And
-     * then, in parallel, merges left half of L with elements of R up
-     * to split point, and merges right half of L with elements of R
-     * past split point
+     * Ensures that the underlying array can be accessed up to the
+     * given upper bound, reallocating and copying the underlying
+     * array to expand if necessary. Or, if the given limit is less
+     * than the length of the underlying array, causes computations to
+     * ignore elements past the given limit.
+     * @param newLimit the new upper bound
+     * @throws IllegalArgumentException if newLimit less than zero.
      */
-    static final class FJDoubleMerger extends RecursiveAction {
-        final double[] a;      // partitioned  array.
-        final double[] w;      // Output array.
-        final int lo;     // relative origin of left side of a
-        final int ln;     // number of elements on left of a
-        final int ro;     // relative origin of right side of a
-        final int rn;     // number of elements on right of a
-        final int wo;     // origin for output
-        final int granularity;
-        FJDoubleMerger next;
+    public final void setLimit(int newLimit) {
+        if (newLimit < 0)
+            throw new IllegalArgumentException();
+        int cap = array.length;
+        if (newLimit > cap)
+            resizeArray(newLimit);
+        limit = newLimit;
+    }
 
-        FJDoubleMerger(double[] a, double[] w,
-                       int lo, int ln, int ro, int rn, int wo, int granularity) {
-            this.a = a;    this.w = w;
-            this.lo = lo;  this.ln = ln;
-            this.ro = ro;  this.rn = rn;
-            this.wo = wo;
-            this.granularity = granularity;
-        }
+    final void replaceElementsWith(double[] a) {
+        System.arraycopy(a, 0, array, 0, a.length);
+        limit = a.length;
+    }
 
-        protected void compute() {
-            FJDoubleMerger rights = null;
-            int lln = ln;
-            int lrn = rn;
-            while (lln > granularity) {
-                int lh = lln >>> 1;
-                int ls = lo + lh;   // index of split
-                double split = a[ls];
-                int rl = 0;
-                int rh = lrn;
-                while (rl < rh) {
-                    int mid = (rl + rh) >>> 1;
-                    if (split <= a[ro + mid])
-                        rh = mid;
-                    else
-                        rl = mid + 1;
-                }
-                FJDoubleMerger rm =
-                    new FJDoubleMerger(a, w, ls, lln-lh, ro+rh,
-                                       lrn-rh, wo+lh+rh, granularity);
-                lln = lh;
-                lrn = rh;
-                rm.next = rights;
-                rights = rm;
-                rm.fork();
-            }
-            merge(lo+lln, ro+lrn);
-            while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
-                    rights.compute();
-                else
-                    rights.join();
-                rights = rights.next;
-            }
-        }
-
-        /** a standard sequential merge */
-        void merge(int lFence, int rFence) {
-            int l = lo;
-            int r = ro;
-            int k = wo;
-            while (l < lFence && r < rFence) {
-                double al = a[l];
-                double ar = a[r];
-                double t;
-                if (al <= ar) {
-                    ++l;
-                    t = al;
-                }
-                else {
-                    ++r;
-                    t = ar;
-                }
-                w[k++] = t;
-            }
-            while (l < lFence)
-                w[k++] = a[l++];
-            while (r < rFence)
-                w[k++] = a[r++];
+    final void resizeArray(int newCap) {
+        int cap = array.length;
+        if (newCap > cap) {
+            double[] a = new double[newCap];
+            System.arraycopy(array, 0, a, 0, cap);
+            array = a;
         }
     }
 
-    // Scan (cumulate) operations
-
-    static abstract class FJScanOp extends Params {
-        final DoubleReducer reducer;
-        final double base;
-
-        FJScanOp(ForkJoinExecutor ex, double[] array,
-                 int firstIndex, int upperBound,
-                 DoubleReducer reducer,
-                 double base) {
-            super(ex, array, firstIndex, upperBound);
-            this.reducer = reducer;
-            this.base = base;
-        }
-
-        abstract double sumLeaf(int lo, int hi);
-        abstract void cumulateLeaf(int lo, int hi, double in);
-        abstract double sumAndCumulateLeaf(int lo, int hi);
-
+    final void insertElementAt(int index, double e) {
+        int hi = limit++;
+        if (hi >= array.length)
+            resizeArray((hi * 3)/2 + 1);
+        if (hi > index)
+            System.arraycopy(array, index, array, index+1, hi - index);
+        array[index] = e;
     }
 
-    static final class FJCumulateOp extends FJScanOp {
-        FJCumulateOp(ForkJoinExecutor ex, double[] array,
-                     int firstIndex, int upperBound,
-                     DoubleReducer reducer,
-                     double base) {
-            super(ex, array, firstIndex, upperBound, reducer, base);
-        }
-
-        double sumLeaf(int lo, int hi) {
-            double sum = base;
-            if (hi != upperBound) {
-                for (int i = lo; i < hi; ++i)
-                    sum = reducer.combine(sum, array[i]);
-            }
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, double in) {
-            double sum = in;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum = reducer.combine(sum, array[i]);
-        }
-
-        double sumAndCumulateLeaf(int lo, int hi) {
-            double sum = base;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum = reducer.combine(sum, array[i]);
-            return sum;
-        }
+    final void appendElement(double e) {
+        int hi = limit++;
+        if (hi >= array.length)
+            resizeArray((hi * 3)/2 + 1);
+        array[hi] = e;
     }
-
-    static final class FJCumulateSumOp extends FJScanOp {
-        FJCumulateSumOp(ForkJoinExecutor ex, double[] array,
-                        int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound,
-                  DoubleAdder.adder, 0);
-        }
-
-        double sumLeaf(int lo, int hi) {
-            double sum = base;
-            if (hi != upperBound) {
-                for (int i = lo; i < hi; ++i)
-                    sum += array[i];
-            }
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, double in) {
-            double sum = in;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum += array[i];
-        }
-
-        double sumAndCumulateLeaf(int lo, int hi) {
-            double sum = base;
-            for (int i = lo; i < hi; ++i)
-                array[i] = sum += array[i];
-            return sum;
-        }
-    }
-
-    static final class FJPrecumulateOp extends FJScanOp {
-        FJPrecumulateOp(ForkJoinExecutor ex, double[] array,
-                        int firstIndex, int upperBound,
-                        DoubleReducer reducer,
-                        double base) {
-            super(ex, array, firstIndex, upperBound, reducer, base);
-        }
-
-        double sumLeaf(int lo, int hi) {
-            double sum = base;
-            for (int i = lo; i < hi; ++i)
-                sum = reducer.combine(sum, array[i]);
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, double in) {
-            double sum = in;
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                array[i] = sum;
-                sum = reducer.combine(sum, x);
-            }
-        }
-
-        double sumAndCumulateLeaf(int lo, int hi) {
-            double sum = base;
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                array[i] = sum;
-                sum = reducer.combine(sum, x);
-            }
-            return sum;
-        }
-    }
-
-    static final class FJPrecumulateSumOp extends FJScanOp {
-        FJPrecumulateSumOp(ForkJoinExecutor ex, double[] array,
-                           int firstIndex, int upperBound) {
-            super(ex, array, firstIndex, upperBound,
-                  DoubleAdder.adder, 0);
-        }
-
-        double sumLeaf(int lo, int hi) {
-            double sum = base;
-            for (int i = lo; i < hi; ++i)
-                sum += array[i];
-            return sum;
-        }
-
-        void cumulateLeaf(int lo, int hi, double in) {
-            double sum = in;
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                array[i] = sum;
-                sum += x;
-            }
-        }
-
-        double sumAndCumulateLeaf(int lo, int hi) {
-            double sum = base;
-            for (int i = lo; i < hi; ++i) {
-                double x = array[i];
-                array[i] = sum;
-                sum += x;
-            }
-            return sum;
-        }
-    }
-
 
     /**
-     * Cumulative scan
-     *
-     * A basic version of scan is straightforward.
-     *  Keep dividing by two to threshold segment size, and then:
-     *   Pass 1: Create tree of partial sums for each segment
-     *   Pass 2: For each segment, cumulate with offset of left sibling
-     * See G. Blelloch's http://www.cs.cmu.edu/~scandal/alg/scan.html
-     *
-     * This version improves performance within FJ framework mainly by
-     * allowing second pass of ready left-hand sides to proceed even
-     * if some right-hand side first passes are still executing.  It
-     * also combines first and second pass for leftmost segment, and
-     * for cumulate (not precumulate) also skips first pass for
-     * rightmost segment (whose result is not needed for second pass).
-     *
-     * To manage this, it relies on "phase" phase/state control field
-     * maintaining bits CUMULATE, SUMMED, and FINISHED. CUMULATE is
-     * main phase bit. When false, segments compute only their sum.
-     * When true, they cumulate array elements. CUMULATE is set at
-     * root at beginning of second pass and then propagated down. But
-     * it may also be set earlier for subtrees with lo==firstIndex (the
-     * left spine of tree). SUMMED is a one bit join count. For leafs,
-     * set when summed. For internal nodes, becomes true when one
-     * child is summed.  When second child finishes summing, it then
-     * moves up tree to trigger cumulate phase. FINISHED is also a one
-     * bit join count. For leafs, it is set when cumulated. For
-     * internal nodes, it becomes true when one child is cumulated.
-     * When second child finishes cumulating, it then moves up tree,
-     * excecuting finish() at the root.
+     * Make len slots available at index
      */
-    static final class FJScan extends AsyncAction {
-        static final int CUMULATE = 1;
-        static final int SUMMED   = 2;
-        static final int FINISHED = 4;
+    final void insertSlotsAt(int index, int len) {
+        if (len <= 0)
+            return;
+        int cap = array.length;
+        int newSize = limit + len;
+        if (cap < newSize) {
+            cap = (cap * 3)/2 + 1;
+            if (cap < newSize)
+                cap = newSize;
+            resizeArray(cap);
+        }
+        if (index < limit)
+            System.arraycopy(array, index, array, index + len, limit - index);
+        limit = newSize;
+    }
 
-        final FJScan parent;
-        final FJScanOp op;
-        FJScan left, right;
-        volatile int phase;  // phase/state
-        final int lo;
-        final int hi;
-        double in;           // Incoming cumulation
-        double out;          // Outgoing cumulation of this subtree
+    final void removeSlotAt(int index) {
+        System.arraycopy(array, index + 1, array, index, limit - index - 1);
+        --limit;
+    }
 
-        static final AtomicIntegerFieldUpdater<FJScan> phaseUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(FJScan.class, "phase");
+    final void removeSlotsAt(int fromIndex, int toIndex) {
+        if (fromIndex < toIndex) {
+            int size = limit;
+            System.arraycopy(array, toIndex, array, fromIndex, size - toIndex);
+            int newSize = size - (toIndex - fromIndex);
+            limit = newSize;
+        }
+    }
 
-        FJScan(FJScan parent, FJScanOp op, int lo, int hi) {
-            this.parent = parent;
-            this.op = op;
-            this.lo = lo;
-            this.hi = hi;
-            this.in = op.base;
-            this.out = op.base;
+    final int seqIndexOf(double target) {
+        double[] arr = array;
+        int fence = limit;
+        for (int i = 0; i < fence; i++)
+            if (target == arr[i])
+                return i;
+        return -1;
+    }
+
+    final int seqLastIndexOf(double target) {
+        double[] arr = array;
+        for (int i = limit - 1; i >= 0; i--)
+            if (target == arr[i])
+                return i;
+        return -1;
+    }
+
+    final class ListIter implements ListIterator<Double> {
+        int cursor;
+        int lastRet;
+        double[] arr; // cache array and bound
+        int hi;
+        ListIter(int lo) {
+            this.cursor = lo;
+            this.lastRet = -1;
+            this.arr = ParallelDoubleArray.this.array;
+            this.hi = ParallelDoubleArray.this.limit;
         }
 
-        /** Returns true if can CAS CUMULATE bit true */
-        boolean transitionToCumulate() {
-            int c;
-            while (((c = phase) & CUMULATE) == 0)
-                if (phaseUpdater.compareAndSet(this, c, c | CUMULATE))
-                    return true;
-            return false;
+        public boolean hasNext() {
+            return cursor < hi;
         }
 
-        public void compute() {
-            if (hi - lo > op.granularity) {
-                if (left == null) { // first pass
-                    int mid = (lo + hi) >>> 1;
-                    left =  new FJScan(this, op, lo, mid);
-                    right = new FJScan(this, op, mid, hi);
-                }
+        public Double next() {
+            int i = cursor;
+            if (i < 0 || i >= hi)
+                throw new NoSuchElementException();
+            double next = arr[i];
+            lastRet = i;
+            cursor = i + 1;
+            return Double.valueOf(next);
+        }
 
-                boolean cumulate = (phase & CUMULATE) != 0;
-                if (cumulate) { // push down sums
-                    double cin = in;
-                    left.in = cin;
-                    right.in = op.reducer.combine(cin, left.out);
-                }
+        public void remove() {
+            int k = lastRet;
+            if (k < 0)
+                throw new IllegalStateException();
+            ParallelDoubleArray.this.removeSlotAt(k);
+            hi = ParallelDoubleArray.this.limit;
+            if (lastRet < cursor)
+                cursor--;
+            lastRet = -1;
+        }
 
-                if (!cumulate || right.transitionToCumulate())
-                    right.fork();
-                if (!cumulate || left.transitionToCumulate())
-                    left.compute();
-            }
-            else {
-                int cb;
-                for (;;) { // Establish action: sum, cumulate, or both
-                    int b = phase;
-                    if ((b & FINISHED) != 0) // already done
-                        return;
-                    if ((b & CUMULATE) != 0)
-                        cb = FINISHED;
-                    else if (lo == op.firstIndex) // combine leftmost
-                        cb = (SUMMED|FINISHED);
-                    else
-                        cb = SUMMED;
-                    if (phaseUpdater.compareAndSet(this, b, b|cb))
-                        break;
-                }
+        public boolean hasPrevious() {
+            return cursor > 0;
+        }
 
-                // perform the action
-                if (cb == SUMMED)
-                    out = op.sumLeaf(lo, hi);
-                else if (cb == FINISHED)
-                    op.cumulateLeaf(lo, hi, in);
-                else if (cb == (SUMMED|FINISHED))
-                    out = op.sumAndCumulateLeaf(lo, hi);
+        public Double previous() {
+            int i = cursor - 1;
+            if (i < 0 || i >= hi)
+                throw new NoSuchElementException();
+            double previous = arr[i];
+            lastRet = cursor = i;
+            return Double.valueOf(previous);
+        }
 
-                // propagate up
-                FJScan ch = this;
-                FJScan par = parent;
-                for (;;) {
-                    if (par == null) {
-                        if ((cb & FINISHED) != 0)
-                            ch.finish();
-                        break;
-                    }
-                    int pb = par.phase;
-                    if ((pb & cb & FINISHED) != 0) { // both finished
-                        ch = par;
-                        par = par.parent;
-                    }
-                    else if ((pb & cb & SUMMED) != 0) { // both summed
-                        par.out = op.reducer.combine(par.left.out,
-                                                     par.right.out);
-                        int refork = ((pb & CUMULATE) == 0 &&
-                                      par.lo == op.firstIndex)? CUMULATE : 0;
-                        int nextPhase = pb|cb|refork;
-                        if (pb == nextPhase ||
-                            phaseUpdater.compareAndSet(par, pb, nextPhase)) {
-                            if (refork != 0)
-                                par.fork();
-                            cb = SUMMED; // drop finished bit
-                            ch = par;
-                            par = par.parent;
-                        }
-                    }
-                    else if (phaseUpdater.compareAndSet(par, pb, pb|cb))
-                        break;
-                }
-            }
+        public int nextIndex() {
+            return cursor;
+        }
+
+        public int previousIndex() {
+            return cursor - 1;
+        }
+
+        public void set(Double e) {
+            int i = lastRet;
+            if (i < 0 || i >= hi)
+                throw new NoSuchElementException();
+            arr[i] = e.doubleValue();
+        }
+
+        public void add(Double e) {
+            int i = cursor;
+            ParallelDoubleArray.this.insertElementAt(i, e.doubleValue());
+            arr = ParallelDoubleArray.this.array;
+            hi = ParallelDoubleArray.this.limit;
+            lastRet = -1;
+            cursor = i + 1;
+        }
+    }
+
+    final class AsList extends AbstractList<Double> implements RandomAccess {
+        public Double get(int i) {
+            if (i >= limit)
+                throw new IndexOutOfBoundsException();
+            return Double.valueOf(array[i]);
+        }
+
+        public Double set(int i, Double x) {
+            if (i >= limit)
+                throw new IndexOutOfBoundsException();
+            double[] arr = array;
+            Double t = Double.valueOf(arr[i]);
+            arr[i] = x.doubleValue();
+            return t;
+        }
+
+        public boolean isEmpty() {
+            return limit == 0;
+        }
+
+        public int size() {
+            return limit;
+        }
+
+        public Iterator<Double> iterator() {
+            return new ListIter(0);
+        }
+
+        public ListIterator<Double> listIterator() {
+            return new ListIter(0);
+        }
+
+        public ListIterator<Double> listIterator(int index) {
+            if (index < 0 || index > limit)
+                throw new IndexOutOfBoundsException();
+            return new ListIter(index);
+        }
+
+        public boolean add(Double e) {
+            appendElement(e.doubleValue());
+            return true;
+        }
+
+        public void add(int index, Double e) {
+            if (index < 0 || index > limit)
+                throw new IndexOutOfBoundsException();
+            insertElementAt(index, e.doubleValue());
+        }
+
+        public boolean addAll(Collection<? extends Double> c) {
+            int csize = c.size();
+            if (csize == 0)
+                return false;
+            int hi = limit;
+            setLimit(hi + csize);
+            double[] arr = array;
+            for (Double e : c)
+                arr[hi++] = e.doubleValue();
+            return true;
+        }
+
+        public boolean addAll(int index, Collection<? extends Double> c) {
+            if (index < 0 || index > limit)
+                throw new IndexOutOfBoundsException();
+            int csize = c.size();
+            if (csize == 0)
+                return false;
+            insertSlotsAt(index, csize);
+            double[] arr = array;
+            for (Double e : c)
+                arr[index++] = e.doubleValue();
+            return true;
+        }
+
+        public void clear() {
+            limit = 0;
+        }
+
+        public boolean remove(Object o) {
+            if (!(o instanceof Double))
+                return false;
+            int idx = seqIndexOf(((Double)o).doubleValue());
+            if (idx < 0)
+                return false;
+            removeSlotAt(idx);
+            return true;
+        }
+
+        public Double remove(int index) {
+            Double oldValue = get(index);
+            removeSlotAt(index);
+            return oldValue;
+        }
+
+        protected void removeRange(int fromIndex, int toIndex) {
+            removeSlotsAt(fromIndex, toIndex);
+        }
+
+        public boolean contains(Object o) {
+            if (!(o instanceof Double))
+                return false;
+            return seqIndexOf(((Double)o).doubleValue()) >= 0;
+        }
+
+        public int indexOf(Object o) {
+            if (!(o instanceof Double))
+                return -1;
+            return seqIndexOf(((Double)o).doubleValue());
+        }
+
+        public int lastIndexOf(Object o) {
+            if (!(o instanceof Double))
+                return -1;
+            return seqLastIndexOf(((Double)o).doubleValue());
         }
     }
 }
+

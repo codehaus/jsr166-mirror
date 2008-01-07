@@ -18,7 +18,7 @@ class SortDemo {
         int reps = 10;
         Long[] a = new Long[n];
         ForkJoinPool fjpool = new ForkJoinPool();
-        ParallelArray<Long> pa = new ParallelArray<Long>(fjpool, a);
+        ParallelArray<Long> pa = ParallelArray.createUsingHandoff(a, fjpool);
 
         System.out.printf("Sorting %d Longs, %d replications\n", n, sreps);
         for (int i = 0; i < sreps; ++i) {

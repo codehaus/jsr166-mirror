@@ -53,7 +53,7 @@ public class LongCumulateDemo {
     static void oneRun(ForkJoinPool fjp, 
                        long[] array, int nthreads, 
                        int reps, int tests) throws Exception {
-        ParallelLongArray pa = new ParallelLongArray(fjp, array);
+        ParallelLongArray pa = ParallelLongArray.createUsingHandoff(array, fjp);
         long last, now;
         long steals = fjp.getStealCount();
         //        long syncs = fjp.getSyncCount();

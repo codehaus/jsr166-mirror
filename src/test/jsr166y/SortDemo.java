@@ -62,7 +62,7 @@ class SortDemo {
     }
     
     static final class RandomLongGenerator implements Ops.Generator<Long> {
-        public Long generate() {
+        public Long op() {
             return new Long(ForkJoinWorkerThread.nextRandomLong());
         }
     }

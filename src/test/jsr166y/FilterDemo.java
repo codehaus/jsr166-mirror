@@ -21,7 +21,7 @@ public class FilterDemo {
         int n = list.length;
         for (int i = 0; i < n; ++i) {
             T x = list[i];
-            if (pred.evaluate(x))
+            if (pred.op(x))
                 result.add(x);
         }
         return result;
@@ -31,7 +31,7 @@ public class FilterDemo {
      * Slow/dumb prime check
      */
     static final class IsPrime implements Ops.Predicate<Rand> {
-        public boolean evaluate(Rand r) {
+        public boolean op(Rand r) {
             long n = r.seed;
             if ((n & 1) == 0)
                 return false;
@@ -47,7 +47,7 @@ public class FilterDemo {
     static final long NPS = (1000L * 1000 * 1000);
 
     static final class NextRand implements Ops.Procedure<Rand> {
-        public void apply(Rand r) {
+        public void op(Rand r) {
             r.next();
         }
     }

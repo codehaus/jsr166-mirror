@@ -18,13 +18,13 @@ import java.lang.reflect.Array;
  * single-step fork+join parallel tasks using subclasses of FJBase and
  * FJSearchBase. Prefix instances hold the non-operation-specific
  * control and data accessors needed for a task as a whole (as opposed
- * to subtasks), and also house leaf methods that perform the actual
- * array processing. The leaf methods are for the most part just plain
- * array operations. They are boringly repetitive in order to flatten
- * out and minimize inner-loop overhead, as well as to minimized
- * call-chain depth. This makes it more likely that dynamic compilers
- * can go the rest of the way, and hoist per-element method call
- * dispatch, so we have a good chance to speed up processing via
+ * to subtasks), and also house some of the leaf methods that perform
+ * the actual array processing. The leaf methods are for the most part
+ * just plain array operations. They are boringly repetitive in order
+ * to flatten out and minimize inner-loop overhead, as well as to
+ * minimized call-chain depth. This makes it more likely that dynamic
+ * compilers can go the rest of the way, and hoist per-element method
+ * call dispatch, so we have a good chance to speed up processing via
  * parallelism rather than lose due to dispatch and indirection
  * overhead. The dispatching from Prefix to FJ and back is otherwise
  * Visitor-pattern-like, allowing the basic parallelism control for
@@ -95,112 +95,402 @@ class PAS {
         }
 
         /**
-         * Array access methods for ref, double, long. Checking
-         * for null return is used as a sort of type test.
+         * Access methods for ref, double, long. Checking for
+         * null/false return is used as a sort of type test.  These
+         * are used to avoid duplication in non-performance-critical
+         * aspects of control, as well as to provide a simple default
+         * mechanism for extensions.
          */
-        abstract Object[] rgetArray();
-        abstract double[] dgetArray();
-        abstract long[]  lgetArray();
+        Object[] ogetArray() { return null; }
+        double[] dgetArray() { return null; }
+        long[]  lgetArray() { return null; }
+        boolean hasMap() { return false; }
+        boolean hasFilter() { return false; }
+        boolean isSelected(int index) { return true; }
+        Object oget(int index) { return null; }
+        double dget(int index) { return 0.0; }
+        long   lget(int index) { return 0L; }
 
         /*
-         * Inner leaf methods. Most are no-ops overriddden in concrete
-         * classes. Some of them can never be called from some
-         * contexts and so are never overridden in the associated leaf
-         * classes.  For example the double version of leafApply can't
-         * be called from any ParallelArray.WithBounds method, but can
-         * be in ParallelArray.WithBoundedDoubleMapping, Introducing
-         * them all here, regardless, simplifies usage in the FJ* and
-         * prefix classes.
+         * Leaf methods for FJ tasks. Default versions use isSelected,
+         * oget, dget, etc. But most are overridden in most concrete
+         * classes to avoid per-element dispatching.
          */
+        void leafApply(int lo, int hi, Procedure procedure) {
+            for (int i = lo; i < hi; ++i)
+                if (isSelected(i))
+                    procedure.op(oget(i));
+        }
 
-        void leafApply(int lo, int hi, Procedure procedure) {}
-        void leafApply(int lo, int hi, DoubleProcedure procedure) {}
-        void leafApply(int lo, int hi, LongProcedure procedure) {}
+        void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            for (int i = lo; i < hi; ++i)
+                if (isSelected(i))
+                    procedure.op(dget(i));
+        }
 
-        Object leafReduce(int lo, int hi,
-                          Reducer reducer, Object base) { return null; }
-        double leafReduce(int lo, int hi,
-                          DoubleReducer reducer, double base) { return 0.0; }
-        long leafReduce(int lo, int hi,
-                        LongReducer reducer, long base) { return 0L; }
+        void leafApply(int lo, int hi, LongProcedure procedure) {
+            for (int i = lo; i < hi; ++i)
+                if (isSelected(i))
+                    procedure.op(lget(i));
+        }
 
-        void leafStats(int lo, int hi, FJRStats task) {}
-        void leafStats(int lo, int hi, FJDStats task) {}
-        void leafStats(int lo, int hi, FJLStats task) {}
+        Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
+            boolean gotFirst = false;
+            Object r = base;
+            for (int i = lo; i < hi; ++i) {
+                if (isSelected(i)) {
+                    Object x = oget(i);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = x;
+                    }
+                    else
+                        r = reducer.op(r, x);
+                }
+            }
+            return r;
+        }
+
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            boolean gotFirst = false;
+            double r = base;
+            for (int i = lo; i < hi; ++i) {
+                if (isSelected(i)) {
+                    double x = dget(i);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = x;
+                    }
+                    else
+                        r = reducer.op(r, x);
+                }
+            }
+            return r;
+        }
+
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
+            boolean gotFirst = false;
+            long r = base;
+            for (int i = lo; i < hi; ++i) {
+                if (isSelected(i)) {
+                    long x = lget(i);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = x;
+                    }
+                    else
+                        r = reducer.op(r, x);
+                }
+            }
+            return r;
+        }
 
         // copy elements, ignoring selector, but applying mapping
-        void leafTransfer(int lo, int hi, Object[] dest, int offset) {}
-        void leafTransfer(int lo, int hi, double[] dest, int offset) {}
-        void leafTransfer(int lo, int hi, long[] dest, int offset) {}
+        void leafTransfer(int lo, int hi, Object[] dest, int offset) {
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = oget(i);
+        }
+
+        void leafTransfer(int lo, int hi, double[] dest, int offset) {
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = dget(i);
+        }
+
+        void leafTransfer(int lo, int hi, long[] dest, int offset) {
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = lget(i);
+        }
 
         // copy elements indexed in indices[loIdx..hiIdx], ignoring
         // selector, but applying mapping
         void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
-                                 Object[] dest, int offset) {}
+                                 Object[] dest, int offset) {
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = oget(indices[i]);
+        }
+
         void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
-                                 double[] dest, int offset) {}
+                                 double[] dest, int offset) {
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = dget(indices[i]);
+        }
+
         void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
-                                 long[] dest, int offset) {}
-
-        void leafCombineInPlace(int lo, int hi, Object[] other,
-                                int otherOffset, Reducer combiner) {}
-        void leafCombineInPlace(int lo, int hi, double[] other,
-                                int otherOffset, DoubleReducer combiner) {}
-        void leafCombineInPlace(int lo, int hi, long[] other,
-                                int otherOffset, LongReducer combiner) {}
-
-        void leafCombine(int lo, int hi, Object[] other, int otherOffset,
-                         Object[] dest, Combiner combiner) {}
-        void leafCombine(int lo, int hi, long[] other, int otherOffset,
-                         long[] dest, LongReducer combiner) {}
-        void leafCombine(int lo, int hi, double[] other, int otherOffset,
-                         double[] dest, DoubleReducer combiner) {}
-
-        void leafTransform(int lo, int hi, Mapper mapper) {}
-        void leafTransform(int lo, int hi, DoubleMapper mapper) {}
-        void leafTransform(int lo, int hi, LongMapper mapper) {}
-
-        void leafIndexMap(int lo, int hi, MapperFromInt mapper) {}
-        void leafIndexMap(int lo, int hi, MapperFromIntToDouble mapper) {}
-        void leafIndexMap(int lo, int hi, MapperFromIntToLong mapper) {}
-
-        void leafGenerate(int lo, int hi, Generator generator) {}
-        void leafGenerate(int lo, int hi, DoubleGenerator generator) {}
-        void leafGenerate(int lo, int hi, LongGenerator generator) {}
-
-        void leafFillValue(int lo, int hi, Object value) {}
-        void leafFillValue(int lo, int hi, double value) {}
-        void leafFillValue(int lo, int hi, long value) {}
+                                 long[] dest, int offset) {
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = lget(indices[i]);
+        }
 
         // add indices of selected elements to index array; return #added
-        int leafIndexSelected(int lo, int hi, boolean positive,
-                              int[] indices) { return 0; }
+        abstract int leafIndexSelected(int lo, int hi, boolean positive,
+                                       int[] indices);
 
         // move selected elements to indices starting at offset,
         // return final offset
-        int leafMoveSelected(int lo, int hi, int offset,
-                             boolean positive) { return 0; }
+        abstract int leafMoveSelected(int lo, int hi, int offset,
+                                      boolean positive);
 
         // move elements indexed by indices[loIdx...hiIdx] starting
         // at given offset
         abstract void leafMoveByIndex(int[] indices, int loIdx,
                                       int hiIdx, int offset);
 
+        /**
+         * Shared support for select/map all -- probe filter, map, and
+         * type to start selection driver, or do parallel mapping, or
+         * just copy,
+         */
+        final Object[] allObjects(Class elementType) {
+            if (hasFilter()) {
+                if (elementType == null) {
+                    if (!hasMap())
+                        elementType = ogetArray().getClass().getComponentType();
+                    else
+                        elementType = Object.class;
+                }
+                PAS.FJOSelectAllDriver r = new PAS.FJOSelectAllDriver
+                    (this, elementType);
+                ex.invoke(r);
+                return r.results;
+            }
+            else {
+                int n = upperBound - firstIndex;
+                Object[] dest;
+                if (hasMap()) {
+                    if (elementType == null)
+                        dest = new Object[n];
+                    else
+                        dest = (Object[])Array.newInstance(elementType, n);
+                    ex.invoke(new PAS.FJOMap(this, firstIndex, upperBound,
+                                             null, dest, firstIndex));
+                }
+                else {
+                    Object[] array = ogetArray();
+                    if (elementType == null)
+                        elementType = array.getClass().getComponentType();
+                    dest = (Object[])Array.newInstance(elementType, n);
+                    System.arraycopy(array, firstIndex, dest, 0, n);
+                }
+                return dest;
+            }
+        }
+
+        final double[] allDoubles() {
+            if (hasFilter()) {
+                PAS.FJDSelectAllDriver r = new PAS.FJDSelectAllDriver(this);
+                ex.invoke(r);
+                return r.results;
+            }
+            else {
+                int n = upperBound - firstIndex;
+                double[] dest = new double[n];
+                if (hasMap()) {
+                    ex.invoke(new PAS.FJDMap(this, firstIndex, upperBound,
+                                             null, dest, firstIndex));
+                }
+                else {
+                    double[] array = dgetArray();
+                    System.arraycopy(array, firstIndex, dest, 0, n);
+                }
+                return dest;
+            }
+        }
+
+        final long[] allLongs() {
+            if (hasFilter()) {
+                PAS.FJLSelectAllDriver r = new PAS.FJLSelectAllDriver(this);
+                ex.invoke(r);
+                return r.results;
+            }
+            else {
+                int n = upperBound - firstIndex;
+                long[] dest = new long[n];
+                if (hasMap()) {
+                    ex.invoke(new PAS.FJLMap(this, firstIndex, upperBound,
+                                             null, dest, firstIndex));
+                }
+                else {
+                    long[] array = lgetArray();
+                    System.arraycopy(array, firstIndex, dest, 0, n);
+                }
+                return dest;
+            }
+        }
+
+        // Iterator support
+        class SequentiallyAsDouble implements Iterable<Double> {
+            public Iterator<Double> iterator() {
+                if (hasFilter())
+                    return new FilteredAsDoubleIterator();
+                else
+                    return new UnfilteredAsDoubleIterator();
+            }
+        }
+
+        class UnfilteredAsDoubleIterator implements Iterator<Double> {
+            int cursor = firstIndex;
+            public boolean hasNext() { return cursor < upperBound; }
+            public Double next() {
+                if (cursor >= upperBound)
+                    throw new NoSuchElementException();
+                return Double.valueOf(dget(cursor++));
+            }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        class FilteredAsDoubleIterator implements Iterator<Double> {
+            double next;
+            int cursor;
+            FilteredAsDoubleIterator() {
+                cursor = firstIndex;
+                advance() ;
+            }
+            private void advance() {
+                while (cursor < upperBound) {
+                    if (isSelected(cursor)) {
+                        next = dget(cursor);
+                        break;
+                    }
+                    cursor++;
+                }
+            }
+
+            public boolean hasNext() { return cursor < upperBound; }
+            public Double next() {
+                if (cursor >= upperBound)
+                    throw new NoSuchElementException();
+                Double x = Double.valueOf(next);
+                cursor++;
+                advance();
+                return x;
+            }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        class SequentiallyAsLong implements Iterable<Long> {
+            public Iterator<Long> iterator() {
+                if (hasFilter())
+                    return new FilteredAsLongIterator();
+                else
+                    return new UnfilteredAsLongIterator();
+            }
+        }
+
+        class UnfilteredAsLongIterator implements Iterator<Long> {
+            int cursor = firstIndex;
+            public boolean hasNext() { return cursor < upperBound; }
+            public Long next() {
+                if (cursor >= upperBound)
+                    throw new NoSuchElementException();
+                return Long.valueOf(lget(cursor++));
+            }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        class FilteredAsLongIterator implements Iterator<Long> {
+            long next;
+            int cursor;
+            FilteredAsLongIterator() {
+                cursor = firstIndex;
+                advance() ;
+            }
+            private void advance() {
+                while (cursor < upperBound) {
+                    if (isSelected(cursor)) {
+                        next = lget(cursor);
+                        break;
+                    }
+                    cursor++;
+                }
+            }
+
+            public boolean hasNext() { return cursor < upperBound; }
+            public Long next() {
+                if (cursor >= upperBound)
+                    throw new NoSuchElementException();
+                Long x = Long.valueOf(next);
+                cursor++;
+                advance();
+                return x;
+            }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        class Sequentially<U> implements Iterable<U> {
+            public Iterator<U> iterator() {
+                if (hasFilter())
+                    return new FilteredIterator<U>();
+                else
+                    return new UnfilteredIterator<U>();
+            }
+        }
+
+        class UnfilteredIterator<U> implements Iterator<U> {
+            int cursor = firstIndex;
+            public boolean hasNext() { return cursor < upperBound; }
+            public U next() {
+                if (cursor >= upperBound)
+                    throw new NoSuchElementException();
+                return (U)oget(cursor++);
+            }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        class FilteredIterator<U> implements Iterator<U> {
+            Object next;
+            int cursor;
+            FilteredIterator() {
+                cursor = firstIndex;
+                advance() ;
+            }
+            private void advance() {
+                while (cursor < upperBound) {
+                    if (isSelected(cursor)) {
+                        next = oget(cursor);
+                        break;
+                    }
+                    cursor++;
+                }
+            }
+
+            public boolean hasNext() { return cursor < upperBound; }
+            public U next() {
+                if (cursor >= upperBound)
+                    throw new NoSuchElementException();
+                U x = (U)next;
+                cursor++;
+                advance();
+                return x;
+            }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
     }
 
     /**
-     * Base of ref array prefix classes
+     * Base of object ref array prefix classes
      */
-    static abstract class RPrefix extends PAS.Prefix {
-        final ParallelArray pa;
-        RPrefix(ParallelArray pa, int firstIndex, int upperBound) {
+    static abstract class OPrefix<T> extends PAS.Prefix {
+        final ParallelArray<T> pa;
+        OPrefix(ParallelArray<T> pa, int firstIndex, int upperBound) {
             super(pa.ex, firstIndex, upperBound);
             this.pa = pa;
         }
 
-        final Object[] rgetArray() { return pa.array; }
-        final double[] dgetArray() { return null; }
-        final long[]  lgetArray() { return null; }
+        final Object[] ogetArray() { return pa.array; }
+        Predicate getPredicate() { return null; }
 
         final void leafMoveByIndex(int[] indices, int loIdx,
                                    int hiIdx, int offset) {
@@ -208,6 +498,79 @@ class PAS {
             for (int i = loIdx; i < hiIdx; ++i)
                 array[offset++] = array[indices[i]];
         }
+
+        final int leafIndexSelected(int lo, int hi, boolean positive,
+                                    int[] indices){
+            final Predicate s = getPredicate();
+            if (s == null)
+                return unfilteredLeafIndexSelected(lo, hi, positive, indices);
+            final Object[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (s.op(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        final int unfilteredLeafIndexSelected(int lo, int hi, boolean positive,
+                                              int[] indices) {
+            int k = 0;
+            if (positive) {
+                final Object[] array = pa.array;
+                for (int i = lo; i < hi; ++i) {
+                    indices[lo + k++] = i;
+                }
+            }
+            return k;
+        }
+
+        final int leafMoveSelected(int lo, int hi, int offset,
+                                   boolean positive) {
+            final Predicate s = getPredicate();
+            if (s == null)
+                return unfilteredLeafMoveSelected(lo, hi, offset, positive);
+            final Object[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                Object t = array[i];
+                if (s.op(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
+
+        final int unfilteredLeafMoveSelected(int lo, int hi, int offset,
+                                             boolean positive) {
+            if (positive) {
+                final Object[] array = pa.array;
+                for (int i = lo; i < hi; ++i) {
+                    array[offset++] = array[i];
+                }
+            }
+            return offset;
+        }
+
+        final int computeSize() {
+            Predicate s = getPredicate();
+            if (s == null)
+                return upperBound - firstIndex;
+            PAS.FJOCountSelected f = new PAS.FJOCountSelected
+                (this, firstIndex, upperBound, null, s);
+            ex.invoke(f);
+            return f.count;
+        }
+
+        final int computeAnyIndex() {
+            Predicate s = getPredicate();
+            if (s == null)
+                return (firstIndex < upperBound)? firstIndex : -1;
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJOSelectAny f = new PAS.FJOSelectAny
+                (this, firstIndex, upperBound, null, result, s);
+            ex.invoke(f);
+            return result.get();
+        }
+
     }
 
     /**
@@ -220,9 +583,8 @@ class PAS {
             this.pa = pa;
         }
 
-        final Object[] rgetArray() { return null; }
         final double[] dgetArray() { return pa.array; }
-        final long[]  lgetArray() { return null; }
+        DoublePredicate getPredicate() { return null; }
 
         final void leafMoveByIndex(int[] indices, int loIdx,
                                    int hiIdx, int offset) {
@@ -230,6 +592,79 @@ class PAS {
             for (int i = loIdx; i < hiIdx; ++i)
                 array[offset++] = array[indices[i]];
         }
+
+        final int leafIndexSelected(int lo, int hi, boolean positive,
+                                    int[] indices){
+            final DoublePredicate s = getPredicate();
+            if (s == null)
+                return unfilteredLeafIndexSelected(lo, hi, positive, indices);
+            final double[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (s.op(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        final int unfilteredLeafIndexSelected(int lo, int hi, boolean positive,
+                                              int[] indices) {
+            int k = 0;
+            if (positive) {
+                final double[] array = pa.array;
+                for (int i = lo; i < hi; ++i) {
+                    indices[lo + k++] = i;
+                }
+            }
+            return k;
+        }
+
+        final int leafMoveSelected(int lo, int hi, int offset,
+                                   boolean positive) {
+            final DoublePredicate s = getPredicate();
+            if (s == null)
+                return unfilteredLeafMoveSelected(lo, hi, offset, positive);
+            final double[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                double t = array[i];
+                if (s.op(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
+
+        final int unfilteredLeafMoveSelected(int lo, int hi, int offset,
+                                             boolean positive) {
+            if (positive) {
+                final double[] array = pa.array;
+                for (int i = lo; i < hi; ++i) {
+                    array[offset++] = array[i];
+                }
+            }
+            return offset;
+        }
+
+        final int computeSize() {
+            DoublePredicate s = getPredicate();
+            if (s == null)
+                return upperBound - firstIndex;
+            PAS.FJDCountSelected f = new PAS.FJDCountSelected
+                (this, firstIndex, upperBound, null, s);
+            ex.invoke(f);
+            return f.count;
+        }
+
+        final int computeAnyIndex() {
+            DoublePredicate s = getPredicate();
+            if (s == null)
+                return (firstIndex < upperBound)? firstIndex : -1;
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJDSelectAny f = new PAS.FJDSelectAny
+                (this, firstIndex, upperBound, null, result, s);
+            ex.invoke(f);
+            return result.get();
+        }
+
     }
 
     /**
@@ -242,9 +677,8 @@ class PAS {
             this.pa = pa;
         }
 
-        final Object[] rgetArray() { return null; }
-        final double[] dgetArray() { return null; }
         final long[]  lgetArray() { return pa.array; }
+        LongPredicate getPredicate() { return null; }
 
         final void leafMoveByIndex(int[] indices, int loIdx,
                                    int hiIdx, int offset) {
@@ -252,6 +686,79 @@ class PAS {
             for (int i = loIdx; i < hiIdx; ++i)
                 array[offset++] = array[indices[i]];
         }
+
+        final int leafIndexSelected(int lo, int hi, boolean positive,
+                                    int[] indices){
+            final LongPredicate s = getPredicate();
+            if (s == null)
+                return unfilteredLeafIndexSelected(lo, hi, positive, indices);
+            final long[] array = pa.array;
+            int k = 0;
+            for (int i = lo; i < hi; ++i) {
+                if (s.op(array[i]) == positive)
+                    indices[lo + k++] = i;
+            }
+            return k;
+        }
+
+        final int unfilteredLeafIndexSelected(int lo, int hi, boolean positive,
+                                              int[] indices) {
+            int k = 0;
+            if (positive) {
+                final long[] array = pa.array;
+                for (int i = lo; i < hi; ++i) {
+                    indices[lo + k++] = i;
+                }
+            }
+            return k;
+        }
+
+        final int leafMoveSelected(int lo, int hi, int offset,
+                                   boolean positive) {
+            final LongPredicate s = getPredicate();
+            if (s == null)
+                return unfilteredLeafMoveSelected(lo, hi, offset, positive);
+            final long[] array = pa.array;
+            for (int i = lo; i < hi; ++i) {
+                long t = array[i];
+                if (s.op(t) == positive)
+                    array[offset++] = t;
+            }
+            return offset;
+        }
+
+        final int unfilteredLeafMoveSelected(int lo, int hi, int offset,
+                                             boolean positive) {
+            if (positive) {
+                final long[] array = pa.array;
+                for (int i = lo; i < hi; ++i) {
+                    array[offset++] = array[i];
+                }
+            }
+            return offset;
+        }
+
+        final int computeSize() {
+            LongPredicate s = getPredicate();
+            if (s == null)
+                return upperBound - firstIndex;
+            PAS.FJLCountSelected f = new PAS.FJLCountSelected
+                (this, firstIndex, upperBound, null, s);
+            ex.invoke(f);
+            return f.count;
+        }
+
+        final int computeAnyIndex() {
+            LongPredicate s = getPredicate();
+            if (s == null)
+                return (firstIndex < upperBound)? firstIndex : -1;
+            AtomicInteger result = new AtomicInteger(-1);
+            PAS.FJLSelectAny f = new PAS.FJLSelectAny
+                (this, firstIndex, upperBound, null, result, s);
+            ex.invoke(f);
+            return result.get();
+        }
+
     }
 
     /**
@@ -268,7 +775,7 @@ class PAS {
      * directly runs its leaf action rather than possibly replitting.
      *
      * There are, with a few exceptions, three flavors of each FJBase
-     * subclass, prefixed FJR (reference), FJD (double) and FJL
+     * subclass, prefixed FJO (object reference), FJD (double) and FJL
      * (long). These in turn normally dispatch to the ref-based,
      * double-based, or long-based leaf* methods.
      */
@@ -314,15 +821,15 @@ class PAS {
 
     // apply
 
-    static final class FJRApply extends FJBase {
+    static final class FJOApply extends FJBase {
         final Procedure procedure;
-        FJRApply(Prefix prefix, int lo, int hi, FJBase next,
+        FJOApply(Prefix prefix, int lo, int hi, FJBase next,
                  Procedure procedure) {
             super(prefix, lo, hi, next);
             this.procedure = procedure;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRApply(prefix, l, h, r, procedure);
+            return new FJOApply(prefix, l, h, r, procedure);
         }
         void atLeaf(int l, int h) {
             prefix.leafApply(l, h, procedure);
@@ -361,23 +868,23 @@ class PAS {
 
     // reduce
 
-    static final class FJRReduce extends FJBase {
+    static final class FJOReduce extends FJBase {
         final Reducer reducer;
         Object result;
-        FJRReduce(Prefix prefix, int lo, int hi, FJBase next,
+        FJOReduce(Prefix prefix, int lo, int hi, FJBase next,
                   Reducer reducer, Object base) {
             super(prefix, lo, hi, next);
             this.reducer = reducer;
             this.result = base;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRReduce(prefix, l, h, r, reducer, result);
+            return new FJOReduce(prefix, l, h, r, reducer, result);
         }
         void atLeaf(int l, int h) {
             result = prefix.leafReduce(l, h, reducer, result);
         }
         void onReduce(FJBase right) {
-            result = reducer.combine(result, ((FJRReduce)right).result);
+            result = reducer.op(result, ((FJOReduce)right).result);
         }
     }
 
@@ -397,7 +904,7 @@ class PAS {
             result = prefix.leafReduce(l, h, reducer, result);
         }
         void onReduce(FJBase right) {
-            result = reducer.combine(result, ((FJDReduce)right).result);
+            result = reducer.op(result, ((FJDReduce)right).result);
         }
     }
 
@@ -417,23 +924,23 @@ class PAS {
             result = prefix.leafReduce(l, h, reducer, result);
         }
         void onReduce(FJBase right) {
-            result = reducer.combine(result, ((FJLReduce)right).result);
+            result = reducer.op(result, ((FJLReduce)right).result);
         }
     }
 
     // map
 
-    static final class FJRMap extends FJBase {
+    static final class FJOMap extends FJBase {
         final Object[] dest;
         final int offset;
-        FJRMap(Prefix prefix, int lo, int hi, FJBase next, Object[] dest,
+        FJOMap(Prefix prefix, int lo, int hi, FJBase next, Object[] dest,
                int offset) {
             super(prefix, lo, hi, next);
             this.dest = dest;
             this.offset = offset;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRMap(prefix, l, h, r, dest, offset);
+            return new FJOMap(prefix, l, h, r, dest, offset);
         }
         void atLeaf(int l, int h) {
             prefix.leafTransfer(l, h, dest, l - offset);
@@ -476,112 +983,237 @@ class PAS {
 
     // transform
 
-    static final class FJRTransform extends FJBase {
-        final Mapper mapper;
-        FJRTransform(Prefix prefix, int lo, int hi, FJBase next,
-                     Mapper mapper) {
+    static final class FJOTransform extends FJBase {
+        final Op op;
+        FJOTransform(Prefix prefix, int lo, int hi, FJBase next,
+                     Op op) {
             super(prefix, lo, hi, next);
-            this.mapper = mapper;
+            this.op = op;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRTransform(prefix, l, h, r, mapper);
+            return new FJOTransform(prefix, l, h, r, op);
         }
         void atLeaf(int l, int h) {
-            prefix.leafTransform(l, h, mapper);
+            OPrefix p = (OPrefix)prefix;
+            Object[] array = p.pa.array;
+            Predicate s = p.getPredicate();
+            if (s == null)
+                leafTransform(l, h, array);
+            else
+                leafTransform(l, h, array, s);
+        }
+        void leafTransform(int l, int h, Object[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = op.op(array[i]);
+        }
+
+        void leafTransform(int l, int h, Object[] array, Predicate s) {
+            for (int i = l; i < h; ++i) {
+                Object x = array[i];
+                if (s.op(x))
+                    array[i] = op.op(x);
+            }
         }
     }
 
     static final class FJDTransform extends FJBase {
-        final DoubleMapper mapper;
+        final DoubleOp op;
         FJDTransform(Prefix prefix, int lo, int hi, FJBase next,
-                     DoubleMapper mapper) {
+                     DoubleOp op) {
             super(prefix, lo, hi, next);
-            this.mapper = mapper;
+            this.op = op;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJDTransform(prefix, l, h, r, mapper);
+            return new FJDTransform(prefix, l, h, r, op);
         }
         void atLeaf(int l, int h) {
-            prefix.leafTransform(l, h, mapper);
+            DPrefix p = (DPrefix)prefix;
+            double[] array = p.pa.array;
+            DoublePredicate s = p.getPredicate();
+            if (s == null)
+                leafTransform(l, h, array);
+            else
+                leafTransform(l, h, array, s);
+        }
+        void leafTransform(int l, int h, double[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = op.op(array[i]);
+        }
+
+        void leafTransform(int l, int h, double[] array, DoublePredicate s) {
+            for (int i = l; i < h; ++i) {
+                double x = array[i];
+                if (s.op(x))
+                    array[i] = op.op(x);
+            }
         }
     }
 
     static final class FJLTransform extends FJBase {
-        final LongMapper mapper;
+        final LongOp op;
         FJLTransform(Prefix prefix, int lo, int hi, FJBase next,
-                     LongMapper mapper) {
+                     LongOp op) {
             super(prefix, lo, hi, next);
-            this.mapper = mapper;
+            this.op = op;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJLTransform(prefix, l, h, r, mapper);
+            return new FJLTransform(prefix, l, h, r, op);
         }
         void atLeaf(int l, int h) {
-            prefix.leafTransform(l, h, mapper);
+            LPrefix p = (LPrefix)prefix;
+            long[] array = p.pa.array;
+            LongPredicate s = p.getPredicate();
+            if (s == null)
+                leafTransform(l, h, array);
+            else
+                leafTransform(l, h, array, s);
+        }
+        void leafTransform(int l, int h, long[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = op.op(array[i]);
+        }
+
+        void leafTransform(int l, int h, long[] array, LongPredicate s) {
+            for (int i = l; i < h; ++i) {
+                long x = array[i];
+                if (s.op(x))
+                    array[i] = op.op(x);
+            }
         }
     }
 
     // index map
 
-    static final class FJRIndexMap extends FJBase {
-        final MapperFromInt mapper;
-        FJRIndexMap(Prefix prefix, int lo, int hi, FJBase next,
-                    MapperFromInt mapper) {
+    static final class FJOIndexMap extends FJBase {
+        final IntToObject op;
+        FJOIndexMap(Prefix prefix, int lo, int hi, FJBase next,
+                    IntToObject op) {
             super(prefix, lo, hi, next);
-            this.mapper = mapper;
+            this.op = op;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRIndexMap(prefix, l, h, r, mapper);
+            return new FJOIndexMap(prefix, l, h, r, op);
         }
         void atLeaf(int l, int h) {
-            prefix.leafIndexMap(l, h, mapper);
+            OPrefix p = (OPrefix)prefix;
+            Object[] array = p.pa.array;
+            Predicate s = p.getPredicate();
+            if (s == null)
+                leafIndexMap(l, h, array);
+            else
+                leafIndexMap(l, h, array, s);
+        }
+        void leafIndexMap(int l, int h, Object[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = op.op(i);
+        }
+
+        void leafIndexMap(int l, int h, Object[] array, Predicate s) {
+            for (int i = l; i < h; ++i) {
+                Object x = array[i];
+                if (s.op(x))
+                    array[i] = op.op(i);
+            }
         }
     }
 
     static final class FJDIndexMap extends FJBase {
-        final MapperFromIntToDouble mapper;
+        final IntToDouble op;
         FJDIndexMap(Prefix prefix, int lo, int hi, FJBase next,
-                    MapperFromIntToDouble mapper) {
+                    IntToDouble op) {
             super(prefix, lo, hi, next);
-            this.mapper = mapper;
+            this.op = op;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJDIndexMap(prefix, l, h, r, mapper);
+            return new FJDIndexMap(prefix, l, h, r, op);
         }
         void atLeaf(int l, int h) {
-            prefix.leafIndexMap(l, h, mapper);
+            DPrefix p = (DPrefix)prefix;
+            double[] array = p.pa.array;
+            DoublePredicate s = p.getPredicate();
+            if (s == null)
+                leafIndexMap(l, h, array);
+            else
+                leafIndexMap(l, h, array, s);
+        }
+        void leafIndexMap(int l, int h, double[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = op.op(i);
+        }
+
+        void leafIndexMap(int l, int h, double[] array, DoublePredicate s) {
+            for (int i = l; i < h; ++i) {
+                double x = array[i];
+                if (s.op(x))
+                    array[i] = op.op(i);
+            }
         }
     }
 
     static final class FJLIndexMap extends FJBase {
-        final MapperFromIntToLong mapper;
+        final IntToLong op;
         FJLIndexMap(Prefix prefix, int lo, int hi, FJBase next,
-                    MapperFromIntToLong mapper) {
+                    IntToLong op) {
             super(prefix, lo, hi, next);
-            this.mapper = mapper;
+            this.op = op;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJLIndexMap(prefix, l, h, r, mapper);
+            return new FJLIndexMap(prefix, l, h, r, op);
         }
         void atLeaf(int l, int h) {
-            prefix.leafIndexMap(l, h, mapper);
+            LPrefix p = (LPrefix)prefix;
+            long[] array = p.pa.array;
+            LongPredicate s = p.getPredicate();
+            if (s == null)
+                leafIndexMap(l, h, array);
+            else
+                leafIndexMap(l, h, array, s);
+        }
+        void leafIndexMap(int l, int h, long[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = op.op(i);
+        }
+
+        void leafIndexMap(int l, int h, long[] array, LongPredicate s) {
+            for (int i = l; i < h; ++i) {
+                long x = array[i];
+                if (s.op(x))
+                    array[i] = op.op(i);
+            }
         }
     }
 
     // generate
 
-    static final class FJRGenerate extends FJBase {
+    static final class FJOGenerate extends FJBase {
         final Generator generator;
-        FJRGenerate(Prefix prefix, int lo, int hi, FJBase next,
+        FJOGenerate(Prefix prefix, int lo, int hi, FJBase next,
                     Generator generator) {
             super(prefix, lo, hi, next);
             this.generator = generator;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRGenerate(prefix, l, h, r, generator);
+            return new FJOGenerate(prefix, l, h, r, generator);
         }
         void atLeaf(int l, int h) {
-            prefix.leafGenerate(l, h, generator);
+            OPrefix p = (OPrefix)prefix;
+            Object[] array = p.pa.array;
+            Predicate s = p.getPredicate();
+            if (s == null)
+                leafGenerate(l, h, array);
+            else
+                leafGenerate(l, h, array, s);
+        }
+        void leafGenerate(int l, int h, Object[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = generator.op();
+        }
+
+        void leafGenerate(int l, int h, Object[] array, Predicate s) {
+            for (int i = l; i < h; ++i) {
+                if (s.op(array[i]))
+                    array[i] = generator.op();
+            }
         }
     }
 
@@ -596,7 +1228,24 @@ class PAS {
             return new FJDGenerate(prefix, l, h, r, generator);
         }
         void atLeaf(int l, int h) {
-            prefix.leafGenerate(l, h, generator);
+            DPrefix p = (DPrefix)prefix;
+            double[] array = p.pa.array;
+            DoublePredicate s = p.getPredicate();
+            if (s == null)
+                leafGenerate(l, h, array);
+            else
+                leafGenerate(l, h, array, s);
+        }
+        void leafGenerate(int l, int h, double[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = generator.op();
+        }
+
+        void leafGenerate(int l, int h, double[] array, DoublePredicate s) {
+            for (int i = l; i < h; ++i) {
+                if (s.op(array[i]))
+                    array[i] = generator.op();
+            }
         }
     }
 
@@ -611,23 +1260,57 @@ class PAS {
             return new FJLGenerate(prefix, l, h, r, generator);
         }
         void atLeaf(int l, int h) {
-            prefix.leafGenerate(l, h, generator);
+            LPrefix p = (LPrefix)prefix;
+            long[] array = p.pa.array;
+            LongPredicate s = p.getPredicate();
+            if (s == null)
+                leafGenerate(l, h, array);
+            else
+                leafGenerate(l, h, array, s);
+        }
+        void leafGenerate(int l, int h, long[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = generator.op();
+        }
+
+        void leafGenerate(int l, int h, long[] array, LongPredicate s) {
+            for (int i = l; i < h; ++i) {
+                if (s.op(array[i]))
+                    array[i] = generator.op();
+            }
         }
     }
 
     // fill
 
-    static final class FJRFill extends FJBase {
+    static final class FJOFill extends FJBase {
         final Object value;
-        FJRFill(Prefix prefix, int lo, int hi, FJBase next, Object value) {
+        FJOFill(Prefix prefix, int lo, int hi, FJBase next, Object value) {
             super(prefix, lo, hi, next);
             this.value = value;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRFill(prefix, l, h, r, value);
+            return new FJOFill(prefix, l, h, r, value);
         }
         void atLeaf(int l, int h) {
-            prefix.leafFillValue(l, h, value);
+            OPrefix p = (OPrefix)prefix;
+            Object[] array = p.pa.array;
+            Predicate s = p.getPredicate();
+            if (s == null)
+                leafFill(l, h, array);
+            else
+                leafFill(l, h, array, s);
+        }
+        void leafFill(int l, int h, Object[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = value;
+        }
+
+        void leafFill(int l, int h, Object[] array, Predicate s) {
+            for (int i = l; i < h; ++i) {
+                if (s.op(array[i]))
+                    array[i] = value;
+            }
         }
     }
 
@@ -641,7 +1324,24 @@ class PAS {
             return new FJDFill(prefix, l, h, r, value);
         }
         void atLeaf(int l, int h) {
-            prefix.leafFillValue(l, h, value);
+            DPrefix p = (DPrefix)prefix;
+            double[] array = p.pa.array;
+            DoublePredicate s = p.getPredicate();
+            if (s == null)
+                leafFill(l, h, array);
+            else
+                leafFill(l, h, array, s);
+        }
+        void leafFill(int l, int h, double[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = value;
+        }
+
+        void leafFill(int l, int h, double[] array, DoublePredicate s) {
+            for (int i = l; i < h; ++i) {
+                if (s.op(array[i]))
+                    array[i] = value;
+            }
         }
     }
 
@@ -655,40 +1355,75 @@ class PAS {
             return new FJLFill(prefix, l, h, r, value);
         }
         void atLeaf(int l, int h) {
-            prefix.leafFillValue(l, h, value);
+            LPrefix p = (LPrefix)prefix;
+            long[] array = p.pa.array;
+            LongPredicate s = p.getPredicate();
+            if (s == null)
+                leafFill(l, h, array);
+            else
+                leafFill(l, h, array, s);
+        }
+        void leafFill(int l, int h, long[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = value;
+        }
+
+        void leafFill(int l, int h, long[] array, LongPredicate s) {
+            for (int i = l; i < h; ++i) {
+                if (s.op(array[i]))
+                    array[i] = value;
+            }
         }
     }
 
     // combine in place
 
-    static final class FJRCombineInPlace extends FJBase {
+    static final class FJOCombineInPlace extends FJBase {
         final Object[] other;
         final int otherOffset;
-        final Reducer combiner;
-        FJRCombineInPlace(Prefix prefix, int lo, int hi, FJBase next,
+        final BinaryOp combiner;
+        FJOCombineInPlace(Prefix prefix, int lo, int hi, FJBase next,
                           Object[] other, int otherOffset,
-                          Reducer combiner) {
+                          BinaryOp combiner) {
             super(prefix, lo, hi, next);
             this.other = other;
             this.otherOffset = otherOffset;
             this.combiner = combiner;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRCombineInPlace
+            return new FJOCombineInPlace
                 (prefix, l, h, r, other, otherOffset, combiner);
         }
         void atLeaf(int l, int h) {
-            prefix.leafCombineInPlace(l, h, other, otherOffset, combiner);
+            OPrefix p = (OPrefix)prefix;
+            Object[] array = p.pa.array;
+            Predicate s = p.getPredicate();
+            if (s == null)
+                leafCombineInPlace(l, h, array);
+            else
+                leafCombineInPlace(l, h, array, s);
+        }
+        void leafCombineInPlace(int l, int h, Object[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = combiner.op(array[i], other[i+otherOffset]);
+        }
+
+        void leafCombineInPlace(int l, int h, Object[] array, Predicate s) {
+            for (int i = l; i < h; ++i) {
+                Object x = array[i];
+                if (s.op(x))
+                    array[i] = combiner.op(x, other[i+otherOffset]);
+            }
         }
     }
 
     static final class FJDCombineInPlace extends FJBase {
         final double[] other;
         final int otherOffset;
-        final DoubleReducer combiner;
+        final BinaryDoubleOp combiner;
         FJDCombineInPlace(Prefix prefix, int lo, int hi, FJBase next,
                           double[] other, int otherOffset,
-                          DoubleReducer combiner) {
+                          BinaryDoubleOp combiner) {
             super(prefix, lo, hi, next);
             this.other = other;
             this.otherOffset = otherOffset;
@@ -699,17 +1434,35 @@ class PAS {
                 (prefix, l, h, r, other, otherOffset, combiner);
         }
         void atLeaf(int l, int h) {
-            prefix.leafCombineInPlace(l, h, other, otherOffset, combiner);
+            DPrefix p = (DPrefix)prefix;
+            double[] array = p.pa.array;
+            DoublePredicate s = p.getPredicate();
+            if (s == null)
+                leafCombineInPlace(l, h, array);
+            else
+                leafCombineInPlace(l, h, array, s);
+        }
+        void leafCombineInPlace(int l, int h, double[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = combiner.op(array[i], other[i+otherOffset]);
+        }
+
+        void leafCombineInPlace(int l, int h, double[] array, DoublePredicate s) {
+            for (int i = l; i < h; ++i) {
+                double x = array[i];
+                if (s.op(x))
+                    array[i] = combiner.op(x, other[i+otherOffset]);
+            }
         }
     }
 
     static final class FJLCombineInPlace extends FJBase {
         final long[] other;
         final int otherOffset;
-        final LongReducer combiner;
+        final BinaryLongOp combiner;
         FJLCombineInPlace(Prefix prefix, int lo, int hi, FJBase next,
                           long[] other, int otherOffset,
-                          LongReducer combiner) {
+                          BinaryLongOp combiner) {
             super(prefix, lo, hi, next);
             this.other = other;
             this.otherOffset = otherOffset;
@@ -720,84 +1473,31 @@ class PAS {
                 (prefix, l, h, r, other, otherOffset, combiner);
         }
         void atLeaf(int l, int h) {
-            prefix.leafCombineInPlace(l, h, other, otherOffset, combiner);
+            LPrefix p = (LPrefix)prefix;
+            long[] array = p.pa.array;
+            LongPredicate s = p.getPredicate();
+            if (s == null)
+                leafCombineInPlace(l, h, array);
+            else
+                leafCombineInPlace(l, h, array, s);
         }
-    }
+        void leafCombineInPlace(int l, int h, long[] array) {
+            for (int i = l; i < h; ++i)
+                array[i] = combiner.op(array[i], other[i+otherOffset]);
+        }
 
-    // combine
-
-    static final class FJRCombine extends FJBase {
-        final Object[] other;
-        final Object[] dest;
-        final int otherOffset;
-        final Combiner combiner;
-        FJRCombine(Prefix prefix, int lo, int hi, FJBase next,
-                   Object[] other, int otherOffset, Object[] dest,
-                   Combiner combiner) {
-            super(prefix, lo, hi, next);
-            this.other = other;
-            this.otherOffset = otherOffset;
-            this.dest = dest;
-            this.combiner = combiner;
-        }
-        FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRCombine(prefix, l, h, r, other,
-                                  otherOffset, dest, combiner);
-        }
-        void  atLeaf(int l, int h) {
-            prefix.leafCombine(l, h, other, otherOffset, dest, combiner);
-        }
-    }
-
-    static final class FJDCombine extends FJBase {
-        final double[] other;
-        final double[] dest;
-        final int otherOffset;
-        final DoubleReducer combiner;
-        FJDCombine(Prefix prefix, int lo, int hi, FJBase next,
-                   double[] other, int otherOffset, double[] dest,
-                   DoubleReducer combiner) {
-            super(prefix, lo, hi, next);
-            this.other = other;
-            this.otherOffset = otherOffset;
-            this.dest = dest;
-            this.combiner = combiner;
-        }
-        FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJDCombine(prefix, l, h, r, other,
-                                  otherOffset, dest, combiner);
-        }
-        void  atLeaf(int l, int h) {
-            prefix.leafCombine(l, h, other, otherOffset, dest, combiner);
-        }
-    }
-
-    static final class FJLCombine extends FJBase {
-        final long[] other;
-        final long[] dest;
-        final int otherOffset;
-        final LongReducer combiner;
-        FJLCombine(Prefix prefix, int lo, int hi, FJBase next,
-                   long[] other, int otherOffset, long[] dest,
-                   LongReducer combiner) {
-            super(prefix, lo, hi, next);
-            this.other = other;
-            this.otherOffset = otherOffset;
-            this.dest = dest;
-            this.combiner = combiner;
-        }
-        FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJLCombine(prefix, l, h, r, other,
-                                  otherOffset, dest, combiner);
-        }
-        void  atLeaf(int l, int h) {
-            prefix.leafCombine(l, h, other, otherOffset, dest, combiner);
+        void leafCombineInPlace(int l, int h, long[] array, LongPredicate s) {
+            for (int i = l; i < h; ++i) {
+                long x = array[i];
+                if (s.op(x))
+                    array[i] = combiner.op(x, other[i+otherOffset]);
+            }
         }
     }
 
     // stats
 
-    static final class FJRStats extends FJBase
+    static final class FJOStats extends FJBase
         implements ParallelArray.SummaryStatistics {
         final Comparator comparator;
         public int size() { return size; }
@@ -810,7 +1510,7 @@ class PAS {
         Object max;
         int indexOfMin;
         int indexOfMax;
-        FJRStats(Prefix prefix, int lo, int hi, FJBase next,
+        FJOStats(Prefix prefix, int lo, int hi, FJBase next,
                  Comparator comparator) {
             super(prefix, lo, hi, next);
             this.comparator = comparator;
@@ -818,13 +1518,10 @@ class PAS {
             this.indexOfMax = -1;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRStats(prefix, l, h, r, comparator);
-        }
-        void  atLeaf(int l, int h) {
-            prefix.leafStats(l, h, this);
+            return new FJOStats(prefix, l, h, r, comparator);
         }
         void onReduce(FJBase right) {
-            FJRStats r = (FJRStats)right;
+            FJOStats r = (FJOStats)right;
             size += r.size;
             updateMin(r.indexOfMin, r.min);
             updateMax(r.indexOfMax, r.max);
@@ -841,6 +1538,30 @@ class PAS {
                 (indexOfMax < 0 || comparator.compare(max, x) < 0)) {
                 max = x;
                 indexOfMax = i;
+            }
+        }
+
+        void  atLeaf(int l, int h) {
+            if (prefix.hasFilter()) {
+                filteredAtLeaf(l, h);
+                return;
+            }
+            size = h - l;
+            for (int i = l; i < h; ++i) {
+                Object x = prefix.oget(i);
+                updateMin(i, x);
+                updateMax(i, x);
+            }
+        }
+
+        void  filteredAtLeaf(int l, int h) {
+            for (int i = l; i < h; ++i) {
+                if (prefix.isSelected(i)) {
+                    Object x = prefix.oget(i);
+                    ++size;
+                    updateMin(i, x);
+                    updateMax(i, x);
+                }
             }
         }
 
@@ -881,9 +1602,6 @@ class PAS {
         FJBase newSubtask(int l, int h, FJBase r) {
             return new FJDStats(prefix, l, h, r, comparator);
         }
-        void  atLeaf(int l, int h) {
-            prefix.leafStats(l, h, this);
-        }
         void onReduce(FJBase right) {
             FJDStats r = (FJDStats)right;
             size += r.size;
@@ -905,6 +1623,32 @@ class PAS {
                 indexOfMax = i;
             }
         }
+        void  atLeaf(int l, int h) {
+            if (prefix.hasFilter()) {
+                filteredAtLeaf(l, h);
+                return;
+            }
+            size = h - l;
+            for (int i = l; i < h; ++i) {
+                double x = prefix.dget(i);
+                sum += x;
+                updateMin(i, x);
+                updateMax(i, x);
+            }
+        }
+
+        void  filteredAtLeaf(int l, int h) {
+            for (int i = l; i < h; ++i) {
+                if (prefix.isSelected(i)) {
+                    double x = prefix.dget(i);
+                    ++size;
+                    sum += x;
+                    updateMin(i, x);
+                    updateMax(i, x);
+                }
+            }
+        }
+
         public String toString() {
             return
                 "size: " + size +
@@ -942,9 +1686,6 @@ class PAS {
         FJBase newSubtask(int l, int h, FJBase r) {
             return new FJLStats(prefix, l, h, r, comparator);
         }
-        void  atLeaf(int l, int h) {
-            prefix.leafStats(l, h, this);
-        }
         void onReduce(FJBase right) {
             FJLStats r = (FJLStats)right;
             size += r.size;
@@ -967,6 +1708,32 @@ class PAS {
             }
         }
 
+        void  atLeaf(int l, int h) {
+            if (prefix.hasFilter()) {
+                filteredAtLeaf(l, h);
+                return;
+            }
+            size = h - l;
+            for (int i = l; i < h; ++i) {
+                long x = prefix.lget(i);
+                sum += x;
+                updateMin(i, x);
+                updateMax(i, x);
+            }
+        }
+
+        void  filteredAtLeaf(int l, int h) {
+            for (int i = l; i < h; ++i) {
+                if (prefix.isSelected(i)) {
+                    long x = prefix.lget(i);
+                    ++size;
+                    sum += x;
+                    updateMin(i, x);
+                    updateMax(i, x);
+                }
+            }
+        }
+
         public String toString() {
             return
                 "size: " + size +
@@ -978,27 +1745,27 @@ class PAS {
 
     // count
 
-    static final class FJRCountSelected extends FJBase {
+    static final class FJOCountSelected extends FJBase {
         final Predicate selector;
         int count;
-        FJRCountSelected(Prefix prefix, int lo, int hi, FJBase next,
+        FJOCountSelected(Prefix prefix, int lo, int hi, FJBase next,
                          Predicate selector) {
             super(prefix, lo, hi, next);
             this.selector = selector;
         }
         FJBase newSubtask(int l, int h, FJBase r) {
-            return new FJRCountSelected(prefix, l, h, r, selector);
+            return new FJOCountSelected(prefix, l, h, r, selector);
         }
         void onReduce(FJBase right) {
-            count += ((FJRCountSelected)right).count;
+            count += ((FJOCountSelected)right).count;
         }
         void atLeaf(int l, int h) {
-            final Object[] array = prefix.rgetArray();
+            final Object[] array = prefix.ogetArray();
             if (array == null) return;
             final Predicate sel = this.selector;
             int n = 0;
             for (int i = l; i < h; ++i) {
-                if (sel.evaluate(array[i]))
+                if (sel.op(array[i]))
                     ++n;
             }
             count = n;
@@ -1025,7 +1792,7 @@ class PAS {
             final DoublePredicate sel = this.selector;
             int n = 0;
             for (int i = l; i < h; ++i) {
-                if (sel.evaluate(array[i]))
+                if (sel.op(array[i]))
                     ++n;
             }
             count = n;
@@ -1052,7 +1819,7 @@ class PAS {
             final LongPredicate sel = this.selector;
             int n = 0;
             for (int i = l; i < h; ++i) {
-                if (sel.evaluate(array[i]))
+                if (sel.op(array[i]))
                     ++n;
             }
             count = n;
@@ -1112,21 +1879,21 @@ class PAS {
 
     // select any
 
-    static final class FJRSelectAny extends FJSearchBase {
+    static final class FJOSelectAny extends FJSearchBase {
         final Predicate selector;
-        FJRSelectAny(Prefix prefix, int lo, int hi, FJSearchBase next,
+        FJOSelectAny(Prefix prefix, int lo, int hi, FJSearchBase next,
                      AtomicInteger result, Predicate selector) {
             super(prefix, lo, hi, next, result);
             this.selector = selector;
         }
         FJSearchBase newSubtask(int l, int h, FJSearchBase r) {
-            return new FJRSelectAny(prefix, l, h, r, result, selector);
+            return new FJOSelectAny(prefix, l, h, r, result, selector);
         }
         void atLeaf(int l, int h) {
-            final Object[] array = prefix.rgetArray();
+            final Object[] array = prefix.ogetArray();
             if (array == null) return;
             for (int i = l; i < h; ++i) {
-                if (selector.evaluate(array[i])) {
+                if (selector.op(array[i])) {
                     result.compareAndSet(-1, i);
                     break;
                 }
@@ -1150,7 +1917,7 @@ class PAS {
             final double[] array = prefix.dgetArray();
             if (array == null) return;
             for (int i = l; i < h; ++i) {
-                if (selector.evaluate(array[i])) {
+                if (selector.op(array[i])) {
                     result.compareAndSet(-1, i);
                     break;
                 }
@@ -1174,7 +1941,7 @@ class PAS {
             final long[] array = prefix.lgetArray();
             if (array == null) return;
             for (int i = l; i < h; ++i) {
-                if (selector.evaluate(array[i])) {
+                if (selector.op(array[i])) {
                     result.compareAndSet(-1, i);
                     break;
                 }
@@ -1186,18 +1953,18 @@ class PAS {
 
     // index of
 
-    static final class FJRIndexOf extends FJSearchBase {
+    static final class FJOIndexOf extends FJSearchBase {
         final Object target;
-        FJRIndexOf(Prefix prefix, int lo, int hi, FJSearchBase next,
+        FJOIndexOf(Prefix prefix, int lo, int hi, FJSearchBase next,
                    AtomicInteger result, Object target) {
             super(prefix, lo, hi, next, result);
             this.target = target;
         }
         FJSearchBase newSubtask(int l, int h, FJSearchBase r) {
-            return new FJRIndexOf(prefix, l, h, r, result, target);
+            return new FJOIndexOf(prefix, l, h, r, result, target);
         }
         void atLeaf(int l, int h) {
-            final Object[] array = prefix.rgetArray();
+            final Object[] array = prefix.ogetArray();
             if (array == null) return;
             for (int i = l; i < h; ++i) {
                 if (target.equals(array[i])) {
@@ -1261,9 +2028,9 @@ class PAS {
     // select all
 
     /**
-     * SelectAll proceeds in two passes. In the first pass, indices of
-     * matching elements are recorded in indices array.  In second pass,
-     * once the size of results is known and result array is
+     * SelectAll proceeds in two passes. In the first phase, indices
+     * of matching elements are recorded in indices array.  In second
+     * pass, once the size of results is known and result array is
      * constructed in driver, the matching elements are placed into
      * corresponding result positions.
      */
@@ -1355,10 +2122,10 @@ class PAS {
         abstract void leafPhase1(int loIdx, int hiIdx, int offset);
     }
 
-    static final class FJRSelectAllDriver extends FJSelectAllDriver {
+    static final class FJOSelectAllDriver extends FJSelectAllDriver {
         final Class elementType;
         Object[] results;
-        FJRSelectAllDriver(Prefix prefix, Class elementType) {
+        FJOSelectAllDriver(Prefix prefix, Class elementType) {
             super(prefix);
             this.elementType = elementType;
         }
@@ -1569,11 +2336,11 @@ class PAS {
         abstract int addElements(int lo, int hi);
     }
 
-    static final class RUniquifierTable extends UniquifierTable {
+    static final class OUniquifierTable extends UniquifierTable {
         final Object[] source;
         final Predicate selector;
         final boolean byIdentity;
-        RUniquifierTable(int size, Object[] array, Predicate selector,
+        OUniquifierTable(int size, Object[] array, Predicate selector,
                          boolean byIdentity) {
             super(size);
             this.source = array;
@@ -1588,7 +2355,7 @@ class PAS {
             int count = 0;
             for (int k = lo; k < hi; ++k) {
                 Object x = src[k];
-                if (x == null || (selector != null && !selector.evaluate(x)))
+                if (x == null || (selector != null && !selector.op(x)))
                     continue;
                 int hc = byIdentity? System.identityHashCode(x): x.hashCode();
                 int hash = hash(hc);
@@ -1648,7 +2415,7 @@ class PAS {
             int count = 0;
             for (int k = lo; k < hi; ++k) {
                 double x = src[k];
-                if (selector != null && !selector.evaluate(x))
+                if (selector != null && !selector.op(x))
                     continue;
                 long bits = Double.doubleToLongBits(x);
                 int hash = hash((int)(bits ^ (bits >>> 32)));;
@@ -1701,7 +2468,7 @@ class PAS {
             int count = 0;
             for (int k = lo; k < hi; ++k) {
                 long x = src[k];
-                if (selector != null && !selector.evaluate(x))
+                if (selector != null && !selector.op(x))
                     continue;
                 int hash = hash((int)(x ^ (x >>> 32)));
                 long entry = (((long)hash) << 32) + (k + 1);
@@ -1763,14 +2530,14 @@ class PAS {
      * creating 6 versions (not just 3) -- one each for natural
      * comparisons vs supplied comparators.
      */
-    static final class FJRSorter extends RecursiveAction {
+    static final class FJOSorter extends RecursiveAction {
         final Comparator cmp;
         final Object[] a;     // array to be sorted.
         final Object[] w;     // workspace for merge
         final int origin;     // origin of the part of array we deal with
         final int n;          // Number of elements in (sub)arrays.
         final int gran;       // split control
-        FJRSorter(Comparator cmp,
+        FJOSorter(Comparator cmp,
                   Object[] a, Object[] w, int origin, int n, int gran) {
             this.cmp = cmp;
             this.a = a; this.w = w; this.origin = origin; this.n = n;
@@ -1785,27 +2552,27 @@ class PAS {
                 int q = n >>> 2; // lower quarter index
                 int u = h + q;   // upper quarter
                 forkJoin(new FJSubSorter
-                         (new FJRSorter(cmp, a, w, l,   q,   g),
-                          new FJRSorter(cmp, a, w, l+q, h-q, g),
-                          new FJRMerger(cmp, a, w, l,   q,
+                         (new FJOSorter(cmp, a, w, l,   q,   g),
+                          new FJOSorter(cmp, a, w, l+q, h-q, g),
+                          new FJOMerger(cmp, a, w, l,   q,
                                         l+q, h-q, l, g, null)),
                          new FJSubSorter
-                         (new FJRSorter(cmp, a, w, l+h, q,   g),
-                          new FJRSorter(cmp, a, w, l+u, n-u, g),
-                          new FJRMerger(cmp, a, w, l+h, q,
+                         (new FJOSorter(cmp, a, w, l+h, q,   g),
+                          new FJOSorter(cmp, a, w, l+u, n-u, g),
+                          new FJOMerger(cmp, a, w, l+h, q,
                                         l+u, n-u, l+h, g, null)));
-                new FJRMerger(cmp, w, a, l, h,
+                new FJOMerger(cmp, w, a, l, h,
                               l+h, n-h, l, g, null).compute();
             }
             else
-                rquickSort(a, cmp, l, l+n-1);
+                oquickSort(a, cmp, l, l+n-1);
         }
     }
 
-    static final class FJRCSorter extends RecursiveAction {
+    static final class FJOCSorter extends RecursiveAction {
         final Comparable[] a; final Comparable[] w;
         final int origin; final int n; final int gran;
-        FJRCSorter(Comparable[] a, Comparable[] w,
+        FJOCSorter(Comparable[] a, Comparable[] w,
                    int origin, int n, int gran) {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
             this.gran = gran;
@@ -1818,20 +2585,20 @@ class PAS {
                 int q = n >>> 2;
                 int u = h + q;
                 forkJoin(new FJSubSorter
-                         (new FJRCSorter(a, w, l,   q,   g),
-                          new FJRCSorter(a, w, l+q, h-q, g),
-                          new FJRCMerger(a, w, l,   q,
+                         (new FJOCSorter(a, w, l,   q,   g),
+                          new FJOCSorter(a, w, l+q, h-q, g),
+                          new FJOCMerger(a, w, l,   q,
                                          l+q, h-q, l, g, null)),
                          new FJSubSorter
-                         (new FJRCSorter(a, w, l+h, q,   g),
-                          new FJRCSorter(a, w, l+u, n-u, g),
-                          new FJRCMerger(a, w, l+h, q,
+                         (new FJOCSorter(a, w, l+h, q,   g),
+                          new FJOCSorter(a, w, l+u, n-u, g),
+                          new FJOCMerger(a, w, l+h, q,
                                          l+u, n-u, l+h, g, null)));
-                new FJRCMerger(w, a, l, h,
+                new FJOCMerger(w, a, l, h,
                                l+h, n-h, l, g, null).compute();
             }
             else
-                rcquickSort(a, l, l+n-1);
+                ocquickSort(a, l, l+n-1);
         }
     }
 
@@ -1995,7 +2762,7 @@ class PAS {
      * sequentially merges. This is all messy to code; sadly we need
      * six versions.
      */
-    static final class FJRMerger extends RecursiveAction {
+    static final class FJOMerger extends RecursiveAction {
         final Comparator cmp;
         final Object[] a;      // partitioned  array.
         final Object[] w;      // Output array.
@@ -2005,11 +2772,11 @@ class PAS {
         final int rn;          // number of elements on right of a
         final int wo;          // origin for output
         final int gran;
-        final FJRMerger next;
+        final FJOMerger next;
 
-        FJRMerger(Comparator cmp, Object[] a, Object[] w,
+        FJOMerger(Comparator cmp, Object[] a, Object[] w,
                   int lo, int ln, int ro, int rn, int wo,
-                  int gran, FJRMerger next) {
+                  int gran, FJOMerger next) {
             this.cmp = cmp;
             this.a = a;    this.w = w;
             this.lo = lo;  this.ln = ln;
@@ -2021,7 +2788,7 @@ class PAS {
 
         public void compute() {
             // spawn right subtasks
-            FJRMerger rights = null;
+            FJOMerger rights = null;
             int nleft = ln;
             int nright = rn;
             while (nleft > gran) {
@@ -2038,7 +2805,7 @@ class PAS {
                     else
                         rl = mid + 1;
                 }
-                (rights = new FJRMerger
+                (rights = new FJOMerger
                  (cmp, a, w, splitIndex, nleft-lh, ro+rh,
                   nright-rh, wo+lh+rh, gran, rights)).fork();
                 nleft = lh;
@@ -2074,14 +2841,14 @@ class PAS {
         }
     }
 
-    static final class FJRCMerger extends RecursiveAction {
+    static final class FJOCMerger extends RecursiveAction {
         final Comparable[] a; final Comparable[] w;
         final int lo; final int ln; final int ro;  final int rn; final int wo;
         final int gran;
-        final FJRCMerger next;
-        FJRCMerger(Comparable[] a, Comparable[] w, int lo,
+        final FJOCMerger next;
+        FJOCMerger(Comparable[] a, Comparable[] w, int lo,
                    int ln, int ro, int rn, int wo,
-                   int gran, FJRCMerger next) {
+                   int gran, FJOCMerger next) {
             this.a = a;    this.w = w;
             this.lo = lo;  this.ln = ln; this.ro = ro; this.rn = rn;
             this.wo = wo;
@@ -2090,7 +2857,7 @@ class PAS {
         }
 
         public void compute() {
-            FJRCMerger rights = null;
+            FJOCMerger rights = null;
             int nleft = ln;
             int nright = rn;
             while (nleft > gran) {
@@ -2106,7 +2873,7 @@ class PAS {
                     else
                         rl = mid + 1;
                 }
-                (rights = new FJRCMerger
+                (rights = new FJOCMerger
                  (a, w, splitIndex, nleft-lh, ro+rh,
                   nright-rh, wo+lh+rh, gran, rights)).fork();
                 nleft = lh;
@@ -2411,7 +3178,7 @@ class PAS {
 
     // Six nearly identical versions of quicksort
 
-    static void rquickSort(Object[] a, Comparator cmp, int lo, int hi) {
+    static void oquickSort(Object[] a, Comparator cmp, int lo, int hi) {
         for (;;) {
             if (hi - lo <= INSERTION_SORT_THRESHOLD) {
                 for (int i = lo + 1; i <= hi; i++) {
@@ -2452,12 +3219,12 @@ class PAS {
                 else break;
             }
 
-            rquickSort(a, cmp, lo, left);
+            oquickSort(a, cmp, lo, left);
             lo = left + 1;
         }
     }
 
-    static void rcquickSort(Comparable[] a, int lo, int hi) {
+    static void ocquickSort(Comparable[] a, int lo, int hi) {
         for (;;) {
             if (hi - lo <= INSERTION_SORT_THRESHOLD) {
                 for (int i = lo + 1; i <= hi; i++) {
@@ -2498,7 +3265,7 @@ class PAS {
                 else break;
             }
 
-            rcquickSort(a, lo, left);
+            ocquickSort(a, lo, left);
             lo = left + 1;
         }
     }
@@ -2830,8 +3597,8 @@ class PAS {
 
         // no-op versions of methods to get/set in/out, overridden as
         // appropriate in subclasses
-        Object rgetIn() { return null; }
-        Object rgetOut() { return null; }
+        Object ogetIn() { return null; }
+        Object ogetOut() { return null; }
         void rsetIn(Object x) { }
         void rsetOut(Object x) { }
 
@@ -2847,14 +3614,14 @@ class PAS {
     }
 
     // Subclasses adding in/out fields of the appropriate type
-    static final class FJRScan extends FJScan {
+    static final class FJOScan extends FJScan {
         Object in;
         Object out;
-        FJRScan(FJScan parent, FJScanOp op, int lo, int hi) {
+        FJOScan(FJScan parent, FJScanOp op, int lo, int hi) {
             super(parent, op, lo, hi);
         }
-        Object rgetIn() { return in; }
-        Object rgetOut() { return out; }
+        Object ogetIn() { return in; }
+        Object ogetOut() { return out; }
         void rsetIn(Object x) { in = x; }
         void rsetOut(Object x) { out = x; }
     }
@@ -2904,35 +3671,35 @@ class PAS {
         abstract FJScan newSubtask(FJScan parent, int lo, int hi);
     }
 
-    static abstract class FJRScanOp extends FJScanOp {
+    static abstract class FJOScanOp extends FJScanOp {
         final Object[] array;
         final Reducer reducer;
         final Object base;
-        FJRScanOp(RPrefix prefix, Reducer reducer, Object base) {
+        FJOScanOp(OPrefix prefix, Reducer reducer, Object base) {
             super(prefix);
             this.array = prefix.pa.array;
             this.reducer = reducer;
             this.base = base;
         }
         final void pushDown(FJScan parent, FJScan left, FJScan right) {
-            Object pin = parent.rgetIn();
+            Object pin = parent.ogetIn();
             left.rsetIn(pin);
-            right.rsetIn(reducer.combine(pin, left.rgetOut()));
+            right.rsetIn(reducer.op(pin, left.ogetOut()));
         }
         final void pushUp(FJScan parent, FJScan left, FJScan right) {
-            parent.rsetOut(reducer.combine(left.rgetOut(),
-                                           right.rgetOut()));
+            parent.rsetOut(reducer.op(left.ogetOut(),
+                                           right.ogetOut()));
         }
         final FJScan newSubtask(FJScan parent, int lo, int hi) {
-            FJRScan f = new FJRScan(parent, this, lo, hi);
+            FJOScan f = new FJOScan(parent, this, lo, hi);
             f.in = base;
             f.out = base;
             return f;
         }
     }
 
-    static final class FJRCumulateOp extends FJRScanOp {
-        FJRCumulateOp(RPrefix prefix, Reducer reducer, Object base) {
+    static final class FJOCumulateOp extends FJOScanOp {
+        FJOCumulateOp(OPrefix prefix, Reducer reducer, Object base) {
             super(prefix, reducer, base);
         }
         void sumLeaf(int lo, int hi, FJScan f) {
@@ -2940,43 +3707,43 @@ class PAS {
             if (hi != upperBound) {
                 Object[] arr = array;
                 for (int i = lo; i < hi; ++i)
-                    sum = reducer.combine(sum, arr[i]);
+                    sum = reducer.op(sum, arr[i]);
             }
             f.rsetOut(sum);
         }
         void cumulateLeaf(int lo, int hi, FJScan f) {
             Object[] arr = array;
-            Object sum = f.rgetIn();
+            Object sum = f.ogetIn();
             for (int i = lo; i < hi; ++i)
-                arr[i] = sum = reducer.combine(sum, arr[i]);
+                arr[i] = sum = reducer.op(sum, arr[i]);
         }
         void sumAndCumulateLeaf(int lo, int hi, FJScan f) {
             Object[] arr = array;
             Object sum = base;
             for (int i = lo; i < hi; ++i)
-                arr[i] = sum = reducer.combine(sum, arr[i]);
+                arr[i] = sum = reducer.op(sum, arr[i]);
             f.rsetOut(sum);
         }
     }
 
-    static final class FJRPrecumulateOp extends FJRScanOp {
-        FJRPrecumulateOp(RPrefix prefix, Reducer reducer, Object base) {
+    static final class FJOPrecumulateOp extends FJOScanOp {
+        FJOPrecumulateOp(OPrefix prefix, Reducer reducer, Object base) {
             super(prefix, reducer, base);
         }
         void sumLeaf(int lo, int hi, FJScan f) {
             Object[] arr = array;
             Object sum = base;
             for (int i = lo; i < hi; ++i)
-                sum = reducer.combine(sum, arr[i]);
+                sum = reducer.op(sum, arr[i]);
             f.rsetOut(sum);
         }
         void cumulateLeaf(int lo, int hi, FJScan f) {
             Object[] arr = array;
-            Object sum = f.rgetIn();
+            Object sum = f.ogetIn();
             for (int i = lo; i < hi; ++i) {
                 Object x = arr[i];
                 arr[i] = sum;
-                sum = reducer.combine(sum, x);
+                sum = reducer.op(sum, x);
             }
         }
         void sumAndCumulateLeaf(int lo, int hi, FJScan f) {
@@ -2985,7 +3752,7 @@ class PAS {
             for (int i = lo; i < hi; ++i) {
                 Object x = arr[i];
                 arr[i] = sum;
-                sum = reducer.combine(sum, x);
+                sum = reducer.op(sum, x);
             }
             f.rsetOut(sum);
         }
@@ -3004,10 +3771,10 @@ class PAS {
         final void pushDown(FJScan parent, FJScan left, FJScan right) {
             double pin = parent.dgetIn();
             left.dsetIn(pin);
-            right.dsetIn(reducer.combine(pin, left.dgetOut()));
+            right.dsetIn(reducer.op(pin, left.dgetOut()));
         }
         final void pushUp(FJScan parent, FJScan left, FJScan right) {
-            parent.dsetOut(reducer.combine(left.dgetOut(),
+            parent.dsetOut(reducer.op(left.dgetOut(),
                                            right.dgetOut()));
         }
         final FJScan newSubtask(FJScan parent, int lo, int hi) {
@@ -3027,7 +3794,7 @@ class PAS {
             if (hi != upperBound) {
                 double[] arr = array;
                 for (int i = lo; i < hi; ++i)
-                    sum = reducer.combine(sum, arr[i]);
+                    sum = reducer.op(sum, arr[i]);
             }
             f.dsetOut(sum);
         }
@@ -3035,13 +3802,13 @@ class PAS {
             double[] arr = array;
             double sum = f.dgetIn();
             for (int i = lo; i < hi; ++i)
-                arr[i] = sum = reducer.combine(sum, arr[i]);
+                arr[i] = sum = reducer.op(sum, arr[i]);
         }
         void sumAndCumulateLeaf(int lo, int hi, FJScan f) {
             double[] arr = array;
             double sum = base;
             for (int i = lo; i < hi; ++i)
-                arr[i] = sum = reducer.combine(sum, arr[i]);
+                arr[i] = sum = reducer.op(sum, arr[i]);
             f.dsetOut(sum);
         }
     }
@@ -3054,7 +3821,7 @@ class PAS {
             double[] arr = array;
             double sum = base;
             for (int i = lo; i < hi; ++i)
-                sum = reducer.combine(sum, arr[i]);
+                sum = reducer.op(sum, arr[i]);
             f.dsetOut(sum);
         }
         void cumulateLeaf(int lo, int hi, FJScan f) {
@@ -3063,7 +3830,7 @@ class PAS {
             for (int i = lo; i < hi; ++i) {
                 double x = arr[i];
                 arr[i] = sum;
-                sum = reducer.combine(sum, x);
+                sum = reducer.op(sum, x);
             }
         }
         void sumAndCumulateLeaf(int lo, int hi, FJScan f) {
@@ -3072,7 +3839,7 @@ class PAS {
             for (int i = lo; i < hi; ++i) {
                 double x = arr[i];
                 arr[i] = sum;
-                sum = reducer.combine(sum, x);
+                sum = reducer.op(sum, x);
             }
             f.dsetOut(sum);
         }
@@ -3091,10 +3858,10 @@ class PAS {
         final void pushDown(FJScan parent, FJScan left, FJScan right) {
             long pin = parent.lgetIn();
             left.lsetIn(pin);
-            right.lsetIn(reducer.combine(pin, left.lgetOut()));
+            right.lsetIn(reducer.op(pin, left.lgetOut()));
         }
         final void pushUp(FJScan parent, FJScan left, FJScan right) {
-            parent.lsetOut(reducer.combine(left.lgetOut(),
+            parent.lsetOut(reducer.op(left.lgetOut(),
                                            right.lgetOut()));
         }
         final FJScan newSubtask(FJScan parent, int lo, int hi) {
@@ -3114,7 +3881,7 @@ class PAS {
             if (hi != upperBound) {
                 long[] arr = array;
                 for (int i = lo; i < hi; ++i)
-                    sum = reducer.combine(sum, arr[i]);
+                    sum = reducer.op(sum, arr[i]);
             }
             f.lsetOut(sum);
         }
@@ -3122,13 +3889,13 @@ class PAS {
             long[] arr = array;
             long sum = f.lgetIn();
             for (int i = lo; i < hi; ++i)
-                arr[i] = sum = reducer.combine(sum, arr[i]);
+                arr[i] = sum = reducer.op(sum, arr[i]);
         }
         void sumAndCumulateLeaf(int lo, int hi, FJScan f) {
             long[] arr = array;
             long sum = base;
             for (int i = lo; i < hi; ++i)
-                arr[i] = sum = reducer.combine(sum, arr[i]);
+                arr[i] = sum = reducer.op(sum, arr[i]);
             f.lsetOut(sum);
         }
     }
@@ -3141,7 +3908,7 @@ class PAS {
             long[] arr = array;
             long sum = base;
             for (int i = lo; i < hi; ++i)
-                sum = reducer.combine(sum, arr[i]);
+                sum = reducer.op(sum, arr[i]);
             f.lsetOut(sum);
         }
         void cumulateLeaf(int lo, int hi, FJScan f) {
@@ -3150,7 +3917,7 @@ class PAS {
             for (int i = lo; i < hi; ++i) {
                 long x = arr[i];
                 arr[i] = sum;
-                sum = reducer.combine(sum, x);
+                sum = reducer.op(sum, x);
             }
         }
         void sumAndCumulateLeaf(int lo, int hi, FJScan f) {
@@ -3159,7 +3926,7 @@ class PAS {
             for (int i = lo; i < hi; ++i) {
                 long x = arr[i];
                 arr[i] = sum;
-                sum = reducer.combine(sum, x);
+                sum = reducer.op(sum, x);
             }
             f.lsetOut(sum);
         }
@@ -3332,4 +4099,871 @@ class PAS {
             f.lsetOut(sum);
         }
     }
+
+    // Zillions of little classes to support binary ops
+
+    static <T,U,V> IntAndObjectToObject<T,V> indexedMapper
+        (final BinaryOp<? super T, ? super U, ? extends V> combiner,
+         final U[] u, final int offset) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T,U> IntAndObjectToDouble<T> indexedMapper
+        (final ObjectAndObjectToDouble<? super T, ? super U> combiner,
+         final U[] u, final int offset) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T,U> IntAndObjectToLong<T> indexedMapper
+        (final ObjectAndObjectToLong<? super T, ? super U> combiner,
+         final U[] u, final int offset) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> indexedMapper
+        (final ObjectAndDoubleToObject<? super T, ? extends V> combiner,
+         final double[] u, final int offset) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> indexedMapper
+        (final ObjectAndDoubleToDouble<? super T> combiner,
+         final double[] u, final int offset) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T,U> IntAndObjectToLong<T> indexedMapper
+        (final ObjectAndDoubleToLong<? super T> combiner,
+         final double[] u, final int offset) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> indexedMapper
+        (final ObjectAndLongToObject<? super T, ? extends V> combiner,
+         final long[] u, final int offset) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> indexedMapper
+        (final ObjectAndLongToDouble<? super T> combiner,
+         final long[] u, final int offset) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T> IntAndObjectToLong<T> indexedMapper
+        (final ObjectAndLongToLong<? super T> combiner,
+         final long[] u, final int offset) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <U,V> IntAndDoubleToObject<V> indexedMapper
+        (final DoubleAndObjectToObject<? super U, ? extends V> combiner,
+         final U[] u, final int offset) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <U> IntAndDoubleToDouble indexedMapper
+        (final DoubleAndObjectToDouble<? super U> combiner,
+         final U[] u, final int offset) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <U> IntAndDoubleToLong indexedMapper
+        (final DoubleAndObjectToLong<? super U> combiner,
+         final U[] u, final int offset) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> indexedMapper
+        (final DoubleAndDoubleToObject<? extends V> combiner,
+         final double[] u, final int offset) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndDoubleToDouble indexedMapper
+        (final BinaryDoubleOp combiner,
+         final double[] u, final int offset) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndDoubleToLong indexedMapper
+        (final DoubleAndDoubleToLong combiner,
+         final double[] u, final int offset) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> indexedMapper
+        (final DoubleAndLongToObject<? extends V> combiner,
+         final long[] u, final int offset) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndDoubleToDouble indexedMapper
+        (final DoubleAndLongToDouble combiner,
+         final long[] u, final int offset) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndDoubleToLong indexedMapper
+        (final DoubleAndLongToLong combiner,
+         final long[] u, final int offset) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <U,V> IntAndLongToObject<V> indexedMapper
+        (final LongAndObjectToObject<? super U, ? extends V> combiner,
+         final U[] u, final int offset) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <U> IntAndLongToDouble indexedMapper
+        (final LongAndObjectToDouble<? super U> combiner,
+         final U[] u, final int offset) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <U> IntAndLongToLong indexedMapper
+        (final LongAndObjectToLong<? super U> combiner,
+         final U[] u, final int offset) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> indexedMapper
+        (final LongAndDoubleToObject<? extends V> combiner,
+         final double[] u, final int offset) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndLongToDouble indexedMapper
+        (final LongAndDoubleToDouble combiner,
+         final double[] u, final int offset) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndLongToLong indexedMapper
+        (final LongAndDoubleToLong combiner,
+         final double[] u, final int offset) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> indexedMapper
+        (final LongAndLongToObject<? extends V> combiner,
+         final long[] u, final int offset) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndLongToDouble indexedMapper
+        (final LongAndLongToDouble combiner,
+         final long[] u, final int offset) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static IntAndLongToLong indexedMapper
+        (final BinaryLongOp combiner,
+         final long[] u, final int offset) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return combiner.op(a, u[i+offset]); }
+        };
+    }
+
+    static <T,U,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final IntAndObjectToObject<? super T, ? extends U> fst,
+         final IntAndObjectToObject<? super U, ? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T,U> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final IntAndObjectToObject<? super T, ? extends U> fst,
+         final IntAndObjectToDouble<? super U> snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T,U> IntAndObjectToLong<T> compoundIndexedMapper
+        (final IntAndObjectToObject<? super T, ? extends U> fst,
+         final IntAndObjectToLong<? super U> snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <U,V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final IntAndDoubleToObject<? extends U> fst,
+         final IntAndObjectToObject<? super U, ? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndDoubleToDouble compoundIndexedMapper
+        (final IntAndDoubleToObject<? extends U> fst,
+         final IntAndObjectToDouble<? super U> snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndDoubleToLong compoundIndexedMapper
+        (final IntAndDoubleToObject<? extends U> fst,
+         final IntAndObjectToLong<? super U> snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <U,V> IntAndLongToObject<V> compoundIndexedMapper
+        (final IntAndLongToObject<? extends U> fst,
+         final IntAndObjectToObject<? super U, ? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndLongToDouble compoundIndexedMapper
+        (final IntAndLongToObject<? extends U> fst,
+         final IntAndObjectToDouble<? super U> snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndLongToLong compoundIndexedMapper
+        (final IntAndLongToObject<? extends U> fst,
+         final IntAndObjectToLong<? super U> snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final IntAndObjectToDouble<? super T> fst,
+         final IntAndDoubleToObject<? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final IntAndObjectToDouble<? super T> fst,
+         final IntAndDoubleToDouble snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToLong<T> compoundIndexedMapper
+        (final IntAndObjectToLong<? super T> fst,
+         final IntAndLongToLong snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final IntAndDoubleToLong fst,
+         final IntAndLongToObject<? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToDouble compoundIndexedMapper
+        (final IntAndDoubleToDouble fst,
+         final IntAndDoubleToDouble snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToLong compoundIndexedMapper
+        (final IntAndDoubleToDouble fst,
+         final IntAndDoubleToLong snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> compoundIndexedMapper
+        (final IntAndLongToDouble fst,
+         final IntAndDoubleToObject<? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToDouble compoundIndexedMapper
+        (final IntAndLongToDouble fst,
+         final IntAndDoubleToDouble snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToLong compoundIndexedMapper
+        (final IntAndLongToDouble fst,
+         final IntAndDoubleToLong snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final IntAndObjectToLong<? super T> fst,
+         final IntAndLongToObject<? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final IntAndObjectToLong<? super T> fst,
+         final IntAndLongToDouble snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToLong<T> compoundIndexedMapper
+        (final IntAndObjectToDouble<? super T> fst,
+         final IntAndDoubleToLong snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final IntAndDoubleToDouble fst,
+         final IntAndDoubleToObject<? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToDouble compoundIndexedMapper
+        (final IntAndDoubleToLong fst,
+         final IntAndLongToDouble snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToLong compoundIndexedMapper
+        (final IntAndDoubleToLong fst,
+         final IntAndLongToLong snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> compoundIndexedMapper
+        (final IntAndLongToLong fst,
+         final IntAndLongToObject<? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToDouble compoundIndexedMapper
+        (final IntAndLongToLong fst,
+         final IntAndLongToDouble snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToLong compoundIndexedMapper
+        (final IntAndLongToLong fst,
+         final IntAndLongToLong snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(i, fst.op(i, a)); }
+        };
+    }
+
+    static <T,U,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final IntAndObjectToObject<? super T, ? extends U> fst,
+         final Op<? super U, ? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T,U> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final IntAndObjectToObject<? super T, ? extends U> fst,
+         final ObjectToDouble<? super U> snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T,U> IntAndObjectToLong<T> compoundIndexedMapper
+        (final IntAndObjectToObject<? super T, ? extends U> fst,
+         final ObjectToLong<? super U> snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <U,V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final IntAndDoubleToObject<? extends U> fst,
+         final Op<? super U, ? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndDoubleToDouble compoundIndexedMapper
+        (final IntAndDoubleToObject<? extends U> fst,
+         final ObjectToDouble<? super U> snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndDoubleToLong compoundIndexedMapper
+        (final IntAndDoubleToObject<? extends U> fst,
+         final ObjectToLong<? super U> snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <U,V> IntAndLongToObject<V> compoundIndexedMapper
+        (final IntAndLongToObject<? extends U> fst,
+         final Op<? super U, ? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndLongToDouble compoundIndexedMapper
+        (final IntAndLongToObject<? extends U> fst,
+         final ObjectToDouble<? super U> snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <U> IntAndLongToLong compoundIndexedMapper
+        (final IntAndLongToObject<? extends U> fst,
+         final ObjectToLong<? super U> snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final IntAndObjectToDouble<? super T> fst,
+         final DoubleToObject<? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final IntAndObjectToDouble<? super T> fst,
+         final DoubleOp snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToLong<T> compoundIndexedMapper
+        (final IntAndObjectToDouble<? super T> fst,
+         final DoubleToLong snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final IntAndDoubleToDouble fst,
+         final DoubleToObject<? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToDouble compoundIndexedMapper
+        (final IntAndDoubleToDouble fst,
+         final DoubleOp snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToLong compoundIndexedMapper
+        (final IntAndDoubleToDouble fst,
+         final DoubleToLong snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> compoundIndexedMapper
+        (final IntAndLongToDouble fst,
+         final DoubleToObject<? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToDouble compoundIndexedMapper
+        (final IntAndLongToDouble fst,
+         final DoubleOp snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i,long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToLong compoundIndexedMapper
+        (final IntAndLongToDouble fst,
+         final DoubleToLong snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final IntAndObjectToLong<? super T> fst,
+         final LongToObject<? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final IntAndObjectToLong<? super T> fst,
+         final LongToDouble snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T> IntAndObjectToLong<T> compoundIndexedMapper
+        (final IntAndObjectToLong<? super T> fst,
+         final LongOp snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final IntAndDoubleToLong fst,
+         final LongToObject<? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToDouble compoundIndexedMapper
+        (final IntAndDoubleToLong fst,
+         final LongToDouble snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndDoubleToLong compoundIndexedMapper
+        (final IntAndDoubleToLong fst,
+         final LongOp snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> compoundIndexedMapper
+        (final IntAndLongToLong fst,
+         final LongToObject<? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToDouble compoundIndexedMapper
+        (final IntAndLongToLong fst,
+         final LongToDouble snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i,long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static IntAndLongToLong compoundIndexedMapper
+        (final IntAndLongToLong fst,
+         final LongOp snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(fst.op(i, a)); }
+        };
+    }
+
+    static <T,U,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final Op<? super T, ? extends U> fst,
+         final IntAndObjectToObject<? super U, ? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T,U> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final Op<? super T, ? extends U> fst,
+         final IntAndObjectToDouble<? super U> snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T,U> IntAndObjectToLong<T> compoundIndexedMapper
+        (final Op<? super T, ? extends U> fst,
+         final IntAndObjectToLong<? super U> snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <U,V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final DoubleToObject<? extends U> fst,
+         final IntAndObjectToObject<? super U, ? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <U> IntAndDoubleToDouble compoundIndexedMapper
+        (final DoubleToObject<? extends U> fst,
+         final IntAndObjectToDouble<? super U> snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <U> IntAndDoubleToLong compoundIndexedMapper
+        (final DoubleToObject<? extends U> fst,
+         final IntAndObjectToLong<? super U> snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <U,V> IntAndLongToObject<V> compoundIndexedMapper
+        (final LongToObject<? extends U> fst,
+         final IntAndObjectToObject<? super U, ? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <U> IntAndLongToDouble compoundIndexedMapper
+        (final LongToObject<? extends U> fst,
+         final IntAndObjectToDouble<? super U> snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <U> IntAndLongToLong compoundIndexedMapper
+        (final LongToObject<? extends U> fst,
+         final IntAndObjectToLong<? super U> snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final ObjectToDouble<? super T> fst,
+         final IntAndDoubleToObject<? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final ObjectToDouble<? super T> fst,
+         final IntAndDoubleToDouble snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T> IntAndObjectToLong<T> compoundIndexedMapper
+        (final ObjectToDouble<? super T> fst,
+         final IntAndDoubleToLong snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final DoubleOp fst,
+         final IntAndDoubleToObject<? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndDoubleToDouble compoundIndexedMapper
+        (final DoubleOp fst,
+         final IntAndDoubleToDouble snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndDoubleToLong compoundIndexedMapper
+        (final DoubleOp fst,
+         final IntAndDoubleToLong snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> compoundIndexedMapper
+        (final LongToDouble fst,
+         final IntAndDoubleToObject<? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndLongToDouble compoundIndexedMapper
+        (final LongToDouble fst,
+         final IntAndDoubleToDouble snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndLongToLong compoundIndexedMapper
+        (final LongToDouble fst,
+         final IntAndDoubleToLong snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T,V> IntAndObjectToObject<T,V> compoundIndexedMapper
+        (final ObjectToLong<? super T> fst,
+         final IntAndLongToObject<? extends V> snd) {
+        return new IntAndObjectToObject<T,V>() {
+            public V op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T> IntAndObjectToDouble<T> compoundIndexedMapper
+        (final ObjectToLong<? super T> fst,
+         final IntAndLongToDouble snd) {
+        return new IntAndObjectToDouble<T>() {
+            public double op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <T> IntAndObjectToLong<T> compoundIndexedMapper
+        (final ObjectToLong<? super T> fst,
+         final IntAndLongToLong snd) {
+        return new IntAndObjectToLong<T>() {
+            public long op(int i, T a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <V> IntAndDoubleToObject<V> compoundIndexedMapper
+        (final DoubleToLong fst,
+         final IntAndLongToObject<? extends V> snd) {
+        return new IntAndDoubleToObject<V>() {
+            public V op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndDoubleToDouble compoundIndexedMapper
+        (final DoubleToLong fst,
+         final IntAndLongToDouble snd) {
+        return new IntAndDoubleToDouble() {
+            public double op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndDoubleToLong compoundIndexedMapper
+        (final DoubleToLong fst,
+         final IntAndLongToLong snd) {
+        return new IntAndDoubleToLong() {
+            public long op(int i, double a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static <V> IntAndLongToObject<V> compoundIndexedMapper
+        (final LongOp fst,
+         final IntAndLongToObject<? extends V> snd) {
+        return new IntAndLongToObject<V>() {
+            public V op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndLongToDouble compoundIndexedMapper
+        (final LongOp fst,
+         final IntAndLongToDouble snd) {
+        return new IntAndLongToDouble() {
+            public double op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
+    static IntAndLongToLong compoundIndexedMapper
+        (final LongOp fst,
+         final IntAndLongToLong snd) {
+        return new IntAndLongToLong() {
+            public long op(int i, long a) { return snd.op(i, fst.op(a)); }
+        };
+    }
+
 }

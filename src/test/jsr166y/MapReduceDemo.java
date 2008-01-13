@@ -16,27 +16,27 @@ public class MapReduceDemo {
      * Sequential version, for performance comparison
      */
     static <T, U> U seqMapReduce(T[] array,
-                                 Ops.Mapper<T, U> mapper,
+                                 Ops.Op<T, U> mapper,
                                  Ops.Reducer<U> reducer,
                                  U base) {
         int n = array.length;
         U x = base;
         for (int i = 0; i < n; ++i) 
-            x = reducer.combine(x, mapper.map(array[i]));
+            x = reducer.op(x, mapper.op(array[i]));
         return x;
     }
 
     
 
     // sample functions
-    static final class GetNext implements Ops.Mapper<Rand, Long> {
-        public Long map(Rand x) { 
+    static final class GetNext implements Ops.Op<Rand, Long> {
+        public Long op(Rand x) { 
             return x.next();
         }
     }
 
     static final class Accum implements Ops.Reducer<Long> {
-        public Long combine(Long a, Long b) {
+        public Long op(Long a, Long b) {
             long x = a;
             long y = b;
             return x + y;

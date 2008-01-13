@@ -53,30 +53,6 @@ import java.lang.reflect.Array;
  * method {@link #setLimit} along with element-by-element access
  * methods {@link #get}</tt> and {@link #set}.
  *
- * <p> Most operations can be prefixed with range bounds, filters, and
- * mappings using <tt>withBounds</tt>, <tt>withFilter</tt>, and
- * <tt>withMapping</tt>, respectively. For example,
- * <tt>aParallelArray.withFilter(aPredicate).all()</tt> creates a new
- * ParallelArray containing only those elements matching the
- * predicate.  As illustrated below, a <em>mapping</em> often
- * represents accessing some field or invoking some method of an
- * element.  These versions are typically more efficient than
- * performing selections, then mappings, then other operations in
- * multiple (parallel) steps. The basic ideas and usages of filtering
- * and mapping are similar to those in database query systems such as
- * SQL, but take a more restrictive form.  Series of filter and
- * mapping prefixes may each be cascaded, but all filter prefixes
- * must precede all mapping prefixes, to ensure efficient execution in
- * s single parallel step.  Instances of <tt>WithFilter</tt> etc are
- * useful only as operation prefixes, and should not normally be
- * stored in variables for future use.
- *
- * <p>This class includes some reductions, such as <tt>min</tt>, that
- * are commonly useful for most element types, as well as a combined
- * version, <tt>summary</tt>, that computes all of them in a single
- * parallel step, which is normally more efficient that computing each
- * in turn.
- *
  * <p>While ParallelArrays can be based on any kind of an object
  * array, including "boxed" types such as Long, parallel operations on
  * scalar "unboxed" type are likely to be substantially more
@@ -89,6 +65,35 @@ import java.lang.reflect.Array;
  * specializations for these other types would add clutter without
  * significantly improving performance beyond that of the Long and
  * Double versions.)
+ *
+ * <p> Most usages of ParallelArray chain srts of operations prefixed
+ * with range bounds, filters, and mappings (including mappings that
+ * combine elements from other ParallelArrays), using
+ * <tt>withBounds</tt>, <tt>withFilter</tt>, and <tt>withMapping</tt>,
+ * respectively. For example,
+ * <tt>aParallelArray.withFilter(aPredicate).all()</tt> creates a new
+ * ParallelArray containing only those elements matching the
+ * predicate. And for ParallelLongArrays a, b, and c,
+ * <tt>a.withMapping(Ops.longAdder(),b).WithMapping(Ops.longAdder(),c).min()</tt>
+ * returns the minimum value of a[i]+b[i]+c[i] for all i.  As
+ * illustrated below, a <em>mapping</em> often represents accessing
+ * some field or invoking some method of an element.  These versions
+ * are typically more efficient than performing selections, then
+ * mappings, then other operations in multiple (parallel) steps. The
+ * basic ideas and usages of filtering and mapping are similar to
+ * those in database query systems such as SQL, but take a more
+ * restrictive form.  Series of filter and mapping prefixes may each
+ * be cascaded, but all filter prefixes must precede all mapping
+ * prefixes, to ensure efficient execution in s single parallel step.
+ * Instances of <tt>WithFilter</tt> etc are useful only as operation
+ * prefixes, and should not normally be stored in variables for future
+ * use.
+ *
+ * <p>This class includes some reductions, such as <tt>min</tt>, that
+ * are commonly useful for most element types, as well as a combined
+ * version, <tt>summary</tt>, that computes all of them in a single
+ * parallel step, which is normally more efficient than computing each
+ * in turn.
  *
  * <p>The methods in this class are designed to perform efficiently
  * with both large and small pools, even with single-thread pools on
@@ -115,11 +120,11 @@ import java.lang.reflect.Array;
  *
  *   // helpers:
  *   static final class IsSenior implements Predicate&lt;Student&gt; {
- *     public boolean evaluate(Student s) { return s.credits &gt; 90; }
+ *     public boolean op(Student s) { return s.credits &gt; 90; }
  *   }
  *   static final IsSenior isSenior = new IsSenior();
- *   static final class GpaField implements MapperToDouble&lt;Student&gt {
- *     public double map(Student s) { return s.gpa; }
+ *   static final class GpaField implements ObjectToDouble&lt;Student&gt {
+ *     public double op(Student s) { return s.gpa; }
  *   }
  *   static final GpaField gpaField = new GpaField();
  * }
@@ -163,8 +168,7 @@ public class ParallelArray<T> implements Iterable<T> {
      * @param array the array
      * @param limit the upper bound limit
      */
-    protected ParallelArray(ForkJoinExecutor executor, T[] array,
-                            int limit) {
+    protected ParallelArray(ForkJoinExecutor executor, T[] array, int limit) {
         if (executor == null || array == null)
             throw new NullPointerException();
         if (limit < 0 || limit > array.length)
@@ -324,124 +328,21 @@ public class ParallelArray<T> implements Iterable<T> {
     }
 
     /**
-     * Returns a ParallelArray containing results of
-     * applying <tt>combine(thisElement, otherElement)</tt>
-     * for each element.
-     * @param other the other array
-     * @param combiner the combiner
-     * @return the array of mappings
-     * @throws ArrayIndexOutOfBoundsException if other array is
-     * shorter than this array.
-     */
-    public <U,V> ParallelArray<V> combine
-        (U[] other,
-         Combiner<? super T, ? super U, ? extends V> combiner) {
-        return new WithBounds<T>(this).combine(other, combiner);
-    }
-
-    /**
-     * Returns a ParallelArray containing results of
-     * applying <tt>combine(thisElement, otherElement)</tt>
-     * for each element.
-     * @param other the other array
-     * @param combiner the combiner
-     * @return the array of mappings
-     * @throws ArrayIndexOutOfBoundsException if other array is not
-     * the same length as this array.
-     */
-    public <U,V> ParallelArray<V> combine
-        (ParallelArray<? extends U> other,
-         Combiner<? super T, ? super U, ? extends V> combiner) {
-        return new WithBounds<T>(this).combine(other, combiner);
-    }
-
-    /**
-     * Returns a ParallelArray containing results of
-     * applying <tt>combine(thisElement, otherElement)</tt>
-     * for each element.
-     * @param other the other array
-     * @param combiner the combiner
-     * @param elementType the type of elements of returned array
-     * @return the array of mappings
-     * @throws ArrayIndexOutOfBoundsException if other array is
-     * shorter than this array.
-     */
-    public <U,V> ParallelArray<V> combine
-        (U[] other,
-         Combiner<? super T, ? super U, ? extends V> combiner,
-         Class<? super V> elementType) {
-        return new WithBounds<T>(this).combine(other, combiner, elementType);
-    }
-
-    /**
-     * Returns a ParallelArray containing results of
-     * applying <tt>combine(thisElement, otherElement)</tt>
-     * for each element.
-     * @param other the other array segment
-     * @param combiner the combiner
-     * @return the array of mappings
-     * @throws ArrayIndexOutOfBoundsException if other segment is
-     * shorter than this array.
-     */
-    public <U,V> ParallelArray<V> combine
-        (ParallelArray.WithBounds<? extends U> other,
-         Combiner<? super T, ? super U, ? extends V> combiner) {
-        return new WithBounds<T>(this).combine(other, combiner);
-    }
-
-    /**
-     * Returns a ParallelArray containing results of
-     * applying <tt>combine(thisElement, otherElement)</tt>
-     * for each element.
-     * @param other the other array segment
-     * @param combiner the combiner
-     * @param elementType the type of elements of returned array
-     * @return the array of mappings
-     * @throws ArrayIndexOutOfBoundsException if other array is
-     * shorter than this array.
-     */
-    public <U,V> ParallelArray<V> combine
-        (ParallelArray.WithBounds<? extends U> other,
-         Combiner<? super T, ? super U, ? extends V> combiner,
-         Class<? super V> elementType) {
-        return new WithBounds<T>(this).combine(other, combiner, elementType);
-    }
-
-    /**
-     * Returns a ParallelArray containing results of
-     * applying <tt>combine(thisElement, otherElement)</tt>
-     * for each element.
-     * @param other the other array
-     * @param combiner the combiner
-     * @param elementType the type of elements of returned array
-     * @return the array of mappings
-     * @throws ArrayIndexOutOfBoundsException if other array is not
-     * the same length as this array.
-     */
-    public <U,V> ParallelArray<V> combine
-        (ParallelArray<? extends U> other,
-         Combiner<? super T, ? super U, ? extends V> combiner,
-         Class<? super V> elementType) {
-        return new WithBounds<T>(this).combine(other.array,
-                                               combiner, elementType);
-    }
-
-    /**
-     * Replaces elements with the results of applying the given mapper
+     * Replaces elements with the results of applying the given transform
      * to their current values.
-     * @param mapper the mapper
+     * @param op the op
      */
-    public void replaceWithTransform(Mapper<? super T, ? extends T> mapper) {
-        new WithBounds<T>(this).replaceWithTransform(mapper);
+    public void replaceWithMapping(Op<? super T, ? extends T> op) {
+        new WithBounds<T>(this).replaceWithMapping(op);
     }
 
     /**
      * Replaces elements with the results of applying the given
-     * mapper to their indices.
-     * @param mapper the mapper
+     * mapping to their indices.
+     * @param op the op
      */
-    public void replaceWithMappedIndex(MapperFromInt<? extends T> mapper) {
-        new WithBounds<T>(this).replaceWithMappedIndex(mapper);
+    public void replaceWithMappedIndex(IntToObject<? extends T> op) {
+        new WithBounds<T>(this).replaceWithMappedIndex(op);
     }
 
     /**
@@ -463,41 +364,40 @@ public class ParallelArray<T> implements Iterable<T> {
 
     /**
      * Replaces elements with results of applying
-     * <tt>combine(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>
      * @param other the other array
      * @param combiner the combiner
      * @throws ArrayIndexOutOfBoundsException if other array has
      * fewer elements than this array.
      */
-    public void replaceWithCombination
-        (ParallelArray<? extends T> other, Reducer<T> combiner) {
-        new WithBounds<T>(this).replaceWithCombination(other.array, combiner);
+    public void replaceWithMapping(BinaryOp<T,T,T> combiner,
+                                   ParallelArray<? extends T> other) {
+        new WithBounds<T>(this).replaceWithMapping(combiner, other.array);
     }
 
     /**
      * Replaces elements with results of applying
-     * <tt>combine(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>
      * @param other the other array
      * @param combiner the combiner
      * @throws ArrayIndexOutOfBoundsException if other array has
      * fewer elements than this array.
      */
-    public void replaceWithCombination(T[] other, Reducer<T> combiner) {
-        new WithBounds<T>(this).replaceWithCombination(other, combiner);
+    public void replaceWithMapping(BinaryOp<T,T,T> combiner, T[] other) {
+        new WithBounds<T>(this).replaceWithMapping(combiner, other);
     }
 
     /**
      * Replaces elements with results of applying
-     * <tt>combine(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>
      * @param other the other array segment
      * @param combiner the combiner
      * @throws ArrayIndexOutOfBoundsException if other segment has
      * fewer elements.than this array,
      */
-    public void replaceWithCombination
-        (ParallelArray.WithBounds<? extends T> other,
-         Reducer<T> combiner) {
-        new WithBounds<T>(this).replaceWithCombination(other, combiner);
+    public void replaceWithMapping(BinaryOp<T,T,T> combiner,
+                                   ParallelArray.WithBounds<? extends T> other){
+        new WithBounds<T>(this).replaceWithMapping(combiner, other);
     }
 
     /**
@@ -687,9 +587,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
     /**
      * Returns a new ParallelArray containing only the non-null unique
-     * elements of this array (that is, without any duplicates). This
-     * method uses each element's <tt>equals</tt> method to test for
-     * duplication.
+     * elements of this array (that is, without any duplicates), using
+     * each element's <tt>equals</tt> method to test for duplication.
      * @return the new ParallelArray
      */
     public ParallelArray<T> allUniqueElements() {
@@ -698,8 +597,8 @@ public class ParallelArray<T> implements Iterable<T> {
 
     /**
      * Returns a new ParallelArray containing only the non-null unique
-     * elements of this array (that is, without any duplicates). This
-     * method uses reference identity to test for duplication.
+     * elements of this array (that is, without any duplicates), using
+     * reference identity to test for duplication.
      * @return the new ParallelArray
      */
     public ParallelArray<T> allNonidenticalElements() {
@@ -739,42 +638,216 @@ public class ParallelArray<T> implements Iterable<T> {
 
     /**
      * Returns an operation prefix that causes a method to operate
-     * on mapped elements of the array using the given mapper.
-     * @param mapper the mapper
+     * on mapped elements of the array using the given op.
+     * @param op the op
      * @return operation prefix
      */
-    public <U> WithMapping<T, U> withMapping
-        (Mapper<? super T, ? extends U> mapper) {
-        return new WithBoundedMapping<T,U>(this, 0, limit, mapper);
+    public <U> WithMapping<T, U> withMapping(Op<? super T, ? extends U> op) {
+        return new WithBoundedMapping<T,U>(this, 0, limit, op);
     }
 
     /**
      * Returns an operation prefix that causes a method to operate
-     * on mapped elements of the array using the given mapper.
-     * @param mapper the mapper
+     * on mapped elements of the array using the given op.
+     * @param op the op
+     * @return operation prefix
+     */
+    public WithDoubleMapping<T> withMapping(ObjectToDouble<? super T> op) {
+        return new WithBoundedDoubleMapping<T>(this, 0, limit, op);
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on mapped elements of the array using the given op.
+     * @param op the op
+     * @return operation prefix
+     */
+    public WithLongMapping<T> withMapping(ObjectToLong<? super T> op) {
+        return new WithBoundedLongMapping<T>(this, 0, limit, op);
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
+     * @return operation prefix
+     */
+    public <U,V> WithMapping<T,V> withMapping
+        (BinaryOp<? super T, ? super U, ? extends V> combiner,
+         ParallelArray<U> other) {
+        return new WithBoundedIndexedMapping<T,V>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
+     * @return operation prefix
+     */
+    public <V> WithMapping<T,V> withMapping
+        (ObjectAndDoubleToObject<? super T, ? extends V> combiner,
+         ParallelDoubleArray other) {
+        return new WithBoundedIndexedMapping<T,V>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
+     * @return operation prefix
+     */
+    public <V> WithMapping<T,V> withMapping
+        (ObjectAndLongToObject<? super T, ? extends V> combiner,
+         ParallelLongArray other) {
+        return new WithBoundedIndexedMapping<T,V>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
+     * @return operation prefix
+     */
+    public <U> WithDoubleMapping<T> withMapping
+        (ObjectAndObjectToDouble<? super T, ? super U> combiner,
+         ParallelArray<U> other) {
+        return new WithBoundedIndexedDoubleMapping<T>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
      * @return operation prefix
      */
     public WithDoubleMapping<T> withMapping
-        (MapperToDouble<? super T> mapper) {
-        return new WithBoundedDoubleMapping<T>(this, 0, limit, mapper);
+        (ObjectAndDoubleToDouble<? super T> combiner,
+         ParallelDoubleArray other) {
+        return new WithBoundedIndexedDoubleMapping<T>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
     }
 
     /**
      * Returns an operation prefix that causes a method to operate
-     * on mapped elements of the array using the given mapper.
-     * @param mapper the mapper
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
+     * @return operation prefix
+     */
+    public WithDoubleMapping<T> withMapping
+        (ObjectAndLongToDouble<? super T> combiner,
+         ParallelLongArray other) {
+        return new WithBoundedIndexedDoubleMapping<T>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
+     * @return operation prefix
+     */
+    public <U> WithLongMapping<T> withMapping
+        (ObjectAndObjectToLong<? super T, ? super U> combiner,
+         ParallelArray<U> other) {
+        return new WithBoundedIndexedLongMapping<T>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
      * @return operation prefix
      */
     public WithLongMapping<T> withMapping
-        (MapperToLong<? super T> mapper) {
-        return new WithBoundedLongMapping<T>(this, 0, limit, mapper);
+        (ObjectAndDoubleToLong<? super T> combiner,
+         ParallelDoubleArray other) {
+        return new WithBoundedIndexedLongMapping<T>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * on binary mappings of this array and the other array.
+     * @param combiner the combiner
+     * @param other the other array
+     * @return operation prefix
+     */
+    public WithLongMapping<T> withMapping
+        (ObjectAndLongToLong<? super T> combiner,
+         ParallelLongArray other) {
+        return new WithBoundedIndexedLongMapping<T>
+            (this, 0, limit,
+             PAS.indexedMapper(combiner, other.array, 0));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate on
+     * mappings of this array using the given mapper that accepts as
+     * arguments an element's current index and value, and produces a
+     * new value. Index-based mappings allow parallel computation of
+     * many common array operations. For example, you could create
+     * function to average the values at the same index of multiple
+     * arrays and apply it using this method.
+     * @param mapper the mapper
+     * @return operation prefix
+     */
+    public <U> WithMapping<T,U> withIndexedMapping
+        (IntAndObjectToObject<? super T, ? extends U> mapper) {
+        return new WithBoundedIndexedMapping<T,U>(this, 0, limit, mapper);
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate on
+     * mappings of this array using the given mapper that accepts as
+     * arguments an element's current index and value, and produces a
+     * new value.
+     * @param mapper the mapper
+     * @return operation prefix
+     */
+    public WithDoubleMapping<T> withIndexedMapping
+        (IntAndObjectToDouble<? super T> mapper) {
+        return new WithBoundedIndexedDoubleMapping<T>(this, 0, limit, mapper);
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate on
+     * mappings of this array using the given mapper that accepts as
+     * arguments an element's current index and value, and produces a
+     * new value.
+     * @param mapper the mapper
+     * @return operation prefix
+     */
+    public WithLongMapping<T> withIndexedMapping
+        (IntAndObjectToLong<? super T> mapper) {
+        return new WithBoundedIndexedLongMapping<T>(this, 0, limit, mapper);
     }
 
     /**
      * A modifier for parallel array operations to apply to mappings
      * of elements, not to the elements themselves
      */
-    public static abstract class WithMapping<T,U> extends PAS.RPrefix {
+    public static abstract class WithMapping<T,U> extends PAS.OPrefix<T> {
         WithMapping(ParallelArray<T> pa, int firstIndex, int upperBound) {
             super(pa, firstIndex, upperBound);
         }
@@ -784,7 +857,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param procedure the procedure
          */
         public void apply(Procedure<? super U> procedure) {
-            ex.invoke(new PAS.FJRApply(this, firstIndex, upperBound, null,
+            ex.invoke(new PAS.FJOApply(this, firstIndex, upperBound, null,
                                        procedure));
         }
 
@@ -795,7 +868,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return reduction
          */
         public U reduce(Reducer<U> reducer, U base) {
-            PAS.FJRReduce f = new PAS.FJRReduce
+            PAS.FJOReduce f = new PAS.FJOReduce
                 (this, firstIndex, upperBound, null, reducer, base);
             ex.invoke(f);
             return (U)(f.result);
@@ -806,14 +879,19 @@ public class ParallelArray<T> implements Iterable<T> {
          * constraints, or -1 if none.
          * @return index of matching element, or -1 if none.
          */
-        public abstract int anyIndex();
+        public int anyIndex() {
+            return super.computeAnyIndex();
+        }
 
         /**
          * Returns some element matching bound and filter
          * constraints, or null if none.
          * @return an element, or null if none.
          */
-        public abstract U any();
+        public U any() {
+            int i = super.computeAnyIndex();
+            return (i < 0)? null : (U)oget(i);
+        }
 
         /**
          * Returns the minimum element, or null if empty
@@ -862,7 +940,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public ParallelArray.SummaryStatistics<U> summary
             (Comparator<? super U> comparator) {
-            PAS.FJRStats f = new PAS.FJRStats
+            PAS.FJOStats f = new PAS.FJOStats
                 (this, firstIndex, upperBound, null, comparator);
             ex.invoke(f);
             return (ParallelArray.SummaryStatistics<U>)f;
@@ -874,7 +952,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return the summary.
          */
         public ParallelArray.SummaryStatistics<U> summary() {
-            PAS.FJRStats f = new PAS.FJRStats
+            PAS.FJOStats f = new PAS.FJOStats
                 (this, firstIndex, upperBound, null,
                  (Comparator<? super U>)(Ops.castedComparator()));
             ex.invoke(f);
@@ -885,7 +963,9 @@ public class ParallelArray<T> implements Iterable<T> {
          * Returns a new ParallelArray holding elements
          * @return a new ParallelArray holding elements
          */
-        public abstract ParallelArray<U> all();
+        public ParallelArray<U> all() {
+            return new ParallelArray<U>(ex, (U[])allObjects(null));
+        }
 
         /**
          * Returns a new ParallelArray with the given element type
@@ -893,7 +973,9 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param elementType the type of the elements
          * @return a new ParallelArray holding elements
          */
-        public abstract ParallelArray<U> all(Class<? super U> elementType);
+        public ParallelArray<U> all(Class<? super U> elementType) {
+            return new ParallelArray<U>(ex, (U[])allObjects(null));
+        }
 
         /**
          * Return the number of elements selected using bound or
@@ -901,38 +983,184 @@ public class ParallelArray<T> implements Iterable<T> {
          * all selectors to return its result.
          * @return the number of elements
          */
-        public abstract int size();
+        public int size() {
+            return super.computeSize();
+        }
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper
-         * applied to current mapper's results
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op
+         * applied to current op's results
+         * @param op the op
          * @return operation prefix
          */
         public abstract <V> WithMapping<T, V> withMapping
-            (Mapper<? super U, ? extends V> mapper);
+            (Op<? super U, ? extends V> op);
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper
-         * applied to current mapper's results
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op
+         * applied to current op's results
+         * @param op the op
          * @return operation prefix
          */
         public abstract WithDoubleMapping<T> withMapping
-            (MapperToDouble<? super U> mapper);
+            (ObjectToDouble<? super U> op);
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper
-         * applied to current mapper's results
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op
+         * applied to current op's results
+         * @param op the op
          * @return operation prefix
          */
         public abstract WithLongMapping<T> withMapping
-            (MapperToLong<? super U> mapper);
+            (ObjectToLong<? super U> op);
 
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V,W> WithMapping<T,W> withMapping
+            (BinaryOp<? super U, ? super V, ? extends W> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withMapping
+            (ObjectAndDoubleToObject<? super U, ? extends V> combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withMapping
+            (ObjectAndLongToObject<? super U, ? extends V> combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithDoubleMapping<T> withMapping
+            (ObjectAndObjectToDouble<? super U, ? super V> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withMapping
+            (ObjectAndDoubleToDouble<? super U> combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withMapping
+            (ObjectAndLongToDouble<? super U> combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithLongMapping<T> withMapping
+            (ObjectAndObjectToLong<? super U, ? super V> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withMapping
+            (ObjectAndDoubleToLong<? super U> combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withMapping
+            (ObjectAndLongToLong<? super U> combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withIndexedMapping
+            (IntAndObjectToObject<? super U, ? extends V> mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withIndexedMapping
+            (IntAndObjectToDouble<? super U> mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withIndexedMapping
+            (IntAndObjectToLong<? super U> mapper);
+
+        /**
+         * Returns an Iterable view to sequentially step through mapped
+         * elements also obeying bound and filter constraints, without
+         * performing computations to evaluate them in parallel
+         * @return the Iterable view
+         */
+        public Iterable<U> sequentially() {
+            return new Sequentially<U>();
+        }
     }
 
     /**
@@ -944,70 +1172,24 @@ public class ParallelArray<T> implements Iterable<T> {
             super(pa, firstIndex, upperBound);
         }
 
-        public void apply(Procedure<? super T> procedure) {
-            ex.invoke(new PAS.FJRApply
-                      (this, firstIndex, upperBound, null, procedure));
-        }
-
-        public T reduce(Reducer<T> reducer, T base) {
-            PAS.FJRReduce f = new PAS.FJRReduce
-                (this, firstIndex, upperBound, null, reducer, base);
-            ex.invoke(f);
-            return (T)(f.result);
-        }
-
-        public T min(Comparator<? super T> comparator) {
-            return reduce(Ops.<T>minReducer(comparator), null);
-        }
-
-        public T min() {
-            return reduce((Reducer<T>)(Ops.castedMinReducer()), null);
-        }
-
-        public T max(Comparator<? super T> comparator) {
-            return reduce(Ops.<T>maxReducer(comparator), null);
-        }
-
-        public T max() {
-            return reduce((Reducer<T>)(Ops.castedMaxReducer()), null);
-        }
-
-        public ParallelArray.SummaryStatistics<T> summary
-            (Comparator<? super T> comparator) {
-            PAS.FJRStats f = new PAS.FJRStats
-                (this, firstIndex, upperBound, null, comparator);
-            ex.invoke(f);
-            return (ParallelArray.SummaryStatistics<T>)f;
-        }
-
-        public ParallelArray.SummaryStatistics<T> summary() {
-            PAS.FJRStats f = new PAS.FJRStats
-                (this, firstIndex, upperBound, null,
-                 (Comparator<? super T>)(Ops.castedComparator()));
-            ex.invoke(f);
-            return (ParallelArray.SummaryStatistics<T>)f;
+        /**
+         * Replaces elements with the results of applying the given
+         * op to their current values.
+         * @param op the op
+         */
+        public void replaceWithMapping(Op<? super T, ? extends T> op) {
+            ex.invoke(new PAS.FJOTransform(this, firstIndex, upperBound,
+                                           null, op));
         }
 
         /**
          * Replaces elements with the results of applying the given
-         * mapper to their current values.
-         * @param mapper the mapper
+         * op to their indices
+         * @param op the op
          */
-        public void replaceWithTransform
-            (Mapper<? super T, ? extends T> mapper) {
-            ex.invoke(new PAS.FJRTransform(this, firstIndex, upperBound,
-                                           null, mapper));
-        }
-
-        /**
-         * Replaces elements with the results of applying the given
-         * mapper to their indices
-         * @param mapper the mapper
-         */
-        public void replaceWithMappedIndex
-            (MapperFromInt<? extends T> mapper) {
-            ex.invoke(new PAS.FJRIndexMap(this, firstIndex, upperBound,
-                                          null, mapper));
+        public void replaceWithMappedIndex(IntToObject<? extends T> op) {
+            ex.invoke(new PAS.FJOIndexMap(this, firstIndex, upperBound,
+                                          null, op));
         }
 
         /**
@@ -1017,7 +1199,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public void replaceWithGeneratedValue
             (Generator<? extends T> generator) {
-            ex.invoke(new PAS.FJRGenerate
+            ex.invoke(new PAS.FJOGenerate
                       (this, firstIndex, upperBound, null, generator));
         }
 
@@ -1026,58 +1208,51 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param value the value
          */
         public void replaceWithValue(T value) {
-            ex.invoke(new PAS.FJRFill(this, firstIndex, upperBound,
+            ex.invoke(new PAS.FJOFill(this, firstIndex, upperBound,
                                       null, value));
         }
 
         /**
          * Replaces elements with results of applying
-         * <tt>combine(thisElement, otherElement)</tt>
+         * <tt>op(thisElement, otherElement)</tt>
          * @param other the other array
          * @param combiner the combiner
          * @throws ArrayIndexOutOfBoundsException if other array has
          * fewer than <tt>upperBound</tt> elements.
          */
-        public void replaceWithCombination
-            (ParallelArray<? extends T> other, Reducer<T> combiner) {
-            if (other.size() < size())
-                throw new ArrayIndexOutOfBoundsException();
-            ex.invoke(new PAS.FJRCombineInPlace
+        public void replaceWithMapping(BinaryOp<T,T,T> combiner,
+                                       ParallelArray<? extends T> other) {
+            ex.invoke(new PAS.FJOCombineInPlace
                       (this, firstIndex, upperBound, null,
                        other.array, 0, combiner));
         }
 
         /**
          * Replaces elements with results of applying
-         * <tt>combine(thisElement, otherElement)</tt>
+         * <tt>op(thisElement, otherElement)</tt>
          * @param other the other array segment
          * @param combiner the combiner
          * @throws ArrayIndexOutOfBoundsException if other array has
          * fewer than <tt>upperBound</tt> elements.
          */
-        public void replaceWithCombination
-            (ParallelArray.WithBounds<? extends T> other,
-             Reducer<T> combiner) {
-            if (other.size() < size())
-                throw new ArrayIndexOutOfBoundsException();
-            ex.invoke(new PAS.FJRCombineInPlace
+        public void replaceWithMapping
+            (BinaryOp<T,T,T> combiner,
+             ParallelArray.WithBounds<? extends T> other) {
+            ex.invoke(new PAS.FJOCombineInPlace
                       (this, firstIndex, upperBound, null,
                        other.pa.array, other.firstIndex-firstIndex, combiner));
         }
 
         /**
          * Replaces elements with results of applying
-         * <tt>combine(thisElement, otherElement)</tt>
+         * <tt>op(thisElement, otherElement)</tt>
          * @param other the other array
          * @param combiner the combiner
          * @throws ArrayIndexOutOfBoundsException if other array has
          * fewer than <tt>upperBound</tt> elements.
          */
-        public void replaceWithCombination
-            (T[] other, Reducer<T> combiner) {
-            if (other.length < size())
-                throw new ArrayIndexOutOfBoundsException();
-            ex.invoke(new PAS.FJRCombineInPlace
+        public void replaceWithMapping(BinaryOp<T,T,T> combiner, T[] other) {
+            ex.invoke(new PAS.FJOCombineInPlace
                       (this, firstIndex, upperBound, null, other,
                        -firstIndex, combiner));
         }
@@ -1153,6 +1328,8 @@ public class ParallelArray<T> implements Iterable<T> {
             super(pa, 0, pa.limit);
         }
 
+        Object oget(int i) { return pa.array[i]; }
+
         /**
          * Returns an operation prefix that causes a method to operate
          * only on the elements of the array between firstIndex
@@ -1186,20 +1363,110 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public <U> WithMapping<T, U> withMapping
-            (Mapper<? super T, ? extends U> mapper) {
+            (Op<? super T, ? extends U> op) {
             return new WithBoundedMapping<T,U>
-                (pa, firstIndex, upperBound, mapper);
+                (pa, firstIndex, upperBound, op);
         }
 
         public WithDoubleMapping<T> withMapping
-            (MapperToDouble<? super T> mapper) {
+            (ObjectToDouble<? super T> op) {
             return new WithBoundedDoubleMapping<T>
-                (pa, firstIndex, upperBound, mapper);
+                (pa, firstIndex, upperBound, op);
         }
 
         public WithLongMapping<T> withMapping
-            (MapperToLong<? super T> mapper) {
+            (ObjectToLong<? super T> op) {
             return new WithBoundedLongMapping<T>
+                (pa, firstIndex, upperBound, op);
+        }
+
+        public <U,V> WithMapping<T,V> withMapping
+            (BinaryOp<? super T, ? super U, ? extends V> combiner,
+             ParallelArray<U> other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndDoubleToObject<? super T, ? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndLongToObject<? super T, ? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <U> WithDoubleMapping<T> withMapping
+            (ObjectAndObjectToDouble<? super T, ? super U> combiner,
+             ParallelArray<U> other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndDoubleToDouble<? super T> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndLongToDouble<? super T> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <U> WithLongMapping<T> withMapping
+            (ObjectAndObjectToLong<? super T, ? super U> combiner,
+             ParallelArray<U> other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndDoubleToLong<? super T> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndLongToLong<? super T> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndObjectToObject<? super T, ? extends V> mapper) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, mapper);
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndObjectToDouble<? super T> mapper) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, mapper);
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndObjectToLong<? super T> mapper) {
+            return new WithBoundedIndexedLongMapping<T>
                 (pa, firstIndex, upperBound, mapper);
         }
 
@@ -1208,181 +1475,8 @@ public class ParallelArray<T> implements Iterable<T> {
                 (pa, firstIndex, upperBound, selector);
         }
 
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
-        }
-
-        public T any() {
-            return (firstIndex < upperBound)? (T)(pa.array[firstIndex]) : null;
-        }
-
-        /**
-         * Returns a ParallelArray containing results of
-         * applying <tt>combine(thisElement, otherElement)</tt>
-         * for each element.
-         * @param other the other array
-         * @param combiner the combiner
-         * @return the array of mappings
-         * @throws ArrayIndexOutOfBoundsException if other array is
-         * shorter than this array.
-         */
-        public <U,V> ParallelArray<V> combine
-            (U[] other,
-             Combiner<? super T, ? super U, ? extends V> combiner) {
-            int size = upperBound - firstIndex;
-            if (other.length < size)
-                throw new ArrayIndexOutOfBoundsException();
-            V[] dest = (V[])new Object[size];
-            ex.invoke(new PAS.FJRCombine
-                      (this, firstIndex, upperBound, null, other,
-                       -firstIndex, dest, combiner));
-            return new ParallelArray<V>(ex, dest);
-        }
-
-        /**
-         * Returns a ParallelArray containing results of
-         * applying <tt>combine(thisElement, otherElement)</tt>
-         * for each element.
-         * @param other the other array
-         * @param combiner the combiner
-         * @param elementType the type of elements of returned array
-         * @return the array of mappings
-         * @throws ArrayIndexOutOfBoundsException if other array is
-         * shorter than this array.
-         */
-        public <U,V> ParallelArray<V> combine
-            (U[] other,
-             Combiner<? super T, ? super U, ? extends V> combiner,
-             Class<? super V> elementType) {
-            int size = upperBound - firstIndex;
-            if (other.length < size)
-                throw new ArrayIndexOutOfBoundsException();
-            V[] dest = (V[])Array.newInstance(elementType, size);
-            ex.invoke(new PAS.FJRCombine
-                      (this, firstIndex, upperBound, null,
-                       other, -firstIndex, dest, combiner));
-            return new ParallelArray<V>(ex, dest);
-        }
-
-        /**
-         * Returns a ParallelArray containing results of
-         * applying <tt>combine(thisElement, otherElement)</tt>
-         * for each element.
-         * @param other the other array
-         * @param combiner the combiner
-         * @return the array of mappings
-         * @throws ArrayIndexOutOfBoundsException if other array is
-         * shorter than this array.
-         */
-        public <U,V> ParallelArray<V> combine
-            (ParallelArray<? extends U> other,
-             Combiner<? super T, ? super U, ? extends V> combiner) {
-            int size = upperBound - firstIndex;
-            if (other.size() < size)
-                throw new ArrayIndexOutOfBoundsException();
-            V[] dest = (V[])new Object[size];
-            ex.invoke(new PAS.FJRCombine
-                      (this, firstIndex, upperBound, null,
-                       other.array, -firstIndex, dest, combiner));
-            return new ParallelArray<V>(ex, dest);
-        }
-
-        /**
-         * Returns a ParallelArray containing results of
-         * applying <tt>combine(thisElement, otherElement)</tt>
-         * for each element.
-         * @param other the other array
-         * @param combiner the combiner
-         * @param elementType the type of elements of returned array
-         * @return the array of mappings
-         * @throws ArrayIndexOutOfBoundsException if other array is
-         * shorter than this array.
-         */
-        public <U,V> ParallelArray<V> combine
-            (ParallelArray<? extends U> other,
-             Combiner<? super T, ? super U, ? extends V> combiner,
-             Class<? super V> elementType) {
-            int size = upperBound - firstIndex;
-            if (other.size() < size)
-                throw new ArrayIndexOutOfBoundsException();
-            V[] dest = (V[])Array.newInstance(elementType, size);
-            ex.invoke(new PAS.FJRCombine(this, firstIndex, upperBound,
-                                         null, other.array,
-                                         -firstIndex,
-                                         dest, combiner));
-            return new ParallelArray<V>(ex, dest);
-        }
-
-        /**
-         * Returns a ParallelArray containing results of
-         * applying <tt>combine(thisElement, otherElement)</tt>
-         * for each element.
-         * @param other the other array segment
-         * @param combiner the combiner
-         * @return the array of mappings
-         * @throws ArrayIndexOutOfBoundsException if other segment is
-         * shorter than this array.
-         */
-        public <U,V> ParallelArray<V> combine
-            (ParallelArray.WithBounds<? extends U> other,
-             Combiner<? super T, ? super U, ? extends V> combiner) {
-            int size = upperBound - firstIndex;
-            if (other.size() < size)
-                throw new ArrayIndexOutOfBoundsException();
-            V[] dest = (V[])new Object[size];
-            ex.invoke(new PAS.FJRCombine(this, firstIndex, upperBound,
-                                         null, other.pa.array,
-                                         other.firstIndex - firstIndex,
-                                         dest, combiner));
-            return new ParallelArray<V>(ex, dest);
-        }
-
-        /**
-         * Returns a ParallelArray containing results of
-         * applying <tt>combine(thisElement, otherElement)</tt>
-         * for each element.
-         * @param other the other array segment
-         * @param combiner the combiner
-         * @param elementType the type of elements of returned array
-         * @return the array of mappings
-         * @throws ArrayIndexOutOfBoundsException if other array is
-         * shorter than this array.
-         */
-        public <U,V> ParallelArray<V> combine
-            (ParallelArray.WithBounds<? extends U> other,
-             Combiner<? super T, ? super U, ? extends V> combiner,
-             Class<? super V> elementType) {
-            int size = upperBound - firstIndex;
-            if (other.size() < size)
-                throw new ArrayIndexOutOfBoundsException();
-            V[] dest = (V[])Array.newInstance(elementType, size);
-            ex.invoke(new PAS.FJRCombine(this, firstIndex, upperBound,
-                                         null, other.pa.array,
-                                         other.firstIndex - firstIndex,
-                                         dest, combiner));
-            return new ParallelArray<V>(ex, dest);
-        }
-
-        public ParallelArray<T> all() {
-            final Object[] array = pa.array;
-            // For now, avoid copyOf so people can compile with Java5
-            int size = upperBound - firstIndex;
-            T[] dest = (T[])Array.newInstance
-                (array.getClass().getComponentType(), size);
-            System.arraycopy(array, firstIndex, dest, 0, size);
-            return new ParallelArray<T>(ex, dest);
-        }
-
-        public ParallelArray<T> all(Class<? super T> elementType) {
-            final Object[] array = pa.array;
-            int size = upperBound - firstIndex;
-            T[] dest = (T[])Array.newInstance(elementType, size);
-            System.arraycopy(array, firstIndex, dest, 0, size);
-            return new ParallelArray<T>(ex, dest);
-        }
-
         public ParallelArray<T> allUniqueElements() {
-            PAS.RUniquifierTable tab = new PAS.RUniquifierTable
+            PAS.OUniquifierTable tab = new PAS.OUniquifierTable
                 (upperBound - firstIndex, pa.array, null, false);
             PAS.FJUniquifier f = new PAS.FJUniquifier
                 (this, firstIndex, upperBound, null, tab);
@@ -1392,7 +1486,7 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public ParallelArray<T> allNonidenticalElements() {
-            PAS.RUniquifierTable tab = new PAS.RUniquifierTable
+            PAS.OUniquifierTable tab = new PAS.OUniquifierTable
                 (upperBound - firstIndex, pa.array, null, true);
             PAS.FJUniquifier f = new PAS.FJUniquifier
                 (this, firstIndex, upperBound, null, tab);
@@ -1409,7 +1503,7 @@ public class ParallelArray<T> implements Iterable<T> {
          */
         public int indexOf(T target) {
             AtomicInteger result = new AtomicInteger(-1);
-            PAS.FJRIndexOf f = new PAS.FJRIndexOf
+            PAS.FJOIndexOf f = new PAS.FJOIndexOf
                 (this, firstIndex, upperBound, null, result, target);
             ex.invoke(f);
             return result.get();
@@ -1466,10 +1560,6 @@ public class ParallelArray<T> implements Iterable<T> {
             return -1;
         }
 
-        public int size() {
-            return upperBound - firstIndex;
-        }
-
         /**
          * Replaces each element with the running cumulation of applying
          * the given reducer.
@@ -1477,8 +1567,8 @@ public class ParallelArray<T> implements Iterable<T> {
          * @param base the result for an empty array
          */
         public void cumulate(Reducer<T> reducer, T base) {
-            PAS.FJRCumulateOp op = new PAS.FJRCumulateOp(this, reducer, base);
-            PAS.FJRScan r = new PAS.FJRScan(null, op, firstIndex, upperBound);
+            PAS.FJOCumulateOp op = new PAS.FJOCumulateOp(this, reducer, base);
+            PAS.FJOScan r = new PAS.FJOScan(null, op, firstIndex, upperBound);
             ex.invoke(r);
         }
 
@@ -1491,9 +1581,9 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return the total reduction
          */
         public T precumulate(Reducer<T> reducer, T base) {
-            PAS.FJRPrecumulateOp op = new PAS.FJRPrecumulateOp
+            PAS.FJOPrecumulateOp op = new PAS.FJOPrecumulateOp
                 (this, reducer, base);
-            PAS.FJRScan r = new PAS.FJRScan(null, op, firstIndex, upperBound);
+            PAS.FJOScan r = new PAS.FJOScan(null, op, firstIndex, upperBound);
             ex.invoke(r);
             return (T)(r.out);
         }
@@ -1509,7 +1599,7 @@ public class ParallelArray<T> implements Iterable<T> {
             final Object[] array = pa.array;
             Class tc = array.getClass().getComponentType();
             T[] ws = (T[])Array.newInstance(tc, upperBound);
-            ex.invoke(new PAS.FJRSorter
+            ex.invoke(new PAS.FJOSorter
                       (cmp, array, ws, firstIndex,
                        upperBound - firstIndex, threshold));
         }
@@ -1530,7 +1620,7 @@ public class ParallelArray<T> implements Iterable<T> {
             }
             Comparable[] ca = (Comparable[])array;
             Comparable[] ws = (Comparable[])Array.newInstance(tc, upperBound);
-            pa.ex.invoke(new PAS.FJRCSorter
+            pa.ex.invoke(new PAS.FJOCSorter
                          (ca, ws, firstIndex,
                           upperBound - firstIndex, threshold));
         }
@@ -1579,44 +1669,15 @@ public class ParallelArray<T> implements Iterable<T> {
         void leafApply(int lo, int hi, Procedure procedure) {
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i)
-                procedure.apply(array[i]);
-        }
-
-        void leafTransform(int lo, int hi, Mapper mapper) {
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i)
-                array[i] = mapper.map(array[i]);
-        }
-
-        void leafIndexMap(int lo, int hi, MapperFromInt mapper) {
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i)
-                array[i] = mapper.map(i);
-        }
-
-        void leafGenerate(int lo, int hi, Generator generator) {
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i)
-                array[i] = generator.generate();
-        }
-        void leafFillValue(int lo, int hi, Object value) {
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i)
-                array[i] = value;
-        }
-        void leafCombineInPlace(int lo, int hi, Object[] other,
-                                int otherOffset, Reducer combiner) {
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i)
-                array[i] = combiner.combine(array[i], other[i+otherOffset]);
+                procedure.op(array[i]);
         }
 
         void leafCombine(int lo, int hi, Object[] other, int otherOffset,
-                         Object[] dest, Combiner combiner) {
+                         Object[] dest, BinaryOp combiner) {
             final Object[] array = pa.array;
             int k = lo - firstIndex;
             for (int i = lo; i < hi; ++i) {
-                dest[k] = combiner.combine(array[i], other[i + otherOffset]);
+                dest[k] = combiner.op(array[i], other[i + otherOffset]);
                 ++k;
             }
         }
@@ -1627,19 +1688,10 @@ public class ParallelArray<T> implements Iterable<T> {
             final Object[] array = pa.array;
             Object r = array[lo];
             for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, array[i]);
+                r = reducer.op(r, array[i]);
             return r;
         }
 
-        void leafStats(int lo, int hi, PAS.FJRStats task) {
-            final Object[] array = pa.array;
-            task.size = hi - lo;
-            for (int i = lo; i < hi; ++i) {
-                Object x = array[i];
-                task.updateMin(i, x);
-                task.updateMax(i, x);
-            }
-        }
     }
 
     static final class WithBoundedFilter<T> extends WithFilter<T> {
@@ -1650,6 +1702,11 @@ public class ParallelArray<T> implements Iterable<T> {
             super(pa, firstIndex, upperBound);
             this.selector = selector;
         }
+
+        boolean hasFilter() { return true; }
+        Predicate getPredicate() { return selector; }
+        boolean isSelected(int i) { return selector.op(pa.array[i]); }
+        Object oget(int i) { return pa.array[i]; }
 
         public WithFilter<T> withFilter(Predicate<? super T> selector) {
             return new WithBoundedFilter<T>
@@ -1664,63 +1721,115 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public <U> WithMapping<T, U> withMapping
-            (Mapper<? super T, ? extends U> mapper) {
+            (Op<? super T, ? extends U> op) {
             return new WithBoundedFilteredMapping<T,U>
-                (pa, firstIndex, upperBound, selector, mapper);
+                (pa, firstIndex, upperBound, selector, op);
         }
 
         public WithDoubleMapping<T> withMapping
-            (MapperToDouble<? super T> mapper) {
+            (ObjectToDouble<? super T> op) {
             return new WithBoundedFilteredDoubleMapping<T>
-                (pa, firstIndex, upperBound, selector, mapper);
+                (pa, firstIndex, upperBound, selector, op);
         }
 
         public WithLongMapping<T> withMapping
-            (MapperToLong<? super T> mapper) {
+            (ObjectToLong<? super T> op) {
             return new WithBoundedFilteredLongMapping<T>
+                (pa, firstIndex, upperBound, selector, op);
+        }
+
+        public <U,V> WithMapping<T,V> withMapping
+            (BinaryOp<? super T, ? super U, ? extends V> combiner,
+             ParallelArray<U> other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndDoubleToObject<? super T, ? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndLongToObject<? super T, ? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <U> WithDoubleMapping<T> withMapping
+            (ObjectAndObjectToDouble<? super T, ? super U> combiner,
+             ParallelArray<U> other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndDoubleToDouble<? super T> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndLongToDouble<? super T> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <U> WithLongMapping<T> withMapping
+            (ObjectAndObjectToLong<? super T, ? super U> combiner,
+             ParallelArray<U> other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndDoubleToLong<? super T> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndLongToLong<? super T> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.indexedMapper(combiner, other.array, -firstIndex));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndObjectToObject<? super T, ? extends V> mapper) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
                 (pa, firstIndex, upperBound, selector, mapper);
         }
 
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            PAS.FJRSelectAny f = new PAS.FJRSelectAny
-                (this, firstIndex, upperBound, null, result, selector);
-            ex.invoke(f);
-            return result.get();
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndObjectToDouble<? super T> mapper) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector, mapper);
         }
 
-        public T any() {
-            int idx = anyIndex();
-            final Object[] array = pa.array;
-            return (idx < 0)?  null : (T)(array[idx]);
-        }
-
-        public ParallelArray<T> all() {
-            final Object[] array = pa.array;
-            Class<? super T> elementType =
-                (Class<? super T>)array.getClass().getComponentType();
-            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
-                (this, elementType);
-            ex.invoke(r);
-            return new ParallelArray<T>(ex, (T[])(r.results));
-        }
-
-        public ParallelArray<T> all(Class<? super T> elementType) {
-            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
-                (this, elementType);
-            ex.invoke(r);
-            return new ParallelArray<T>(ex, (T[])(r.results));
-        }
-
-        public int size() {
-            PAS.FJRCountSelected f = new PAS.FJRCountSelected
-                (this, firstIndex, upperBound, null, selector);
-            ex.invoke(f);
-            return f.count;
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndObjectToLong<? super T> mapper) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector, mapper);
         }
 
         public ParallelArray<T> allUniqueElements() {
-            PAS.RUniquifierTable tab = new PAS.RUniquifierTable
+            PAS.OUniquifierTable tab = new PAS.OUniquifierTable
                 (upperBound - firstIndex, pa.array, selector, false);
             PAS.FJUniquifier f = new PAS.FJUniquifier
                 (this, firstIndex, upperBound, null, tab);
@@ -1730,7 +1839,7 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         public ParallelArray<T> allNonidenticalElements() {
-            PAS.RUniquifierTable tab = new PAS.RUniquifierTable
+            PAS.OUniquifierTable tab = new PAS.OUniquifierTable
                 (upperBound - firstIndex, pa.array, selector, true);
             PAS.FJUniquifier f = new PAS.FJUniquifier
                 (this, firstIndex, upperBound, null, tab);
@@ -1747,381 +1856,782 @@ public class ParallelArray<T> implements Iterable<T> {
         }
 
         void leafApply(int lo, int hi, Procedure  procedure) {
-            final Predicate sel = selector;
+            final Predicate s = selector;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 Object x = array[i];
-                if (sel.evaluate(x))
-                    procedure.apply(x);
-            }
-        }
-
-        void leafTransform(int lo, int hi, Mapper mapper) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object x = array[i];
-                if (sel.evaluate(x))
-                    array[i] = mapper.map(x);
-            }
-        }
-        void leafIndexMap(int lo, int hi, MapperFromInt mapper) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object x = array[i];
-                if (sel.evaluate(x))
-                    array[i] = mapper.map(i);
-            }
-        }
-
-        void leafGenerate(int lo, int hi, Generator generator) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object x = array[i];
-                if (sel.evaluate(x))
-                    array[i] = generator.generate();
-            }
-        }
-        void leafFillValue(int lo, int hi, Object value) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object x = array[i];
-                if (sel.evaluate(x))
-                    array[i] = value;
-            }
-        }
-        void leafCombineInPlace(int lo, int hi, Object[] other,
-                                int otherOffset, Reducer combiner) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object x = array[i];
-                if (sel.evaluate(x))
-                    array[i] = combiner.combine(x, other[i+otherOffset]);
+                if (s.op(x))
+                    procedure.op(x);
             }
         }
 
         Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
-            final Predicate sel = selector;
+            final Predicate s = selector;
             boolean gotFirst = false;
             Object r = base;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 Object x = array[i];
-                if (sel.evaluate(x)) {
+                if (s.op(x)) {
                     if (!gotFirst) {
                         gotFirst = true;
                         r = x;
                     }
                     else
-                        r = reducer.combine(r, x);
+                        r = reducer.op(r, x);
                 }
             }
             return r;
         }
 
-        void leafStats(int lo, int hi, PAS.FJRStats task) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            int count = 0;
-            for (int i = lo; i < hi; ++i) {
-                Object x = array[i];
-                if (sel.evaluate(x)) {
-                    ++count;
-                    task.updateMin(i, x);
-                    task.updateMax(i, x);
-                }
-            }
-            task.size = count;
+    }
+
+    static abstract class WithMappingBase<T,U> extends WithMapping<T,U> {
+        final Op<? super T, ? extends U> op;
+        WithMappingBase(ParallelArray<T> pa,
+                        int firstIndex, int upperBound,
+                        Op<? super T, ? extends U> op) {
+            super(pa, firstIndex, upperBound);
+            this.op = op;
         }
 
-        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
-            final Predicate sel = selector;
+        final boolean hasMap() { return true; }
+        final Object oget(int i) { return op.op(pa.array[i]); }
+
+        final void leafTransfer(int lo, int hi, Object[] dest, int offset) {
+            final Op f = op;
             final Object[] array = pa.array;
-            int k = 0;
-            for (int i = lo; i < hi; ++i) {
-                if (sel.evaluate(array[i]) == positive)
-                    indices[lo + k++] = i;
-            }
-            return k;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = f.op(array[i]);
         }
 
-        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
-            final Predicate sel = selector;
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                 Object[] dest, int offset) {
             final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object t = array[i];
-                if (sel.evaluate(t) == positive)
-                    array[offset++] = t;
-            }
-            return offset;
+            final Op f = op;
+            for (int i = loIdx; i < hiIdx; ++i)
+                dest[offset++] = f.op(array[indices[i]]);
         }
     }
 
-    static final class WithBoundedMapping<T,U> extends WithMapping<T,U> {
-        final Mapper<? super T, ? extends U> mapper;
+    static final class WithBoundedMapping<T,U> extends WithMappingBase<T,U> {
         WithBoundedMapping(ParallelArray<T> pa,
                            int firstIndex, int upperBound,
-                           Mapper<? super T, ? extends U> mapper) {
-            super(pa, firstIndex, upperBound);
-            this.mapper = mapper;
-        }
-
-        public ParallelArray<U> all() {
-            int n = upperBound - firstIndex;
-            U[] dest = (U[])new Object[n];
-            PAS.FJRMap f = new PAS.FJRMap
-                (this, firstIndex, upperBound, null, dest, firstIndex);
-            ex.invoke(f);
-            return new ParallelArray<U>(ex, dest);
-        }
-
-        public ParallelArray<U> all(Class<? super U> elementType) {
-            int n = upperBound - firstIndex;
-            U[] dest = (U[])Array.newInstance(elementType, n);
-            PAS.FJRMap f = new PAS.FJRMap
-                (this, firstIndex, upperBound, null, dest, 0);
-            ex.invoke(f);
-            return new ParallelArray<U>(ex, dest);
-        }
-
-        public int size() {
-            return upperBound - firstIndex;
-        }
-
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
-        }
-
-        public U any() {
-            final Mapper mpr = mapper;
-            final Object[] array = pa.array;
-            return (firstIndex < upperBound)?
-                (U)(mpr.map(array[firstIndex])) : null;
+                           Op<? super T, ? extends U> op) {
+            super(pa, firstIndex, upperBound, op);
         }
 
         public <V> WithMapping<T, V> withMapping
-            (Mapper<? super U, ? extends V> mapper) {
+            (Op<? super U, ? extends V> op) {
             return new WithBoundedMapping<T,V>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
         public WithDoubleMapping<T> withMapping
-            (MapperToDouble<? super U> mapper) {
-            return new WithBoundedDoubleMapping
+            (ObjectToDouble<? super U> op) {
+            return new WithBoundedDoubleMapping<T>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
         public WithLongMapping<T> withMapping
-            (MapperToLong<? super U> mapper) {
-            return new WithBoundedLongMapping
+            (ObjectToLong<? super U> op) {
+            return new WithBoundedLongMapping<T>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (BinaryOp<? super U, ? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedMapping<T,W>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndDoubleToObject<? super U, ? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndLongToObject<? super U, ? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (ObjectAndObjectToDouble<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndDoubleToDouble<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndLongToDouble<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (ObjectAndObjectToLong<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndDoubleToLong<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndLongToLong<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndObjectToObject<? super U, ? extends V> mapper) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndObjectToDouble<? super U> mapper) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndObjectToLong<? super U> mapper) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
         }
 
         void leafApply(int lo, int hi, Procedure  procedure) {
-            final Mapper mpr = mapper;
+            final Op f = op;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i)
-                procedure.apply(mpr.map(array[i]));
+                procedure.op(f.op(array[i]));
         }
 
         Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
             if (lo >= hi)
                 return base;
             final Object[] array = pa.array;
-            final Mapper mpr = mapper;
-            Object r = mpr.map(array[lo]);
+            final Op f = op;
+            Object r = f.op(array[lo]);
             for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mpr.map(array[i]));
+                r = reducer.op(r, f.op(array[i]));
             return r;
         }
 
-        void leafStats(int lo, int hi, PAS.FJRStats task) {
-            final Object[] array = pa.array;
-            final Mapper mpr = mapper;
-            task.size = hi - lo;
-            for (int i = lo; i < hi; ++i) {
-                Object x = mpr.map(array[i]);
-                task.updateMin(i, x);
-                task.updateMax(i, x);
-            }
-        }
-
-        void leafTransfer(int lo, int hi, Object[] dest, int offset) {
-            final Mapper mpr = mapper;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i)
-                dest[offset++] = mpr.map(array[i]);
-        }
-
-        void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
-                                 Object[] dest, int offset) {
-            final Object[] array = pa.array;
-            final Mapper mpr = mapper;
-            for (int i = loIdx; i < hiIdx; ++i)
-                dest[offset++] = mpr.map(array[indices[i]]);
-        }
     }
 
     static final class WithBoundedFilteredMapping<T,U>
-        extends WithMapping<T,U> {
+        extends WithMappingBase<T,U> {
         final Predicate<? super T> selector;
-        final Mapper<? super T, ? extends U> mapper;
+
         WithBoundedFilteredMapping(ParallelArray<T> pa,
                                    int firstIndex, int upperBound,
                                    Predicate<? super T> selector,
-                                   Mapper<? super T, ? extends U> mapper) {
-            super(pa, firstIndex, upperBound);
+                                   Op<? super T, ? extends U> op) {
+            super(pa, firstIndex, upperBound, op);
             this.selector = selector;
-            this.mapper = mapper;
         }
 
-        public ParallelArray<U> all() {
-            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
-                (this, Object.class);
-            ex.invoke(r);
-            return new ParallelArray<U>(ex, (U[])(r.results));
-        }
-
-        public ParallelArray<U> all(Class<? super U> elementType) {
-            PAS.FJRSelectAllDriver r = new PAS.FJRSelectAllDriver
-                (this, elementType);
-            ex.invoke(r);
-            return new ParallelArray<U>(ex, (U[])(r.results));
-        }
-
-        public int size() {
-            PAS.FJRCountSelected f = new PAS.FJRCountSelected
-                (this, firstIndex, upperBound, null, selector);
-            ex.invoke(f);
-            return f.count;
-        }
-
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            PAS.FJRSelectAny f = new PAS.FJRSelectAny
-                (this, firstIndex, upperBound, null, result, selector);
-            ex.invoke(f);
-            return result.get();
-        }
-
-        public U any() {
-            int idx = anyIndex();
-            final Object[] array = pa.array;
-            final Mapper mpr = mapper;
-            return (idx < 0)?  null : (U)(mpr.map(array[idx]));
-        }
+        boolean hasFilter() { return true; }
+        Predicate getPredicate() { return selector; }
+        boolean isSelected(int i) { return selector.op(pa.array[i]); }
 
         public <V> WithMapping<T, V> withMapping
-            (Mapper<? super U, ? extends V> mapper) {
+            (Op<? super U, ? extends V> op) {
             return new WithBoundedFilteredMapping<T,V>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public WithDoubleMapping<T> withMapping(ObjectToDouble<? super U> op) {
+            return new WithBoundedFilteredDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public WithLongMapping<T> withMapping(ObjectToLong<? super U> op) {
+            return new WithBoundedFilteredLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (BinaryOp<? super U, ? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedMapping<T,W>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndDoubleToObject<? super U, ? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndLongToObject<? super U, ? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (ObjectAndObjectToDouble<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
         }
 
         public WithDoubleMapping<T> withMapping
-            (MapperToDouble<? super U> mapper) {
-            return new WithBoundedFilteredDoubleMapping<T>
+            (ObjectAndDoubleToDouble<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndLongToDouble<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (ObjectAndObjectToLong<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
         }
 
         public WithLongMapping<T> withMapping
-            (MapperToLong<? super U> mapper) {
-            return new WithBoundedFilteredLongMapping<T>
+            (ObjectAndDoubleToLong<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndLongToLong<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndObjectToObject<? super U, ? extends V> mapper) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndObjectToDouble<? super U> mapper) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndObjectToLong<? super U> mapper) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
         }
 
         void leafApply(int lo, int hi, Procedure  procedure) {
-            final Predicate sel = selector;
+            final Predicate s = selector;
             final Object[] array = pa.array;
-            final Mapper mpr = mapper;
+            final Op f = op;
             for (int i = lo; i < hi; ++i) {
                 Object x = array[i];
-                if (sel.evaluate(x))
-                    procedure.apply(mpr.map(x));
+                if (s.op(x))
+                    procedure.op(f.op(x));
             }
         }
         Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
-            final Predicate sel = selector;
+            final Predicate s = selector;
             final Object[] array = pa.array;
-            final Mapper mpr = mapper;
+            final Op f = op;
             boolean gotFirst = false;
             Object r = base;
             for (int i = lo; i < hi; ++i) {
                 Object x = array[i];
-                if (sel.evaluate(x)) {
-                    Object y = mpr.map(x);
+                if (s.op(x)) {
+                    Object y = f.op(x);
                     if (!gotFirst) {
                         gotFirst = true;
                         r = y;
                     }
                     else
-                        r = reducer.combine(r, y);
+                        r = reducer.op(r, y);
                 }
             }
             return r;
         }
 
-        void leafStats(int lo, int hi, PAS.FJRStats task) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            final Mapper mpr = mapper;
-            int count = 0;
-            for (int i = lo; i < hi; ++i) {
-                Object t = array[i];
-                if (sel.evaluate(t)) {
-                    ++count;
-                    Object x = mpr.map(t);
-                    task.updateMin(i, x);
-                    task.updateMax(i, x);
-                }
-            }
-            task.size = count;
+    }
+
+    static abstract class WithIndexedMappingBase<T,U> extends WithMapping<T,U> {
+        final IntAndObjectToObject<? super T, ? extends U> op;
+        WithIndexedMappingBase
+            (ParallelArray<T> pa,
+             int firstIndex, int upperBound,
+             IntAndObjectToObject<? super T, ? extends U> op) {
+            super(pa, firstIndex, upperBound);
+            this.op = op;
         }
 
-        void leafTransfer(int lo, int hi, Object[] dest, int offset) {
+        final boolean hasMap() { return true; }
+        final Object oget(int i) { return op.op(i, pa.array[i]); }
+
+        final void leafTransfer(int lo, int hi, Object[] dest, int offset) {
+            final IntAndObjectToObject f = op;
             final Object[] array = pa.array;
-            final Mapper mpr = mapper;
             for (int i = lo; i < hi; ++i)
-                dest[offset++] = mpr.map(array[i]);
+                dest[offset++] = f.op(i, array[i]);
         }
 
-        void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
                                  Object[] dest, int offset) {
             final Object[] array = pa.array;
-            final Mapper mpr = mapper;
-            for (int i = loIdx; i < hiIdx; ++i)
-                dest[offset++] = mpr.map(array[indices[i]]);
+            final IntAndObjectToObject f = op;
+            for (int i = loIdx; i < hiIdx; ++i) {
+                int idx = indices[i];
+                dest[offset++] = f.op(idx, array[idx]);
+            }
+        }
+    }
+
+    static final class WithBoundedIndexedMapping<T,U>
+        extends WithIndexedMappingBase<T,U> {
+        WithBoundedIndexedMapping
+            (ParallelArray<T> pa,
+             int firstIndex, int upperBound,
+             IntAndObjectToObject<? super T, ? extends U> op) {
+            super(pa, firstIndex, upperBound, op);
         }
 
-        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            int k = 0;
-            for (int i = lo; i < hi; ++i) {
-                if (sel.evaluate(array[i]) == positive)
-                    indices[lo + k++] = i;
-            }
-            return k;
+        public <V> WithMapping<T, V> withMapping
+            (Op<? super U, ? extends V> op) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
         }
 
-        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
-            final Predicate sel = selector;
+        public WithDoubleMapping<T> withMapping
+            (ObjectToDouble<? super U> op) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectToLong<? super U> op) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (BinaryOp<? super U, ? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedMapping<T,W>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndDoubleToObject<? super U, ? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndLongToObject<? super U, ? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (ObjectAndObjectToDouble<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndDoubleToDouble<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndLongToDouble<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (ObjectAndObjectToLong<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndDoubleToLong<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndLongToLong<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndObjectToObject<? super U, ? extends V> mapper) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndObjectToDouble<? super U> mapper) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndObjectToLong<? super U> mapper) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        void leafApply(int lo, int hi, Procedure  procedure) {
+            final IntAndObjectToObject f = op;
             final Object[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                procedure.op(f.op(i, array[i]));
+        }
+
+        Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
+            if (lo >= hi)
+                return base;
+            final Object[] array = pa.array;
+            final IntAndObjectToObject f = op;
+            Object r = f.op(lo, array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.op(r, f.op(i, array[i]));
+            return r;
+        }
+
+    }
+
+    static final class WithBoundedFilteredIndexedMapping<T,U>
+        extends WithIndexedMappingBase<T,U> {
+        final Predicate<? super T> selector;
+
+        WithBoundedFilteredIndexedMapping
+            (ParallelArray<T> pa,
+             int firstIndex, int upperBound,
+             Predicate<? super T> selector,
+             IntAndObjectToObject<? super T, ? extends U> op) {
+            super(pa, firstIndex, upperBound, op);
+            this.selector = selector;
+        }
+
+        boolean hasFilter() { return true; }
+        Predicate getPredicate() { return selector; }
+        boolean isSelected(int i) { return selector.op(pa.array[i]); }
+
+        public <V> WithMapping<T, V> withMapping
+            (Op<? super U, ? extends V> op) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public WithDoubleMapping<T> withMapping(ObjectToDouble<? super U> op) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public WithLongMapping<T> withMapping(ObjectToLong<? super U> op) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (BinaryOp<? super U, ? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedMapping<T,W>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndDoubleToObject<? super U, ? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (ObjectAndLongToObject<? super U, ? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (ObjectAndObjectToDouble<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndDoubleToDouble<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (ObjectAndLongToDouble<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (ObjectAndObjectToLong<? super U, ? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndDoubleToLong<? super U> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (ObjectAndLongToLong<? super U> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndObjectToObject<? super U, ? extends V> mapper) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndObjectToDouble<? super U> mapper) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndObjectToLong<? super U> mapper) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        void leafApply(int lo, int hi, Procedure  procedure) {
+            final Predicate s = selector;
+            final Object[] array = pa.array;
+            final IntAndObjectToObject f = op;
             for (int i = lo; i < hi; ++i) {
-                Object t = array[i];
-                if (sel.evaluate(t) == positive)
-                    array[offset++] = t;
+                Object x = array[i];
+                if (s.op(x))
+                    procedure.op(f.op(i, x));
             }
-            return offset;
+        }
+        Object leafReduce(int lo, int hi, Reducer reducer, Object base) {
+            final Predicate s = selector;
+            final Object[] array = pa.array;
+            final IntAndObjectToObject f = op;
+            boolean gotFirst = false;
+            Object r = base;
+            for (int i = lo; i < hi; ++i) {
+                Object x = array[i];
+                if (s.op(x)) {
+                    Object y = f.op(i, x);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = y;
+                    }
+                    else
+                        r = reducer.op(r, y);
+                }
+            }
+            return r;
         }
     }
 
@@ -2129,13 +2639,10 @@ public class ParallelArray<T> implements Iterable<T> {
      * A modifier for parallel array operations to apply to mappings
      * of elements to doubles, not to the elements themselves
      */
-    public static abstract class WithDoubleMapping<T> extends PAS.RPrefix {
-        final MapperToDouble<? super T> mapper;
+    public static abstract class WithDoubleMapping<T> extends PAS.OPrefix<T> {
         WithDoubleMapping(ParallelArray<T> pa,
-                          int firstIndex, int upperBound,
-                          MapperToDouble<? super T> mapper) {
+                          int firstIndex, int upperBound) {
             super(pa, firstIndex, upperBound);
-            this.mapper = mapper;
         }
 
         /**
@@ -2234,7 +2741,9 @@ public class ParallelArray<T> implements Iterable<T> {
          * Returns a new ParallelDoubleArray holding mappings
          * @return a new ParallelDoubleArray holding mappings
          */
-        public abstract ParallelDoubleArray all();
+        public ParallelDoubleArray all() {
+            return new ParallelDoubleArray(ex, allDoubles());
+        }
 
         /**
          * Return the number of elements selected using bound or
@@ -2242,257 +2751,933 @@ public class ParallelArray<T> implements Iterable<T> {
          * all selectors to return its result.
          * @return the number of elements
          */
-        public abstract int size();
+        public int size() {
+            return super.computeSize();
+        }
 
         /**
          * Returns the index of some element matching bound and filter
          * constraints, or -1 if none.
          * @return index of matching element, or -1 if none.
          */
-        public abstract int anyIndex();
+        public int anyIndex() {
+            return super.computeAnyIndex();
+        }
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op.
+         * @param op the op
          * @return operation prefix
          */
-        public abstract WithDoubleMapping<T> withMapping
-            (DoubleMapper mapper);
+        public abstract WithDoubleMapping<T> withMapping(DoubleOp op);
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op.
+         * @param op the op
          * @return operation prefix
          */
-        public abstract WithLongMapping<T> withMapping
-            (MapperFromDoubleToLong mapper);
+        public abstract WithLongMapping<T> withMapping(DoubleToLong op);
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op.
+         * @param op the op
          * @return operation prefix
          */
         public abstract <U> WithMapping<T, U> withMapping
-            (MapperFromDouble<? extends U> mapper);
+            (DoubleToObject<? extends U> op);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V,W> WithMapping<T,W> withMapping
+            (DoubleAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withMapping
+            (DoubleAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withMapping
+            (DoubleAndLongToObject<? extends V> combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithDoubleMapping<T> withMapping
+            (DoubleAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withMapping
+            (BinaryDoubleOp combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withMapping
+            (DoubleAndLongToDouble combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithLongMapping<T> withMapping
+            (DoubleAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withMapping
+            (DoubleAndDoubleToLong combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withMapping
+            (DoubleAndLongToLong combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withIndexedMapping
+            (IntAndDoubleToObject<? extends V> mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withIndexedMapping
+            (IntAndDoubleToDouble mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withIndexedMapping
+            (IntAndDoubleToLong mapper);
+
+        /**
+         * Returns an Iterable view to sequentially step through mapped
+         * elements also obeying bound and filter constraints, without
+         * performing computations to evaluate them in parallel
+         * @return the Iterable view
+         */
+        public Iterable<Double> sequentially() {
+            return new SequentiallyAsDouble();
+        }
+
+    }
+
+    static abstract class WithDoubleMappingBase<T>
+        extends WithDoubleMapping<T> {
+        final ObjectToDouble<? super T> op;
+        WithDoubleMappingBase(ParallelArray<T> pa,
+                              int firstIndex, int upperBound,
+                              ObjectToDouble<? super T> op) {
+            super(pa, firstIndex, upperBound);
+            this.op = op;
+        }
+
+        final boolean hasMap() { return true; }
+        final double dget(int i) { return op.op(pa.array[i]); }
+        final Object oget(int i) { return Double.valueOf(dget(i)); }
 
         final void leafTransfer(int lo, int hi, double[] dest, int offset) {
-            final MapperToDouble mpr = mapper;
+            final ObjectToDouble f = op;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i)
-                dest[offset++] = mpr.map(array[i]);
+                dest[offset++] = f.op(array[i]);
         }
 
         final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
                                        double[] dest, int offset) {
             final Object[] array = pa.array;
-            final MapperToDouble mpr = mapper;
+            final ObjectToDouble f = op;
             for (int i = loIdx; i < hiIdx; ++i)
-                dest[offset++] = mpr.map(array[indices[i]]);
+                dest[offset++] = f.op(array[indices[i]]);
         }
 
     }
 
     static final class WithBoundedDoubleMapping<T>
-        extends WithDoubleMapping<T> {
+        extends WithDoubleMappingBase<T> {
         WithBoundedDoubleMapping(ParallelArray<T> pa,
                                  int firstIndex, int upperBound,
-                                 MapperToDouble<? super T> mapper) {
-            super(pa, firstIndex, upperBound, mapper);
+                                 ObjectToDouble<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
         }
 
-        public ParallelDoubleArray all() {
-            double[] dest = new double[upperBound - firstIndex];
-            PAS.FJDMap f = new PAS.FJDMap
-                (this, firstIndex, upperBound, null, dest, firstIndex);
-            ex.invoke(f);
-            return new ParallelDoubleArray(ex, dest);
-        }
-
-        public int size() {
-            return upperBound - firstIndex;
-        }
-
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
-        }
-
-        public WithDoubleMapping<T> withMapping
-            (DoubleMapper mapper) {
+        public WithDoubleMapping<T> withMapping(DoubleOp op) {
             return new WithBoundedDoubleMapping<T>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
-        public WithLongMapping<T> withMapping
-            (MapperFromDoubleToLong mapper) {
+        public WithLongMapping<T> withMapping(DoubleToLong op) {
             return new WithBoundedLongMapping<T>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
         public <U> WithMapping<T, U> withMapping
-            (MapperFromDouble<? extends U> mapper) {
+            (DoubleToObject<? extends U> op) {
             return new WithBoundedMapping<T,U>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (DoubleAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedMapping<T,W>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (DoubleAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (BinaryDoubleOp combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (DoubleAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (DoubleAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndLongToLong combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndDoubleToObject<? extends V> mapper) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndDoubleToDouble mapper) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndDoubleToLong mapper) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
         }
 
         void leafApply(int lo, int hi, DoubleProcedure procedure) {
-            final MapperToDouble mpr = mapper;
+            final ObjectToDouble f = op;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i)
-                procedure.apply(mpr.map(array[i]));
+                procedure.op(f.op(array[i]));
         }
 
         double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
             if (lo >= hi)
                 return base;
             final Object[] array = pa.array;
-            final MapperToDouble mpr = mapper;
-            double r = mpr.map(array[lo]);
+            final ObjectToDouble f = op;
+            double r = f.op(array[lo]);
             for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mpr.map(array[i]));
+                r = reducer.op(r, f.op(array[i]));
             return r;
         }
 
-        void leafStats(int lo, int hi, PAS.FJDStats task) {
-            final Object[] array = pa.array;
-            final MapperToDouble mpr = mapper;
-            task.size = hi - lo;
-            for (int i = lo; i < hi; ++i) {
-                double x = mpr.map(array[i]);
-                task.sum += x;
-                task.updateMin(i, x);
-                task.updateMax(i, x);
-            }
-        }
     }
 
     static final class WithBoundedFilteredDoubleMapping<T>
-        extends WithDoubleMapping<T> {
+        extends WithDoubleMappingBase<T> {
         final Predicate<? super T> selector;
         WithBoundedFilteredDoubleMapping
             (ParallelArray<T> pa, int firstIndex, int upperBound,
-             Predicate<? super T> selector, MapperToDouble<? super T> mapper) {
-            super(pa, firstIndex, upperBound, mapper);
+             Predicate<? super T> selector, ObjectToDouble<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
             this.selector = selector;
         }
 
-        public ParallelDoubleArray all() {
-            PAS.FJDSelectAllDriver r = new PAS.FJDSelectAllDriver(this);
-            ex.invoke(r);
-            return new ParallelDoubleArray(ex, r.results);
-        }
+        boolean hasFilter() { return true; }
+        Predicate getPredicate() { return selector; }
+        boolean isSelected(int i) { return selector.op(pa.array[i]); }
 
-        public int size() {
-            PAS.FJRCountSelected f = new PAS.FJRCountSelected
-                (this, firstIndex, upperBound, null, selector);
-            ex.invoke(f);
-            return f.count;
-        }
-
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            PAS.FJRSelectAny f = new PAS.FJRSelectAny
-                (this, firstIndex, upperBound, null, result, selector);
-            ex.invoke(f);
-            return result.get();
-        }
-
-        public WithDoubleMapping<T> withMapping
-            (DoubleMapper mapper) {
+        public WithDoubleMapping<T> withMapping(DoubleOp op) {
             return new WithBoundedFilteredDoubleMapping<T>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
-        public WithLongMapping<T> withMapping
-            (MapperFromDoubleToLong mapper) {
+        public WithLongMapping<T> withMapping(DoubleToLong op) {
             return new WithBoundedFilteredLongMapping<T>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
         public <U> WithMapping<T, U> withMapping
-            (MapperFromDouble<? extends U> mapper) {
+            (DoubleToObject<? extends U> op) {
             return new WithBoundedFilteredMapping<T,U>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (DoubleAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedMapping<T,W>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (DoubleAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (BinaryDoubleOp combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (DoubleAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (DoubleAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndLongToLong combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndDoubleToObject<? extends V> mapper) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndDoubleToDouble mapper) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndDoubleToLong mapper) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
         }
 
         void leafApply(int lo, int hi, DoubleProcedure procedure) {
-            final Predicate sel = selector;
+            final Predicate s = selector;
             final Object[] array = pa.array;
-            final MapperToDouble mpr = mapper;
+            final ObjectToDouble f = op;
             for (int i = lo; i < hi; ++i) {
                 Object x = array[i];
-                if (sel.evaluate(x))
-                    procedure.apply(mpr.map(x));
+                if (s.op(x))
+                    procedure.op(f.op(x));
             }
         }
 
         double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
-            final Predicate sel = selector;
-            final MapperToDouble mpr = mapper;
+            final Predicate s = selector;
+            final ObjectToDouble f = op;
             boolean gotFirst = false;
             double r = base;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 Object t = array[i];
-                if (sel.evaluate(t)) {
-                    double y = mpr.map(t);
+                if (s.op(t)) {
+                    double y = f.op(t);
                     if (!gotFirst) {
                         gotFirst = true;
                         r = y;
                     }
                     else
-                        r = reducer.combine(r, y);
+                        r = reducer.op(r, y);
                 }
             }
             return r;
         }
+    }
 
-        void leafStats(int lo, int hi, PAS.FJDStats task) {
-            final Predicate sel = selector;
+    static abstract class WithIndexedDoubleMappingBase<T>
+        extends WithDoubleMapping<T> {
+        final IntAndObjectToDouble<? super T> op;
+        WithIndexedDoubleMappingBase(ParallelArray<T> pa,
+                                     int firstIndex, int upperBound,
+                                     IntAndObjectToDouble<? super T> op) {
+            super(pa, firstIndex, upperBound);
+            this.op = op;
+        }
+
+        final boolean hasMap() { return true; }
+        final double dget(int i) { return op.op(i, pa.array[i]); }
+        final Object oget(int i) { return Double.valueOf(dget(i)); }
+
+        final void leafTransfer(int lo, int hi, double[] dest, int offset) {
+            final IntAndObjectToDouble f = op;
             final Object[] array = pa.array;
-            final MapperToDouble mpr = mapper;
-            int count = 0;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = f.op(i, array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       double[] dest, int offset) {
+            final Object[] array = pa.array;
+            final IntAndObjectToDouble f = op;
+            for (int i = loIdx; i < hiIdx; ++i) {
+                int idx = indices[i];
+                dest[offset++] = f.op(idx, array[idx]);
+            }
+        }
+
+    }
+
+    static final class WithBoundedIndexedDoubleMapping<T>
+        extends WithIndexedDoubleMappingBase<T> {
+        WithBoundedIndexedDoubleMapping
+            (ParallelArray<T> pa,
+             int firstIndex, int upperBound,
+             IntAndObjectToDouble<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
+        }
+
+        public WithDoubleMapping<T> withMapping(DoubleOp op) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public WithLongMapping<T> withMapping(DoubleToLong op) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <U> WithMapping<T, U> withMapping
+            (DoubleToObject<? extends U> op) {
+            return new WithBoundedIndexedMapping<T,U>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (DoubleAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedMapping<T,W>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (DoubleAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (BinaryDoubleOp combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (DoubleAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (DoubleAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndLongToLong combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndDoubleToObject<? extends V> mapper) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndDoubleToDouble mapper) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndDoubleToLong mapper) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            final IntAndObjectToDouble f = op;
+            final Object[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                procedure.op(f.op(i, array[i]));
+        }
+
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            if (lo >= hi)
+                return base;
+            final Object[] array = pa.array;
+            final IntAndObjectToDouble f = op;
+            double r = f.op(lo, array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.op(r, f.op(i, array[i]));
+            return r;
+        }
+
+    }
+
+    static final class WithBoundedFilteredIndexedDoubleMapping<T>
+        extends WithIndexedDoubleMappingBase<T> {
+        final Predicate<? super T> selector;
+        WithBoundedFilteredIndexedDoubleMapping
+            (ParallelArray<T> pa, int firstIndex, int upperBound,
+             Predicate<? super T> selector,
+             IntAndObjectToDouble<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
+            this.selector = selector;
+        }
+
+        boolean hasFilter() { return true; }
+        Predicate getPredicate() { return selector; }
+        boolean isSelected(int i) { return selector.op(pa.array[i]); }
+
+        public WithDoubleMapping<T> withMapping(DoubleOp op) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public WithLongMapping<T> withMapping(DoubleToLong op) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <U> WithMapping<T, U> withMapping
+            (DoubleToObject<? extends U> op) {
+            return new WithBoundedFilteredIndexedMapping<T,U>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (DoubleAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedMapping<T,W>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (DoubleAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (DoubleAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (BinaryDoubleOp combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (DoubleAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (DoubleAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (DoubleAndLongToLong combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndDoubleToObject<? extends V> mapper) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndDoubleToDouble mapper) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndDoubleToLong mapper) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, mapper));
+        }
+
+        void leafApply(int lo, int hi, DoubleProcedure procedure) {
+            final Predicate s = selector;
+            final Object[] array = pa.array;
+            final IntAndObjectToDouble f = op;
+            for (int i = lo; i < hi; ++i) {
+                Object x = array[i];
+                if (s.op(x))
+                    procedure.op(f.op(i, x));
+            }
+        }
+
+        double leafReduce(int lo, int hi, DoubleReducer reducer, double base) {
+            final Predicate s = selector;
+            final IntAndObjectToDouble f = op;
+            boolean gotFirst = false;
+            double r = base;
+            final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 Object t = array[i];
-                if (sel.evaluate(t)) {
-                    ++count;
-                    double x = mpr.map(t);
-                    task.sum += x;
-                    task.updateMin(i, x);
-                    task.updateMax(i, x);
+                if (s.op(t)) {
+                    double y = f.op(i, t);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = y;
+                    }
+                    else
+                        r = reducer.op(r, y);
                 }
             }
-            task.size = count;
-        }
-
-        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            int k = 0;
-            for (int i = lo; i < hi; ++i) {
-                if (sel.evaluate(array[i]) == positive)
-                    indices[lo + k++] = i;
-            }
-            return k;
-        }
-
-        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object t = array[i];
-                if (sel.evaluate(t) == positive)
-                    array[offset++] = t;
-            }
-            return offset;
+            return r;
         }
     }
 
@@ -2500,13 +3685,10 @@ public class ParallelArray<T> implements Iterable<T> {
      * A modifier for parallel array operations to apply to mappings
      * of elements to longs, not to the elements themselves
      */
-    public static abstract class WithLongMapping<T> extends PAS.RPrefix {
-        final MapperToLong<? super T> mapper;
+    public static abstract class WithLongMapping<T> extends PAS.OPrefix<T> {
         WithLongMapping(ParallelArray<T> pa,
-                        int firstIndex, int upperBound,
-                        final MapperToLong<? super T> mapper) {
+                        int firstIndex, int upperBound) {
             super(pa, firstIndex, upperBound);
-            this.mapper = mapper;
         }
 
         /**
@@ -2545,8 +3727,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return minimum element, or Long.MAX_VALUE if empty
          */
         public long min(LongComparator comparator) {
-            return reduce(longMinReducer(comparator),
-                          Long.MAX_VALUE);
+            return reduce(longMinReducer(comparator), Long.MAX_VALUE);
         }
 
         /**
@@ -2563,8 +3744,7 @@ public class ParallelArray<T> implements Iterable<T> {
          * @return maximum element, or Long.MIN_VALUE if empty
          */
         public long max(LongComparator comparator) {
-            return reduce(longMaxReducer(comparator),
-                          Long.MIN_VALUE);
+            return reduce(longMaxReducer(comparator), Long.MIN_VALUE);
         }
 
         /**
@@ -2605,7 +3785,9 @@ public class ParallelArray<T> implements Iterable<T> {
          * Returns a new ParallelLongArray holding mappings
          * @return a new ParallelLongArray holding mappings
          */
-        public abstract ParallelLongArray all();
+        public ParallelLongArray all() {
+            return new ParallelLongArray(ex, allLongs());
+        }
 
         /**
          * Return the number of elements selected using bound or
@@ -2613,256 +3795,936 @@ public class ParallelArray<T> implements Iterable<T> {
          * all selectors to return its result.
          * @return the number of elements
          */
-        public abstract int size();
+        public int size() {
+            return super.computeSize();
+        }
 
         /**
          * Returns the index of some element matching bound and filter
          * constraints, or -1 if none.
          * @return index of matching element, or -1 if none.
          */
-        public abstract int anyIndex();
+        public int anyIndex() {
+            return super.computeAnyIndex();
+        }
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op.
+         * @param op the op
          * @return operation prefix
          */
-        public abstract WithDoubleMapping<T> withMapping
-            (MapperFromLongToDouble mapper);
+        public abstract WithDoubleMapping<T> withMapping(LongToDouble op);
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op.
+         * @param op the op
          * @return operation prefix
          */
-        public abstract WithLongMapping<T> withMapping
-            (LongMapper mapper);
+        public abstract WithLongMapping<T> withMapping(LongOp op);
 
         /**
          * Returns an operation prefix that causes a method to operate
-         * on mapped elements of the array using the given mapper.
-         * @param mapper the mapper
+         * on mapped elements of the array using the given op.
+         * @param op the op
          * @return operation prefix
          */
         public abstract <U> WithMapping<T, U> withMapping
-            (MapperFromLong<? extends U> mapper);
+            (LongToObject<? extends U> op);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V,W> WithMapping<T,W> withMapping
+            (LongAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withMapping
+            (LongAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withMapping
+            (LongAndLongToObject<? extends V> combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithDoubleMapping<T> withMapping
+            (LongAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withMapping
+            (LongAndDoubleToDouble combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withMapping
+            (LongAndLongToDouble combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract <V> WithLongMapping<T> withMapping
+            (LongAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withMapping
+            (LongAndDoubleToLong combiner,
+             ParallelDoubleArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on binary mappings of this array and the other array.
+         * @param combiner the combiner
+         * @param other the other array
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withMapping
+            (BinaryLongOp combiner,
+             ParallelLongArray other);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract <V> WithMapping<T,V> withIndexedMapping
+            (IntAndLongToObject<? extends V> mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithDoubleMapping<T> withIndexedMapping
+            (IntAndLongToDouble mapper);
+
+        /**
+         * Returns an operation prefix that causes a method to operate
+         * on mappings of this array using the given mapper that
+         * accepts as arguments an element's current index and value
+         * (as mapped by preceding mappings, if any), and produces a
+         * new value.
+         * @param mapper the mapper
+         * @return operation prefix
+         */
+        public abstract WithLongMapping<T> withIndexedMapping
+            (IntAndLongToLong mapper);
+
+        /**
+         * Returns an Iterable view to sequentially step through mapped
+         * elements also obeying bound and filter constraints, without
+         * performing computations to evaluate them in parallel
+         * @return the Iterable view
+         */
+        public Iterable<Long> sequentially() {
+            return new SequentiallyAsLong();
+        }
+
+    }
+
+    static abstract class WithLongMappingBase<T> extends WithLongMapping<T> {
+        final ObjectToLong<? super T> op;
+        WithLongMappingBase(ParallelArray<T> pa,
+                            int firstIndex, int upperBound,
+                            final ObjectToLong<? super T> op) {
+            super(pa, firstIndex, upperBound);
+            this.op = op;
+        }
+
+        final boolean hasMap() { return true; }
+        final long lget(int i) { return op.op(pa.array[i]); }
+        final Object oget(int i) { return Long.valueOf(lget(i)); }
 
         final void leafTransfer(int lo, int hi, long[] dest, int offset) {
-            final MapperToLong mpr = mapper;
+            final ObjectToLong f = op;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i)
-                dest[offset++] = mpr.map(array[i]);
+                dest[offset++] = f.op(array[i]);
         }
 
         final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
                                        long[] dest, int offset) {
             final Object[] array = pa.array;
-            final MapperToLong mpr = mapper;
+            final ObjectToLong f = op;
             for (int i = loIdx; i < hiIdx; ++i)
-                dest[offset++] = mpr.map(array[indices[i]]);
+                dest[offset++] = f.op(array[indices[i]]);
         }
     }
 
     static final class WithBoundedLongMapping<T>
-        extends WithLongMapping<T> {
+        extends WithLongMappingBase<T> {
         WithBoundedLongMapping(ParallelArray<T> pa,
                                int firstIndex, int upperBound,
-                               MapperToLong<? super T> mapper) {
-            super(pa, firstIndex, upperBound, mapper);
+                               ObjectToLong<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
         }
 
-        public ParallelLongArray all() {
-            long[] dest = new long[upperBound - firstIndex];
-            PAS.FJLMap f = new PAS.FJLMap
-                (this, firstIndex, upperBound, null, dest, firstIndex);
-            ex.invoke(f);
-            return new ParallelLongArray(ex, dest);
+        public WithDoubleMapping<T> withMapping(LongToDouble op) {
+            return new WithBoundedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundOp(this.op, op));
         }
 
-        public int size() {
-            return upperBound - firstIndex;
+        public WithLongMapping<T> withMapping(LongOp op) {
+            return new WithBoundedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundOp(this.op, op));
         }
 
-        public int anyIndex() {
-            return (firstIndex < upperBound)? firstIndex : -1;
+        public <U> WithMapping<T, U> withMapping(LongToObject<? extends U> op) {
+            return new WithBoundedMapping<T,U>
+                (pa, firstIndex, upperBound,
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (LongAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedMapping<T,W>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (LongAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
         }
 
         public WithDoubleMapping<T> withMapping
-            (MapperFromLongToDouble mapper) {
-            return new WithBoundedDoubleMapping<T>
+            (LongAndDoubleToDouble combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (LongAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (LongAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
         }
 
         public WithLongMapping<T> withMapping
-            (LongMapper mapper) {
-            return new WithBoundedLongMapping<T>
+            (LongAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedLongMapping<T>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
         }
 
-        public <U> WithMapping<T, U> withMapping
-            (MapperFromLong<? extends U> mapper) {
-            return new WithBoundedMapping<T,U>
+        public WithLongMapping<T> withMapping
+            (BinaryLongOp combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedLongMapping<T>
                 (pa, firstIndex, upperBound,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndLongToObject<? extends V> mapper) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndLongToDouble mapper) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndLongToLong mapper) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
         }
 
         void leafApply(int lo, int hi, LongProcedure procedure) {
             final Object[] array = pa.array;
-            final MapperToLong mpr = mapper;
+            final ObjectToLong f = op;
             for (int i = lo; i < hi; ++i)
-                procedure.apply(mpr.map(array[i]));
+                procedure.op(f.op(array[i]));
         }
 
         long leafReduce(int lo, int hi, LongReducer reducer, long base) {
             if (lo >= hi)
                 return base;
             final Object[] array = pa.array;
-            final MapperToLong mpr = mapper;
-            long r = mpr.map(array[lo]);
+            final ObjectToLong f = op;
+            long r = f.op(array[lo]);
             for (int i = lo+1; i < hi; ++i)
-                r = reducer.combine(r, mpr.map(array[i]));
+                r = reducer.op(r, f.op(array[i]));
             return r;
-        }
-
-        void leafStats(int lo, int hi, PAS.FJLStats task) {
-            final Object[] array = pa.array;
-            final MapperToLong mpr = mapper;
-            task.size = hi - lo;
-            for (int i = lo; i < hi; ++i) {
-                long x = mpr.map(array[i]);
-                task.sum += x;
-                task.updateMin(i, x);
-                task.updateMax(i, x);
-            }
         }
 
     }
 
     static final class WithBoundedFilteredLongMapping<T>
-        extends WithLongMapping<T> {
+        extends WithLongMappingBase<T> {
         final Predicate<? super T> selector;
         WithBoundedFilteredLongMapping
             (ParallelArray<T> pa, int firstIndex, int upperBound,
-             Predicate<? super T> selector, MapperToLong<? super T> mapper) {
-            super(pa, firstIndex, upperBound, mapper);
+             Predicate<? super T> selector, ObjectToLong<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
             this.selector = selector;
         }
-        public ParallelLongArray all() {
-            PAS.FJLSelectAllDriver r = new PAS.FJLSelectAllDriver(this);
-            ex.invoke(r);
-            return new ParallelLongArray(ex, r.results);
-        }
 
-        public int size() {
-            PAS.FJRCountSelected f = new PAS.FJRCountSelected
-                (this, firstIndex, upperBound, null, selector);
-            ex.invoke(f);
-            return f.count;
-        }
-
-        public int anyIndex() {
-            AtomicInteger result = new AtomicInteger(-1);
-            PAS.FJRSelectAny f = new PAS.FJRSelectAny
-                (this, firstIndex, upperBound, null, result, selector);
-            ex.invoke(f);
-            return result.get();
-        }
+        boolean hasFilter() { return true; }
+        Predicate getPredicate() { return selector; }
+        boolean isSelected(int i) { return selector.op(pa.array[i]); }
 
         public WithDoubleMapping<T> withMapping
-            (MapperFromLongToDouble mapper) {
+            (LongToDouble op) {
             return new WithBoundedFilteredDoubleMapping<T>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
         public WithLongMapping<T> withMapping
-            (LongMapper mapper) {
+            (LongOp op) {
             return new WithBoundedFilteredLongMapping<T>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
         }
 
         public <U> WithMapping<T, U> withMapping
-            (MapperFromLong<? extends U> mapper) {
+            (LongToObject<? extends U> op) {
             return new WithBoundedFilteredMapping<T,U>
                 (pa, firstIndex, upperBound, selector,
-                 Ops.compoundMapper(this.mapper, mapper));
+                 Ops.compoundOp(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (LongAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedMapping<T,W>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (LongAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (LongAndDoubleToDouble combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (LongAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (LongAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (LongAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (BinaryLongOp combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndLongToObject<? extends V> mapper) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndLongToDouble mapper) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndLongToLong mapper) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
         }
 
         void leafApply(int lo, int hi, LongProcedure procedure) {
-            final Predicate sel = selector;
+            final Predicate s = selector;
             final Object[] array = pa.array;
-            final MapperToLong mpr = mapper;
+            final ObjectToLong f = op;
             for (int i = lo; i < hi; ++i) {
                 Object x = array[i];
-                if (sel.evaluate(x))
-                    procedure.apply(mpr.map(x));
+                if (s.op(x))
+                    procedure.op(f.op(x));
             }
         }
 
         long leafReduce(int lo, int hi, LongReducer reducer, long base) {
-            final Predicate sel = selector;
-            final MapperToLong mpr = mapper;
+            final Predicate s = selector;
+            final ObjectToLong f = op;
             boolean gotFirst = false;
             long r = base;
             final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 Object t = array[i];
-                if (sel.evaluate(t)) {
-                    long y = mpr.map(t);
+                if (s.op(t)) {
+                    long y = f.op(t);
                     if (!gotFirst) {
                         gotFirst = true;
                         r = y;
                     }
                     else
-                        r = reducer.combine(r, y);
+                        r = reducer.op(r, y);
                 }
             }
             return r;
         }
 
-        void leafStats(int lo, int hi, PAS.FJLStats task) {
-            final Predicate sel = selector;
+    }
+
+    static abstract class WithIndexedLongMappingBase<T>
+        extends WithLongMapping<T> {
+        final IntAndObjectToLong<? super T> op;
+        WithIndexedLongMappingBase(ParallelArray<T> pa,
+                                     int firstIndex, int upperBound,
+                                     IntAndObjectToLong<? super T> op) {
+            super(pa, firstIndex, upperBound);
+            this.op = op;
+        }
+
+        final boolean hasMap() { return true; }
+        final long lget(int i) { return op.op(i, pa.array[i]); }
+        final Object oget(int i) { return Long.valueOf(lget(i)); }
+
+        final void leafTransfer(int lo, int hi, long[] dest, int offset) {
+            final IntAndObjectToLong f = op;
             final Object[] array = pa.array;
-            final MapperToLong mpr = mapper;
-            int count = 0;
+            for (int i = lo; i < hi; ++i)
+                dest[offset++] = f.op(i, array[i]);
+        }
+
+        final void leafTransferByIndex(int[] indices, int loIdx, int hiIdx,
+                                       long[] dest, int offset) {
+            final Object[] array = pa.array;
+            final IntAndObjectToLong f = op;
+            for (int i = loIdx; i < hiIdx; ++i) {
+                int idx = indices[i];
+                dest[offset++] = f.op(idx, array[idx]);
+            }
+        }
+
+    }
+
+    static final class WithBoundedIndexedLongMapping<T>
+        extends WithIndexedLongMappingBase<T> {
+        WithBoundedIndexedLongMapping
+            (ParallelArray<T> pa,
+             int firstIndex, int upperBound,
+             IntAndObjectToLong<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
+        }
+
+        public WithDoubleMapping<T> withMapping(LongToDouble op) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public WithLongMapping<T> withMapping(LongOp op) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <U> WithMapping<T, U> withMapping
+            (LongToObject<? extends U> op) {
+            return new WithBoundedIndexedMapping<T,U>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (LongAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedMapping<T,W>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (LongAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (LongAndDoubleToDouble combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (LongAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (LongAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (LongAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (BinaryLongOp combiner,
+             ParallelLongArray other) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndLongToObject<? extends V> mapper) {
+            return new WithBoundedIndexedMapping<T,V>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndLongToDouble mapper) {
+            return new WithBoundedIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndLongToLong mapper) {
+            return new WithBoundedIndexedLongMapping<T>
+                (pa, firstIndex, upperBound,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        void leafApply(int lo, int hi, LongProcedure procedure) {
+            final IntAndObjectToLong f = op;
+            final Object[] array = pa.array;
+            for (int i = lo; i < hi; ++i)
+                procedure.op(f.op(i, array[i]));
+        }
+
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
+            if (lo >= hi)
+                return base;
+            final Object[] array = pa.array;
+            final IntAndObjectToLong f = op;
+            long r = f.op(lo, array[lo]);
+            for (int i = lo+1; i < hi; ++i)
+                r = reducer.op(r, f.op(i, array[i]));
+            return r;
+        }
+
+    }
+
+    static final class WithBoundedFilteredIndexedLongMapping<T>
+        extends WithIndexedLongMappingBase<T> {
+        final Predicate<? super T> selector;
+        WithBoundedFilteredIndexedLongMapping
+            (ParallelArray<T> pa, int firstIndex, int upperBound,
+             Predicate<? super T> selector,
+             IntAndObjectToLong<? super T> op) {
+            super(pa, firstIndex, upperBound, op);
+            this.selector = selector;
+        }
+
+        boolean hasFilter() { return true; }
+        Predicate getPredicate() { return selector; }
+        boolean isSelected(int i) { return selector.op(pa.array[i]); }
+
+        public WithDoubleMapping<T> withMapping(LongToDouble op) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public WithLongMapping<T> withMapping(LongOp op) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <U> WithMapping<T, U> withMapping
+            (LongToObject<? extends U> op) {
+            return new WithBoundedFilteredIndexedMapping<T,U>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper(this.op, op));
+        }
+
+        public <V,W> WithMapping<T,W> withMapping
+            (LongAndObjectToObject<? super V, ? extends W> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedMapping<T,W>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndDoubleToObject<? extends V> combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withMapping
+            (LongAndLongToObject<? extends V> combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithDoubleMapping<T> withMapping
+            (LongAndObjectToDouble<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (LongAndDoubleToDouble combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithDoubleMapping<T> withMapping
+            (LongAndLongToDouble combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithLongMapping<T> withMapping
+            (LongAndObjectToLong<? super V> combiner,
+             ParallelArray<V> other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (LongAndDoubleToLong combiner,
+             ParallelDoubleArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public WithLongMapping<T> withMapping
+            (BinaryLongOp combiner,
+             ParallelLongArray other) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op,
+                  PAS.indexedMapper(combiner, other.array, -firstIndex)));
+        }
+
+        public <V> WithMapping<T,V> withIndexedMapping
+            (IntAndLongToObject<? extends V> mapper) {
+            return new WithBoundedFilteredIndexedMapping<T,V>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithDoubleMapping<T> withIndexedMapping
+            (IntAndLongToDouble mapper) {
+            return new WithBoundedFilteredIndexedDoubleMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        public WithLongMapping<T> withIndexedMapping
+            (IntAndLongToLong mapper) {
+            return new WithBoundedFilteredIndexedLongMapping<T>
+                (pa, firstIndex, upperBound, selector,
+                 PAS.compoundIndexedMapper
+                 (this.op, mapper));
+        }
+
+        void leafApply(int lo, int hi, LongProcedure procedure) {
+            final Predicate s = selector;
+            final Object[] array = pa.array;
+            final IntAndObjectToLong f = op;
+            for (int i = lo; i < hi; ++i) {
+                Object x = array[i];
+                if (s.op(x))
+                    procedure.op(f.op(i, x));
+            }
+        }
+
+        long leafReduce(int lo, int hi, LongReducer reducer, long base) {
+            final Predicate s = selector;
+            final IntAndObjectToLong f = op;
+            boolean gotFirst = false;
+            long r = base;
+            final Object[] array = pa.array;
             for (int i = lo; i < hi; ++i) {
                 Object t = array[i];
-                if (sel.evaluate(t)) {
-                    ++count;
-                    long x = mpr.map(t);
-                    task.sum += x;
-                    task.updateMin(i, x);
-                    task.updateMax(i, x);
+                if (s.op(t)) {
+                    long y = f.op(i, t);
+                    if (!gotFirst) {
+                        gotFirst = true;
+                        r = y;
+                    }
+                    else
+                        r = reducer.op(r, y);
                 }
             }
-            task.size = count;
-        }
-
-        int leafIndexSelected(int lo, int hi, boolean positive, int[] indices){
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            int k = 0;
-            for (int i = lo; i < hi; ++i) {
-                if (sel.evaluate(array[i]) == positive)
-                    indices[lo + k++] = i;
-            }
-            return k;
-        }
-
-        int leafMoveSelected(int lo, int hi, int offset, boolean positive) {
-            final Predicate sel = selector;
-            final Object[] array = pa.array;
-            for (int i = lo; i < hi; ++i) {
-                Object t = array[i];
-                if (sel.evaluate(t) == positive)
-                    array[offset++] = t;
-            }
-            return offset;
+            return r;
         }
     }
 

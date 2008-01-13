@@ -8,13 +8,65 @@ package jsr166y.forkjoin;
 import java.util.*;
 
 /**
- * Interfaces and utilities describing per-element operations used
+ * Interfaces and utilities declaring per-element operations used
  * within parallel methods on aggregates. This class provides type
- * names for common operation signatures accepting zero, one or two
+ * names for all operation signatures accepting zero, one or two
  * arguments, and returning zero or one results, for parameterized
- * types, as well as specializations to <tt>long</tt>, and
- * <tt>double</tt>. (Other scalar types like <tt>short</tt> are
- * absent.)
+ * types, as well as specializations to <tt>int</tt>, <tt>long</tt>,
+ * and <tt>double</tt>. In keeping with normal Java evaluation rules
+ * that promote, for example <tt>short</tt> to <tt>int</tt>, operation
+ * names for these smaller types are absent.
+ *
+ * <p><b>Preliminary release note: Some of the declarations in this
+ * class are likely to be moved elsewhere in the JDK libraries
+ * upon actual release, and most likely will not all nested in the
+ * same class.</b>
+ *
+ * <p>The naming conventions are as follows:
+ * <ul>
+ *
+ * <li> The name of the single method declared in each interface is
+ * simply <tt>op</tt> (short for "operate").
+ *
+ * <li> An <tt>Op</tt> (short for "operation") maps a single argument to
+ * a result. Example: negating a value.
+ *
+ * <li> The names for scalar ops accepting and returning the same type
+ * are prefaced by their type name.
+ *
+ * <li> A <tt>BinaryOp</tt> maps two arguments to a result. Example:
+ * dividing two numbers
+ *
+ * <li>A <tt>Reducer</tt> is an <em>associative</em> binary op
+ * accepting and returning values of the same type; where op(a, op(b,
+ * c)) should have the same result as op(op(a, b), c).  Example:
+ * adding two numbers.
+ *
+ * <li> Scalar binary ops accepting and returning the same type
+ * include their type name.
+ *
+ * <li> Mixed-type operators are named just by their argument type
+ * names.
+ *
+ * <li> A <tt>Generator</tt> takes no arguments and returns a result.
+ * Examples: random number generators, builders
+ *
+ * <li> A <tt>Procedure</tt> accepts an argument but doesn't return a
+ * result. Example: printing a value.  An <tt>Action</tt> is a
+ * Procedure that takes no arguments.
+ *
+ * <li>A <tt>Predicate</tt> accepts a value and returns a boolean indicator
+ * that the argument obeys some property. Example: testing if a number is even.
+ *
+ * <li>A <tt>BinaryPredicate</tt> accepts two values and returns a
+ * boolean indicator that the arguments obeys some relation. Example:
+ * testing if two numbers are relatively prime.
+ *
+ * <li>Scalar versions of {@link Comparator} have the same properties
+ * as the Object version -- returning negative, zero, or positive
+ * if the first argument is less, equal, or greater than the second.
+ *
+ * </ul>
  *
  * <p>In addition to stated signatures, implementations of these
  * interfaces must work safely in parallel. In general, this means
@@ -31,263 +83,122 @@ import java.util.*;
 public class Ops {
     private Ops() {} // disable construction
 
-    /**
-     * A generator (builder) of objects of type T that takes no
-     * arguments.
-     */
-    public static interface Generator<T> {
-        public T generate();
-    }
+    // You want to read/edit this with a wide editor panel
 
-    /**
-     * An object with a method of one argument that does not return a
-     * result.
-     */
-    public static interface Procedure<T> {
-        public void apply(T t);
-    }
+    public static interface Op<A,R>                      { R       op(A a);}
+    public static interface Predicate<A>                 { boolean op(A a);}
+    public static interface Procedure<A>                 { void    op(A a);}
+    public static interface Generator<R>                 { R       op();}
+    public static interface BinaryPredicate<A,B>         { boolean op(A a, B b);}
+    public static interface BinaryOp<A,B,R>              { R       op(A a, B b);}
+    public static interface Reducer<A> extends BinaryOp<A, A, A>{}
 
-    /**
-     * An object with a function accepting objects of type T and
-     * returning those of type U
-     */
-    public static interface Mapper<T, U> {
-        public U map(T t);
-    }
+    public static interface IntOp                        { int     op(int a);}
+    public static interface IntPredicate                 { boolean op(int a);}
+    public static interface IntProcedure                 { void    op(int a);}
+    public static interface IntGenerator                 { int     op();}
+    public static interface BinaryIntPredicate           { boolean op(int a, int b);}
+    public static interface BinaryIntOp                  { int     op(int a, int b);}
+    public static interface IntReducer extends BinaryIntOp{}
+    public static interface IntComparator                { int     compare(int a, int b);}
 
-    /**
-     * An object with a function accepting pairs of objects, one of
-     * type T and one of type U, returning those of type V
-     */
-    public static interface Combiner<T, U, V> {
-        public V combine(T t, U u);
-    }
+    public static interface LongOp                       { long    op(long a);}
+    public static interface LongPredicate                { boolean op(long a);}
+    public static interface LongProcedure                { void    op(long a);}
+    public static interface LongGenerator                { long    op();}
+    public static interface BinaryLongPredicate          { boolean op(long a, long b);}
+    public static interface BinaryLongOp                 { long    op(long a, long b);}
+    public static interface LongReducer extends BinaryLongOp{}
+    public static interface LongComparator               { int     compare(long a, long b);}
 
-    /**
-     * A specialized combiner that is associative and accepts pairs of
-     * objects of the same type and returning one of the same
-     * type. Like for example, an addition operation, a Reducer must
-     * be associative: combine(a, combine(b, c)) should have
-     * the same result as combine(combine(a, b), c).
-     */
-    public static interface Reducer<T> extends Combiner<T, T, T> {
-        public T combine(T t, T v);
-    }
+    public static interface DoubleOp                     { double  op(double a);}
+    public static interface DoublePredicate              { boolean op(double a);}
+    public static interface DoubleProcedure              { void    op(double a);}
+    public static interface DoubleGenerator              { double  op();}
+    public static interface DoubleBinaryPredicate        { boolean op(double a, double b);}
+    public static interface BinaryDoubleOp               { double  op(double a, double b);}
+    public static interface DoubleReducer extends BinaryDoubleOp{}
+    public static interface DoubleComparator             { int     compare(double a, double b);}
 
-    /**
-     * An object with boolean method of one argument
-     */
-    public static interface Predicate<T> {
-        public boolean evaluate(T t);
-    }
+    public static interface Action                       { void    op();}
 
-    /**
-     * An object with boolean method of two arguments
-     */
-    public static interface RelationalPredicate<T, U> {
-        public boolean evaluate(T t, U u);
-    }
+    // mixed mode ops
+    public static interface IntToLong                    { long    op(int a);}
+    public static interface IntToDouble                  { double  op(int a);}
+    public static interface IntToObject<R>               { R       op(int a);}
+    public static interface LongToInt                    { int     op(long a);}
+    public static interface LongToDouble                 { double  op(long a);}
+    public static interface LongToObject<R>              { R       op(long a);}
+    public static interface DoubleToInt                  { int     op(double a);}
+    public static interface DoubleToLong                 { long    op(double a);}
+    public static interface DoubleToObject<R>            { R       op(double a);}
+    public static interface ObjectToInt<A>               { int     op(A a);}
+    public static interface ObjectToLong<A>              { long    op(A a);}
+    public static interface ObjectToDouble<A>            { double  op(A a);}
 
-    /**
-     *  A mapper returning an int
-     */
-    public static interface MapperToInt<T> {
-        public int map(T t);
-    }
+    // mixed mode binary ops
+    public static interface IntAndIntToLong              { long   op(int a, int b);}
+    public static interface IntAndIntToDouble            { double op(int a, int b);}
+    public static interface IntAndIntToObject<R>         { R      op(int a, int b);}
+    public static interface IntAndLongToInt              { int    op(int a, long b);}
+    public static interface IntAndLongToLong             { long   op(int a, long b);}
+    public static interface IntAndLongToDouble           { double op(int a, long b);}
+    public static interface IntAndLongToObject<R>        { R      op(int a, long b);}
+    public static interface IntAndDoubleToInt            { int    op(int a, double b);}
+    public static interface IntAndDoubleToLong           { long   op(int a, double b);}
+    public static interface IntAndDoubleToDouble         { double op(int a, double b);}
+    public static interface IntAndDoubleToObject<R>      { R      op(int a, double b);}
+    public static interface IntAndObjectToInt<A>         { int    op(int a, A b);}
+    public static interface IntAndObjectToLong<A>        { long   op(int a, A b);}
+    public static interface IntAndObjectToDouble<A>      { double op(int a, A b);}
+    public static interface IntAndObjectToObject<A,R>    { R      op(int a, A b);}
+    public static interface LongAndIntToInt              { int    op(long a, int b);}
+    public static interface LongAndIntToLong             { long   op(long a, int b);}
+    public static interface LongAndIntToDouble           { double op(long a, int b);}
+    public static interface LongAndIntToObject<R>        { R      op(long a, int b);}
+    public static interface LongAndLongToInt             { int    op(long a, long b);}
+    public static interface LongAndLongToDouble          { double op(long a, long b);}
+    public static interface LongAndLongToObject<R>       { R      op(long a, long b);}
+    public static interface LongAndDoubleToInt           { int    op(long a, double b);}
+    public static interface LongAndDoubleToLong          { long   op(long a, double b);}
+    public static interface LongAndDoubleToDouble        { double op(long a, double b);}
+    public static interface LongAndDoubleToObject<R>     { R      op(long a, double b);}
+    public static interface LongAndObjectToInt<A>        { int    op(long a, A b);}
+    public static interface LongAndObjectToLong<A>       { long   op(long a, A b);}
+    public static interface LongAndObjectToDouble<A>     { double op(long a, A b);}
+    public static interface LongAndObjectToObject<A,R>   { R      op(long a, A b);}
+    public static interface DoubleAndIntToInt            { int    op(double a, int b);}
+    public static interface DoubleAndIntToLong           { long   op(double a, int b);}
+    public static interface DoubleAndIntToDouble         { double op(double a, int b);}
+    public static interface DoubleAndIntToObject<R>      { R      op(double a, int b);}
+    public static interface DoubleAndLongToInt           { int    op(double a, long b);}
+    public static interface DoubleAndLongToLong          { long   op(double a, long b);}
+    public static interface DoubleAndLongToDouble        { double op(double a, long b);}
+    public static interface DoubleAndLongToObject<R>     { R      op(double a, long b);}
+    public static interface DoubleAndDoubleToInt         { int    op(double a, double b);}
+    public static interface DoubleAndDoubleToLong        { long   op(double a, double b);}
+    public static interface DoubleAndDoubleToObject<R>   { R      op(double a, double b);}
+    public static interface DoubleAndObjectToInt<A>      { int    op(double a, A b);}
+    public static interface DoubleAndObjectToLong<A>     { long   op(double a, A b);}
+    public static interface DoubleAndObjectToDouble<A>   { double op(double a, A b);}
+    public static interface DoubleAndObjectToObject<A,R> { R      op(double a, A b);}
+    public static interface ObjectAndIntToInt<A>         { int    op(A a, int b);}
+    public static interface ObjectAndIntToLong<A>        { long   op(A a, int b);}
+    public static interface ObjectAndIntToDouble<A>      { double op(A a, int b);}
+    public static interface ObjectAndIntToObject<A,R>    { R      op(A a, int b);}
+    public static interface ObjectAndLongToInt<A>        { int    op(A a, long b);}
+    public static interface ObjectAndLongToLong<A>       { long   op(A a, long b);}
+    public static interface ObjectAndLongToDouble<A>     { double op(A a, long b);}
+    public static interface ObjectAndLongToObject<A,R>   { R      op(A a, long b);}
+    public static interface ObjectAndDoubleToInt<A>      { int    op(A a, double b);}
+    public static interface ObjectAndDoubleToLong<A>     { long   op(A a, double b);}
+    public static interface ObjectAndDoubleToDouble<A>   { double op(A a, double b);}
+    public static interface ObjectAndDoubleToObject<A,R> { R      op(A a, double b);}
+    public static interface ObjectAndObjectToInt<A,B>    { int    op(A a, B b);}
+    public static interface ObjectAndObjectToLong<A,B>   { long   op(A a, B b);}
+    public static interface ObjectAndObjectToDouble<A,B> { double op(A a, B b);}
 
-    /**
-     * A mapper returning a double
-     */
-    public static interface MapperToDouble<T> {
-        public double map(T t);
-    }
-
-    /**
-     * A mapper returning a long
-     */
-    public static interface MapperToLong<T> {
-        public long map(T t);
-    }
-
-    /**
-     * A mapper accepting an int
-     */
-    public static interface MapperFromInt<T> {
-        public T map(int t);
-    }
-
-    /**
-     * A mapper accepting a double
-     */
-    public static interface MapperFromDouble<T> {
-        public T map(double t);
-    }
-
-    /**
-     * A mapper accepting a long argument
-     */
-    public static interface MapperFromLong<T> {
-        public T map(long t);
-    }
-
-    /** A generator of doubles */
-    public static interface DoubleGenerator {
-        public double generate();
-    }
-
-    /** A procedure accepting a double */
-    public static interface DoubleProcedure {
-        public void apply(double t);
-    }
-
-    /**
-     * A mapper accepting a double argument and returning an int
-     */
-    public static interface MapperFromDoubleToInt {
-        public int map(double t);
-    }
-
-    /**
-     * A mapper accepting a double argument and returning a long
-     */
-    public static interface MapperFromDoubleToLong {
-        public long map(double t);
-    }
-
-    /**
-     * A mapper accepting a double argument and returning a double
-     */
-    public static interface DoubleMapper {
-        public double map(double t);
-    }
-
-    /** A reducer accepting and returning doubles */
-    public static interface DoubleReducer {
-        public double combine(double u, double v);
-    }
-
-    /** A predicate accepting a double argument */
-    public static interface DoublePredicate {
-        public boolean evaluate(double t);
-    }
-
-    /** A relationalPredicate accepting double arguments */
-    public static interface DoubleRelationalPredicate {
-        public boolean evaluate(double t, double u);
-    }
-
-    /** A generator of longs */
-    public static interface LongGenerator {
-        public long generate();
-    }
-
-    /** A procedure accepting a long */
-    public static interface LongProcedure {
-        public void apply(long t);
-    }
-
-    /**
-     * A mapper accepting a long argument and returning an int
-     */
-    public static interface MapperFromLongToInt {
-        public int map(long t);
-    }
-
-    /**
-     * A mapper accepting a long argument and returning a double
-     */
-    public static interface MapperFromLongToDouble {
-        public double map(long t);
-    }
-
-    /**
-     * A mapper accepting a long argument and returning a long
-     */
-    public static interface LongMapper {
-        public long map(long t);
-    }
-
-    /** A reducer accepting and returning longs */
-    public static interface LongReducer {
-        public long combine(long u, long v);
-    }
-
-    /** A predicate accepting a long argument */
-    public static interface LongPredicate {
-        public boolean evaluate(long t);
-    }
-
-    /** A relationalPredicate accepting long arguments */
-    public static interface LongRelationalPredicate {
-        public boolean evaluate(long t, long u);
-    }
-
-    /** A generator of ints */
-    public static interface IntGenerator {
-        public int generate();
-    }
-
-    /** A procedure accepting an int */
-    public static interface IntProcedure {
-        public void apply(int t);
-    }
-
-    /** A map accepting an int and returning an int */
-    public static interface IntMapper {
-        public int map(int u);
-    }
-
-    /**
-     * A mapper accepting an int argument and returning a long
-     */
-    public static interface MapperFromIntToLong {
-        public long map(int t);
-    }
-
-    /**
-     * A mapper accepting an int argument and returning a double
-     */
-    public static interface MapperFromIntToDouble {
-        public double map(int t);
-    }
-
-    /** A reducer accepting and returning ints */
-    public static interface IntReducer {
-        public int combine(int u, int v);
-    }
-
-    /** A predicate accepting an int */
-    public static interface IntPredicate {
-        public boolean evaluate(int t);
-    }
-
-    /** A relationalPredicate accepting int arguments */
-    public static interface IntRelationalPredicate {
-        public boolean evaluate(int t, int u);
-    }
-
-    // comparators
-
-    /**
-     * A Comparator for doubles
-     */
-    public static interface DoubleComparator {
-        public int compare(double x, double y);
-    }
-
-    /**
-     * A Comparator for longs
-     */
-    public static interface LongComparator {
-        public int compare(long x, long y);
-    }
-
-    /**
-     * A Comparator for ints
-     */
-    public static interface IntComparator {
-        public int compare(int x, int y);
-    }
+    // Static factories for builtin ops
 
     /**
      * Returns a Comparator for Comparable objects
@@ -295,9 +206,7 @@ public class Ops {
     public static <T extends Comparable<? super T>> Comparator<T>
                              naturalComparator(Class<T> type) {
         return new Comparator<T>() {
-            public int compare(T a, T b) {
-                return a.compareTo(b);
-            }
+            public int compare(T a, T b) { return a.compareTo(b); }
         };
     }
 
@@ -308,7 +217,7 @@ public class Ops {
     public static <T extends Comparable<? super T>> Reducer<T>
                              naturalMaxReducer(Class<T> type) {
         return new Reducer<T>() {
-            public T combine(T a, T b) {
+            public T op(T a, T b) {
                 return (a != null &&
                         (b == null || a.compareTo(b) >= 0))? a : b;
             }
@@ -322,7 +231,7 @@ public class Ops {
     public static <T extends Comparable<? super T>> Reducer<T>
                              naturalMinReducer(Class<T> type) {
         return new Reducer<T>() {
-            public T combine(T a, T b) {
+            public T op(T a, T b) {
                 return (a != null &&
                         (b == null || a.compareTo(b) <= 0))? a : b;
             }
@@ -337,7 +246,7 @@ public class Ops {
     public static <T> Reducer<T> maxReducer
         (final Comparator<? super T> comparator) {
         return new Reducer<T>() {
-            public T combine(T a, T b) {
+            public T op(T a, T b) {
                 return (a != null &&
                         (b == null || comparator.compare(a, b) >= 0))? a : b;
             }
@@ -352,7 +261,7 @@ public class Ops {
     public static <T> Reducer<T> minReducer
         (final Comparator<? super T> comparator) {
         return new Reducer<T>() {
-            public T combine(T a, T b) {
+            public T op(T a, T b) {
                 return (a != null &&
                         (b == null || comparator.compare(a, b) <= 0))? a : b;
             }
@@ -384,7 +293,7 @@ public class Ops {
     }
     static final class RawMaxReducer implements Reducer {
         static final RawMaxReducer max = new RawMaxReducer();
-        public Object combine(Object a, Object b) {
+        public Object op(Object a, Object b) {
             return (a != null &&
                     (b == null ||
                      ((Comparable)a).compareTo((Comparable)b) >= 0))? a : b;
@@ -402,7 +311,7 @@ public class Ops {
     }
     static final class RawMinReducer implements Reducer {
         static final RawMinReducer min = new RawMinReducer();
-        public Object combine(Object a, Object b) {
+        public Object op(Object a, Object b) {
             return (a != null &&
                     (b == null ||
                      ((Comparable)a).compareTo((Comparable)b) <= 0))? a : b;
@@ -437,7 +346,7 @@ public class Ops {
         implements DoubleReducer {
         public static final NaturalDoubleMaxReducer max =
             new NaturalDoubleMaxReducer();
-        public double combine(double a, double b) { return Math.max(a, b); }
+        public double op(double a, double b) { return Math.max(a, b); }
     }
 
     /**
@@ -451,7 +360,7 @@ public class Ops {
         implements DoubleReducer {
         public static final NaturalDoubleMinReducer min =
             new NaturalDoubleMinReducer();
-        public double combine(double a, double b) { return Math.min(a, b); }
+        public double op(double a, double b) { return Math.min(a, b); }
     }
 
     /**
@@ -461,7 +370,7 @@ public class Ops {
     public static DoubleReducer doubleMaxReducer
         (final DoubleComparator comparator) {
         return new DoubleReducer() {
-                public double combine(double a, double b) {
+                public double op(double a, double b) {
                     return (comparator.compare(a, b) >= 0)? a : b;
                 }
             };
@@ -474,7 +383,7 @@ public class Ops {
     public static DoubleReducer doubleMinReducer
         (final DoubleComparator comparator) {
         return new DoubleReducer() {
-                public double combine(double a, double b) {
+                public double op(double a, double b) {
                     return (comparator.compare(a, b) <= 0)? a : b;
                 }
             };
@@ -507,7 +416,7 @@ public class Ops {
         implements LongReducer {
         public static final NaturalLongMaxReducer max =
             new NaturalLongMaxReducer();
-        public long combine(long a, long b) { return a >= b? a : b; }
+        public long op(long a, long b) { return a >= b? a : b; }
     }
 
     /**
@@ -521,7 +430,7 @@ public class Ops {
         implements LongReducer {
         public static final NaturalLongMinReducer min =
             new NaturalLongMinReducer();
-        public long combine(long a, long b) { return a <= b? a : b; }
+        public long op(long a, long b) { return a <= b? a : b; }
     }
 
     /**
@@ -531,7 +440,7 @@ public class Ops {
     public static LongReducer longMaxReducer
         (final LongComparator comparator) {
         return new LongReducer() {
-                public long combine(long a, long b) {
+                public long op(long a, long b) {
                     return (comparator.compare(a, b) >= 0)? a : b;
                 }
             };
@@ -544,7 +453,7 @@ public class Ops {
     public static LongReducer longMinReducer
         (final LongComparator comparator) {
         return new LongReducer() {
-                public long combine(long a, long b) {
+                public long op(long a, long b) {
                     return (comparator.compare(a, b) <= 0)? a : b;
                 }
             };
@@ -554,11 +463,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T,U,V> Mapper<T,V> compoundMapper
-        (final Mapper<? super T, ? extends U> first,
-         final Mapper<? super U, ? extends V> second) {
-        return new Mapper<T,V>() {
-            public final V map(T t) { return second.map(first.map(t)); }
+    public static <T,U,V> Op<T,V> compoundOp
+        (final Op<? super T, ? extends U> first,
+         final Op<? super U, ? extends V> second) {
+        return new Op<T,V>() {
+            public final V op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -566,11 +475,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T,V> Mapper<T,V> compoundMapper
-        (final MapperToDouble<? super T> first,
-         final MapperFromDouble<? extends V> second) {
-        return new Mapper<T,V>() {
-            public final V map(T t) { return second.map(first.map(t)); }
+    public static <T,V> Op<T,V> compoundOp
+        (final ObjectToDouble<? super T> first,
+         final DoubleToObject<? extends V> second) {
+        return new Op<T,V>() {
+            public final V op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -578,11 +487,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T,V> Mapper<T,V> compoundMapper
-        (final MapperToLong<? super T> first,
-         final MapperFromLong<? extends V> second) {
-        return new Mapper<T,V>() {
-            public final V map(T t) { return second.map(first.map(t)); }
+    public static <T,V> Op<T,V> compoundOp
+        (final ObjectToLong<? super T> first,
+         final LongToObject<? extends V> second) {
+        return new Op<T,V>() {
+            public final V op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -590,11 +499,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T,V> MapperFromDouble<V> compoundMapper
-        (final MapperFromDouble<? extends T> first,
-         final Mapper<? super T,? extends V> second) {
-        return new MapperFromDouble<V>() {
-            public final V map(double t) { return second.map(first.map(t)); }
+    public static <T,V> DoubleToObject<V> compoundOp
+        (final DoubleToObject<? extends T> first,
+         final Op<? super T,? extends V> second) {
+        return new DoubleToObject<V>() {
+            public final V op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -602,11 +511,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T,V> MapperFromLong<V> compoundMapper
-        (final MapperFromLong<? extends T> first,
-         final Mapper<? super T,? extends V> second) {
-        return new MapperFromLong<V>() {
-            public final V map(long t) { return second.map(first.map(t)); }
+    public static <T,V> LongToObject<V> compoundOp
+        (final LongToObject<? extends T> first,
+         final Op<? super T,? extends V> second) {
+        return new LongToObject<V>() {
+            public final V op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -614,11 +523,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T,U> MapperToDouble<T> compoundMapper
-        (final Mapper<? super T, ? extends U> first,
-         final MapperToDouble<? super U> second) {
-        return new MapperToDouble<T>() {
-            public final double map(T t) { return second.map(first.map(t)); }
+    public static <T,U> ObjectToDouble<T> compoundOp
+        (final Op<? super T, ? extends U> first,
+         final ObjectToDouble<? super U> second) {
+        return new ObjectToDouble<T>() {
+            public final double op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -626,11 +535,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T,U> MapperToLong<T> compoundMapper
-        (final Mapper<? super T, ? extends U> first,
-         final MapperToLong<? super U> second) {
-        return new MapperToLong<T>() {
-            public final long map(T t) { return second.map(first.map(t)); }
+    public static <T,U> ObjectToLong<T> compoundOp
+        (final Op<? super T, ? extends U> first,
+         final ObjectToLong<? super U> second) {
+        return new ObjectToLong<T>() {
+            public final long op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -638,11 +547,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperToDouble<T> compoundMapper
-        (final MapperToDouble<? super T> first,
-         final DoubleMapper second) {
-        return new MapperToDouble<T>() {
-            public final double map(T t) { return second.map(first.map(t)); }
+    public static <T> ObjectToDouble<T> compoundOp
+        (final ObjectToDouble<? super T> first,
+         final DoubleOp second) {
+        return new ObjectToDouble<T>() {
+            public final double op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -650,11 +559,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperToLong<T> compoundMapper
-        (final MapperToDouble<? super T> first,
-         final MapperFromDoubleToLong second) {
-        return new MapperToLong<T>() {
-            public final long map(T t) { return second.map(first.map(t)); }
+    public static <T> ObjectToLong<T> compoundOp
+        (final ObjectToDouble<? super T> first,
+         final DoubleToLong second) {
+        return new ObjectToLong<T>() {
+            public final long op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -662,11 +571,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperToLong<T> compoundMapper
-        (final MapperToLong<? super T> first,
-         final LongMapper second) {
-        return new MapperToLong<T>() {
-            public final long map(T t) { return second.map(first.map(t)); }
+    public static <T> ObjectToLong<T> compoundOp
+        (final ObjectToLong<? super T> first,
+         final LongOp second) {
+        return new ObjectToLong<T>() {
+            public final long op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -674,11 +583,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperToDouble<T> compoundMapper
-        (final MapperToLong<? super T> first,
-         final MapperFromLongToDouble second) {
-        return new MapperToDouble<T>() {
-            public final double map(T t) { return second.map(first.map(t)); }
+    public static <T> ObjectToDouble<T> compoundOp
+        (final ObjectToLong<? super T> first,
+         final LongToDouble second) {
+        return new ObjectToDouble<T>() {
+            public final double op(T t) { return second.op(first.op(t)); }
         };
     }
 
@@ -686,11 +595,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static DoubleMapper compoundMapper
-        (final DoubleMapper first,
-         final DoubleMapper second) {
-        return new DoubleMapper() {
-            public final double map(double t) { return second.map(first.map(t)); }
+    public static DoubleOp compoundOp
+        (final DoubleOp first,
+         final DoubleOp second) {
+        return new DoubleOp() {
+            public final double op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -698,11 +607,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static MapperFromDoubleToLong compoundMapper
-        (final DoubleMapper first,
-         final MapperFromDoubleToLong second) {
-        return new MapperFromDoubleToLong() {
-            public final long map(double t) { return second.map(first.map(t)); }
+    public static DoubleToLong compoundOp
+        (final DoubleOp first,
+         final DoubleToLong second) {
+        return new DoubleToLong() {
+            public final long op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -710,11 +619,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static MapperFromDoubleToLong compoundMapper
-        (final MapperFromDoubleToLong first,
-         final LongMapper second) {
-        return new MapperFromDoubleToLong() {
-            public final long map(double t) { return second.map(first.map(t)); }
+    public static DoubleToLong compoundOp
+        (final DoubleToLong first,
+         final LongOp second) {
+        return new DoubleToLong() {
+            public final long op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -722,11 +631,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperFromDouble<T> compoundMapper
-        (final MapperFromDoubleToLong first,
-         final MapperFromLong<? extends T> second) {
-        return new MapperFromDouble<T>() {
-            public final T map(double t) { return second.map(first.map(t)); }
+    public static <T> DoubleToObject<T> compoundOp
+        (final DoubleToLong first,
+         final LongToObject<? extends T> second) {
+        return new DoubleToObject<T>() {
+            public final T op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -734,11 +643,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperFromLong<T> compoundMapper
-        (final MapperFromLongToDouble first,
-         final MapperFromDouble<? extends T> second) {
-        return new MapperFromLong<T>() {
-            public final T map(long t) { return second.map(first.map(t)); }
+    public static <T> LongToObject<T> compoundOp
+        (final LongToDouble first,
+         final DoubleToObject<? extends T> second) {
+        return new LongToObject<T>() {
+            public final T op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -746,11 +655,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static MapperFromLongToDouble compoundMapper
-        (final LongMapper first,
-         final MapperFromLongToDouble second) {
-        return new MapperFromLongToDouble() {
-            public final double map(long t) { return second.map(first.map(t)); }
+    public static LongToDouble compoundOp
+        (final LongOp first,
+         final LongToDouble second) {
+        return new LongToDouble() {
+            public final double op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -758,11 +667,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static MapperFromLongToDouble compoundMapper
-        (final MapperFromLongToDouble first,
-         final DoubleMapper second) {
-        return new MapperFromLongToDouble() {
-            public final double map(long t) { return second.map(first.map(t)); }
+    public static LongToDouble compoundOp
+        (final LongToDouble first,
+         final DoubleOp second) {
+        return new LongToDouble() {
+            public final double op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -770,11 +679,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperFromDouble<T> compoundMapper
-        (final DoubleMapper first,
-         final MapperFromDouble<? extends T> second) {
-        return new MapperFromDouble<T>() {
-            public final T map(double t) { return second.map(first.map(t)); }
+    public static <T> DoubleToObject<T> compoundOp
+        (final DoubleOp first,
+         final DoubleToObject<? extends T> second) {
+        return new DoubleToObject<T>() {
+            public final T op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -782,11 +691,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperFromLong<T> compoundMapper
-        (final LongMapper first,
-         final MapperFromLong<? extends T> second) {
-        return new MapperFromLong<T>() {
-            public final T map(long t) { return second.map(first.map(t)); }
+    public static <T> LongToObject<T> compoundOp
+        (final LongOp first,
+         final LongToObject<? extends T> second) {
+        return new LongToObject<T>() {
+            public final T op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -794,11 +703,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> DoubleMapper compoundMapper
-        (final MapperFromDouble<? extends T> first,
-         final MapperToDouble<? super T>  second) {
-        return new DoubleMapper() {
-            public final double map(double t) { return second.map(first.map(t)); }
+    public static <T> DoubleOp compoundOp
+        (final DoubleToObject<? extends T> first,
+         final ObjectToDouble<? super T>  second) {
+        return new DoubleOp() {
+            public final double op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -806,11 +715,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperFromLongToDouble compoundMapper
-        (final MapperFromLong<? extends T> first,
-         final MapperToDouble<? super T>  second) {
-        return new MapperFromLongToDouble() {
-            public final double map(long t) { return second.map(first.map(t)); }
+    public static <T> LongToDouble compoundOp
+        (final LongToObject<? extends T> first,
+         final ObjectToDouble<? super T>  second) {
+        return new LongToDouble() {
+            public final double op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -818,11 +727,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> MapperFromDoubleToLong compoundMapper
-        (final MapperFromDouble<? extends T> first,
-         final MapperToLong<? super T>  second) {
-        return new MapperFromDoubleToLong() {
-            public final long map(double t) { return second.map(first.map(t)); }
+    public static <T> DoubleToLong compoundOp
+        (final DoubleToObject<? extends T> first,
+         final ObjectToLong<? super T>  second) {
+        return new DoubleToLong() {
+            public final long op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -830,11 +739,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static <T> LongMapper compoundMapper
-        (final MapperFromLong<? extends T> first,
-         final MapperToLong<? super T>  second) {
-        return new LongMapper() {
-            public final long map(long t) { return second.map(first.map(t)); }
+    public static <T> LongOp compoundOp
+        (final LongToObject<? extends T> first,
+         final ObjectToLong<? super T>  second) {
+        return new LongOp() {
+            public final long op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -842,11 +751,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static LongMapper compoundMapper
-        (final LongMapper first,
-         final LongMapper second) {
-        return new LongMapper() {
-            public final long map(long t) { return second.map(first.map(t)); }
+    public static LongOp compoundOp
+        (final LongOp first,
+         final LongOp second) {
+        return new LongOp() {
+            public final long op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -854,11 +763,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static DoubleMapper compoundMapper
-        (final MapperFromDoubleToLong first,
-         final MapperFromLongToDouble second) {
-        return new DoubleMapper() {
-            public final double map(double t) { return second.map(first.map(t)); }
+    public static DoubleOp compoundOp
+        (final DoubleToLong first,
+         final LongToDouble second) {
+        return new DoubleOp() {
+            public final double op(double t) { return second.op(first.op(t)); }
         };
     }
 
@@ -866,11 +775,11 @@ public class Ops {
      * Returns a composite mapper that applies a second mapper to the results
      * of applying the first one
      */
-    public static LongMapper compoundMapper
-        (final MapperFromLongToDouble first,
-         final MapperFromDoubleToLong second) {
-        return new LongMapper() {
-            public final long map(long t) { return second.map(first.map(t)); }
+    public static LongOp compoundOp
+        (final LongToDouble first,
+         final DoubleToLong second) {
+        return new LongOp() {
+            public final long op(long t) { return second.op(first.op(t)); }
         };
     }
 
@@ -880,7 +789,7 @@ public class Ops {
     public static <T> Predicate<T> notPredicate
         (final Predicate<T> pred) {
         return new Predicate<T>() {
-            public final boolean evaluate(T x) { return !pred.evaluate(x); }
+            public final boolean op(T x) { return !pred.op(x); }
         };
     }
 
@@ -890,7 +799,7 @@ public class Ops {
     public static DoublePredicate notPredicate
         (final DoublePredicate pred) {
         return new DoublePredicate() {
-                public final boolean evaluate(double x) { return !pred.evaluate(x); }
+                public final boolean op(double x) { return !pred.op(x); }
             };
     }
 
@@ -900,7 +809,7 @@ public class Ops {
     public static LongPredicate notPredicate
         (final LongPredicate pred) {
         return new LongPredicate() {
-                public final boolean evaluate(long x) { return !pred.evaluate(x); }
+                public final boolean op(long x) { return !pred.op(x); }
             };
     }
 
@@ -911,8 +820,8 @@ public class Ops {
         (final Predicate<S> first,
          final Predicate<? super T> second) {
         return new Predicate<T>() {
-            public final boolean evaluate(T x) {
-                return first.evaluate(x) && second.evaluate(x);
+            public final boolean op(T x) {
+                return first.op(x) && second.op(x);
             }
         };
     }
@@ -924,8 +833,8 @@ public class Ops {
         (final Predicate<S> first,
          final Predicate<? super T> second) {
         return new Predicate<T>() {
-            public final boolean evaluate(T x) {
-                return first.evaluate(x) || second.evaluate(x);
+            public final boolean op(T x) {
+                return first.op(x) || second.op(x);
             }
         };
     }
@@ -937,8 +846,8 @@ public class Ops {
         (final DoublePredicate first,
          final DoublePredicate second) {
         return new DoublePredicate() {
-            public final boolean evaluate(double x) {
-                return first.evaluate(x) && second.evaluate(x);
+            public final boolean op(double x) {
+                return first.op(x) && second.op(x);
             }
         };
     }
@@ -950,8 +859,8 @@ public class Ops {
         (final DoublePredicate first,
          final DoublePredicate second) {
         return new DoublePredicate() {
-            public final boolean evaluate(double x) {
-                return first.evaluate(x) || second.evaluate(x);
+            public final boolean op(double x) {
+                return first.op(x) || second.op(x);
             }
         };
     }
@@ -964,8 +873,8 @@ public class Ops {
         (final LongPredicate first,
          final LongPredicate second) {
         return new LongPredicate() {
-            public final boolean evaluate(long x) {
-                return first.evaluate(x) && second.evaluate(x);
+            public final boolean op(long x) {
+                return first.op(x) && second.op(x);
             }
         };
     }
@@ -977,8 +886,8 @@ public class Ops {
         (final LongPredicate first,
          final LongPredicate second) {
         return new LongPredicate() {
-            public final boolean evaluate(long x) {
-                return first.evaluate(x) || second.evaluate(x);
+            public final boolean op(long x) {
+                return first.op(x) || second.op(x);
             }
         };
     }
@@ -992,7 +901,7 @@ public class Ops {
     static final class IsNonNullPredicate implements Predicate<Object> {
         static final IsNonNullPredicate predicate =
             new IsNonNullPredicate();
-        public final boolean evaluate(Object x) {
+        public final boolean op(Object x) {
             return x != null;
         }
     }
@@ -1006,7 +915,7 @@ public class Ops {
     static final class IsNullPredicate implements Predicate<Object> {
         static final IsNullPredicate predicate =
             new IsNullPredicate();
-        public final boolean evaluate(Object x) {
+        public final boolean op(Object x) {
             return x != null;
         }
     }
@@ -1017,12 +926,11 @@ public class Ops {
      */
     public static Predicate<Object> instanceofPredicate(final Class type) {
         return new Predicate<Object>() {
-            public final boolean evaluate(Object x) {
+            public final boolean op(Object x) {
                 return type.isInstance(x);
             }
         };
     }
-
 
     /**
      * Returns a predicate evaluating to true if its argument is assignable
@@ -1030,7 +938,7 @@ public class Ops {
      */
     public static Predicate<Object> isAssignablePredicate(final Class type) {
         return new Predicate<Object>() {
-            public final boolean evaluate(Object x) {
+            public final boolean op(Object x) {
                 return type.isAssignableFrom(x.getClass());
             }
         };
@@ -1042,7 +950,7 @@ public class Ops {
     public static DoubleReducer doubleAdder() { return DoubleAdder.adder; }
     static final class DoubleAdder implements DoubleReducer {
         static final DoubleAdder adder = new DoubleAdder();
-        public double combine(double a, double b) { return a + b; }
+        public double op(double a, double b) { return a + b; }
     }
 
     /**
@@ -1051,7 +959,7 @@ public class Ops {
     public static LongReducer longAdder() { return LongAdder.adder; }
     static final class LongAdder implements LongReducer {
         static final LongAdder adder = new LongAdder();
-        public long combine(long a, long b) { return a + b; }
+        public long op(long a, long b) { return a + b; }
     }
 
     /**
@@ -1060,7 +968,7 @@ public class Ops {
     public static IntReducer intAdder() { return IntAdder.adder; }
     static final class IntAdder implements IntReducer {
         static final IntAdder adder = new IntAdder();
-        public int combine(int a, int b) { return a + b; }
+        public int op(int a, int b) { return a + b; }
     }
 
     /**
@@ -1076,7 +984,7 @@ public class Ops {
     static final class DoubleRandomGenerator implements DoubleGenerator {
         static final DoubleRandomGenerator generator =
             new DoubleRandomGenerator();
-        public double generate() {
+        public double op() {
             return ForkJoinWorkerThread.nextRandomDouble();
         }
     }
@@ -1087,7 +995,7 @@ public class Ops {
      * java.util.Random#nextDouble} but operating independently across
      * ForkJoinWorkerThreads and usable only within forkjoin
      * computations.
-     * @param bound the upper bound (exclusive) of generated values
+     * @param bound the upper bound (exclusive) of opd values
      */
     public static DoubleGenerator doubleRandom(double bound) {
         return new DoubleBoundedRandomGenerator(bound);
@@ -1095,7 +1003,7 @@ public class Ops {
     static final class DoubleBoundedRandomGenerator implements DoubleGenerator {
         final double bound;
         DoubleBoundedRandomGenerator(double bound) { this.bound = bound; }
-        public double generate() {
+        public double op() {
             return ForkJoinWorkerThread.nextRandomDouble() * bound;
         }
     }
@@ -1106,7 +1014,7 @@ public class Ops {
      * independently across ForkJoinWorkerThreads and usable only
      * within forkjoin computations.
      * @param least the least value returned
-     * @param bound the upper bound (exclusive) of generated values
+     * @param bound the upper bound (exclusive) of opd values
      */
     public static DoubleGenerator doubleRandom(double least, double bound) {
         return new DoubleIntervalRandomGenerator(least, bound);
@@ -1117,7 +1025,7 @@ public class Ops {
         DoubleIntervalRandomGenerator(double least, double bound) {
             this.least = least; this.range = bound - least;
         }
-        public double generate() {
+        public double op() {
             return ForkJoinWorkerThread.nextRandomDouble() * range + least;
         }
     }
@@ -1134,7 +1042,7 @@ public class Ops {
     static final class LongRandomGenerator implements LongGenerator {
         static final LongRandomGenerator generator =
             new LongRandomGenerator();
-        public long generate() {
+        public long op() {
             return ForkJoinWorkerThread.nextRandomLong();
         }
     }
@@ -1144,7 +1052,7 @@ public class Ops {
      * same properties as {@link java.util.Random#nextInt(int)} but
      * operating independently across ForkJoinWorkerThreads and usable
      * only within forkjoin computations.
-     * @param bound the upper bound (exclusive) of generated values
+     * @param bound the upper bound (exclusive) of opd values
      */
     public static LongGenerator longRandom(long bound) {
         if (bound <= 0)
@@ -1154,7 +1062,7 @@ public class Ops {
     static final class LongBoundedRandomGenerator implements LongGenerator {
         final long bound;
         LongBoundedRandomGenerator(long bound) { this.bound = bound; }
-        public long generate() {
+        public long op() {
             return ForkJoinWorkerThread.nextRandomLong(bound);
         }
     }
@@ -1165,7 +1073,7 @@ public class Ops {
      * independently across ForkJoinWorkerThreads and usable only
      * within forkjoin computations.
      * @param least the least value returned
-     * @param bound the upper bound (exclusive) of generated values
+     * @param bound the upper bound (exclusive) of opd values
      */
     public static LongGenerator longRandom(long least, long bound) {
         if (least >= bound)
@@ -1178,7 +1086,7 @@ public class Ops {
         LongIntervalRandomGenerator(long least, long bound) {
             this.least = least; this.range = bound - least;
         }
-        public long generate() {
+        public long op() {
             return ForkJoinWorkerThread.nextRandomLong(range) + least;
         }
     }
@@ -1195,7 +1103,7 @@ public class Ops {
     static final class IntRandomGenerator implements IntGenerator {
         static final IntRandomGenerator generator =
             new IntRandomGenerator();
-        public int generate() {
+        public int op() {
             return ForkJoinWorkerThread.nextRandomInt();
         }
     }
@@ -1205,7 +1113,7 @@ public class Ops {
      * same properties as {@link java.util.Random#nextInt(int)} but
      * operating independently across ForkJoinWorkerThreads and usable
      * only within forkjoin computations.
-     * @param bound the upper bound (exclusive) of generated values
+     * @param bound the upper bound (exclusive) of opd values
      */
     public static IntGenerator intRandom(int bound) {
         if (bound <= 0)
@@ -1215,7 +1123,7 @@ public class Ops {
     static final class IntBoundedRandomGenerator implements IntGenerator {
         final int bound;
         IntBoundedRandomGenerator(int bound) { this.bound = bound; }
-        public int generate() {
+        public int op() {
             return ForkJoinWorkerThread.nextRandomInt(bound);
         }
     }
@@ -1226,7 +1134,7 @@ public class Ops {
      * independently across ForkJoinWorkerThreads and usable only
      * within forkjoin computations.
      * @param least the least value returned
-     * @param bound the upper bound (exclusive) of generated values
+     * @param bound the upper bound (exclusive) of opd values
      */
     public static IntGenerator intRandom(int least, int bound) {
         if (least >= bound)
@@ -1239,7 +1147,7 @@ public class Ops {
         IntIntervalRandomGenerator(int least, int bound) {
             this.least = least; this.range = bound - least;
         }
-        public int generate() {
+        public int op() {
             return ForkJoinWorkerThread.nextRandomInt(range) + least;
         }
     }

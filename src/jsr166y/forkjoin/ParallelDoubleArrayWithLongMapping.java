@@ -16,10 +16,10 @@ import java.lang.reflect.Array;
  * Instances of this class may be constructed only via prefix
  * methods of ParallelDoubleArray or its other prefix classes.
  */
-public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
+public abstract class ParallelDoubleArrayWithLongMapping extends AbstractParallelAnyArray.DPap {
     ParallelDoubleArrayWithLongMapping
-        (ForkJoinExecutor ex, int firstIndex, int upperBound, double[] array) {
-        super(ex, firstIndex, upperBound, array);
+        (ForkJoinExecutor ex, int origin, int fence, double[] array) {
+        super(ex, origin, fence, array);
     }
 
     /**
@@ -27,8 +27,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param procedure the procedure
      */
     public void apply(LongProcedure procedure) {
-        ex.invoke(new PAS.FJLApply
-                  (this, firstIndex, upperBound, null, procedure));
+        ex.invoke(new PAS.FJLApply(this, origin, fence, null, procedure));
     }
 
     /**
@@ -39,7 +38,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      */
     public long reduce(LongReducer reducer, long base) {
         PAS.FJLReduce f = new PAS.FJLReduce
-            (this, firstIndex, upperBound, null, reducer, base);
+            (this, origin, fence, null, reducer, base);
         ex.invoke(f);
         return f.result;
     }
@@ -49,7 +48,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @return minimum element, or Long.MAX_VALUE if empty
      */
     public long min() {
-        return reduce(naturalLongMinReducer(), Long.MAX_VALUE);
+        return reduce(CommonOps.naturalLongMinReducer(), Long.MAX_VALUE);
     }
 
     /**
@@ -58,8 +57,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @return minimum element, or Long.MAX_VALUE if empty
      */
     public long min(LongComparator comparator) {
-        return reduce(longMinReducer(comparator),
-                      Long.MAX_VALUE);
+        return reduce(CommonOps.longMinReducer(comparator), Long.MAX_VALUE);
     }
 
     /**
@@ -67,7 +65,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @return maximum element, or Long.MIN_VALUE if empty
      */
     public long max() {
-        return reduce(naturalLongMaxReducer(), Long.MIN_VALUE);
+        return reduce(CommonOps.naturalLongMaxReducer(), Long.MIN_VALUE);
     }
 
     /**
@@ -76,8 +74,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @return maximum element, or Long.MIN_VALUE if empty
      */
     public long max(LongComparator comparator) {
-        return reduce(longMaxReducer(comparator),
-                      Long.MIN_VALUE);
+        return reduce(CommonOps.longMaxReducer(comparator), Long.MIN_VALUE);
     }
 
     /**
@@ -85,7 +82,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @return the sum of elements
      */
     public long sum() {
-        return reduce(Ops.longAdder(), 0);
+        return reduce(CommonOps.longAdder(), 0);
     }
 
     /**
@@ -97,7 +94,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
     public ParallelLongArray.SummaryStatistics summary
         (LongComparator comparator) {
         PAS.FJLStats f = new PAS.FJLStats
-            (this, firstIndex, upperBound, null, comparator);
+            (this, origin, fence, null, comparator);
         ex.invoke(f);
         return f;
     }
@@ -107,11 +104,7 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @return the summary.
      */
     public ParallelLongArray.SummaryStatistics summary() {
-        PAS.FJLStats f = new PAS.FJLStats
-            (this, firstIndex, upperBound, null,
-             naturalLongComparator());
-        ex.invoke(f);
-        return f;
+        return summary(CommonOps.naturalLongComparator());
     }
 
     /**
@@ -120,25 +113,6 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      */
     public ParallelLongArray all() {
         return new ParallelLongArray(ex, allLongs());
-    }
-
-    /**
-     * Return the number of elements selected using bound or
-     * filter restrictions. Note that this method must evaluate
-     * all selectors to return its result.
-     * @return the number of elements
-     */
-    public int size() {
-        return super.computeSize();
-    }
-
-    /**
-     * Returns the index of some element matching bound and filter
-     * constraints, or -1 if none.
-     * @return index of matching element, or -1 if none.
-     */
-    public int anyIndex() {
-        return super.computeAnyIndex();
     }
 
     /**
@@ -174,10 +148,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract <V,W> ParallelDoubleArrayWithMapping<W> withMapping
+    public <V,W,X> ParallelDoubleArrayWithMapping<W> withMapping
         (LongAndObjectToObject<? super V, ? extends W> combiner,
-         ParallelArray<V> other);
+         ParallelArrayWithMapping<X,V> other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -185,10 +164,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract <V> ParallelDoubleArrayWithMapping<V> withMapping
+    public <V> ParallelDoubleArrayWithMapping<V> withMapping
         (LongAndDoubleToObject<? extends V> combiner,
-         ParallelDoubleArray other);
+         ParallelDoubleArrayWithDoubleMapping other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -196,10 +180,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract <V> ParallelDoubleArrayWithMapping<V> withMapping
+    public <V> ParallelDoubleArrayWithMapping<V> withMapping
         (LongAndLongToObject<? extends V> combiner,
-         ParallelLongArray other);
+         ParallelLongArrayWithLongMapping other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -207,10 +196,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract <V> ParallelDoubleArrayWithDoubleMapping withMapping
+    public <V,W> ParallelDoubleArrayWithDoubleMapping withMapping
         (LongAndObjectToDouble<? super V> combiner,
-         ParallelArray<V> other);
+         ParallelArrayWithMapping<W,V> other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -218,10 +212,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract ParallelDoubleArrayWithDoubleMapping withMapping
+    public ParallelDoubleArrayWithDoubleMapping withMapping
         (LongAndDoubleToDouble combiner,
-         ParallelDoubleArray other);
+         ParallelDoubleArrayWithDoubleMapping other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -229,10 +228,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract ParallelDoubleArrayWithDoubleMapping withMapping
+    public ParallelDoubleArrayWithDoubleMapping withMapping
         (LongAndLongToDouble combiner,
-         ParallelLongArray other);
+         ParallelLongArrayWithLongMapping other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -240,10 +244,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract <V> ParallelDoubleArrayWithLongMapping withMapping
+    public <V,W> ParallelDoubleArrayWithLongMapping withMapping
         (LongAndObjectToLong<? super V> combiner,
-         ParallelArray<V> other);
+         ParallelArrayWithMapping<W,V> other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -251,10 +260,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract ParallelDoubleArrayWithLongMapping withMapping
+    public ParallelDoubleArrayWithLongMapping withMapping
         (LongAndDoubleToLong combiner,
-         ParallelDoubleArray other);
+         ParallelDoubleArrayWithDoubleMapping other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -262,10 +276,15 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
      * @param combiner the combiner
      * @param other the other array
      * @return operation prefix
+     * @throws IllegalArgumentException if other array is a
+     * filtered view (all filters must precede all mappings).
      */
-    public abstract ParallelDoubleArrayWithLongMapping withMapping
+    public ParallelDoubleArrayWithLongMapping withMapping
         (BinaryLongOp combiner,
-         ParallelLongArray other);
+         ParallelLongArrayWithLongMapping other) {
+        if (other.hasFilter()) throw new IllegalArgumentException();
+        return withIndexedMapping(AbstractParallelAnyArray.indexedMapper(combiner, other, origin));
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -312,6 +331,5 @@ public abstract class ParallelDoubleArrayWithLongMapping extends PAS.DPrefix {
     public Iterable<Long> sequentially() {
         return new SequentiallyAsLong();
     }
-
 }
 

@@ -18,8 +18,8 @@ import java.lang.reflect.Array;
  */
 public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter<T> {
     ParallelArrayWithBounds
-        (ForkJoinExecutor ex, int firstIndex, int upperBound, T[] array) {
-        super(ex, firstIndex, upperBound, array);
+        (ForkJoinExecutor ex, int origin, int fence, T[] array) {
+        super(ex, origin, fence, array);
     }
 
     /**
@@ -73,7 +73,7 @@ public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter
      * @param base the result for an empty array
      * @return this (to simplify use in expressions)
      */
-    public abstract ParallelArrayWithBounds<? extends T> cumulate(Reducer<T> reducer, T base);
+    public abstract ParallelArrayWithBounds<T> cumulate(Reducer<T> reducer, T base);
 
     /**
      * Replaces each element with the cumulation of applying the given
@@ -93,7 +93,7 @@ public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter
      * @param cmp the comparator to use
      * @return this (to simplify use in expressions)
      */
-    public abstract ParallelArrayWithBounds<? extends T> sort(Comparator<? super T> cmp);
+    public abstract ParallelArrayWithBounds<T> sort(Comparator<? super T> cmp);
 
     /**
      * Sorts the elements, assuming all elements are
@@ -103,6 +103,6 @@ public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter
      * @return this (to simplify use in expressions)
      * @throws ClassCastException if any element is not Comparable.
      */
-    public abstract ParallelArrayWithBounds<? extends T> sort();
+    public abstract ParallelArrayWithBounds<T> sort();
 }
 

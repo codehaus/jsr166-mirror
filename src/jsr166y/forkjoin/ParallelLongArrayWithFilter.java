@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.lang.reflect.Array;
 
+
 /**
  * A prefix view of ParallelLongArray that causes operations to apply
  * only to elements for which a selector returns true.  Instances of
@@ -18,8 +19,8 @@ import java.lang.reflect.Array;
  */
 public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithLongMapping {
     ParallelLongArrayWithFilter
-        (ForkJoinExecutor ex, int firstIndex, int upperBound, long[] array) {
-        super(ex, firstIndex, upperBound, array);
+        (ForkJoinExecutor ex, int origin, int fence, long[] array) {
+        super(ex, origin, fence, array);
     }
 
     /**
@@ -30,7 +31,7 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
      */
     public ParallelLongArrayWithFilter replaceWithMapping(LongOp  op) {
         ex.invoke(new PAS.FJLTransform
-                  (this, firstIndex, upperBound, null, op));
+                  (this, origin, fence, null, op));
         return this;
     }
 
@@ -42,7 +43,7 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
      */
     public ParallelLongArrayWithFilter replaceWithMappedIndex(IntToLong op) {
         ex.invoke(new PAS.FJLIndexMap
-                  (this, firstIndex, upperBound, null, op));
+                  (this, origin, fence, null, op));
         return this;
     }
 
@@ -54,7 +55,7 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
     */
    public ParallelLongArrayWithFilter replaceWithMappedIndex(IntAndLongToLong op) {
         ex.invoke(new PAS.FJLBinaryIndexMap
-                  (this, firstIndex, upperBound, null, op));
+                  (this, origin, fence, null, op));
         return this;
     }
 
@@ -66,7 +67,7 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
      */
     public ParallelLongArrayWithFilter replaceWithGeneratedValue(LongGenerator generator) {
         ex.invoke(new PAS.FJLGenerate
-                  (this, firstIndex, upperBound, null, generator));
+                  (this, origin, fence, null, generator));
         return this;
     }
 
@@ -77,7 +78,7 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
      */
     public ParallelLongArrayWithFilter replaceWithValue(long value) {
         ex.invoke(new PAS.FJLFill
-                  (this, firstIndex, upperBound, null, value));
+                  (this, origin, fence, null, value));
         return this;
     }
 
@@ -89,10 +90,10 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
      * @return this (to simplify use in expressions)
      */
     public ParallelLongArrayWithFilter replaceWithMapping(BinaryLongOp combiner,
-                                   ParallelLongArray other) {
+                                   ParallelLongArrayWithLongMapping other) {
         ex.invoke(new PAS.FJLPACombineInPlace
-                  (this, firstIndex, upperBound, null,
-                   other, other.firstIndex - firstIndex, combiner));
+                  (this, origin, fence, null,
+                   other, other.origin - origin, combiner));
         return this;
     }
 
@@ -106,8 +107,8 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
     public ParallelLongArrayWithFilter replaceWithMapping(BinaryLongOp combiner,
                                    long[] other) {
         ex.invoke(new PAS.FJLCombineInPlace
-                  (this, firstIndex, upperBound, null, other,
-                   -firstIndex, combiner));
+                  (this, origin, fence, null, other,
+                   -origin, combiner));
         return this;
     }
 
@@ -116,7 +117,16 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
      * elements (that is, without any duplicates).
      * @return the new ParallelLongArray
      */
-    public abstract ParallelLongArray allUniqueElements();
+    public ParallelLongArray allUniqueElements() {
+        PAS.UniquifierTable tab = new PAS.UniquifierTable
+            (fence - origin, this, false);
+        PAS.FJLUniquifier f = new PAS.FJLUniquifier
+            (this, origin, fence, null, tab);
+        ex.invoke(f);
+        long[] res = tab.uniqueLongs(f.count);
+        return new ParallelLongArray(ex, res);
+    }
+
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -130,11 +140,36 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the current selector (if
-     * present) or the given selector returns true
+     * present) and the given binary selector returns true
      * @param selector the selector
      * @return operation prefix
      */
-    public abstract ParallelLongArrayWithFilter orFilter(LongPredicate selector);
+    public ParallelLongArrayWithFilter withFilter
+        (BinaryLongPredicate selector,
+         ParallelLongArrayWithLongMapping other) {
+        return withIndexedFilter(AbstractParallelAnyArray.indexedSelector(selector, other, origin));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * only on elements for which the current selector (if
+     * present) and the given indexed selector returns true
+     * @param selector the selector
+     * @return operation prefix
+     */
+    public abstract ParallelLongArrayWithFilter withIndexedFilter
+        (IntAndLongPredicate selector);
+
+    /**
+     * Returns true if all elements at the same relative positions
+     * of this and other array are equal.
+     * @param other the other array
+     * @return true if equal
+     */
+    public boolean hasAllEqualElements(ParallelLongArrayWithLongMapping other) {
+        return withFilter(CommonOps.longInequalityPredicate(), 
+                          other).anyIndex() < 0;
+    }
 
     final void leafTransfer(int lo, int hi, long[] dest, int offset) {
         final long[] a = this.array;
@@ -149,5 +184,5 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
             dest[offset++] = (a[indices[i]]);
     }
 
+    final long lget(int i) { return this.array[i]; }
 }
-

@@ -16,9 +16,10 @@ import java.lang.reflect.Array;
  * Instances of this class may be constructed only via prefix
  * methods of ParallelArray or its other prefix classes.
  */
-public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMapping<T,T>{
-    ParallelArrayWithFilter(ForkJoinExecutor ex, int firstIndex, int upperBound, T[] array) {
-        super(ex, firstIndex, upperBound, array);
+public abstract class ParallelArrayWithFilter<T> 
+    extends ParallelArrayWithMapping<T,T>{
+    ParallelArrayWithFilter(ForkJoinExecutor ex, int origin, int fence, T[] array) {
+        super(ex, origin, fence, array);
     }
 
     /**
@@ -27,8 +28,9 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * @param op the op
      * @return this (to simplify use in expressions)
      */
-    public ParallelArrayWithFilter<? extends T> replaceWithMapping(Op<? super T, ? extends T> op) {
-        ex.invoke(new PAS.FJOTransform(this, firstIndex, upperBound,
+    public ParallelArrayWithFilter<T> replaceWithMapping
+                                             (Op<? super T, ? extends T> op) {
+        ex.invoke(new PAS.FJOTransform(this, origin, fence,
                                        null, op));
         return this;
     }
@@ -39,8 +41,9 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * @param op the op
      * @return this (to simplify use in expressions)
      */
-    public ParallelArrayWithFilter<? extends T> replaceWithMappedIndex(IntToObject<? extends T> op) {
-        ex.invoke(new PAS.FJOIndexMap(this, firstIndex, upperBound,
+    public ParallelArrayWithFilter<T> replaceWithMappedIndex
+                                             (IntToObject<? extends T> op) {
+        ex.invoke(new PAS.FJOIndexMap(this, origin, fence,
                                       null, op));
         return this;
     }
@@ -51,10 +54,10 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * @param op the op
      * @return this (to simplify use in expressions)
      */
-    public ParallelArrayWithFilter<? extends T> replaceWithMappedIndex
+    public ParallelArrayWithFilter<T> replaceWithMappedIndex
         (IntAndObjectToObject<? super T, ? extends T> op) {
         ex.invoke(new PAS.FJOBinaryIndexMap
-                  (this, firstIndex, upperBound, null, op));
+                  (this, origin, fence, null, op));
         return this;
     }
 
@@ -64,10 +67,10 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * @param generator the generator
      * @return this (to simplify use in expressions)
      */
-    public ParallelArrayWithFilter<? extends T> replaceWithGeneratedValue
+    public ParallelArrayWithFilter<T> replaceWithGeneratedValue
         (Generator<? extends T> generator) {
         ex.invoke(new PAS.FJOGenerate
-                  (this, firstIndex, upperBound, null, generator));
+                  (this, origin, fence, null, generator));
         return this;
     }
 
@@ -76,8 +79,8 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * @param value the value
      * @return this (to simplify use in expressions)
      */
-    public ParallelArrayWithFilter<? extends T> replaceWithValue(T value) {
-        ex.invoke(new PAS.FJOFill(this, firstIndex, upperBound,
+    public ParallelArrayWithFilter<T> replaceWithValue(T value) {
+        ex.invoke(new PAS.FJOFill(this, origin, fence,
                                   null, value));
         return this;
     }
@@ -88,14 +91,13 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
-     * @throws ArrayIndexOutOfBoundsException if other array has
-     * fewer than <tt>upperBound</tt> elements.
      */
-    public ParallelArrayWithFilter<? extends T> replaceWithMapping(BinaryOp<T,T,T> combiner,
-                                   ParallelArray<? extends T> other) {
+    public <V,W> ParallelArrayWithFilter<T> replaceWithMapping
+        (BinaryOp<? super T, ? super V, ? extends T> combiner,
+         ParallelArrayWithMapping<W,V> other) {
         ex.invoke(new PAS.FJOPACombineInPlace
-                  (this, firstIndex, upperBound, null,
-                   other, other.firstIndex - firstIndex, combiner));
+                  (this, origin, fence, null,
+                   other, other.origin - origin, combiner));
         return this;
     }
 
@@ -105,13 +107,12 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
-     * @throws ArrayIndexOutOfBoundsException if other array has
-     * fewer than <tt>upperBound</tt> elements.
      */
-    public ParallelArrayWithFilter<? extends T> replaceWithMapping(BinaryOp<T,T,T> combiner, T[] other) {
+    public ParallelArrayWithFilter<T> replaceWithMapping
+        (BinaryOp<T,T,T> combiner, T[] other) {
         ex.invoke(new PAS.FJOCombineInPlace
-                  (this, firstIndex, upperBound, null, other,
-                   -firstIndex, combiner));
+                  (this, origin, fence, null, other,
+                   -origin, combiner));
         return this;
     }
 
@@ -122,7 +123,15 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * duplication.
      * @return the new ParallelArray
      */
-    public abstract ParallelArray<T> allUniqueElements();
+    public ParallelArray<T> allUniqueElements() {
+        PAS.UniquifierTable tab = new PAS.UniquifierTable
+            (fence - origin, this, false);
+        PAS.FJOUniquifier f = new PAS.FJOUniquifier
+            (this, origin, fence, null, tab);
+        ex.invoke(f);
+        T[] res = (T[])(tab.uniqueObjects(f.count));
+        return new ParallelArray<T>(ex, res);
+    }
 
     /**
      * Returns a new ParallelArray containing only non-null unique
@@ -130,7 +139,15 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
      * uses reference identity to test for duplication.
      * @return the new ParallelArray
      */
-    public abstract ParallelArray<T> allNonidenticalElements();
+    public ParallelArray<T> allNonidenticalElements() {
+        PAS.UniquifierTable tab = new PAS.UniquifierTable
+            (fence - origin, this, true);
+        PAS.FJOUniquifier f = new PAS.FJOUniquifier
+            (this, origin, fence, null, tab);
+        ex.invoke(f);
+        T[] res = (T[])(tab.uniqueObjects(f.count));
+        return new ParallelArray<T>(ex, res);
+    }
 
     /**
      * Returns an operation prefix that causes a method to operate
@@ -145,12 +162,51 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the current selector (if
-     * present) or the given selector returns true
+     * present) and the given binary selector returns true
      * @param selector the selector
      * @return operation prefix
      */
-    public abstract ParallelArrayWithFilter<T> orFilter
-        (Predicate<? super T> selector);
+    public <V,W> ParallelArrayWithFilter<T> withFilter
+        (BinaryPredicate<? super T, ? super V> selector,
+         ParallelArrayWithMapping<W,V> other) {
+        return withIndexedFilter(AbstractParallelAnyArray.indexedSelector(selector, other, origin));
+    }
+
+    /**
+     * Returns an operation prefix that causes a method to operate
+     * only on elements for which the current selector (if
+     * present) and the given indexed selector returns true
+     * @param selector the selector
+     * @return operation prefix
+     */
+    public abstract ParallelArrayWithFilter<T> withIndexedFilter
+        (IntAndObjectPredicate<? super T> selector);
+
+
+
+    /**
+     * Returns true if all elements at the same relative positions
+     * of this and other array are equal.
+     * @param other the other array
+     * @return true if equal
+     */
+    public <U,V> boolean hasAllEqualElements
+        (ParallelArrayWithMapping<U,V> other) {
+        return withFilter(CommonOps.inequalityPredicate(), 
+                          other).anyIndex() < 0;
+    }
+
+    /**
+     * Returns true if all elements at the same relative positions
+     * of this and other array are identical.
+     * @param other the other array
+     * @return true if equal
+     */
+    public <U,V> boolean hasAllIdenticalElements
+        (ParallelArrayWithMapping<U,V> other) {
+        return withFilter(CommonOps.nonidentityPredicate(), 
+                          other).anyIndex() < 0;
+    }
 
     final void leafTransfer(int lo, int hi, Object[] dest, int offset) {
         final Object[] a = this.array;
@@ -164,5 +220,7 @@ public abstract class ParallelArrayWithFilter<T> extends ParallelArrayWithMappin
         for (int i = loIdx; i < hiIdx; ++i)
             dest[offset++] = (a[indices[i]]);
     }
+
+    final Object oget(int i) { return this.array[i]; }
 }
 

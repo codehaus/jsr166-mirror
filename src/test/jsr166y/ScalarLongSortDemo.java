@@ -21,7 +21,7 @@ class ScalarLongSortDemo {
         long max = 1234567890123L;
 
         for (int i = 0; i < sreps; ++i) {
-            pa.replaceWithGeneratedValue(Ops.longRandom(max++));
+            pa.replaceWithGeneratedValue(CommonOps.longRandom(max++));
             long last = System.nanoTime();
             java.util.Arrays.sort(a);
             double elapsed = (double)(System.nanoTime() - last) / NPS;
@@ -32,7 +32,7 @@ class ScalarLongSortDemo {
 
         System.out.printf("Sorting %d longs, %d replications\n", n, reps);
         for (int i = 0; i < reps; ++i) {
-            pa.replaceWithGeneratedValue(Ops.longRandom(max++));
+            pa.replaceWithGeneratedValue(CommonOps.longRandom(max++));
             long last = System.nanoTime();
             pa.sort();
             double elapsed = (double)(System.nanoTime() - last) / NPS;

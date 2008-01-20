@@ -18,8 +18,8 @@ import java.lang.reflect.Array;
  */
 public abstract class ParallelLongArrayWithBounds extends ParallelLongArrayWithFilter {
     ParallelLongArrayWithBounds
-        (ForkJoinExecutor ex, int firstIndex, int upperBound, long[] array) {
-        super(ex, firstIndex, upperBound, array);
+        (ForkJoinExecutor ex, int origin, int fence, long[] array) {
+        super(ex, origin, fence, array);
     }
 
     /**
@@ -118,3 +118,4 @@ public abstract class ParallelLongArrayWithBounds extends ParallelLongArrayWithF
     public abstract ParallelLongArrayWithBounds sort();
 
 }
+

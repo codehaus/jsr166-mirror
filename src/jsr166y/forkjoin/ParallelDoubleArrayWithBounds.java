@@ -18,8 +18,8 @@ import java.lang.reflect.Array;
  */
 public abstract class ParallelDoubleArrayWithBounds extends ParallelDoubleArrayWithFilter {
     ParallelDoubleArrayWithBounds
-        (ForkJoinExecutor ex, int firstIndex, int upperBound, double[] array) {
-        super(ex, firstIndex, upperBound, array);
+        (ForkJoinExecutor ex, int origin, int fence, double[] array) {
+        super(ex, origin, fence, array);
     }
 
     /**
@@ -118,3 +118,4 @@ public abstract class ParallelDoubleArrayWithBounds extends ParallelDoubleArrayW
      */
     public abstract ParallelDoubleArrayWithBounds sort();
 }
+

@@ -511,7 +511,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
             insertSlotsAt(end, csize);
             if (other.hasMap()) 
                 ex.invoke(new PAS.FJLMap(other, other.origin, other.fence,
-                                         null, array, end));
+                                         null, array, end - other.origin));
             else
                 System.arraycopy(other.array, 0, array, end, csize);
         }

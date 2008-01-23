@@ -227,7 +227,7 @@ class PAS {
             return new FJOMap(pap, l, h, r, dest, offset);
         }
         void atLeaf(int l, int h) {
-            pap.leafTransfer(l, h, dest, l - offset);
+            pap.leafTransfer(l, h, dest, l + offset);
         }
     }
 
@@ -244,7 +244,7 @@ class PAS {
             return new FJDMap(pap, l, h, r, dest, offset);
         }
         void atLeaf(int l, int h) {
-            pap.leafTransfer(l, h, dest, l - offset);
+            pap.leafTransfer(l, h, dest, l + offset);
         }
     }
 
@@ -261,7 +261,7 @@ class PAS {
             return new FJLMap(pap, l, h, r, dest, offset);
         }
         void atLeaf(int l, int h) {
-            pap.leafTransfer(l, h, dest, l - offset);
+            pap.leafTransfer(l, h, dest, l + offset);
         }
     }
 

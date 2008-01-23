@@ -692,7 +692,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
             insertSlotsAt(end, csize);
             if (other.hasMap())
                 ex.invoke(new PAS.FJOMap(other, other.origin, other.fence,
-                                         null, array, end));
+                                         null, array, end - other.origin));
             else
                 System.arraycopy(other.array, 0, array, end, csize);
         }

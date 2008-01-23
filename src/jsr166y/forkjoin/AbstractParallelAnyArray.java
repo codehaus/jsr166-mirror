@@ -291,7 +291,7 @@ public abstract class AbstractParallelAnyArray {
                 else
                     dest = (Object[])Array.newInstance(elementType, n);
                 ex.invoke(new PAS.FJOMap(this, origin, fence,
-                                         null, dest, origin));
+                                         null, dest, -origin));
             }
             else {
                 Object[] array = ogetArray();
@@ -315,7 +315,7 @@ public abstract class AbstractParallelAnyArray {
             double[] dest = new double[n];
             if (hasMap()) {
                 ex.invoke(new PAS.FJDMap(this, origin, fence,
-                                         null, dest, origin));
+                                         null, dest, -origin));
             }
             else {
                 double[] array = dgetArray();
@@ -336,7 +336,7 @@ public abstract class AbstractParallelAnyArray {
             long[] dest = new long[n];
             if (hasMap()) {
                 ex.invoke(new PAS.FJLMap(this, origin, fence,
-                                         null, dest, origin));
+                                         null, dest, -origin));
             }
             else {
                 long[] array = lgetArray();

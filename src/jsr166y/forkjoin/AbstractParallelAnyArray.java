@@ -3823,7 +3823,7 @@ public abstract class AbstractParallelAnyArray {
             final double[] a = this.array;
             final DoubleOp f = op;
             for (int i = loIdx; i < hiIdx; ++i)
-                dest[offset++] = (a[indices[i]]);
+                dest[offset++] = f.op(a[indices[i]]);
         }
     }
 

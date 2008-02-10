@@ -48,8 +48,8 @@ class PAS {
      *
      * Split control relies on pap.getThreshold(), which is
      * expected to err on the side of generating too many tasks. To
-     * counterblance, if a task pops off its smallest subtask, it
-     * directly runs its leaf action rather than possibly replitting.
+     * counterbalance, if a task pops off its own smallest subtask, it
+     * directly runs its leaf action rather than possibly resplitting.
      *
      * There are, with a few exceptions, three flavors of each FJBase
      * subclass, prefixed FJO (object reference), FJD (double) and FJL
@@ -1492,7 +1492,7 @@ class PAS {
                     if (d != 0) {
                         if ((int)(d >>> 32) == hash) {
                             Object y = src[(int)((d-1) & 0x7fffffffL)];
-                            if (byIdentity? (x == y) : x.equals(y))
+                            if (x == y || (!byIdentity && x.equals(y)))
                                 break;
                         }
                         idx = (idx + 1) & mask;

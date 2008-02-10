@@ -116,7 +116,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * of slots upon termination.  All uses of this array should first
      * assign as local, and must screen out nulls.
      */
-    private volatile ForkJoinWorkerThread[] workers;
+    volatile ForkJoinWorkerThread[] workers;
 
     /**
      * Lock protecting access to workers.
@@ -191,6 +191,14 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * Pool number, just for assigning useful names to worker threads
      */
     private final int poolNumber;
+
+    /**
+     * Return a good size for worker array given pool size.
+     * Currently requires size to be a power of two.
+     */
+    private static int workerSizeFor(int ps) {
+        return 1 << (32 - Integer.numberOfLeadingZeros(ps-1));
+    }
 
     /**
      * Create new worker using factory.
@@ -281,7 +289,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
         this.poolSize = poolSize;
         this.factory = factory;
         this.poolNumber = poolNumberGenerator.incrementAndGet();
-        this.workers = new ForkJoinWorkerThread[poolSize];
+        this.workers = new ForkJoinWorkerThread[workerSizeFor(poolSize)];
         this.poolBarrier = new PoolBarrier();
         this.activeWorkerCounter = new AtomicInteger();
         this.runningSubmissions = new AtomicInteger();
@@ -289,20 +297,20 @@ public class ForkJoinPool implements ForkJoinExecutor {
         this.runState = new RunState();
         this.workerLock = new ReentrantLock();
         this.termination = workerLock.newCondition();
-        createAndStartWorkers();
+        createAndStartWorkers(poolSize);
     }
 
     /**
      * Initial worker startup
      */
-    private void createAndStartWorkers() {
+    private void createAndStartWorkers(int ps) {
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
             ForkJoinWorkerThread[] ws = workers;
-            for (int i = 0; i < ws.length; ++i) 
+            for (int i = 0; i < ps; ++i) 
                 ws[i] = createWorker(i);
-            for (int i = 0; i < ws.length; ++i) {
+            for (int i = 0; i < ps; ++i) {
                 ws[i].start();
                 ++runningWorkers;
             }
@@ -485,8 +493,9 @@ public class ForkJoinPool implements ForkJoinExecutor {
                 ForkJoinWorkerThread[] ws = workers;
                 int len = ws.length;
                 int newLen = len + numberToAdd;
+                int newSize = workerSizeFor(newLen); 
                 ForkJoinWorkerThread[] nws = 
-                    new ForkJoinWorkerThread[newLen];
+                    new ForkJoinWorkerThread[newSize];
                 System.arraycopy(ws, 0, nws, 0, len);
                 for (int i = len; i < newLen; ++i) 
                     nws[i] = createWorker(i);
@@ -602,11 +611,14 @@ public class ForkJoinPool implements ForkJoinExecutor {
                         while (newlen > 0 && ws[newlen-1] == null)
                             --newlen;
                         if (newlen < len) {
-                            ForkJoinWorkerThread[] nws = 
-                                new ForkJoinWorkerThread[newlen];
-                            System.arraycopy(ws, 0, nws, 0, newlen);
-                            workers = nws;
-                            poolBarrier.signal();
+                            int newSize = workerSizeFor(newlen);
+                            if (newSize < len) {
+                                ForkJoinWorkerThread[] nws = 
+                                    new ForkJoinWorkerThread[newSize];
+                                System.arraycopy(ws, 0, nws, 0, newlen);
+                                workers = nws;
+                                poolBarrier.signal();
+                            }
                         }
                     }
                 }

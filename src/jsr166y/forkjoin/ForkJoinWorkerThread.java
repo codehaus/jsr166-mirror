@@ -106,7 +106,7 @@ public class ForkJoinWorkerThread extends Thread {
     private volatile long sp;
 
     /**
-     * Number of steals, just for monitoring purposes, 
+     * Number of steals, just for monitoring purposes,
      */
     private volatile long fullStealCount;
 
@@ -118,7 +118,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Number of steals, transferred to fullStealCount at syncs
      */
-    private int stealCount; 
+    private int stealCount;
 
     /**
      * Cached from pool
@@ -183,7 +183,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Threshold for checking with PoolBarrier and possibly blocking
      * when idling threads cannot find work. This value must be at
      * least 3 for scan control logic to work.
-     * 
+     *
      * Scans for work (see getTask()) are nearly read-only, and likely
      * to be much faster than context switches that may occur within
      * syncs. So there's no reason to make this value especially
@@ -191,8 +191,8 @@ public class ForkJoinWorkerThread extends Thread {
      * syncs may help wake up other threads that may allow further
      * progress. So the value should not be especially large either.
      */
-    private static final int IDLING_SCANS_PER_SYNC = 32; 
-    
+    private static final int IDLING_SCANS_PER_SYNC = 16;
+
     /**
      * Threshold for checking with PoolBarrier and possibly blocking
      * when joining threads cannot find work. This value must be at
@@ -204,8 +204,7 @@ public class ForkJoinWorkerThread extends Thread {
      * programmer errors as well as to cope better when some worker
      * threads are making very slow progress.
      */
-    private static final int JOINING_SCANS_PER_SYNC = 1024; 
-
+    private static final int JOINING_SCANS_PER_SYNC = 1024;
 
     /**
      * Generator for per-thread randomVictimSeeds
@@ -214,7 +213,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     // Methods called only by pool
 
-    final void setWorkerPoolIndex(int i) { 
+    final void setWorkerPoolIndex(int i) {
         poolIndex = i;
     }
 
@@ -309,7 +308,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Perform cleanup associated with termination of this worker
      * thread.  If you override this method, you must invoke
      * super.onTermination at the end of the overridden method.
-     * 
+     *
      * @param exception the exception causing this thread to abort due
      * to an unrecoverable error, or null if completed normally.
      */
@@ -358,7 +357,7 @@ public class ForkJoinWorkerThread extends Thread {
         else {
             scans = 1; // reset scans to 1 (not 0) on resumption
             // transfer steal counts so pool can read
-            int sc = stealCount; 
+            int sc = stealCount;
             if (sc != 0) {
                 stealCount = 0;
                 if (sc < 0)
@@ -366,10 +365,10 @@ public class ForkJoinWorkerThread extends Thread {
                 fullStealCount += sc;
             }
 
-            if (runState.isAtLeastStopping()) { 
+            if (runState.isAtLeastStopping()) {
                 // abort if joining; else return so caller can check state
-                if (context == JOINING) 
-                    throw new CancellationException(); 
+                if (context == JOINING)
+                    throw new CancellationException();
             }
             else if (context == POLLING)
                 Thread.yield();
@@ -428,7 +427,7 @@ public class ForkJoinWorkerThread extends Thread {
             int idx = ((int)s) & (q.length-1);
             x = q[idx];
             sp = s;
-            q[idx] = null; 
+            q[idx] = null;
             long b = base;
             if (s <= b) {
                 if (s < b || !casBase(b, ++b)) // note ++b side effect
@@ -448,7 +447,7 @@ public class ForkJoinWorkerThread extends Thread {
         if (task != null) {
             long s = sp - 1;
             ForkJoinTask<?>[] q = queue;
-            if (q != null) { 
+            if (q != null) {
                 int idx = ((int)s) & (q.length-1);
                 if (q[idx] == task) {
                     sp = s;
@@ -466,7 +465,7 @@ public class ForkJoinWorkerThread extends Thread {
         }
         return false;
     }
-    
+
     /**
      * Tries to take a task from the base of the queue.  Returns null
      * upon contention.
@@ -488,68 +487,54 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Tries to find a worker with a non-empty queue.  Starts at a
-     * random index of workers array, and probes workers until finding
-     * one with non-empty queue or finding that all are empty.  This
+     * Tries to steal a task from a random worker.  Starts at a random
+     * index of workers array, and probes workers until finding one
+     * with non-empty queue or finding that all are empty.  This
      * doesn't require a very high quality generator, but also not a
      * crummy one.  It uses Marsaglia xorshift to generate first n
      * probes. If these are empty, it resorts to full incremental
      * circular traversal.
-     * @return a worker with (currently) non-empty queue, or null if none
-     */
-    private ForkJoinWorkerThread randomVictim() {
-        int r = randomVictimSeed;
-        ForkJoinWorkerThread victim = null;
-        ForkJoinWorkerThread[] ws = pool.getWorkers();
-        if (ws != null) {
-            int n = ws.length;
-            int remaining = n << 1;
-            int idx = 0;
-            do {
-                if (remaining-- >= n) {
-                    // avoid % for power of 2
-                    idx = (n & (n-1)) == 0? (r & (n-1)) : ((r >>> 1) % n);
-                    r ^= r <<   1;
-                    r ^= r >>>  3;
-                    r ^= r <<  10;
-                }
-                else if (++idx >= n)
-                    idx = 0;
-                ForkJoinWorkerThread v = ws[idx];
-                if (v != null && v.base < v.sp) {
-                    victim = v;
-                    break;
-                }
-            } while (remaining >= 0);
-        }
-        randomVictimSeed = r;
-        return victim;
-    }
-
-    /**
-     * Tries to steal a task from a random worker.  
      * @return a task, or null if none
      */
     private ForkJoinTask<?> getStolenTask() {
-        ForkJoinWorkerThread v;
-        while ((v = randomVictim()) != null) {
-            if (scans != 0) {
-                // Rescan if taken while trying to activate.
-                AtomicInteger awc = activeWorkerCounter;
-                do {
-                    int c = awc.get();
-                    if (awc.compareAndSet(c, c+1)) {
-                        scans = 0;
-                        break;
+        int n; // length of worker array; must be power of 2
+        ForkJoinWorkerThread[] ws = pool.getWorkers();
+        if (ws != null && (n = ws.length) > 0) {
+            int iters = n << 1;
+            int s = scans;
+            int r = randomVictimSeed;
+            int idx = r;
+            for (;;) {
+                ForkJoinWorkerThread v = ws[idx & (n-1)];
+                r ^= r <<   1; // update seed
+                r ^= r >>>  3;
+                r ^= r <<  10;
+                if (v != null && v.base < v.sp) {
+                    if (s == 0) {
+                        ForkJoinTask<?> t = v.tryStealTask();
+                        if (t != null) {
+                            randomVictimSeed = r;
+                            ++stealCount;
+                            return t;
+                        }
+                        else { // restart under contention
+                            iters = n << 1;
+                            idx = r;
+                        }
                     }
-                } while (v.base < v.sp);
-            }
-            if (scans == 0) {
-                ForkJoinTask<?> t = v.tryStealTask();
-                if (t != null) {
-                    ++stealCount;
-                    return t;
+                    else { // must re-activate first (then retry above)
+                        AtomicInteger awc = activeWorkerCounter;
+                        int c = awc.get();
+                        if (awc.compareAndSet(c, c+1))
+                            scans = s = 0;
+                    }
                 }
+                else if (--iters >= n)
+                    idx = r;
+                else if (iters >= 0)
+                    ++idx;
+                else
+                    break;
             }
         }
         return null;
@@ -567,7 +552,7 @@ public class ForkJoinWorkerThread extends Thread {
             if (scans != 0) {
                 AtomicInteger awc = activeWorkerCounter;
                 int c = awc.get();
-                if (awc.compareAndSet(c, c+1)) 
+                if (awc.compareAndSet(c, c+1))
                     scans = 0;
             }
             if (scans == 0) {
@@ -620,7 +605,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     // Public methods on current thread
-    
+
     /**
      * Returns the pool hosting the current task execution.
      * @return the pool
@@ -648,7 +633,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return the number of tasks
      */
     public static int getLocalQueueSize() {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         long n = w.sp - w.base;
         return n < 0? 0 : (int)n;
@@ -663,9 +648,9 @@ public class ForkJoinWorkerThread extends Thread {
      * fewer tasks than idle workers
      */
     public static int getEstimatedSurplusTaskCount() {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
-        return (int)(w.sp - w.base) - 
+        return (int)(w.sp - w.base) -
             (w.poolSize - w.activeWorkerCounter.get());
     }
 
@@ -709,9 +694,9 @@ public class ForkJoinWorkerThread extends Thread {
      * that no task was available.
      */
     public static boolean executeLocalTask() {
-        ForkJoinTask<?> t = 
+        ForkJoinTask<?> t =
             ((ForkJoinWorkerThread)(Thread.currentThread())).popTask();
-        if (t == null) 
+        if (t == null)
             return false;
         t.exec();
         return true;
@@ -725,7 +710,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return the next task to execute, or null if none
      */
     public static ForkJoinTask<?> pollTask() {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         ForkJoinTask<?> t = w.getTask();
         if (t == null)
@@ -739,14 +724,14 @@ public class ForkJoinWorkerThread extends Thread {
      * when several tasks are forked, and only one of them must be
      * joined, as in:
      * <pre>
-     *   while (!t1.isDone() &amp;&amp; !t2.isDone()) 
+     *   while (!t1.isDone() &amp;&amp; !t2.isDone())
      *     ForkJoinWorkerThread.executeTask();
-     * </pre> 
+     * </pre>
      * Similarly, you can help process tasks until all computations
-     * complete via 
+     * complete via
      * <pre>
-     *   while(ForkJoinWorkerThread.executeTask() || 
-     *         !ForkJoinWorkerThread.getPool().isQuiescent()) 
+     *   while(ForkJoinWorkerThread.executeTask() ||
+     *         !ForkJoinWorkerThread.getPool().isQuiescent())
      *      ;
      * </pre>
      *
@@ -754,7 +739,7 @@ public class ForkJoinWorkerThread extends Thread {
      * that no task was available.
      */
     public static boolean executeTask() {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         ForkJoinTask<?> t = w.getTask();
         if (t == null) {
@@ -768,7 +753,7 @@ public class ForkJoinWorkerThread extends Thread {
     // per-worker exported random numbers
 
     /**
-     * A workalike for java.util.Random, but specialized 
+     * A workalike for java.util.Random, but specialized
      * for exporting to users of worker threads.
      */
     final class JURandom { // non-static, use worker seed
@@ -776,7 +761,7 @@ public class ForkJoinWorkerThread extends Thread {
         final static long Multiplier = 0x5DEECE66DL;
         final static long Addend = 0xBL;
         final static long Mask = (1L << 48) - 1;
-        
+
         int next(int bits) {
             long next = (juRandomSeed * Multiplier + Addend) & Mask;
             juRandomSeed = next;
@@ -786,14 +771,14 @@ public class ForkJoinWorkerThread extends Thread {
         int nextInt() {
             return next(32);
         }
-        
+
         int nextInt(int n) {
             if (n <= 0)
                 throw new IllegalArgumentException("n must be positive");
             int bits = next(31);
-            if ((n & -n) == n) 
+            if ((n & -n) == n)
                 return (int)((n * (long)bits) >> 31);
-            
+
             for (;;) {
                 int val = bits % n;
                 if (bits - val + (n-1) >= 0)
@@ -806,7 +791,6 @@ public class ForkJoinWorkerThread extends Thread {
             return ((long)(next(32)) << 32) + next(32);
         }
 
-        
         long nextLong(long n) {
             if (n <= 0)
                 throw new IllegalArgumentException("n must be positive");
@@ -821,12 +805,11 @@ public class ForkJoinWorkerThread extends Thread {
             }
             return offset + nextInt((int)n);
         }
-        
-        
+
         double nextDouble() {
             return (((long)(next(26)) << 27) + next(27))
                 / (double)(1L << 53);
-        }        
+        }
     }
 
     /**
@@ -837,7 +820,7 @@ public class ForkJoinWorkerThread extends Thread {
      *         value from this worker's random number generator's sequence
      */
     public static int nextRandomInt() {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         return w.juRandom.nextInt();
     }
@@ -854,7 +837,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @throws IllegalArgumentException if n is not positive
      */
     public static int nextRandomInt(int n) {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         return w.juRandom.nextInt(n);
     }
@@ -867,7 +850,7 @@ public class ForkJoinWorkerThread extends Thread {
      *         value from this worker's random number generator's sequence
      */
     public static long nextRandomLong() {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         return w.juRandom.nextLong();
     }
@@ -884,7 +867,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @throws IllegalArgumentException if n is not positive
      */
     public static long nextRandomLong(long n) {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         return w.juRandom.nextLong(n);
     }
@@ -898,7 +881,7 @@ public class ForkJoinWorkerThread extends Thread {
      *         worker's random number generator's sequence
      */
     public static double nextRandomDouble() {
-        ForkJoinWorkerThread w = 
+        ForkJoinWorkerThread w =
             (ForkJoinWorkerThread)(Thread.currentThread());
         return w.juRandom.nextDouble();
     }
@@ -907,7 +890,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Called only from ForkJoinTask, upon completion
-     * of stolen or cancelled task. 
+     * of stolen or cancelled task.
      */
     static void signalTaskCompletion() {
         Thread t = Thread.currentThread();
@@ -970,7 +953,7 @@ public class ForkJoinWorkerThread extends Thread {
                 t.exec();
         }
     }
-    
+
     final void doForkJoin(RecursiveAction t1, RecursiveAction t2) {
         int touch = t1.status + t2.status; // force null pointer check
         pushTask(t2);
@@ -982,9 +965,8 @@ public class ForkJoinWorkerThread extends Thread {
             ForkJoinTask.rethrowException(ex1);
     }
 
-
     // Temporary Unsafe mechanics for preliminary release
- 
+
     private static Unsafe getUnsafe() {
         try {
             if (ForkJoinWorkerThread.class.getClassLoader() != null) {
@@ -995,8 +977,7 @@ public class ForkJoinWorkerThread extends Thread {
             else
                 return Unsafe.getUnsafe();
         } catch (Exception e) {
-            throw new RuntimeException("Could not initialize intrinsics",
-                                       e);
+            throw new RuntimeException("Could not initialize intrinsics", e);
         }
     }
 
@@ -1004,7 +985,7 @@ public class ForkJoinWorkerThread extends Thread {
     private static final long baseOffset;
     private static final long arrayBase;
     private static final int arrayShift;
-    
+
     private static int computeArrayShift() {
         int s = _unsafe.arrayIndexScale(ForkJoinTask[].class);
         if ((s & (s-1)) != 0)
@@ -1020,14 +1001,14 @@ public class ForkJoinWorkerThread extends Thread {
             arrayShift = computeArrayShift();
         } catch (Exception ex) { throw new Error(ex); }
     }
-    
+
     private final boolean casBase(long cmp, long val) {
         return _unsafe.compareAndSwapLong(this, baseOffset, cmp, val);
     }
-    
-    private static final void clearSlot(ForkJoinTask[] array, int i, 
+
+    private static final void clearSlot(ForkJoinTask[] array, int i,
                                         ForkJoinTask expect) {
-        _unsafe.compareAndSwapObject(array, 
+        _unsafe.compareAndSwapObject(array,
                                      arrayBase + ((long)i << arrayShift),
                                      expect, null);
     }

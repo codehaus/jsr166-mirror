@@ -130,7 +130,7 @@ public abstract class ParallelArrayWithMapping<T,U> extends AbstractParallelAnyA
      * @return a new ParallelArray holding elements
      */
     public ParallelArray<U> all(Class<? super U> elementType) {
-        return new ParallelArray<U>(ex, (U[])allObjects(null));
+        return new ParallelArray<U>(ex, (U[])allObjects(elementType));
     }
 
     /**

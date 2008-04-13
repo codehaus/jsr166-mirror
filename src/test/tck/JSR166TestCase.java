@@ -279,10 +279,15 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * threadFail with message "should throw exception"
-     */
+     */ 
     public void threadShouldThrow() {
-        threadFailed = true;
-        fail("should throw exception");
+       try {
+           threadFailed = true;
+           fail("should throw exception");
+       } catch (AssertionFailedError e) {
+           e.printStackTrace();
+           throw e;
+       }
     }
 
     /**
@@ -293,6 +298,14 @@ public class JSR166TestCase extends TestCase {
         fail("Unexpected exception");
     }
 
+    /**
+     * threadFail with message "Unexpected exception", with argument
+     */
+    public void threadUnexpectedException(Throwable ex) {
+        threadFailed = true;
+        ex.printStackTrace();
+        fail("Unexpected exception: " + ex);
+    }
 
     /**
      * Wait out termination of a thread pool or fail doing so
@@ -402,7 +415,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SHORT_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
         }
     }
@@ -424,7 +437,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SMALL_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
         }
     }
@@ -445,7 +458,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SMALL_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
             return Boolean.TRUE;
         }
@@ -469,7 +482,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(MEDIUM_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
         }
     }

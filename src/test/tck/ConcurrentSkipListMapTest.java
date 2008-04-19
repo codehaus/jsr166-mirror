@@ -169,11 +169,33 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         Iterator i = s.iterator();
         Integer last = (Integer)i.next();
         assertEquals(last, one);
+        int count = 1;
         while (i.hasNext()) {
             Integer k = (Integer)i.next();
             assertTrue(last.compareTo(k) < 0);
             last = k;
+            ++count;
         }
+        assertEquals(count ,5);
+    }
+
+    /**
+     * descending iterator of key set is inverse ordered
+     */
+    public void testKeySetDescendingIteratorOrder() {
+        ConcurrentSkipListMap map = map5();
+	NavigableSet s = map.navigableKeySet();
+        Iterator i = s.descendingIterator();
+        Integer last = (Integer)i.next();
+        assertEquals(last, five);
+        int count = 1;
+        while (i.hasNext()) {
+            Integer k = (Integer)i.next();
+            assertTrue(last.compareTo(k) > 0);
+            last = k;
+            ++count;
+        }
+        assertEquals(count ,5);
     }
 
     /**
@@ -185,13 +207,34 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         Iterator i = s.iterator();
         Integer last = (Integer)i.next();
         assertEquals(last, five);
+        int count = 1;
         while (i.hasNext()) {
             Integer k = (Integer)i.next();
             assertTrue(last.compareTo(k) > 0);
             last = k;
+            ++count;
         }
+        assertEquals(count, 5);
     }
 
+    /**
+     *  descending iterator of descendingKeySet is ordered
+     */
+    public void testDescendingKeySetDescendingIteratorOrder() {
+        ConcurrentSkipListMap map = map5();
+	NavigableSet s = map.descendingKeySet();
+        Iterator i = s.descendingIterator();
+        Integer last = (Integer)i.next();
+        assertEquals(last, one);
+        int count = 1;
+        while (i.hasNext()) {
+            Integer k = (Integer)i.next();
+            assertTrue(last.compareTo(k) < 0);
+            last = k;
+            ++count;
+        }
+        assertEquals(count, 5);
+    }
 
     /**
      *  Values.toArray contains all values

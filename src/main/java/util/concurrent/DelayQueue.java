@@ -107,9 +107,9 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         try {
             q.offer(e);
             if (q.peek() == e) {
-		leader = null;
+                leader = null;
                 available.signal();
-	    }
+            }
             return true;
         } finally {
             lock.unlock();
@@ -177,27 +177,27 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                 E first = q.peek();
                 if (first == null)
                     available.await();
-		else {
+                else {
                     long delay = first.getDelay(TimeUnit.NANOSECONDS);
-		    if (delay <= 0)
-			return q.poll();
-		    else if (leader != null)
-			available.await();
-		    else {
-			Thread thisThread = Thread.currentThread();
-			leader = thisThread;
-			try {
-			    available.awaitNanos(delay);
-			} finally {
-			    if (leader == thisThread)
-				leader = null;
-			}
+                    if (delay <= 0)
+                        return q.poll();
+                    else if (leader != null)
+                        available.await();
+                    else {
+                        Thread thisThread = Thread.currentThread();
+                        leader = thisThread;
+                        try {
+                            available.awaitNanos(delay);
+                        } finally {
+                            if (leader == thisThread)
+                                leader = null;
+                        }
                     }
                 }
             }
         } finally {
-	    if (leader == null && q.peek() != null)
-		available.signal();
+            if (leader == null && q.peek() != null)
+                available.signal();
             lock.unlock();
         }
     }
@@ -226,28 +226,28 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                         nanos = available.awaitNanos(nanos);
                 } else {
                     long delay = first.getDelay(TimeUnit.NANOSECONDS);
-		    if (delay <= 0)
-			return q.poll();
-		    if (nanos <= 0)
-			return null;
-		    if (nanos < delay || leader != null)
-			nanos = available.awaitNanos(nanos);
-		    else {
-			Thread thisThread = Thread.currentThread();
-			leader = thisThread;
-			try {
-			    long timeLeft = available.awaitNanos(delay);
-			    nanos -= delay - timeLeft;
-			} finally {
-			    if (leader == thisThread)
-				leader = null;
-			}
-		    }
+                    if (delay <= 0)
+                        return q.poll();
+                    if (nanos <= 0)
+                        return null;
+                    if (nanos < delay || leader != null)
+                        nanos = available.awaitNanos(nanos);
+                    else {
+                        Thread thisThread = Thread.currentThread();
+                        leader = thisThread;
+                        try {
+                            long timeLeft = available.awaitNanos(delay);
+                            nanos -= delay - timeLeft;
+                        } finally {
+                            if (leader == thisThread)
+                                leader = null;
+                        }
+                    }
                 }
             }
         } finally {
-	    if (leader == null && q.peek() != null)
-		available.signal();
+            if (leader == null && q.peek() != null)
+                available.signal();
             lock.unlock();
         }
     }
@@ -470,8 +470,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      */
     private class Itr implements Iterator<E> {
         final Object[] array; // Array of all elements
-	int cursor;           // index of next element to return;
-	int lastRet;          // index of last element, or -1 if no such
+        int cursor;           // index of next element to return;
+        int lastRet;          // index of last element, or -1 if no such
 
         Itr(Object[] array) {
             lastRet = -1;
@@ -482,7 +482,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             return cursor < array.length;
         }
 
-	@SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")
         public E next() {
             if (cursor >= array.length)
                 throw new NoSuchElementException();
@@ -492,7 +492,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
 
         public void remove() {
             if (lastRet < 0)
-		throw new IllegalStateException();
+                throw new IllegalStateException();
             Object x = array[lastRet];
             lastRet = -1;
             // Traverse underlying queue to find == element,

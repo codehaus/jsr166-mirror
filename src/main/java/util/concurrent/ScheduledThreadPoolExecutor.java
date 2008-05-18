@@ -155,8 +155,8 @@ public class ScheduledThreadPoolExecutor
          */
         private final long period;
 
-	/** The actual task to be re-enqueued by reExecutePeriodic */
-	RunnableScheduledFuture<V> outerTask = this;
+        /** The actual task to be re-enqueued by reExecutePeriodic */
+        RunnableScheduledFuture<V> outerTask = this;
 
         /**
          * Index into delay queue, to support faster cancellation.
@@ -293,8 +293,8 @@ public class ScheduledThreadPoolExecutor
                 !canRunInCurrentRunState(task.isPeriodic()) &&
                 remove(task))
                 task.cancel(false);
-	    else
-		prestartCoreThread();
+            else
+                prestartCoreThread();
         }
     }
 
@@ -309,8 +309,8 @@ public class ScheduledThreadPoolExecutor
             super.getQueue().add(task);
             if (!canRunInCurrentRunState(true) && remove(task))
                 task.cancel(false);
-	    else
-		prestartCoreThread();
+            else
+                prestartCoreThread();
         }
     }
 
@@ -340,7 +340,7 @@ public class ScheduledThreadPoolExecutor
                 }
             }
         }
-	tryTerminate();
+        tryTerminate();
     }
 
     /**
@@ -492,13 +492,13 @@ public class ScheduledThreadPoolExecutor
             throw new IllegalArgumentException();
         if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
-	ScheduledFutureTask<Void> sft =
-	    new ScheduledFutureTask<Void>(command,
-					  null,
-					  triggerTime,
-					  unit.toNanos(period));
+        ScheduledFutureTask<Void> sft =
+            new ScheduledFutureTask<Void>(command,
+                                          null,
+                                          triggerTime,
+                                          unit.toNanos(period));
         RunnableScheduledFuture<Void> t = decorateTask(command, sft);
-	sft.outerTask = t;
+        sft.outerTask = t;
         delayedExecute(t);
         return t;
     }
@@ -518,13 +518,13 @@ public class ScheduledThreadPoolExecutor
             throw new IllegalArgumentException();
         if (initialDelay < 0) initialDelay = 0;
         long triggerTime = now() + unit.toNanos(initialDelay);
-	ScheduledFutureTask<Void> sft =
-	    new ScheduledFutureTask<Void>(command,
-					  null,
-					  triggerTime,
-					  unit.toNanos(-delay));
+        ScheduledFutureTask<Void> sft =
+            new ScheduledFutureTask<Void>(command,
+                                          null,
+                                          triggerTime,
+                                          unit.toNanos(-delay));
         RunnableScheduledFuture<Void> t = decorateTask(command, sft);
-	sft.outerTask = t;
+        sft.outerTask = t;
         delayedExecute(t);
         return t;
     }
@@ -760,29 +760,29 @@ public class ScheduledThreadPoolExecutor
         private final ReentrantLock lock = new ReentrantLock();
         private int size = 0;
 
-	/**
-	 * Thread designated to wait for the task at the head of the
-	 * queue.  This variant of the Leader-Follower pattern
-	 * (http://www.cs.wustl.edu/~schmidt/POSA/POSA2/) serves to
-	 * minimize unnecessary timed waiting.  When a thread becomes
-	 * the leader, it waits only for the next delay to elapse, but
-	 * other threads await indefinitely.  The leader thread must
-	 * signal some other thread before returning from take() or
-	 * poll(...), unless some other thread becomes leader in the
-	 * interim.  Whenever the head of the queue is replaced with a
-	 * task with an earlier expiration time, the leader field is
-	 * invalidated by being reset to null, and some waiting
-	 * thread, but not necessarily the current leader, is
-	 * signalled.  So waiting threads must be prepared to acquire
-	 * and lose leadership while waiting.
-	 */
-	private Thread leader = null;
+        /**
+         * Thread designated to wait for the task at the head of the
+         * queue.  This variant of the Leader-Follower pattern
+         * (http://www.cs.wustl.edu/~schmidt/POSA/POSA2/) serves to
+         * minimize unnecessary timed waiting.  When a thread becomes
+         * the leader, it waits only for the next delay to elapse, but
+         * other threads await indefinitely.  The leader thread must
+         * signal some other thread before returning from take() or
+         * poll(...), unless some other thread becomes leader in the
+         * interim.  Whenever the head of the queue is replaced with a
+         * task with an earlier expiration time, the leader field is
+         * invalidated by being reset to null, and some waiting
+         * thread, but not necessarily the current leader, is
+         * signalled.  So waiting threads must be prepared to acquire
+         * and lose leadership while waiting.
+         */
+        private Thread leader = null;
 
-	/**
-	 * Condition signalled when a newer task becomes available at the
-	 * head of the queue or a new thread may need to become leader.
-	 */
-	private final Condition available = lock.newCondition();
+        /**
+         * Condition signalled when a newer task becomes available at the
+         * head of the queue or a new thread may need to become leader.
+         */
+        private final Condition available = lock.newCondition();
 
         /**
          * Set f's heapIndex if it is a ScheduledFutureTask.
@@ -848,49 +848,49 @@ public class ScheduledThreadPoolExecutor
          */
         private int indexOf(Object x) {
             if (x != null) {
-		if (x instanceof ScheduledFutureTask) {
-		    int i = ((ScheduledFutureTask) x).heapIndex;
-		    // Sanity check; x could conceivably be a
-		    // ScheduledFutureTask from some other pool.
-		    if (i >= 0 && i < size && queue[i] == x)
-			return i;
-		} else {
-		    for (int i = 0; i < size; i++)
-			if (x.equals(queue[i]))
-			    return i;
-		}
+                if (x instanceof ScheduledFutureTask) {
+                    int i = ((ScheduledFutureTask) x).heapIndex;
+                    // Sanity check; x could conceivably be a
+                    // ScheduledFutureTask from some other pool.
+                    if (i >= 0 && i < size && queue[i] == x)
+                        return i;
+                } else {
+                    for (int i = 0; i < size; i++)
+                        if (x.equals(queue[i]))
+                            return i;
+                }
             }
             return -1;
         }
 
-	public boolean contains(Object x) {
-	    final ReentrantLock lock = this.lock;
+        public boolean contains(Object x) {
+            final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-		return indexOf(x) != -1;
+                return indexOf(x) != -1;
             } finally {
                 lock.unlock();
             }
-	}
+        }
 
         public boolean remove(Object x) {
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
                 int i = indexOf(x);
-		if (i < 0)
-		    return false;
+                if (i < 0)
+                    return false;
 
-		setIndex(queue[i], -1);
-		int s = --size;
-		RunnableScheduledFuture replacement = queue[s];
-		queue[s] = null;
-		if (s != i) {
-		    siftDown(i, replacement);
-		    if (queue[i] == replacement)
-			siftUp(i, replacement);
-		}
-		return true;
+                setIndex(queue[i], -1);
+                int s = --size;
+                RunnableScheduledFuture replacement = queue[s];
+                queue[s] = null;
+                if (s != i) {
+                    siftDown(i, replacement);
+                    if (queue[i] == replacement)
+                        siftUp(i, replacement);
+                }
+                return true;
             } finally {
                 lock.unlock();
             }
@@ -942,22 +942,22 @@ public class ScheduledThreadPoolExecutor
                     siftUp(i, e);
                 }
                 if (queue[0] == e) {
-		    leader = null;
+                    leader = null;
                     available.signal();
-		}
+                }
             } finally {
                 lock.unlock();
             }
             return true;
-	}
+        }
 
         public void put(Runnable e) {
             offer(e);
         }
 
         public boolean add(Runnable e) {
-	    return offer(e);
-	}
+            return offer(e);
+        }
 
         public boolean offer(Runnable e, long timeout, TimeUnit unit) {
             return offer(e);
@@ -1002,26 +1002,26 @@ public class ScheduledThreadPoolExecutor
                     if (first == null)
                         available.await();
                     else {
-			long delay = first.getDelay(TimeUnit.NANOSECONDS);
-			if (delay <= 0)
-			    return finishPoll(first);
-			else if (leader != null)
-			    available.await();
-			else {
-			    Thread thisThread = Thread.currentThread();
-			    leader = thisThread;
-			    try {
-				available.awaitNanos(delay);
-			    } finally {
-				if (leader == thisThread)
-				    leader = null;
-			    }
-			}
+                        long delay = first.getDelay(TimeUnit.NANOSECONDS);
+                        if (delay <= 0)
+                            return finishPoll(first);
+                        else if (leader != null)
+                            available.await();
+                        else {
+                            Thread thisThread = Thread.currentThread();
+                            leader = thisThread;
+                            try {
+                                available.awaitNanos(delay);
+                            } finally {
+                                if (leader == thisThread)
+                                    leader = null;
+                            }
+                        }
                     }
                 }
             } finally {
-		if (leader == null && queue[0] != null)
-		    available.signal();
+                if (leader == null && queue[0] != null)
+                    available.signal();
                 lock.unlock();
             }
         }
@@ -1041,28 +1041,28 @@ public class ScheduledThreadPoolExecutor
                             nanos = available.awaitNanos(nanos);
                     } else {
                         long delay = first.getDelay(TimeUnit.NANOSECONDS);
-			if (delay <= 0)
+                        if (delay <= 0)
                             return finishPoll(first);
-			if (nanos <= 0)
-			    return null;
-			if (nanos < delay || leader != null)
-			    nanos = available.awaitNanos(nanos);
-			else {
-			    Thread thisThread = Thread.currentThread();
-			    leader = thisThread;
-			    try {
-				long timeLeft = available.awaitNanos(delay);
-				nanos -= delay - timeLeft;
-			    } finally {
-				if (leader == thisThread)
-				    leader = null;
-			    }
-			}
-		    }
-		}
+                        if (nanos <= 0)
+                            return null;
+                        if (nanos < delay || leader != null)
+                            nanos = available.awaitNanos(nanos);
+                        else {
+                            Thread thisThread = Thread.currentThread();
+                            leader = thisThread;
+                            try {
+                                long timeLeft = available.awaitNanos(delay);
+                                nanos -= delay - timeLeft;
+                            } finally {
+                                if (leader == thisThread)
+                                    leader = null;
+                            }
+                        }
+                    }
+                }
             } finally {
-		if (leader == null && queue[0] != null)
-		    available.signal();
+                if (leader == null && queue[0] != null)
+                    available.signal();
                 lock.unlock();
             }
         }
@@ -1092,7 +1092,7 @@ public class ScheduledThreadPoolExecutor
             RunnableScheduledFuture first = queue[0];
             if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
                 return null;
-	    return finishPoll(first);
+            return finishPoll(first);
         }
 
         public int drainTo(Collection<? super Runnable> c) {
@@ -1103,12 +1103,12 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-		RunnableScheduledFuture first;
+                RunnableScheduledFuture first;
                 int n = 0;
                 while ((first = pollExpired()) != null) {
-		    c.add(first);
-		    ++n;
-		}
+                    c.add(first);
+                    ++n;
+                }
                 return n;
             } finally {
                 lock.unlock();
@@ -1125,12 +1125,12 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-		RunnableScheduledFuture first;
+                RunnableScheduledFuture first;
                 int n = 0;
                 while (n < maxElements && (first = pollExpired()) != null) {
-		    c.add(first);
-		    ++n;
-		}
+                    c.add(first);
+                    ++n;
+                }
                 return n;
             } finally {
                 lock.unlock();
@@ -1147,7 +1147,7 @@ public class ScheduledThreadPoolExecutor
             }
         }
 
-	@SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             final ReentrantLock lock = this.lock;
             lock.lock();
@@ -1172,8 +1172,8 @@ public class ScheduledThreadPoolExecutor
          */
         private class Itr implements Iterator<Runnable> {
             final RunnableScheduledFuture[] array;
-            int cursor = 0;	// index of next element to return
-            int lastRet = -1;	// index of last element, or -1 if no such
+            int cursor = 0;     // index of next element to return
+            int lastRet = -1;   // index of last element, or -1 if no such
 
             Itr(RunnableScheduledFuture[] array) {
                 this.array = array;

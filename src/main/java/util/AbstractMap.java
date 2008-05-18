@@ -60,7 +60,6 @@ import java.util.Map.Entry;
  *
  * @author  Josh Bloch
  * @author  Neal Gafter
- * @version %I%, %G%
  * @see Map
  * @see Collection
  * @since 1.2

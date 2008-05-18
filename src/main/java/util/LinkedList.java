@@ -81,7 +81,6 @@ package java.util;
  * Java Collections Framework</a>.
  *
  * @author  Josh Bloch
- * @version %I%, %G%
  * @see     List
  * @see     ArrayList
  * @see     Vector

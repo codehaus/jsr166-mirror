@@ -70,7 +70,6 @@ package java.util;
  *
  * @author  Lee Boynton
  * @author  Jonathan Payne
- * @version %I%, %G%
  * @see Collection
  * @see List
  * @see ArrayList

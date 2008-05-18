@@ -93,7 +93,6 @@ package java.util;
  * @param <V> the type of mapped values
  *
  * @author  Josh Bloch and Doug Lea
- * @version %I%, %G%
  * @see Map
  * @see HashMap
  * @see Hashtable

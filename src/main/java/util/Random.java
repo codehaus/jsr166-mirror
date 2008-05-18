@@ -51,7 +51,6 @@ import sun.misc.Unsafe;
  * Many applications will find the method {@link Math#random} simpler to use.
  *
  * @author  Frank Yellin
- * @version %I%, %G%
  * @since   1.0
  */
 public

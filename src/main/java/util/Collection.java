@@ -105,7 +105,6 @@ package java.util;
  *
  * @author  Josh Bloch
  * @author  Neal Gafter
- * @version %I%, %G%
  * @see     Set
  * @see     List
  * @see     Map

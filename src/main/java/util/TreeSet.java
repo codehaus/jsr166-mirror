@@ -80,7 +80,6 @@ package java.util;
  * @param <E> the type of elements maintained by this set
  *
  * @author  Josh Bloch
- * @version %I%, %G%
  * @see     Collection
  * @see     Set
  * @see     HashSet

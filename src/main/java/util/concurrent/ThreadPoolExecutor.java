@@ -1313,6 +1313,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * tasks are executed, but no new tasks will be accepted.
      * Invocation has no additional effect if already shut down.
      *
+     * <p>This method does not wait for previously submitted tasks to
+     * complete execution.  Use {@link #awaitTermination awaitTermination}
+     * to do that.
+     *
      * @throws SecurityException {@inheritDoc}
      */
     public void shutdown() {
@@ -1334,6 +1338,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * processing of waiting tasks, and returns a list of the tasks
      * that were awaiting execution. These tasks are drained (removed)
      * from the task queue upon return from this method.
+     *
+     * <p>This method does not wait for actively executing tasks to
+     * terminate.  Use {@link #awaitTermination awaitTermination} to
+     * do that.
      *
      * <p>There are no guarantees beyond best-effort attempts to stop
      * processing actively executing tasks.  This implementation

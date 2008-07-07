@@ -225,6 +225,8 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     public final void finishExceptionally(Throwable ex) {
         if (ex == null)
             throw new NullPointerException();
+        if (!(ex instanceof RuntimeException) && !(ex instanceof Error))
+            throw new IllegalArgumentException(ex);
         LinkedAsyncAction a = this;
         while (a.setDoneExceptionally(ex) == ex) {
             boolean up = a.onException(); // abort if this throws

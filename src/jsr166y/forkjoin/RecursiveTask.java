@@ -89,7 +89,7 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
     }
 
     public final void finishExceptionally(Throwable ex) {
-        setDoneExceptionally(ex);
+        checkedSetDoneExceptionally(ex);
     }
 
     public final void reinitialize() {

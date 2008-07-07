@@ -42,7 +42,7 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
     }
 
     public final void finishExceptionally(Throwable ex) {
-        setDoneExceptionally(ex);
+        checkedSetDoneExceptionally(ex);
     }
 
     /**

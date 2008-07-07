@@ -50,18 +50,18 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Pool-wide sync barrier, cached from pool upon construction
      */
-    private final PoolBarrier poolBarrier;
+    final PoolBarrier poolBarrier;
 
     /**
      * Pool-wide count of active workers, cached from pool upon
      * construction
      */
-    private final AtomicInteger activeWorkerCounter;
+    final AtomicInteger activeWorkerCounter;
 
     /**
      * Run state of this worker, set only by pool (except for termination)
      */
-    private final RunState runState;
+    final RunState runState;
 
     /**
      * Each thread's work-stealing queue is represented via the
@@ -87,7 +87,7 @@ public class ForkJoinWorkerThread extends Thread {
      * methods except pushTask are written in a way that allows them
      * to instead be lazily allocated and/or disposed of when empty.
      */
-    private ForkJoinTask<?>[] queue;
+    ForkJoinTask<?>[] queue;
 
     private static final int INITIAL_CAPACITY = 1 << 13;
     private static final int MAXIMUM_CAPACITY = 1 << 30;
@@ -97,43 +97,43 @@ public class ForkJoinWorkerThread extends Thread {
      * always the next position to steal from if nonempty.  Updated
      * only via casBase().
      */
-    private volatile long base;
+    volatile long base;
 
     /**
      * Index (mod queue.length-1) of next queue slot to push to
      * or pop from
      */
-    private volatile long sp;
+    volatile long sp;
 
     /**
      * Number of steals, just for monitoring purposes,
      */
-    private volatile long fullStealCount;
+    volatile long fullStealCount;
 
     /**
      * The last event count waited for
      */
-    private long eventCount;
+    long eventCount;
 
     /**
      * Number of steals, transferred to fullStealCount at syncs
      */
-    private int stealCount;
+    int stealCount;
 
     /**
      * Cached from pool
      */
-    private int poolSize;
+    int poolSize;
 
     /**
      * Index of this worker in pool array. Set once by pool before running.
      */
-    private int poolIndex;
+    int poolIndex;
 
     /**
      * Seed for random number generator for choosing steal victims
      */
-    private int randomVictimSeed;
+    int randomVictimSeed;
 
     /**
      * Number of scans (calls to getTask() or variants) since last
@@ -146,7 +146,7 @@ public class ForkJoinWorkerThread extends Thread {
      * contention, this is done only if worker queues appear to be
      * non-empty.
      */
-    private int scans;
+    int scans;
 
     /**
      * Seed for juRandom. Kept with worker fields to minimize
@@ -331,13 +331,12 @@ public class ForkJoinWorkerThread extends Thread {
      * @return a task or null if none
      */
     private ForkJoinTask<?> getTask() {
-        ForkJoinTask<?> popped, stolen;
-        if ((popped = popTask()) != null)
-            return popped;
-        else if ((stolen = getStolenTask()) != null)
-            return stolen;
-        else
-            return getSubmission();
+        ForkJoinTask<?> t;
+        if (base < sp && (t = popTask()) != null)
+            return t;
+        if ((t = getStolenTask()) != null)
+            return t;
+        return getSubmission();
     }
 
     /**
@@ -370,16 +369,14 @@ public class ForkJoinWorkerThread extends Thread {
                 if (context == JOINING)
                     throw new CancellationException();
             }
-            else if (context == POLLING)
-                Thread.yield();
-            else
+            else if (context != POLLING)
                 eventCount = poolBarrier.sync(this, eventCount);
         }
     }
 
     // Main work-stealing queue methods
 
-    /*
+    /**
      * Resizes queue
      */
     private void growQueue() {
@@ -394,7 +391,8 @@ public class ForkJoinWorkerThread extends Thread {
         long s = sp;
         for (long i = base; i < s; ++i)
             newQ[((int)i) & newMask] = oldQ[((int)i) & oldMask];
-        sp = s; // need volatile write here just to force ordering
+        _unsafe.putOrderedLong(this, spOffset, s);
+        //        sp = s; // need volatile write here just to force ordering
         queue = newQ;
     }
 
@@ -408,7 +406,8 @@ public class ForkJoinWorkerThread extends Thread {
         ForkJoinTask<?>[] q = queue;
         int mask = q.length - 1;
         q[((int)s) & mask] = x;
-        sp = s + 1;
+        _unsafe.putOrderedLong(this, spOffset, s + 1); // only need store fence
+        //        sp = s + 1;
         if ((s -= base) >= mask - 1)
             growQueue();
         else if (s <= 0)
@@ -425,8 +424,8 @@ public class ForkJoinWorkerThread extends Thread {
         ForkJoinTask<?>[] q = queue;
         if (q != null) {
             int idx = ((int)s) & (q.length-1);
-            x = q[idx];
             sp = s;
+            x = q[idx];
             q[idx] = null;
             long b = base;
             if (s <= b) {
@@ -450,10 +449,10 @@ public class ForkJoinWorkerThread extends Thread {
             if (q != null) {
                 int idx = ((int)s) & (q.length-1);
                 if (q[idx] == task) {
-                    sp = s;
                     q[idx] = null;
+                    sp = s;
                     long b = base;
-                    if (s > b)
+                    if (s > b) 
                         return true;
                     if (s == b && casBase(b, ++b)) {
                         sp = b;
@@ -750,6 +749,17 @@ public class ForkJoinWorkerThread extends Thread {
         return true;
     }
 
+    /**
+     * Wakes up other dormant worker threads that may be waiting for
+     * work.
+     */
+    public static void signalWork() {
+        Thread t = Thread.currentThread();
+        if (t instanceof ForkJoinWorkerThread)
+            ((ForkJoinWorkerThread)t).poolBarrier.signal();
+        // else external cancel -- OK not to signal
+    }
+
     // per-worker exported random numbers
 
     /**
@@ -889,17 +899,6 @@ public class ForkJoinWorkerThread extends Thread {
     // Package-local support for core ForkJoinTask methods
 
     /**
-     * Called only from ForkJoinTask, upon completion
-     * of stolen or cancelled task.
-     */
-    static void signalTaskCompletion() {
-        Thread t = Thread.currentThread();
-        if (t instanceof ForkJoinWorkerThread)
-            ((ForkJoinWorkerThread)t).poolBarrier.signal();
-        // else external cancel -- OK not to signal
-    }
-
-    /**
      * Implements ForkJoinTask.join
      */
     final <T> T doJoinTask(ForkJoinTask<T> joinMe) {
@@ -954,7 +953,7 @@ public class ForkJoinWorkerThread extends Thread {
         }
     }
 
-    final void doForkJoin(RecursiveAction t1, RecursiveAction t2) {
+    final void doForkJoin(ForkJoinTask<Void> t1, ForkJoinTask<Void> t2) {
         int touch = t1.status + t2.status; // force null pointer check
         pushTask(t2);
         Throwable ex1 = t1.exec();
@@ -983,6 +982,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     private static final Unsafe _unsafe = getUnsafe();
     private static final long baseOffset;
+    private static final long spOffset;
     private static final long arrayBase;
     private static final int arrayShift;
 
@@ -997,6 +997,8 @@ public class ForkJoinWorkerThread extends Thread {
         try {
             baseOffset = _unsafe.objectFieldOffset
                 (ForkJoinWorkerThread.class.getDeclaredField("base"));
+            spOffset = _unsafe.objectFieldOffset
+                (ForkJoinWorkerThread.class.getDeclaredField("sp"));
             arrayBase = _unsafe.arrayBaseOffset(ForkJoinTask[].class);
             arrayShift = computeArrayShift();
         } catch (Exception ex) { throw new Error(ex); }

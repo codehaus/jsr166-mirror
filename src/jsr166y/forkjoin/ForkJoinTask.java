@@ -84,14 +84,6 @@ public abstract class ForkJoinTask<V> {
     volatile Throwable exception;
 
     /**
-     * Updater to enable CAS of exception field
-     */
-    static final
-        AtomicReferenceFieldUpdater<ForkJoinTask, Throwable>
-        exceptionUpdater = AtomicReferenceFieldUpdater.newUpdater
-        (ForkJoinTask.class, Throwable.class, "exception");
-
-    /**
      * Status, taking values:
      *    0: initial
      *   -1: completed 
@@ -136,7 +128,7 @@ public abstract class ForkJoinTask<V> {
         int s = status;
         status = -1;
         if (s != 0) // conservatively signal on any nonzero
-            ForkJoinWorkerThread.signalTaskCompletion();
+            ForkJoinWorkerThread.signalWork();
         return ex;
     }
 
@@ -144,11 +136,19 @@ public abstract class ForkJoinTask<V> {
      * setDone for exceptional termination
      */
     final Throwable setDoneExceptionally(Throwable rex) {
-        exceptionUpdater.compareAndSet(this, null, rex);
-        ForkJoinWorkerThread.signalTaskCompletion();
+        casException(null, rex);
+        ForkJoinWorkerThread.signalWork();
         return exception;
     }
 
+    /**
+     * Version of setDoneExceptionally that screens argument
+     */
+    final void checkedSetDoneExceptionally(Throwable rex) {
+        if (!(rex instanceof RuntimeException) && !(rex instanceof Error))
+            throw new IllegalArgumentException(rex);
+        setDoneExceptionally(rex);
+    }
 
     /**
      * Returns result or throws exception. 
@@ -160,7 +160,6 @@ public abstract class ForkJoinTask<V> {
             rethrowException(ex);
         return rawResult();
     }
-
 
     /**
      * Returns result or throws exception using j.u.c.Future conventions
@@ -346,11 +345,108 @@ public abstract class ForkJoinTask<V> {
      * <tt>join</tt> and related operations. Upon invocation, the task
      * itself, if running, must exit (return) in a small finite number
      * of steps.
-     * @param ex the exception to throw. While not necessarily
-     * statically enforced, this must be a RuntimeException or Error.
+     * @param ex the unchecked exception (RuntimeException or Error)
+     * to throw.
+     * @throws IllegalArgumentException if the given exception is not
+     * a RuntimeException or Error.
      */
     public abstract void finishExceptionally(Throwable ex);
 
+    /**
+     * Forks both tasks and returns when <tt>isDone</tt> holds for
+     * both.. If both tasks encounter exceptions, only one of them
+     * (arbitrarily chosen) is thrown from this method.  You can check
+     * individual status using method <tt>getException</tt>.  This
+     * method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result in
+     * exceptions or errors including ClassCastException.
+     * @throws NullPointerException if t1 or t2 are null.
+     */
+    public static void forkJoin(ForkJoinTask<Void> t1, ForkJoinTask<Void> t2) {
+        ((ForkJoinWorkerThread)(Thread.currentThread())).doForkJoin(t1, t2);
+    }
+
+    /**
+     * Forks all tasks in the array, returning when <tt>isDone</tt>
+     * holds for all of them. If any task encounters an exception,
+     * others are cancelled.  This method may be invoked only from
+     * within other ForkJoinTask computations. Attempts to invoke in
+     * other contexts result in exceptions or errors including
+     * ClassCastException.
+     * @throws NullPointerException if array or any element of array are null
+     */
+    public static void forkJoin(ForkJoinTask<Void>[] tasks) {
+        int last = tasks.length - 1;
+        Throwable ex = null;
+        for (int i = last; i >= 0; --i) {
+            ForkJoinTask<Void> t = tasks[i];
+            if (t == null) {
+                if (ex == null)
+                    ex = new NullPointerException();
+            }
+            else if (ex != null)
+                t.cancel();
+            else if (i != 0)
+                t.fork();
+            else
+                ex = t.exec();
+        }
+        for (int i = 1; i <= last; ++i) {
+            ForkJoinTask<Void> t = tasks[i];
+            if (t != null) {
+                boolean pop = ForkJoinWorkerThread.removeIfNextLocalTask(t);
+                if (ex != null)
+                    t.cancel();
+                else if (!pop)
+                    ex = t.quietlyJoin();
+                else
+                    ex = t.exec();
+            }
+        }
+        if (ex != null)
+            rethrowException(ex);
+    }
+
+    /**
+     * Forks all tasks in the list, returning when <tt>isDone</tt>
+     * holds for all of them. If any task encounters an exception,
+     * others are cancelled.
+     * This method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result
+     * in exceptions or errors including ClassCastException.
+     * @throws NullPointerException if list or any element of list are null.
+     */
+    public static void forkJoin(List<? extends ForkJoinTask<Void>> tasks) {
+        int last = tasks.size() - 1;
+        Throwable ex = null;
+        for (int i = last; i >= 0; --i) {
+            ForkJoinTask<Void> t = tasks.get(i);
+            if (t == null) {
+                if (ex == null)
+                    ex = new NullPointerException();
+            }
+            else if (i != 0)
+                t.fork();
+            else if (ex != null)
+                t.cancel();
+            else
+                ex = t.exec();
+        }
+        for (int i = 1; i <= last; ++i) {
+            ForkJoinTask<Void> t = tasks.get(i);
+            if (t != null) {
+                boolean pop = ForkJoinWorkerThread.removeIfNextLocalTask(t);
+                if (ex != null)
+                    t.cancel();
+                else if (!pop)
+                    ex = t.quietlyJoin();
+                else
+                    ex = t.exec();
+            }
+        }
+        if (ex != null)
+            rethrowException(ex);
+    }
 
     // Temporary Unsafe mechanics for preliminary release
  
@@ -377,6 +473,19 @@ public abstract class ForkJoinTask<V> {
     static final void rethrowException(Throwable ex) {
         if (ex != null)
             _unsafe.throwException(ex);
+    }
+
+    private static final long exceptionOffset;
+
+    static {
+        try {
+            exceptionOffset = _unsafe.objectFieldOffset
+                (ForkJoinTask.class.getDeclaredField("exception"));
+        } catch (Exception ex) { throw new Error(ex); }
+    }
+
+    final boolean casException(Throwable cmp, Throwable val) {
+        return _unsafe.compareAndSwapObject(this, exceptionOffset, cmp, val);
     }
 
 }

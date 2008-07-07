@@ -5,10 +5,11 @@
  */
 
 package jsr166y.forkjoin;
+import jsr166y.Phaser;
 
 /**
  * A computation that is broken into a series of task executions, each
- * separated by a TaskBarrier arrival.  Concrete subclasses must
+ * separated by a Phaser arrival.  Concrete subclasses must
  * define method <tt>compute</tt>, that performs the action occurring
  * at each step of the barrier.  Upon invocation of this task, the
  * <tt>compute</tt> method is repeatedly invoked until the barrier
@@ -22,8 +23,8 @@ package jsr166y.forkjoin;
  * <pre>
  * class ImageSmoother extends RecursiveAction {
  *   protected void compute() {
- *     TaskBarrier b = new TaskBarrier() {
- *       protected boolean terminate(int cycle, int registeredParties) {
+ *     Phaser b = new Phaser() {
+ *       protected boolean onAdvance(int cycle, int registeredParties) {
  *          return registeredParties &lt;= 0 || cycle &gt;= 500;
  *       }
  *     }
@@ -36,16 +37,13 @@ package jsr166y.forkjoin;
  *         }
  *       }
  *     }
- *     for (int i = 0; i &lt; n; ++i) 
- *       actions[i].fork();
- *     for (int i = 0; i &lt; n; ++i) 
- *       actions[i].join();
+ *     CyclicAction.forkJoin(actions);
  *   }
  * }
  * </pre>
  */
 public abstract class CyclicAction extends ForkJoinTask<Void> {
-    final TaskBarrier barrier;
+    final Phaser barrier;
     int phase = -1;
 
     /**
@@ -53,7 +51,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
      * registering for this barrier upon construction.
      * @param barrier the barrier
      */
-    public CyclicAction(TaskBarrier barrier) {
+    public CyclicAction(Phaser barrier) {
         this.barrier = barrier;
         barrier.register();
     }
@@ -68,7 +66,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     /**
      * Returns the barrier
      */
-    public final TaskBarrier getBarrier() { 
+    public final Phaser getBarrier() { 
         return barrier; 
     }
 
@@ -76,7 +74,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
      * Returns the current cycle of the barrier
      */
     public final int getCycle() { 
-        return barrier.getCycle(); 
+        return barrier.getPhase(); 
     }
 
     /**
@@ -88,15 +86,15 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     }
 
     public final Throwable exec() {
-        TaskBarrier b = barrier;
+        Phaser b = barrier;
         if (isDone()) {
             b.arriveAndDeregister();
             return getException();
         }
         if (phase < 0)
-            phase = b.getCycle();
+            phase = b.getPhase();
         else
-            phase = b.awaitCycleAdvance(phase);
+            phase = b.awaitAdvance(phase);
         if (phase < 0)
             return setDone();
         try {
@@ -109,7 +107,6 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
         this.fork();
         return null;
     }
-
 
     public final Void forkJoin() {
         exec();
@@ -128,7 +125,7 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     }
 
     public final void finishExceptionally(Throwable ex) {
-        setDoneExceptionally(ex);
+        checkedSetDoneExceptionally(ex);
     }
 
 }

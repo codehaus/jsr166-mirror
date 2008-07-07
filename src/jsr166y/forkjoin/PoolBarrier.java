@@ -18,11 +18,11 @@ final class PoolBarrier {
     /**
      * Wait nodes for Treiber stack representing wait queue.
      */
-    static final class EQNode {
-        EQNode next;
+    static final class QNode {
+        QNode next;
         volatile ForkJoinWorkerThread thread; // nulled to cancel wait
         final long count;
-        EQNode(ForkJoinWorkerThread t, long c) {
+        QNode(ForkJoinWorkerThread t, long c) {
             thread = t;
             count = c;
         }
@@ -33,7 +33,7 @@ final class PoolBarrier {
      * busy, it is not usually heavily contended because of
      * signal/wait/release policies.
      */
-    final AtomicReference<EQNode> head = new AtomicReference<EQNode>();
+    final AtomicReference<QNode> head = new AtomicReference<QNode>();
 
     /**
      * The event count
@@ -76,11 +76,11 @@ final class PoolBarrier {
      * incoming value;
      */
     void signal() {
+        final AtomicReference<QNode> head = this.head;
         final AtomicLong counter = this.counter;
         long c = counter.get();
         counter.compareAndSet(c, c+1); 
-        final AtomicReference<EQNode> head = this.head;
-        EQNode h = head.get();
+        QNode h = head.get();
         if (h != null) {
             ForkJoinWorkerThread t;
             if (head.compareAndSet(h, h.next) && (t = h.thread) != null) {
@@ -106,14 +106,13 @@ final class PoolBarrier {
      * Enqueues node and waits unless aborted or signalled.
      */
     private void enqAndWait(ForkJoinWorkerThread thread, long count) {
-        EQNode node = new EQNode(thread, count);
-        final AtomicReference<EQNode> head = this.head;
+        QNode node = new QNode(thread, count);
+        final AtomicReference<QNode> head = this.head;
         final AtomicLong counter = this.counter;
         for (;;) {
-            EQNode h = head.get();
+            QNode h = head.get();
             node.next = h;
-            if ((h != null && h.count != count) || 
-                counter.get() != count)
+            if ((h != null && h.count != count) || counter.get() != count)
                 break;
             if (head.compareAndSet(h, node)) {
                 while (!thread.isInterrupted() &&
@@ -135,8 +134,8 @@ final class PoolBarrier {
      * contention and avoids unbounded enq/deq races.
      */
     private void releaseAll() {
-        final AtomicReference<EQNode> head = this.head;
-        EQNode p;
+        final AtomicReference<QNode> head = this.head;
+        QNode p;
         while ( (p = head.get()) != null) {
             if (head.compareAndSet(p, null)) {
                 do {

@@ -131,11 +131,19 @@ public class ScheduledThreadPoolExecutor
      */
     private static final AtomicLong sequencer = new AtomicLong(0);
 
+
+    /**
+     * Value of System.nanoTime upon static initialization.  This is
+     * used as an offset by now() to avoid wraparound of time values
+     * that would make them appear negative.
+     */
+    static final long initialNanoTime = System.nanoTime();
+
     /**
      * Returns current nanosecond time.
      */
-    final long now() {
-        return System.nanoTime();
+    static long now() {
+        return System.nanoTime() - initialNanoTime;
     }
 
     private class ScheduledFutureTask<V>
@@ -194,8 +202,8 @@ public class ScheduledThreadPoolExecutor
         }
 
         public long getDelay(TimeUnit unit) {
-            long d = unit.convert(time - now(), TimeUnit.NANOSECONDS);
-            return d;
+            long d = time - now();
+            return d<=0? 0 : unit.convert(d, TimeUnit.NANOSECONDS);
         }
 
         public int compareTo(Delayed other) {
@@ -444,6 +452,20 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
+     * Returns the trigger time of a delayed action
+     */
+    private static long nextTriggerTime(long delay, TimeUnit unit) {
+        long triggerTime;
+        long now = now();
+        if (delay <= 0) 
+            return now;            // avoid negative trigger times
+        else if ((triggerTime = now + unit.toNanos(delay)) < 0)
+            return Long.MAX_VALUE; // avoid numerical overflow
+        else
+            return triggerTime;
+    }
+
+    /**
      * @throws RejectedExecutionException {@inheritDoc}
      * @throws NullPointerException       {@inheritDoc}
      */
@@ -452,14 +474,13 @@ public class ScheduledThreadPoolExecutor
                                        TimeUnit unit) {
         if (command == null || unit == null)
             throw new NullPointerException();
-        if (delay < 0) delay = 0;
-        long triggerTime = now() + unit.toNanos(delay);
+        long triggerTime = nextTriggerTime(delay, unit);
         RunnableScheduledFuture<?> t = decorateTask(command,
             new ScheduledFutureTask<Void>(command, null, triggerTime));
         delayedExecute(t);
         return t;
     }
-
+    
     /**
      * @throws RejectedExecutionException {@inheritDoc}
      * @throws NullPointerException       {@inheritDoc}
@@ -469,8 +490,7 @@ public class ScheduledThreadPoolExecutor
                                            TimeUnit unit) {
         if (callable == null || unit == null)
             throw new NullPointerException();
-        if (delay < 0) delay = 0;
-        long triggerTime = now() + unit.toNanos(delay);
+        long triggerTime = nextTriggerTime(delay, unit);
         RunnableScheduledFuture<V> t = decorateTask(callable,
             new ScheduledFutureTask<V>(callable, triggerTime));
         delayedExecute(t);
@@ -491,7 +511,7 @@ public class ScheduledThreadPoolExecutor
         if (period <= 0)
             throw new IllegalArgumentException();
         if (initialDelay < 0) initialDelay = 0;
-        long triggerTime = now() + unit.toNanos(initialDelay);
+        long triggerTime = nextTriggerTime(initialDelay, unit);
         ScheduledFutureTask<Void> sft =
             new ScheduledFutureTask<Void>(command,
                                           null,
@@ -516,8 +536,7 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (delay <= 0)
             throw new IllegalArgumentException();
-        if (initialDelay < 0) initialDelay = 0;
-        long triggerTime = now() + unit.toNanos(initialDelay);
+        long triggerTime = nextTriggerTime(initialDelay, unit);
         ScheduledFutureTask<Void> sft =
             new ScheduledFutureTask<Void>(command,
                                           null,

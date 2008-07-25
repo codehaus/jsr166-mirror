@@ -407,9 +407,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     public void transfer(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
         if (xfer(e, WAIT, 0) == null) {
-	    Thread.interrupted();
+            Thread.interrupted();
             throw new InterruptedException();
-	}
+        }
     }
 
     public boolean tryTransfer(E e, long timeout, TimeUnit unit)
@@ -431,7 +431,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         Object e = xfer(null, WAIT, 0);
         if (e != null)
             return (E)e;
-	Thread.interrupted();
+        Thread.interrupted();
         throw new InterruptedException();
     }
 

@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.*;
 /**
  * Resultless ForkJoinTasks with explicit completions, that may be
  * linked in parent-child relationships.  Unlike other kinds of tasks,
- * LinkedAsyncActions do not intrinisically complete upon exit from
+ * LinkedAsyncActions do not intrinsically complete upon exit from
  * their <tt>compute</tt> methods, but instead require explicit
  * invocation of their <tt>finish</tt> methods and completion of
  * subtasks.

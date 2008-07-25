@@ -140,7 +140,7 @@ public class ForkJoinWorkerThread extends Thread {
      * successfully getting a task.  Always zero (== "active" status)
      * when busy executing tasks.  Incremented after a failed scan to
      * help control spins and maintain active worker count. On
-     * transition from or to sero, the pool's activeWorkerCounter must
+     * transition from or to zero, the pool's activeWorkerCounter must
      * be adjusted.  Must be zero when executing tasks, and BEFORE
      * stealing a submission.  To avoid continual flickering and
      * contention, this is done only if worker queues appear to be
@@ -936,7 +936,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Timeout version of join for Submissions.
-     * Returns false if timed out before complated
+     * @return false if timed out before completed
      */
     final boolean doTimedJoinTask(ForkJoinTask<?> joinMe, long nanos) {
         long startTime = System.nanoTime();

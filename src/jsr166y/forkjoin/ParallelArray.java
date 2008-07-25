@@ -88,7 +88,7 @@ import java.lang.reflect.Array;
  * In cases of combined mapping expressions, this rule is only
  * dynamically enforced. For example, <tt>pa.withMapping(op,
  * pb.withFilter(f))</tt> will compile but throw an exception upon
- * execution because the filter precedes tha mapping.
+ * execution because the filter precedes the mapping.
  *
  * <p>While series of filters and mappings are allowed, it is
  * usually more efficient to combine them into single filters or
@@ -149,7 +149,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     /**
      * Returns a common default executor for use in ParallelArrays.
      * This executor arranges enough parallelism to use most, but not
-     * necessarily all, of the avaliable processors on this system.
+     * necessarily all, of the available processors on this system.
      * @return the executor
      */
     public static ForkJoinExecutor defaultExecutor() {

@@ -20,7 +20,7 @@ import java.util.concurrent.locks.*;
  * use helping joins if the caller is itself a ForkJoinWorkerThread.
  *
  * (2) Regular Futures encase RuntimeExceptions within
- * ExecutionExeptions, while internal tasks just throw them directly,
+ * ExecutionExceptions, while internal tasks just throw them directly,
  * so these must be trapped and wrapped.
  *
  * (3) External submissions are tracked for the sake of managing

@@ -642,7 +642,7 @@ public class CommonOps {
     }
 
     /**
-     * Returns a predicate evaluating to the disjuntion of its contained predicates
+     * Returns a predicate evaluating to the disjunction of its contained predicates
      */
     public static <S, T extends S> Predicate<T> orPredicate
                                 (final Predicate<S> first,
@@ -668,7 +668,7 @@ public class CommonOps {
     }
 
     /**
-     * Returns a predicate evaluating to the disjuntion of its contained predicates
+     * Returns a predicate evaluating to the disjunction of its contained predicates
      */
     public static DoublePredicate orPredicate
         (final DoublePredicate first,
@@ -695,7 +695,7 @@ public class CommonOps {
     }
 
     /**
-     * Returns a predicate evaluating to the disjuntion of its contained predicates
+     * Returns a predicate evaluating to the disjunction of its contained predicates
      */
     public static LongPredicate orPredicate
         (final LongPredicate first,

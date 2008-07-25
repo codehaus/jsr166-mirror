@@ -183,7 +183,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
 
     /**
      * The uncaught exception handler used when any worker
-     * abrupty terminates
+     * abruptly terminates
      */
     private Thread.UncaughtExceptionHandler ueh;
 
@@ -856,7 +856,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     /**
      * Returns the approximate number of threads that are currently
      * idle waiting for tasks. This method may underestimate the
-     * number of idel threads.
+     * number of idle threads.
      * @return the number of idle threads.
      */
     public int getIdleThreadCount() {
@@ -988,7 +988,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
      */
     static final class SubmissionQueue {
 
-        /** Opportunistically subclasses AtromicReference for next-field */
+        /** Opportunistically subclasses AtomicReference for next-field */
         static final class SQNode extends AtomicReference<SQNode> {
             Submission<?> submission;
             SQNode(Submission<?> s) { submission = s; }

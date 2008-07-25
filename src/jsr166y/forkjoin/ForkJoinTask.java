@@ -100,7 +100,7 @@ public abstract class ForkJoinTask<V> {
      * reads will be fresh. In other situations, in the worst case of
      * not being seen earlier, since Worker threads eventually scan
      * all other threads looking for work, any subsequent read must
-     * see any writes occuring before last volatile bookkeeping
+     * see any writes occurring before last volatile bookkeeping
      * operation, which all workers must eventually perform. And on
      * the issuing side, status is set after rechecking exception
      * field which prevents premature writes.

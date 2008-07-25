@@ -1330,8 +1330,8 @@ class PAS {
     }
 
     /**
-     * Basic FJ tssk for non-root FJRemoveAll nodes. Differs from
-     * FJBase because it requires maintaing explicit right pointers so
+     * Basic FJ task for non-root FJRemoveAll nodes. Differs from
+     * FJBase because it requires maintaining explicit right pointers so
      * FJRemoveAllDriver can traverse them
      */
     static final class FJRemoveAll extends RecursiveAction {
@@ -2588,7 +2588,7 @@ class PAS {
      * bit join count. For leafs, it is set when cumulated. For
      * internal nodes, it becomes true when one child is cumulated.
      * When second child finishes cumulating, it then moves up tree,
-     * excecuting finish() at the root.
+     * executing finish() at the root.
      *
      * This class maintains only the basic control logic.  Subclasses
      * maintain the "in" and "out" fields, and *Ops classes perform

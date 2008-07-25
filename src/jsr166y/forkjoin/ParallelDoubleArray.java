@@ -23,7 +23,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     /**
      * Returns a common default executor for use in ParallelArrays.
      * This executor arranges enough parallelism to use most, but not
-     * necessarily all, of the avaliable processors on this system.
+     * necessarily all, of the available processors on this system.
      * @return the executor
      */
     public static ForkJoinExecutor defaultExecutor() {

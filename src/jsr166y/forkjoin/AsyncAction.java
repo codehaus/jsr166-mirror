@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 
 /**
  * Resultless ForkJoinTasks with explicit completions.  Unlike some
- * other kinds of tasks, AsyncActions do not intrinisically complete
+ * other kinds of tasks, AsyncActions do not intrinsically complete
  * upon exit from their <tt>compute</tt> methods, but instead require
  * explicit invocation of their <tt>finish</tt> methods.
  *
@@ -25,7 +25,7 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      * The asynchronous part of the computation performed by this
      * task.  While you must define this method, you should not in
      * general call it directly (although you can invoke immediately
-     * via <tt>exec</tt>.) If this method throws an excaption,
+     * via <tt>exec</tt>.) If this method throws an exception,
      * <tt>finishExceptionally</tt> is immediately invoked.
      */
     protected abstract void compute();

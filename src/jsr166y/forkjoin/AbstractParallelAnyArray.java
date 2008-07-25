@@ -17,7 +17,7 @@ import java.lang.reflect.Array;
 public abstract class AbstractParallelAnyArray {
     /*
      * This class and its subclasses (most of which are defined here
-     * as sested static classes) maintain the execution parameters for
+     * as nested static classes) maintain the execution parameters for
      * ParallelArray, ParallelDoubleArray, and ParallelLongArray
      * tasks.  Pap instances hold the non-operation-specific control
      * and data accessors needed for a task as a whole (as opposed to

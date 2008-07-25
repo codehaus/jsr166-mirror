@@ -90,7 +90,7 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this queue
      */
-    boolean tryTransfer(E e, long timeout, TimeUnit unit) 
+    boolean tryTransfer(E e, long timeout, TimeUnit unit)
         throws InterruptedException;
 
     /**

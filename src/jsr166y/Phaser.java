@@ -28,7 +28,7 @@ import java.util.concurrent.locks.LockSupport;
  * <li> Each generation has an associated phase value, starting at
  * zero, and advancing when all parties reach the barrier (wrapping
  * around to zero after reaching <tt>Integer.MAX_VALUE</tt>).
- * 
+ *
  * <li> Like a CyclicBarrier, a Phaser may be repeatedly awaited.
  * Method <tt>arriveAndAwaitAdvance</tt> has effect analogous to
  * <tt>CyclicBarrier.await</tt>.  However, Phasers separate two
@@ -37,7 +37,7 @@ import java.util.concurrent.locks.LockSupport;
  * <ul>
  *
  *   <li> Arriving at a barrier. Methods <tt>arrive</tt> and
- *       <tt>arriveAndDeregister</tt> do not block, but return 
+ *       <tt>arriveAndDeregister</tt> do not block, but return
  *       the phase value on entry to the method.
  *
  *   <li> Awaiting others. Method <tt>awaitAdvance</tt> requires an
@@ -60,9 +60,9 @@ import java.util.concurrent.locks.LockSupport;
  * number reaches a threshold.  Method <tt>forceTermination</tt> is
  * also available to assist recovery actions upon failure.
  *
- * <li> Unlike most synchronizers, a Phaser may also be used with 
+ * <li> Unlike most synchronizers, a Phaser may also be used with
  * ForkJoinTasks (as well as plain threads).
- * 
+ *
  * <li> By default, <tt>awaitAdvance</tt> continues to wait even if
  * the current thread is interrupted. And unlike the case in
  * CyclicBarriers, exceptions encountered while tasks wait
@@ -72,7 +72,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * </ul>
  *
- * <p><b>Sample usage:</b> 
+ * <p><b>Sample usage:</b>
  *
  * <p>[todo: non-FJ example]
  *
@@ -114,7 +114,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of parties to 65535. Attempts to register
- * additional parties result in IllegalStateExceptions.  
+ * additional parties result in IllegalStateExceptions.
  */
 public class Phaser {
     /*
@@ -126,7 +126,7 @@ public class Phaser {
     /**
      * Barrier state representation. Conceptually, a barrier contains
      * four values:
-     * 
+     *
      * * parties -- the number of parties to wait (16 bits)
      * * unarrived -- the number of parties yet to hit barrier (16 bits)
      * * phase -- the generation of the barrier (31 bits)
@@ -307,7 +307,7 @@ public class Phaser {
         if (phase < 0)
             return phase;
         Thread current = Thread.currentThread();
-        if (current instanceof ForkJoinWorkerThread) 
+        if (current instanceof ForkJoinWorkerThread)
             return helpingWait(phase);
         if (untimedWait(current, phase, false))
             current.interrupt();
@@ -326,7 +326,7 @@ public class Phaser {
         if (phase < 0)
             return phase;
         Thread current = Thread.currentThread();
-        if (current instanceof ForkJoinWorkerThread) 
+        if (current instanceof ForkJoinWorkerThread)
             return helpingWait(phase);
         else if (Thread.interrupted() || untimedWait(current, phase, true))
             throw new InterruptedException();
@@ -343,13 +343,13 @@ public class Phaser {
      * @throws InterruptedException if thread interrupted while waiting
      * @throws TimeoutException if timed out while waiting
      */
-    public int awaitAdvanceInterruptibly(int phase, long timeout, TimeUnit unit) 
+    public int awaitAdvanceInterruptibly(int phase, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
         if (phase < 0)
             return phase;
         long nanos = unit.toNanos(timeout);
         Thread current = Thread.currentThread();
-        if (current instanceof ForkJoinWorkerThread) 
+        if (current instanceof ForkJoinWorkerThread)
             return timedHelpingWait(phase, nanos);
         timedWait(current, phase, nanos);
         return phaseOf(state.get());
@@ -446,7 +446,7 @@ public class Phaser {
      * phase number, this barrier will be set to a final termination
      * state, and subsequent calls to <tt>isTerminated</tt> will
      * return true.
-     * 
+     *
      * <p> The default version returns true when the number of
      * registered parties is zero. Normally, overrides that arrange
      * termination for other reasons should also preserve this
@@ -569,7 +569,7 @@ public class Phaser {
      * The number of times to spin before blocking in timed waits.
      * The value is empirically derived.
      */
-    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32; 
+    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32;
 
     /**
      * The number of times to spin before blocking in untimed waits.
@@ -587,7 +587,7 @@ public class Phaser {
     /**
      * Enqueues node and waits unless aborted or signalled.
      */
-    private boolean untimedWait(Thread thread, int currentPhase, 
+    private boolean untimedWait(Thread thread, int currentPhase,
                                boolean abortOnInterrupt) {
         final AtomicReference<QNode> head = this.head;
         final AtomicLong state = this.state;
@@ -602,7 +602,7 @@ public class Phaser {
                     LockSupport.park();
                     if (Thread.interrupted()) {
                         wasInterrupted = true;
-                        if (abortOnInterrupt) 
+                        if (abortOnInterrupt)
                             break;
                     }
                 }
@@ -635,7 +635,7 @@ public class Phaser {
     /**
      * Messier timeout version
      */
-    private void timedWait(Thread thread, int currentPhase, long nanos) 
+    private void timedWait(Thread thread, int currentPhase, long nanos)
         throws InterruptedException, TimeoutException {
         final AtomicReference<QNode> head = this.head;
         final AtomicLong state = this.state;
@@ -692,4 +692,3 @@ public class Phaser {
     }
 
 }
-

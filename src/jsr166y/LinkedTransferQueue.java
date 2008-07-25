@@ -79,7 +79,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * seems not to vary with number of CPUs (beyond 2) so is just
      * a constant.
      */
-    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32; 
+    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32;
 
     /**
      * The number of times to spin before blocking in untimed waits.
@@ -94,7 +94,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     static final long spinForTimeoutThreshold = 1000L;
 
-    /** 
+    /**
      * Node class for LinkedTransferQueue. Opportunistically subclasses from
      * AtomicReference to represent item. Uses Object, not E, to allow
      * setting item to "this" after use, to avoid garbage
@@ -132,9 +132,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
 
     private final QNode dummy = new QNode(null, false);
-    private final PaddedAtomicReference<QNode> head = 
+    private final PaddedAtomicReference<QNode> head =
         new PaddedAtomicReference<QNode>(dummy);
-    private final PaddedAtomicReference<QNode> tail = 
+    private final PaddedAtomicReference<QNode> tail =
         new PaddedAtomicReference<QNode>(dummy);
 
     /**
@@ -156,7 +156,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
         return false;
     }
-    
+
     /**
      * Puts or takes an item. Used for most queue operations (except
      * poll() and tryTransfer())
@@ -188,10 +188,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     return awaitFulfill(t, s, e, mode, nanos);
                 }
             }
-            
+
             else if (h != null) {
                 QNode first = h.next;
-                if (t == tail.get() && first != null && 
+                if (t == tail.get() && first != null &&
                     advanceHead(h, first)) {
                     Object x = first.get();
                     if (x != first && first.compareAndSet(x, e)) {
@@ -228,7 +228,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
             else if (h != null) {
                 QNode first = h.next;
-                if (t == tail.get() && 
+                if (t == tail.get() &&
                     first != null &&
                     advanceHead(h, first)) {
                     Object x = first.get();
@@ -252,7 +252,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param nanos timeout value
      * @return matched item, or s if cancelled
      */
-    private Object awaitFulfill(QNode pred, QNode s, Object e, 
+    private Object awaitFulfill(QNode pred, QNode s, Object e,
                                 int mode, long nanos) {
         if (mode == NOWAIT)
             return null;
@@ -268,7 +268,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 advanceHead(pred, s);     // unlink if head
                 if (x == s)               // was cancelled
                     return clean(pred, s);
-                else if (x != null) {     
+                else if (x != null) {
                     s.set(s);             // avoid garbage retention
                     return x;
                 }
@@ -288,7 +288,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (spins < 0) {
                 QNode h = head.get(); // only spin if at head
                 spins = ((h != null && h.next == s) ?
-                         (mode == TIMEOUT? 
+                         (mode == TIMEOUT?
                           maxTimedSpins : maxUntimedSpins) : 0);
             }
             if (spins > 0)
@@ -321,10 +321,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (w != Thread.currentThread())
                 LockSupport.unpark(w);
         }
-        
+
         for (;;) {
             if (pred.next != s) // already cleaned
-                return null; 
+                return null;
             QNode h = head.get();
             QNode hn = h.next;   // Absorb cancelled first node as head
             if (hn != null && hn.next == hn) {
@@ -360,12 +360,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     cleanMe.compareAndSet(dp, null);
                 if (dp == pred)
                     return null;      // s is already saved node
-            } 
+            }
             else if (cleanMe.compareAndSet(null, pred))
                 return null;          // Postpone cleaning s
         }
     }
-    
+
     /**
      * Creates an initially empty <tt>LinkedTransferQueue</tt>.
      */
@@ -390,7 +390,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         xfer(e, NOWAIT, 0);
     }
 
-    public boolean offer(E e, long timeout, TimeUnit unit)  
+    public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (e == null) throw new NullPointerException();
         if (Thread.interrupted()) throw new InterruptedException();
@@ -487,12 +487,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 QNode last = t.next;
                 QNode first = h.next;
                 if (t == tail.get()) {
-                    if (last != null) 
+                    if (last != null)
                         tail.compareAndSet(t, last);
                     else if (first != null) {
                         Object x = first.get();
-                        if (x == first) 
-                            advanceHead(h, first);     
+                        if (x == first)
+                            advanceHead(h, first);
                         else
                             return h;
                     }
@@ -520,17 +520,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         QNode currentNode; // last returned node, for remove()
         QNode prevNode;    // predecessor of last returned node
         E nextItem;        // Cache of next item, once commited to in next
-        
+
         Itr() {
             nextNode = traversalHead();
             advance();
         }
-        
+
         E advance() {
             prevNode = currentNode;
             currentNode = nextNode;
             E x = nextItem;
-            
+
             QNode p = nextNode.next;
             for (;;) {
                 if (p == null || !p.isData) {
@@ -543,25 +543,25 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     nextNode = p;
                     nextItem = (E)item;
                     return x;
-                } 
+                }
                 prevNode = p;
                 p = p.next;
             }
         }
-        
+
         public boolean hasNext() {
             return nextNode != null;
         }
-        
+
         public E next() {
             if (nextNode == null) throw new NoSuchElementException();
             return advance();
         }
-        
+
         public void remove() {
             QNode p = currentNode;
             QNode prev = prevNode;
-            if (prev == null || p == null) 
+            if (prev == null || p == null)
                 throw new IllegalStateException();
             Object x = p.get();
             if (x != null && x != p && p.compareAndSet(x, p))
@@ -608,11 +608,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (p == null)
                 return false;
             Object x = p.get();
-            if (p != x) 
+            if (p != x)
                 return !p.isData;
         }
     }
-    
+
     /**
      * Returns the number of elements in this queue.  If this queue
      * contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
@@ -630,7 +630,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         QNode h = traversalHead();
         for (QNode p = h.next; p != null && p.isData; p = p.next) {
             Object x = p.get();
-            if (x != null && x != p) { 
+            if (x != null && x != p) {
                 if (++count == Integer.MAX_VALUE) // saturated
                     break;
             }

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.*;
  * <p> Unlike LinkedAsyncActions, AsyncActions do not establish links
  * to parent tasks or count child tasks.  This class can thus form a
  * more flexible basis for classes creating custom linkages.
- * 
+ *
  */
 public abstract class AsyncAction extends ForkJoinTask<Void> {
     /**
@@ -49,8 +49,8 @@ public abstract class AsyncAction extends ForkJoinTask<Void> {
      * Always returns null.
      * @return null
      */
-    public final Void rawResult() { 
-        return null; 
+    public final Void rawResult() {
+        return null;
     }
 
     public final Void forkJoin() {

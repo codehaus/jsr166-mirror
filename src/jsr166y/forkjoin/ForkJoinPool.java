@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.*;
  * tuning, and monitoring fork/join applications.
  */
 public class ForkJoinPool implements ForkJoinExecutor {
-    
+
     /*
      * This is an overhauled version of the framework described in "A
      * Java Fork/Join Framework" by Doug Lea, in, Proceedings, ACM
@@ -129,7 +129,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     private final Condition termination;
 
     /**
-     * The current targetted pool size. Updated only under worker lock
+     * The current targeted pool size. Updated only under worker lock
      * but volatile to allow concurrent reads.
      */
     volatile int poolSize;
@@ -308,7 +308,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
         lock.lock();
         try {
             ForkJoinWorkerThread[] ws = workers;
-            for (int i = 0; i < ps; ++i) 
+            for (int i = 0; i < ps; ++i)
                 ws[i] = createWorker(i);
             for (int i = 0; i < ps; ++i) {
                 ws[i].start();
@@ -329,7 +329,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     public <T> T invoke(ForkJoinTask<T> task) {
         return doSubmit(task).awaitInvoke();
     }
-    
+
     /**
      * Arranges for (asynchronous) execution of the given task,
      * returning a <tt>Future</tt> that may be used to obtain results
@@ -368,7 +368,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Returns the targetted number of worker threads in this pool.
+     * Returns the targeted number of worker threads in this pool.
      * This value does not necessarily reflect transient changes as
      * threads are added, removed, or abruptly terminate.
      *
@@ -474,7 +474,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     /**
      * Tries to adds the indicated number of new worker threads to the
      * pool. This method may be used to increase the amount of
-     * parallelism available to tasks. The actual number of 
+     * parallelism available to tasks. The actual number of
      * threads added may be less than requested if the pool
      * is terminating or terminated
      * @return the number of threads added
@@ -493,11 +493,11 @@ public class ForkJoinPool implements ForkJoinExecutor {
                 ForkJoinWorkerThread[] ws = workers;
                 int len = ws.length;
                 int newLen = len + numberToAdd;
-                int newSize = workerSizeFor(newLen); 
-                ForkJoinWorkerThread[] nws = 
+                int newSize = workerSizeFor(newLen);
+                ForkJoinWorkerThread[] nws =
                     new ForkJoinWorkerThread[newSize];
                 System.arraycopy(ws, 0, nws, 0, len);
-                for (int i = len; i < newLen; ++i) 
+                for (int i = len; i < newLen; ++i)
                     nws[i] = createWorker(i);
                 workers = nws;
                 for (int i = len; i < newLen; ++i) {
@@ -537,7 +537,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
             // shutdown in rightmost order to enable shrinkage in
             // workerTerminated
             ForkJoinWorkerThread[] ws = workers;
-            int k = ws.length;  
+            int k = ws.length;
             while (!runState.isAtLeastStopping() &&
                    --k > 0 && // don't kill ws[0]
                    nremoved < numberToRemove) {
@@ -578,7 +578,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
         lock.lock();
         try {
             int ps = poolSize;
-            if (newSize > ps) 
+            if (newSize > ps)
                 addWorkers(newSize - ps);
             else if (newSize < ps)
                 removeWorkers(ps - newSize);
@@ -601,7 +601,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
             try {
                 // Unless stopping, null slot, and if rightmost slots
                 // now null, shrink
-                if (!runState.isAtLeastStopping()) { 
+                if (!runState.isAtLeastStopping()) {
                     int idx = w.getWorkerPoolIndex();
                     ForkJoinWorkerThread[] ws = workers;
                     int len = ws.length;
@@ -613,7 +613,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
                         if (newlen < len) {
                             int newSize = workerSizeFor(newlen);
                             if (newSize < len) {
-                                ForkJoinWorkerThread[] nws = 
+                                ForkJoinWorkerThread[] nws =
                                     new ForkJoinWorkerThread[newSize];
                                 System.arraycopy(ws, 0, nws, 0, newlen);
                                 workers = nws;
@@ -844,7 +844,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Returns the approximate number of threads that are 
+     * Returns the approximate number of threads that are
      * currently executing tasks. This method may overestimate
      * the number of active threads.
      * @return the number of active threads.
@@ -996,7 +996,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
 
         private volatile SQNode head;
         private volatile SQNode tail;
-        
+
         SubmissionQueue() {
             SQNode dummy = new SQNode(null);
             head = dummy;
@@ -1017,7 +1017,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
         private boolean casTail(SQNode cmp, SQNode val) {
             return tailUpdater.compareAndSet(this, cmp, val);
         }
-        
+
         private boolean casHead(SQNode cmp, SQNode val) {
             return headUpdater.compareAndSet(this, cmp, val);
         }
@@ -1072,7 +1072,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
                 if (h == head) {
                     if (f == null)
                         return null;
-                    else if (h == t) 
+                    else if (h == t)
                         casTail(t, f);
                     else if (casHead(h, f)) {
                         Submission<?> x = f.submission;

@@ -64,7 +64,7 @@ public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter
      * @param comparator the comparator
      * @return the index or -1 if not present
      */
-    public abstract int binarySearch(T target, 
+    public abstract int binarySearch(T target,
                                      Comparator<? super T> comparator);
     /**
      * Replaces each element with the running cumulation of applying

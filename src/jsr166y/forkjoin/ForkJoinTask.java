@@ -79,14 +79,14 @@ public abstract class ForkJoinTask<V> {
     /**
      * The exception thrown within compute method, or via cancellation.
      * Updated only via CAS, to arbitrate cancellations vs normal
-     * exceptions.  
+     * exceptions.
      */
     volatile Throwable exception;
 
     /**
      * Status, taking values:
      *    0: initial
-     *   -1: completed 
+     *   -1: completed
      *   >0: stolen (or external)
      *
      * Status is set negative when task completes normally.  A task is
@@ -151,7 +151,7 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Returns result or throws exception. 
+     * Returns result or throws exception.
      * Only call when isDone known to be true.
      */
     final V reportAsForkJoinResult() {
@@ -293,7 +293,7 @@ public abstract class ForkJoinTask<V> {
     }
 
     /**
-     * Returns true if this task was stolen from some other worker in the 
+     * Returns true if this task was stolen from some other worker in the
      * pool and has not yet completed. This method should be called
      * only by the thread currently executing this task. The results
      * of calling this method in any other context are undefined.
@@ -449,7 +449,7 @@ public abstract class ForkJoinTask<V> {
     }
 
     // Temporary Unsafe mechanics for preliminary release
- 
+
     private static Unsafe getUnsafe() {
         try {
             if (ForkJoinTask.class.getClassLoader() != null) {

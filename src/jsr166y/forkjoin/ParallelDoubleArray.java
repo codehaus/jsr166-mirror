@@ -470,7 +470,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
         else {
             int csize = other.size();
             insertSlotsAt(end, csize);
-            if (other.hasMap()) 
+            if (other.hasMap())
                 ex.invoke(new PAS.FJDMap(other, other.origin, other.fence,
                                          null, array, end - other.origin));
             else
@@ -545,7 +545,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param upperBound the upper bound (exclusive)
      * @return operation prefix
      */
-    public ParallelDoubleArrayWithBounds withBounds(int firstIndex, 
+    public ParallelDoubleArrayWithBounds withBounds(int firstIndex,
                                                     int upperBound) {
         return super.withBounds(firstIndex, upperBound);
     }

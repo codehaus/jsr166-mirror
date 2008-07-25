@@ -56,7 +56,7 @@ final class PoolBarrier {
      */
     long sync(ForkJoinWorkerThread thread, long count) {
         long current = counter.get();
-        if (current == count) 
+        if (current == count)
             enqAndWait(thread, count);
         if (head.get() != null)
             releaseAll();
@@ -79,7 +79,7 @@ final class PoolBarrier {
         final AtomicReference<QNode> head = this.head;
         final AtomicLong counter = this.counter;
         long c = counter.get();
-        counter.compareAndSet(c, c+1); 
+        counter.compareAndSet(c, c+1);
         QNode h = head.get();
         if (h != null) {
             ForkJoinWorkerThread t;

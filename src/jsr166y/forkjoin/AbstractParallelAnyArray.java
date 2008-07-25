@@ -12,7 +12,7 @@ import java.lang.reflect.Array;
 
 /**
  * Abstract class serving as the basis of parallel
- * array classes across types. 
+ * array classes across types.
  */
 public abstract class AbstractParallelAnyArray {
     /*
@@ -61,7 +61,7 @@ public abstract class AbstractParallelAnyArray {
         this.fence = fence;
     }
 
-    // A few public methods exported across all subclasses 
+    // A few public methods exported across all subclasses
 
     /**
      * Return the number of elements selected using bound or
@@ -97,8 +97,8 @@ public abstract class AbstractParallelAnyArray {
      * Returns true if there are no elements
      * @return true if there are no elements
      */
-    public boolean isEmpty() { 
-        return anyIndex() < 0; 
+    public boolean isEmpty() {
+        return anyIndex() < 0;
     }
 
 

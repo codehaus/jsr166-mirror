@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.*;
  * this, you would create a GraphVisitor for the root node with null
  * parent, and <tt>invoke</tt> in a ForkJoinPool. Upon return, all
  * reachable nodes will have been visited.
- * 
+ *
  * <pre>
  * class GraphVisitor extends LinkedAsyncAction {
  *    final Node node;
@@ -93,7 +93,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      */
     protected LinkedAsyncAction(LinkedAsyncAction parent) {
         this.parent = parent;
-        if (parent != null) 
+        if (parent != null)
             pendingCountUpdater.incrementAndGet(parent);
     }
 
@@ -109,7 +109,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      */
     protected LinkedAsyncAction(LinkedAsyncAction parent, boolean register) {
         this.parent = parent;
-        if (parent != null && register) 
+        if (parent != null && register)
             pendingCountUpdater.incrementAndGet(parent);
     }
 
@@ -127,12 +127,12 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * to complete before it completes
      * @param pending the pending join count
      */
-    protected LinkedAsyncAction(LinkedAsyncAction parent, 
+    protected LinkedAsyncAction(LinkedAsyncAction parent,
                           boolean register,
                           int pending) {
         this.parent = parent;
         pendingCount = pending;
-        if (parent != null && register) 
+        if (parent != null && register)
             pendingCountUpdater.incrementAndGet(parent);
     }
 
@@ -187,7 +187,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * exception is encountered in any <tt>onCompletion</tt>
      * invocation, that task and its ancestors
      * <tt>finishExceptionally</tt>.
-     * 
+     *
      * @param result must be <tt>null</tt>.
      */
     public final void finish(Void result) {
@@ -200,7 +200,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
                 } catch (Throwable rex) {
                     a.finishExceptionally(rex);
                     return;
-                } 
+                }
                 a.setDone();
                 a = a.parent;
             }
@@ -244,24 +244,24 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * Returns this task's parent, or null if none.
      * @return this task's parent, or null if none.
      */
-    public final LinkedAsyncAction getParent() { 
-        return parent; 
+    public final LinkedAsyncAction getParent() {
+        return parent;
     }
 
     /**
      * Returns the number of subtasks that have not yet completed.
      * @return the number of subtasks that have not yet completed.
      */
-    public final int getPendingSubtaskCount() { 
-        return pendingCount; 
+    public final int getPendingSubtaskCount() {
+        return pendingCount;
     }
 
     /**
      * Always returns null.
      * @return null
      */
-    public final Void rawResult() { 
-        return null; 
+    public final Void rawResult() {
+        return null;
     }
 
     /**
@@ -295,7 +295,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
         if (pendingCount != 0)
             pendingCount = 0;
         this.parent = parent;
-        if (parent != null && register) 
+        if (parent != null && register)
             pendingCountUpdater.incrementAndGet(parent);
     }
 
@@ -307,13 +307,13 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * to complete before it completes
      * @param pending the pending join count
      */
-    public void reinitialize(LinkedAsyncAction parent, 
+    public void reinitialize(LinkedAsyncAction parent,
                              boolean register,
                              int pending) {
         super.reinitialize();
         pendingCount = pending;
         this.parent = parent;
-        if (parent != null && register) 
+        if (parent != null && register)
             pendingCountUpdater.incrementAndGet(parent);
     }
 

@@ -452,7 +452,7 @@ public class ForkJoinWorkerThread extends Thread {
                     q[idx] = null;
                     sp = s;
                     long b = base;
-                    if (s > b) 
+                    if (s > b)
                         return true;
                     if (s == b && casBase(b, ++b)) {
                         sp = b;

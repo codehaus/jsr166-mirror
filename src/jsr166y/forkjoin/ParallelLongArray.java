@@ -31,11 +31,11 @@ import java.lang.reflect.Array;
  *     ParallelLongArray a = create(n-1, defaultExecutor());
  *     a.replaceWithMappedIndex(add2);
  *     int i = 0;
- *     long p = 2; 
- *     while (p * p &lt; n) { // repeatedly filter 
+ *     long p = 2;
+ *     while (p * p &lt; n) { // repeatedly filter
  *         a = a.withFilter(notDivisibleBy(p)).all();
  *         p = a.get(++i);
- *     }     
+ *     }
  *     System.out.printf("sieve(%d) = %s%n", n, a);
  *     // check result
  *     if (!a.withFilter(notProbablePrime).isEmpty())
@@ -49,9 +49,9 @@ import java.lang.reflect.Array;
  *     } }
  *   static LongPredicate notProbablePrime = new LongPredicate() {
  *     private static final int CERTAINTY = 8;
- *     public boolean op(long n) { 
- *       return !BigInteger.valueOf(n).isProbablePrime(CERTAINTY); 
- *     } 
+ *     public boolean op(long n) {
+ *       return !BigInteger.valueOf(n).isProbablePrime(CERTAINTY);
+ *     }
  *   }
  * }
  * </pre>
@@ -303,7 +303,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * @throws ArrayIndexOutOfBoundsException if other array has
      * fewer elements than this array.
      */
-    public ParallelLongArray replaceWithMapping(BinaryLongOp combiner, 
+    public ParallelLongArray replaceWithMapping(BinaryLongOp combiner,
                                                 long[] other) {
         super.replaceWithMapping(combiner, other);
         return this;
@@ -509,7 +509,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
         else {
             int csize = other.size();
             insertSlotsAt(end, csize);
-            if (other.hasMap()) 
+            if (other.hasMap())
                 ex.invoke(new PAS.FJLMap(other, other.origin, other.fence,
                                          null, array, end - other.origin));
             else
@@ -583,7 +583,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * @param upperBound the upper bound (exclusive)
      * @return operation prefix
      */
-    public ParallelLongArrayWithBounds withBounds(int firstIndex, 
+    public ParallelLongArrayWithBounds withBounds(int firstIndex,
                                                   int upperBound) {
         return super.withBounds(firstIndex, upperBound);
     }

@@ -18,7 +18,7 @@ final class RunState extends AtomicInteger {
     static final int SHUTDOWN   = 1;
     static final int STOPPING   = 2;
     static final int TERMINATED = 4;
-    
+
     boolean isRunning()              { return get() == RUNNING; }
     boolean isShutdown()             { return get() == SHUTDOWN; }
     boolean isStopping()             { return get() == STOPPING; }
@@ -28,7 +28,7 @@ final class RunState extends AtomicInteger {
     boolean transitionToShutdown()   { return transitionTo(SHUTDOWN); }
     boolean transitionToStopping()   { return transitionTo(STOPPING); }
     boolean transitionToTerminated() { return transitionTo(TERMINATED); }
-    
+
     /**
      * Transition to at least the given state. Return true if not
      * already at least given state.

@@ -31,7 +31,7 @@ import java.util.concurrent.locks.*;
  *
  */
 final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
-    
+
     // Status values for sync. We need to keep track of RUNNING status
     // just to make sure callbacks to pool are balanced.
     static final int INITIAL = 0;
@@ -88,7 +88,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         if (sync.transitionToDone() == RUNNING)
             pool.submissionCompleted();
     }
-    
+
     protected V compute() {
         try {
             V ret = null;
@@ -96,7 +96,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
                 pool.submissionStarting();
                 ret = task.forkJoin();
             } // else was cancelled, so result doesn't matter
-            return ret; 
+            return ret;
         } finally {
             complete();
         }
@@ -131,7 +131,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         // through.to acquire, to preserve Submission sync guarantees
         Thread t = Thread.currentThread();
         if (t instanceof ForkJoinWorkerThread)
-            quietlyJoin(); 
+            quietlyJoin();
         sync.acquireSharedInterruptibly(1);
         return task.reportAsFutureResult();
     }
@@ -157,12 +157,12 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
     public V awaitInvoke() {
         Thread t = Thread.currentThread();
         if (t instanceof ForkJoinWorkerThread)
-            quietlyJoin(); 
+            quietlyJoin();
         sync.acquireShared(1);
         return task.reportAsForkJoinResult();
     }
 
-    public void finish(V result) { 
+    public void finish(V result) {
         try {
             this.result = result;
             setDone();
@@ -206,8 +206,8 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         return setDone();
     }
 
-    public V rawResult() { 
-        return result; 
+    public V rawResult() {
+        return result;
     }
 
     public void reinitialize() { // Of dubious value.

@@ -340,5 +340,5 @@ public abstract class ParallelLongArrayWithDoubleMapping extends AbstractParalle
     public Iterable<Double> sequentially() {
         return new SequentiallyAsDouble();
     }
-    
+
 }

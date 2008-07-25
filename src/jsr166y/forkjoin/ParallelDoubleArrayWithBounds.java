@@ -64,7 +64,7 @@ public abstract class ParallelDoubleArrayWithBounds extends ParallelDoubleArrayW
      * @param comparator the comparator
      * @return the index or -1 if not present
      */
-    public abstract int binarySearch(double target, 
+    public abstract int binarySearch(double target,
                                      DoubleComparator comparator);
 
     /**

@@ -16,7 +16,7 @@ import java.lang.reflect.Array;
  * Instances of this class may be constructed only via prefix
  * methods of ParallelArray or its other prefix classes.
  */
-public abstract class ParallelArrayWithFilter<T> 
+public abstract class ParallelArrayWithFilter<T>
     extends ParallelArrayWithMapping<T,T>{
     ParallelArrayWithFilter(ForkJoinExecutor ex, int origin, int fence, T[] array) {
         super(ex, origin, fence, array);
@@ -192,7 +192,7 @@ public abstract class ParallelArrayWithFilter<T>
      */
     public <U,V> boolean hasAllEqualElements
         (ParallelArrayWithMapping<U,V> other) {
-        return withFilter(CommonOps.inequalityPredicate(), 
+        return withFilter(CommonOps.inequalityPredicate(),
                           other).anyIndex() < 0;
     }
 
@@ -204,7 +204,7 @@ public abstract class ParallelArrayWithFilter<T>
      */
     public <U,V> boolean hasAllIdenticalElements
         (ParallelArrayWithMapping<U,V> other) {
-        return withFilter(CommonOps.nonidentityPredicate(), 
+        return withFilter(CommonOps.nonidentityPredicate(),
                           other).anyIndex() < 0;
     }
 

@@ -169,7 +169,7 @@ public abstract class ParallelDoubleArrayWithFilter extends ParallelDoubleArrayW
      */
     public boolean hasAllEqualElements
         (ParallelDoubleArrayWithDoubleMapping other) {
-        return withFilter(CommonOps.doubleInequalityPredicate(), 
+        return withFilter(CommonOps.doubleInequalityPredicate(),
                           other).anyIndex() < 0;
     }
 

@@ -19,7 +19,7 @@ import jsr166y.Phaser;
  * that each perform 500 iterations of an imagined image smoothing
  * operation. Note that the aggregate ImageSmoother task itself is not
  * a CyclicTask.
- * 
+ *
  * <pre>
  * class ImageSmoother extends RecursiveAction {
  *   protected void compute() {
@@ -66,23 +66,23 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     /**
      * Returns the barrier
      */
-    public final Phaser getBarrier() { 
-        return barrier; 
+    public final Phaser getBarrier() {
+        return barrier;
     }
 
     /**
      * Returns the current cycle of the barrier
      */
-    public final int getCycle() { 
-        return barrier.getPhase(); 
+    public final int getCycle() {
+        return barrier.getPhase();
     }
 
     /**
      * Always returns null.
      * @return null
      */
-    public final Void rawResult() { 
-        return null; 
+    public final Void rawResult() {
+        return null;
     }
 
     public final Throwable exec() {
@@ -116,11 +116,11 @@ public abstract class CyclicAction extends ForkJoinTask<Void> {
     /**
      * Equivalent to <tt>finish(null)</tt>.
      */
-    public final void finish() { 
+    public final void finish() {
         setDone();
     }
 
-    public final void finish(Void result) { 
+    public final void finish(Void result) {
         setDone();
     }
 

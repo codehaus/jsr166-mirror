@@ -21,7 +21,7 @@ class PAS {
     private static volatile ForkJoinPool defaultExecutor;
     /** Lock for on-demand initialization of defaultExecutor */
     private static final Object poolLock = new Object();
-    
+
     static ForkJoinExecutor defaultExecutor() {
         ForkJoinPool p = defaultExecutor; // double-check
         if (p == null) {
@@ -53,7 +53,7 @@ class PAS {
      *
      * There are, with a few exceptions, three flavors of each FJBase
      * subclass, prefixed FJO (object reference), FJD (double) and FJL
-     * (long). 
+     * (long).
      */
     static abstract class FJBase extends RecursiveAction {
         final AbstractParallelAnyArray pap;
@@ -71,7 +71,7 @@ class PAS {
             int g = pap.getThreshold();
             int l = lo;
             int h = hi;
-            if (h - l > g) 
+            if (h - l > g)
                 internalCompute(l, h, g);
             else
                 atLeaf(l, h);
@@ -234,7 +234,7 @@ class PAS {
     static final class FJDMap extends FJBase {
         final double[] dest;
         final int offset;
-        FJDMap(AbstractParallelAnyArray pap, int lo, int hi, FJBase next, 
+        FJDMap(AbstractParallelAnyArray pap, int lo, int hi, FJBase next,
                double[] dest, int offset) {
             super(pap, lo, hi, next);
             this.dest = dest;
@@ -251,7 +251,7 @@ class PAS {
     static final class FJLMap extends FJBase {
         final long[] dest;
         final int offset;
-        FJLMap(AbstractParallelAnyArray pap, int lo, int hi, FJBase next, 
+        FJLMap(AbstractParallelAnyArray pap, int lo, int hi, FJBase next,
                long[] dest, int offset) {
             super(pap, lo, hi, next);
             this.dest = dest;
@@ -363,7 +363,7 @@ class PAS {
 
     static final class FJOBinaryIndexMap extends FJBase {
         final IntAndObjectToObject op;
-        FJOBinaryIndexMap(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJOBinaryIndexMap(AbstractParallelAnyArray pap, int lo, int hi,
                           FJBase next, IntAndObjectToObject op) {
             super(pap, lo, hi, next);
             this.op = op;
@@ -378,7 +378,7 @@ class PAS {
 
     static final class FJDBinaryIndexMap extends FJBase {
         final IntAndDoubleToDouble op;
-        FJDBinaryIndexMap(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJDBinaryIndexMap(AbstractParallelAnyArray pap, int lo, int hi,
                           FJBase next, IntAndDoubleToDouble op) {
             super(pap, lo, hi, next);
             this.op = op;
@@ -393,7 +393,7 @@ class PAS {
 
     static final class FJLBinaryIndexMap extends FJBase {
         final IntAndLongToLong op;
-        FJLBinaryIndexMap(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJLBinaryIndexMap(AbstractParallelAnyArray pap, int lo, int hi,
                           FJBase next, IntAndLongToLong op) {
             super(pap, lo, hi, next);
             this.op = op;
@@ -458,7 +458,7 @@ class PAS {
 
     static final class FJOFill extends FJBase {
         final Object value;
-        FJOFill(AbstractParallelAnyArray pap, int lo, int hi, FJBase next, 
+        FJOFill(AbstractParallelAnyArray pap, int lo, int hi, FJBase next,
                 Object value) {
             super(pap, lo, hi, next);
             this.value = value;
@@ -473,7 +473,7 @@ class PAS {
 
     static final class FJDFill extends FJBase {
         final double value;
-        FJDFill(AbstractParallelAnyArray pap, int lo, int hi, FJBase next, 
+        FJDFill(AbstractParallelAnyArray pap, int lo, int hi, FJBase next,
                 double value) {
             super(pap, lo, hi, next);
             this.value = value;
@@ -488,7 +488,7 @@ class PAS {
 
     static final class FJLFill extends FJBase {
         final long value;
-        FJLFill(AbstractParallelAnyArray pap, int lo, int hi, FJBase next, 
+        FJLFill(AbstractParallelAnyArray pap, int lo, int hi, FJBase next,
                 long value) {
             super(pap, lo, hi, next);
             this.value = value;
@@ -507,7 +507,7 @@ class PAS {
         final Object[] other;
         final int otherOffset;
         final BinaryOp combiner;
-        FJOCombineInPlace(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJOCombineInPlace(AbstractParallelAnyArray pap, int lo, int hi,
                           FJBase next, Object[] other, int otherOffset,
                           BinaryOp combiner) {
             super(pap, lo, hi, next);
@@ -528,7 +528,7 @@ class PAS {
         final double[] other;
         final int otherOffset;
         final BinaryDoubleOp combiner;
-        FJDCombineInPlace(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJDCombineInPlace(AbstractParallelAnyArray pap, int lo, int hi,
                           FJBase next, double[] other, int otherOffset,
                           BinaryDoubleOp combiner) {
             super(pap, lo, hi, next);
@@ -549,7 +549,7 @@ class PAS {
         final long[] other;
         final int otherOffset;
         final BinaryLongOp combiner;
-        FJLCombineInPlace(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJLCombineInPlace(AbstractParallelAnyArray pap, int lo, int hi,
                           FJBase next, long[] other, int otherOffset,
                           BinaryLongOp combiner) {
             super(pap, lo, hi, next);
@@ -570,7 +570,7 @@ class PAS {
         final ParallelArrayWithMapping other;
         final int otherOffset;
         final BinaryOp combiner;
-        FJOPACombineInPlace(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJOPACombineInPlace(AbstractParallelAnyArray pap, int lo, int hi,
                             FJBase next,
                             ParallelArrayWithMapping other, int otherOffset,
                             BinaryOp combiner) {
@@ -592,9 +592,9 @@ class PAS {
         final ParallelDoubleArrayWithDoubleMapping other;
         final int otherOffset;
         final BinaryDoubleOp combiner;
-        FJDPACombineInPlace(AbstractParallelAnyArray pap, int lo, int hi, 
-                            FJBase next, 
-                            ParallelDoubleArrayWithDoubleMapping other, 
+        FJDPACombineInPlace(AbstractParallelAnyArray pap, int lo, int hi,
+                            FJBase next,
+                            ParallelDoubleArrayWithDoubleMapping other,
                             int otherOffset, BinaryDoubleOp combiner) {
             super(pap, lo, hi, next);
             this.other = other;
@@ -614,9 +614,9 @@ class PAS {
         final ParallelLongArrayWithLongMapping other;
         final int otherOffset;
         final BinaryLongOp combiner;
-        FJLPACombineInPlace(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJLPACombineInPlace(AbstractParallelAnyArray pap, int lo, int hi,
                             FJBase next,
-                            ParallelLongArrayWithLongMapping other, 
+                            ParallelLongArrayWithLongMapping other,
                             int otherOffset, BinaryLongOp combiner) {
             super(pap, lo, hi, next);
             this.other = other;
@@ -679,7 +679,7 @@ class PAS {
         }
 
         void  atLeaf(int l, int h) {
-            if (pap.hasFilter()) 
+            if (pap.hasFilter())
                 filteredAtLeaf(l, h);
             else {
                 size = h - l;
@@ -761,7 +761,7 @@ class PAS {
             }
         }
         void atLeaf(int l, int h) {
-            if (pap.hasFilter()) 
+            if (pap.hasFilter())
                 filteredAtLeaf(l, h);
             else {
                 size = h - l;
@@ -846,7 +846,7 @@ class PAS {
         }
 
         void  atLeaf(int l, int h) {
-            if (pap.hasFilter()) 
+            if (pap.hasFilter())
                 filteredAtLeaf(l, h);
             else {
                 size = h - l;
@@ -884,7 +884,7 @@ class PAS {
 
     static final class FJCountSelected extends FJBase {
         int count;
-        FJCountSelected(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJCountSelected(AbstractParallelAnyArray pap, int lo, int hi,
                         FJBase next) {
             super(pap, lo, hi, next);
         }
@@ -959,7 +959,7 @@ class PAS {
     // select any
 
     static final class FJSelectAny extends FJSearchBase {
-        FJSelectAny(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJSelectAny(AbstractParallelAnyArray pap, int lo, int hi,
                     FJSearchBase next, AtomicInteger result) {
             super(pap, lo, hi, next, result);
         }
@@ -982,7 +982,7 @@ class PAS {
 
     static final class FJOIndexOf extends FJSearchBase {
         final Object target;
-        FJOIndexOf(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJOIndexOf(AbstractParallelAnyArray pap, int lo, int hi,
                    FJSearchBase next, AtomicInteger result, Object target) {
             super(pap, lo, hi, next, result);
             this.target = target;
@@ -1006,7 +1006,7 @@ class PAS {
 
     static final class FJDIndexOf extends FJSearchBase {
         final double target;
-        FJDIndexOf(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJDIndexOf(AbstractParallelAnyArray pap, int lo, int hi,
                    FJSearchBase next, AtomicInteger result, double target) {
             super(pap, lo, hi, next, result);
             this.target = target;
@@ -1030,7 +1030,7 @@ class PAS {
 
     static final class FJLIndexOf extends FJSearchBase {
         final long target;
-        FJLIndexOf(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJLIndexOf(AbstractParallelAnyArray pap, int lo, int hi,
                    FJSearchBase next, AtomicInteger result, long target) {
             super(pap, lo, hi, next, result);
             this.target = target;
@@ -1197,7 +1197,7 @@ class PAS {
 
     static final class FJOAppendAllDriver extends FJSelectAllDriver {
         Object[] results;
-        FJOAppendAllDriver(AbstractParallelAnyArray pap, int initialOffset, 
+        FJOAppendAllDriver(AbstractParallelAnyArray pap, int initialOffset,
                            Object[] results) {
             super(pap, 0);
             this.results = results;
@@ -1219,7 +1219,7 @@ class PAS {
 
     static final class FJDAppendAllDriver extends FJSelectAllDriver {
         double[] results;
-        FJDAppendAllDriver(AbstractParallelAnyArray pap, int initialOffset, 
+        FJDAppendAllDriver(AbstractParallelAnyArray pap, int initialOffset,
                            double[] results) {
             super(pap, initialOffset);
             this.results = results;
@@ -1240,7 +1240,7 @@ class PAS {
 
     static final class FJLAppendAllDriver extends FJSelectAllDriver {
         long[] results;
-        FJLAppendAllDriver(AbstractParallelAnyArray pap, int initialOffset, 
+        FJLAppendAllDriver(AbstractParallelAnyArray pap, int initialOffset,
                            long[] results) {
             super(pap, initialOffset);
             this.results = results;
@@ -1342,7 +1342,7 @@ class PAS {
         final int[] indices;
         int count;
         FJRemoveAll right;
-        FJRemoveAll(AbstractParallelAnyArray pap, int lo, int hi, 
+        FJRemoveAll(AbstractParallelAnyArray pap, int lo, int hi,
                     FJRemoveAll next, int[] indices) {
             this.pap = pap;
             this.lo = lo;
@@ -1450,7 +1450,7 @@ class PAS {
     static final class UniquifierTable extends AtomicLongArray {
         final AbstractParallelAnyArray pap;
         final boolean byIdentity;
-        UniquifierTable(int size, AbstractParallelAnyArray pap, 
+        UniquifierTable(int size, AbstractParallelAnyArray pap,
                         boolean byIdentity) {
             super(tableSizeFor(size));
             this.pap = pap;
@@ -2780,7 +2780,7 @@ class PAS {
         final Object[] array;
         final Reducer reducer;
         final Object base;
-        FJOScanOp(AbstractParallelAnyArray.OPap pap, 
+        FJOScanOp(AbstractParallelAnyArray.OPap pap,
                   Reducer reducer, Object base) {
             super(pap);
             this.array = pap.array;
@@ -2805,7 +2805,7 @@ class PAS {
     }
 
     static final class FJOCumulateOp extends FJOScanOp {
-        FJOCumulateOp(AbstractParallelAnyArray.OPap pap, 
+        FJOCumulateOp(AbstractParallelAnyArray.OPap pap,
                       Reducer reducer, Object base) {
             super(pap, reducer, base);
         }
@@ -2834,7 +2834,7 @@ class PAS {
     }
 
     static final class FJOPrecumulateOp extends FJOScanOp {
-        FJOPrecumulateOp(AbstractParallelAnyArray.OPap pap, 
+        FJOPrecumulateOp(AbstractParallelAnyArray.OPap pap,
                          Reducer reducer, Object base) {
             super(pap, reducer, base);
         }
@@ -2870,7 +2870,7 @@ class PAS {
         final double[] array;
         final DoubleReducer reducer;
         final double base;
-        FJDScanOp(AbstractParallelAnyArray.DPap pap, 
+        FJDScanOp(AbstractParallelAnyArray.DPap pap,
                   DoubleReducer reducer, double base) {
             super(pap);
             this.array = pap.array;
@@ -2895,7 +2895,7 @@ class PAS {
     }
 
     static final class FJDCumulateOp extends FJDScanOp {
-        FJDCumulateOp(AbstractParallelAnyArray.DPap pap, 
+        FJDCumulateOp(AbstractParallelAnyArray.DPap pap,
                       DoubleReducer reducer, double base) {
             super(pap, reducer, base);
         }
@@ -2924,7 +2924,7 @@ class PAS {
     }
 
     static final class FJDPrecumulateOp extends FJDScanOp {
-        FJDPrecumulateOp(AbstractParallelAnyArray.DPap pap, 
+        FJDPrecumulateOp(AbstractParallelAnyArray.DPap pap,
                          DoubleReducer reducer, double base) {
             super(pap, reducer, base);
         }
@@ -2960,7 +2960,7 @@ class PAS {
         final long[] array;
         final LongReducer reducer;
         final long base;
-        FJLScanOp(AbstractParallelAnyArray.LPap pap, 
+        FJLScanOp(AbstractParallelAnyArray.LPap pap,
                   LongReducer reducer, long base) {
             super(pap);
             this.array = pap.array;
@@ -2985,7 +2985,7 @@ class PAS {
     }
 
     static final class FJLCumulateOp extends FJLScanOp {
-        FJLCumulateOp(AbstractParallelAnyArray.LPap pap, 
+        FJLCumulateOp(AbstractParallelAnyArray.LPap pap,
                       LongReducer reducer, long base) {
             super(pap, reducer, base);
         }
@@ -3014,7 +3014,7 @@ class PAS {
     }
 
     static final class FJLPrecumulateOp extends FJLScanOp {
-        FJLPrecumulateOp(AbstractParallelAnyArray.LPap pap, 
+        FJLPrecumulateOp(AbstractParallelAnyArray.LPap pap,
                          LongReducer reducer, long base) {
             super(pap, reducer, base);
         }

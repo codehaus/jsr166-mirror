@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.*;
  * </pre>
  *
  * You could then sort anArray by creating <tt>new SortTask(anArray, 0,
- * anArray.length-1) </tt> and invoking it in a ForkJoinPool. 
+ * anArray.length-1) </tt> and invoking it in a ForkJoinPool.
  * As a more concrete simple example, the following task increments
  * each element of an array:
  * <pre>
@@ -128,13 +128,13 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
      * Always returns null.
      * @return null
      */
-    public final Void rawResult() { 
-        return null; 
+    public final Void rawResult() {
+        return null;
     }
 
     public final Void forkJoin() {
         try {
-            if (exception == null) 
+            if (exception == null)
                 compute();
         } catch(Throwable rex) {
             setDoneExceptionally(rex);
@@ -158,11 +158,11 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     /**
      * Equivalent to <tt>finish(null)</tt>.
      */
-    public final void finish() { 
+    public final void finish() {
         setDone();
     }
 
-    public final void finish(Void result) { 
+    public final void finish(Void result) {
         setDone();
     }
 

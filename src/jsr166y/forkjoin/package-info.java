@@ -23,7 +23,7 @@
  * available to other threads (normally one per CPU), that help
  * complete the tasks.  In general, the most efficient ForkJoinTasks
  * are those that directly implement this algorithmic design pattern.
- * 
+ *
  * <p>While direct implementation of parallel divide-and-conquer
  * algorithms is often straightforward, it can also be tedious and
  * code-intensive. For this reason, a number of solution "templates"

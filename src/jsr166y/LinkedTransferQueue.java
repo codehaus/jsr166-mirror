@@ -49,7 +49,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private static final long serialVersionUID = -3223113410248163686L;
 
     /*
-     * This is still a work in prgress...
+     * This is still a work in progress...
      *
      * This class extends the approach used in FIFO-mode
      * SynchronousQueues. See the internal documentation, as well as
@@ -160,7 +160,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Puts or takes an item. Used for most queue operations (except
      * poll() and tryTransfer())
-     * @param e the item or if null, signfies that this is a take
+     * @param e the item or if null, signifies that this is a take
      * @param mode the wait mode: NOWAIT, TIMEOUT, WAIT
      * @param nanos timeout in nanosecs, used only if mode is TIMEOUT
      * @return an item, or null on failure
@@ -206,7 +206,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Version of xfer for poll() and tryTransfer, which
-     * simpifies control paths both here and in xfer
+     * simplifies control paths both here and in xfer
      */
     private Object fulfill(Object e) {
         boolean isData = (e != null);
@@ -509,7 +509,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Iterators. Basic strategy os to travers list, treating
+     * Iterators. Basic strategy is to traverse list, treating
      * non-data (i.e., request) nodes as terminating list.
      * Once a valid data node is found, the item is cached
      * so that the next call to next() will return it even

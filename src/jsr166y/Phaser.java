@@ -299,7 +299,7 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given
-     * value, or returns immediately if this barrier is terminated
+     * value, or returns immediately if this barrier is terminated.
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
      */
@@ -337,7 +337,7 @@ public class Phaser {
     /**
      * Awaits the phase of the barrier to advance from the given value
      * or the given timeout elapses, or returns immediately if this
-     * barrier is terminated
+     * barrier is terminated.
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
      * @throws InterruptedException if thread interrupted while waiting
@@ -431,7 +431,7 @@ public class Phaser {
     }
 
     /**
-     * Returns true if this barrier has been terminated
+     * Returns true if this barrier has been terminated.
      * @return true if this barrier has been terminated
      */
     public boolean isTerminated() {
@@ -567,7 +567,7 @@ public class Phaser {
 
     /**
      * The number of times to spin before blocking in timed waits.
-     * The value is empirically derived 
+     * The value is empirically derived.
      */
     static final int maxTimedSpins = (NCPUS < 2)? 0 : 32; 
 

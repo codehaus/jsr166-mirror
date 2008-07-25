@@ -6,6 +6,6 @@
 
 
 /**
- * Preview versions of classes targetted for Java 7.
+ * Preview versions of classes targeted for Java 7.
  */
 package jsr166y;

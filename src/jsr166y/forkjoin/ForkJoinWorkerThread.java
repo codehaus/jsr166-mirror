@@ -840,7 +840,7 @@ public class ForkJoinWorkerThread extends Thread {
      * number generator with the same properties as
      * {@link java.util.Random#nextInt(int)}
      * @param n the bound on the random number to be returned.  Must be
-     *	      positive.
+     *        positive.
      * @return the next pseudorandom, uniformly distributed {@code int}
      *         value between {@code 0} (inclusive) and {@code n} (exclusive)
      *         from this worker's random number generator's sequence
@@ -870,7 +870,7 @@ public class ForkJoinWorkerThread extends Thread {
      * number generator with the same properties as
      * {@link java.util.Random#nextInt(int)}
      * @param n the bound on the random number to be returned.  Must be
-     *	      positive.
+     *        positive.
      * @return the next pseudorandom, uniformly distributed {@code int}
      *         value between {@code 0} (inclusive) and {@code n} (exclusive)
      *         from this worker's random number generator's sequence

@@ -5,8 +5,6 @@
  */
 
 package jsr166y.forkjoin;
-import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 
@@ -20,13 +18,26 @@ final class PoolBarrier {
      */
     static final class QNode {
         QNode next;
-        volatile ForkJoinWorkerThread thread; // nulled to cancel wait
+        volatile Thread thread; // nulled to cancel wait
         final long count;
-        QNode(ForkJoinWorkerThread t, long c) {
-            thread = t;
+        QNode(long c) {
             count = c;
+            thread = Thread.currentThread();
+        }
+        final boolean signal() {
+            Thread t = thread;
+            if (t == null)
+                return false;
+            thread = null;
+            LockSupport.unpark(t);
+            return true;
         }
     }
+
+    /**
+     * The event count
+     */
+    final AtomicLong counter = new AtomicLong();
 
     /**
      * Head of Treiber stack. Even though this variable is very
@@ -36,117 +47,93 @@ final class PoolBarrier {
     final AtomicReference<QNode> head = new AtomicReference<QNode>();
 
     /**
-     * The event count
-     */
-    final AtomicLong counter = new AtomicLong();
-
-    /**
      * Returns the current event count
      */
-    long getCount() {
+    final long getCount() {
         return counter.get();
     }
 
     /**
-     * Waits until event count advances from count, or some
-     * other thread arrives or is already waiting with a different
-     * count.
-     * @param count previous value returned by sync (or 0)
+     * Waits until event count advances from count, or some thread is
+     * waiting on a previous count. Help wake up others on release.
+     * @param prev previous value returned by sync (or 0)
      * @return current event count
      */
-    long sync(ForkJoinWorkerThread thread, long count) {
-        long current = counter.get();
-        if (current == count)
-            enqAndWait(thread, count);
-        if (head.get() != null)
-            releaseAll();
-        return current;
-    }
-
-    /**
-     * Ensures that event count on exit is greater than event
-     * count on entry, and that at least one thread waiting for
-     * count to change is signalled, (It will then in turn
-     * propagate other wakeups.) This lessens stalls by signallers
-     * when they want to be doing something more productive.
-     * However, on contention to release, wakes up all threads to
-     * help forestall further contention.  Note that the counter
-     * is not necessarily incremented by caller.  If attempted CAS
-     * fails, then some other thread already advanced from
-     * incoming value;
-     */
-    void signal() {
-        final AtomicReference<QNode> head = this.head;
-        final AtomicLong counter = this.counter;
-        long c = counter.get();
-        counter.compareAndSet(c, c+1);
-        QNode h = head.get();
-        if (h != null) {
-            ForkJoinWorkerThread t;
-            if (head.compareAndSet(h, h.next) && (t = h.thread) != null) {
-                h.thread = null;
-                LockSupport.unpark(t);
+    final long sync(long prev) {
+        final AtomicReference<QNode> hd = this.head;
+        final AtomicLong ctr = this.counter;
+        long count = ctr.get();
+        if (count == prev) {
+            QNode node = null; // delay construction until first check
+            QNode h;
+            while (((h = hd.get()) == null || h.count == count) &&
+                   ctr.get() == count) {
+                if (node == null)
+                    node = new QNode(count);
+                else if (hd.compareAndSet(node.next = h, node)) {
+                    while (!Thread.interrupted() && node.thread != null &&
+                           ctr.get() == count)
+                        LockSupport.park(this);
+                    node.thread = null;
+                    if (ctr.get() == count) // premature wake up
+                        return count;       // don't release others below
+                    break;
+                }
             }
-            else if (head.get() != null)
-                releaseAll();
         }
+        releaseAll(hd);
+        return count;
     }
 
     /**
-     * Version of signal called from pool. Forces increment and
-     * releases all. It is OK if this is called by worker threads,
-     * but it is heavier than necessary for them.
+     * Increment event count and release waiting threads.
      */
-    void poolSignal() {
+    final void signal() {
         counter.incrementAndGet();
-        releaseAll();
+        releaseAll(head);
     }
 
     /**
-     * Enqueues node and waits unless aborted or signalled.
+     * Try to increment event count and release a waiting thread, if
+     * one exists (released threads will in turn wake up
+     * others). Allows repeated invocation by caller to recheck need
+     * for signal on contention.
+     * @return true if successful
      */
-    private void enqAndWait(ForkJoinWorkerThread thread, long count) {
-        QNode node = new QNode(thread, count);
-        final AtomicReference<QNode> head = this.head;
-        final AtomicLong counter = this.counter;
-        for (;;) {
-            QNode h = head.get();
-            node.next = h;
-            if ((h != null && h.count != count) || counter.get() != count)
+    final boolean trySignal() {
+        QNode q;
+        final AtomicReference<QNode> hd = this.head;
+        final AtomicLong ctr = this.counter;
+        long c = ctr.get();
+        boolean inc = ctr.compareAndSet(c, c+1);
+        // Even if CAS fails, we know that count is now > c, so help release
+        while ((q = hd.get()) != null && q.count <= c) {
+            if (hd.compareAndSet(q, q.next) && q.signal())
                 break;
-            if (head.compareAndSet(h, node)) {
-                while (!thread.isInterrupted() &&
-                       node.thread != null &&
-                       counter.get() == count)
-                    LockSupport.park();
-                node.thread = null;
-                break;
-            }
         }
+        return inc;
     }
 
     /**
-     * Release all waiting threads. Called on exit from sync, as
-     * well as on contention in signal. Regardless of why sync'ing
-     * threads exit, other waiting threads must also recheck for
-     * tasks or completions before resync. Release by chopping off
-     * entire list, and then signalling. This both lessens
-     * contention and avoids unbounded enq/deq races.
+     * Release all waiting threads. Called on exit from sync, as well
+     * as on contention in signal. Regardless of why sync'ing threads
+     * exit, other waiting threads must also recheck for tasks or
+     * completions before resync. Release by chopping off entire list,
+     * and then signalling. This both lessens contention and avoids
+     * unbounded enq/deq races.  This method is static because it is
+     * always called by methods that have already read head, or could
+     * easily do so.
      */
-    private void releaseAll() {
-        final AtomicReference<QNode> head = this.head;
-        QNode p;
-        while ( (p = head.get()) != null) {
-            if (head.compareAndSet(p, null)) {
+    static void releaseAll(AtomicReference<QNode> hd) {
+        QNode q;
+        while ( (q = hd.get()) != null) {
+            if (hd.compareAndSet(q, null)) {
                 do {
-                    ForkJoinWorkerThread t = p.thread;
-                    if (t != null) {
-                        p.thread = null;
-                        LockSupport.unpark(t);
-                    }
-                } while ((p = p.next) != null);
+                    q.signal();
+                } while ((q = q.next) != null);
                 break;
             }
         }
     }
+
 }

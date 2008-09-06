@@ -85,11 +85,14 @@ class PAS {
                 (r = newSubtask(h, rh, r)).fork();
             } while (h - l > g);
             atLeaf(l, h);
+            while (ForkJoinWorkerThread.removeIfNextLocalTask(r)) {
+                r.atLeaf(r.lo, r.hi);
+                onReduce(r);
+                if ((r = r.next) == null)
+                    return;
+            }
             do {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(r))
-                    r.atLeaf(r.lo, r.hi);
-                else
-                    r.join();
+                r.join();
                 onReduce(r);
                 r = r.next;
             } while (r != null);
@@ -939,9 +942,11 @@ class PAS {
             }
             atLeaf(l, h);
             boolean stopping = false;
+            boolean pop = true;
             while (r != null) {
                 stopping |= result.get() >= 0;
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(r)) {
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(r))) {
                     if (!stopping)
                         r.atLeaf(r.lo, r.hi);
                 }
@@ -1069,11 +1074,13 @@ class PAS {
         int count;  // number of matching elements
         int offset;
         boolean isInternal; // true if this is a non-leaf node
+        final int threshold;
 
         FJSelectAll(FJSelectAllDriver driver, int lo, int hi) {
             this.driver = driver;
             this.lo = lo;
             this.hi = hi;
+            this.threshold = driver.pap.getThreshold();
         }
 
         public void compute() {
@@ -1082,7 +1089,7 @@ class PAS {
             FJSelectAllDriver d = driver;
             if (d.phase == 0) {
                 AbstractParallelAnyArray p = d.pap;
-                if (isInternal = (h - l > p.getThreshold()))
+                if (isInternal = (h - l > threshold))
                     internalPhase0();
                 else
                     count = p.leafIndexSelected(l, h, true, d.indices);
@@ -1273,26 +1280,30 @@ class PAS {
         final int hi;
         final int[] indices;
         int offset;
+        final int threshold;
         FJRemoveAllDriver(AbstractParallelAnyArray pap, int lo, int hi) {
             this.pap = pap;
             this.lo = lo;
             this.hi = hi;
             this.indices = new int[hi - lo];
+            this.threshold = pap.getThreshold();
         }
 
         public void compute() {
             FJRemoveAll r = null;
             int l = lo;
             int h = hi;
-            int g = pap.getThreshold();
+            int g = threshold;
             while (h - l > g) {
                 int rh = h;
                 h = (l + h) >>> 1;
                 (r = new FJRemoveAll(pap, h, rh, r, indices)).fork();
             }
             int k = pap.leafMoveSelected(l, h, l, false);
+            boolean pop = true;
             while (r != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(r))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(r)))
                     k = pap.leafMoveSelected(r.lo, r.hi, k, false);
                 else {
                     r.join();
@@ -1342,6 +1353,7 @@ class PAS {
         final int[] indices;
         int count;
         FJRemoveAll right;
+        final int threshold;
         FJRemoveAll(AbstractParallelAnyArray pap, int lo, int hi,
                     FJRemoveAll next, int[] indices) {
             this.pap = pap;
@@ -1349,13 +1361,14 @@ class PAS {
             this.hi = hi;
             this.next = next;
             this.indices = indices;
+            this.threshold = pap.getThreshold();
         }
 
         public void compute() {
             FJRemoveAll r = null;
             int l = lo;
             int h = hi;
-            int g = pap.getThreshold();
+            int g = threshold;
             while (h - l > g) {
                 int rh = h;
                 h = (l + h) >>> 1;
@@ -1363,8 +1376,10 @@ class PAS {
             }
             right = r;
             count = pap.leafIndexSelected(l, h, false, indices);
+            boolean pop = true;
             while (r != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(r))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(r)))
                     r.count = pap.leafIndexSelected
                         (r.lo, r.hi, false, indices);
                 else
@@ -1936,8 +1951,10 @@ class PAS {
                 w[k++] = a[r++];
 
             // join subtasks
+            boolean pop = true;
             while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(rights)))
                     rights.compute();
                 else
                     rights.join();
@@ -2001,9 +2018,10 @@ class PAS {
                 w[k++] = a[l++];
             while (r < rFence)
                 w[k++] = a[r++];
-
+            boolean pop = true;
             while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(rights)))
                     rights.compute();
                 else
                     rights.join();
@@ -2068,9 +2086,10 @@ class PAS {
                 w[k++] = a[l++];
             while (r < rFence)
                 w[k++] = a[r++];
-
+            boolean pop = true;
             while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(rights)))
                     rights.compute();
                 else
                     rights.join();
@@ -2134,9 +2153,10 @@ class PAS {
                 w[k++] = a[l++];
             while (r < rFence)
                 w[k++] = a[r++];
-
+            boolean pop = true;
             while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(rights)))
                     rights.compute();
                 else
                     rights.join();
@@ -2201,9 +2221,10 @@ class PAS {
                 w[k++] = a[l++];
             while (r < rFence)
                 w[k++] = a[r++];
-
+            boolean pop = true;
             while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(rights)))
                     rights.compute();
                 else
                     rights.join();
@@ -2267,9 +2288,10 @@ class PAS {
                 w[k++] = a[l++];
             while (r < rFence)
                 w[k++] = a[r++];
-
+            boolean pop = true;
             while (rights != null) {
-                if (ForkJoinWorkerThread.removeIfNextLocalTask(rights))
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(rights)))
                     rights.compute();
                 else
                     rights.join();
@@ -2594,7 +2616,7 @@ class PAS {
      * maintain the "in" and "out" fields, and *Ops classes perform
      * computations
      */
-    static abstract class FJScan extends AsyncAction {
+    static abstract class FJScan extends BasicAsyncAction {
         static final int CUMULATE = 1;
         static final int SUMMED   = 2;
         static final int FINISHED = 4;
@@ -2602,12 +2624,8 @@ class PAS {
         final FJScan parent;
         final FJScanOp op;
         FJScan left, right;
-        volatile int phase;  // phase/state
         final int lo;
         final int hi;
-
-        static final AtomicIntegerFieldUpdater<FJScan> phaseUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(FJScan.class, "phase");
 
         FJScan(FJScan parent, FJScanOp op, int lo, int hi) {
             this.parent = parent;
@@ -2619,8 +2637,8 @@ class PAS {
         /** Returns true if can CAS CUMULATE bit true */
         final boolean transitionToCumulate() {
             int c;
-            while (((c = phase) & CUMULATE) == 0)
-                if (phaseUpdater.compareAndSet(this, c, c | CUMULATE))
+            while (((c = getTaskState()) & CUMULATE) == 0)
+                if (compareAndSetTaskState(c, c | CUMULATE))
                     return true;
             return false;
         }
@@ -2633,7 +2651,7 @@ class PAS {
                     right = op.newSubtask(this, mid, hi);
                 }
 
-                boolean cumulate = (phase & CUMULATE) != 0;
+                boolean cumulate = (getTaskState() & CUMULATE) != 0;
                 if (cumulate)
                     op.pushDown(this, left, right);
 
@@ -2645,8 +2663,8 @@ class PAS {
             else {
                 int cb;
                 for (;;) { // Establish action: sum, cumulate, or both
-                    int b = phase;
-                    if ((b & FINISHED) != 0) // already done
+                    int b = getTaskState();
+                    if (b < 0 || (b & FINISHED) != 0) // already done
                         return;
                     if ((b & CUMULATE) != 0)
                         cb = FINISHED;
@@ -2654,7 +2672,7 @@ class PAS {
                         cb = (SUMMED|FINISHED);
                     else
                         cb = SUMMED;
-                    if (phaseUpdater.compareAndSet(this, b, b|cb))
+                    if (compareAndSetTaskState(b, b|cb))
                         break;
                 }
 
@@ -2674,7 +2692,7 @@ class PAS {
                             ch.finish();
                         break;
                     }
-                    int pb = par.phase;
+                    int pb = par.getTaskState();
                     if ((pb & cb & FINISHED) != 0) { // both finished
                         ch = par;
                         par = par.parent;
@@ -2686,7 +2704,7 @@ class PAS {
                              par.lo == op.origin)? CUMULATE : 0;
                         int nextPhase = pb|cb|refork;
                         if (pb == nextPhase ||
-                            phaseUpdater.compareAndSet(par, pb, nextPhase)) {
+                            par.compareAndSetTaskState(pb, nextPhase)) {
                             if (refork != 0)
                                 par.fork();
                             cb = SUMMED; // drop finished bit
@@ -2694,7 +2712,7 @@ class PAS {
                             par = par.parent;
                         }
                     }
-                    else if (phaseUpdater.compareAndSet(par, pb, pb|cb))
+                    else if (par.compareAndSetTaskState(pb, pb|cb))
                         break;
                 }
             }
@@ -2766,7 +2784,7 @@ class PAS {
         FJScanOp(AbstractParallelAnyArray pap) {
             this.origin = pap.origin;
             this.fence = pap.fence;
-            this.threshold = pap.getThreshold();
+            this.threshold = pap.computeThreshold();
         }
         abstract void pushDown(FJScan parent, FJScan left, FJScan right);
         abstract void pushUp(FJScan parent, FJScan left, FJScan right);

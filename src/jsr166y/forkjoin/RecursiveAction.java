@@ -78,7 +78,7 @@ import java.util.concurrent.atomic.*;
  * double sumOfSquares(ForkJoinPool pool, double[] array) {
  *   int n = array.length;
  *   int seqSize = 1 + n / (8 * pool.getParallelismLevel());
- *   Applyer a = new Applyer(array, 0, n-1, seqSize, null);
+ *   Applyer a = new Applyer(array, 0, n, seqSize, null);
  *   pool.invoke(a);
  *   return a.result;
  * }
@@ -86,7 +86,7 @@ import java.util.concurrent.atomic.*;
  * class Applyer extends RecursiveAction {
  *   final double[] array;
  *   final int lo, hi, seqSize;
- *   int result;
+ *   double result;
  *   Applyer next; // keeps track of right-hand-side tasks
  *   Applyer(double[] array, int lo, int hi, int seqSize, Applyer next) {
  *     this.array = array; this.lo = lo; this.hi = hi;
@@ -98,7 +98,7 @@ import java.util.concurrent.atomic.*;
  *     int h = hi;
  *     Applyer right = null;
  *     while (h - l &gt; seqSize) { // fork right-hand sides
- *        int mid = (l + h) &gt;&gt;&gt 1;
+ *        int mid = (l + h) &gt;&gt;&gt; 1;
  *        right = new Applyer(array, mid, h, seqSize, right);
  *        right.fork();
  *        h = mid;
@@ -119,10 +119,125 @@ import java.util.concurrent.atomic.*;
 public abstract class RecursiveAction extends ForkJoinTask<Void> {
     /**
      * The main computation performed by this task.  While you must
-     * define this method, you should not in general call it directly.
-     * To immediately perform the computation, use <tt>forkJoin</tt>.
+     * define this method, you should not call it directly unless this
+     * task will never be forked or joined. In general, to immediately
+     * perform the computation, use <tt>forkJoin</tt>.
      */
     protected abstract void compute();
+
+    /**
+     * Forks both tasks and returns when <tt>isDone</tt> holds for
+     * both.. If both tasks encounter exceptions, only one of them
+     * (arbitrarily chosen) is thrown from this method.  You can check
+     * individual status using method <tt>getException</tt>.  This
+     * method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result in
+     * exceptions or errors including ClassCastException.
+     * @param t1 one task
+     * @param t2 the other task
+     * @throws NullPointerException if t1 or t2 are null.
+     */
+    public static void forkJoin(RecursiveAction t1, RecursiveAction t2) {
+        ((ForkJoinWorkerThread)(Thread.currentThread())).doForkJoin(t1, t2);
+    }
+
+    /**
+     * Forks all tasks in the array, returning when <tt>isDone</tt>
+     * holds for all of them. If any task encounters an exception,
+     * others are cancelled.  This method may be invoked only from
+     * within other ForkJoinTask computations. Attempts to invoke in
+     * other contexts result in exceptions or errors including
+     * ClassCastException.
+     * @throws NullPointerException if array or any element of array are null
+     */
+    public static void forkJoin(RecursiveAction[] tasks) {
+        Throwable ex = null;
+        int last = tasks.length - 1;
+        for (int i = last; i >= 0; --i) {
+            RecursiveAction t = tasks[i];
+            if (t == null) {
+                if (ex == null)
+                    ex = new NullPointerException();
+            }
+            else if (i != 0)
+                t.fork();
+            else {
+                // Prod pool to improve ramp-up when there a lot of tasks
+                ForkJoinWorkerThread.advertiseWork();
+                if (!t.exec() && ex == null)
+                    ex = getException(t);
+            }
+        }
+        boolean pop = true;
+        for (int i = 1; i <= last; ++i) {
+            RecursiveAction t = tasks[i];
+            if (t != null) {
+                boolean ok;
+                if (ex != null)
+                    t.cancel();
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(t)))
+                    ok = t.exec();
+                else {
+                    t.quietlyJoin();
+                    ok = t.completedNormally();
+                }
+                if (!ok && ex == null)
+                    ex = getException(t);
+            }
+        }
+        if (ex != null)
+            rethrowException(ex);
+    }
+
+    /**
+     * Forks all tasks in the list, returning when <tt>isDone</tt>
+     * holds for all of them. If any task encounters an exception,
+     * others are cancelled.
+     * This method may be invoked only from within other ForkJoinTask
+     * computations. Attempts to invoke in other contexts result
+     * in exceptions or errors including ClassCastException.
+     * @throws NullPointerException if list or any element of list are null.
+     */
+    public static void forkJoin(List<? extends RecursiveAction> tasks) {
+        Throwable ex = null;
+        int last = tasks.size() - 1;
+        for (int i = last; i >= 0; --i) {
+            RecursiveAction t = tasks.get(i);
+            if (t == null) {
+                if (ex == null)
+                    ex = new NullPointerException();
+            }
+            else if (i != 0)
+                t.fork();
+            else {
+                // Prod pool to improve ramp-up when there a lot of tasks
+                ForkJoinWorkerThread.advertiseWork();
+                if (!t.exec() && ex == null)
+                    ex = getException(t);
+            }
+        }
+        boolean pop = true;
+        for (int i = 1; i <= last; ++i) {
+            RecursiveAction t = tasks.get(i);
+            if (t != null) {
+                boolean ok;
+                if (ex != null)
+                    t.cancel();
+                if (pop &&
+                    (pop = ForkJoinWorkerThread.removeIfNextLocalTask(t)))
+                    ok = t.exec();
+                else {
+                    t.quietlyJoin();
+                    ok = t.completedNormally();
+                }
+                if (!ok && ex == null)
+                    ex = getException(t);
+            }
+        }
+        if (ex != null)
+            rethrowException(ex);
+    }
 
     /**
      * Always returns null.
@@ -133,41 +248,29 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     }
 
     public final Void forkJoin() {
-        try {
-            if (exception == null)
+        if (status >= 0) {
+            try {
                 compute();
-        } catch(Throwable rex) {
-            setDoneExceptionally(rex);
+                setDone();
+                return null;
+            } catch(Throwable rex) {
+                setDoneExceptionally(rex);
+            }
         }
-        Throwable ex = setDone();
-        if (ex != null)
-            rethrowException(ex);
-        return null;
+        return reportAsForkJoinResult();
     }
 
-    public final Throwable exec() {
-        try {
-            if (exception == null)
+    final boolean exec() {
+        if (status >= 0) {
+            try {
                 compute();
-        } catch(Throwable rex) {
-            return setDoneExceptionally(rex);
+                setDone();
+                return true;
+            } catch(Throwable rex) {
+                setDoneExceptionally(rex);
+            }
         }
-        return setDone();
+        return false;
     }
-
-    /**
-     * Equivalent to <tt>finish(null)</tt>.
-     */
-    public final void finish() {
-        setDone();
-    }
-
-    public final void finish(Void result) {
-        setDone();
-    }
-
-    public final void finishExceptionally(Throwable ex) {
-        checkedSetDoneExceptionally(ex);
-    }
-
+    
 }

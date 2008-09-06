@@ -58,43 +58,28 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
     }
 
     public final V forkJoin() {
-        V v = null;
-        if (exception == null) {
+        if (status == 0) {
             try {
-                result = v = compute();
+                result = compute();
+                setDone();
             } catch(Throwable rex) {
                 setDoneExceptionally(rex);
             }
         }
-        Throwable ex = setDone();
-        if (ex != null)
-            rethrowException(ex);
-        return v;
+        return reportAsForkJoinResult();
     }
 
-    public final Throwable exec() {
-        if (exception == null) {
-            try {
-                result = compute();
-            } catch(Throwable rex) {
-                return setDoneExceptionally(rex);
-            }
+    final boolean exec() {
+        if (status != 0)
+            return false;
+        try {
+            result = compute();
+            setDone();
+            return true;
+        } catch(Throwable rex) {
+            setDoneExceptionally(rex);
+            return false;
         }
-        return setDone();
-    }
-
-    public final void finish(V result) {
-        this.result = result;
-        setDone();
-    }
-
-    public final void finishExceptionally(Throwable ex) {
-        checkedSetDoneExceptionally(ex);
-    }
-
-    public final void reinitialize() {
-        result = null;
-        super.reinitialize();
     }
 
 }

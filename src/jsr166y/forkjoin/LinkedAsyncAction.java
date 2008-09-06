@@ -10,12 +10,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 /**
- * Resultless ForkJoinTasks with explicit completions, that may be
- * linked in parent-child relationships.  Unlike other kinds of tasks,
- * LinkedAsyncActions do not intrinsically complete upon exit from
- * their <tt>compute</tt> methods, but instead require explicit
- * invocation of their <tt>finish</tt> methods and completion of
- * subtasks.
+ * AsyncActions that may be linked in parent-child relationships.
  *
  * <p> Upon construction, an LinkedAsyncAction may register as a
  * subtask of a given parent task. In this case, completion of this
@@ -64,19 +59,16 @@ import java.util.concurrent.atomic.*;
  * </pre>
  *
  */
-public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
+public abstract class LinkedAsyncAction extends AsyncAction {
     /**
      * Parent to notify on completion
      */
     private LinkedAsyncAction parent;
 
-    /**
-     * Count of outstanding subtask joins
+    /*
+     * Note: we also piggyback pending join count on
+     * ForkJoinTask.status field.
      */
-    private volatile int pendingCount;
-
-    private static final AtomicIntegerFieldUpdater<LinkedAsyncAction> pendingCountUpdater =
-        AtomicIntegerFieldUpdater.newUpdater(LinkedAsyncAction.class, "pendingCount");
 
     /**
      * Creates a new action with no parent. (You can add a parent
@@ -94,7 +86,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     protected LinkedAsyncAction(LinkedAsyncAction parent) {
         this.parent = parent;
         if (parent != null)
-            pendingCountUpdater.incrementAndGet(parent);
+            parent.incrementStatus();
     }
 
     /**
@@ -110,7 +102,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     protected LinkedAsyncAction(LinkedAsyncAction parent, boolean register) {
         this.parent = parent;
         if (parent != null && register)
-            pendingCountUpdater.incrementAndGet(parent);
+            parent.incrementStatus();
     }
 
     /**
@@ -130,20 +122,13 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     protected LinkedAsyncAction(LinkedAsyncAction parent,
                           boolean register,
                           int pending) {
+        if (pending < 0)
+            throw new IllegalArgumentException();
         this.parent = parent;
-        pendingCount = pending;
+        status = pending;
         if (parent != null && register)
-            pendingCountUpdater.incrementAndGet(parent);
+            parent.incrementStatus();
     }
-
-    /**
-     * The asynchronous part of the computation performed by this
-     * task.  While you must define this method, you should not in
-     * general call it directly (although you can invoke immediately
-     * via <tt>exec</tt>.) If this method throws a Throwable,
-     * <tt>finishExceptionally</tt> is immediately invoked.
-     */
-    protected abstract void compute();
 
     /**
      * Overridable callback action triggered by <tt>finish</tt>.  Upon
@@ -173,13 +158,6 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Equivalent to <tt>finish(null)</tt>.
-     */
-    public final void finish() {
-        finish(null);
-    }
-
-    /**
      * Completes this task. If the pending subtask completion count is
      * zero, invokes <tt>onCompletion</tt>, then causes this task to
      * be joinable (<tt>isDone</tt> becomes true), and then
@@ -187,14 +165,12 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * exception is encountered in any <tt>onCompletion</tt>
      * invocation, that task and its ancestors
      * <tt>finishExceptionally</tt>.
-     *
-     * @param result must be <tt>null</tt>.
      */
-    public final void finish(Void result) {
+    public final void finish() {
         LinkedAsyncAction a = this;
         while (a != null && !a.isDone()) {
-            int c = a.pendingCount;
-            if (c == 0) {
+            int c = a.status;
+            if (c <= 0) {
                 try {
                     a.onCompletion();
                 } catch (Throwable rex) {
@@ -204,7 +180,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
                 a.setDone();
                 a = a.parent;
             }
-            else if (pendingCountUpdater.compareAndSet(a, c, c-1))
+            else if (a.casStatus(c, c-1))
                 return;
         }
     }
@@ -223,19 +199,27 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * <tt>onException</tt> does so.
      */
     public final void finishExceptionally(Throwable ex) {
-        if (ex == null)
-            throw new NullPointerException();
         if (!(ex instanceof RuntimeException) && !(ex instanceof Error))
             throw new IllegalArgumentException(ex);
+        doFinishExceptionally(ex);
+    }
+
+    /**
+     * Internal version without argument screening
+     */
+    private void doFinishExceptionally(Throwable ex) {
         LinkedAsyncAction a = this;
-        while (a.setDoneExceptionally(ex) == ex) {
+        for (;;) {
+            if (a.status == ForkJoinTask.HAS_EXCEPTION)
+                break;
+            a.setDoneExceptionally(ex);
             boolean up = a.onException(); // abort if this throws
             a = a.parent;
             if (a == null)
-                return;
+                break;
             if (!up) {
                 a.finish();
-                return;
+                break;
             }
         }
     }
@@ -253,15 +237,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * @return the number of subtasks that have not yet completed.
      */
     public final int getPendingSubtaskCount() {
-        return pendingCount;
-    }
-
-    /**
-     * Always returns null.
-     * @return null
-     */
-    public final Void rawResult() {
-        return null;
+        return status;
     }
 
     /**
@@ -270,8 +246,6 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      */
     public void reinitialize() {
         super.reinitialize();
-        if (pendingCount != 0)
-            pendingCount = 0;
     }
 
     /**
@@ -280,8 +254,10 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * @param pending the number of pending joins
      */
     public void reinitialize(int pending) {
+        if (pending < 0)
+            throw new IllegalArgumentException();
         super.reinitialize();
-        pendingCount = pending;
+        status = pending;
     }
 
     /**
@@ -292,11 +268,9 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      */
     public void reinitialize(LinkedAsyncAction parent, boolean register) {
         super.reinitialize();
-        if (pendingCount != 0)
-            pendingCount = 0;
         this.parent = parent;
         if (parent != null && register)
-            pendingCountUpdater.incrementAndGet(parent);
+            parent.incrementStatus();
     }
 
     /**
@@ -310,28 +284,23 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     public void reinitialize(LinkedAsyncAction parent,
                              boolean register,
                              int pending) {
+        if (pending < 0)
+            throw new IllegalArgumentException();
         super.reinitialize();
-        pendingCount = pending;
+        status = pending;
         this.parent = parent;
         if (parent != null && register)
-            pendingCountUpdater.incrementAndGet(parent);
+            parent.incrementStatus();
     }
 
-
-    public final Void forkJoin() {
-        exec();
-        return join();
-    }
-
-    public final Throwable exec() {
-        if (exception == null) {
+    final boolean exec() {
+        if (status >= 0) {
             try {
                 compute();
             } catch(Throwable rex) {
-                finishExceptionally(rex);
+                doFinishExceptionally(rex);
             }
         }
-        return exception;
+        return false;
     }
-
 }

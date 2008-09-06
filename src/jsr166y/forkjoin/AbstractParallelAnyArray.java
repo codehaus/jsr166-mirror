@@ -53,7 +53,7 @@ public abstract class AbstractParallelAnyArray {
     final ForkJoinExecutor ex;
     final int origin;
     int fence;
-    int threshold; // subtask split control; computed on first use
+    int threshold;
 
     AbstractParallelAnyArray(ForkJoinExecutor ex, int origin, int fence) {
         this.ex = ex;
@@ -106,13 +106,19 @@ public abstract class AbstractParallelAnyArray {
      * Returns size threshold for splitting into subtask.  By
      * default, uses about 8 times as many tasks as threads
      */
+    final int computeThreshold() {
+        int n = fence - origin;
+        int p = ex.getParallelismLevel();
+        return threshold = (p > 1) ? (1 + n / (p << 3)) : n;
+    }
+
+    /**
+     * Returns lazily computed threshold.
+     */
     final int getThreshold() {
         int t = threshold;
-        if (t == 0) {
-            int n = fence - origin;
-            int p = ex.getParallelismLevel();
-            threshold = t = (p > 1) ? (1 + n / (p << 3)) : n;
-        }
+        if (t == 0) 
+            t = computeThreshold();
         return t;
     }
 

@@ -71,35 +71,46 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
     private final ForkJoinTask<V> task;
     private final ForkJoinPool pool;
     private final Sync sync;
-    private volatile V result;
+    private V result;
 
     Submission(ForkJoinTask<V> t, ForkJoinPool p) {
-        t.setStolen(); // All submitted tasks treated as stolen
         task = t;
         pool = p;
         sync = new Sync();
     }
 
     /**
-     * Transition sync and notify pool.that task finished, only if it
-     * was initially notified that task started.
+     * Run the inner tssk.
      */
-    private void complete() {
-        if (sync.transitionToDone() == RUNNING)
-            pool.submissionCompleted();
-    }
-
-    protected V compute() {
+    private void runTask() {
         try {
-            V ret = null;
             if (sync.transitionToRunning()) {
                 pool.submissionStarting();
-                ret = task.forkJoin();
-            } // else was cancelled, so result doesn't matter
-            return ret;
+                if (status >= 0) {
+                    result = task.forkJoin();
+                    setDone();
+                }
+            } 
+        } catch(Throwable rex) {
+            setDoneExceptionally(rex);
         } finally {
-            complete();
+            if (sync.transitionToDone() == RUNNING)
+                pool.submissionCompleted();
         }
+    }
+
+    public V forkJoin() {
+        runTask();
+        return reportAsForkJoinResult();
+    }
+
+    final boolean exec() {
+        runTask();
+        return completedNormally();
+    }
+
+    public V rawResult() {
+        return result;
     }
 
     /**
@@ -107,14 +118,14 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
      */
     public void cancel() {
         try {
-            // Don't bother trying to cancel if already done
-            if (getException() == null && !sync.isDone()) {
-                // avoid recursive call to cancel
-                setDoneExceptionally(new CancellationException());
+            if (!sync.isDone()) {
+                setCancelled(); // avoid recursive call to cancel
                 task.cancel();
             }
         } finally {
-            complete();
+            // Claim completion even if async cancel
+            if (sync.transitionToDone() == RUNNING)
+                pool.submissionCompleted();
         }
     }
 
@@ -133,7 +144,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         if (t instanceof ForkJoinWorkerThread)
             quietlyJoin();
         sync.acquireSharedInterruptibly(1);
-        return task.reportAsFutureResult();
+        return reportAsFutureResult();
     }
 
     public V get(long timeout, TimeUnit unit)
@@ -148,7 +159,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         }
         else if (!sync.tryAcquireSharedNanos(1, nanos))
             throw new TimeoutException();
-        return task.reportAsFutureResult();
+        return reportAsFutureResult();
     }
 
     /**
@@ -159,62 +170,15 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         if (t instanceof ForkJoinWorkerThread)
             quietlyJoin();
         sync.acquireShared(1);
-        return task.reportAsForkJoinResult();
+        return reportAsForkJoinResult();
     }
 
-    public void finish(V result) {
-        try {
-            this.result = result;
-            setDone();
-        } finally {
-            complete();
-        }
-    }
-
-    public void finishExceptionally(Throwable ex) {
-        try {
-            setDoneExceptionally(ex);
-            task.setDoneExceptionally(ex);
-        } finally {
-            complete();
-        }
-    }
-
-    public V forkJoin() {
-        V v = null;
-        if (exception == null) {
-            try {
-                result = v = compute();
-            } catch(Throwable rex) {
-                finishExceptionally(rex);
-            }
-        }
-        Throwable ex = setDone();
-        if (ex != null)
-            rethrowException(ex);
-        return v;
-    }
-
-    public Throwable exec() {
-        if (exception == null) {
-            try {
-                result = compute();
-            } catch(Throwable rex) {
-                return setDoneExceptionally(rex);
-            }
-        }
-        return setDone();
-    }
-
-    public V rawResult() {
-        return result;
-    }
-
-    public void reinitialize() { // Of dubious value.
+    public void reinitialize() { // Required, but of dubious value.
         result = null;
         sync.reset();
         super.reinitialize();
     }
+
 
 }
 

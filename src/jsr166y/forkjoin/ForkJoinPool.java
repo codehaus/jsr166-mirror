@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
+import sun.misc.Unsafe;
+import java.lang.reflect.*;
 
 
 /**
@@ -105,18 +107,21 @@ public class ForkJoinPool implements ForkJoinExecutor {
         new AtomicInteger();
 
     /**
-     * Creation factory for worker threads.
-     */
-    private final ForkJoinWorkerThreadFactory factory;
-
-    /**
      * Array holding all worker threads in the pool. Acts similarly to
      * a CopyOnWriteArrayList -- updates are protected by workerLock.
      * But it additionally allows in-place nulling out or replacements
      * of slots upon termination.  All uses of this array should first
-     * assign as local, and must screen out nulls.
+     * assign as local, and must screen out nulls. Note:
+     * ForkJoinWorkerThreads directly access this array.
      */
     volatile ForkJoinWorkerThread[] workers;
+
+    /**
+     * Head and tail of embedded submission queue. (The queue is
+     * embedded to avoid hostile memory placements.)
+     */
+    volatile SQNode sqHead;
+    volatile SQNode sqTail;
 
     /**
      * Lock protecting access to workers.
@@ -129,28 +134,11 @@ public class ForkJoinPool implements ForkJoinExecutor {
     private final Condition termination;
 
     /**
-     * The current targeted pool size. Updated only under worker lock
-     * but volatile to allow concurrent reads.
-     */
-    volatile int poolSize;
-
-    /**
-     * The number of workers that have started but not yet terminated
-     * Accessed only under workerLock.
-     */
-    private int runningWorkers;
-
-    /**
-     * Queue of external submissions.
-     */
-    private final SubmissionQueue submissionQueue;
-
-    /**
      * Lifecycle control.
      */
     private final RunState runState;
 
-    /**
+   /**
      * Pool wide synchronization control. Workers are enabled to look
      * for work when the barrier's count is incremented. If they fail
      * to find some, they may wait for next count. Synchronization
@@ -160,14 +148,14 @@ public class ForkJoinPool implements ForkJoinExecutor {
      *   - Submission of a new task
      *   - Termination of pool or worker
      *   - A worker pushing a task on an empty per-worker queue
-     *   - A worker completing a stolen or cancelled task
      *
      * So, signals and waits occur relatively rarely during normal
      * processing, which minimizes contention on this global
      * synchronizer. Even so, the PoolBarrier is designed to minimize
-     * blockages by threads that have better things to do.
+     * blockages by threads that have better things to do.  Note that
+     * ForkJoinWorkerThreads access and cache this field.
      */
-    private final PoolBarrier poolBarrier;
+    final PoolBarrier poolBarrier;
 
     /**
      * The number of submissions that are running in pool.
@@ -175,22 +163,42 @@ public class ForkJoinPool implements ForkJoinExecutor {
     private final AtomicInteger runningSubmissions;
 
     /**
-     * Number of workers that are (probably) executing tasks.
-     * Atomically incremented when a worker gets a task to run, and
-     * decremented when worker has no tasks and cannot find any.
-     */
-    private final AtomicInteger activeWorkerCounter;
-
-    /**
      * The uncaught exception handler used when any worker
-     * abruptly terminates
+     * abrupty terminates
      */
     private Thread.UncaughtExceptionHandler ueh;
+
+    /**
+     * Creation factory for worker threads.
+     */
+    private final ForkJoinWorkerThreadFactory factory;
+
+    /**
+     * Number of workers that are (probably) executing tasks.
+     * Atomically incremented when a worker gets a task to run, and
+     * decremented when worker has no tasks and cannot find any.  This
+     * is updated only via CAS. It is inlined here rather than a
+     * stand-alone field to minimize memory thrashing when it is
+     * heavily contended during ramp-up/down of tasks.
+     */
+    volatile int activeCount;
+
+    /**
+     * The current targetted pool size. Updated only under worker lock
+     * but volatile to allow concurrent reads.
+     */
+    volatile int poolSize;
 
     /**
      * Pool number, just for assigning useful names to worker threads
      */
     private final int poolNumber;
+
+    /**
+     * The number of workers that have started but not yet terminated
+     * Accessed only under workerLock.
+     */
+    private int runningWorkers;
 
     /**
      * Return a good size for worker array given pool size.
@@ -212,7 +220,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
         Thread.UncaughtExceptionHandler h = ueh;
         if (h != null)
             w.setUncaughtExceptionHandler(h);
-        activeWorkerCounter.incrementAndGet(); // initially active state
         return w;
     }
 
@@ -289,14 +296,15 @@ public class ForkJoinPool implements ForkJoinExecutor {
         this.poolSize = poolSize;
         this.factory = factory;
         this.poolNumber = poolNumberGenerator.incrementAndGet();
+        this.runningSubmissions = new AtomicInteger();
         this.workers = new ForkJoinWorkerThread[workerSizeFor(poolSize)];
         this.poolBarrier = new PoolBarrier();
-        this.activeWorkerCounter = new AtomicInteger();
-        this.runningSubmissions = new AtomicInteger();
-        this.submissionQueue = new SubmissionQueue();
         this.runState = new RunState();
         this.workerLock = new ReentrantLock();
         this.termination = workerLock.newCondition();
+        SQNode dummy = new SQNode(null);
+        this.sqHead = dummy;
+        this.sqTail = dummy;
         createAndStartWorkers(poolSize);
     }
 
@@ -362,8 +370,8 @@ public class ForkJoinPool implements ForkJoinExecutor {
         if (runState.isAtLeastShutdown())
             throw new RejectedExecutionException();
         Submission<T> job = new Submission<T>(task, this);
-        submissionQueue.add(job);
-        poolBarrier.poolSignal();
+        addSubmission(job);
+        poolBarrier.signal();
         return job;
     }
 
@@ -459,19 +467,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Update cached poolSize to all workers
-     */
-    private void broadcastPoolSize() {
-        int ps = poolSize;
-        ForkJoinWorkerThread[] ws = workers;
-        for (int i = 0; i < ws.length; ++i) {
-            ForkJoinWorkerThread w = ws[i];
-            if (w != null)
-                w.setPoolSize(ps);
-        }
-    }
-
-    /**
      * Tries to adds the indicated number of new worker threads to the
      * pool. This method may be used to increase the amount of
      * parallelism available to tasks. The actual number of
@@ -510,10 +505,8 @@ public class ForkJoinPool implements ForkJoinExecutor {
         } finally {
             lock.unlock();
         }
-        broadcastPoolSize();
         return nadded;
     }
-
 
     /**
      * Tries to remove the indicated number of worker threads from the
@@ -553,7 +546,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
         } finally {
             lock.unlock();
         }
-        broadcastPoolSize();
         return nremoved;
     }
 
@@ -745,7 +737,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     private void tryTerminateOnShutdown() {
         if (runState.isAtLeastShutdown() &&
             runningSubmissions.get() == 0 &&
-            submissionQueue.isEmpty() &&
+            !hasQueuedSubmissions() &&
             runningSubmissions.get() == 0) // recheck
             terminate();
     }
@@ -755,8 +747,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
      */
     private void cancelQueuedSubmissions() {
         Submission<?> task;
-        while (!submissionQueue.isEmpty() &&
-               (task = submissionQueue.poll()) != null)
+        while (hasQueuedSubmissions() && (task = pollSubmission()) != null)
             task.cancel(false);
     }
 
@@ -797,7 +788,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
         } finally {
             lock.unlock();
         }
-        poolBarrier.poolSignal();
+        poolBarrier.signal();
     }
 
     /**
@@ -840,7 +831,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * @return true if all threads are currently idle
      */
     public final boolean isQuiescent() {
-        return activeWorkerCounter.get() == 0;
+        return activeCount == 0;
     }
 
     /**
@@ -849,8 +840,8 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * the number of active threads.
      * @return the number of active threads.
      */
-    public int getActiveThreadCount() {
-        return activeWorkerCounter.get();
+    public final int getActiveThreadCount() {
+        return activeCount;
     }
 
     /**
@@ -859,8 +850,8 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * number of idle threads.
      * @return the number of idle threads.
      */
-    public int getIdleThreadCount() {
-        return poolSize - activeWorkerCounter.get();
+    public final int getIdleThreadCount() {
+        return poolSize - activeCount;
     }
 
     /**
@@ -905,15 +896,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Returns true if there are any tasks submitted to this pool
-     * that have not yet begun executing.
-     * @return <tt>true</tt> if there are any queued submissions.
-     */
-    public boolean hasQueuedSubmissions() {
-        return !submissionQueue.isEmpty();
-    }
-
-    /**
      * Returns the number of tasks that have been submitted (via
      * <tt>submit</tt> or <tt>invoke</tt>) and are currently executing
      * in the pool.
@@ -930,36 +912,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
      */
     public ForkJoinWorkerThreadFactory getFactory() {
         return factory;
-    }
-
-    // Methods callable from workers.
-
-    /**
-     * Return current workers array (not cached by workers)
-     */
-    final ForkJoinWorkerThread[] getWorkers() {
-        return workers;
-    }
-
-    /**
-     * Return submission queue (not cached by workers)
-     */
-    final SubmissionQueue getSubmissionQueue() {
-        return submissionQueue;
-    }
-
-    /**
-     * Return counter (cached by workers)
-     */
-    final AtomicInteger getActiveWorkerCounter() {
-        return activeWorkerCounter;
-    }
-
-    /**
-     * Return counter (cached by workers)
-     */
-    final PoolBarrier getPoolBarrier() {
-        return poolBarrier;
     }
 
     // Callbacks from submissions
@@ -982,107 +934,134 @@ public class ForkJoinPool implements ForkJoinExecutor {
 
 
     /**
-     * SubmissionQueues hold submissions not yet started by
-     * workers. This is a variant of an M&S queue supporting
-     * a fast check for apparent emptiness.
+     * Embedded submission queue holds submissions not yet started by
+     * workers. This is a variant of an Michael/Scott queue that
+     * supports a fast check for apparent emptiness.  This class
+     * opportunistically subclasses AtromicReference for next-field
      */
-    static final class SubmissionQueue {
+    static final class SQNode extends AtomicReference<SQNode> {
+        Submission<?> submission;
+        SQNode(Submission<?> s) { submission = s; }
+    }
 
-        /** Opportunistically subclasses AtomicReference for next-field */
-        static final class SQNode extends AtomicReference<SQNode> {
-            Submission<?> submission;
-            SQNode(Submission<?> s) { submission = s; }
-        }
+    /**
+     * Quick check for likely non-emptiness.  Returns true if an
+     * add completed but not yet fully taken.
+     */
+    final boolean mayHaveQueuedSubmissions() {
+        return sqHead != sqTail;
+    }
 
-        private volatile SQNode head;
-        private volatile SQNode tail;
-
-        SubmissionQueue() {
-            SQNode dummy = new SQNode(null);
-            head = dummy;
-            tail = dummy;
-        }
-
-        private static final
-            AtomicReferenceFieldUpdater<SubmissionQueue, SQNode>
-            tailUpdater =
-            AtomicReferenceFieldUpdater.newUpdater
-            (SubmissionQueue.class, SQNode.class, "tail");
-        private static final
-            AtomicReferenceFieldUpdater<SubmissionQueue, SQNode>
-            headUpdater =
-            AtomicReferenceFieldUpdater.newUpdater
-            (SubmissionQueue.class,  SQNode.class, "head");
-
-        private boolean casTail(SQNode cmp, SQNode val) {
-            return tailUpdater.compareAndSet(this, cmp, val);
-        }
-
-        private boolean casHead(SQNode cmp, SQNode val) {
-            return headUpdater.compareAndSet(this, cmp, val);
-        }
-
-        /**
-         * Quick check for likely non-emptiness.  Returns true if an
-         * add fully completed but not yet fully taken.
-         */
-        boolean isApparentlyNonEmpty() {
-            SQNode h = head;
-            SQNode t = tail;
-            return h != t;
-        }
-
-        boolean isEmpty() {
-            for (;;) {
-                SQNode h = head;
-                SQNode t = tail;
-                SQNode f = h.get();
-                if (h == head) {
-                    if (f == null)
-                        return true;
-                    else if (h != t)
-                        return false;
-                    else
-                        casTail(t, f);
-                }
+    /**
+     * Returns true if there are any tasks submitted to this pool
+     * that have not yet begun executing.
+     * @return <tt>true</tt> if there are any queued submissions.
+     */
+    public boolean hasQueuedSubmissions() {
+        for (;;) {
+            SQNode h = sqHead;
+            SQNode t = sqTail;
+            SQNode f = h.get();
+            if (h == sqHead) {
+                if (f == null)
+                    return false;
+                else if (h != t)
+                    return true;
+                else
+                    casSqTail(t, f);
             }
         }
+    }
 
-        void add(Submission<?> x) {
-            SQNode n = new SQNode(x);
-            for (;;) {
-                SQNode t = tail;
-                SQNode s = t.get();
-                if (t == tail) {
-                    if (s != null)
-                        casTail(t, s);
-                    else if (t.compareAndSet(s, n)) {
-                        casTail(t, n);
-                        return;
-                    }
-                }
-            }
-        }
-
-        Submission<?> poll() {
-            for (;;) {
-                SQNode h = head;
-                SQNode t = tail;
-                SQNode f = h.get();
-                if (h == head) {
-                    if (f == null)
-                        return null;
-                    else if (h == t)
-                        casTail(t, f);
-                    else if (casHead(h, f)) {
-                        Submission<?> x = f.submission;
-                        f.submission = null;
-                        x.setStolen();
-                        return x;
-                    }
+    final void addSubmission(Submission<?> x) {
+        SQNode n = new SQNode(x);
+        for (;;) {
+            SQNode t = sqTail;
+            SQNode s = t.get();
+            if (t == sqTail) {
+                if (s != null)
+                    casSqTail(t, s);
+                else if (t.compareAndSet(s, n)) {
+                    casSqTail(t, n);
+                    return;
                 }
             }
         }
     }
 
+    final Submission<?> pollSubmission() {
+        for (;;) {
+            SQNode h = sqHead;
+            SQNode t = sqTail;
+            SQNode f = h.get();
+            if (h == sqHead) {
+                if (f == null)
+                    return null;
+                else if (h == t)
+                    casSqTail(t, f);
+                else if (casSqHead(h, f)) {
+                    Submission<?> x = f.submission;
+                    f.submission = null;
+                    return x;
+                }
+            }
+        }
+    }
+
+    // Temporary Unsafe mechanics for preliminary release
+
+    static final Unsafe _unsafe;
+    static final long activeCountOffset;
+    static final long sqHeadOffset;
+    static final long sqTailOffset;
+
+    static {
+        try {
+            if (ForkJoinPool.class.getClassLoader() != null) {
+                Field f = Unsafe.class.getDeclaredField("theUnsafe");
+                f.setAccessible(true);
+                _unsafe = (Unsafe)f.get(null);
+            }
+            else
+                _unsafe = Unsafe.getUnsafe();
+            activeCountOffset = _unsafe.objectFieldOffset
+                (ForkJoinPool.class.getDeclaredField("activeCount"));
+            sqHeadOffset = _unsafe.objectFieldOffset
+                (ForkJoinPool.class.getDeclaredField("sqHead"));
+            sqTailOffset = _unsafe.objectFieldOffset
+                (ForkJoinPool.class.getDeclaredField("sqTail"));
+        } catch (Exception e) {
+            throw new RuntimeException("Could not initialize intrinsics", e);
+        }
+    }
+
+    final boolean tryIncrementActiveCount() {
+        int c = activeCount;
+        return _unsafe.compareAndSwapInt(this, activeCountOffset,
+                                         c, c+1);
+    }
+
+    final boolean tryDecrementActiveCount() {
+        int c = activeCount;
+        return _unsafe.compareAndSwapInt(this, activeCountOffset,
+                                         c, c-1);
+    }
+
+    final void incrementActiveCount() {
+        while (!tryIncrementActiveCount())
+            ;
+    }
+
+    final void decrementActiveCount() {
+        while (!tryDecrementActiveCount())
+            ;
+    }
+
+    private boolean casSqTail(SQNode cmp, SQNode val) {
+        return _unsafe.compareAndSwapObject(this, sqTailOffset, cmp, val);
+    }
+
+    private boolean casSqHead(SQNode cmp, SQNode val) {
+        return _unsafe.compareAndSwapObject(this, sqHeadOffset, cmp, val);
+    }
 }

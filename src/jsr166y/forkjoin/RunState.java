@@ -33,7 +33,7 @@ final class RunState extends AtomicInteger {
      * Transition to at least the given state. Return true if not
      * already at least given state.
      */
-    boolean transitionTo(int state) {
+    private boolean transitionTo(int state) {
         for (;;) {
             int s = get();
             if (s >= state)

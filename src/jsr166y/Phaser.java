@@ -52,7 +52,7 @@ import java.lang.reflect.*;
  * <li> Barrier actions, performed by the task triggering a phase
  * advance while others may be waiting, are arranged by overriding
  * method <tt>onAdvance</tt>, that also controls termination.
- * Overriding this method may be used to similar but more flecible
+ * Overriding this method may be used to similar but more flexible
  * effect as providing a barrier action to a CyclicBarrier.
  *
  * <li> Phasers may enter a <em>termination</em> state in which all

@@ -836,18 +836,6 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Removes and returns, without executing, the next task submitted
-     * for execution in this worker's pool, if one is available.  This
-     * method may be useful for draining tasks during exception
-     * recovery.
-     * @return the next submission, or null if none
-     */
-    public static ForkJoinTask<?> pollSubmission() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            pool.pollSubmission();
-    }
-
-    /**
      * Returns an estimate of how many more locally queued tasks there
      * are than idle worker threads that might steal them.  This value
      * may be useful for heuristic decisions about whether to fork
@@ -955,7 +943,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Declares that there are stealable tasks. This may (or may not)
      * improve ramp-up time when called after forking large numbers of
      * tasks that might not in turn naturally propagate by forking
-     * other tasks..Use in other contexts is unlikely to benefit
+     * other tasks. Use in other contexts is unlikely to benefit
      * performance.
      */
     public static void advertiseWork() {
@@ -976,6 +964,32 @@ public class ForkJoinWorkerThread extends Thread {
             throw new NullPointerException();
         ((ForkJoinWorkerThread)(Thread.currentThread())).
             unsignalledPushTask(task);
+    }
+
+    /**
+     * Removes and returns, without executing, the next task submitted
+     * for execution to the given pool, if one is available. To access
+     * a submission from the current worker's pool, use
+     * <tt>pollSubmission(getPool())</tt>.  This method may be useful
+     * for draining tasks during exception recovery.
+     * @param pool the pool
+     * @return the next submission, or null if none
+     */
+    public static ForkJoinTask<?> pollSubmission(ForkJoinPool pool) {
+        return pool.pollSubmission();
+    }
+
+    /**
+     * If the given task <tt>t</tt> represents a submission to a
+     * ForkJoinPool (typically, one returned by
+     * <tt>pollSubmission</tt>), returns the actual task submitted to
+     * the pool, otherwise returning <tt>t</tt> itself. This method may be
+     * useful for alternate handling of drained tasks.
+     * @param t the task
+     * @return the underlying task if one exists, else t.
+     */
+    public static <V> ForkJoinTask<V> asSubmitted(ForkJoinTask<V> t){
+        return (t instanceof Submission)? ((Submission)t).getTask() : t;
     }
 
     // per-worker exported random numbers

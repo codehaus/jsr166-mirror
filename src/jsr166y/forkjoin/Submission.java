@@ -179,6 +179,12 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
         super.reinitialize();
     }
 
+    /**
+     * Within-package utility to access underlying task
+     */
+    ForkJoinTask<V> getTask() {
+        return task;
+    }
 
 }
 

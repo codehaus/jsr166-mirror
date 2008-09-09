@@ -34,6 +34,11 @@ import java.lang.reflect.*;
  * common to the entire pool, and are started only if no other
  * work is available.
  *
+ * <p> This class also includes utility methods for accessing and
+ * manipulating submissions to the pool, in support of extensions that
+ * provide more extensive error recovery and/or alternate forms of
+ * execution.
+ *
  * <p> This class is subclassable solely for the sake of adding
  * functionality -- there are no overridable methods dealing with
  * scheduling or execution. However, you can override initialization
@@ -966,31 +971,84 @@ public class ForkJoinWorkerThread extends Thread {
             unsignalledPushTask(task);
     }
 
+    // Support for alternate handling of submissions
+
     /**
-     * Removes and returns, without executing, the next task submitted
-     * for execution to the given pool, if one is available. To access
-     * a submission from the current worker's pool, use
-     * <tt>pollSubmission(getPool())</tt>.  This method may be useful
-     * for draining tasks during exception recovery.
+     * Removes and returns the next unexecuted submission to the given
+     * pool, if one is available. To access a submission from the
+     * current worker's pool, use <tt>pollSubmission(getPool())</tt>.
+     * This method may be useful for draining tasks during exception
+     * recovery and for re-assigning work in systems with multiple
+     * pools.
      * @param pool the pool
      * @return the next submission, or null if none
      */
-    public static ForkJoinTask<?> pollSubmission(ForkJoinPool pool) {
+    public static Future<?> pollSubmission(ForkJoinPool pool) {
         return pool.pollSubmission();
     }
 
     /**
-     * If the given task <tt>t</tt> represents a submission to a
-     * ForkJoinPool (typically, one returned by
-     * <tt>pollSubmission</tt>), returns the actual task submitted to
-     * the pool, otherwise returning <tt>t</tt> itself. This method may be
-     * useful for alternate handling of drained tasks.
-     * @param t the task
-     * @return the underlying task if one exists, else t.
+     * If the given argument represents a submission to a ForkJoinPool
+     * (normally, one returned by <tt>pollSubmission</tt>), returns
+     * the actual task submitted to the pool.  This method may be
+     * useful for alternate handling of drained submissions..
+     * @param submission the submission
+     * @return the underlying task
+     * @throws IllegalArgumentException if the given future does
+     * not represent a submission to a pool
      */
-    public static <V> ForkJoinTask<V> asSubmitted(ForkJoinTask<V> t){
-        return (t instanceof Submission)? ((Submission)t).getTask() : t;
+    public static <V> ForkJoinTask<V> getSubmittedTask(Future<V> submission) {
+        try {
+            return ((Submission)submission).getSubmittedTask();
+        } catch (ClassCastException ex) {
+            throw new IllegalArgumentException();
+        }
     }
+
+    /**
+     * If the argument represents a submission to a ForkJoinPool
+     * (normally, one returned by <tt>pollSubmission</tt>), causes it
+     * to be ready with the given value returned upon invocation of
+     * its <tt>get()</tt> method. This method may be useful for
+     * alternate handling of drained submissions..
+     * @param submission the submission
+     * @param value the result to be returned by the submission
+     * @throws IllegalArgumentException if the given future does
+     * not represent a submission to a pool
+     */
+    public static <V> void forceCompletion(Future<V> submission, V value) {
+        try {
+            ((Submission)submission).finishTask(value);
+        } catch (ClassCastException ex) {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    /**
+     * If the argument represents a submission to a ForkJoinPool
+     * (normally, one returned by <tt>pollSubmission</tt>), causes it
+     * to be ready with the given exception thrown on invocation of
+     * its <tt>get()</tt> method.This method may be useful for
+     * alternate handling of drained submissions..
+     * @param submission the submission
+     * @param exception the exception to be thrown on access 
+     * @throws IllegalArgumentException if the exception is
+     * not a RuntimeException or Error
+     * @throws IllegalArgumentException if the given future does
+     * not represent a submission to a pool
+     */
+    public static <V> void forceCompletionExceptionally(Future<V> submission, 
+                                                        Throwable exception) {
+        if (!(exception instanceof RuntimeException) && 
+            !(exception instanceof Error))
+            throw new IllegalArgumentException();
+        try {
+            ((Submission)submission).finishTaskExceptionally(exception);
+        } catch (ClassCastException ex) {
+            throw new IllegalArgumentException();
+        }
+    }
+
 
     // per-worker exported random numbers
 

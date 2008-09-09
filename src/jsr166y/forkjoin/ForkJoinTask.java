@@ -5,6 +5,7 @@
  */
 
 package jsr166y.forkjoin;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -70,8 +71,14 @@ import java.lang.reflect.*;
  * The {@link ForkJoinWorkerThread} class supports a number of
  * inspection and tuning methods that can be useful when developing
  * fork/join programs.
+ *
+ * <p>ForkJoinTasks are <tt>Serializable</tt>, which enables them to
+ * be used in extensions such as remote execution frameworks. However,
+ * it is in general safe to serialize tasks only before or after, but
+ * not during execution. Serialization is not relied on during
+ * execution itself.
  */
-public abstract class ForkJoinTask<V> {
+public abstract class ForkJoinTask<V> implements Serializable {
     /*
      * The main implementations of execution methods are provided by
      * ForkJoinWorkerThread, so internals are package protected.  This
@@ -378,6 +385,35 @@ public abstract class ForkJoinTask<V> {
      */
     public final void quietlyJoin() {
         ((ForkJoinWorkerThread)(Thread.currentThread())).helpJoinTask(this);
+    }
+
+    // Serialization support
+
+    private static final long serialVersionUID = -7721805057305804111L;
+
+    /**
+     * Save the state to a stream.
+     *
+     * @serialData the current run status and the exception thrown
+     * during execution, or null if none.
+     * @param s the stream
+     */
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws java.io.IOException {
+        s.defaultWriteObject();
+        s.writeObject(getException(this));
+    }
+
+    /**
+     * Reconstitute the instance from a stream.
+     * @param s the stream
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        Object ex = s.readObject();
+        if (ex != null)
+            setException(this, (Throwable)ex);
     }
 
     // Temporary Unsafe mechanics for preliminary release

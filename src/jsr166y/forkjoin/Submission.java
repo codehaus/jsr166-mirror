@@ -182,8 +182,31 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
     /**
      * Within-package utility to access underlying task
      */
-    ForkJoinTask<V> getTask() {
+    ForkJoinTask<V> getSubmittedTask() {
         return task;
+    }
+
+    /**
+     * Externally set completion
+     */
+    void finishTask(V value) {
+        if (sync.transitionToRunning())
+            pool.submissionStarting();
+        result = value;
+        setDone();
+        if (sync.transitionToDone() == RUNNING)
+            pool.submissionCompleted();
+    }
+
+    /**
+     * Externally set exceptional completion
+     */
+    void finishTaskExceptionally(Throwable rex) {
+        if (sync.transitionToRunning())
+            pool.submissionStarting();
+        setDoneExceptionally(rex);
+        if (sync.transitionToDone() == RUNNING)
+            pool.submissionCompleted();
     }
 
 }

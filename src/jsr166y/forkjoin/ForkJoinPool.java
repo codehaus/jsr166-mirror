@@ -858,16 +858,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
 
     /**
      * Returns the total number of tasks stolen from one thread's work
-     * queue by another. This value is only an approximation, and
-     * underestimates the actual total number of steals when the pool
-     * is not quiescent. But the value is still useful for monitoring
-     * and tuning fork/join programs: In general, steal counts should
-     * be high enough to keep threads busy, but low enough to avoid
-     * overhead and contention across threads.
-     * @return the number of steals.
-     */
-    /**
-     * Returns the total number of tasks stolen from one thread's work
      * queue by another. This value is only an approximation, obtained
      * by iterating across all threads in the pool, and may lag the
      * actual total number of steals when the pool is not

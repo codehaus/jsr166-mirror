@@ -107,12 +107,13 @@ public class ForkJoinPool implements ForkJoinExecutor {
         new AtomicInteger();
 
     /**
-     * Array holding all worker threads in the pool. Acts similarly to
-     * a CopyOnWriteArrayList -- updates are protected by workerLock.
-     * But it additionally allows in-place nulling out or replacements
-     * of slots upon termination.  All uses of this array should first
-     * assign as local, and must screen out nulls. Note:
-     * ForkJoinWorkerThreads directly access this array.
+     * Array holding all worker threads in the pool. Array size must
+     * be a power of two. Acts similarly to a CopyOnWriteArrayList --
+     * updates are protected by workerLock.  But it additionally
+     * allows in-place nulling out or replacements of slots upon
+     * termination.  All uses of this array should first assign as
+     * local, and must screen out nulls. Note: ForkJoinWorkerThreads
+     * directly access this array.
      */
     volatile ForkJoinWorkerThread[] workers;
 
@@ -205,7 +206,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * Currently requires size to be a power of two.
      */
     private static int workerSizeFor(int ps) {
-        return 1 << (32 - Integer.numberOfLeadingZeros(ps-1));
+        return ps <= 1? 1 : (1 << (32 - Integer.numberOfLeadingZeros(ps-1)));
     }
 
     /**
@@ -340,8 +341,9 @@ public class ForkJoinPool implements ForkJoinExecutor {
 
     /**
      * Arranges for (asynchronous) execution of the given task,
-     * returning a <tt>Future</tt> that may be used to obtain results
-     * upon completion.
+     * returning a {@link Future} that may be used to obtain results
+     * upon completion. (The only supported operations on this object
+     * are those defined in the <tt>Future</tt> interface.)
      * @param task the task
      * @return a Future that can be used to get the task's results.
      * @throws NullPointerException if task is null
@@ -854,6 +856,16 @@ public class ForkJoinPool implements ForkJoinExecutor {
         return poolSize - activeCount;
     }
 
+    /**
+     * Returns the total number of tasks stolen from one thread's work
+     * queue by another. This value is only an approximation, and
+     * underestimates the actual total number of steals when the pool
+     * is not quiescent. But the value is still useful for monitoring
+     * and tuning fork/join programs: In general, steal counts should
+     * be high enough to keep threads busy, but low enough to avoid
+     * overhead and contention across threads.
+     * @return the number of steals.
+     */
     /**
      * Returns the total number of tasks stolen from one thread's work
      * queue by another. This value is only an approximation, obtained

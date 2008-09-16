@@ -60,28 +60,9 @@ final class PoolBarrier {
      * @return current event count
      */
     final long sync(long prev) {
-        final AtomicReference<QNode> hd = this.head;
-        final AtomicLong ctr = this.counter;
-        long count = ctr.get();
-        if (count == prev) {
-            QNode node = null; // delay construction until first check
-            QNode h;
-            while (((h = hd.get()) == null || h.count == count) &&
-                   ctr.get() == count) {
-                if (node == null)
-                    node = new QNode(count);
-                else if (hd.compareAndSet(node.next = h, node)) {
-                    while (!Thread.interrupted() && node.thread != null &&
-                           ctr.get() == count)
-                        LockSupport.park(this);
-                    node.thread = null;
-                    if (ctr.get() == count) // premature wake up
-                        return count;       // don't release others below
-                    break;
-                }
-            }
-        }
-        releaseAll(hd);
+        long count = counter.get();
+        if (count != prev || enqAndWait(count))
+            releaseAll();
         return count;
     }
 
@@ -90,7 +71,7 @@ final class PoolBarrier {
      */
     final void signal() {
         counter.incrementAndGet();
-        releaseAll(head);
+        releaseAll();
     }
 
     /**
@@ -115,16 +96,41 @@ final class PoolBarrier {
     }
 
     /**
+     * Enqueue, block and wait for signal
+     * @return true if counter advanced, else false (on spurious wakeup)
+     */
+    private final boolean enqAndWait(long count) {
+        final AtomicReference<QNode> hd = this.head;
+        final AtomicLong ctr = this.counter;
+        QNode node = null; // delay construction until first check
+        QNode h;
+        while (((h = hd.get()) == null || h.count == count) &&
+               ctr.get() == count) {
+            if (node == null)
+                node = new QNode(count);
+            else if (hd.compareAndSet(node.next = h, node)) {
+                while (!Thread.interrupted() && node.thread != null &&
+                       ctr.get() == count)
+                    LockSupport.park(this);
+                node.thread = null;
+                if (ctr.get() == count) // premature wake up
+                    return false;       // don't release others below
+                break;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Release all waiting threads. Called on exit from sync, as well
      * as on contention in signal. Regardless of why sync'ing threads
      * exit, other waiting threads must also recheck for tasks or
      * completions before resync. Release by chopping off entire list,
      * and then signalling. This both lessens contention and avoids
-     * unbounded enq/deq races.  This method is static because it is
-     * always called by methods that have already read head, or could
-     * easily do so.
+     * unbounded enq/deq races.  
      */
-    static void releaseAll(AtomicReference<QNode> hd) {
+    private final void releaseAll() {
+        AtomicReference<QNode> hd = this.head;
         QNode q;
         while ( (q = hd.get()) != null) {
             if (hd.compareAndSet(q, null)) {

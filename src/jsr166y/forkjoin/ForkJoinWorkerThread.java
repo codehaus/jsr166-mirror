@@ -48,104 +48,193 @@ import java.lang.reflect.*;
  * ForkJoinPool.
  */
 public class ForkJoinWorkerThread extends Thread {
-    /**
-     * Generator for per-thread randomVictimSeeds
+
+    /*
+     * Algorithm overview:
+     *
+     * 1. Work-Stealing: Work-stealing queues are special forms of
+     * Deques that support only three of the four possible
+     * end-operations -- push, pop, and deq (aka steal), and only do
+     * so under the constraints that push and pop are called only from
+     * the owning thread, while deq may be called from other threads.
+     * (If you are unfamiliar with them, you probably want to read
+     * Herlihy and Shavit's book "The Art of Multiprocessor
+     * programming", chapter 16 describing these in more detail before
+     * proceeding.)  The main work-stealing queue design is roughly
+     * similar to "Dynamic Circular Work-Stealing Deque" by David
+     * Chase and Yossi Lev, SPAA 2005
+     * (http://research.sun.com/scalable/pubs/index.html).  The main
+     * difference ultimately stems from gc requirements that we null
+     * out taken slots as soon as we can, to maintain as small a
+     * footprint as possible even in programs generating huge numbers
+     * of tasks. To accomplish this, we shift the CAS arbitrating pop
+     * vs deq (steal) from being on the indices ("base" and "sp") to
+     * the slots themselves (see especially method "extract()"). So,
+     * both a successful pop and deq mainly entail CAS'ing a nonnull
+     * slot to null.  Because we rely on CASes of references, we do
+     * not need tag bits on base or sp.  They are simple ints as used
+     * in any circular array-based queue (see for example ArrayDeque).
+     * Updates to the indices must still be ordered in a way that
+     * guarantees that (sp - base) > 0 means the queue is empty, but
+     * otherwise may err on the side of possibly making the queue
+     * appear nonempty when a push, pop, or deq have not fully
+     * committed. Note that this means that the deq operation,
+     * considered individually, is not wait-free. One thief cannot
+     * successfully continue until another in-progress one (or, if
+     * previously empty, a push) completes.  However, in the
+     * aggregate, we ensure at least probablistic non-blockingness. If
+     * an attempted steal fails, a thief always chooses a different
+     * random victim target to try next. So, in order for one thief to
+     * progress, it suffices for any in-progress deq or new push on
+     * any empty queue to complete. One reason this works well here is
+     * that apparently-nonempty often means soon-to-be-stealable,
+     * which gives threads a chance to activate if necessary before
+     * stealing (see below).
+     * 
+     * Efficient implementation of this approach currently relies on
+     * an uncomfortable amount of "Unsafe" mechanics. To maintain
+     * correct orderings, reads of base and sp have volatile ordering,
+     * but writes of sp require only store ordering.  Because they are
+     * protected by volatile index reads, reads of the array slots do
+     * not need volatile load semantics, but writes (in push) require
+     * store order and CASes (in pop and deq) require full volatile
+     * CAS semantics. Since these combinations aren't supported using
+     * ordinary volatiles, the only way to accomplish these effciently
+     * is to use direct Unsafe calls. (Using external AtomicIntegers
+     * and AtomicReferenceArrays for the indices and array is
+     * significantly slower because of memory locality and indirection
+     * effects.) Further, performance on most platforms is very
+     * sensitive to placement and sizing of the (resizable) queue
+     * array.  Even though these queues don't usually become all that
+     * big, the initial size must be large enough to counteract cache
+     * contention effects across multiple queues (especially in the
+     * presence of GC cardmarking), Also, to improve thread-locality,
+     * queues are currently initialized immediately after the thread
+     * gets the initial signal to start processing tasks.  However,
+     * all queue-related methods except pushTask are written in a way
+     * that allows them to instead be lazily allocated and/or disposed
+     * of when empty. All together, these low-level implementation
+     * choices produce as much as a factor of 4 performance
+     * improvement compared to naive implementations, and enable the
+     * processing of billions of tasks per second, sometimes at the
+     * expense of ugliness.
+     * 
+     * 2. Run control: The primary run control is based on a global
+     * counter (activeCount) held by the pool. It uses an algorithm
+     * similar to that in Herlihy and Shavit section 17.6 to cause
+     * threads to eventually block when "isActive" is false for all
+     * threads.  For this to work, isActive must be true when
+     * executing tasks, and before stealing a task. It must be false
+     * before blocking on PoolBarrier (awaiting a new submission or
+     * other Pool event). In between, there is some free play which we
+     * take advantage of to avoid contention and rapid flickering of
+     * the global activeCount: If inactive, we activate only if a
+     * victim queue appears to be nonempty (see above), and even then,
+     * back off, looking for another victim if the attempt (CAS) to
+     * increase activeCount fails.  Similarly, a thread tries to
+     * inactivate only after a full scan of other threads, and if the
+     * attempted decrement fails, rescans instead. The net effect is
+     * that contention on activeCount is rarely a measurable
+     * performance issue. (There are also a few other cases where we
+     * scan for work rather than retry/block upon contention.)
+     *
+     * Unlike in previous incarnations of this framework, we do not
+     * ever block worker threads while submissions are executing
+     * (i.e., activeCount is nonzero). Doing so can lead to anomalies
+     * (like convoying of dependent threads) and overheads that negate
+     * benefits. To compensate, we ensure that threads looking for
+     * work are extremely well-behaved. Scans (mainly in
+     * getStolenTask; also getSubmission and scanWhileJoining) do not
+     * modify any variables that might disrupt caches (except, when
+     * necessary, "isActive") and probe only the base/sp fields of
+     * other threads unless they appear non-empty. We also
+     * occasionally perform Thread.yields, which may or may not
+     * improve good citizenship. It may be possible to replace this
+     * with a different advisory blocking scheme that better shields
+     * users from the effects of poor ForkJoin task design causing
+     * imbalances, in turn causing excessive spins.
+     *
+     * 3. Selection control. We maintain policy of always choosing to
+     * run local tasks rather than stealing, and always trying to
+     * steal tasks before trying to run a new submission. This shows
+     * up in different ways in different cases though, accounting for
+     * the number of different run/get methods. All steals are
+     * currently performed in randomly-chosen deq-order. It may be
+     * worthwhile to bias these with locality / anti-locality
+     * information, but doing this well probably requires lower-level
+     * information from JVMs than is currently the case.
      */
-    static final Random randomSeedGenerator = new Random();
+
+    /**
+     * Capacity of work-stealing queue array upon initialization.
+     * Must be a power of two. Initial size must be at least 2, but is
+     * padded to minimize cache effects.
+     */
+    private static final int INITIAL_QUEUE_CAPACITY = 1 << 13;
+
+    /**
+     * Maximum work-stealing queue array size.  Must equal 1 << 30 to
+     * ensure lack of index wraparound.
+     */
+    private static final int MAXIMUM_QUEUE_CAPACITY = 1 << 30;
+
+    /**
+     * Generator of seeds for per-thread random numbers and random
+     * victims
+     */
+    private static final Random randomSeedGenerator = new Random();
 
     /**
      * Exported random numbers
      */
-    final JURandom juRandom;
+    private final JURandom juRandom;
 
     /**
-     * Run state of this worker, set only by pool (except for termination)
+     * Run state of this worker.
      */
-    final RunState runState;
+    private final RunState runState;
 
     /**
      * The pool this thread works in.
      */
-    final ForkJoinPool pool;
+    private final ForkJoinPool pool;
 
     /**
      * Pool-wide sync barrier, cached from pool upon construction
      */
-    final PoolBarrier poolBarrier;
+    private final PoolBarrier poolBarrier;
 
     /**
-     * Each thread's work-stealing queue is represented via the
-     * resizable "queue" array plus base and sp indices.
-     * Work-stealing queues are special forms of Deques that support
-     * only three of the four possible end-operations -- push, pop,
-     * and steal (aka dequeue), and only do so under the constraints
-     * that push and pop are called only from the owning thread, while
-     * steal may be called from other threads.  The work-stealing
-     * queue here uses a variant of the algorithm described in
-     * "Dynamic Circular Work-Stealing Deque" by David Chase and Yossi
-     * Lev, SPAA 2005. For an explanation, read the paper.
-     * (http://research.sun.com/scalable/pubs/index.html). The main
-     * differences here stem from ensuring that queue slots
-     * referencing popped and stolen tasks are cleared, as well as
-     * spin/wait control. (Also. method and variable names differ.)
-     * To avoid garbage retention, slots for popped and stolen tasks
-     * are nulled out. This is done just by direct nulling in the case
-     * of pop, but must use a CAS (in tryStealTask()) for steals to
-     * guard against wrongly nulling a slot reused after index
-     * wraparound.
-     *
-     * The length of the queue array must always be a power of
-     * two. Even though these queues don't usually become all that
-     * big, the initial size must be large enough to counteract cache
-     * contention effects across multiple queues.  Currently, they are
-     * initialized upon construction.  However, all queue-related
-     * methods except pushTask are written in a way that allows them
-     * to instead be lazily allocated and/or disposed of when empty.
-     *
-     * Bear in mind while reading queue support code that we expect to
-     * be able to process billions of tasks per second, sometimes at
-     * the expense of odd-looking code.
+     * The work-stealing queue array. Size must be a power of two.
      */
-    ForkJoinTask<?>[] queue;
-
-    private static final int INITIAL_CAPACITY = 1 << 13;
-    private static final int MAXIMUM_CAPACITY = 1 << 30;
+    private ForkJoinTask<?>[] queue;
 
     /**
-     * Index (mod queue.length-1) of next queue slot to push to or pop
-     * from. Almost always written via urdered store, which is weaker
-     * than volatile write but unfortunately requires direct use of
-     * Unsafe.
+     * Index (mod queue.length) of next queue slot to push to or pop
+     * from. It is written only by owner thread, via ordered store.
      */
-    volatile long sp;
+    private volatile int sp;
 
     /**
      * Index (mod queue.length) of least valid queue slot, which is
-     * always the next position to steal from if nonempty.  Updated
-     * only via CAS. To keep this field nearby sp field rather than a
-     * separate AtomicLong, we need to use Unsafe.
+     * always the next position to steal from if nonempty.
      */
-    volatile long base;
-
-    /**
-     * Number of steals, just for monitoring purposes,
-     */
-    volatile long fullStealCount;
+    private volatile int base;
 
     /**
      * The last event event count waited for
      */
-    long eventCount;
+    private long eventCount;
 
     /**
-     * Seed for random number generator for choosing steal victims
+     * Number of steals, just for monitoring purposes,
      */
-    int randomVictimSeed;
+    private volatile long fullStealCount;
 
     /**
      * Number of steals, transferred to fullStealCount when idle
      */
-    int stealCount;
+    private int stealCount;
 
     /**
      * Seed for juRandom. Kept with worker fields to minimize
@@ -156,128 +245,23 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Index of this worker in pool array. Set once by pool before running.
      */
-    int poolIndex;
+    private int poolIndex;
 
     /**
-     * Activity status.  Must be true when executing tasks, and BEFORE
-     * stealing a task.  Set false after failed scans to help control
-     * spins.
+     * The number of empty calls to getStolenTask, for pause control.
      */
-    boolean isActive;
+    private int emptyScans;
 
     /**
-     * The number of consecutive empty calls to getStolenTask since
-     * last successful one;
+     * Seed for random number generator for choosing steal victims
      */
-    int emptyScans;
+    private int randomVictimSeed;
 
     /**
-     * The maximum number of consecutive unsuccessful calls to
-     * getStolenTask before possibly deactivating. Must be at least 2.
-     * Using a slightly larger value reduces useless blocking more
-     * than enough to outweigh useless spinning.
+     * Activity status. Must be true when executing tasks, and BEFORE
+     * stealing a task. Must be false before blocking on PoolBarrier.
      */
-    private static final int SCANS_PER_DEACTIVATE = 4;
-
-    /**
-     * Number of empty helping probes before pausing.  Must be a power
-     * of two. Currently pauses are implemented only as yield, but may
-     * someday incorporate advisory blocking.
-     */
-    private static final int HELPING_PROBES_PER_PAUSE = (1 << 10);
-
-
-    // Methods called only by pool
-
-    final void setWorkerPoolIndex(int i) {
-        poolIndex = i;
-    }
-
-    final int getWorkerPoolIndex() {
-        return poolIndex;
-    }
-
-    final long getWorkerStealCount() {
-        return fullStealCount;
-    }
-
-    final RunState getRunState() {
-        return runState;
-    }
-
-    final int getQueueSize() {
-        long n = sp - base;
-        return n < 0? 0 : (int)n; // suppress momentarily negative values
-    }
-
-    // misc utilities
-
-    /**
-     * Computes next value for random victim probe. Scans don't
-     * require a very high quality generator, but also not a crummy
-     * one. This is cheap and works well.
-     */
-    static final int xorShift(int r) {
-        r ^= r << 1;
-        r ^= r >>> 3;
-        return r ^ (r << 10);
-    }
-
-
-    final void ensureActive() {
-        if (!isActive) {
-            isActive = true;
-            pool.incrementActiveCount();
-        }
-    }
-
-    final void ensureInactive() {
-        if (isActive) {
-            isActive = false;
-            pool.decrementActiveCount();
-        }
-    }
-
-    /**
-     * transfer local steal count to volatile field pool can read
-     */
-    final void transferSteals() {
-        int sc = stealCount;
-        if (sc != 0) {
-            stealCount = 0;
-            if (sc < 0)
-                sc = Integer.MAX_VALUE; // wraparound
-            fullStealCount += sc;
-        }
-    }
-
-    /**
-     * Returns queue length minus #inactive workers.
-     */
-    final int estimatedSurplusTaskCount() {
-        return (int)(sp - base) - pool.getIdleThreadCount();
-    }
-
-    /**
-     * Resizes queue
-     */
-    final void growQueue() {
-        ForkJoinTask<?>[] oldQ = queue;
-        int oldSize = oldQ.length;
-        int newSize = oldSize << 1;
-        if (newSize > MAXIMUM_CAPACITY)
-            throw new RejectedExecutionException("Queue capacity exceeded");
-        ForkJoinTask<?>[] newQ = new ForkJoinTask<?>[newSize];
-        int oldMask = oldSize - 1;
-        int newMask = newSize - 1;
-        long s = sp;
-        for (long i = base; i < s; ++i)
-            newQ[((int)i) & newMask] = oldQ[((int)i) & oldMask];
-        _unsafe.putOrderedLong(this, spOffset, s); // store fence
-        queue = newQ;
-    }
-
-    // Construction and lifecycle methods
+    private boolean isActive;
 
     /**
      * Creates a ForkJoinWorkerThread operating in the given pool.
@@ -287,13 +271,258 @@ public class ForkJoinWorkerThread extends Thread {
     protected ForkJoinWorkerThread(ForkJoinPool pool) {
         this.pool = pool;
         this.poolBarrier = pool.poolBarrier; // cached
+        this.juRandom = new JURandom();
+        this.runState = new RunState();
         this.juRandomSeed = randomSeedGenerator.nextLong();
         int rseed = randomSeedGenerator.nextInt();
         this.randomVictimSeed = (rseed == 0)? 1 : rseed; // must be nonzero
-        this.juRandom = new JURandom();
-        this.runState = new RunState();
-        this.queue = new ForkJoinTask<?>[INITIAL_CAPACITY];
     }
+
+    // Primitive support for queue operations
+
+    /**
+     * Sets sp in store-order.
+     */
+    private final void setSp(int s) {
+        _unsafe.putOrderedInt(this, spOffset, s);
+    }
+
+    /**
+     * Add in store-order the given task at given slot of q to
+     * null. Caller must ensure q is nonnull and index is in range.
+     */
+    private static final void setSlot(ForkJoinTask<?>[] q, int i,
+                                      ForkJoinTask<?> t){
+        _unsafe.putOrderedObject(q, (i << qShift) + qBase, t);
+    }
+
+    /**
+     * CAS given slot of q to null. Caller must ensure q is nonnull
+     * and index is in range.
+     */
+    private static final boolean casSlotNull(ForkJoinTask<?>[] q, int i,
+                                             ForkJoinTask<?> t) {
+        return _unsafe.compareAndSwapObject(q, (i << qShift) + qBase, t, null);
+    }
+
+    /**
+     * Gets and clears non-null element of q for (base or sp) slot i.
+     * @return task, or null if empty or CAS failed
+     */
+    private static final ForkJoinTask<?> extract(ForkJoinTask<?>[] q, int i) {
+        ForkJoinTask<?> t;
+        return ((q != null &&
+                 (t = q[i &= (q.length - 1)]) != null &&
+                 _unsafe.compareAndSwapObject(q, (i << qShift) + qBase,
+                                              t, null)) ?
+                t : null);
+    }
+
+    // Main queue methods
+
+    /**
+     * Pushes a task. Called only by current thread.
+     * @param t the task. Caller must ensure nonnull
+     */
+   final void pushTask(ForkJoinTask<?> t) {
+        ForkJoinTask<?>[] q = queue;
+        int mask = q.length - 1;
+        int s = sp;
+        setSp(s + 1);
+        setSlot(q, s & mask, t);
+        if (mask <= s + 1 - base)
+            growQueue();
+   }
+
+    /**
+     * Resizes queue by a factor of 2.
+     */
+    private final void growQueue() {
+        ForkJoinTask<?>[] oldQ = queue;
+        int oldSize = oldQ.length;
+        int newSize = oldSize << 1;
+        if (newSize > MAXIMUM_QUEUE_CAPACITY)
+            throw new RejectedExecutionException("Queue capacity exceeded");
+        ForkJoinTask<?>[] newQ = queue = new ForkJoinTask<?>[newSize];
+        int b = base;
+        int bf = b + oldSize;
+        int newMask = newSize - 1;
+        do { // must transfer in deq order
+            setSlot(newQ, b & newMask, extract(oldQ, b));
+        } while (++b != bf);
+    }
+
+    /**
+     * Tries to take a task from the base of the queue, failing if
+     * either empty or contended.
+     * @return a task, or null if none or contended.
+     */
+    private final ForkJoinTask<?> deqTask() {
+        ForkJoinTask<?> t = null;
+        int b = base;
+        if (sp - b > 0 && (t = extract(queue, b)) != null)
+            base = b + 1;
+        return t;
+    }
+
+    /**
+     * Returns a popped task, or null if empty.  Called only by
+     * current thread.
+     */
+    final ForkJoinTask<?> popTask() {
+        ForkJoinTask<?> t = null;
+        int s = sp - 1;
+        if (s - base >= 0 && (t = extract(queue, s)) != null)
+            setSp(s);
+        return t;
+    }
+
+    /**
+     * Specialized version of popTask to pop only if
+     * topmost element is the given task.
+     * @param t the (nonnull) task to match
+     */
+    final boolean popIfNext(ForkJoinTask<?> t) {
+        int s;
+        ForkJoinTask<?>[] q = queue;
+        if (q != null && casSlotNull(q, (q.length - 1) & (s = sp - 1), t)) {
+            setSp(s);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns next task to pop.
+     */
+    final ForkJoinTask<?> peekTask() {
+        ForkJoinTask<?>[] q = queue;
+        return q == null? null : q[(sp - 1) & (q.length - 1)];
+    }
+
+
+    // Methods used by Pool
+
+    final void setWorkerPoolIndex(int i) {
+        poolIndex = i;
+    }
+
+    final int getWorkerPoolIndex() {
+        return poolIndex;
+    }
+
+    final RunState getRunState() {
+        return runState;
+    }
+
+    final int getQueueSize() {
+        int n = sp - base;
+        return n < 0? 0 : n; // suppress momentarily negative values
+    }
+
+    final long getWorkerStealCount() {
+        return fullStealCount + stealCount; // can peek at local count too
+    }
+
+    /**
+     * transfer local steal count to volatile field pool can read
+     */
+    private final void transferSteals() {
+        int sc = stealCount;
+        if (sc != 0) {
+            stealCount = 0;
+            if (sc < 0)
+                sc = Integer.MAX_VALUE; // wraparound
+            fullStealCount += sc;
+        }
+    }
+
+    // Activation control
+
+    /**
+     * Unconditionally set status to active and adjust activeCount
+     */
+    private final void ensureActive() {
+        if (!isActive) {
+            isActive = true;
+            pool.incrementActiveCount();
+        }
+    }
+
+    /**
+     * Try to activate but fail on contention on active worker counter
+     * @return true if now active
+     */
+    private final boolean tryActivate() {
+        if (!isActive) {
+            if (!pool.tryIncrementActiveCount())
+                return false;
+            isActive = true;
+        }
+        return true;
+    }
+
+    /**
+     * Unconditionally inactivate. Does not block even if activeCount
+     * now zero. (Use tryInactivate instead.)
+     */
+    private final void ensureInactive() {
+        if (isActive) {
+            isActive = false;
+            pool.decrementActiveCount();
+            transferSteals();
+        }
+    }
+
+    /**
+     * Possibly inactivate and block or pause waiting for work
+     * @return true if pool apparently idle
+     */
+    private final boolean tryInactivate() {
+        if (isActive) {
+            if (!pool.tryDecrementActiveCount())
+                return false;
+            isActive = false;
+        }
+        if (pool.getActiveThreadCount() == 0) {
+            transferSteals();
+            eventCount = poolBarrier.sync(eventCount);
+            return true;
+        }
+        else if (++emptyScans > SCANS_PER_PAUSE) {
+            emptyScans = 0;
+            pauseAwaitingWork();
+        }
+        return false;
+    }
+
+    // Support for pausing when inactive 
+
+    /**
+     * The number of empty steal attempts before pausing.  Must be a
+     * power of two. 
+     */
+    private static final int PROBES_PER_PAUSE = (1 << 10);
+
+    /**
+     * The number of empty scans (== probe each worker at least once)
+     * before pausing. Based on actual number of processors, not
+     * actual poolSize, since this better estimates effects of memory
+     * stalls etc on larger machines.
+     */
+    private static final int SCANS_PER_PAUSE =
+        PROBES_PER_PAUSE / Runtime.getRuntime().availableProcessors();
+
+    /**
+     * Politely stall when cannot find a task to run. Currently,
+     * pauses are implemented only as yield, but may someday
+     * incorporate advisory blocking.
+     */
+    private static void pauseAwaitingWork() {
+        Thread.yield();
+    }
+
+    // Overridable lifecycle methods
 
     /**
      * Initializes internal state after construction but before
@@ -318,13 +547,14 @@ public class ForkJoinWorkerThread extends Thread {
     protected void onTermination(Throwable exception) {
         try {
             ensureInactive();
-            transferSteals();
             cancelTasks();
             runState.transitionToTerminated();
         } finally {
             pool.workerTerminated(this, exception);
         }
     }
+
+    // Methods for running submissions, stolen and/or local tasks
 
     /**
      * This method is required to be public, but should never be
@@ -335,8 +565,11 @@ public class ForkJoinWorkerThread extends Thread {
         Throwable exception = null;
         try {
             onStart();
+            eventCount = poolBarrier.sync(0); // wait for start signal
+            queue = new ForkJoinTask<?>[INITIAL_QUEUE_CAPACITY];
+            boolean preferSubmission = true;
             while (runState.isRunning())
-                topLevelStep();
+                preferSubmission = mainStep(preferSubmission);
             clearLocalTasks();
         } catch (Throwable ex) {
             exception = ex;
@@ -346,297 +579,209 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Scans for a task and if one exists, runs it (along with any
-     * tasks it in turn pushed).  Checks first for submissions if none
-     * currently running, else prefers stolen tasks to new
-     * submissions. If none found, possibly deactivates or blocks.
+     * Try to run a stolen task or submission, prefering a submission
+     * if so instructed.
+     * @return true if should next prefer a submission
      */
-    final void topLevelStep() {
-        ForkJoinTask<?> t;
-        if ((t = getSubmission(true)) != null ||
-            (t = getStolenTask()) != null ||
-            (t = getSubmission(false)) != null) {
-            do {
-                t.exec();
-            } while ((t = popTask()) != null);
-            emptyScans = 0;
-        }
-        else {
-            long c = poolBarrier.getCount();
-            if (emptyScans < SCANS_PER_DEACTIVATE) {
-                ++emptyScans;
-                eventCount = c;
-            }
-            else if (!isActive)
-                eventCount = poolBarrier.sync(eventCount);
-            else if (eventCount == c && pool.tryDecrementActiveCount()) {
-                isActive = false;
-                transferSteals();
-            }
-            else
-                eventCount = c;
-        }
-    }
-
-    /**
-     * Signal idle threads waiting on poolBarrier.sync.  To avoid
-     * needless contention on barrier, this suppresses signals if
-     * there are no idle threads. The precheck works because threads
-     * must scan one more time after declaring they are they are
-     * inactive (see topLevelStep). The loop is also stopped if other
-     * threads have already stolen all tasks.
-     */
-    final void signalAvailability() {
-        while (pool.getIdleThreadCount() > 0) {
-            if (poolBarrier.trySignal() || sp <= base)
-                break;
-        }
-    }
-
-    // Main work-stealing queue methods
-
-    /**
-     * Pushes a task. Also wakes up other workers if queue was
-     * previously empty.  Called only by current thread.
-     * @param x the task
-     */
-    final void pushTask(ForkJoinTask<?> x) {
-        ForkJoinTask<?>[] q = queue;
-        long mask = q.length - 1;
-        long s = sp;
-        q[(int)(s & mask)] = x;
-        _unsafe.putOrderedLong(this, spOffset, s + 1); // store fence
-        if ((s -= base) >= mask - 1)
-            growQueue();
-        else if (s <= 0)
-            signalAvailability();
-    }
-
-    /**
-     * Same as pushTask except doesn't signal and returns old queue
-     * length. Mainly used for repushes.
-     */
-    final long unsignalledPushTask(ForkJoinTask<?> x) {
-        ForkJoinTask<?>[] q = queue;
-        long mask = q.length - 1;
-        long s = sp;
-        q[(int)(s & mask)] = x;
-        _unsafe.putOrderedLong(this, spOffset, s + 1); // store fence
-        if ((s -= base) >= mask - 1)
-            growQueue();
-        return s;
-    }
-
-    /**
-     * Returns a popped task, or null if empty.  Called only by
-     * current thread.
-     */
-    final ForkJoinTask<?> popTask() {
-        ForkJoinTask<?> x;
-        ForkJoinTask<?>[] q = queue;
-        long s = sp - 1;
-        int idx;
-        long b;
-        if (q == null || s < base ||
-            (x = q[idx = ((int)s) & (q.length-1)]) == null ||
-            ((sp = s) <= (b = base) && !arbitratePop(s, b)))
-            return null;
-        q[idx] = null;
-        return x;
-    }
-
-    /**
-     * Arbitrate an apparently tied or losing attempt to pop item, in
-     * either case reconciling sp and base. This is offloaded from ppp
-     * to improve performance for typical case where this is not
-     * called
-     * @return true if popped
-     */
-    final boolean arbitratePop(long s, long b) {
-        boolean w = s < b? false :
-            _unsafe.compareAndSwapLong(this, baseOffset, b, ++b);
-        _unsafe.putOrderedLong(this, spOffset, b);
-        return w;
-    }
-
-    /**
-     * Specialized version of popTask to pop only if
-     * topmost element is the given task.
-     * @param task the task to match, null OK (but never matched)
-     */
-    final boolean popIfNext(ForkJoinTask<?> task) {
-        ForkJoinTask<?>[] q = queue;
-        long s = sp - 1;
-        int idx;
-        long b;
-        if (task == null || q == null ||
-            q[idx = ((int)s) & (q.length-1)] != task ||
-            ((sp = s) <= (b = base) && !arbitratePop(s, b)))
+    private final boolean mainStep(boolean preferSubmission) {
+        if ((!preferSubmission && runStolenTask()) ||
+            (runSubmission() || preferSubmission))
             return false;
-        q[idx] = null;
+        return tryInactivate();
+    }
+
+    /**
+     * Runs all tasks on local queue
+     */
+    private final void runLocalTasks() {
+        ForkJoinTask<?> t;
+        while ((t = popTask()) != null)
+            t.exec();
+    }
+
+    /**
+     * Runs a stolen task (and any subtasks it pushed), if one exists.
+     * @return true if ran a task
+     */
+    private final boolean runStolenTask() {
+        ForkJoinTask<?> t = getStolenTask();
+        if (t != null) {
+            t.exec();
+            runLocalTasks();
+        }
+        return false;
+    }
+
+    /**
+     * Runs a submission (and any subtasks it pushed), if one exists.
+     * @return true if ran a task
+     */
+    private final boolean runSubmission() {
+        Submission<?> s = getSubmission();
+        if (s != null) {
+            s.exec();
+            runLocalTasks();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns a submission, if one exists; activating first if necessary
+     */
+    private final Submission<?> getSubmission() {
+        while (pool.mayHaveQueuedSubmissions()) {
+            Submission<?> s;
+            if (tryActivate() && (s = pool.pollSubmission()) != null)
+                return s;
+        }
+        return null;
+    }
+
+    /**
+     * Runs one popped task, if available
+     * @return true if ran a task
+     */
+    private final boolean runLocalTask() {
+        ForkJoinTask<?> t = popTask();
+        if (t == null)
+            return false;
+        t.exec();
         return true;
     }
 
     /**
-     * Returns next task to pop. Called only by current thread.
+     * Pops or steals a task
+     * @return task, or null if none available
      */
-    final ForkJoinTask<?> peekTask() {
-        ForkJoinTask<?>[] q = queue;
-        long s = sp - 1;
-        return (q == null || s <= base)? null : q[((int)s) & (q.length-1)];
+    private final ForkJoinTask<?> getLocalOrStolenTask() {
+        ForkJoinTask<?> t = popTask();
+        return t != null? t : getStolenTask();
     }
 
     /**
-     * Tries to take a task from the base of the queue.  Returns null
-     * upon contention.
-     * @return a task, or null if none
+     * Runs one popped or stolen task, if available
+     * @return true if ran a task
      */
-    final ForkJoinTask<?> tryStealTask() {
-        long b;
-        ForkJoinTask<?>[] q;
-        ForkJoinTask<?> t;
-        int k;
-        if ((b = base) >= sp ||
-            (q = queue) == null ||
-            (t = q[k = ((int)b) & (q.length-1)]) == null ||
-            !_unsafe.compareAndSwapLong(this, baseOffset, b, b+1))
-            return null;
-        // CAS slot to null
-        _unsafe.compareAndSwapObject(q, (k<<arrayShift)+arrayBase, t, null);
-        return t;
+    private final boolean runLocalOrStolenTask() {
+        ForkJoinTask<?> t = getLocalOrStolenTask();
+        if (t == null)
+            return false;
+        t.exec();
+        return true;
     }
 
     /**
-     * Tries to steal a task from a worker. Starts at a random index
-     * of workers array, and probes workers until finding one with
-     * non-empty queue or finding that all are empty.  It uses
-     * Marsaglia xorshift to generate first n-1 probes. If these are
-     * empty, it resorts to n circular traversals (which is necessary
-     * to accurately set idle status by caller).
+     * Runs tasks until activeCount zero
+     */
+    private final void runUntilQuiescent() {
+        for (;;) {
+            ForkJoinTask<?> t = getLocalOrStolenTask();
+            if (t != null) {
+                ensureActive();
+                t.exec();
+            }
+            else {
+                ensureInactive();
+                if (pool.getActiveThreadCount() == 0) {
+                    ensureActive(); // reactivate on exit
+                    break;
+                }
+            }
+        }
+    }
+
+    // Stealing tasks
+
+    /**
+     * Computes next value for random victim probe. Scans don't
+     * require a very high quality generator, but also not a crummy
+     * one. This is cheap and works well.
+     */
+    private static final int xorShift(int r) {
+        r ^= r << 1;
+        r ^= r >>> 3;
+        return r ^ (r << 10);
+    }
+
+    /**
+     * Tries to steal a task from another worker. Starts at a random
+     * index of workers array, and probes workers until finding one
+     * with non-empty queue or finding that all are empty.  It
+     * randomly selects the first n-1 probes. If these are empty, it
+     * resorts to a full circular traversal, which is necessary to
+     * accurately set active status by caller.
      *
      * This method must be both fast and quiet -- avoiding as much as
      * possible memory accesses that could disrupt cache sharing etc
      * other than those needed to check for and take tasks. This
      * accounts for, among other things, updating random seed in place
-     * without storing it until exit.
+     * without storing it until exit. (Note that we only need to store
+     * it if we found a task; otherwise it doesn't matter if we start
+     * at the same place next time.)
      *
-     * @return a task, or null if none
+     * @return a task, or null if none found
      */
-    final ForkJoinTask<?> getStolenTask() {
-        int r = randomVictimSeed;            // extract once to keep scan quiet
+    private final ForkJoinTask<?> getStolenTask() {
         final ForkJoinWorkerThread[] ws = pool.workers;
-        final int mask = ws.length - 1;      // must be power of 2 minus 1
-        if (mask > 0) {                      // skip for pool size 1
-            int probes = -mask;              // use random index while negative
-            int idx = r;
-            do {
-                r = xorShift(r);             // update random seed
-                ForkJoinWorkerThread v = ws[mask & idx];
-                if (v != null && v.base < v.sp) {
-                    if (isActive) {
-                        ForkJoinTask<?> t = v.tryStealTask();
-                        if (t != null) {
-                            randomVictimSeed = r;
-                            ++stealCount;
-                            return t;
-                        }
-                    }
-                    else if (pool.tryIncrementActiveCount())
-                        isActive = true;     // activate and retry
-                    else
-                        idx = r;
-                    probes = -mask;          // restart on contention
-                    continue;
+        final int mask = ws.length - 1;  // must be power of 2 minus 1
+        int probes = -mask;              // use random index while negative
+        int r = randomVictimSeed;        // extract once to keep scan quiet
+        int idx = r;
+        boolean active = isActive;
+        ForkJoinTask<?> t = null;
+        do {
+            ForkJoinWorkerThread v = ws[mask & idx];
+            r = xorShift(r);                      // update random seed
+            if (v != null && v.sp - v.base > 0) { // apparently nonempty
+                if ((active || (active = tryActivate())) &&
+                    (t = v.deqTask()) != null) {
+                    randomVictimSeed = r;
+                    ++stealCount;
+                    break;
                 }
-                idx = (probes >= 0)? (idx + 1) : r;
-            } while (probes++ <= mask);
-        }
-        return null;
-    }
-
-    /**
-     * Tries to get a submission, first activating if necessary.
-     * @param initial try only if no other tasks apparently running
-     * @return a task, or null if none
-     */
-    final ForkJoinTask<?> getSubmission(boolean initial) {
-        while ((!initial ||
-                pool.getActiveSubmissionCount() == 0 ||
-                pool.getActiveThreadCount() == 0) &&
-               pool.mayHaveQueuedSubmissions()) {
-            ForkJoinTask<?> t;
-            if ((isActive ||
-                 (isActive = pool.tryIncrementActiveCount())) &&
-                (t = pool.pollSubmission()) != null)
-                return t;
-        }
-        return null;
-    }
-
-    // Cleanup support
-
-    /**
-     * Run or cancel all local tasks on exit from main.  Exceptions
-     * will cause aborts that will eventually trigger cancelTasks.
-     */
-    final void clearLocalTasks() {
-        while (sp > base) {
-            ForkJoinTask<?> t = popTask();
-            if (t != null) {
-                if (runState.isAtLeastStopping())
-                    t.setCancelled();
-                else
-                    t.exec();
+                probes = -mask;                   // restart on contention
+                idx = r;
+                continue;
             }
-        }
+            idx = (probes >= 0)? (idx + 1) : r;
+        } while (probes++ <= mask);
+        return t;
     }
-
-    /*
-     * Remove (via steal) and cancel all tasks in queue.  Can be
-     * called from any thread.
-     */
-    final void cancelTasks() {
-        while (sp > base) {
-            ForkJoinTask<?> t = tryStealTask();
-            if (t != null) // avoid exceptions due to cancel()
-                t.setCancelled();
-        }
-    }
-
-    // Package-local support for core ForkJoinTask methods
 
     /**
-     * Try to steal tasks while waiting for join.  Similar to
-     * getStolenTask except must check completion and run state.
+     * Tries to steal tasks while waiting for join.  Similar to
+     * getStolenTask except intersperses checks for completion and
+     * shutdown.
      * @return a task, or null if joinMe is completed
      */
-    final ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
+    private final ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
         ForkJoinWorkerThread[] ws = pool.workers;
         int mask = ws.length - 1;
         int r = randomVictimSeed;
         int idx = r;
         int probes = 0;
+        ForkJoinTask<?> t = null;
         for (;;) {
-            ForkJoinTask<?> t;
+            ForkJoinWorkerThread v = ws[idx & mask];
             r = xorShift(r);
-            if (mask <= 0 || runState.isAtLeastStopping()) {
-                joinMe.cancel();
-                break;
-            }
-            ForkJoinWorkerThread v = ws[mask & idx];
             if (joinMe.status < 0)
                 break;
-            if (v != null && (t = v.tryStealTask()) != null){
+            if (v != null && (t = v.deqTask()) != null) {
                 randomVictimSeed = r;
                 ++stealCount;
-                return t;
+                break;
             }
-            if ((++probes & (HELPING_PROBES_PER_PAUSE - 1)) == 0)
-                Thread.yield();
-            idx = probes <= mask? r : (idx + 1); // n-1 random then circular
+            if (runState.isAtLeastStopping())
+                joinMe.cancel();
+            if ((++probes & (PROBES_PER_PAUSE - 1)) == 0)
+                pauseAwaitingWork();
+            idx = probes > mask? (idx + 1) : r; // n-1 random then circular
         }
-        return null;
+        return t;
     }
+
+    // Support for core ForkJoinTask methods
 
     /**
      * Implements ForkJoinTask.quietlyJoin
@@ -653,25 +798,27 @@ public class ForkJoinWorkerThread extends Thread {
      * Implements RecursiveAction.forkJoin
      */
     final void doForkJoin(RecursiveAction t1, RecursiveAction t2) {
-        if (t1 == null || t2 == null)
-            throw new NullPointerException();
-        pushTask(t2);
-        if (!t1.exec() || !popIfNext(t2) || !t2.exec()) {
-            Throwable ex = t1.getException();
-            if (ex != null)
-                t2.cancel();
-            helpJoinTask(t2);
-            if (ex != null || (ex = t2.getException()) != null)
-                ForkJoinTask.rethrowException(ex);
+        if (t1.status >= 0 && t2.status >= 0) {
+            pushTask(t2);
+            if (t1.rawExec()) {
+                if (popIfNext(t2)) {
+                    if (t2.rawExec())
+                        return;
+                }
+                else {
+                    helpJoinTask(t2);
+                    if (t2.completedNormally())
+                        return;
+                }
+            }
         }
-    }
-
-    /**
-     * Pop or steal a task
-     */
-    final ForkJoinTask<?> getLocalOrStolenTask() {
-        ForkJoinTask<?> t = popTask();
-        return t != null? t : getStolenTask();
+        Throwable ex;
+        if ((ex = t1.getException()) != null)
+            t2.cancel();
+        else if ((ex = t2.getException()) != null)
+            t1.cancel();
+        if (ex != null)
+            ForkJoinTask.rethrowException(ex);
     }
 
     /**
@@ -693,6 +840,36 @@ public class ForkJoinWorkerThread extends Thread {
                 return false;
         }
     }
+
+    // Cleanup support
+
+    /**
+     * Run or cancel all local tasks on exit from main.
+     */
+    private final void clearLocalTasks() {
+        while (sp - base > 0) {
+            ForkJoinTask<?> t = popTask();
+            if (t != null) {
+                if (runState.isAtLeastStopping())
+                    t.setCancelled(); // avoid exceptions due to cancel()
+                else
+                    t.exec();
+            }
+        }
+    }
+
+    /**
+     * Removes and cancels all tasks in queue.  Can be called from any
+     * thread.
+     */
+    final void cancelTasks() {
+        while (sp - base > 0) {
+            ForkJoinTask<?> t = deqTask();
+            if (t != null) // avoid exceptions due to cancel()
+                t.setCancelled();
+        }
+    }
+
 
     // Public methods on current thread
 
@@ -717,28 +894,14 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns the number of tasks waiting to be run by the current
-     * worker thread. This value may be useful for heuristic decisions
-     * about whether to fork other tasks.
+     * Returns an estimate of the number of tasks waiting to be run by
+     * the current worker thread. This value may be useful for
+     * heuristic decisions about whether to fork other tasks.
      * @return the number of tasks
      */
     public static int getLocalQueueSize() {
-        ForkJoinWorkerThread w =
-            (ForkJoinWorkerThread)(Thread.currentThread());
-        long n = w.sp - w.base;
-        return n < 0? 0 : (int)n;
-    }
-
-    /**
-     * Returns true if there are no local tasks waiting to be run by
-     * the current worker thread.
-     * @return true if there are no local tasks waiting to be run by
-     * the current worker thread.
-     */
-    public static boolean hasEmptyLocalQueue() {
-        ForkJoinWorkerThread w =
-            (ForkJoinWorkerThread)(Thread.currentThread());
-        return w.sp <= w.base;
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).
+            getQueueSize();
     }
 
     /**
@@ -768,12 +931,8 @@ public class ForkJoinWorkerThread extends Thread {
      * that no task was available.
      */
     public static boolean executeLocalTask() {
-        ForkJoinTask<?> t =
-            ((ForkJoinWorkerThread)(Thread.currentThread())).popTask();
-        if (t == null)
-            return false;
-        t.exec();
-        return true;
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).
+            runLocalTask();
     }
 
     /**
@@ -803,16 +962,8 @@ public class ForkJoinWorkerThread extends Thread {
      * that no task was available.
      */
     public static boolean executeTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread()))
-            .doExecuteTask();
-    }
-
-    final boolean doExecuteTask() {
-        ForkJoinTask<?> t = getLocalOrStolenTask();
-        if (t == null)
-            return false;
-        t.exec();
-        return true;
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).
+            runLocalOrStolenTask();
     }
 
     /**
@@ -820,24 +971,8 @@ public class ForkJoinWorkerThread extends Thread {
      * isQuiescent.
      */
     public static void helpQuiesce() {
-        ((ForkJoinWorkerThread)(Thread.currentThread())).doHelpQuiesce();
-    }
-
-    final void doHelpQuiesce() {
-        for (;;) {
-            ForkJoinTask<?> t = popTask();
-            if (t != null || (t = getStolenTask()) != null) {
-                ensureActive();
-                t.exec();
-            }
-            else {
-                ensureInactive();
-                if (pool.getActiveThreadCount() == 0) {
-                    ensureActive(); // reactivate on exit
-                    break;
-                }
-            }
-        }
+        ((ForkJoinWorkerThread)(Thread.currentThread())).
+            runUntilQuiescent();
     }
 
     /**
@@ -877,6 +1012,10 @@ public class ForkJoinWorkerThread extends Thread {
     public static int getEstimatedSurplusTaskCount() {
         return ((ForkJoinWorkerThread)(Thread.currentThread()))
             .estimatedSurplusTaskCount();
+    }
+
+    final int estimatedSurplusTaskCount() {
+        return (sp - base) - pool.getIdleThreadCount();
     }
 
     /**
@@ -941,34 +1080,8 @@ public class ForkJoinWorkerThread extends Thread {
      * @return true if removed
      */
     public static boolean removeIfNextLocalTask(ForkJoinTask<?> task) {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).popIfNext(task);
-    }
-
-    /**
-     * Declares that there are stealable tasks. This may (or may not)
-     * improve ramp-up time when called after forking large numbers of
-     * tasks that might not in turn naturally propagate by forking
-     * other tasks. Use in other contexts is unlikely to benefit
-     * performance.
-     */
-    public static void advertiseWork() {
-        Thread t = Thread.currentThread();
-        if (t instanceof ForkJoinWorkerThread)
-            ((ForkJoinWorkerThread)t).poolBarrier.signal();
-    }
-
-    /**
-     * Forks the given task, but does not advertise its existence to
-     * idle threads. While this task may be stolen anyway, this method
-     * may be useful as a heuristic to improve locality.
-     * @param task the task
-     * @throws NullPointerException if task is null
-     */
-    public static void quietlyFork(ForkJoinTask<?> task) {
-        if (task == null)
-            throw new NullPointerException();
-        ((ForkJoinWorkerThread)(Thread.currentThread())).
-            unsignalledPushTask(task);
+        return task != null &&
+            ((ForkJoinWorkerThread)(Thread.currentThread())).popIfNext(task);
     }
 
     // Support for alternate handling of submissions
@@ -1009,7 +1122,8 @@ public class ForkJoinWorkerThread extends Thread {
      * If the argument represents a submission to a ForkJoinPool
      * (normally, one returned by <tt>pollSubmission</tt>), causes it
      * to be ready with the given value returned upon invocation of
-     * its <tt>get()</tt> method. This method may be useful for
+     * its <tt>get()</tt> method, regardless of the status of the
+     * underlying ForkJoinTask. This method may be useful for
      * alternate handling of drained submissions..
      * @param submission the submission
      * @param value the result to be returned by the submission
@@ -1028,18 +1142,19 @@ public class ForkJoinWorkerThread extends Thread {
      * If the argument represents a submission to a ForkJoinPool
      * (normally, one returned by <tt>pollSubmission</tt>), causes it
      * to be ready with the given exception thrown on invocation of
-     * its <tt>get()</tt> method.This method may be useful for
+     * its <tt>get()</tt> method, regardless of the status of the
+     * underlying ForkJoinTask..This method may be useful for
      * alternate handling of drained submissions..
      * @param submission the submission
-     * @param exception the exception to be thrown on access 
+     * @param exception the exception to be thrown on access
      * @throws IllegalArgumentException if the exception is
      * not a RuntimeException or Error
      * @throws IllegalArgumentException if the given future does
      * not represent a submission to a pool
      */
-    public static <V> void forceCompletionExceptionally(Future<V> submission, 
+    public static <V> void forceCompletionExceptionally(Future<V> submission,
                                                         Throwable exception) {
-        if (!(exception instanceof RuntimeException) && 
+        if (!(exception instanceof RuntimeException) &&
             !(exception instanceof Error))
             throw new IllegalArgumentException();
         try {
@@ -1048,7 +1163,6 @@ public class ForkJoinWorkerThread extends Thread {
             throw new IllegalArgumentException();
         }
     }
-
 
     // per-worker exported random numbers
 
@@ -1186,8 +1300,8 @@ public class ForkJoinWorkerThread extends Thread {
     static final Unsafe _unsafe;
     static final long baseOffset;
     static final long spOffset;
-    static final long arrayBase;
-    static final int arrayShift;
+    static final long qBase;
+    static final int qShift;
     static {
         try {
             if (ForkJoinWorkerThread.class.getClassLoader() != null) {
@@ -1201,11 +1315,11 @@ public class ForkJoinWorkerThread extends Thread {
                 (ForkJoinWorkerThread.class.getDeclaredField("base"));
             spOffset = _unsafe.objectFieldOffset
                 (ForkJoinWorkerThread.class.getDeclaredField("sp"));
-            arrayBase = _unsafe.arrayBaseOffset(ForkJoinTask[].class);
+            qBase = _unsafe.arrayBaseOffset(ForkJoinTask[].class);
             int s = _unsafe.arrayIndexScale(ForkJoinTask[].class);
             if ((s & (s-1)) != 0)
                 throw new Error("data type scale not a power of two");
-            arrayShift = 31 - Integer.numberOfLeadingZeros(s);
+            qShift = 31 - Integer.numberOfLeadingZeros(s);
         } catch (Exception e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }

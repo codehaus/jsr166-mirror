@@ -127,7 +127,8 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
 
     /**
      * Forks both tasks and returns when <tt>isDone</tt> holds for
-     * both.. If both tasks encounter exceptions, only one of them
+     * both..If one task encounters an exception, the other may be
+     * cancelled. If both tasks encounter exceptions, only one of them
      * (arbitrarily chosen) is thrown from this method.  You can check
      * individual status using method <tt>getException</tt>.  This
      * method may be invoked only from within other ForkJoinTask
@@ -144,7 +145,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     /**
      * Forks all tasks in the array, returning when <tt>isDone</tt>
      * holds for all of them. If any task encounters an exception,
-     * others are cancelled.  This method may be invoked only from
+     * others may be cancelled.  This method may be invoked only from
      * within other ForkJoinTask computations. Attempts to invoke in
      * other contexts result in exceptions or errors including
      * ClassCastException.
@@ -161,12 +162,8 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
             }
             else if (i != 0)
                 t.fork();
-            else {
-                // Prod pool to improve ramp-up when there a lot of tasks
-                ForkJoinWorkerThread.advertiseWork();
-                if (!t.exec() && ex == null)
-                    ex = getException(t);
-            }
+            else if (!t.exec() && ex == null)
+                ex = getException(t);
         }
         boolean pop = true;
         for (int i = 1; i <= last; ++i) {
@@ -193,10 +190,10 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     /**
      * Forks all tasks in the list, returning when <tt>isDone</tt>
      * holds for all of them. If any task encounters an exception,
-     * others are cancelled.
-     * This method may be invoked only from within other ForkJoinTask
-     * computations. Attempts to invoke in other contexts result
-     * in exceptions or errors including ClassCastException.
+     * others may be cancelled.  This method may be invoked only from
+     * within other ForkJoinTask computations. Attempts to invoke in
+     * other contexts result in exceptions or errors including
+     * ClassCastException.
      * @throws NullPointerException if list or any element of list are null.
      */
     public static void forkJoin(List<? extends RecursiveAction> tasks) {
@@ -210,12 +207,8 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
             }
             else if (i != 0)
                 t.fork();
-            else {
-                // Prod pool to improve ramp-up when there a lot of tasks
-                ForkJoinWorkerThread.advertiseWork();
-                if (!t.exec() && ex == null)
-                    ex = getException(t);
-            }
+            else if (!t.exec() && ex == null)
+                ex = getException(t);
         }
         boolean pop = true;
         for (int i = 1; i <= last; ++i) {
@@ -272,5 +265,20 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
         }
         return false;
     }
-    
+
+    /**
+     * Version of exec for ForkJoinWorkerThread.doForkJoin, that
+     * prechecks status so doesn't need to suppress check.
+     */
+    final boolean rawExec() {
+        try {
+            compute();
+            setDone();
+            return true;
+        } catch(Throwable rex) {
+            setDoneExceptionally(rex);
+            return false;
+        }
+    }
+
 }

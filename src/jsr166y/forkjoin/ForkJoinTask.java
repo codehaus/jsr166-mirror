@@ -130,7 +130,7 @@ public abstract class ForkJoinTask<V> implements Serializable {
      * direct use of Unsafe to avoid overhead.)
      */
     volatile int status;
-    static final int COMPLETED     = -1;
+    static final int COMPLETED     = -1; // order matters
     static final int CANCELLED     = -2;
     static final int HAS_EXCEPTION = -3;
 
@@ -175,19 +175,17 @@ public abstract class ForkJoinTask<V> implements Serializable {
      * allow races across normal and exceptional completion.
      */
     final void setDoneExceptionally(Throwable rex) {
-        if (status != HAS_EXCEPTION) { // races OK.
-            setException(this, rex);
-            status = HAS_EXCEPTION;
-        }
+        setException(this, rex);
+        status = HAS_EXCEPTION;
     }
 
     /**
-     * Sets status to cancelled, failing on lost CAS race.  Same
-     * implementation as cancel() but used internally to force status
-     * CAS even if cancel() is overridden.
+     * Sets status to cancelled only if in initial state. Uses same
+     * implementation as cancel() but used internally to safely set
+     * status on pool shutdown etc even if cancel is overridden.
      */
     final void setCancelled() {
-        _unsafe.compareAndSwapInt(this, statusOffset, status, CANCELLED);
+        _unsafe.compareAndSwapInt(this, statusOffset, 0, CANCELLED);
     }
 
     /**
@@ -269,7 +267,7 @@ public abstract class ForkJoinTask<V> implements Serializable {
             ((ForkJoinWorkerThread)(Thread.currentThread())).helpJoinTask(this);
             s = status;
         }
-        return s == COMPLETED? rawResult() : reportAsForkJoinResult();
+        return s < COMPLETED? reportAsForkJoinResult() : rawResult();
     }
 
     /**
@@ -302,12 +300,19 @@ public abstract class ForkJoinTask<V> implements Serializable {
     }
 
     /**
-     * Returns true if task currently hase COMPLETED status. This
+     * Returns true if task currently has COMPLETED status. This
      * method is not public because this fact may asynchronously
      * change, which we can handle internally but not externally.
      */
     final boolean completedNormally() {
         return status == COMPLETED;
+    }
+
+    /**
+     * Returns true if task threw and exception or was cancelled
+     */
+    final boolean completedAbnormally() {
+        return status < COMPLETED;
     }
 
     /**
@@ -330,7 +335,8 @@ public abstract class ForkJoinTask<V> implements Serializable {
      * <tt>finishExceptionally()</tt>.
      */
     public void cancel() {
-        _unsafe.compareAndSwapInt(this, statusOffset, status, CANCELLED);
+        // Using 0 here succeeds if task never touched, and maybe otherwise
+        _unsafe.compareAndSwapInt(this, statusOffset, 0, CANCELLED);
     }
 
     /**
@@ -341,7 +347,7 @@ public abstract class ForkJoinTask<V> implements Serializable {
      */
     public final Throwable getException() {
         int s = status;
-        if (s == COMPLETED)
+        if (s >= COMPLETED)
             return null;
         if (s == CANCELLED)
             return new CancellationException();

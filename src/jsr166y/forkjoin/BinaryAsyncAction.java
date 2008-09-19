@@ -97,11 +97,14 @@ public abstract class BinaryAsyncAction extends AsyncAction {
 
     /**
      * Overridable callback action triggered upon <tt>finish</tt> of
-     * subtasks.  Upon invocation, both (non-null) subtasks have
-     * completed.  After return, this task <tt>isDone</tt> and is
-     * joinable by other tasks. The default version of this method
-     * does nothing. But it may may be overridden in subclasses to
-     * perform some action when this task is about to complete. 
+     * subtasks.  Upon invocation, both subtasks have completed.
+     * After return, this task <tt>isDone</tt> and is joinable by
+     * other tasks. The default version of this method does
+     * nothing. But it may may be overridden in subclasses to perform
+     * some action (for example a reduction) when this task is
+     * completes.
+     * @param x one subtask
+     * @param y the other subtask
      */
     protected void onFinish(BinaryAsyncAction x, BinaryAsyncAction y) {
     }
@@ -144,21 +147,20 @@ public abstract class BinaryAsyncAction extends AsyncAction {
         // todo: Use removeIfNextLocalTask(s) without possibly blowing stack
         BinaryAsyncAction a = this;
         for (;;) {
-            BinaryAsyncAction p = a.parent;
             BinaryAsyncAction s = a.sibling;
-            a.parent = null;
+            BinaryAsyncAction p = a.parent;
             a.sibling = null;
+            a.parent = null;
             a.setDone();
-            if (p != null && s != null && !p.casStatus(0, 1)) {
-                try {
-                    p.onFinish(a, s);
-                } catch(Throwable rex) {
-                    p.finishExceptionally(rex);
-                    break;
-                }
-                a = p;
+            if (p == null || p.casStatus(0, 1))
+                break;
+            try {
+                p.onFinish(a, s);
+            } catch(Throwable rex) {
+                p.doFinishExceptionally(rex);
+                return;
             }
-            else break;
+            a = p;
         }
     }
 
@@ -186,9 +188,7 @@ public abstract class BinaryAsyncAction extends AsyncAction {
      */
     private void doFinishExceptionally(Throwable ex) {
         BinaryAsyncAction a = this;
-        for (;;) {
-            if (a.status == ForkJoinTask.HAS_EXCEPTION)
-                break;
+        while (a.status != ForkJoinTask.HAS_EXCEPTION) {
             a.setDoneExceptionally(ex);
             BinaryAsyncAction s = a.sibling;
             if (s != null)
@@ -203,8 +203,8 @@ public abstract class BinaryAsyncAction extends AsyncAction {
      * is already finished.
      * @return this task's parent, or null if none.
      */
-    public final BinaryAsyncAction getParent() { 
-        return parent; 
+    public final BinaryAsyncAction getParent() {
+        return parent;
     }
 
     /**
@@ -212,8 +212,8 @@ public abstract class BinaryAsyncAction extends AsyncAction {
      * already finished.
      * @return this task's sibling, or null if none.
      */
-    public BinaryAsyncAction getSibling() { 
-        return sibling; 
+    public BinaryAsyncAction getSibling() {
+        return sibling;
     }
 
     /**

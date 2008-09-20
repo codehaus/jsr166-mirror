@@ -153,10 +153,9 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * So, signals and waits occur relatively rarely during normal
      * processing, which minimizes contention on this global
      * synchronizer. Even so, the PoolBarrier is designed to minimize
-     * blockages by threads that have better things to do.  Note that
-     * ForkJoinWorkerThreads access and cache this field.
+     * blockages by threads that have better things to do.
      */
-    final PoolBarrier poolBarrier;
+    private final PoolBarrier poolBarrier;
 
     /**
      * The number of submissions that are running in pool.
@@ -934,6 +933,9 @@ public class ForkJoinPool implements ForkJoinExecutor {
             tryTerminateOnShutdown();
     }
 
+    final long barrierSync(long eventCount) {
+        return poolBarrier.sync(eventCount);
+    }
 
     /**
      * Embedded submission queue holds submissions not yet started by

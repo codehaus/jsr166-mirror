@@ -93,12 +93,14 @@ public class ForkJoinWorkerThread extends Thread {
      *
      * Efficient implementation of this approach currently relies on
      * an uncomfortable amount of "Unsafe" mechanics. To maintain
-     * correct orderings, reads of base and sp have volatile ordering,
-     * but writes of sp require only store ordering.  Because they are
-     * protected by volatile index reads, reads of the array slots do
+     * correct orderings, reads and writes of variable base require
+     * volatile ordering.  Variable sp does not require volatile loads
+     * (so long as other threads read base first), but require
+     * store-ordering on writes.  Because they are protected by
+     * volatile base reads, reads of the queue array and its slots do
      * not need volatile load semantics, but writes (in push) require
-     * store order and CASes (in pop and deq) require full volatile
-     * CAS semantics. Since these combinations aren't supported using
+     * store order and CASes (in pop and deq) require (volatile) CAS
+     * semantics. Since these combinations aren't supported using
      * ordinary volatiles, the only way to accomplish these effciently
      * is to use direct Unsafe calls. (Using external AtomicIntegers
      * and AtomicReferenceArrays for the indices and array is
@@ -122,21 +124,22 @@ public class ForkJoinWorkerThread extends Thread {
      * 2. Run control: The primary run control is based on a global
      * counter (activeCount) held by the pool. It uses an algorithm
      * similar to that in Herlihy and Shavit section 17.6 to cause
-     * threads to eventually block when "isActive" is false for all
-     * threads.  For this to work, isActive must be true when
-     * executing tasks, and before stealing a task. It must be false
-     * before blocking on PoolBarrier (awaiting a new submission or
-     * other Pool event). In between, there is some free play which we
-     * take advantage of to avoid contention and rapid flickering of
-     * the global activeCount: If inactive, we activate only if a
-     * victim queue appears to be nonempty (see above), and even then,
-     * back off, looking for another victim if the attempt (CAS) to
-     * increase activeCount fails.  Similarly, a thread tries to
-     * inactivate only after a full scan of other threads, and if the
-     * attempted decrement fails, rescans instead. The net effect is
-     * that contention on activeCount is rarely a measurable
-     * performance issue. (There are also a few other cases where we
-     * scan for work rather than retry/block upon contention.)
+     * threads to eventually block when all threads declare they are
+     * inactive. (See variable "scans".)  For this to work, threads
+     * must be declared active when executing tasks, and before
+     * stealing a task. The must be inactive before blocking on the
+     * PoolBarrier (awaiting a new submission or other Pool event). In
+     * between, there is some free play which we take advantage of to
+     * avoid contention and rapid flickering of the global
+     * activeCount: If inactive, we activate only if a victim queue
+     * appears to be nonempty (see above), and even then, back off,
+     * looking for another victim if the attempt (CAS) to increase
+     * activeCount fails.  Similarly, a thread tries to inactivate
+     * only after a full scan of other threads, and if the attempted
+     * decrement fails, rescans instead. The net effect is that
+     * contention on activeCount is rarely a measurable performance
+     * issue. (There are also a few other cases where we scan for work
+     * rather than retry/block upon contention.)
      *
      * Unlike in previous incarnations of this framework, we do not
      * ever block worker threads while submissions are executing
@@ -146,8 +149,8 @@ public class ForkJoinWorkerThread extends Thread {
      * work are extremely well-behaved. Scans (mainly in
      * getStolenTask; also getSubmission and scanWhileJoining) do not
      * modify any variables that might disrupt caches (except, when
-     * necessary, "isActive") and probe only the base/sp fields of
-     * other threads unless they appear non-empty. We also
+     * necessary, activation status) and probe only the base/sp fields
+     * of other threads unless they appear non-empty. We also
      * occasionally perform Thread.yields, which may or may not
      * improve good citizenship. It may be possible to replace this
      * with a different advisory blocking scheme that better shields
@@ -179,20 +182,9 @@ public class ForkJoinWorkerThread extends Thread {
     private static final int MAXIMUM_QUEUE_CAPACITY = 1 << 30;
 
     /**
-     * Generator of seeds for per-thread random numbers and random
-     * victims
+     * Generator of seeds for per-thread random numbers.
      */
     private static final Random randomSeedGenerator = new Random();
-
-    /**
-     * Exported random numbers
-     */
-    private final JURandom juRandom;
-
-    /**
-     * Run state of this worker.
-     */
-    private final RunState runState;
 
     /**
      * The pool this thread works in.
@@ -200,22 +192,14 @@ public class ForkJoinWorkerThread extends Thread {
     private final ForkJoinPool pool;
 
     /**
-     * Pool-wide sync barrier, cached from pool upon construction
+     * Run state of this worker.
      */
-    private final PoolBarrier poolBarrier;
+    private final RunState runState;
 
     /**
      * The work-stealing queue array. Size must be a power of two.
      */
     private ForkJoinTask<?>[] queue;
-
-    /**
-     * Index (mod queue.length) of next queue slot to push to or pop
-     * from. It is written only by owner thread, via ordered store.
-     * Both sp and base are allowed to wrap around on overflow,
-     * but (sp - base) still estimates size.
-     */
-    private volatile int sp;
 
     /**
      * Index (mod queue.length) of least valid queue slot, which is
@@ -224,35 +208,22 @@ public class ForkJoinWorkerThread extends Thread {
     private volatile int base;
 
     /**
-     * The last event event count waited for
+     * Index (mod queue.length) of next queue slot to push to or pop
+     * from. It is written only by owner thread, via ordered store.
+     * Both sp and base are allowed to wrap around on overflow,
+     * but (sp - base) still estimates size.
      */
-    private long eventCount;
+    private int sp;
 
     /**
-     * Number of steals, just for monitoring purposes,
+     * Activity status and pause control. When zero, this worker is
+     * considered active. Nonzero values indicate number of empty
+     * scans (see getStolenTask) to control pausing.  The value must
+     * be nonzero upon construction. It must be zero when executing
+     * tasks, and BEFORE stealing a task. It must be nonzero before
+     * blocking on the PoolBarrier.
      */
-    private volatile long fullStealCount;
-
-    /**
-     * Number of steals, transferred to fullStealCount when idle
-     */
-    private int stealCount;
-
-    /**
-     * Seed for juRandom. Kept with worker fields to minimize
-     * cacheline sharing
-     */
-    long juRandomSeed;
-
-    /**
-     * Index of this worker in pool array. Set once by pool before running.
-     */
-    private int poolIndex;
-
-    /**
-     * The number of empty calls to getStolenTask, for pause control.
-     */
-    private int emptyScans;
+    private int scans;
 
     /**
      * Seed for random number generator for choosing steal victims
@@ -260,10 +231,32 @@ public class ForkJoinWorkerThread extends Thread {
     private int randomVictimSeed;
 
     /**
-     * Activity status. Must be true when executing tasks, and BEFORE
-     * stealing a task. Must be false before blocking on PoolBarrier.
+     * Number of steals, transferred to fullStealCount when idle
      */
-    private boolean isActive;
+    private int stealCount;
+
+    /**
+     * Number of steals, just for monitoring purposes,
+     */
+    private volatile long fullStealCount;
+
+    /**
+     * Index of this worker in pool array. Set once by pool before running.
+     */
+    private int poolIndex;
+
+    /**
+     * The last event count waited for
+     */
+    private long eventCount;
+
+    /**
+     * Seed for juRandom methods. 
+     */
+    private long juRandomSeed;
+
+    // Padding to help avoid cacheline sharing across workers
+    private int q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, qa, qb, qc, qd, qe, qf;
 
     /**
      * Creates a ForkJoinWorkerThread operating in the given pool.
@@ -272,9 +265,8 @@ public class ForkJoinWorkerThread extends Thread {
      */
     protected ForkJoinWorkerThread(ForkJoinPool pool) {
         this.pool = pool;
-        this.poolBarrier = pool.poolBarrier; // cached
-        this.juRandom = new JURandom();
         this.runState = new RunState();
+        this.scans = 1;
         this.juRandomSeed = randomSeedGenerator.nextLong();
         int rseed = randomSeedGenerator.nextInt();
         this.randomVictimSeed = (rseed == 0)? 1 : rseed; // must be nonzero
@@ -357,10 +349,10 @@ public class ForkJoinWorkerThread extends Thread {
     private final ForkJoinTask<?> deqTask() {
         ForkJoinTask<?> t;
         int i;
-        int b;
+        int b = base;
         ForkJoinTask<?>[] q = queue;
         if (q != null &&
-            sp - (b = base) > 0 &&
+            b - sp < 0 &&
             (t = q[i = b & (q.length - 1)]) != null &&
             casSlotNull(q, i, t)) {
             base = b + 1;
@@ -409,12 +401,13 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Specialized version of popTask to pop only if
      * topmost element is the given task.
-     * @param t the (nonnull) task to match
+     * @param t the task to match (null is never matched)
      */
     final boolean popIfNext(ForkJoinTask<?> t) {
         int s;
         ForkJoinTask<?>[] q = queue;
-        if (q != null && casSlotNull(q, (q.length - 1) & (s = sp - 1), t)) {
+        if (t != null && q != null && 
+            casSlotNull(q, (q.length - 1) & (s = sp - 1), t)) {
             setSp(s);
             return true;
         }
@@ -471,8 +464,8 @@ public class ForkJoinWorkerThread extends Thread {
      * Unconditionally set status to active and adjust activeCount
      */
     private final void ensureActive() {
-        if (!isActive) {
-            isActive = true;
+        if (scans != 0) {
+            scans = 0;
             pool.incrementActiveCount();
         }
     }
@@ -482,10 +475,10 @@ public class ForkJoinWorkerThread extends Thread {
      * @return true if now active
      */
     private final boolean tryActivate() {
-        if (!isActive) {
+        if (scans != 0) {
             if (!pool.tryIncrementActiveCount())
                 return false;
-            isActive = true;
+            scans = 0;
         }
         return true;
     }
@@ -495,8 +488,8 @@ public class ForkJoinWorkerThread extends Thread {
      * now zero. (Use tryInactivate instead.)
      */
     private final void ensureInactive() {
-        if (isActive) {
-            isActive = false;
+        if (scans == 0) {
+            scans = 1;
             pool.decrementActiveCount();
             transferSteals();
         }
@@ -507,18 +500,18 @@ public class ForkJoinWorkerThread extends Thread {
      * @return true if pool apparently idle
      */
     private final boolean tryInactivate() {
-        if (isActive) {
+        if (scans == 0) {
             if (!pool.tryDecrementActiveCount())
                 return false;
-            isActive = false;
+            scans = 1;
         }
         if (pool.getActiveThreadCount() == 0) {
             transferSteals();
-            eventCount = poolBarrier.sync(eventCount);
+            eventCount = pool.barrierSync(eventCount);
             return true;
         }
-        else if (++emptyScans > SCANS_PER_PAUSE) {
-            emptyScans = 0;
+        else if (++scans > SCANS_PER_PAUSE) {
+            scans = 1;
             pauseAwaitingWork();
         }
         return false;
@@ -593,7 +586,7 @@ public class ForkJoinWorkerThread extends Thread {
         Throwable exception = null;
         try {
             onStart();
-            eventCount = poolBarrier.sync(0); // wait for start signal
+            eventCount = pool.barrierSync(0); // wait for start signal
             queue = new ForkJoinTask<?>[INITIAL_QUEUE_CAPACITY];
             /*
              * Prefer running a submission if previously inactive,
@@ -754,14 +747,12 @@ public class ForkJoinWorkerThread extends Thread {
         int probes = -mask;              // use random index while negative
         int r = randomVictimSeed;        // extract once to keep scan quiet
         int idx = r;
-        boolean active = isActive;
         ForkJoinTask<?> t = null;
         do {
             ForkJoinWorkerThread v = ws[mask & idx];
             r = xorShift(r);                      // update random seed
-            if (v != null && v.sp - v.base > 0) { // apparently nonempty
-                if ((active || (active = tryActivate())) &&
-                    (t = v.deqTask()) != null) {
+            if (v != null && v.base - v.sp < 0) { // apparently nonempty
+                if (tryActivate() && (t = v.deqTask()) != null) {
                     randomVictimSeed = r;
                     ++stealCount;
                     break;
@@ -1106,8 +1097,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return true if removed
      */
     public static boolean removeIfNextLocalTask(ForkJoinTask<?> task) {
-        return task != null &&
-            ((ForkJoinWorkerThread)(Thread.currentThread())).popIfNext(task);
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).popIfNext(task);
     }
 
     // Support for alternate handling of submissions
@@ -1191,65 +1181,59 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     // per-worker exported random numbers
+    // Same constants as java.util.Random
+    final static long JURandomMultiplier = 0x5DEECE66DL;
+    final static long JURandomAddend = 0xBL;
+    final static long JURandomMask = (1L << 48) - 1;
 
-    /**
-     * A workalike for java.util.Random, but specialized
-     * for exporting to users of worker threads.
-     */
-    final class JURandom { // non-static, use worker seed
-        // Guarantee same constants as java.util.Random
-        final static long Multiplier = 0x5DEECE66DL;
-        final static long Addend = 0xBL;
-        final static long Mask = (1L << 48) - 1;
+    private final int nextJURandom(int bits) {
+        long next = (juRandomSeed * JURandomMultiplier + JURandomAddend) &
+            JURandomMask;
+        juRandomSeed = next;
+        return (int)(next >>> (48 - bits));
+    }
 
-        int next(int bits) {
-            long next = (juRandomSeed * Multiplier + Addend) & Mask;
-            juRandomSeed = next;
-            return (int)(next >>> (48 - bits));
+    private final int nextJURandomInt() {
+        return nextJURandom(32);
+    }
+
+    private final int nextJURandomInt(int n) {
+        if (n <= 0)
+            throw new IllegalArgumentException("n must be positive");
+        int bits = nextJURandom(31);
+        if ((n & -n) == n)
+            return (int)((n * (long)bits) >> 31);
+        
+        for (;;) {
+            int val = bits % n;
+            if (bits - val + (n-1) >= 0)
+                return val;
+            bits = nextJURandom(31);
         }
+    }
 
-        int nextInt() {
-            return next(32);
+    private final long nextJURandomLong() {
+        return ((long)(nextJURandom(32)) << 32) + nextJURandom(32);
+    }
+    
+    private final long nextJURandomLong(long n) {
+        if (n <= 0)
+            throw new IllegalArgumentException("n must be positive");
+        long offset = 0;
+        while (n >= Integer.MAX_VALUE) { // randomly pick half range
+            int bits = nextJURandom(2); // 2nd bit for odd vs even split
+            long half = n >>> 1;
+            long nextn = ((bits & 2) == 0)? half : n - half;
+            if ((bits & 1) == 0)
+                offset += n - nextn;
+            n = nextn;
         }
+        return offset + nextJURandomInt((int)n);
+    }
 
-        int nextInt(int n) {
-            if (n <= 0)
-                throw new IllegalArgumentException("n must be positive");
-            int bits = next(31);
-            if ((n & -n) == n)
-                return (int)((n * (long)bits) >> 31);
-
-            for (;;) {
-                int val = bits % n;
-                if (bits - val + (n-1) >= 0)
-                    return val;
-                bits = next(31);
-            }
-        }
-
-        long nextLong() {
-            return ((long)(next(32)) << 32) + next(32);
-        }
-
-        long nextLong(long n) {
-            if (n <= 0)
-                throw new IllegalArgumentException("n must be positive");
-            long offset = 0;
-            while (n >= Integer.MAX_VALUE) { // randomly pick half range
-                int bits = next(2); // 2nd bit for odd vs even split
-                long half = n >>> 1;
-                long nextn = ((bits & 2) == 0)? half : n - half;
-                if ((bits & 1) == 0)
-                    offset += n - nextn;
-                n = nextn;
-            }
-            return offset + nextInt((int)n);
-        }
-
-        double nextDouble() {
-            return (((long)(next(26)) << 27) + next(27))
-                / (double)(1L << 53);
-        }
+    private final double nextJURandomDouble() {
+        return (((long)(nextJURandom(26)) << 27) + nextJURandom(27))
+            / (double)(1L << 53);
     }
 
     /**
@@ -1261,7 +1245,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     public static int nextRandomInt() {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            juRandom.nextInt();
+            nextJURandomInt();
     }
 
     /**
@@ -1277,7 +1261,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     public static int nextRandomInt(int n) {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            juRandom.nextInt(n);
+            nextJURandomInt(n);
     }
 
     /**
@@ -1289,7 +1273,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     public static long nextRandomLong() {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            juRandom.nextLong();
+            nextJURandomLong();
     }
 
     /**
@@ -1305,7 +1289,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     public static long nextRandomLong(long n) {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            juRandom.nextLong(n);
+            nextJURandomLong(n);
     }
 
     /**
@@ -1318,7 +1302,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     public static double nextRandomDouble() {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            juRandom.nextDouble();
+            nextJURandomDouble();
     }
 
     // Temporary Unsafe mechanics for preliminary release

@@ -117,12 +117,22 @@ public class ForkJoinPool implements ForkJoinExecutor {
      */
     volatile ForkJoinWorkerThread[] workers;
 
-    /**
-     * Head and tail of embedded submission queue. (The queue is
-     * embedded to avoid hostile memory placements.)
+   /**
+     * Pool wide synchronization control. Workers are enabled to look
+     * for work when the barrier's count is incremented. If they fail
+     * to find some, they may wait for next count. Synchronization
+     * events occur only in enough contexts to maintain overall
+     * liveness:
+     *
+     *   - Submission of a new task
+     *   - Termination of pool or worker
+     *
+     * So, signals and waits occur relatively rarely during normal
+     * processing, which minimizes contention on this global
+     * synchronizer. Even so, the PoolBarrier is designed to minimize
+     * blockages by threads that have better things to do.
      */
-    volatile SQNode sqHead;
-    volatile SQNode sqTail;
+    private final PoolBarrier poolBarrier;
 
     /**
      * Lock protecting access to workers.
@@ -138,24 +148,6 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * Lifecycle control.
      */
     private final RunState runState;
-
-   /**
-     * Pool wide synchronization control. Workers are enabled to look
-     * for work when the barrier's count is incremented. If they fail
-     * to find some, they may wait for next count. Synchronization
-     * events occur only in enough contexts to maintain overall
-     * liveness:
-     *
-     *   - Submission of a new task
-     *   - Termination of pool or worker
-     *   - A worker pushing a task on an empty per-worker queue
-     *
-     * So, signals and waits occur relatively rarely during normal
-     * processing, which minimizes contention on this global
-     * synchronizer. Even so, the PoolBarrier is designed to minimize
-     * blockages by threads that have better things to do.
-     */
-    private final PoolBarrier poolBarrier;
 
     /**
      * The number of submissions that are running in pool.
@@ -174,6 +166,13 @@ public class ForkJoinPool implements ForkJoinExecutor {
     private final ForkJoinWorkerThreadFactory factory;
 
     /**
+     * Head and tail of embedded submission queue. (The queue is
+     * embedded to avoid hostile memory placements.)
+     */
+    private volatile SQNode sqHead;
+    private volatile SQNode sqTail;
+
+    /**
      * Number of workers that are (probably) executing tasks.
      * Atomically incremented when a worker gets a task to run, and
      * decremented when worker has no tasks and cannot find any.  This
@@ -181,24 +180,24 @@ public class ForkJoinPool implements ForkJoinExecutor {
      * stand-alone field to minimize memory thrashing when it is
      * heavily contended during ramp-up/down of tasks.
      */
-    volatile int activeCount;
+    private volatile int activeCount;
 
     /**
      * The current targetted pool size. Updated only under worker lock
      * but volatile to allow concurrent reads.
      */
-    volatile int poolSize;
-
-    /**
-     * Pool number, just for assigning useful names to worker threads
-     */
-    private final int poolNumber;
+    private volatile int poolSize;
 
     /**
      * The number of workers that have started but not yet terminated
      * Accessed only under workerLock.
      */
     private int runningWorkers;
+
+    /**
+     * Pool number, just for assigning useful names to worker threads
+     */
+    private final int poolNumber;
 
     /**
      * Return a good size for worker array given pool size.
@@ -288,18 +287,17 @@ public class ForkJoinPool implements ForkJoinExecutor {
      *         java.lang.RuntimePermission}<tt>("modifyThread")</tt>,
      */
     public ForkJoinPool(int poolSize, ForkJoinWorkerThreadFactory factory) {
-        checkPermission();
         if (poolSize <= 0)
             throw new IllegalArgumentException();
         if (factory == null)
             throw new NullPointerException();
+        checkPermission();
         this.poolSize = poolSize;
         this.factory = factory;
         this.poolNumber = poolNumberGenerator.incrementAndGet();
-        this.runningSubmissions = new AtomicInteger();
-        this.workers = new ForkJoinWorkerThread[workerSizeFor(poolSize)];
         this.poolBarrier = new PoolBarrier();
         this.runState = new RunState();
+        this.runningSubmissions = new AtomicInteger();
         this.workerLock = new ReentrantLock();
         this.termination = workerLock.newCondition();
         SQNode dummy = new SQNode(null);
@@ -309,13 +307,17 @@ public class ForkJoinPool implements ForkJoinExecutor {
     }
 
     /**
-     * Initial worker startup
+     * Initial worker array and worker creation and startup. (This
+     * must be done under lock to avoid interference by some of the
+     * newly started threads while creating others.)
      */
     private void createAndStartWorkers(int ps) {
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
-            ForkJoinWorkerThread[] ws = workers;
+            ForkJoinWorkerThread[] ws = 
+                new ForkJoinWorkerThread[workerSizeFor(ps)];
+            workers = ws;
             for (int i = 0; i < ps; ++i)
                 ws[i] = createWorker(i);
             for (int i = 0; i < ps; ++i) {
@@ -858,9 +860,9 @@ public class ForkJoinPool implements ForkJoinExecutor {
     /**
      * Returns the total number of tasks stolen from one thread's work
      * queue by another. This value is only an approximation, obtained
-     * by iterating across all threads in the pool, and may lag the
-     * actual total number of steals when the pool is not
-     * quiescent. But the value is still useful for monitoring and
+     * by iterating across all threads in the pool, and may
+     * mis-estimate the actual total number of steals when the pool is
+     * not quiescent. But the value is still useful for monitoring and
      * tuning fork/join programs: In general, steal counts should be
      * high enough to keep threads busy, but low enough to avoid
      * overhead and contention across threads.
@@ -933,6 +935,9 @@ public class ForkJoinPool implements ForkJoinExecutor {
             tryTerminateOnShutdown();
     }
 
+    /**
+     * Wait for a pool event, if necessary. Called only by workers.
+     */
     final long barrierSync(long eventCount) {
         return poolBarrier.sync(eventCount);
     }

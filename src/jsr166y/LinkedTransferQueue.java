@@ -10,6 +10,8 @@ import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 import java.util.*;
 import java.io.*;
+import sun.misc.Unsafe;
+import java.lang.reflect.*;
 
 /**
  * An unbounded {@linkplain TransferQueue} based on linked nodes.
@@ -131,19 +133,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
 
-    private final QNode dummy = new QNode(null, false);
-    private final PaddedAtomicReference<QNode> head =
-        new PaddedAtomicReference<QNode>(dummy);
-    private final PaddedAtomicReference<QNode> tail =
-        new PaddedAtomicReference<QNode>(dummy);
+    /** head of the queue */
+    private transient final PaddedAtomicReference<QNode> head;
+    /** tail of the queue */
+    private transient final PaddedAtomicReference<QNode> tail;
 
     /**
      * Reference to a cancelled node that might not yet have been
      * unlinked from queue because it was the last inserted node
      * when it cancelled.
      */
-    private final PaddedAtomicReference<QNode> cleanMe =
-        new PaddedAtomicReference<QNode>(null);
+    private transient final PaddedAtomicReference<QNode> cleanMe;
 
     /**
      * Tries to cas nh as new head; if successful, unlink
@@ -370,6 +370,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Creates an initially empty <tt>LinkedTransferQueue</tt>.
      */
     public LinkedTransferQueue() {
+        QNode dummy = new QNode(null, false);
+        head = new PaddedAtomicReference<QNode>(dummy);
+        tail = new PaddedAtomicReference<QNode>(dummy);
+        cleanMe = new PaddedAtomicReference<QNode>(null);
     }
 
     /**
@@ -381,6 +385,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *         of its elements are null
      */
     public LinkedTransferQueue(Collection<? extends E> c) {
+        this();
         addAll(c);
     }
 
@@ -678,6 +683,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
+        resetHeadAndTail();
         for (;;) {
             E item = (E)s.readObject();
             if (item == null)
@@ -686,4 +692,42 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 offer(item);
         }
     }
+
+
+    // Support for resetting head/tail while deserializing
+
+    // Temporary Unsafe mechanics for preliminary release
+    private static final Unsafe _unsafe;
+    private static final long headOffset;
+    private static final long tailOffset;
+    private static final long cleanMeOffset;
+    static {
+        try {
+            if (LinkedTransferQueue.class.getClassLoader() != null) {
+                Field f = Unsafe.class.getDeclaredField("theUnsafe");
+                f.setAccessible(true);
+                _unsafe = (Unsafe)f.get(null);
+            }
+            else
+                _unsafe = Unsafe.getUnsafe();
+            headOffset = _unsafe.objectFieldOffset
+                (LinkedTransferQueue.class.getDeclaredField("head"));
+            tailOffset = _unsafe.objectFieldOffset
+                (LinkedTransferQueue.class.getDeclaredField("tail"));
+            cleanMeOffset = _unsafe.objectFieldOffset
+                (LinkedTransferQueue.class.getDeclaredField("cleanMe"));
+        } catch (Exception e) {
+            throw new RuntimeException("Could not initialize intrinsics", e);
+        }
+    }
+
+    private void resetHeadAndTail() {
+        QNode dummy = new QNode(null, false);
+        _unsafe.putObjectVolatile(this, headOffset, dummy);
+        _unsafe.putObjectVolatile(this, tailOffset, dummy);
+        _unsafe.putObjectVolatile(this, cleanMeOffset,
+                                  new PaddedAtomicReference<QNode>(null));
+
+    }
+
 }

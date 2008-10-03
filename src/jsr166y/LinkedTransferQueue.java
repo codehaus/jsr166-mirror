@@ -723,8 +723,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     private void resetHeadAndTail() {
         QNode dummy = new QNode(null, false);
-        _unsafe.putObjectVolatile(this, headOffset, dummy);
-        _unsafe.putObjectVolatile(this, tailOffset, dummy);
+        _unsafe.putObjectVolatile(this, headOffset, 
+                                  new PaddedAtomicReference<QNode>(dummy));
+        _unsafe.putObjectVolatile(this, tailOffset, 
+                                  new PaddedAtomicReference<QNode>(dummy));
         _unsafe.putObjectVolatile(this, cleanMeOffset,
                                   new PaddedAtomicReference<QNode>(null));
 

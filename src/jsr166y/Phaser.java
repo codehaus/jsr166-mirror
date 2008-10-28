@@ -102,10 +102,13 @@ import java.lang.reflect.*;
  *        }
  *      }.start();
  *   }
+ *
+ *   doSomethingOnBehalfOfWorkers();
  *   phaser.arrive(); // allow threads to start
- *   int p = phaser.arriveAndDeregister(); // deregister self
+ *   int p = phaser.arriveAndDeregister(); // deregister self  ...
+ *   p = phaser.awaitAdvance(p); // ... and await arrival
  *   otherActions(); // do other things while tasks execute
- *   phaser.awaitAdvance(p); // wait for all tasks to arrive
+ *   phaser.awaitAdvance(p); // awit final completion
  * }
  * </pre>
  *

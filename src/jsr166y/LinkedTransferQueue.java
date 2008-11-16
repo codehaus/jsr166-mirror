@@ -51,19 +51,19 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private static final long serialVersionUID = -3223113410248163686L;
 
     /*
-     * This is still a work in progress...
-     *
      * This class extends the approach used in FIFO-mode
      * SynchronousQueues. See the internal documentation, as well as
      * the PPoPP 2006 paper "Scalable Synchronous Queues" by Scherer,
      * Lea & Scott
      * (http://www.cs.rice.edu/~wns1/papers/2006-PPoPP-SQ.pdf)
      *
-     * The main extension is to provide different Wait modes
-     * for the main "xfer" method that puts or takes items.
-     * These don't impact the basic dual-queue logic, but instead
-     * control whether or how threads block upon insertion
-     * of request or data nodes into the dual queue.
+     * The main extension is to provide different Wait modes for the
+     * main "xfer" method that puts or takes items.  These don't
+     * impact the basic dual-queue logic, but instead control whether
+     * or how threads block upon insertion of request or data nodes
+     * into the dual queue. It also uses slightly different
+     * conventions for tracking whether nodes are off-list or
+     * cancelled.
      */
 
     // Wait modes for xfer method
@@ -97,11 +97,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     static final long spinForTimeoutThreshold = 1000L;
 
     /**
-     * Node class for LinkedTransferQueue. Opportunistically subclasses from
-     * AtomicReference to represent item. Uses Object, not E, to allow
-     * setting item to "this" after use, to avoid garbage
-     * retention. Similarly, setting the next field to this is used as
-     * sentinel that node is off list.
+     * Node class for LinkedTransferQueue. Opportunistically
+     * subclasses from AtomicReference to represent item. Uses Object,
+     * not E, to allow setting item to "this" after use, to avoid
+     * garbage retention. Similarly, setting the next field to this is
+     * used as sentinel that node is off list.
      */
     static final class QNode extends AtomicReference<Object> {
         volatile QNode next;
@@ -159,7 +159,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Puts or takes an item. Used for most queue operations (except
-     * poll() and tryTransfer())
+     * poll() and tryTransfer()). See the similar code in
+     * SynchronousQueue for detailed explanation.
      * @param e the item or if null, signifies that this is a take
      * @param mode the wait mode: NOWAIT, TIMEOUT, WAIT
      * @param nanos timeout in nanosecs, used only if mode is TIMEOUT
@@ -266,8 +267,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Object x = s.get();
             if (x != e) {                 // Node was matched or cancelled
                 advanceHead(pred, s);     // unlink if head
-                if (x == s)               // was cancelled
-                    return clean(pred, s);
+                if (x == s) {              // was cancelled
+                    clean(pred, s);
+                    return null;
+                }
                 else if (x != null) {
                     s.set(s);             // avoid garbage retention
                     return x;
@@ -275,7 +278,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 else
                     return e;
             }
-
             if (mode == TIMEOUT) {
                 long now = System.nanoTime();
                 nanos -= now - lastTime;
@@ -311,59 +313,92 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Gets rid of cancelled node s with original predecessor pred.
-     * @return null (to simplify use by callers)
+     * Returns validated tail for use in cleaning methods
      */
-    private Object clean(QNode pred, QNode s) {
+    private QNode getValidatedTail() {
+        for (;;) {
+            QNode h = head.get();
+            QNode first = h.next;
+            if (first != null && first.next == first) { // help advance
+                advanceHead(h, first);
+                continue;
+            }
+            QNode t = tail.get();
+            QNode last = t.next;
+            if (t == tail.get()) {
+                if (last != null)
+                    tail.compareAndSet(t, last); // help advance
+                else
+                    return t;
+            }
+        }
+    }    
+
+    /**
+     * Gets rid of cancelled node s with original predecessor pred.
+     * @param pred predecessor of cancelled node
+     * @param s the cancelled node
+     */
+    private void clean(QNode pred, QNode s) {
         Thread w = s.waiter;
         if (w != null) {             // Wake up thread
             s.waiter = null;
             if (w != Thread.currentThread())
                 LockSupport.unpark(w);
         }
-
-        for (;;) {
-            if (pred.next != s) // already cleaned
-                return null;
-            QNode h = head.get();
-            QNode hn = h.next;   // Absorb cancelled first node as head
-            if (hn != null && hn.next == hn) {
-                advanceHead(h, hn);
-                continue;
+        /*
+         * At any given time, exactly one node on list cannot be
+         * deleted -- the last inserted node. To accommodate this, if
+         * we cannot delete s, we save its predecessor as "cleanMe",
+         * processing the previously saved version first. At least one
+         * of node s or the node previously saved can always be
+         * processed, so this always terminates.
+         */
+        while (pred.next == s) {
+            QNode oldpred = reclean();  // First, help get rid of cleanMe
+            QNode t = getValidatedTail();
+            if (s != t) {               // If not tail, try to unsplice
+                QNode sn = s.next;      // s.next == s means s already off list
+                if (sn == s || pred.casNext(s, sn)) 
+                    break;
             }
-            QNode t = tail.get();      // Ensure consistent read for tail
-            if (t == h)
-                return null;
-            QNode tn = t.next;
-            if (t != tail.get())
-                continue;
-            if (tn != null) {          // Help advance tail
-                tail.compareAndSet(t, tn);
-                continue;
-            }
-            if (s != t) {             // If not tail, try to unsplice
-                QNode sn = s.next;
-                if (sn == s || pred.casNext(s, sn))
-                    return null;
-            }
-            QNode dp = cleanMe.get();
-            if (dp != null) {    // Try unlinking previous cancelled node
-                QNode d = dp.next;
-                QNode dn;
-                if (d == null ||               // d is gone or
-                    d == dp ||                 // d is off list or
-                    d.get() != d ||            // d not cancelled or
-                    (d != t &&                 // d not tail and
-                     (dn = d.next) != null &&  //   has successor
-                     dn != d &&                //   that is on list
-                     dp.casNext(d, dn)))       // d unspliced
-                    cleanMe.compareAndSet(dp, null);
-                if (dp == pred)
-                    return null;      // s is already saved node
-            }
-            else if (cleanMe.compareAndSet(null, pred))
-                return null;          // Postpone cleaning s
+            else if (oldpred == pred || // Already saved
+                     (oldpred == null && cleanMe.compareAndSet(null, pred)))
+                break;                  // Postpone cleaning
         }
+    }
+
+    /**
+     * Tries to unsplice the cancelled node held in cleanMe that was
+     * previously uncleanable because it was at tail.
+     * @return current cleanMe node (or null)
+     */
+    private QNode reclean() {
+        /* 
+         * cleanMe is, or at one time was, predecessor of cancelled
+         * node s that was the tail so could not be unspliced.  If s
+         * is no longer the tail, try to unsplice if necessary and
+         * make cleanMe slot available.  This differs from similar
+         * code in clean() because we must check that pred still
+         * points to a cancelled node that must be unspliced -- if
+         * not, we can (must) clear cleanMe without unsplicing.
+         * This can loop only due to contention on casNext or
+         * clearing cleanMe. 
+         */
+        QNode pred;
+        while ((pred = cleanMe.get()) != null) {
+            QNode t = getValidatedTail();
+            QNode s = pred.next;
+            if (s != t) { 
+                QNode sn;
+                if (s == null || s == pred || s.get() != s ||
+                    (sn = s.next) == s || pred.casNext(s, sn))
+                    cleanMe.compareAndSet(pred, null);
+            }
+            else // s is still tail; cannot clean
+                break;
+        }
+        return pred;
     }
 
     /**

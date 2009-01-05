@@ -554,7 +554,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private final void pauseAwaitingWork(ForkJoinTask<?> joinMe) {
         if (runState.isAtLeastStopping()) {
-            if (joinMe != null) 
+            if (joinMe != null)
                 joinMe.cancel();
         }
         else
@@ -562,7 +562,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     // Lifecycle methods
-    
+
     /**
      * Initializes internal state after construction but before
      * processing any tasks. If you override this method, you must

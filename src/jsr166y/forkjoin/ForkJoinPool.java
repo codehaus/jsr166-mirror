@@ -315,7 +315,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
-            ForkJoinWorkerThread[] ws = 
+            ForkJoinWorkerThread[] ws =
                 new ForkJoinWorkerThread[workerSizeFor(ps)];
             workers = ws;
             for (int i = 0; i < ps; ++i)

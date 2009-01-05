@@ -127,7 +127,7 @@ final class PoolBarrier {
      * exit, other waiting threads must also recheck for tasks or
      * completions before resync. Release by chopping off entire list,
      * and then signalling. This both lessens contention and avoids
-     * unbounded enq/deq races.  
+     * unbounded enq/deq races.
      */
     private final void releaseAll() {
         AtomicReference<QNode> hd = this.head;

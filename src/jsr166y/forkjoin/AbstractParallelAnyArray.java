@@ -117,7 +117,7 @@ public abstract class AbstractParallelAnyArray {
      */
     final int getThreshold() {
         int t = threshold;
-        if (t == 0) 
+        if (t == 0)
             t = computeThreshold();
         return t;
     }

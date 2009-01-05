@@ -332,7 +332,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     return t;
             }
         }
-    }    
+    }
 
     /**
      * Gets rid of cancelled node s with original predecessor pred.
@@ -359,7 +359,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             QNode t = getValidatedTail();
             if (s != t) {               // If not tail, try to unsplice
                 QNode sn = s.next;      // s.next == s means s already off list
-                if (sn == s || pred.casNext(s, sn)) 
+                if (sn == s || pred.casNext(s, sn))
                     break;
             }
             else if (oldpred == pred || // Already saved
@@ -374,7 +374,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @return current cleanMe node (or null)
      */
     private QNode reclean() {
-        /* 
+        /*
          * cleanMe is, or at one time was, predecessor of cancelled
          * node s that was the tail so could not be unspliced.  If s
          * is no longer the tail, try to unsplice if necessary and
@@ -383,13 +383,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * points to a cancelled node that must be unspliced -- if
          * not, we can (must) clear cleanMe without unsplicing.
          * This can loop only due to contention on casNext or
-         * clearing cleanMe. 
+         * clearing cleanMe.
          */
         QNode pred;
         while ((pred = cleanMe.get()) != null) {
             QNode t = getValidatedTail();
             QNode s = pred.next;
-            if (s != t) { 
+            if (s != t) {
                 QNode sn;
                 if (s == null || s == pred || s.get() != s ||
                     (sn = s.next) == s || pred.casNext(s, sn))
@@ -758,9 +758,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     private void resetHeadAndTail() {
         QNode dummy = new QNode(null, false);
-        _unsafe.putObjectVolatile(this, headOffset, 
+        _unsafe.putObjectVolatile(this, headOffset,
                                   new PaddedAtomicReference<QNode>(dummy));
-        _unsafe.putObjectVolatile(this, tailOffset, 
+        _unsafe.putObjectVolatile(this, tailOffset,
                                   new PaddedAtomicReference<QNode>(dummy));
         _unsafe.putObjectVolatile(this, cleanMeOffset,
                                   new PaddedAtomicReference<QNode>(null));

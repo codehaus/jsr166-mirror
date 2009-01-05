@@ -90,7 +90,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
                     result = task.forkJoin();
                     setDone();
                 }
-            } 
+            }
         } catch(Throwable rex) {
             setDoneExceptionally(rex);
         } finally {

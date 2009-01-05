@@ -9,23 +9,23 @@ import java.util.concurrent.*;
 
 /**
  * A {@link BlockingQueue} in which producers may wait for consumers
- * to receive elements.  A <tt>TransferQueue</tt> may be useful for
+ * to receive elements.  A {@code TransferQueue} may be useful for
  * example in message passing applications in which producers
- * sometimes (using method <tt>transfer</tt>) await receipt of
- * elements by consumers invoking <tt>take</tt> or <tt>poll</tt>,
- * while at other times enqueue elements (via method <tt>put</tt>)
+ * sometimes (using method {@code transfer}) await receipt of
+ * elements by consumers invoking {@code take} or {@code poll},
+ * while at other times enqueue elements (via method {@code put})
  * without waiting for receipt. Non-blocking and time-out versions of
- * <tt>tryTransfer</tt> are also available.  A TransferQueue may also
- * be queried via <tt>hasWaitingConsumer</tt> whether there are any
+ * {@code tryTransfer} are also available.  A TransferQueue may also
+ * be queried via {@code hasWaitingConsumer} whether there are any
  * threads waiting for items, which is a converse analogy to a
- * <tt>peek</tt> operation
+ * {@code peek} operation.
  *
- * <p>Like any <tt>BlockingQueue</tt>, a <tt>TransferQueue</tt> may be
- * capacity bounded. If so, an attempted <tt>transfer</tt> operation
+ * <p>Like any {@code BlockingQueue}, a {@code TransferQueue} may be
+ * capacity bounded. If so, an attempted {@code transfer} operation
  * may initially block waiting for available space, and/or
  * subsequently block waiting for reception by a consumer.  Note that
  * in a queue with zero capacity, such as {@link SynchronousQueue},
- * <tt>put</tt> and <tt>transfer</tt> are effectively synonymous.
+ * {@code put} and {@code transfer} are effectively synonymous.
  *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
@@ -38,12 +38,12 @@ import java.util.concurrent.*;
 public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Transfers the specified element if there exists a consumer
-     * already waiting to receive it, otherwise returning <tt>false</tt>
+     * already waiting to receive it, otherwise returning {@code false}
      * without enqueuing the element.
      *
      * @param e the element to transfer
-     * @return <tt>true</tt> if the element was transferred, else
-     *         <tt>false</tt>
+     * @return {@code true} if the element was transferred, else
+     *         {@code false}
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this queue
      * @throws NullPointerException if the specified element is null
@@ -55,7 +55,7 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Inserts the specified element into this queue, waiting if
      * necessary for space to become available and the element to be
-     * dequeued by a consumer invoking <tt>take</tt> or <tt>poll</tt>.
+     * dequeued by a consumer invoking {@code take} or {@code poll}.
      *
      * @param e the element to transfer
      * @throws InterruptedException if interrupted while waiting,
@@ -72,14 +72,14 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
      * Inserts the specified element into this queue, waiting up to
      * the specified wait time if necessary for space to become
      * available and the element to be dequeued by a consumer invoking
-     * <tt>take</tt> or <tt>poll</tt>.
+     * {@code take} or {@code poll}.
      *
      * @param e the element to transfer
      * @param timeout how long to wait before giving up, in units of
-     *        <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     *        <tt>timeout</tt> parameter
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if
+     *        {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     *        {@code timeout} parameter
+     * @return {@code true} if successful, or {@code false} if
      *         the specified waiting time elapses before completion,
      *         in which case the element is not enqueued.
      * @throws InterruptedException if interrupted while waiting,
@@ -94,23 +94,24 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
         throws InterruptedException;
 
     /**
-     * Returns true if there is at least one consumer waiting to
-     * dequeue an element via <tt>take</tt> or <tt>poll</tt>. The
-     * return value represents a momentary state of affairs.
-     * @return true if there is at least one waiting consumer.
+     * Returns {@code true} if there is at least one consumer waiting
+     * to dequeue an element via {@code take} or {@code poll}.
+     * The return value represents a momentary state of affairs.
+     *
+     * @return {@code true} if there is at least one waiting consumer
      */
     boolean hasWaitingConsumer();
 
-
     /**
      * Returns an estimate of the number of consumers waiting to
-     * dequeue elements via <tt>take</tt> or <tt>poll</tt>. The return
+     * dequeue elements via {@code take} or {@code poll}. The return
      * value is an approximation of a momentary state of affairs, that
      * may be inaccurate if consumers have completed or given up
      * waiting. The value may be useful for monitoring and heuristics,
      * but not for synchronization control. Implementations of this
      * method are likely to be noticeably slower than those for
-     * <tt>hasWaitingConsumer</tt>.
+     * {@link #hasWaitingConsumer}.
+     *
      * @return the number of consumers waiting to dequeue elements
      */
     int getWaitingConsumerCount();

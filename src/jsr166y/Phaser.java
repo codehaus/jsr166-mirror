@@ -5,6 +5,7 @@
  */
 
 package jsr166y;
+
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.LockSupport;
@@ -13,9 +14,9 @@ import java.lang.reflect.*;
 
 /**
  * A reusable synchronization barrier, similar in functionality to a
- * {@link java.util.concurrent.CyclicBarrier} and {@link
- * java.util.concurrent.CountDownLatch} but supporting more flexible
- * usage.
+ * {@link java.util.concurrent.CyclicBarrier CyclicBarrier} and
+ * {@link java.util.concurrent.CountDownLatch CountDownLatch}
+ * but supporting more flexible usage.
  *
  * <ul>
  *
@@ -25,7 +26,7 @@ import java.lang.reflect.*;
  * basic synchronization constructs, registration and deregistration
  * affect only internal counts; they do not establish any further
  * internal bookkeeping, so tasks cannot query whether they are
- * registered. (However, you can introduce such bookkeeping in by
+ * registered. (However, you can introduce such bookkeeping by
  * subclassing this class.)
  *
  * <li> Each generation has an associated phase value, starting at
@@ -617,9 +618,9 @@ public class Phaser {
     }
 
     /**
-     * Returns true if the current phase number equals the given phase.
+     * Returns {@code true} if the current phase number equals the given phase.
      * @param phase the phase
-     * @return true if the current phase number equals the given phase.
+     * @return {@code true} if the current phase number equals the given phase
      */
     public final boolean hasPhase(int phase) {
         return phaseOf(getReconciledState()) == phase;
@@ -653,7 +654,7 @@ public class Phaser {
 
     /**
      * Returns the parent of this phaser, or null if none.
-     * @return the parent of this phaser, or null if none.
+     * @return the parent of this phaser, or null if none
      */
     public Phaser getParent() {
         return parent;
@@ -662,15 +663,15 @@ public class Phaser {
     /**
      * Returns the root ancestor of this phaser, which is the same as
      * this phaser if it has no parent.
-     * @return the root ancestor of this phaser.
+     * @return the root ancestor of this phaser
      */
     public Phaser getRoot() {
         return root;
     }
 
     /**
-     * Returns true if this barrier has been terminated.
-     * @return true if this barrier has been terminated
+     * Returns {@code true} if this barrier has been terminated.
+     * @return {@code true} if this barrier has been terminated
      */
     public boolean isTerminated() {
         return getPhase() < 0;
@@ -702,9 +703,8 @@ public class Phaser {
      * method.
      *
      * @param phase the phase number on entering the barrier
-     * @param registeredParties the current number of registered
-     * parties.
-     * @return true if this barrier should terminate
+     * @param registeredParties the current number of registered parties
+     * @return {@code true} if this barrier should terminate
      */
     protected boolean onAdvance(int phase, int registeredParties) {
         return registeredParties <= 0;
@@ -713,15 +713,18 @@ public class Phaser {
     /**
      * Returns a string identifying this phaser, as well as its
      * state.  The state, in brackets, includes the String {@code
-     * "phase ="} followed by the phase number, {@code "parties ="}
+     * "phase = "} followed by the phase number, {@code "parties = "}
      * followed by the number of registered parties, and {@code
-     * "arrived ="} followed by the number of arrived parties
+     * "arrived = "} followed by the number of arrived parties.
      *
      * @return a string identifying this barrier, as well as its state
      */
     public String toString() {
         long s = getReconciledState();
-        return super.toString() + "[phase = " + phaseOf(s) + " parties = " + partiesOf(s) + " arrived = " + arrivedOf(s) + "]";
+        return super.toString() +
+            "[phase = " + phaseOf(s) +
+            " parties = " + partiesOf(s) +
+            " arrived = " + arrivedOf(s) + "]";
     }
 
     // methods for waiting

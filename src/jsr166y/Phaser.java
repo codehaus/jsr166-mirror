@@ -30,20 +30,20 @@ import java.lang.reflect.*;
  *
  * <li> Each generation has an associated phase value, starting at
  * zero, and advancing when all parties reach the barrier (wrapping
- * around to zero after reaching <tt>Integer.MAX_VALUE</tt>).
+ * around to zero after reaching {@code Integer.MAX_VALUE}).
  *
  * <li> Like a CyclicBarrier, a Phaser may be repeatedly awaited.
- * Method <tt>arriveAndAwaitAdvance</tt> has effect analogous to
- * <tt>CyclicBarrier.await</tt>.  However, Phasers separate two
+ * Method {@code arriveAndAwaitAdvance} has effect analogous to
+ * {@code CyclicBarrier.await}.  However, Phasers separate two
  * aspects of coordination, that may also be invoked independently:
  *
  * <ul>
  *
- *   <li> Arriving at a barrier. Methods <tt>arrive</tt> and
- *       <tt>arriveAndDeregister</tt> do not block, but return
+ *   <li> Arriving at a barrier. Methods {@code arrive} and
+ *       {@code arriveAndDeregister} do not block, but return
  *       the phase value current upon entry to the method.
  *
- *   <li> Awaiting others. Method <tt>awaitAdvance</tt> requires an
+ *   <li> Awaiting others. Method {@code awaitAdvance} requires an
  *       argument indicating the entry phase, and returns when the
  *       barrier advances to a new phase.
  * </ul>
@@ -51,19 +51,19 @@ import java.lang.reflect.*;
  *
  * <li> Barrier actions, performed by the task triggering a phase
  * advance while others may be waiting, are arranged by overriding
- * method <tt>onAdvance</tt>, that also controls termination.
+ * method {@code onAdvance}, that also controls termination.
  * Overriding this method may be used to similar but more flexible
  * effect as providing a barrier action to a CyclicBarrier.
  *
  * <li> Phasers may enter a <em>termination</em> state in which all
  * await actions immediately return, indicating (via a negative phase
  * value) that execution is complete.  Termination is triggered by
- * executing the overridable <tt>onAdvance</tt> method that is invoked
+ * executing the overridable {@code onAdvance} method that is invoked
  * each time the barrier is about to be tripped. When a Phaser is
  * controlling an action with a fixed number of iterations, it is
  * often convenient to override this method to cause termination when
  * the current phase number reaches a threshold. Method
- * <tt>forceTermination</tt> is also available to abruptly release
+ * {@code forceTermination} is also available to abruptly release
  * waiting threads and allow them to terminate.
  *
  * <li> Phasers may be tiered to reduce contention. Phasers with large
@@ -72,19 +72,19 @@ import java.lang.reflect.*;
  * This will typically greatly increase throughput even though it
  * incurs somewhat greater per-operation overhead.
  *
- * <li> By default, <tt>awaitAdvance</tt> continues to wait even if
+ * <li> By default, {@code awaitAdvance} continues to wait even if
  * the waiting thread is interrupted. And unlike the case in
  * CyclicBarriers, exceptions encountered while tasks wait
  * interruptibly or with timeout do not change the state of the
  * barrier. If necessary, you can perform any associated recovery
  * within handlers of those exceptions, often after invoking
- * <tt>forceTermination</tt>.
+ * {@code forceTermination}.
  *
  * </ul>
  *
  * <p><b>Sample usages:</b>
  *
- * <p>A Phaser may be used instead of a <tt>CountdownLatch</tt> to control
+ * <p>A Phaser may be used instead of a {@code CountdownLatch} to control
  * a one-shot action serving a variable number of parties. The typical
  * idiom is for the method setting this up to first register, then
  * start the actions, then deregister, as in:
@@ -113,7 +113,7 @@ import java.lang.reflect.*;
  * </pre>
  *
  * <p>One way to cause a set of threads to repeatedly perform actions
- * for a given number of iterations is to override <tt>onAdvance</tt>:
+ * for a given number of iterations is to override {@code onAdvance}:
  *
  * <pre>
  *  void startTasks(List&lt;Runnable&gt; list, final int iterations) {
@@ -163,7 +163,7 @@ import java.lang.reflect.*;
  *  build(new Task[n], 0, n, new Phaser());
  * </pre>
  *
- * The best value of <tt>TASKS_PER_PHASER</tt> depends mainly on
+ * The best value of {@code TASKS_PER_PHASER} depends mainly on
  * expected barrier synchronization rates. A value as low as four may
  * be appropriate for extremely small per-barrier task bodies (thus
  * high rates), or up to hundreds for extremely large ones.
@@ -508,7 +508,7 @@ public class Phaser {
 
     /**
      * Arrives at the barrier and awaits others. Equivalent in effect
-     * to <tt>awaitAdvance(arrive())</tt>.  If you instead need to
+     * to {@code awaitAdvance(arrive())}.  If you instead need to
      * await with interruption of timeout, and/or deregister upon
      * arrival, you can arrange them using analogous constructions.
      * @return the phase on entry to this method
@@ -608,7 +608,7 @@ public class Phaser {
 
     /**
      * Returns the current phase number. The maximum phase number is
-     * <tt>Integer.MAX_VALUE</tt>, after which it restarts at
+     * {@code Integer.MAX_VALUE}, after which it restarts at
      * zero. Upon termination, the phase number is negative.
      * @return the phase number, or a negative value if terminated
      */
@@ -682,7 +682,7 @@ public class Phaser {
      * barrier is tripped (and thus all other waiting parties are
      * dormant). If it returns true, then, rather than advance the
      * phase number, this barrier will be set to a final termination
-     * state, and subsequent calls to <tt>isTerminated</tt> will
+     * state, and subsequent calls to {@code isTerminated} will
      * return true.
      *
      * <p> The default version returns true when the number of
@@ -693,7 +693,7 @@ public class Phaser {
      * <p> You may override this method to perform an action with side
      * effects visible to participating tasks, but it is in general
      * only sensible to do so in designs where all parties register
-     * before any arrive, and all <tt>awaitAdvance</tt> at each phase.
+     * before any arrive, and all {@code awaitAdvance} at each phase.
      * Otherwise, you cannot ensure lack of interference. In
      * particular, this method may be invoked more than once per
      * transition if other parties successfully register while the

@@ -21,7 +21,7 @@ import java.lang.reflect.*;
  * producer.  The <em>tail</em> of the queue is that element that has
  * been on the queue the shortest time for some producer.
  *
- * <p>Beware that, unlike in most collections, the <tt>size</tt>
+ * <p>Beware that, unlike in most collections, the {@code size}
  * method is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
  * of elements requires a traversal of the elements.
@@ -402,7 +402,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates an initially empty <tt>LinkedTransferQueue</tt>.
+     * Creates an initially empty {@code LinkedTransferQueue}.
      */
     public LinkedTransferQueue() {
         QNode dummy = new QNode(null, false);
@@ -412,7 +412,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>LinkedTransferQueue</tt>
+     * Creates a {@code LinkedTransferQueue}
      * initially containing the elements of the given collection,
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
@@ -655,8 +655,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Returns the number of elements in this queue.  If this queue
-     * contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
-     * <tt>Integer.MAX_VALUE</tt>.
+     * contains more than {@code Integer.MAX_VALUE} elements, returns
+     * {@code Integer.MAX_VALUE}.
      *
      * <p>Beware that, unlike in most collections, this method is
      * <em>NOT</em> a constant-time operation. Because of the
@@ -697,7 +697,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Save the state to a stream (that is, serialize it).
      *
-     * @serialData All of the elements (each an <tt>E</tt>) in
+     * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
      * @param s the stream
      */

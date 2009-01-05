@@ -86,7 +86,7 @@ public class TSPExchangerTest {
     static final int MIN_STRAND_LENGTH = 3;
 
     /**
-     * The probablility mask value for creating random strands,
+     * The probability mask value for creating random strands,
      * that have lengths at least MIN_STRAND_LENGTH, and grow
      * with exposnential decay 2^(-(1/(RANDOM_STRAND_MASK + 1)
      * Must be 1 less than a power of two.
@@ -94,9 +94,9 @@ public class TSPExchangerTest {
     static final int RANDOM_STRAND_MASK = 7;
 
     /**
-     * Probablility control for selecting breeders.
+     * Probability control for selecting breeders.
      * Breeders are selected starting at the best-fitness chromosome,
-     * with exponentially decaying probablility
+     * with exponentially decaying probability
      * 1 / (subpopSize >>> BREEDER_DECAY). 
      *
      * Larger values usually cause faster convergence but poorer
@@ -105,9 +105,9 @@ public class TSPExchangerTest {
     static final int BREEDER_DECAY = 1;
 
     /**
-     * Probablility control for selecting dyers.
+     * Probability control for selecting dyers.
      * Dyers are selected starting at the worst-fitness chromosome,
-     * with exponentially decaying probablility
+     * with exponentially decaying probability
      * 1 / (subpopSize >>> DYER_DECAY)
      *
      * Larger values usually cause faster convergence but poorer
@@ -448,7 +448,7 @@ public class TSPExchangerTest {
 
         /**
          * Choose a chromosome that will be replaced, with
-         * exponentially decreasing probablility starting at
+         * exponentially decreasing probability starting at
          * worst, ignoring the excluded index
          * @param exclude index to ignore; use -1 to not exclude any
          * @return index of selected dyer

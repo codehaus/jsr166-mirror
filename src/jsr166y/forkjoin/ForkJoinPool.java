@@ -156,7 +156,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
 
     /**
      * The uncaught exception handler used when any worker
-     * abrupty terminates
+     * abruptly terminates
      */
     private Thread.UncaughtExceptionHandler ueh;
 
@@ -183,7 +183,7 @@ public class ForkJoinPool implements ForkJoinExecutor {
     private volatile int activeCount;
 
     /**
-     * The current targetted pool size. Updated only under worker lock
+     * The current targeted pool size. Updated only under worker lock
      * but volatile to allow concurrent reads.
      */
     private volatile int poolSize;
@@ -944,9 +944,9 @@ public class ForkJoinPool implements ForkJoinExecutor {
 
     /**
      * Embedded submission queue holds submissions not yet started by
-     * workers. This is a variant of an Michael/Scott queue that
+     * workers. This is a variant of a Michael/Scott queue that
      * supports a fast check for apparent emptiness.  This class
-     * opportunistically subclasses AtromicReference for next-field
+     * opportunistically subclasses AtomicReference for next-field.
      */
     static final class SQNode extends AtomicReference<SQNode> {
         Submission<?> submission;

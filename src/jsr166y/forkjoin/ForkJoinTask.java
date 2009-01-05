@@ -63,10 +63,10 @@ import java.lang.reflect.*;
  * exhaustion such as failure to allocate internal task queues.
  *
  * <p>ForkJoinTasks should perform relatively small amounts of
- * computations, othewise splitting into smaller tasks. As a very
+ * computations, otherwise splitting into smaller tasks. As a very
  * rough rule of thumb, a task should perform more than 100 and less
  * than 10000 basic computational steps. If tasks are too big, then
- * parellelism cannot improve throughput. If too small, then memory
+ * parallelism cannot improve throughput. If too small, then memory
  * and internal task maintenance overhead may overwhelm processing.
  * The {@link ForkJoinWorkerThread} class supports a number of
  * inspection and tuning methods that can be useful when developing
@@ -118,7 +118,7 @@ public abstract class ForkJoinTask<V> implements Serializable {
 
     /**
      * Status, taking values:
-     *   sero:     initial
+     *   zero:     initial
      *   negative: COMPLETED. CANCELLED, or HAS_EXCEPTION
      *   positive: ignored wrt completion, may be used by subclasses
      *

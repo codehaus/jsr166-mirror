@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.*;
  * <pre>
  * class GraphVisitor extends LinkedAsyncAction {
  *    final Node node;
- *    GraphVisitor(GraphVistor parent, Node node) {
+ *    GraphVisitor(GraphVisitor parent, Node node) {
  *      super(parent); this.node = node;
  *    }
  *    protected void compute() {
@@ -79,7 +79,7 @@ public abstract class LinkedAsyncAction extends AsyncAction {
 
     /**
      * Creates a new action with the given parent. If the parent is
-     * non-null, this tasks registers with the parent, in which case,
+     * non-null, this task registers with the parent, in which case,
      * the parent task cannot complete until this task completes.
      * @param parent the parent task, or null if none
      */
@@ -92,7 +92,7 @@ public abstract class LinkedAsyncAction extends AsyncAction {
     /**
      * Creates a new action with the given parent, optionally
      * registering with the parent. If the parent is non-null and
-     * <tt>register</tt> is true, this tasks registers with the
+     * <tt>register</tt> is true, this task registers with the
      * parent, in which case, the parent task cannot complete until
      * this task completes.
      * @param parent the parent task, or null if none
@@ -109,7 +109,7 @@ public abstract class LinkedAsyncAction extends AsyncAction {
      * Creates a new action with the given parent, optionally
      * registering with the parent, and setting the pending join count
      * to the given value. If the parent is non-null and
-     * <tt>register</tt> is true, this tasks registers with the
+     * <tt>register</tt> is true, this task registers with the
      * parent, in which case, the parent task cannot complete until
      * this task completes. Setting the pending join count requires
      * care -- it is correct only if child tasks do not themselves
@@ -151,7 +151,7 @@ public abstract class LinkedAsyncAction extends AsyncAction {
      * default version of this method does nothing and returns
      * <tt>true</tt>.
      * @return true if this task's exception should be propagated to
-     * this tasks parent.
+     * this task's parent.
      */
     protected boolean onException() {
         return true;
@@ -161,7 +161,7 @@ public abstract class LinkedAsyncAction extends AsyncAction {
      * Completes this task. If the pending subtask completion count is
      * zero, invokes <tt>onCompletion</tt>, then causes this task to
      * be joinable (<tt>isDone</tt> becomes true), and then
-     * recursively applies to this tasks's parent, if it exists. If an
+     * recursively applies to this task's parent, if it exists. If an
      * exception is encountered in any <tt>onCompletion</tt>
      * invocation, that task and its ancestors
      * <tt>finishExceptionally</tt>.

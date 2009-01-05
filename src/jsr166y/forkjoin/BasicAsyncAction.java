@@ -53,14 +53,14 @@ public abstract class BasicAsyncAction extends AsyncAction {
     }
 
     /**
-     * Sets task state to indicate complation
+     * Sets task state to indicate completion
      */
     public void finish() {
         setDone();
     }
 
     /**
-     * Sets task state to indicate complation with the given exception
+     * Sets task state to indicate completion with the given exception
      */
     public void finishExceptionally(Throwable ex) {
         checkedSetDoneExceptionally(ex);

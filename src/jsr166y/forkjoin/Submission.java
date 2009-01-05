@@ -80,7 +80,7 @@ final class Submission<V> extends ForkJoinTask<V> implements Future<V> {
     }
 
     /**
-     * Run the inner tssk.
+     * Run the inner task.
      */
     private void runTask() {
         try {

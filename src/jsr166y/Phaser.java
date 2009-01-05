@@ -84,7 +84,7 @@ import java.lang.reflect.*;
  *
  * <p><b>Sample usages:</b>
  *
- * <p>A Phaser may be used instead of a {@code CountdownLatch} to control
+ * <p>A Phaser may be used instead of a {@code CountDownLatch} to control
  * a one-shot action serving a variable number of parties. The typical
  * idiom is for the method setting this up to first register, then
  * start the actions, then deregister, as in:
@@ -108,7 +108,7 @@ import java.lang.reflect.*;
  *   int p = phaser.arriveAndDeregister(); // deregister self  ...
  *   p = phaser.awaitAdvance(p); // ... and await arrival
  *   otherActions(); // do other things while tasks execute
- *   phaser.awaitAdvance(p); // awit final completion
+ *   phaser.awaitAdvance(p); // await final completion
  * }
  * </pre>
  *
@@ -195,7 +195,7 @@ public class Phaser {
      * However, to efficiently maintain atomicity, these values are
      * packed into a single (atomic) long. Termination uses the sign
      * bit of 32 bit representation of phase, so phase is set to -1 on
-     * termination. Good performace relies on keeping state decoding
+     * termination. Good performance relies on keeping state decoding
      * and encoding simple, and keeping race windows short.
      *
      * Note: there are some cheats in arrive() that rely on unarrived
@@ -541,7 +541,7 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given
-     * value, or returns immediately if argumet is negative or this
+     * value, or returns immediately if argument is negative or this
      * barrier is terminated, or throws InterruptedException if
      * interrupted while waiting.
      * @param phase the phase on entry to this method

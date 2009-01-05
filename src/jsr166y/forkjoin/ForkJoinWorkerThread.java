@@ -82,7 +82,7 @@ public class ForkJoinWorkerThread extends Thread {
      * considered individually, is not wait-free. One thief cannot
      * successfully continue until another in-progress one (or, if
      * previously empty, a push) completes.  However, in the
-     * aggregate, we ensure at least probablistic non-blockingness. If
+     * aggregate, we ensure at least probabilistic non-blockingness. If
      * an attempted steal fails, a thief always chooses a different
      * random victim target to try next. So, in order for one thief to
      * progress, it suffices for any in-progress deq or new push on
@@ -101,7 +101,7 @@ public class ForkJoinWorkerThread extends Thread {
      * not need volatile load semantics, but writes (in push) require
      * store order and CASes (in pop and deq) require (volatile) CAS
      * semantics. Since these combinations aren't supported using
-     * ordinary volatiles, the only way to accomplish these effciently
+     * ordinary volatiles, the only way to accomplish these efficiently
      * is to use direct Unsafe calls. (Using external AtomicIntegers
      * and AtomicReferenceArrays for the indices and array is
      * significantly slower because of memory locality and indirection
@@ -496,10 +496,10 @@ public class ForkJoinWorkerThread extends Thread {
      * steals to momentarily believe queue is nonempty but will still
      * fail to extract a task, which at most may cause them to
      * unnecessarily activate, but even this is minimized by only
-     * doing this upon quiesence.
+     * doing this upon quiescence.
      *
      * Precondition: Local queue is empty, and at least one full scan
-     * of other worker queus and submissions failed to find a task.
+     * of other worker queues and submissions failed to find a task.
      *
      * @return true if pool apparently idle on entry to this method
      */
@@ -863,7 +863,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Timeout version of helpJoin needed for Submission class
-     * Returns false if timed out before complated
+     * Returns false if timed out before completed
      */
     final boolean doTimedJoinTask(ForkJoinTask<?> joinMe, long nanos) {
         long startTime = System.nanoTime();

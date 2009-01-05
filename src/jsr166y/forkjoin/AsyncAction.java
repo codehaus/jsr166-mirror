@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 
 /**
  * Resultless ForkJoinTasks with explicit completions.  Unlike
- * RecursiveActions, AsyncActions do not intrinisically complete upon
+ * RecursiveActions, AsyncActions do not intrinsically complete upon
  * exit from their <tt>compute</tt> methods, but instead require
  * explicit invocation of their <tt>finish</tt> methods. This class is
  * not directly subclassable outside of this package. Instead, you can

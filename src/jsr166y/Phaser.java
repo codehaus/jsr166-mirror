@@ -57,15 +57,16 @@ import java.lang.reflect.*;
  * effect as providing a barrier action to a CyclicBarrier.
  *
  * <li> Phasers may enter a <em>termination</em> state in which all
- * await actions immediately return, indicating (via a negative phase
- * value) that execution is complete.  Termination is triggered by
- * executing the overridable {@code onAdvance} method that is invoked
- * each time the barrier is about to be tripped. When a Phaser is
- * controlling an action with a fixed number of iterations, it is
- * often convenient to override this method to cause termination when
- * the current phase number reaches a threshold. Method
- * {@code forceTermination} is also available to abruptly release
- * waiting threads and allow them to terminate.
+ * actions immediately return without updating phaser state or waiting
+ * for advance, and indicating (via a negative phase value) that
+ * execution is complete.  Termination is triggered by executing the
+ * overridable {@code onAdvance} method that is invoked each time the
+ * barrier is about to be tripped. When a Phaser is controlling an
+ * action with a fixed number of iterations, it is often convenient to
+ * override this method to cause termination when the current phase
+ * number reaches a threshold. Method {@code forceTermination} is also
+ * available to abruptly release waiting threads and allow them to
+ * terminate.
  *
  * <li> Phasers may be tiered to reduce contention. Phasers with large
  * numbers of parties that would otherwise experience heavy
@@ -80,6 +81,8 @@ import java.lang.reflect.*;
  * barrier. If necessary, you can perform any associated recovery
  * within handlers of those exceptions, often after invoking
  * {@code forceTermination}.
+ *
+ * <li>Phasers ensure lack of starvation when used by ForkJoinTasks.
  *
  * </ul>
  *
@@ -200,20 +203,20 @@ public class Phaser {
      * and encoding simple, and keeping race windows short.
      *
      * Note: there are some cheats in arrive() that rely on unarrived
-     * being lowest 16 bits.
+     * count being lowest 16 bits.
      */
     private volatile long state;
 
     private static final int ushortBits = 16;
-    private static final int ushortMask =  (1 << ushortBits) - 1;
-    private static final int phaseMask = 0x7fffffff;
+    private static final int ushortMask = 0xffff;
+    private static final int phaseMask  = 0x7fffffff;
 
     private static int unarrivedOf(long s) {
         return (int)(s & ushortMask);
     }
 
     private static int partiesOf(long s) {
-        return (int)(s & (ushortMask << 16)) >>> 16;
+        return ((int)s) >>> 16;
     }
 
     private static int phaseOf(long s) {
@@ -225,17 +228,21 @@ public class Phaser {
     }
 
     private static long stateFor(int phase, int parties, int unarrived) {
-        return (((long)phase) << 32) | ((parties << 16) | unarrived);
+        return ((((long)phase) << 32) | (((long)parties) << 16) |
+                (long)unarrived);
     }
 
     private static long trippedStateFor(int phase, int parties) {
-        return (((long)phase) << 32) | ((parties << 16) | parties);
+        long lp = (long)parties;
+        return (((long)phase) << 32) | (lp << 16) | lp;
     }
 
-    private static IllegalStateException badBounds(int parties, int unarrived) {
-        return new IllegalStateException
-            ("Attempt to set " + unarrived +
-             " unarrived of " + parties + " parties");
+    /**
+     * Returns message string for bad bounds exceptions
+     */
+    private static String badBounds(int parties, int unarrived) {
+        return ("Attempt to set " + unarrived +
+                " unarrived of " + parties + " parties");
     }
 
     /**
@@ -252,7 +259,7 @@ public class Phaser {
     // Wait queues
 
     /**
-     * Heads of Treiber stacks waiting for nonFJ threads. To eliminate
+     * Heads of Treiber stacks for waiting threads. To eliminate
      * contention while releasing some threads while adding others, we
      * use two of them, alternating across even and odd phases.
      */
@@ -296,7 +303,8 @@ public class Phaser {
 
     /**
      * Creates a new Phaser without any initially registered parties,
-     * initial phase number 0, and no parent.
+     * initial phase number 0, and no parent. Any thread using this
+     * Phaser will need to first register for it.
      */
     public Phaser() {
         this(null);
@@ -391,10 +399,10 @@ public class Phaser {
             phase = phaseOf(s);
             int unarrived = unarrivedOf(s) + registrations;
             int parties = partiesOf(s) + registrations;
-            if (phase < 0)
+            if (phase < 0) 
                 break;
             if (parties > ushortMask || unarrived > ushortMask)
-                throw badBounds(parties, unarrived);
+                throw new IllegalStateException(badBounds(parties, unarrived));
             if (phase == phaseOf(root.state) &&
                 casState(s, stateFor(phase, parties, unarrived)))
                 break;
@@ -416,6 +424,8 @@ public class Phaser {
         for (;;) {
             long s = state;
             phase = phaseOf(s);
+            if (phase < 0)
+                break;
             int parties = partiesOf(s);
             int unarrived = unarrivedOf(s) - 1;
             if (unarrived > 0) {        // Not the last arrival
@@ -441,12 +451,10 @@ public class Phaser {
                     }
                 }
             }
-            else if (phase < 0) // Don't throw exception if terminated
-                break;
             else if (phase != phaseOf(root.state)) // or if unreconciled
                 reconcileState();
             else
-                throw badBounds(parties, unarrived);
+                throw new IllegalStateException(badBounds(parties, unarrived));
         }
         return phase;
     }
@@ -470,6 +478,8 @@ public class Phaser {
         for (;;) {
             long s = state;
             phase = phaseOf(s);
+            if (phase < 0)
+                break;
             int parties = partiesOf(s) - 1;
             int unarrived = unarrivedOf(s) - 1;
             if (parties >= 0) {
@@ -495,14 +505,12 @@ public class Phaser {
                     }
                     continue;
                 }
-                if (phase < 0)
-                    break;
                 if (par != null && phase != phaseOf(root.state)) {
                     reconcileState();
                     continue;
                 }
             }
-            throw badBounds(parties, unarrived);
+            throw new IllegalStateException(badBounds(parties, unarrived));
         }
         return phase;
     }
@@ -534,7 +542,7 @@ public class Phaser {
         int p = phaseOf(s);
         if (p != phase)
             return p;
-        if (unarrivedOf(s) == 0)
+        if (unarrivedOf(s) == 0 && parent != null)
             parent.awaitAdvance(phase);
         // Fall here even if parent waited, to reconcile and help release
         return untimedWait(phase);
@@ -549,14 +557,15 @@ public class Phaser {
      * @return the phase on exit from this method
      * @throws InterruptedException if thread interrupted while waiting
      */
-    public int awaitAdvanceInterruptibly(int phase) throws InterruptedException {
+    public int awaitAdvanceInterruptibly(int phase) 
+        throws InterruptedException {
         if (phase < 0)
             return phase;
         long s = getReconciledState();
         int p = phaseOf(s);
         if (p != phase)
             return p;
-        if (unarrivedOf(s) != 0)
+        if (unarrivedOf(s) == 0 && parent != null)
             parent.awaitAdvanceInterruptibly(phase);
         return interruptibleWait(phase);
     }
@@ -578,7 +587,7 @@ public class Phaser {
         int p = phaseOf(s);
         if (p != phase)
             return p;
-        if (unarrivedOf(s) == 0)
+        if (unarrivedOf(s) == 0 && parent != null)
             parent.awaitAdvanceInterruptibly(phase, timeout, unit);
         return timedWait(phase, unit.toNanos(timeout));
     }
@@ -729,37 +738,50 @@ public class Phaser {
 
     // methods for waiting
 
-    /** The number of CPUs, for spin control */
-    static final int NCPUS = Runtime.getRuntime().availableProcessors();
-
     /**
-     * The number of times to spin before blocking in timed waits.
-     * The value is empirically derived.
+     * Wait nodes for Treiber stack representing wait queue
      */
-    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32;
-
-    /**
-     * The number of times to spin before blocking in untimed waits.
-     * This is greater than timed value because untimed waits spin
-     * faster since they don't need to check times on each spin.
-     */
-    static final int maxUntimedSpins = maxTimedSpins * 32;
-
-    /**
-     * The number of nanoseconds for which it is faster to spin
-     * rather than to use timed park. A rough estimate suffices.
-     */
-    static final long spinForTimeoutThreshold = 1000L;
-
-    /**
-     * Wait nodes for Treiber stack representing wait queue for non-FJ
-     * tasks.
-     */
-    static final class QNode {
-        QNode next;
+    static final class QNode implements ForkJoinPool.ManagedBlocker {
+        final Phaser phaser;
+        final int phase;
+        final long startTime;
+        final long nanos;
+        final boolean timed;
+        final boolean interruptible;
+        volatile boolean wasInterrupted = false;
         volatile Thread thread; // nulled to cancel wait
-        QNode() {
+        QNode next;
+        QNode(Phaser phaser, int phase, boolean interruptible,
+              boolean timed, long startTime, long nanos) {
+            this.phaser = phaser;
+            this.phase = phase;
+            this.timed = timed;
+            this.interruptible = interruptible;
+            this.startTime = startTime;
+            this.nanos = nanos;
             thread = Thread.currentThread();
+        }
+        public boolean isReleasable() {
+            return (thread == null ||
+                    phaser.getPhase() != phase ||
+                    (interruptible && wasInterrupted) ||
+                    (timed && (nanos - (System.nanoTime() - startTime)) <= 0));
+        }
+        public boolean block() {
+            if (Thread.interrupted()) {
+                wasInterrupted = true;
+                if (interruptible)
+                    return true;
+            }
+            if (!timed)
+                LockSupport.park(this);
+            else {
+                long waitTime = nanos - (System.nanoTime() - startTime);
+                if (waitTime <= 0)
+                    return true;
+                LockSupport.parkNanos(this, waitTime);
+            }
+            return isReleasable();
         }
         void signal() {
             Thread t = thread;
@@ -768,6 +790,16 @@ public class Phaser {
                 LockSupport.unpark(t);
             }
         }
+        boolean doWait() {
+            if (thread != null) {
+                try {
+                    ForkJoinPool.managedBlock(this, false);
+                } catch (InterruptedException ie) {
+                } 
+            }
+            return wasInterrupted;
+        }
+
     }
 
     /**
@@ -783,112 +815,100 @@ public class Phaser {
     }
 
     /**
+     * Tries to enqueue given node in the appropriate wait queue
+     * @return true if successful
+     */
+    private boolean tryEnqueue(QNode node) {
+        AtomicReference<QNode> head = queueFor(node.phase);
+        return head.compareAndSet(node.next = head.get(), node);
+    }
+
+    /**
      * Enqueues node and waits unless aborted or signalled.
+     * @return current phase
      */
     private int untimedWait(int phase) {
-        int spins = maxUntimedSpins;
         QNode node = null;
-        boolean interrupted = false;
         boolean queued = false;
+        boolean interrupted = false;
         int p;
         while ((p = getPhase()) == phase) {
-            interrupted = Thread.interrupted();
-            if (node != null) {
-                if (!queued) {
-                    AtomicReference<QNode> head = queueFor(phase);
-                    queued = head.compareAndSet(node.next = head.get(), node);
-                }
-                else if (node.thread != null)
-                    LockSupport.park(this);
-            }
-            else if (spins <= 0)
-                node = new QNode();
+            if (Thread.interrupted())
+                interrupted = true;
+            else if (node == null)
+                node = new QNode(this, phase, false, false, 0, 0);
+            else if (!queued)
+                queued = tryEnqueue(node);
             else
-                --spins;
+                interrupted = node.doWait();
         }
         if (node != null)
             node.thread = null;
+        releaseWaiters(phase);
         if (interrupted)
             Thread.currentThread().interrupt();
-        releaseWaiters(phase);
         return p;
     }
 
     /**
-     * Messier interruptible version
+     * Interruptible version
+     * @return current phase
      */
     private int interruptibleWait(int phase) throws InterruptedException {
-        int spins = maxUntimedSpins;
         QNode node = null;
         boolean queued = false;
         boolean interrupted = false;
         int p;
-        while ((p = getPhase()) == phase) {
-            if (interrupted = Thread.interrupted())
-                break;
-            if (node != null) {
-                if (!queued) {
-                    AtomicReference<QNode> head = queueFor(phase);
-                    queued = head.compareAndSet(node.next = head.get(), node);
-                }
-                else if (node.thread != null)
-                    LockSupport.park(this);
-            }
-            else if (spins <= 0)
-                node = new QNode();
+        while ((p = getPhase()) == phase && !interrupted) {
+            if (Thread.interrupted())
+                interrupted = true;
+            else if (node == null)
+                node = new QNode(this, phase, true, false, 0, 0);
+            else if (!queued)
+                queued = tryEnqueue(node);
             else
-                --spins;
+                interrupted = node.doWait();
         }
         if (node != null)
             node.thread = null;
+        if (p != phase || (p = getPhase()) != phase)
+            releaseWaiters(phase);
         if (interrupted)
             throw new InterruptedException();
-        releaseWaiters(phase);
         return p;
     }
 
     /**
-     * Even messier timeout version.
+     * Timeout version.
+     * @return current phase
      */
     private int timedWait(int phase, long nanos)
         throws InterruptedException, TimeoutException {
+        long startTime = System.nanoTime();
+        QNode node = null;
+        boolean queued = false;
+        boolean interrupted = false;
         int p;
-        if ((p = getPhase()) == phase) {
-            long lastTime = System.nanoTime();
-            int spins = maxTimedSpins;
-            QNode node = null;
-            boolean queued = false;
-            boolean interrupted = false;
-            while ((p = getPhase()) == phase) {
-                if (interrupted = Thread.interrupted())
-                    break;
-                long now = System.nanoTime();
-                if ((nanos -= now - lastTime) <= 0)
-                    break;
-                lastTime = now;
-                if (node != null) {
-                    if (!queued) {
-                        AtomicReference<QNode> head = queueFor(phase);
-                        queued = head.compareAndSet(node.next = head.get(), node);
-                    }
-                    else if (node.thread != null &&
-                             nanos > spinForTimeoutThreshold) {
-                        LockSupport.parkNanos(this, nanos);
-                    }
-                }
-                else if (spins <= 0)
-                    node = new QNode();
-                else
-                    --spins;
-            }
-            if (node != null)
-                node.thread = null;
-            if (interrupted)
-                throw new InterruptedException();
-            if (p == phase && (p = getPhase()) == phase)
-                throw new TimeoutException();
+        while ((p = getPhase()) == phase && !interrupted) {
+            if (Thread.interrupted())
+                interrupted = true;
+            else if (nanos - (System.nanoTime() - startTime) <= 0)
+                break;
+            else if (node == null)
+                node = new QNode(this, phase, true, true, startTime, nanos);
+            else if (!queued)
+                queued = tryEnqueue(node);
+            else
+                interrupted = node.doWait();
         }
-        releaseWaiters(phase);
+        if (node != null)
+            node.thread = null;
+        if (p != phase || (p = getPhase()) != phase)
+            releaseWaiters(phase);
+        if (interrupted)
+            throw new InterruptedException();
+        if (p == phase)
+            throw new TimeoutException();
         return p;
     }
 

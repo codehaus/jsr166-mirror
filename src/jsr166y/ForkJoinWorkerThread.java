@@ -13,33 +13,18 @@ import sun.misc.Unsafe;
 import java.lang.reflect.*;
 
 /**
- * A thread that is internally managed by a ForkJoinPool to execute
- * ForkJoinTasks. This class additionally provides public
- * <tt>static</tt> methods accessing some basic scheduling and
- * execution mechanics for the <em>current</em>
- * ForkJoinWorkerThread. These methods may be invoked only from within
- * other ForkJoinTask computations. Attempts to invoke in other
- * contexts result in exceptions or errors including
- * ClassCastException.  These methods enable construction of
- * special-purpose task classes, as well as specialized idioms
- * occasionally useful in ForkJoinTask processing.
- *
- * <p>The form of supported static methods reflects the fact that
- * worker threads may access and process tasks obtained in any of
- * three ways. In preference order: <em>Local</em> tasks are processed
- * in LIFO (newest first) order. <em>Stolen</em> tasks are obtained
- * from other threads in FIFO (oldest first) order, only if there are
- * no local tasks to run.  <em>Submissions</em> form a FIFO queue
- * common to the entire pool, and are started only if no other
- * work is available.
- *
- * <p> This class is subclassable solely for the sake of adding
- * functionality -- there are no overridable methods dealing with
- * scheduling or execution. However, you can override initialization
- * and termination cleanup methods surrounding the main task
- * processing loop.  If you do create such a subclass, you will also
- * need to supply a custom ForkJoinWorkerThreadFactory to use it in a
- * ForkJoinPool.
+ * A thread managed by a {@link ForkJoinPool}.  This class is
+ * subclassable solely for the sake of adding functionality -- there
+ * are no overridable methods dealing with scheduling or
+ * execution. However, you can override initialization and termination
+ * cleanup methods surrounding the main task processing loop.  If you
+ * do create such a subclass, you will also need to supply a custom
+ * ForkJoinWorkerThreadFactory to use it in a ForkJoinPool.
+ * 
+ * <p>This class also provides methods for generating per-thread
+ * random numbers, with the same properties as {@link
+ * java.util.Random} but with each generator isolated from those of
+ * other threads.
  */
 public class ForkJoinWorkerThread extends Thread {
     /*
@@ -239,6 +224,28 @@ public class ForkJoinWorkerThread extends Thread {
         // remaining initialization deferred to onStart
     }
 
+    // public access methods 
+
+    /**
+     * Returns the pool hosting the current task execution.
+     * @return the pool
+     */
+    public static ForkJoinPool getPool() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).pool;
+    }
+
+    /**
+     * Returns the index number of the current worker thread in its
+     * pool.  The returned value ranges from zero to the maximum
+     * number of threads (minus one) that have ever been created in
+     * the pool.  This method may be useful for applications that
+     * track status or collect results on a per-worker basis.
+     * @return the index number.
+     */
+    public static int getPoolIndex() {
+        return ((ForkJoinWorkerThread)(Thread.currentThread())).poolIndex;
+    }
+
     //  Access methods used by Pool
 
     /**
@@ -366,7 +373,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Returns next task to pop.
      */
-    private ForkJoinTask<?> peekTask() {
+    final ForkJoinTask<?> peekTask() {
         ForkJoinTask<?>[] q = queue;
         return q == null? null : q[(sp - 1) & (q.length - 1)];
     }
@@ -659,6 +666,8 @@ public class ForkJoinWorkerThread extends Thread {
         }
     }
 
+    // Support for ForkJoinTask methods
+
     /**
      * Implements ForkJoinTask.helpJoin
      */
@@ -681,7 +690,34 @@ public class ForkJoinWorkerThread extends Thread {
         return s;
     }
 
-    // Support for public static and/or ForkJoinTask methods
+    /**
+     * Pops or steals a task
+     * @return task, or null if none available
+     */
+    final ForkJoinTask<?> getLocalOrStolenTask() {
+        ForkJoinTask<?> t = popTask();
+        return t != null? t : scan(null, false);
+    }
+
+    /**
+     * Runs tasks until pool isQuiescent
+     */
+    final void helpQuiescePool() {
+        for (;;) {
+            ForkJoinTask<?> t = getLocalOrStolenTask();
+            if (t != null) {
+                activate();
+                t.quietlyExec();
+            }
+            else {
+                inactivate();
+                if (pool.isQuiescent()) {
+                    activate(); // re-activate on exit
+                    break;
+                }
+            }
+        }
+    }
 
     /**
      * Returns an estimate of the number of tasks in the queue.
@@ -693,157 +729,11 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Runs one popped task, if available
-     * @return true if ran a task
-     */
-    private boolean runLocalTask() {
-        ForkJoinTask<?> t = popTask();
-        if (t == null)
-            return false;
-        t.quietlyExec();
-        return true;
-    }
-
-    /**
-     * Pops or steals a task
-     * @return task, or null if none available
-     */
-    private ForkJoinTask<?> getLocalOrStolenTask() {
-        ForkJoinTask<?> t = popTask();
-        return t != null? t : scan(null, false);
-    }
-
-    /**
-     * Runs a popped or stolen task, if available
-     * @return true if ran a task
-     */
-    private boolean runLocalOrStolenTask() {
-        ForkJoinTask<?> t = getLocalOrStolenTask();
-        if (t == null)
-            return false;
-        t.quietlyExec();
-        return true;
-    }
-
-    /**
-     * Runs tasks until pool isQuiescent
-     */
-    final void helpQuiescePool() {
-        activate();
-        for (;;) {
-            if (!runLocalOrStolenTask()) {
-                inactivate();
-                if (pool.isQuiescent()) {
-                    activate(); // re-activate on exit
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
      * Returns an estimate of the number of tasks, offset by a
      * function of number of idle workers.
      */
     final int getEstimatedSurplusTaskCount() {
         return (sp - base) - (pool.getIdleThreadCount() >>> 1);
-    }
-
-    // Public methods on current thread
-
-    /**
-     * Returns the pool hosting the current task execution.
-     * @return the pool
-     */
-    public static ForkJoinPool getPool() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).pool;
-    }
-
-    /**
-     * Returns the index number of the current worker thread in its
-     * pool.  The returned value ranges from zero to the maximum
-     * number of threads (minus one) that have ever been created in
-     * the pool.  This method may be useful for applications that
-     * track status or collect results per-worker rather than
-     * per-task.
-     * @return the index number.
-     */
-    public static int getPoolIndex() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).poolIndex;
-    }
-
-    /**
-     * Returns an estimate of the number of tasks waiting to be run by
-     * the current worker thread. This value may be useful for
-     * heuristic decisions about whether to fork other tasks.
-     * @return the number of tasks
-     */
-    public static int getLocalQueueSize() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            getQueueSize();
-    }
-
-    /**
-     * Returns, but does not remove or execute, the next task locally
-     * queued for execution by the current worker thread. There is no
-     * guarantee that this task will be the next one actually returned
-     * or executed from other polling or execution methods.
-     * @return the next task or null if none
-     */
-    public static ForkJoinTask<?> peekLocalTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).peekTask();
-    }
-
-    /**
-     * Removes and returns, without executing, the next task queued
-     * for execution in the current worker thread's local queue.
-     * @return the next task to execute, or null if none
-     */
-    public static ForkJoinTask<?> pollLocalTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).popTask();
-    }
-
-    /**
-     * Execute the next task locally queued by the current worker, if
-     * one is available.
-     * @return true if a task was run; a false return indicates
-     * that no task was available.
-     */
-    public static boolean executeLocalTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            runLocalTask();
-    }
-
-    /**
-     * Removes and returns, without executing, the next task queued
-     * for execution in the current worker thread's local queue or if
-     * none, a task stolen from another worker, if one is available.
-     * A null return does not necessarily imply that all tasks are
-     * completed, only that there are currently none available.
-     * @return the next task to execute, or null if none
-     */
-    public static ForkJoinTask<?> pollTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            getLocalOrStolenTask();
-    }
-
-    /**
-     * Helps this program complete by processing a local or stolen
-     * task, if one is available.  This method may be useful when
-     * several tasks are forked, and only one of them must be joined,
-     * as in:
-     *
-     * <pre>
-     *   while (!t1.isDone() &amp;&amp; !t2.isDone())
-     *     ForkJoinWorkerThread.executeTask();
-     * </pre>
-     *
-     * @return true if a task was run; a false return indicates
-     * that no task was available.
-     */
-    public static boolean executeTask() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).
-            runLocalOrStolenTask();
     }
 
     // Per-worker exported random numbers

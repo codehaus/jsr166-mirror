@@ -524,7 +524,7 @@ public class ForkJoinWorkerThread extends Thread {
         while (base != sp) {
             ForkJoinTask<?> t = deqTask();
             if (t != null)
-                t.cancelIgnoreExceptions();
+                t.cancelIgnoringExceptions();
         }
     }
 
@@ -669,34 +669,24 @@ public class ForkJoinWorkerThread extends Thread {
     // Support for ForkJoinTask methods
 
     /**
-     * Implements ForkJoinTask.helpJoin
+     * Scan, returning early if joinMe done
      */
-    final int helpJoinTask(ForkJoinTask<?> joinMe) {
-        ForkJoinTask<?> t = null;
-        int s;
-        while ((s = joinMe.status) >= 0) {
-            if (t == null) {
-                if ((t = scan(joinMe, false)) == null)  // block if no work
-                    return joinMe.awaitDone(this, false);
-                // else recheck status before exec
-            }
-            else {
-                t.quietlyExec();
-                t = null;
-            }
+    final ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
+        ForkJoinTask<?> t = scan(joinMe, false);
+        if (t != null && joinMe.status < 0 && sp == base) {
+            pushTask(t); // unsteal if done and this task would be stealable
+            t = null;
         }
-        if (t != null) // unsteal
-            pushTask(t);
-        return s;
+        return t;
     }
-
+    
     /**
      * Pops or steals a task
      * @return task, or null if none available
      */
-    final ForkJoinTask<?> getLocalOrStolenTask() {
-        ForkJoinTask<?> t = popTask();
-        return t != null? t : scan(null, false);
+    final ForkJoinTask<?> pollLocalOrStolenTask() {
+        ForkJoinTask<?> t;
+        return (t = popTask()) == null? scan(null, false) : t;
     }
 
     /**
@@ -704,7 +694,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     final void helpQuiescePool() {
         for (;;) {
-            ForkJoinTask<?> t = getLocalOrStolenTask();
+            ForkJoinTask<?> t = pollLocalOrStolenTask();
             if (t != null) {
                 activate();
                 t.quietlyExec();
@@ -723,8 +713,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Returns an estimate of the number of tasks in the queue.
      */
     final int getQueueSize() {
-        int b = base;
-        int n = sp - b;
+        int n = sp - base;
         return n <= 0? 0 : n; // suppress momentarily negative values
     }
 
@@ -733,6 +722,7 @@ public class ForkJoinWorkerThread extends Thread {
      * function of number of idle workers.
      */
     final int getEstimatedSurplusTaskCount() {
+        // The halving approximates weighting idle vs non-idle workers
         return (sp - base) - (pool.getIdleThreadCount() >>> 1);
     }
 

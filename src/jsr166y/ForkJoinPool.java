@@ -1477,7 +1477,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             for (k = 0; k < len && ws[k] != null; ++k)
                 ;
         }
-        if (k < len && (w = createWorker(k)) != null) {
+        if (k < len && !isTerminating() && (w = createWorker(k)) != null) {
             ws[k] = w;
             w.start();
         }

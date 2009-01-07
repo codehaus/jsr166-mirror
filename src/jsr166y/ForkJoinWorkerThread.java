@@ -227,23 +227,23 @@ public class ForkJoinWorkerThread extends Thread {
     // public access methods 
 
     /**
-     * Returns the pool hosting the current task execution.
+     * Returns the pool hosting this thread
      * @return the pool
      */
-    public static ForkJoinPool getPool() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).pool;
+    public ForkJoinPool getPool() {
+        return pool;
     }
 
     /**
-     * Returns the index number of the current worker thread in its
-     * pool.  The returned value ranges from zero to the maximum
-     * number of threads (minus one) that have ever been created in
-     * the pool.  This method may be useful for applications that
-     * track status or collect results on a per-worker basis.
+     * Returns the index number of this thread in its pool.  The
+     * returned value ranges from zero to the maximum number of
+     * threads (minus one) that have ever been created in the pool.
+     * This method may be useful for applications that track status or
+     * collect results on a per-worker basis.
      * @return the index number.
      */
-    public static int getPoolIndex() {
-        return ((ForkJoinWorkerThread)(Thread.currentThread())).poolIndex;
+    public int getPoolIndex() {
+        return poolIndex;
     }
 
     //  Access methods used by Pool

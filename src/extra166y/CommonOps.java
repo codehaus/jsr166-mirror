@@ -790,9 +790,7 @@ public class CommonOps {
     /**
      * Returns a generator producing uniform random values between
      * zero and one, with the same properties as {@link
-     * java.util.Random#nextDouble} but operating independently across
-     * ForkJoinWorkerThreads and usable only within forkjoin
-     * computations.
+     * java.util.Random#nextDouble}
      */
     public static DoubleGenerator doubleRandom() {
         return DoubleRandomGenerator.generator;
@@ -801,16 +799,14 @@ public class CommonOps {
         static final DoubleRandomGenerator generator =
             new DoubleRandomGenerator();
         public double op() {
-            return ForkJoinWorkerThread.nextRandomDouble();
+            return ThreadLocalRandom.current().nextDouble();
         }
     }
 
     /**
      * Returns a generator producing uniform random values between
      * zero and the given bound, with the same properties as {@link
-     * java.util.Random#nextDouble} but operating independently across
-     * ForkJoinWorkerThreads and usable only within forkjoin
-     * computations.
+     * java.util.Random#nextDouble}.
      * @param bound the upper bound (exclusive) of opd values
      */
     public static DoubleGenerator doubleRandom(double bound) {
@@ -820,15 +816,13 @@ public class CommonOps {
         final double bound;
         DoubleBoundedRandomGenerator(double bound) { this.bound = bound; }
         public double op() {
-            return ForkJoinWorkerThread.nextRandomDouble() * bound;
+            return ThreadLocalRandom.current().nextDouble() * bound;
         }
     }
 
     /**
      * Returns a generator producing uniform random values between the
-     * given least value (inclusive) and bound (exclusive), operating
-     * independently across ForkJoinWorkerThreads and usable only
-     * within forkjoin computations.
+     * given least value (inclusive) and bound (exclusive)
      * @param least the least value returned
      * @param bound the upper bound (exclusive) of opd values
      */
@@ -842,15 +836,13 @@ public class CommonOps {
             this.least = least; this.range = bound - least;
         }
         public double op() {
-            return ForkJoinWorkerThread.nextRandomDouble() * range + least;
+            return ThreadLocalRandom.current().nextDouble() * range + least;
         }
     }
 
     /**
      * Returns a generator producing uniform random values with the
-     * same properties as {@link java.util.Random#nextLong} but
-     * operating independently across ForkJoinWorkerThreads and usable
-     * only within forkjoin computations.
+     * same properties as {@link java.util.Random#nextLong}
      */
     public static LongGenerator longRandom() {
         return LongRandomGenerator.generator;
@@ -859,15 +851,13 @@ public class CommonOps {
         static final LongRandomGenerator generator =
             new LongRandomGenerator();
         public long op() {
-            return ForkJoinWorkerThread.nextRandomLong();
+            return ThreadLocalRandom.current().nextLong();
         }
     }
 
     /**
      * Returns a generator producing uniform random values with the
-     * same properties as {@link java.util.Random#nextInt(int)} but
-     * operating independently across ForkJoinWorkerThreads and usable
-     * only within forkjoin computations.
+     * same properties as {@link java.util.Random#nextInt(int)}
      * @param bound the upper bound (exclusive) of opd values
      */
     public static LongGenerator longRandom(long bound) {
@@ -879,15 +869,13 @@ public class CommonOps {
         final long bound;
         LongBoundedRandomGenerator(long bound) { this.bound = bound; }
         public long op() {
-            return ForkJoinWorkerThread.nextRandomLong(bound);
+            return ThreadLocalRandom.current().nextLong(bound);
         }
     }
 
     /**
      * Returns a generator producing uniform random values between the
-     * given least value (inclusive) and bound (exclusive), operating
-     * independently across ForkJoinWorkerThreads and usable only
-     * within forkjoin computations.
+     * given least value (inclusive) and bound (exclusive).
      * @param least the least value returned
      * @param bound the upper bound (exclusive) of opd values
      */
@@ -903,15 +891,13 @@ public class CommonOps {
             this.least = least; this.range = bound - least;
         }
         public long op() {
-            return ForkJoinWorkerThread.nextRandomLong(range) + least;
+            return ThreadLocalRandom.current().nextLong(range) + least;
         }
     }
 
     /**
      * Returns a generator producing uniform random values with the
-     * same properties as {@link java.util.Random#nextInt} but
-     * operating independently across ForkJoinWorkerThreads and usable
-     * only within forkjoin computations.
+     * same properties as {@link java.util.Random#nextInt}
      */
     public static IntGenerator intRandom() {
         return IntRandomGenerator.generator;
@@ -920,15 +906,13 @@ public class CommonOps {
         static final IntRandomGenerator generator =
             new IntRandomGenerator();
         public int op() {
-            return ForkJoinWorkerThread.nextRandomInt();
+            return ThreadLocalRandom.current().nextInt();
         }
     }
 
     /**
      * Returns a generator producing uniform random values with the
-     * same properties as {@link java.util.Random#nextInt(int)} but
-     * operating independently across ForkJoinWorkerThreads and usable
-     * only within forkjoin computations.
+     * same properties as {@link java.util.Random#nextInt(int)}
      * @param bound the upper bound (exclusive) of opd values
      */
     public static IntGenerator intRandom(int bound) {
@@ -940,15 +924,13 @@ public class CommonOps {
         final int bound;
         IntBoundedRandomGenerator(int bound) { this.bound = bound; }
         public int op() {
-            return ForkJoinWorkerThread.nextRandomInt(bound);
+            return ThreadLocalRandom.current().nextInt(bound);
         }
     }
 
     /**
      * Returns a generator producing uniform random values between the
-     * given least value (inclusive) and bound (exclusive), operating
-     * independently across ForkJoinWorkerThreads and usable only
-     * within forkjoin computations.
+     * given least value (inclusive) and bound (exclusive)
      * @param least the least value returned
      * @param bound the upper bound (exclusive) of opd values
      */
@@ -964,7 +946,7 @@ public class CommonOps {
             this.least = least; this.range = bound - least;
         }
         public int op() {
-            return ForkJoinWorkerThread.nextRandomInt(range) + least;
+            return ThreadLocalRandom.current().nextInt(range) + least;
         }
     }
 

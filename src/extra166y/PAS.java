@@ -1879,7 +1879,9 @@ class PAS {
             this.left = left; this.right = right; this.merger = merger;
         }
         public void compute() {
-            invokeAll(left, right);
+            right.fork();
+            left.invoke();
+            right.join();
             merger.invoke();
         }
     }
@@ -2346,8 +2348,14 @@ class PAS {
                 else break;
             }
 
-            oquickSort(a, cmp, lo, left);
-            lo = left + 1;
+            if (left - lo <= hi - right) {
+                oquickSort(a, cmp, lo, left);
+                lo = left + 1;
+            }               
+            else {
+                oquickSort(a, cmp, right, hi);
+                hi = left;
+            }
         }
     }
 
@@ -2392,8 +2400,14 @@ class PAS {
                 else break;
             }
 
-            ocquickSort(a, lo, left);
-            lo = left + 1;
+            if (left - lo <= hi - right) {
+                ocquickSort(a, lo, left);
+                lo = left + 1;
+            }
+            else {
+                ocquickSort(a, right, hi);
+                hi = left;
+            }
         }
     }
 
@@ -2438,8 +2452,14 @@ class PAS {
                 else break;
             }
 
-            dquickSort(a, cmp, lo, left);
-            lo = left + 1;
+            if (left - lo <= hi - right) {
+                dquickSort(a, cmp, lo, left);
+                lo = left + 1;
+            }               
+            else {
+                dquickSort(a, cmp, right, hi);
+                hi = left;
+            }
         }
     }
 
@@ -2484,8 +2504,14 @@ class PAS {
                 else break;
             }
 
-            dcquickSort(a, lo, left);
-            lo = left + 1;
+            if (left - lo <= hi - right) {
+                dcquickSort(a, lo, left);
+                lo = left + 1;
+            }
+            else {
+                dcquickSort(a, right, hi);
+                hi = left;
+            }
         }
     }
 
@@ -2530,8 +2556,14 @@ class PAS {
                 else break;
             }
 
-            lquickSort(a, cmp, lo, left);
-            lo = left + 1;
+            if (left - lo <= hi - right) {
+                lquickSort(a, cmp, lo, left);
+                lo = left + 1;
+            }               
+            else {
+                lquickSort(a, cmp, right, hi);
+                hi = left;
+            }
         }
     }
 
@@ -2576,8 +2608,14 @@ class PAS {
                 else break;
             }
 
-            lcquickSort(a, lo, left);
-            lo = left + 1;
+            if (left - lo <= hi - right) {
+                lcquickSort(a, lo, left);
+                lo = left + 1;
+            }
+            else {
+                lcquickSort(a, right, hi);
+                hi = left;
+            }
         }
     }
 

@@ -298,14 +298,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             else if (s.waiter == null)
                 s.waiter = w;
             else if (mode != TIMEOUT) {
-                //                LockSupport.park(this);
-                LockSupport.park(); // allows run on java5
+                LockSupport.park(this);
                 s.waiter = null;
                 spins = -1;
             }
             else if (nanos > spinForTimeoutThreshold) {
-                //                LockSupport.parkNanos(this, nanos);
-                LockSupport.parkNanos(nanos);
+                LockSupport.parkNanos(this, nanos);
                 s.waiter = null;
                 spins = -1;
             }
@@ -730,6 +728,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
 
     // Support for resetting head/tail while deserializing
+    private void resetHeadAndTail() {
+        QNode dummy = new QNode(null, false);
+        _unsafe.putObjectVolatile(this, headOffset,
+                                  new PaddedAtomicReference<QNode>(dummy));
+        _unsafe.putObjectVolatile(this, tailOffset,
+                                  new PaddedAtomicReference<QNode>(dummy));
+        _unsafe.putObjectVolatile(this, cleanMeOffset,
+                                  new PaddedAtomicReference<QNode>(null));
+    }
 
     // Temporary Unsafe mechanics for preliminary release
     private static final Unsafe _unsafe;
@@ -754,17 +761,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         } catch (Exception e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }
-    }
-
-    private void resetHeadAndTail() {
-        QNode dummy = new QNode(null, false);
-        _unsafe.putObjectVolatile(this, headOffset,
-                                  new PaddedAtomicReference<QNode>(dummy));
-        _unsafe.putObjectVolatile(this, tailOffset,
-                                  new PaddedAtomicReference<QNode>(dummy));
-        _unsafe.putObjectVolatile(this, cleanMeOffset,
-                                  new PaddedAtomicReference<QNode>(null));
-
     }
 
 }

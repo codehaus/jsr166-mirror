@@ -8,14 +8,22 @@ package jsr166y;
 import java.util.*;
 
 /**
- * A Random number generator with the same properties as {@link
+ * A random number generator with the same properties as class {@link
  * Random} but isolated to the current Thread.  Like the global
- * generator used by {@link java.lang.Math}, a ThreadLocalRandom is
- * initialized with an internally generated seed that may not
- * otherwise be modified. When applicable, use of ThreadLocalRandom
- * rather than shared Random objects in concurrent programs will
- * typically encounter less overhead and contention. The most common
- * usage form is: <code>ThreadLocalRandom.current().nextX()</code>.
+ * generator used by the {@link java.lang.Math} class, a
+ * ThreadLocalRandom is initialized with an internally generated seed
+ * that may not otherwise be modified. When applicable, use of
+ * ThreadLocalRandom rather than shared Random objects in concurrent
+ * programs will typically encounter much less overhead and
+ * contention.  ThreadLocalRandoms are particularly appropriate when
+ * multiple tasks (for example, each a {@link ForkJoinTask}), use
+ * random numbers in parallel in thread pools.
+ * 
+ * <p>Usages of this class should typically be of the form:
+ * <code>ThreadLocalRandom.current().nextX(...)</code> (where
+ * <code>X</code> is <code>Int</code>, <code>Long</code>, etc).
+ * When all usages are of this form, it is never possible to
+ * accidently share ThreadLocalRandoms across multiple threads.
  *
  * <p>This class also provides additional commonly used bounded random
  * generation methods.
@@ -35,7 +43,7 @@ public class ThreadLocalRandom extends Random {
      * Initialization flag to permit the first and only allowed call
      * to setSeed (inside Random constructor) to succeed.  We can't
      * allow others since it would cause setting seed in one part of a
-     * program to inintentionally impact other usages by the thread.
+     * program to unintentionally impact other usages by the thread.
      */
     boolean initialized;
 
@@ -44,6 +52,9 @@ public class ThreadLocalRandom extends Random {
     // each other.
     private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
+    /**
+     * The actual ThreadLocal
+     */
     private static final ThreadLocal<ThreadLocalRandom> localRandom =
         new ThreadLocal<ThreadLocalRandom>() {
             protected ThreadLocalRandom initialValue() {
@@ -51,8 +62,14 @@ public class ThreadLocalRandom extends Random {
             }
     };
 
-    ThreadLocalRandom() { // construct only in localRandom.initialValue
-        super(); // super constructor calls setSeed
+
+    /**
+     * Constructor called only by localRandom.initialValue.
+     * We rely on the fact that the superclass no-arg constructor 
+     * invokes setSeed exactly once to initialize.
+     */
+    ThreadLocalRandom() {
+        super();
     }
 
     /**
@@ -105,9 +122,14 @@ public class ThreadLocalRandom extends Random {
     public long nextLong(long n) {
         if (n <= 0)
             throw new IllegalArgumentException("n must be positive");
+        // Divide n by two until small enough for nextInt. On each
+        // iteration (at most 31 of them but usually much less),
+        // randomly choose both whether to include high bit in result
+        // (offset) and whether to continue with the lower vs upper
+        // half (which makes a difference only if odd). 
         long offset = 0;
-        while (n >= Integer.MAX_VALUE) { // randomly pick half range
-            int bits = next(2); // 2nd bit for odd vs even split
+        while (n >= Integer.MAX_VALUE) {
+            int bits = next(2); 
             long half = n >>> 1;
             long nextn = ((bits & 2) == 0)? half : n - half;
             if ((bits & 1) == 0)

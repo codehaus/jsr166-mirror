@@ -133,7 +133,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * @return the node
      */
     private E extract() {
-        Node<E> first = head.next;
+        Node<E> h = head;
+        Node<E> first = h.next;
+        h.next = null; // help GC
         head = first;
         E x = first.item;
         first.item = null;

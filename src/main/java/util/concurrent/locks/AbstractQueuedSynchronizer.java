@@ -611,7 +611,6 @@ public abstract class AbstractQueuedSynchronizer
          * If status is negative (i.e., possibly needing signal) try
          * to clear in anticipation of signalling.  It is OK if this
          * fails or if status is changed by waiting thread.
-         * 
          */
         int ws = node.waitStatus;
         if (ws < 0)
@@ -672,7 +671,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Sets head of queue, and checks if successor may be waiting
      * in shared mode, if so propagating if either propagate > 0 or
-     * PROPAGATE status was set
+     * PROPAGATE status was set.
      *
      * @param node the node
      * @param propagate the return value from a tryAcquireShared
@@ -687,7 +686,7 @@ public abstract class AbstractQueuedSynchronizer
          *     (note: this uses sign-check of waitStatus because
          *      PROPAGATE status may transition to SIGNAL.)
          * and
-         *   The next node is waiting in shared mode, 
+         *   The next node is waiting in shared mode,
          *     or we don't know, because it appears null
          *
          * The conservatism in both of these checks may cause
@@ -727,7 +726,7 @@ public abstract class AbstractQueuedSynchronizer
         // Can use unconditional write instead of CAS here
         node.waitStatus = Node.CANCELLED;
 
-        // If we are the tail, remove ourselves. 
+        // If we are the tail, remove ourselves.
         if (node == tail && compareAndSetTail(node, pred)) {
             compareAndSetNext(pred, predNext, null);
         } else {

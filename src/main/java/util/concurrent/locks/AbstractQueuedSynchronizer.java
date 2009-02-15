@@ -720,7 +720,9 @@ public abstract class AbstractQueuedSynchronizer
         while (pred.waitStatus > 0)
             node.prev = pred = pred.prev;
 
-        // Getting this before setting waitStatus avoids staleness
+        // predNext is the apparent node to unsplice. CASes below will
+        // fail if not, in which case, we lost race vs another cancel
+        // or signal, so no further action is necessary.
         Node predNext = pred.next;
 
         // Can use unconditional write instead of CAS here
@@ -730,7 +732,7 @@ public abstract class AbstractQueuedSynchronizer
         if (node == tail && compareAndSetTail(node, pred)) {
             compareAndSetNext(pred, predNext, null);
         } else {
-            // if our predecessor needs signal, try to set its next-link
+            // If successor needs signal, try to set pred's next-link
             // so it will get one. Otherwise wake it up to propagate.
             int ws;
             if (pred != head &&

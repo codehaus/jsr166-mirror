@@ -164,6 +164,7 @@ public class LinkedBlockingDeque<E>
         if (f == null)
             return null;
         Node<E> n = f.next;
+        f.next = null; // help GC
         first = n;
         if (n == null)
             last = null;
@@ -182,6 +183,7 @@ public class LinkedBlockingDeque<E>
         if (l == null)
             return null;
         Node<E> p = l.prev;
+        l.prev = null; // help GC
         last = p;
         if (p == null)
             first = null;

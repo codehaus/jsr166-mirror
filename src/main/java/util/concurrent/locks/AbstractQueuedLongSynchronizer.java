@@ -502,7 +502,9 @@ public abstract class AbstractQueuedLongSynchronizer
         // or signal, so no further action is necessary.
         Node predNext = pred.next;
 
-        // Can use unconditional write instead of CAS here
+        // Can use unconditional write instead of CAS here.
+        // After this atomic step, other Nodes can skip past us.
+        // Before, we are free of interference from other threads.
         node.waitStatus = Node.CANCELLED;
 
         // If we are the tail, remove ourselves.

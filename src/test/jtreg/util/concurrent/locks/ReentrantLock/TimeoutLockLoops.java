@@ -5,7 +5,7 @@
  */
 
 /*
- * @test %I% %E%
+ * @test
  * @bug 4486658 5031862
  * @compile -source 1.5 TimeoutLockLoops.java
  * @run main TimeoutLockLoops

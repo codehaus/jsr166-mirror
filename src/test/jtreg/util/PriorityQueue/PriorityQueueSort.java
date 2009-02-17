@@ -5,7 +5,7 @@
  */
 
 /*
- * @test %I% %E%
+ * @test
  * @bug 4486658
  * @summary Checks that a priority queue returns elements in sorted order across various operations
  */

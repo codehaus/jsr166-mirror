@@ -5,7 +5,7 @@
  */
 
 /*
- * @test %I% %E%
+ * @test
  * @bug 4949279
  * @summary Independent instantiations of Random() have distinct seeds.
  */

@@ -4,7 +4,7 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 /*
- * @test %I% %E%
+ * @test
  * @bug 4486658
  * @compile -source 1.5 TimeoutLockLoops.java
  * @run main TimeoutLockLoops

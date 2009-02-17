@@ -5,7 +5,7 @@
  */
 
 /*
- * @test %I% %E%
+ * @test
  * @bug 4486658
  * @compile -source 1.5 MapCheck.java
  * @run main/timeout=240 MapCheck

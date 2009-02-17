@@ -5,7 +5,7 @@
  */
 
 /*
- * @test %I% %E%
+ * @test
  * @bug 6236036 6264015
  * @compile PollMemoryLeak.java
  * @run main/othervm -Xmx8m PollMemoryLeak

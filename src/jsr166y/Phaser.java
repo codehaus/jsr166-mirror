@@ -399,7 +399,7 @@ public class Phaser {
             phase = phaseOf(s);
             int unarrived = unarrivedOf(s) + registrations;
             int parties = partiesOf(s) + registrations;
-            if (phase < 0) 
+            if (phase < 0)
                 break;
             if (parties > ushortMask || unarrived > ushortMask)
                 throw new IllegalStateException(badBounds(parties, unarrived));
@@ -557,7 +557,7 @@ public class Phaser {
      * @return the phase on exit from this method
      * @throws InterruptedException if thread interrupted while waiting
      */
-    public int awaitAdvanceInterruptibly(int phase) 
+    public int awaitAdvanceInterruptibly(int phase)
         throws InterruptedException {
         if (phase < 0)
             return phase;
@@ -795,7 +795,7 @@ public class Phaser {
                 try {
                     ForkJoinPool.managedBlock(this, false);
                 } catch (InterruptedException ie) {
-                } 
+                }
             }
             return wasInterrupted;
         }
@@ -933,7 +933,7 @@ public class Phaser {
             throws NoSuchFieldException, IllegalAccessException {
         Field f = Unsafe.class.getDeclaredField("theUnsafe");
         f.setAccessible(true);
-        return (Unsafe)f.get(null);
+        return (Unsafe) f.get(null);
     }
 
     private static long fieldOffset(String fieldName)
@@ -949,7 +949,7 @@ public class Phaser {
         try {
             _unsafe = getUnsafe();
             stateOffset = fieldOffset("state");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }
     }

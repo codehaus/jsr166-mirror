@@ -1009,22 +1009,45 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     // Temporary Unsafe mechanics for preliminary release
+    private static Unsafe getUnsafe() throws Throwable {
+        try {
+            return Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
+                        public Unsafe run() throws Exception {
+                            return getUnsafePrivileged();
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw e.getCause();
+            }
+        }
+    }
+
+    private static Unsafe getUnsafePrivileged()
+            throws NoSuchFieldException, IllegalAccessException {
+        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        return (Unsafe) f.get(null);
+    }
+
+    private static long fieldOffset(String fieldName)
+            throws NoSuchFieldException {
+        return _unsafe.objectFieldOffset
+            (ForkJoinTask.class.getDeclaredField(fieldName));
+    }
 
     static final Unsafe _unsafe;
     static final long statusOffset;
 
     static {
         try {
-            if (ForkJoinTask.class.getClassLoader() != null) {
-                Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                f.setAccessible(true);
-                _unsafe = (Unsafe)f.get(null);
-            }
-            else
-                _unsafe = Unsafe.getUnsafe();
-            statusOffset = _unsafe.objectFieldOffset
-                (ForkJoinTask.class.getDeclaredField("status"));
-        } catch (Exception ex) { throw new Error(ex); }
+            _unsafe = getUnsafe();
+            statusOffset = fieldOffset("status");
+        } catch (Throwable e) {
+            throw new RuntimeException("Could not initialize intrinsics", e);
+        }
     }
 
 }

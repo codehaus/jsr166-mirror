@@ -759,7 +759,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             throws NoSuchFieldException, IllegalAccessException {
         Field f = Unsafe.class.getDeclaredField("theUnsafe");
         f.setAccessible(true);
-        return (Unsafe)f.get(null);
+        return (Unsafe) f.get(null);
     }
 
     private static long fieldOffset(String fieldName)

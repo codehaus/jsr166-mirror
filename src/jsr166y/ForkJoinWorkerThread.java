@@ -20,7 +20,7 @@ import java.lang.reflect.*;
  * cleanup methods surrounding the main task processing loop.  If you
  * do create such a subclass, you will also need to supply a custom
  * ForkJoinWorkerThreadFactory to use it in a ForkJoinPool.
- * 
+ *
  */
 public class ForkJoinWorkerThread extends Thread {
     /*
@@ -210,7 +210,7 @@ public class ForkJoinWorkerThread extends Thread {
         // Remaining initialization is deferred to onStart
     }
 
-    // Public access methods 
+    // Public access methods
 
     /**
      * Returns the pool hosting this thread
@@ -323,7 +323,7 @@ public class ForkJoinWorkerThread extends Thread {
     private void mainLoop() {
         while (!isShutdown()) {
             ForkJoinTask<?> t = pollTask();
-            if (t != null || (t = pollSubmission()) != null) 
+            if (t != null || (t = pollSubmission()) != null)
                 t.quietlyExec();
             else if (tryInactivate())
                 pool.sync(this);
@@ -372,7 +372,7 @@ public class ForkJoinWorkerThread extends Thread {
         // propagate exception to uncaught exception handler
         try {
             do;while (!tryInactivate()); // ensure inactive
-            cancelTasks();         
+            cancelTasks();
             runState = TERMINATED;
             pool.workerTerminated(this);
         } catch (Throwable ex) {        // Shouldn't ever happen
@@ -384,7 +384,7 @@ public class ForkJoinWorkerThread extends Thread {
         }
     }
 
-    // Intrinsics-based support for queue operations.  
+    // Intrinsics-based support for queue operations.
 
     /**
      * Add in store-order the given task at given slot of q to
@@ -665,14 +665,14 @@ public class ForkJoinWorkerThread extends Thread {
         }
         return t;
     }
-    
+
     /**
      * Runs tasks until pool isQuiescent
      */
     final void helpQuiescePool() {
         for (;;) {
             ForkJoinTask<?> t = pollTask();
-            if (t != null) 
+            if (t != null)
                 t.quietlyExec();
             else if (tryInactivate() && pool.isQuiescent())
                 break;
@@ -681,6 +681,34 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     // Temporary Unsafe mechanics for preliminary release
+    private static Unsafe getUnsafe() throws Throwable {
+        try {
+            return Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
+                        public Unsafe run() throws Exception {
+                            return getUnsafePrivileged();
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw e.getCause();
+            }
+        }
+    }
+
+    private static Unsafe getUnsafePrivileged()
+            throws NoSuchFieldException, IllegalAccessException {
+        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        return (Unsafe) f.get(null);
+    }
+
+    private static long fieldOffset(String fieldName)
+            throws NoSuchFieldException {
+        return _unsafe.objectFieldOffset
+            (ForkJoinWorkerThread.class.getDeclaredField(fieldName));
+    }
 
     static final Unsafe _unsafe;
     static final long baseOffset;
@@ -690,25 +718,16 @@ public class ForkJoinWorkerThread extends Thread {
     static final int qShift;
     static {
         try {
-            if (ForkJoinWorkerThread.class.getClassLoader() != null) {
-                Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                f.setAccessible(true);
-                _unsafe = (Unsafe)f.get(null);
-            }
-            else
-                _unsafe = Unsafe.getUnsafe();
-            baseOffset = _unsafe.objectFieldOffset
-                (ForkJoinWorkerThread.class.getDeclaredField("base"));
-            spOffset = _unsafe.objectFieldOffset
-                (ForkJoinWorkerThread.class.getDeclaredField("sp"));
-            runStateOffset = _unsafe.objectFieldOffset
-                (ForkJoinWorkerThread.class.getDeclaredField("runState"));
+            _unsafe = getUnsafe();
+            baseOffset = fieldOffset("base");
+            spOffset = fieldOffset("sp");
+            runStateOffset = fieldOffset("runState");
             qBase = _unsafe.arrayBaseOffset(ForkJoinTask[].class);
             int s = _unsafe.arrayIndexScale(ForkJoinTask[].class);
             if ((s & (s-1)) != 0)
                 throw new Error("data type scale not a power of two");
             qShift = 31 - Integer.numberOfLeadingZeros(s);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }
     }

@@ -1302,7 +1302,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             long prev = w.lastEventCount;
             WaitQueueNode node = null;
             WaitQueueNode h;
-            while (eventCount == prev && 
+            while (eventCount == prev &&
                    ((h = syncStack) == null || h.count == prev)) {
                 if (node == null)
                     node = new WaitQueueNode(prev, w);
@@ -1324,8 +1324,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      *  - on signal (thread == null)
      *  - on event count advance (winning race to notify vs signaller)
      *  - on Interrupt
-     *  - if the first queued node, we find work available 
-     * If node was not signalled and event count not advanced on exit, 
+     *  - if the first queued node, we find work available
+     * If node was not signalled and event count not advanced on exit,
      * then we also help advance event count.
      * @return true if node can be released
      */
@@ -1446,10 +1446,10 @@ public class ForkJoinPool extends AbstractExecutorService {
         return (tc < maxPoolSize &&
                 (rc == 0 || totalSurplus < 0 ||
                  (maintainParallelism &&
-                  runningDeficit > totalSurplus && 
+                  runningDeficit > totalSurplus &&
                   ForkJoinWorkerThread.hasQueuedTasks(workers))));
     }
-    
+
     /**
      * Add a spare worker if lock available and no more than the
      * expected numbers of threads exist
@@ -1696,6 +1696,34 @@ public class ForkJoinPool extends AbstractExecutorService {
 
 
     // Temporary Unsafe mechanics for preliminary release
+    private static Unsafe getUnsafe() throws Throwable {
+        try {
+            return Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
+                        public Unsafe run() throws Exception {
+                            return getUnsafePrivileged();
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw e.getCause();
+            }
+        }
+    }
+
+    private static Unsafe getUnsafePrivileged()
+            throws NoSuchFieldException, IllegalAccessException {
+        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        return (Unsafe) f.get(null);
+    }
+
+    private static long fieldOffset(String fieldName)
+            throws NoSuchFieldException {
+        return _unsafe.objectFieldOffset
+            (ForkJoinPool.class.getDeclaredField(fieldName));
+    }
 
     static final Unsafe _unsafe;
     static final long eventCountOffset;
@@ -1706,24 +1734,13 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     static {
         try {
-            if (ForkJoinPool.class.getClassLoader() != null) {
-                Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                f.setAccessible(true);
-                _unsafe = (Unsafe)f.get(null);
-            }
-            else
-                _unsafe = Unsafe.getUnsafe();
-            eventCountOffset = _unsafe.objectFieldOffset
-                (ForkJoinPool.class.getDeclaredField("eventCount"));
-            workerCountsOffset = _unsafe.objectFieldOffset
-                (ForkJoinPool.class.getDeclaredField("workerCounts"));
-            runControlOffset = _unsafe.objectFieldOffset
-                (ForkJoinPool.class.getDeclaredField("runControl"));
-            syncStackOffset = _unsafe.objectFieldOffset
-                (ForkJoinPool.class.getDeclaredField("syncStack"));
-            spareStackOffset = _unsafe.objectFieldOffset
-                (ForkJoinPool.class.getDeclaredField("spareStack"));
-        } catch (Exception e) {
+            _unsafe = getUnsafe();
+            eventCountOffset = fieldOffset("eventCount");
+            workerCountsOffset = fieldOffset("workerCounts");
+            runControlOffset = fieldOffset("runControl");
+            syncStackOffset = fieldOffset("syncStack");
+            spareStackOffset = fieldOffset("spareStack");
+        } catch (Throwable e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }
     }

@@ -913,21 +913,42 @@ public class Phaser {
     }
 
     // Temporary Unsafe mechanics for preliminary release
+    private static Unsafe getUnsafe() throws Throwable {
+        try {
+            return Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
+                        public Unsafe run() throws Exception {
+                            return getUnsafePrivileged();
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw e.getCause();
+            }
+        }
+    }
+
+    private static Unsafe getUnsafePrivileged()
+            throws NoSuchFieldException, IllegalAccessException {
+        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        return (Unsafe)f.get(null);
+    }
+
+    private static long fieldOffset(String fieldName)
+            throws NoSuchFieldException {
+        return _unsafe.objectFieldOffset
+            (Phaser.class.getDeclaredField(fieldName));
+    }
 
     static final Unsafe _unsafe;
     static final long stateOffset;
 
     static {
         try {
-            if (Phaser.class.getClassLoader() != null) {
-                Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                f.setAccessible(true);
-                _unsafe = (Unsafe)f.get(null);
-            }
-            else
-                _unsafe = Unsafe.getUnsafe();
-            stateOffset = _unsafe.objectFieldOffset
-                (Phaser.class.getDeclaredField("state"));
+            _unsafe = getUnsafe();
+            stateOffset = fieldOffset("state");
         } catch (Exception e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }

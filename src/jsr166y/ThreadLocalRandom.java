@@ -18,7 +18,7 @@ import java.util.*;
  * contention.  ThreadLocalRandoms are particularly appropriate when
  * multiple tasks (for example, each a {@link ForkJoinTask}), use
  * random numbers in parallel in thread pools.
- * 
+ *
  * <p>Usages of this class should typically be of the form:
  * <code>ThreadLocalRandom.current().nextX(...)</code> (where
  * <code>X</code> is <code>Int</code>, <code>Long</code>, etc).
@@ -37,7 +37,7 @@ public class ThreadLocalRandom extends Random {
     /**
      * The random seed. We can't use super.seed
      */
-    private long rnd; 
+    private long rnd;
 
     /**
      * Initialization flag to permit the first and only allowed call
@@ -65,7 +65,7 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Constructor called only by localRandom.initialValue.
-     * We rely on the fact that the superclass no-arg constructor 
+     * We rely on the fact that the superclass no-arg constructor
      * invokes setSeed exactly once to initialize.
      */
     ThreadLocalRandom() {
@@ -83,9 +83,9 @@ public class ThreadLocalRandom extends Random {
     /**
      * Throws UnsupportedOperationException. Setting seeds in this
      * generator is unsupported.
-     * @throw UnsupportedOperationException always
+     * @throws UnsupportedOperationException always
      */
-    public void setSeed(long seed) { 
+    public void setSeed(long seed) {
         if (initialized)
             throw new UnsupportedOperationException();
         initialized = true;
@@ -126,10 +126,10 @@ public class ThreadLocalRandom extends Random {
         // iteration (at most 31 of them but usually much less),
         // randomly choose both whether to include high bit in result
         // (offset) and whether to continue with the lower vs upper
-        // half (which makes a difference only if odd). 
+        // half (which makes a difference only if odd).
         long offset = 0;
         while (n >= Integer.MAX_VALUE) {
-            int bits = next(2); 
+            int bits = next(2);
             long half = n >>> 1;
             long nextn = ((bits & 2) == 0)? half : n - half;
             if ((bits & 1) == 0)

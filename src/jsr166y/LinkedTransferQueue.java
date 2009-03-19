@@ -739,26 +739,46 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     // Temporary Unsafe mechanics for preliminary release
+    private static Unsafe getUnsafe() throws Throwable {
+        try {
+            return Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
+                        public Unsafe run() throws Exception {
+                            return getUnsafePrivileged();
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw e.getCause();
+            }
+        }
+    }
+
+    private static Unsafe getUnsafePrivileged()
+            throws NoSuchFieldException, IllegalAccessException {
+        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        return (Unsafe)f.get(null);
+    }
+
+    private static long fieldOffset(String fieldName)
+            throws NoSuchFieldException {
+        return _unsafe.objectFieldOffset
+            (LinkedTransferQueue.class.getDeclaredField(fieldName));
+    }
+
     private static final Unsafe _unsafe;
     private static final long headOffset;
     private static final long tailOffset;
     private static final long cleanMeOffset;
     static {
         try {
-            if (LinkedTransferQueue.class.getClassLoader() != null) {
-                Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                f.setAccessible(true);
-                _unsafe = (Unsafe)f.get(null);
-            }
-            else
-                _unsafe = Unsafe.getUnsafe();
-            headOffset = _unsafe.objectFieldOffset
-                (LinkedTransferQueue.class.getDeclaredField("head"));
-            tailOffset = _unsafe.objectFieldOffset
-                (LinkedTransferQueue.class.getDeclaredField("tail"));
-            cleanMeOffset = _unsafe.objectFieldOffset
-                (LinkedTransferQueue.class.getDeclaredField("cleanMe"));
-        } catch (Exception e) {
+            _unsafe = getUnsafe();
+            headOffset = fieldOffset("head");
+            tailOffset = fieldOffset("tail");
+            cleanMeOffset = fieldOffset("cleanMe");
+        } catch (Throwable e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }
     }

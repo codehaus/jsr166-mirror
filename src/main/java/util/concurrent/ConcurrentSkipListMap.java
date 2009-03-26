@@ -2365,15 +2365,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                                       boolean fromInclusive,
                                       E toElement,
                                       boolean toInclusive) {
-            return new ConcurrentSkipListSet<E>
-                (m.subMap(fromElement, fromInclusive,
-                          toElement,   toInclusive));
+            return new KeySet<E>(m.subMap(fromElement, fromInclusive,
+                                          toElement,   toInclusive));
         }
         public NavigableSet<E> headSet(E toElement, boolean inclusive) {
-            return new ConcurrentSkipListSet<E>(m.headMap(toElement, inclusive));
+            return new KeySet<E>(m.headMap(toElement, inclusive));
         }
         public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
-            return new ConcurrentSkipListSet<E>(m.tailMap(fromElement, inclusive));
+            return new KeySet<E>(m.tailMap(fromElement, inclusive));
         }
         public NavigableSet<E> subSet(E fromElement, E toElement) {
             return subSet(fromElement, true, toElement, false);
@@ -2385,7 +2384,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return tailSet(fromElement, true);
         }
         public NavigableSet<E> descendingSet() {
-            return new ConcurrentSkipListSet(m.descendingMap());
+            return new KeySet(m.descendingMap());
         }
     }
 

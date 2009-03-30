@@ -752,8 +752,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
         s.defaultWriteObject();
-        for (Iterator<E> it = iterator(); it.hasNext(); )
-            s.writeObject(it.next());
+        for (E e : this)
+            s.writeObject(e);
         // Use trailing null as sentinel
         s.writeObject(null);
     }

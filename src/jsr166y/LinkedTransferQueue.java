@@ -166,6 +166,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Puts or takes an item. Used for most queue operations (except
      * poll() and tryTransfer()). See the similar code in
      * SynchronousQueue for detailed explanation.
+     *
      * @param e the item or if null, signifies that this is a take
      * @param mode the wait mode: NOWAIT, TIMEOUT, WAIT
      * @param nanos timeout in nanosecs, used only if mode is TIMEOUT
@@ -212,7 +213,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Version of xfer for poll() and tryTransfer, which
-     * simplifies control paths both here and in xfer
+     * simplifies control paths both here and in xfer.
      */
     private Object fulfill(Object e) {
         boolean isData = (e != null);
@@ -272,7 +273,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Object x = s.get();
             if (x != e) {                 // Node was matched or cancelled
                 advanceHead(pred, s);     // unlink if head
-                if (x == s) {              // was cancelled
+                if (x == s) {             // was cancelled
                     clean(pred, s);
                     return null;
                 }
@@ -316,7 +317,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns validated tail for use in cleaning methods
+     * Returns validated tail for use in cleaning methods.
      */
     private QNode getValidatedTail() {
         for (;;) {
@@ -339,6 +340,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Gets rid of cancelled node s with original predecessor pred.
+     *
      * @param pred predecessor of cancelled node
      * @param s the cancelled node
      */
@@ -378,6 +380,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Tries to unsplice the cancelled node held in cleanMe that was
      * previously uncleanable because it was at tail.
+     *
      * @return current cleanMe node (or null)
      */
     private QNode reclean() {
@@ -422,6 +425,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Creates a {@code LinkedTransferQueue}
      * initially containing the elements of the given collection,
      * added in traversal order of the collection's iterator.
+     *
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if the specified collection or any
      *         of its elements are null
@@ -530,7 +534,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     // Traversal-based methods
 
     /**
-     * Return head after performing any outstanding helping steps
+     * Returns head after performing any outstanding helping steps.
      */
     private QNode traversalHead() {
         for (;;) {
@@ -582,7 +586,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Ensure next points to next valid node, or null if none.
+         * Ensures next points to next valid node, or null if none.
          */
         void findNext() {
             for (;;) {
@@ -732,7 +736,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 if (q == pred) // restart
                     break;
                 Object x = q.get();
-                if (x != null && x != q && o.equals(x) && 
+                if (x != null && x != q && o.equals(x) &&
                     q.compareAndSet(x, q)) {
                     clean(pred, q);
                     return true;

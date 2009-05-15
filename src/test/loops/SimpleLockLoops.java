@@ -19,14 +19,14 @@ public final class SimpleLockLoops {
         if (args.length > 0) 
             maxThreads = Integer.parseInt(args[0]);
 
-        new ReentrantLockLoop(1).test();
-        new ReentrantLockLoop(1).test();
+        new LockLoop(1).test();
+        new LockLoop(1).test();
         print = true;
 
         int k = 1;
         for (int i = 1; i <= maxThreads;) {
             System.out.print("Threads: " + i);
-            new ReentrantLockLoop(i).test();
+            new LockLoop(i).test();
             Thread.sleep(100);
             if (i == k) {
                 k = i << 1;
@@ -38,14 +38,15 @@ public final class SimpleLockLoops {
         pool.shutdown();
     }
 
-    static final class ReentrantLockLoop implements Runnable {
+    static final class LockLoop implements Runnable {
         private int v = rng.next();
         private volatile int result = 17;
+        private final Object lock = new Object();
         private final LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         private final CyclicBarrier barrier;
         private final int nthreads;
         private volatile int readBarrier;
-        ReentrantLockLoop(int nthreads) {
+        LockLoop(int nthreads) {
             this.nthreads = nthreads;
             barrier = new CyclicBarrier(nthreads+1, timer);
         }
@@ -69,13 +70,14 @@ public final class SimpleLockLoops {
         }
 
         public final void run() {
+            final Object lock = this.lock;
             try {
                 barrier.await(); 
                 int sum = v + 1;
                 int x = 0;
                 int n = iters;
                 while (n-- > 0) {
-                    synchronized(this) {
+                    synchronized(lock) {
                         int k = (sum & 3);
                         if (k > 0) {
                             x = v;

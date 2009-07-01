@@ -6,111 +6,169 @@
 /**
  * @test
  * @synopsis Times and checks basic map operations
+ *
+ * When run with "s" second arg, this requires file "testwords", which
+ * is best used with real words.  We can't check in this file, but you
+ * can create one from a real dictonary (1 line per word) and then run
+ * linux "shuf" to randomize entries.
  */
 import java.util.*;
 import java.io.*;
 
 public class MapCheck {
-
-    static final int absentSize = 1 << 17;
-    static final int absentMask = absentSize - 1;
-    static Object[] absent = new Object[absentSize];
-
     static final Object MISSING = new Object();
-
     static TestTimer timer = new TestTimer();
+    static Class eclass;
+    static Class mapClass = java.util.concurrent.ConcurrentHashMap.class;
+
+    static final LoopHelpers.SimpleRandom srng = new LoopHelpers.SimpleRandom();
+    static final Random rng = new Random(3152688);
+
+    static volatile int checkSum;
 
     static void reallyAssert(boolean b) {
         if (!b) throw new Error("Failed Assertion");
     }
 
     public static void main(String[] args) throws Exception {
-        Class mapClass = java.util.concurrent.ConcurrentHashMap.class;
-        int numTests = 50;
-        int size = 50000;
+        int numTests = 100;
+        int size = 36864; // about midway of HashMap resize interval
 
+        if (args.length == 0)
+            System.out.println("Usage: MapCheck mapclass [int|float|string|object] [trials] [size] [serialtest]");
+        
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
             } catch(ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
+        } 
+
+        if (args.length > 1) {
+            String et = args[1].toLowerCase();
+            if (et.startsWith("i"))
+                eclass = java.lang.Integer.class;
+            else if (et.startsWith("f"))
+                eclass = java.lang.Float.class;
+            else if (et.startsWith("s"))
+                eclass = java.lang.String.class;
         }
-
-
-        if (args.length > 1) 
-            numTests = Integer.parseInt(args[1]);
+        if (eclass == null)
+            eclass = Object.class;
 
         if (args.length > 2) 
-            size = Integer.parseInt(args[2]);
+            numTests = Integer.parseInt(args[2]);
 
-        boolean doSerializeTest = args.length > 3;
+        if (args.length > 3) 
+            size = Integer.parseInt(args[3]);
 
-        System.out.println("Testing " + mapClass.getName() + " trials: " + numTests + " size: " + size);
+        boolean doSerializeTest = args.length > 4;
 
-        for (int i = 0; i < absentSize; ++i) absent[i] = new Object();
+        while ((size & 3) != 0) ++size;
+
+        System.out.print("Class: " + mapClass.getName());
+        System.out.print(" elements: " + eclass.getName());
+        System.out.print(" trials: " + numTests);
+        System.out.print(" size: " + size);
+        System.out.println();
 
         Object[] key = new Object[size];
-        for (int i = 0; i < size; ++i) key[i] = new Object();
+        Object[] absent = new Object[size];
+        initializeKeys(key, absent, size);
 
-        forceMem(size * 8);
+        precheck(size,  key, absent);
 
         for (int rep = 0; rep < numTests; ++rep) {
-            runTest(newMap(mapClass), key);
+            mainTest(newMap(), key, absent);
+            if ((rep & 3) == 3 && rep < numTests - 1) {
+                shuffle(key);
+                //                Thread.sleep(10);
+            }
         }
 
         TestTimer.printStats();
 
+        checkNullKey();
 
         if (doSerializeTest)
-            stest(newMap(mapClass), size);
+            serTest(newMap(), size);
     }
 
-    static Map newMap(Class cl) {
+    static Map newMap() {
         try {
-            Map m = (Map)cl.newInstance();
-            return m;
+            return (Map)mapClass.newInstance();
         } catch(Exception e) {
-            throw new RuntimeException("Can't instantiate " + cl + ": " + e);
+            throw new RuntimeException("Can't instantiate " + mapClass + ": " + e);
         }
     }
 
-
-    static void runTest(Map s, Object[] key) {
-        shuffle(key);
-        int size = key.length;
-        long startTime = System.currentTimeMillis();
-        test(s, key);
-        long time = System.currentTimeMillis() - startTime;
+    static void precheck(int n, Object[] key, Object[] abs) {
+        int ck = 0;
+        Map s = newMap();
+        for (int i = 0; i < n; i++) {
+            Object k = key[i];
+            if (k == null) throw new Error("Null key at" + i);
+            ck += System.identityHashCode(k);
+            Object v = s.put(k, k);
+            if (v != null)
+                throw new Error("Duplicate " +  k + " / " + v);
+        }
+        for (int i = 0; i < n; i++) {
+            Object k = abs[i];
+            if (k == null) throw new Error("Null key at" + i);
+            ck += System.identityHashCode(k);
+            Object v = s.put(k, k);
+            if (v != null)
+                throw new Error("Duplicate " +  k + " / " + v);
+        }
+        checkSum += ck;
     }
 
-    static void forceMem(int n) {
-        // force enough memory
-        Long[] junk = new Long[n];
-        for (int i = 0; i < junk.length; ++i) junk[i] = new Long(i);
-        int sum = 0;
-        for (int i = 0; i < junk.length; ++i) 
-            sum += (int)(junk[i].longValue() + i);
-        if (sum == 0) System.out.println("Useless number = " + sum);
-        junk = null;
-        //        System.gc();
+    static void checkNullKey() {
+        Map m = newMap();
+        Object x = new Object();
+        Object v;
+        try {
+            m.put(null, x);
+            v = m.get(null);
+        } catch(NullPointerException npe) {
+            System.out.println("Map does not allow null keys");
+            return;
+        }
+        if (v != x) throw new Error();
+        if (m.remove(null) != v) throw new Error();
+        if (m.get(null) != null) throw new Error();
     }
 
 
-    static void t1(String nm, int n, Map s, Object[] key, int expect) {
+    static void getTest(String nm, int n, Map s, Object[] key, int expect) {
         int sum = 0;
-        int iters = 4;
-        timer.start(nm, n * iters);
-        for (int j = 0; j < iters; ++j) {
-            for (int i = 0; i < n; i++) {
-                if (s.get(key[i]) != null) ++sum;
-            }
+        timer.start(nm, n);
+        for (int i = 0; i < n; i++) {
+            Object v = s.get(key[i]);
+            if (v != null && v.getClass() == eclass)
+                ++sum;
         }
         timer.finish(); 
-        reallyAssert (sum == expect * iters);
+        reallyAssert (sum == expect);
+        checkSum += sum;
     }
 
-    static void t2(String nm, int n, Map s, Object[] key, int expect) {
+
+    // unused
+    static void getTestBoxed(String nm, int n, Map s, Object[] key, int expect) {
+        int sum = 0;
+        Map<Integer,Integer> intMap = (Map<Integer,Integer>)s;
+        timer.start(nm, n);
+        for (int i = 0; i < n; i++) {
+            if ((Integer)(intMap.get(i)) != i) ++sum;
+        }
+        timer.finish(); 
+        reallyAssert (sum == expect);
+    }
+
+    static void remTest(String nm, int n, Map s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
@@ -118,19 +176,31 @@ public class MapCheck {
         }
         timer.finish(); 
         reallyAssert (sum == expect);
+        checkSum += sum;
     }
 
-    static void t3(String nm, int n, Map s, Object[] key, int expect) {
+    static void clrTest(int n, Map s) {
+        String nm = "Remove Present         ";
+        timer.start(nm, n);
+        s.clear();
+        timer.finish(); 
+        reallyAssert (s.isEmpty());
+    }
+
+    static void putTest(String nm, int n, Map s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
-            if (s.put(key[i], absent[i & absentMask]) == null) ++sum;
+            Object k = key[i];
+            Object v = s.put(k, k);
+            if (v == null) ++sum;
         }
         timer.finish(); 
         reallyAssert (sum == expect);
+        checkSum += sum;
     }
 
-    static void t4(String nm, int n, Map s, Object[] key, int expect) {
+    static void keyTest(String nm, int n, Map s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
@@ -138,9 +208,20 @@ public class MapCheck {
         }
         timer.finish(); 
         reallyAssert (sum == expect);
+        checkSum += sum;
     }
 
-    static void t5(String nm, int n, Map s, Object[] key, int expect) {
+    // version without timing for uncategorized tests
+    static void untimedKeyTest(String nm, int n, Map s, Object[] key, int expect) {
+        int sum = 0;
+        for (int i = 0; i < n; i++) {
+            if (s.containsKey(key[i])) ++sum;
+        }
+        reallyAssert (sum == expect);
+        checkSum += sum;
+    }
+
+    static void remHalfTest(String nm, int n, Map s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n/2);
         for (int i = n-2; i >= 0; i-=2) {
@@ -148,105 +229,252 @@ public class MapCheck {
         }
         timer.finish(); 
         reallyAssert (sum == expect);
+        checkSum += sum;
     }
 
-    static void t6(String nm, int n, Map s, Object[] k1, Object[] k2) {
+    static void valTest(Map s, Object[] key) {
+        int size = s.size();
         int sum = 0;
-        timer.start(nm, n * 2);
-        for (int i = 0; i < n; i++) {
-            if (s.get(k1[i]) != null) ++sum;
-            if (s.get(k2[i & absentMask]) != null) ++sum;
-        }
+        timer.start("Traverse access key/val", size);
+        if (s.containsValue(MISSING)) ++sum;
         timer.finish(); 
-        reallyAssert (sum == n);
-    }
-
-    static void t7(String nm, int n, Map s, Object[] k1, Object[] k2) {
-        int sum = 0;
-        timer.start(nm, n * 2);
-        for (int i = 0; i < n; i++) {
-            if (s.containsKey(k1[i])) ++sum;
-            if (s.containsKey(k2[i & absentMask])) ++sum;
-        }
-        timer.finish(); 
-        reallyAssert (sum == n);
-    }
-
-    static void t8(String nm, int n, Map s, Object[] key, int expect) {
-        int sum = 0;
-        timer.start(nm, n);
-        for (int i = 0; i < n; i++) {
-            if (s.get(key[i]) != null) ++sum;
-        }
-        timer.finish(); 
-        reallyAssert (sum == expect);
+        reallyAssert (sum == 0);
+        checkSum += sum;
     }
 
 
-    static void t9(Map s) {
+    static Object kitTest(Map s, int size) {
+        Object last = null;
         int sum = 0;
-        int iters = 20;
-        timer.start("ContainsValue (/n)     ", iters * s.size());
-        int step = absentSize / iters;
-        for (int i = 0; i < absentSize; i += step)
-            if (s.containsValue(absent[i])) ++sum;
-        timer.finish(); 
-        reallyAssert (sum != 0);
-    }
-
-
-    static void ktest(Map s, int size, Object[] key) {
-        timer.start("ContainsKey            ", size);
-        Set ks = s.keySet();
-        int sum = 0;
-        for (int i = 0; i < size; i++) {
-            if (ks.contains(key[i])) ++sum;
-        }
-        timer.finish(); 
-        reallyAssert (sum == size);
-    }
-
-
-    static void ittest1(Map s, int size) {
-        int sum = 0;
-        timer.start("Iter Key               ", size);
+        timer.start("Traverse access key/val", size);
         for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
-            if(it.next() != MISSING)
+            Object x = it.next();
+            if (x != last && x != null && x.getClass() == eclass)
                 ++sum;
+            last = x;
         }
         timer.finish(); 
         reallyAssert (sum == size);
+        checkSum += sum;
+        return last;
     }
 
-    static void ittest2(Map s, int size) {
+    static Object vitTest(Map s, int size) {
+        Object last = null;
         int sum = 0;
-        timer.start("Iter Value             ", size);
+        timer.start("Traverse access key/val", size);
         for (Iterator it = s.values().iterator(); it.hasNext(); ) {
-            if(it.next() != MISSING)
+            Object x = it.next();
+            if (x != last && x != null && x.getClass() == eclass)
                 ++sum;
+            last = x;
         }
         timer.finish(); 
         reallyAssert (sum == size);
+        checkSum += sum;
+        return last;
     }
-    static void ittest3(Map s, int size) {
+
+    static void eitTest(Map s, int size) {
         int sum = 0;
-        int hsum = 0;
-        timer.start("Iter Entry             ", size);
+        timer.start("Traverse access entry  ", size);
         for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
-            if(e != MISSING) {
-                hsum += System.identityHashCode(e.getKey());
-                hsum += System.identityHashCode(e.getValue());
-                hsum >>>= 1;
+            Object k = e.getKey();
+            Object v = e.getValue();
+            if (k != null && k.getClass() == eclass &&
+                v != null && v.getClass() == eclass)
                 ++sum;
-            }
         }
         timer.finish(); 
-        reallyAssert(size == 0 || hsum >= 0);
         reallyAssert (sum == size);
+        checkSum += sum;
     }
 
-    static void ittest4(Map s, int size, int pos) {
+    static void itRemTest(Map s, int size) {
+        int sz = s.size();
+        reallyAssert (sz == size);
+        timer.start("Remove Present         ", size);
+        int sum = 0;
+        for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
+            it.next();
+            it.remove();
+            ++sum;
+        }
+        timer.finish(); 
+        reallyAssert (sum == sz);
+        checkSum += sum;
+    }
+
+    static void itHalfRemTest(Map s, int size) {
+        int sz = s.size();
+        reallyAssert (sz == size);
+        timer.start("Remove Present         ", size);
+        int sum = 0;
+        for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
+            it.next();
+            it.remove();
+            if (it.hasNext())
+                it.next();
+            ++sum;
+        }
+        timer.finish(); 
+        reallyAssert (sum == sz / 2);
+        checkSum += sum;
+    }
+
+    static void putAllTest(String nm, int n, Map src, Map dst) {
+        timer.start(nm, n);
+        dst.putAll(src);
+        timer.finish(); 
+        reallyAssert (src.size() == dst.size());
+    }
+
+    static void serTest(Map s, int size) throws Exception {
+        if (!(s instanceof Serializable)) 
+            return;
+        System.out.print("Serialize              : ");
+      
+        for (int i = 0; i < size; i++) {
+            s.put(new Integer(i), Boolean.TRUE);
+        }
+
+        long startTime = System.currentTimeMillis();
+
+        FileOutputStream fs = new FileOutputStream("MapCheck.dat");
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(fs));
+        out.writeObject(s);
+        out.close();
+
+        FileInputStream is = new FileInputStream("MapCheck.dat");
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(is));
+        Map m = (Map)in.readObject();
+
+        long endTime = System.currentTimeMillis();
+        long time = endTime - startTime;
+
+        System.out.print(time + "ms");
+
+        if (s instanceof IdentityHashMap) return;
+        reallyAssert (s.equals(m));
+    }
+
+    static void mainTest(Map s, Object[] key, Object[] absent) {
+        int size = key.length;
+
+        putTest("Add    Absent          ", size, s, key, size);
+        reallyAssert(s.size() == size);
+        getTest("Access Present         ", size, s, key, size);
+        getTest("Search Absent          ", size, s, absent, 0);
+        kitTest(s, size);
+        vitTest(s, size);
+        eitTest(s, size);
+        putTest("Modify Present         ", size, s, key, 0);
+        reallyAssert(s.size() == size);
+        untimedKeyTest("Access Present         ", size, s, key, size);
+        keyTest("Search Absent          ", size, s, absent, 0);
+        valTest(s, key);
+        remTest("Search Absent          ", size, s, absent, 0);
+        reallyAssert(s.size() == size);
+        remHalfTest("Remove Present         ", size, s, key, size / 2);
+        reallyAssert(s.size() == size / 2);
+        getTest("Access Present         ", size, s, key, size / 2);
+        putTest("Add    Absent          ", size, s, key, size / 2);
+        reallyAssert(s.size() == size);
+        getTest("Access Present         ", size, s, key, size);
+        getTest("Search Absent          ", size, s, absent, 0);
+        itRemTest(s, size);
+        putTest("Add    Absent          ", size, s, key, size);
+        reallyAssert(s.size() == size);
+        getTest("Access Present         ", size, s, key, size);
+        untimedKeyTest("Access Present         ", size, s, key, size);
+        kitTest(s, size);
+        vitTest(s, size);
+        eitTest(s, size);
+        twoMapTest1(s, key, absent); 
+        twoMapTest2(s, key, absent);
+    }
+
+    static void twoMapTest1(Map s, Object[] key, Object[] absent) {
+        int size = s.size();
+        Map s2 = newMap();
+        putAllTest("Add    Absent          ", size, s, s2);
+        getTest("Access Present         ", size, s2, key, size);
+        itHalfRemTest(s2, size);
+        reallyAssert(s2.size() == size / 2);
+        itHalfRemTest(s2, size / 2);
+        reallyAssert(s2.size() == size / 4);
+        putTest("Add    Absent          ", size, s2, absent, size);
+        putTest("Add    Absent          ", size, s2, key, size * 3 / 4);
+        reallyAssert(s2.size() == size * 2);
+        clrTest(size, s2);
+    }        
+
+    static void twoMapTest2(Map s, Object[] key, Object[] absent) {
+        int size = key.length;
+
+        Map s2 = newMap();
+        putAllTest("Add    Absent          ", size, s, s2);
+        putAllTest("Modify Present         ", size, s, s2);
+
+        Object lastkey = kitTest(s2, size);
+        Object hold = s2.get(lastkey);
+        int sum = 0;
+
+        timer.start("Traverse access entry  ", size * 12); // 12 until finish
+
+        int sh1 = s.hashCode() - s2.hashCode();
+        reallyAssert (sh1 == 0);
+
+        boolean eq1 = s2.equals(s);
+        boolean eq2 = s.equals(s2);
+        reallyAssert (eq1 && eq2);
+
+        Set es2 = s2.entrySet();
+        for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
+            Object entry = it.next();
+            if (es2.contains(entry)) ++sum;
+        }
+        reallyAssert (sum == size);
+
+        s2.put(lastkey, MISSING);
+
+        int sh2 = s.hashCode() - s2.hashCode();
+        reallyAssert (sh2 != 0);
+
+        eq1 = s2.equals(s);
+        eq2 = s.equals(s2);
+        reallyAssert (!eq1 && !eq2);
+
+        sum = 0;
+        for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry e = (Map.Entry)it.next();
+            e.setValue(absent[sum++]);
+        }
+        reallyAssert (sum == size);
+        for (Iterator it = s2.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry e = (Map.Entry)it.next();
+            e.setValue(s.get(e.getKey()));
+        }
+
+        timer.finish(); 
+
+        int rmiss = 0;
+        timer.start("Remove Present         ", size * 2);
+        Iterator s2i = s2.entrySet().iterator();
+        Set es = s.entrySet();
+        while (s2i.hasNext()) {
+            if (!es.remove(s2i.next()))
+                ++rmiss;
+        }
+        timer.finish(); 
+        reallyAssert(rmiss == 0);
+
+        clrTest(size, s2);
+        reallyAssert (s2.isEmpty() && s.isEmpty());
+    }
+
+    static void itTest4(Map s, int size, int pos) {
         IdentityHashMap seen = new IdentityHashMap(size);
         reallyAssert (s.size() == size);
         int sum = 0;
@@ -282,224 +510,121 @@ public class MapCheck {
     }
 
 
-    static void ittest(Map s, int size) {
-        ittest1(s, size);
-        ittest2(s, size);
-        ittest3(s, size);
-        //        for (int i = 0; i < size-1; ++i) 
-        //            ittest4(s, size, i);
-    }
 
-    static void entest1(Hashtable ht, int size) {
-        int sum = 0;
-
-        timer.start("Iter Enumeration Key   ", size);
-        for (Enumeration en = ht.keys(); en.hasMoreElements(); ) {
-            if (en.nextElement() != MISSING)
-                ++sum;
+    static void initializeKeys(Object[] key, Object[] absent, int size) {
+        if (eclass == Object.class) {
+            for (int i = 0; i < size; ++i) key[i] = new Object();
+            for (int i = 0; i < size; ++i) absent[i] = new Object();
         }
-        timer.finish(); 
-        reallyAssert (sum == size);
-    }
-
-    static void entest2(Hashtable ht, int size) {
-        int sum = 0;
-        timer.start("Iter Enumeration Value ", size);
-        for (Enumeration en = ht.elements(); en.hasMoreElements(); ) {
-            if (en.nextElement() != MISSING)
-                ++sum;
+        else if (eclass == Integer.class) {
+            initInts(key, absent, size);
         }
-        timer.finish(); 
-        reallyAssert (sum == size);
+        else if (eclass == Float.class) {
+            initFloats(key, absent, size);
+        }
+        else if (eclass == String.class) {
+            initWords(size, key, absent);
+        }
+        else 
+            throw new Error("unknown type");
     }
 
+    static void initInts(Object[] key, Object[] absent, int size) {
+        for (int i = 0; i < size; ++i) 
+            key[i] = Integer.valueOf(i);
+        Map m = newMap();
+        int k = 0;
+        while (k < size) {
+            int r = srng.next();
+            if (r < 0 || r >= size) {
+                Integer ir = Integer.valueOf(r);
+                if (m.put(ir, ir) == null)
+                    absent[k++] = ir;
+            }
+        }
+    }
 
-    static void entest3(Hashtable ht, int size) {
-        int sum = 0;
-
-        timer.start("Iterf Enumeration Key  ", size);
-        Enumeration en = ht.keys(); 
+    static void initFloats(Object[] key, Object[] absent, int size) {
+        Map m = newMap();
         for (int i = 0; i < size; ++i) {
-            if (en.nextElement() != MISSING)
-                ++sum;
+            float r = Float.valueOf(i);
+            key[i] = r;
+            m.put(r, r);
         }
-        timer.finish(); 
-        reallyAssert (sum == size);
-    }
-
-    static void entest4(Hashtable ht, int size) {
-        int sum = 0;
-        timer.start("Iterf Enumeration Value", size);
-        Enumeration en = ht.elements(); 
-        for (int i = 0; i < size; ++i) {
-            if (en.nextElement() != MISSING)
-                ++sum;
-        }
-        timer.finish(); 
-        reallyAssert (sum == size);
-    }
-
-    static void entest(Map s, int size) {
-        if (s instanceof Hashtable) {
-            Hashtable ht = (Hashtable)s;
-            //            entest3(ht, size);
-            //            entest4(ht, size);
-            entest1(ht, size);
-            entest2(ht, size);
-            entest1(ht, size);
-            entest2(ht, size);
-            entest1(ht, size);
-            entest2(ht, size);
+        int k = 0;
+        while (k < size) {
+            float r = rng.nextFloat();
+            Float ir = Float.valueOf(r);
+            if (m.put(ir, ir) == null)
+                absent[k++] = ir;
         }
     }
 
-    static void rtest(Map s, int size) {
-        timer.start("Remove (iterator)      ", size);
-        for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
-            it.next();
-            it.remove();
-        }
-        timer.finish(); 
-    }
+    // Use as many real words as possible, then use fake random words
 
-    static void rvtest(Map s, int size) {
-        timer.start("Remove (iterator)      ", size);
-        for (Iterator it = s.values().iterator(); it.hasNext(); ) {
-            it.next();
-            it.remove();
-        }
-        timer.finish(); 
-    }
-
-
-    static void dtest(Map s, int size, Object[] key) {
-        timer.start("Put (putAll)           ", size * 2);
-        Map s2 = null;
+    static void initWords(int size, Object[] key, Object[] abs) {
+        String fileName = "testwords.txt";
+        int ki = 0;
+        int ai = 0;
         try {
-            s2 = (Map) (s.getClass().newInstance());
-            s2.putAll(s);
+            FileInputStream fr = new FileInputStream(fileName);
+            BufferedInputStream in = new BufferedInputStream(fr);
+            while (ki < size || ai < size) {
+                StringBuffer sb = new StringBuffer();
+                for (;;) {
+                    int c = in.read();
+                    if (c < 0) {
+                        if (ki < size) 
+                            randomWords(key, ki, size);
+                        if (ai < size)
+                            randomWords(abs, ai, size);
+                        in.close();
+                        return;
+                    }
+                    if (c == '\n') {
+                        String s = sb.toString();
+                        if (ki < size)
+                            key[ki++] = s;
+                        else
+                            abs[ai++] = s;
+                        break;
+                    }
+                    sb.append((char)c);
+                }
+            }
+            in.close();
         }
-        catch (Exception e) { e.printStackTrace(); return; }
-        timer.finish(); 
-    
-        timer.start("Iter Equals            ", size * 2);
-        boolean eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (eqt);
-        timer.finish(); 
-
-        timer.start("Iter HashCode          ", size * 2);
-        int shc = s.hashCode();
-        int s2hc = s2.hashCode();
-        reallyAssert (shc == s2hc);
-        timer.finish(); 
-
-        timer.start("Put (present)          ", size);
-        s2.putAll(s);
-        timer.finish(); 
-
-        timer.start("Iter EntrySet contains ", size * 2);
-        Set es2 = s2.entrySet();
-        int sum = 0;
-        for (Iterator i1 = s.entrySet().iterator(); i1.hasNext(); ) {
-            Object entry = i1.next();
-            if (es2.contains(entry)) ++sum;
+        catch (IOException ex) {
+            System.out.println("Can't read words file:" + ex);
+            throw new Error(ex);
         }
-        timer.finish(); 
-        reallyAssert (sum == size);
-
-        t6("Get                    ", size, s2, key, absent);
-
-        Object hold = s2.get(key[size-1]);
-        s2.put(key[size-1], absent[0]);
-        timer.start("Iter Equals            ", size * 2);
-        eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (!eqt);
-        timer.finish(); 
-
-        timer.start("Iter HashCode          ", size * 2);
-        int s1h = s.hashCode();
-        int s2h = s2.hashCode();
-        reallyAssert (s1h != s2h);
-        timer.finish(); 
-
-        s2.put(key[size-1], hold);
-        timer.start("Remove (iterator)      ", size * 2);
-        Iterator s2i = s2.entrySet().iterator();
-        Set es = s.entrySet();
-        while (s2i.hasNext())
-            es.remove(s2i.next());
-        timer.finish(); 
-
-        reallyAssert (s.isEmpty());
-
-        timer.start("Clear                  ", size);
-        s2.clear();
-        timer.finish(); 
-        reallyAssert (s2.isEmpty() && s.isEmpty());
     }
 
-    static void stest(Map s, int size) throws Exception {
-        if (!(s instanceof Serializable)) 
-            return;
-        System.out.print("Serialize              : ");
-      
-        for (int i = 0; i < size; i++) {
-            s.put(new Integer(i), Boolean.TRUE);
+
+    static void randomWords(Object[] ws, int origin, int size) {
+        for (int i = origin; i < size; ++i) {
+            int k = 0;
+            int len = 2 + (srng.next() & 0xf);
+            char[] c = new char[len * 4 + 1];
+            for (int j = 1; j < len; ++j) {
+                int r = srng.next();
+                c[k++] = (char)(' ' + (r & 0x7f));
+                r >>>= 8;
+                c[k++] = (char)(' ' + (r & 0x7f));
+                r >>>= 8;
+                c[k++] = (char)(' ' + (r & 0x7f));
+                r >>>= 8;
+                c[k++] = (char)(' ' + (r & 0x7f));
+            }
+            c[k++] = (char)((i & 31) | 1); // never == to any testword 
+            ws[i] = new String(c);
         }
-
-        long startTime = System.currentTimeMillis();
-
-        FileOutputStream fs = new FileOutputStream("MapCheck.dat");
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(fs));
-        out.writeObject(s);
-        out.close();
-
-        FileInputStream is = new FileInputStream("MapCheck.dat");
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(is));
-        Map m = (Map)in.readObject();
-
-        long endTime = System.currentTimeMillis();
-        long time = endTime - startTime;
-
-        System.out.print(time + "ms");
-
-        if (s instanceof IdentityHashMap) return;
-        reallyAssert (s.equals(m));
     }
 
-    
-    static void test(Map s, Object[] key) {
-        int size = key.length;
-
-        t3("Put (absent)           ", size, s, key, size);
-        t3("Put (present)          ", size, s, key, 0);
-        t7("ContainsKey            ", size, s, key, absent);
-        t4("ContainsKey            ", size, s, key, size);
-        ktest(s, size, key);
-        t4("ContainsKey            ", absentSize, s, absent, 0);
-        t6("Get                    ", size, s, key, absent);
-        t1("Get (present)          ", size, s, key, size);
-        t1("Get (absent)           ", absentSize, s, absent, 0);
-        t2("Remove (absent)        ", absentSize, s, absent, 0);
-        t5("Remove (present)       ", size, s, key, size / 2);
-        t3("Put (half present)     ", size, s, key, size / 2);
-
-        ittest(s, size);
-        entest(s, size);
-        t9(s);
-        rtest(s, size);
-
-        t4("ContainsKey            ", size, s, key, 0);
-        t2("Remove (absent)        ", size, s, key, 0);
-        t3("Put (presized)         ", size, s, key, size);
-        dtest(s, size, key);
-    }
-
-    static class TestTimer {
+    static final class TestTimer {
         private String name;
         private long numOps;
         private long startTime;
-        private String cname;
 
         static final java.util.TreeMap accum = new java.util.TreeMap();
     
@@ -507,85 +632,73 @@ public class MapCheck {
             for (Iterator it = accum.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry e = (Map.Entry)(it.next());
                 Stats stats = ((Stats)(e.getValue()));
-                int n = stats.number;
-                double t;
-                if (n > 0) 
-                    t = stats.sum / n;
-                else
-                    t = stats.least;
-                long nano = Math.round(1000000.0 * t);
-                System.out.println(e.getKey() + ": " + nano);
+                System.out.print(e.getKey() + ": ");
+                long s;
+                long n = stats.number;
+                if (n == 0) {
+                    n = stats.firstn;
+                    s = stats.first;
+                }
+                else 
+                    s = stats.sum;
+                
+                double t = ((double)s) / n;
+                long nano = Math.round(t);
+                System.out.printf("%6d", + nano);
+                System.out.println();
             }
         }
     
         void start(String name, long numOps) {
             this.name = name;
-            this.cname = classify();
             this.numOps = numOps;
-            startTime = System.currentTimeMillis();
-        }
-    
-
-        String classify() {
-            if (name.startsWith("Get"))
-                return "Get                    ";
-            else if (name.startsWith("Put"))
-                return "Put                    ";
-            else if (name.startsWith("Remove"))
-                return "Remove                 ";
-            else if (name.startsWith("Iter"))
-                return "Iter                   ";
-            else 
-                return null;
+            startTime = System.nanoTime();
         }
 
         void finish() {
-            long endTime = System.currentTimeMillis();
-            long time = endTime - startTime;
-            double timePerOp = ((double)time)/numOps;
-
+            long elapsed = System.nanoTime() - startTime;
             Object st = accum.get(name);
             if (st == null)
-                accum.put(name, new Stats(timePerOp));
-            else {
-                Stats stats = (Stats) st;
-                stats.sum += timePerOp;
-                stats.number++;
-                if (timePerOp < stats.least) stats.least = timePerOp;
-            }
-
-            if (cname != null) {
-                st = accum.get(cname);
-                if (st == null)
-                    accum.put(cname, new Stats(timePerOp));
-                else {
-                    Stats stats = (Stats) st;
-                    stats.sum += timePerOp;
-                    stats.number++;
-                    if (timePerOp < stats.least) stats.least = timePerOp;
-                }
-            }
-
+                accum.put(name, new Stats(elapsed, numOps));
+            else 
+                ((Stats)st).addTime(elapsed, numOps);
         }
 
     }
 
-    static class Stats {
-        double sum = 0;
-        double least;
-        int number = 0;
-        Stats(double t) { least = t; }
+    static final class Stats {
+        long sum;
+        long number;
+        long first;
+        long firstn;
+        Stats(long t, long n) { 
+            first = t; 
+            firstn = n;
+        }
+        void addTime(long t, long n) {
+            sum += t;
+            number += n;
+        }
     }
 
-    static Random rng = new Random();
 
     static void shuffle(Object[] keys) {
         int size = keys.length;
-        for (int i=size; i>1; i--) {
+        for (int i= size; i>1; i--) {
             int r = rng.nextInt(i);
             Object t = keys[i-1];
             keys[i-1] = keys[r];
             keys[r] = t;
+        }
+    }
+
+    static void shuffle(ArrayList keys) {
+        int size = keys.size();
+        for (int i= size; i>1; i--) {
+            int r = rng.nextInt(i);
+            Object t = keys.get(i-1);
+            keys.set(i-1, keys.get(r));
+            keys.set(r, t);
         }
     }
 

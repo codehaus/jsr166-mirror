@@ -579,7 +579,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         QNode snext;       // successor of next
         QNode curr;        // last returned node, for remove()
         QNode pcurr;       // predecessor of curr, for remove()
-        E nextItem;        // Cache of next item, once commited to in next
+        E nextItem;        // Cache of next item, once committed to in next
 
         Itr() {
             findNext();

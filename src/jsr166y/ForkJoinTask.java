@@ -96,10 +96,10 @@ import java.lang.reflect.*;
  * by this class.
  *
  * <p>ForkJoinTasks should perform relatively small amounts of
- * computations, othewise splitting into smaller tasks. As a very
+ * computations, otherwise splitting into smaller tasks. As a very
  * rough rule of thumb, a task should perform more than 100 and less
  * than 10000 basic computational steps. If tasks are too big, then
- * parellelism cannot improve throughput. If too small, then memory
+ * parallelism cannot improve throughput. If too small, then memory
  * and internal task maintenance overhead may overwhelm processing.
  *
  * <p>ForkJoinTasks are {@code Serializable}, which enables them
@@ -128,7 +128,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * currently unused. Also value 0x80000000 is available as spare
      * completion value.
      */
-    volatile int status; // accessed directy by pool and workers
+    volatile int status; // accessed directly by pool and workers
 
     static final int COMPLETION_MASK      = 0xe0000000;
     static final int NORMAL               = 0xe0000000; // == mask
@@ -575,7 +575,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * {@code isDone} holds for all of them. If any task
      * encounters an exception, others may be cancelled.  This method
      * may be invoked only from within ForkJoinTask
-     * computations. Attempts to invoke in other contexts resul!t in
+     * computations. Attempts to invoke in other contexts result in
      * exceptions or errors possibly including ClassCastException.
      * @param tasks the collection of tasks
      * @throws NullPointerException if tasks or any element are null.
@@ -639,7 +639,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Asserts that the results of this task's computation will not be
-     * used. If a cancellation occurs before atempting to execute this
+     * used. If a cancellation occurs before attempting to execute this
      * task, then execution will be suppressed, {@code isCancelled}
      * will report true, and {@code join} will result in a
      * {@code CancellationException} being thrown. Otherwise, when
@@ -753,12 +753,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * Possibly executes other tasks until this task is ready, then
      * returns the result of the computation.  This method may be more
      * efficient than {@code join}, but is only applicable when
-     * there are no potemtial dependencies between continuation of the
+     * there are no potential dependencies between continuation of the
      * current task and that of any other task that might be executed
      * while helping. (This usually holds for pure divide-and-conquer
      * tasks). This method may be invoked only from within
      * ForkJoinTask computations. Attempts to invoke in other contexts
-     * resul!t in exceptions or errors possibly including ClassCastException.
+     * result in exceptions or errors possibly including ClassCastException.
      * @return the computed result
      */
     public final V helpJoin() {
@@ -771,7 +771,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Possibly executes other tasks until this task is ready.  This
      * method may be invoked only from within ForkJoinTask
-     * computations. Attempts to invoke in other contexts resul!t in
+     * computations. Attempts to invoke in other contexts result in
      * exceptions or errors possibly including ClassCastException.
      */
     public final void quietlyHelpJoin() {
@@ -961,7 +961,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * queued by the current thread but not yet executed, if one is
      * available, or if not available, a task that was forked by some
      * other thread, if available. Availability may be transient, so a
-     * {@code null} result does not necessarily imply quiecence
+     * {@code null} result does not necessarily imply quiescence
      * of the pool this task is operating in.  This method is designed
      * primarily to support extensions, and is unlikely to be useful
      * otherwise.  This method may be invoked only from within

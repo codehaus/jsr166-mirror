@@ -13,7 +13,7 @@ package jsr166y;
  * <pre>
  * class Fibonacci extends RecursiveTask&lt;Integer&gt; {
  *   final int n;
- *   Fibonnaci(int n) { this.n = n; }
+ *   Fibonacci(int n) { this.n = n; }
  *   Integer compute() {
  *     if (n &lt;= 1)
  *        return n;
@@ -37,7 +37,7 @@ package jsr166y;
 public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
 
     /**
-     * Empty contructor for use by subclasses.
+     * Empty constructor for use by subclasses.
      */
     protected RecursiveTask() {
     }

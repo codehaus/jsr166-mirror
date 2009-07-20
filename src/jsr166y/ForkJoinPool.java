@@ -153,7 +153,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * The uncaught exception handler used when any worker
-     * abrupty terminates
+     * abruptly terminates
      */
     private Thread.UncaughtExceptionHandler ueh;
 
@@ -341,7 +341,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a ForkJoinPool with the indicated parellelism level
+     * Creates a ForkJoinPool with the indicated parallelism level
      * threads, and using the default ForkJoinWorkerThreadFactory,
      * @param parallelism the number of worker threads
      * @throws IllegalArgumentException if parallelism less than or
@@ -430,7 +430,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Create or resize array if necessary to hold newLength.
-     * Call only under exlusion or lock
+     * Call only under exclusion or lock
      * @return the array
      */
     private ForkJoinWorkerThread[] ensureWorkerArrayCapacity(int newLength) {
@@ -716,7 +716,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
 
     /**
-     * Sets the target paralleism level of this pool.
+     * Sets the target parallelism level of this pool.
      * @param parallelism the target parallelism
      * @throws IllegalArgumentException if parallelism less than or
      * equal to zero or greater than maximum size bounds.
@@ -819,7 +819,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * worker threads only process asynchronous tasks.  This method is
      * designed to be invoked only when pool is quiescent, and
      * typically only before any tasks are submitted. The effects of
-     * invocations at ather times may be unpredictable.
+     * invocations at other times may be unpredictable.
      *
      * @param async if true, use locally FIFO scheduling
      * @return the previous mode.
@@ -973,7 +973,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Removes all available unexecuted submitted and forked tasks
      * from scheduling queues and adds them to the given collection,
      * without altering their execution status. These may include
-     * artifically generated or wrapped tasks. This method id designed
+     * artificially generated or wrapped tasks. This method is designed
      * to be invoked only when the pool is known to be
      * quiescent. Invocations at other times may not remove all
      * tasks. A failure encountered while attempting to add elements
@@ -1478,7 +1478,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * only be suspended or removed when they are idle, not
      * immediately when they aren't needed. So adding threads will
      * raise parallelism level for longer than necessary.  Also,
-     * FJ applications often enounter highly transient peaks when
+     * FJ applications often encounter highly transient peaks when
      * many threads are blocked joining, but for less time than it
      * takes to create or resume spares.
      *
@@ -1582,7 +1582,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Add the kth spare worker. On entry, pool coounts are already
+     * Add the kth spare worker. On entry, pool counts are already
      * adjusted to reflect addition.
      */
     private void createAndStartSpare(int k) {
@@ -1719,7 +1719,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * @return true if no additional blocking is necessary (i.e.,
          * if isReleasable would return true).
          * @throws InterruptedException if interrupted while waiting
-         * (the method is not required to do so, but is allowe to).
+         * (the method is not required to do so, but is allowed to).
          */
         boolean block() throws InterruptedException;
 

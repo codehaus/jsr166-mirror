@@ -56,7 +56,7 @@ public class ForkJoinWorkerThread extends Thread {
      * considered individually, is not wait-free. One thief cannot
      * successfully continue until another in-progress one (or, if
      * previously empty, a push) completes.  However, in the
-     * aggregate, we ensure at least probablistic non-blockingness. If
+     * aggregate, we ensure at least probabilistic non-blockingness. If
      * an attempted steal fails, a thief always chooses a different
      * random victim target to try next. So, in order for one thief to
      * progress, it suffices for any in-progress deq or new push on
@@ -75,7 +75,7 @@ public class ForkJoinWorkerThread extends Thread {
      * push) require store order and CASes (in pop and deq) require
      * (volatile) CAS semantics. Since these combinations aren't
      * supported using ordinary volatiles, the only way to accomplish
-     * these effciently is to use direct Unsafe calls. (Using external
+     * these efficiently is to use direct Unsafe calls. (Using external
      * AtomicIntegers and AtomicReferenceArrays for the indices and
      * array is significantly slower because of memory locality and
      * indirection effects.) Further, performance on most platforms is

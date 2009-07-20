@@ -44,7 +44,7 @@ public class ForkJoinWorkerThread extends Thread {
      * of tasks. To accomplish this, we shift the CAS arbitrating pop
      * vs deq (steal) from being on the indices ("base" and "sp") to
      * the slots themselves (mainly via method "casSlotNull()"). So,
-     * both a successful pop and deq mainly entail CAS'ing a nonnull
+     * both a successful pop and deq mainly entail CAS'ing a non-null
      * slot to null.  Because we rely on CASes of references, we do
      * not need tag bits on base or sp.  They are simple ints as used
      * in any circular array-based queue (see for example ArrayDeque).
@@ -400,8 +400,8 @@ public class ForkJoinWorkerThread extends Thread {
     // Intrinsics-based support for queue operations.
 
     /**
-     * Add in store-order the given task at given slot of q to
-     * null. Caller must ensure q is nonnull and index is in range.
+     * Adds in store-order the given task at given slot of q to null.
+     * Caller must ensure q is non-null and index is in range.
      */
     private static void setSlot(ForkJoinTask<?>[] q, int i,
                                 ForkJoinTask<?> t){
@@ -409,7 +409,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * CAS given slot of q to null. Caller must ensure q is nonnull
+     * CAS given slot of q to null. Caller must ensure q is non-null
      * and index is in range.
      */
     private static boolean casSlotNull(ForkJoinTask<?>[] q, int i,
@@ -428,7 +428,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Pushes a task. Called only by current thread.
-     * @param t the task. Caller must ensure nonnull
+     * @param t the task. Caller must ensure non-null.
      */
     final void pushTask(ForkJoinTask<?> t) {
         ForkJoinTask<?>[] q = queue;
@@ -464,7 +464,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Returns a popped task, or null if empty. Ensures active status
-     * if nonnull. Called only by current thread.
+     * if non-null. Called only by current thread.
      */
     final ForkJoinTask<?> popTask() {
         int s = sp;
@@ -487,7 +487,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Specialized version of popTask to pop only if
      * topmost element is the given task. Called only
      * by current thread while active.
-     * @param t the task. Caller must ensure nonnull
+     * @param t the task. Caller must ensure non-null
      */
     final boolean unpushTask(ForkJoinTask<?> t) {
         ForkJoinTask<?>[] q = queue;

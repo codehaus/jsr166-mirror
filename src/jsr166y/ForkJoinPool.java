@@ -226,9 +226,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static int workerCountsFor(int t, int r) { return (t << 16) + r; }
 
     /**
-     * Add delta (which may be negative) to running count.  This must
+     * Adds delta (which may be negative) to running count.  This must
      * be called before (with negative arg) and after (with positive)
-     * any managed synchronization (i.e., mainly, joins)
+     * any managed synchronization (i.e., mainly, joins).
      * @param delta the number to add
      */
     final void updateRunningCount(int delta) {
@@ -237,7 +237,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Add delta (which may be negative) to both total and running
+     * Adds delta (which may be negative) to both total and running
      * count.  This must be called upon creation and termination of
      * worker threads.
      * @param delta the number to add
@@ -281,8 +281,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Try decrementing active count; fail on contention.
-     * Possibly trigger termination on success
+     * Tries decrementing active count; fails on contention.
+     * Possibly triggers termination on success.
      * Called by workers when they can't find tasks.
      * @return true on success
      */
@@ -297,7 +297,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Return true if argument represents zero active count and
+     * Returns true if argument represents zero active count and
      * nonzero runstate, which is the triggering condition for
      * terminating on shutdown.
      */
@@ -421,7 +421,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Return a good size for worker array given pool size.
+     * Returns a good size for worker array given pool size.
      * Currently requires size to be a power of two.
      */
     private static int arraySizeFor(int ps) {
@@ -429,8 +429,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Create or resize array if necessary to hold newLength.
-     * Call only under exclusion or lock
+     * Creates or resizes array if necessary to hold newLength.
+     * Call only under exclusion or lock.
      * @return the array
      */
     private ForkJoinWorkerThread[] ensureWorkerArrayCapacity(int newLength) {
@@ -1183,7 +1183,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Possibly terminate when on shutdown state
+     * Possibly terminates when on shutdown state.
      */
     private void terminateOnShutdown() {
         if (!hasQueuedSubmissions() && canTerminateOnShutdown(runControl))
@@ -1191,7 +1191,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Clear out and cancel submissions
+     * Clears out and cancels submissions.
      */
     private void cancelQueuedSubmissions() {
         ForkJoinTask<?> task;
@@ -1200,7 +1200,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Clean out worker queues.
+     * Cleans out worker queues.
      */
     private void cancelQueuedWorkerTasks() {
         final ReentrantLock lock = this.workerLock;
@@ -1220,8 +1220,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Set each worker's status to terminating. Requires lock to avoid
-     * conflicts with add/remove
+     * Sets each worker's status to terminating. Requires lock to avoid
+     * conflicts with add/remove.
      */
     private void stopAllWorkers() {
         final ReentrantLock lock = this.workerLock;
@@ -1241,7 +1241,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Interrupt all unterminated workers.  This is not required for
+     * Interrupts all unterminated workers.  This is not required for
      * sake of internal control, but may help unstick user code during
      * shutdown.
      */
@@ -1311,7 +1311,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Wake up waiter, returning false if known to already
+         * Wakes up waiter, returning false if known to already
          */
         boolean signal() {
             ForkJoinWorkerThread t = thread;
@@ -1323,7 +1323,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Await release on sync
+         * Awaits release on sync.
          */
         void awaitSyncRelease(ForkJoinPool p) {
             while (thread != null && !p.syncIsReleasable(this))
@@ -1331,7 +1331,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Await resumption as spare
+         * Awaits resumption as spare.
          */
         void awaitSpareRelease() {
             while (thread != null) {
@@ -1371,7 +1371,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Signal threads waiting to poll a task. Because method sync
+     * Signals threads waiting to poll a task. Because method sync
      * rechecks availability, it is OK to only proceed if queue
      * appears to be non-empty, and OK to skip under contention to
      * increment count (since some other thread succeeded).
@@ -1458,7 +1458,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     //  Parallelism maintenance
 
     /**
-     * Decrement running count; if too low, add spare.
+     * Decrements running count; if too low, adds spare.
      *
      * Conceptually, all we need to do here is add or resume a
      * spare thread when one is about to block (and remove or
@@ -1548,8 +1548,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Add a spare worker if lock available and no more than the
-     * expected numbers of threads exist
+     * Adds a spare worker if lock available and no more than the
+     * expected numbers of threads exist.
      * @return true if successful
      */
     private boolean tryAddSpare(int expectedCounts) {
@@ -1582,7 +1582,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Add the kth spare worker. On entry, pool counts are already
+     * Adds the kth spare worker. On entry, pool counts are already
      * adjusted to reflect addition.
      */
     private void createAndStartSpare(int k) {
@@ -1604,11 +1604,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Suspend calling thread w if there are excess threads.  Called
-     * only from sync.  Spares are enqueued in a Treiber stack
-     * using the same WaitQueueNodes as barriers.  They are resumed
-     * mainly in preJoin, but are also woken on pool events that
-     * require all threads to check run state.
+     * Suspends calling thread w if there are excess threads.  Called
+     * only from sync.  Spares are enqueued in a Treiber stack using
+     * the same WaitQueueNodes as barriers.  They are resumed mainly
+     * in preJoin, but are also woken on pool events that require all
+     * threads to check run state.
      * @param w the caller
      */
     private boolean suspendIfSpare(ForkJoinWorkerThread w) {
@@ -1629,7 +1629,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Try to pop and resume a spare thread.
+     * Tries to pop and resume a spare thread.
      * @param updateCount if true, increment running count on success
      * @return true if successful
      */
@@ -1647,7 +1647,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Pop and resume all spare threads. Same idea as ensureSync.
+     * Pops and resumes all spare threads. Same idea as ensureSync.
      * @return true if any spares released
      */
     private boolean resumeAllSpares() {
@@ -1665,7 +1665,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Pop and shutdown excessive spare threads. Call only while
+     * Pops and shuts down excessive spare threads. Call only while
      * holding lock. This is not guaranteed to eliminate all excess
      * threads, only those suspended as spares, which are the ones
      * unlikely to be needed in the future.

@@ -10,7 +10,7 @@ package jsr166y;
  * Recursive resultless ForkJoinTasks. This class establishes
  * conventions to parameterize resultless actions as {@code Void}
  * ForkJoinTasks. Because {@code null} is the only valid value of
- * {@code Void}, methods such as join always return {@code null}
+ * type {@code Void}, methods such as join always return {@code null}
  * upon completion.
  *
  * <p><b>Sample Usages.</b> Here is a sketch of a ForkJoin sort that
@@ -127,7 +127,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     protected abstract void compute();
 
     /**
-     * Always returns null
+     * Always returns null.
      */
     public final Void getRawResult() { return null; }
 
@@ -137,7 +137,7 @@ public abstract class RecursiveAction extends ForkJoinTask<Void> {
     protected final void setRawResult(Void mustBeNull) { }
 
     /**
-     * Implements execution conventions for RecursiveActions
+     * Implements execution conventions for RecursiveActions.
      */
     protected final boolean exec() {
         compute();

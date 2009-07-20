@@ -239,7 +239,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Establishes local first-in-first-out scheduling mode for forked
-     * tasks that are never joined. 
+     * tasks that are never joined.
      * @param async if true, use locally FIFO scheduling
      */
     void setAsyncMode(boolean async) {

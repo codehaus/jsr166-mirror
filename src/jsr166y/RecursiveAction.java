@@ -12,7 +12,7 @@ package jsr166y;
  * ForkJoinTasks. Because <tt>null</tt> is the only valid value of
  * <tt>Void</tt>, methods such as join always return <tt>null</tt>
  * upon completion.
- * 
+ *
  * <p><b>Sample Usages.</b> Here is a sketch of a ForkJoin sort that
  * sorts a given <tt>long[]</tt> array:
  *
@@ -126,7 +126,7 @@ package jsr166y;
 public abstract class RecursiveAction extends ForkJoinTask<Void> {
 
     /**
-     * The main computation performed by this task. 
+     * The main computation performed by this task.
      */
     protected abstract void compute();
 

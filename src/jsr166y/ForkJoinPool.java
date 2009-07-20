@@ -840,7 +840,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Returns true if this pool uses local first-in-first-out
-     * scheduling mode for forked tasks that are never joined. 
+     * scheduling mode for forked tasks that are never joined.
      *
      * @return true if this pool uses async mode.
      */

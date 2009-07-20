@@ -31,7 +31,7 @@ package jsr166y;
  * subtasks are too small to be worthwhile splitting up. Instead, as
  * is the case for nearly all fork/join applications, you'd pick some
  * minimum granularity size (for example 10 here) for which you always
- * sequentially solve rather than subdividing.  
+ * sequentially solve rather than subdividing.
  *
  */
 public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
@@ -48,7 +48,7 @@ public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
     V result;
 
     /**
-     * The main computation performed by this task. 
+     * The main computation performed by this task.
      */
     protected abstract V compute();
 

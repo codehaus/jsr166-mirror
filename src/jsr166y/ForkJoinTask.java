@@ -955,7 +955,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     protected static ForkJoinTask<?> pollNextLocalTask() {
         return ((ForkJoinWorkerThread)(Thread.currentThread())).pollLocalTask();
     }
-    
+
     /**
      * Unschedules and returns, without executing, the next task
      * queued by the current thread but not yet executed, if one is

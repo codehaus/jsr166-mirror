@@ -28,7 +28,7 @@ import java.lang.reflect.*;
  * most tasks spawn other subtasks (as do most ForkJoinTasks), as well
  * as the mixed execution of some plain Runnable- or Callable- based
  * activities along with ForkJoinTasks. When setting
- * <tt>setAsyncMode</tt>, a ForkJoinPools may also be appropriate for
+ * {@code setAsyncMode}, a ForkJoinPools may also be appropriate for
  * use with fine-grained tasks that are never joined. Otherwise, other
  * ExecutorService implementations are typically more appropriate
  * choices.
@@ -38,18 +38,18 @@ import java.lang.reflect.*;
  * adding, suspending, or resuming threads, even if some tasks are
  * waiting to join others. However, no such adjustments are performed
  * in the face of blocked IO or other unmanaged synchronization. The
- * nested <code>ManagedBlocker</code> interface enables extension of
+ * nested {@code ManagedBlocker} interface enables extension of
  * the kinds of synchronization accommodated.  The target parallelism
- * level may also be changed dynamically (<code>setParallelism</code>)
+ * level may also be changed dynamically ({@code setParallelism})
  * and thread construction can be limited using methods
- * <code>setMaximumPoolSize</code> and/or
- * <code>setMaintainsParallelism</code>.
+ * {@code setMaximumPoolSize} and/or
+ * {@code setMaintainsParallelism}.
  *
  * <p>In addition to execution and lifecycle control methods, this
  * class provides status check methods (for example
- * <code>getStealCount</code>) that are intended to aid in developing,
+ * {@code getStealCount}) that are intended to aid in developing,
  * tuning, and monitoring fork/join applications. Also, method
- * <code>toString</code> returns indications of pool state in a
+ * {@code toString} returns indications of pool state in a
  * convenient form for informal monitoring.
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
@@ -333,7 +333,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public ForkJoinPool() {
         this(Runtime.getRuntime().availableProcessors(),
@@ -349,7 +349,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public ForkJoinPool(int parallelism) {
         this(parallelism, defaultForkJoinWorkerThreadFactory);
@@ -364,7 +364,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public ForkJoinPool(ForkJoinWorkerThreadFactory factory) {
         this(Runtime.getRuntime().availableProcessors(), factory);
@@ -381,7 +381,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public ForkJoinPool(int parallelism, ForkJoinWorkerThreadFactory factory) {
         if (parallelism <= 0 || parallelism > MAX_THREADS)
@@ -689,7 +689,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public Thread.UncaughtExceptionHandler
         setUncaughtExceptionHandler(Thread.UncaughtExceptionHandler h) {
@@ -723,7 +723,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public void setParallelism(int parallelism) {
         checkPermission();
@@ -758,7 +758,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns the number of worker threads that have started but not
      * yet terminated.  This result returned by this method may differ
-     * from <code>getParallelism</code> when threads are created to
+     * from {@code getParallelism} when threads are created to
      * maintain parallelism when others are cooperatively blocked.
      *
      * @return the number of worker threads
@@ -953,7 +953,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns true if there are any tasks submitted to this pool
      * that have not yet begun executing.
-     * @return <code>true</code> if there are any queued submissions.
+     * @return {@code true} if there are any queued submissions.
      */
     public boolean hasQueuedSubmissions() {
         return !submissionQueue.isEmpty();
@@ -977,7 +977,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * to be invoked only when the pool is known to be
      * quiescent. Invocations at other times may not remove all
      * tasks. A failure encountered while attempting to add elements
-     * to collection <tt>c</tt> may result in elements being in
+     * to collection {@code c} may result in elements being in
      * neither, either or both collections when the associated
      * exception is thrown.  The behavior of this operation is
      * undefined if the specified collection is modified while the
@@ -1045,7 +1045,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public void shutdown() {
         checkPermission();
@@ -1061,13 +1061,13 @@ public class ForkJoinPool extends AbstractExecutorService {
      * method may or may not be rejected. Unlike some other executors,
      * this method cancels rather than collects non-executed tasks
      * upon termination, so always returns an empty list. However, you
-     * can use method <code>drainTasksTo</code> before invoking this
+     * can use method {@code drainTasksTo} before invoking this
      * method to transfer unexecuted tasks to another collection.
      * @return an empty list
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
-     *         java.lang.RuntimePermission}<code>("modifyThread")</code>,
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
      */
     public List<Runnable> shutdownNow() {
         checkPermission();
@@ -1076,28 +1076,28 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns <code>true</code> if all tasks have completed following shut down.
+     * Returns {@code true} if all tasks have completed following shut down.
      *
-     * @return <code>true</code> if all tasks have completed following shut down
+     * @return {@code true} if all tasks have completed following shut down
      */
     public boolean isTerminated() {
         return runStateOf(runControl) == TERMINATED;
     }
 
     /**
-     * Returns <code>true</code> if the process of termination has
+     * Returns {@code true} if the process of termination has
      * commenced but possibly not yet completed.
      *
-     * @return <code>true</code> if terminating
+     * @return {@code true} if terminating
      */
     public boolean isTerminating() {
         return runStateOf(runControl) >= TERMINATING;
     }
 
     /**
-     * Returns <code>true</code> if this pool has been shut down.
+     * Returns {@code true} if this pool has been shut down.
      *
-     * @return <code>true</code> if this pool has been shut down
+     * @return {@code true} if this pool has been shut down
      */
     public boolean isShutdown() {
         return runStateOf(runControl) >= SHUTDOWN;
@@ -1110,8 +1110,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
-     * @return <code>true</code> if this executor terminated and
-     *         <code>false</code> if the timeout elapsed before termination
+     * @return {@code true} if this executor terminated and
+     *         {@code false} if the timeout elapsed before termination
      * @throws InterruptedException if interrupted while waiting
      */
     public boolean awaitTermination(long timeout, TimeUnit unit)
@@ -1690,8 +1690,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Interface for extending managed parallelism for tasks running
      * in ForkJoinPools. A ManagedBlocker provides two methods.
-     * Method <code>isReleasable</code> must return true if blocking is not
-     * necessary. Method <code>block</code> blocks the current thread
+     * Method {@code isReleasable} must return true if blocking is not
+     * necessary. Method {@code block} blocks the current thread
      * if necessary (perhaps internally invoking isReleasable before
      * actually blocking.).
      * <p>For example, here is a ManagedBlocker based on a
@@ -1734,7 +1734,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * is a ForkJoinWorkerThread, this method possibly arranges for a
      * spare thread to be activated if necessary to ensure parallelism
      * while the current thread is blocked.  If
-     * <code>maintainParallelism</code> is true and the pool supports
+     * {@code maintainParallelism} is true and the pool supports
      * it ({@link #getMaintainsParallelism}), this method attempts to
      * maintain the pool's nominal parallelism. Otherwise if activates
      * a thread only if necessary to avoid complete starvation. This

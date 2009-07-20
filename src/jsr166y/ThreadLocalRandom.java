@@ -20,8 +20,8 @@ import java.util.*;
  * random numbers in parallel in thread pools.
  *
  * <p>Usages of this class should typically be of the form:
- * <code>ThreadLocalRandom.current().nextX(...)</code> (where
- * <code>X</code> is <code>Int</code>, <code>Long</code>, etc).
+ * {@code ThreadLocalRandom.current().nextX(...)} (where
+ * {@code X} is {@code Int}, {@code Long}, etc).
  * When all usages are of this form, it is never possible to
  * accidently share ThreadLocalRandoms across multiple threads.
  *

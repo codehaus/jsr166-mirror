@@ -22,9 +22,9 @@ import java.lang.reflect.*;
  * <p> A "main" ForkJoinTask begins execution when submitted to a
  * {@link ForkJoinPool}. Once started, it will usually in turn start
  * other subtasks.  As indicated by the name of this class, many
- * programs using ForkJoinTasks employ only methods <code>fork</code>
- * and <code>join</code>, or derivatives such as
- * <code>invokeAll</code>.  However, this class also provides a number
+ * programs using ForkJoinTasks employ only methods {@code fork}
+ * and {@code join}, or derivatives such as
+ * {@code invokeAll}.  However, this class also provides a number
  * of other methods that can come into play in advanced usages, as
  * well as extension mechanics that allow support of new forms of
  * fork/join processing.
@@ -36,7 +36,7 @@ import java.lang.reflect.*;
  * operating on purely isolated objects.  The primary coordination
  * mechanisms are {@link #fork}, that arranges asynchronous execution,
  * and {@link #join}, that doesn't proceed until the task's result has
- * been computed.  Computations should avoid <code>synchronized</code>
+ * been computed.  Computations should avoid {@code synchronized}
  * methods or blocks, and should minimize other blocking
  * synchronization apart from joining other tasks or using
  * synchronizers such as Phasers that are advertised to cooperate with
@@ -48,7 +48,7 @@ import java.lang.reflect.*;
  * performance, and the potential to indefinitely stall if the number
  * of threads not waiting for IO or other external synchronization
  * becomes exhausted. This usage restriction is in part enforced by
- * not permitting checked exceptions such as <code>IOExceptions</code>
+ * not permitting checked exceptions such as {@code IOExceptions}
  * to be thrown. However, computations may still encounter unchecked
  * exceptions, that are rethrown to callers attempting join
  * them. These exceptions may additionally include
@@ -58,17 +58,17 @@ import java.lang.reflect.*;
  * <p>The primary method for awaiting completion and extracting
  * results of a task is {@link #join}, but there are several variants:
  * The {@link Future#get} methods support interruptible and/or timed
- * waits for completion and report results using <code>Future</code>
+ * waits for completion and report results using {@code Future}
  * conventions. Method {@link #helpJoin} enables callers to actively
  * execute other tasks while awaiting joins, which is sometimes more
  * efficient but only applies when all subtasks are known to be
  * strictly tree-structured. Method {@link #invoke} is semantically
- * equivalent to <code>fork(); join()</code> but always attempts to
+ * equivalent to {@code fork(); join()} but always attempts to
  * begin execution in the current thread. The "<em>quiet</em>" forms
  * of these methods do not extract results or report exceptions. These
  * may be useful when a set of tasks are being executed, and you need
  * to delay processing of results or exceptions until all complete.
- * Method <code>invokeAll</code> (available in multiple versions)
+ * Method {@code invokeAll} (available in multiple versions)
  * performs the most common form of parallel invocation: forking a set
  * of tasks and joining them all.
  *
@@ -76,23 +76,23 @@ import java.lang.reflect.*;
  * Instead, you subclass one of the abstract classes that support a
  * particular style of fork/join processing.  Normally, a concrete
  * ForkJoinTask subclass declares fields comprising its parameters,
- * established in a constructor, and then defines a <code>compute</code>
+ * established in a constructor, and then defines a {@code compute}
  * method that somehow uses the control methods supplied by this base
- * class. While these methods have <code>public</code> access (to allow
+ * class. While these methods have {@code public} access (to allow
  * instances of different task subclasses to call each others
  * methods), some of them may only be called from within other
  * ForkJoinTasks. Attempts to invoke them in other contexts result in
  * exceptions or errors possibly including ClassCastException.
  *
- * <p>Most base support methods are <code>final</code> because their
+ * <p>Most base support methods are {@code final} because their
  * implementations are intrinsically tied to the underlying
  * lightweight task scheduling framework, and so cannot be overridden.
  * Developers creating new basic styles of fork/join processing should
- * minimally implement <code>protected</code> methods
- * <code>exec</code>, <code>setRawResult</code>, and
- * <code>getRawResult</code>, while also introducing an abstract
+ * minimally implement {@code protected} methods
+ * {@code exec}, {@code setRawResult}, and
+ * {@code getRawResult}, while also introducing an abstract
  * computational method that can be implemented in its subclasses,
- * possibly relying on other <code>protected</code> methods provided
+ * possibly relying on other {@code protected} methods provided
  * by this class.
  *
  * <p>ForkJoinTasks should perform relatively small amounts of
@@ -102,7 +102,7 @@ import java.lang.reflect.*;
  * parellelism cannot improve throughput. If too small, then memory
  * and internal task maintenance overhead may overwhelm processing.
  *
- * <p>ForkJoinTasks are <code>Serializable</code>, which enables them
+ * <p>ForkJoinTasks are {@code Serializable}, which enables them
  * to be used in extensions such as remote execution frameworks. It is
  * in general sensible to serialize tasks only before or after, but
  * not during execution. Serialization is not relied on during
@@ -483,7 +483,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Returns the result of the computation when it is ready.
-     * This method differs from <code>get</code> in that abnormal
+     * This method differs from {@code get} in that abnormal
      * completion results in RuntimeExceptions or Errors, not
      * ExecutionExceptions.
      *
@@ -511,7 +511,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Forks both tasks, returning when <code>isDone</code> holds for
+     * Forks both tasks, returning when {@code isDone} holds for
      * both of them or an exception is encountered. This method may be
      * invoked only from within ForkJoinTask computations. Attempts to
      * invoke in other contexts result in exceptions or errors
@@ -528,7 +528,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Forks the given tasks, returning when <code>isDone</code> holds
+     * Forks the given tasks, returning when {@code isDone} holds
      * for all of them. If any task encounters an exception, others
      * may be cancelled.  This method may be invoked only from within
      * ForkJoinTask computations. Attempts to invoke in other contexts
@@ -572,7 +572,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Forks all tasks in the collection, returning when
-     * <code>isDone</code> holds for all of them. If any task
+     * {@code isDone} holds for all of them. If any task
      * encounters an exception, others may be cancelled.  This method
      * may be invoked only from within ForkJoinTask
      * computations. Attempts to invoke in other contexts resul!t in
@@ -640,12 +640,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Asserts that the results of this task's computation will not be
      * used. If a cancellation occurs before atempting to execute this
-     * task, then execution will be suppressed, <code>isCancelled</code>
-     * will report true, and <code>join</code> will result in a
-     * <code>CancellationException</code> being thrown. Otherwise, when
+     * task, then execution will be suppressed, {@code isCancelled}
+     * will report true, and {@code join} will result in a
+     * {@code CancellationException} being thrown. Otherwise, when
      * cancellation races with completion, there are no guarantees
-     * about whether <code>isCancelled</code> will report true, whether
-     * <code>join</code> will return normally or via an exception, or
+     * about whether {@code isCancelled} will report true, whether
+     * {@code join} will return normally or via an exception, or
      * whether these behaviors will remain consistent upon repeated
      * invocation.
      *
@@ -656,7 +656,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * <p> This method is designed to be invoked by <em>other</em>
      * tasks. To terminate the current task, you can just return or
      * throw an unchecked exception from its computation method, or
-     * invoke <code>completeExceptionally</code>.
+     * invoke {@code completeExceptionally}.
      *
      * @param mayInterruptIfRunning this value is ignored in the
      * default implementation because tasks are not in general
@@ -695,11 +695,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Completes this task abnormally, and if not already aborted or
      * cancelled, causes it to throw the given exception upon
-     * <code>join</code> and related operations. This method may be used
+     * {@code join} and related operations. This method may be used
      * to induce exceptions in asynchronous tasks, or to force
      * completion of tasks that would not otherwise complete.  Its use
      * in other situations is likely to be wrong.  This method is
-     * overridable, but overridden versions must invoke <code>super</code>
+     * overridable, but overridden versions must invoke {@code super}
      * implementation to maintain guarantees.
      *
      * @param ex the exception to throw. If this exception is
@@ -714,12 +714,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Completes this task, and if not already aborted or cancelled,
-     * returning a <code>null</code> result upon <code>join</code> and related
+     * returning a {@code null} result upon {@code join} and related
      * operations. This method may be used to provide results for
      * asynchronous tasks, or to provide alternative handling for
      * tasks that would not otherwise complete normally. Its use in
      * other situations is likely to be wrong. This method is
-     * overridable, but overridden versions must invoke <code>super</code>
+     * overridable, but overridden versions must invoke {@code super}
      * implementation to maintain guarantees.
      *
      * @param value the result value for this task.
@@ -752,7 +752,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Possibly executes other tasks until this task is ready, then
      * returns the result of the computation.  This method may be more
-     * efficient than <code>join</code>, but is only applicable when
+     * efficient than {@code join}, but is only applicable when
      * there are no potemtial dependencies between continuation of the
      * current task and that of any other task that might be executed
      * while helping. (This usually holds for pure divide-and-conquer
@@ -822,7 +822,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Resets the internal bookkeeping state of this task, allowing a
-     * subsequent <code>fork</code>. This method allows repeated reuse of
+     * subsequent {@code fork}. This method allows repeated reuse of
      * this task, but only if reuse occurs when this task has either
      * never been forked, or has been forked, then completed and all
      * outstanding joins of this task have also completed. Effects
@@ -893,7 +893,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     // Extension methods
 
     /**
-     * Returns the result that would be returned by <code>join</code>,
+     * Returns the result that would be returned by {@code join},
      * even if this task completed abnormally, or null if this task is
      * not known to have been completed.  This method is designed to
      * aid debugging, as well as to support extensions. Its use in any
@@ -918,7 +918,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * called otherwise. The return value controls whether this task
      * is considered to be done normally. It may return false in
      * asynchronous actions that require explicit invocations of
-     * <code>complete</code> to become joinable. It may throw exceptions
+     * {@code complete} to become joinable. It may throw exceptions
      * to indicate abnormal exit.
      * @return true if completed normally
      * @throws Error or RuntimeException if encountered during computation
@@ -961,7 +961,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * queued by the current thread but not yet executed, if one is
      * available, or if not available, a task that was forked by some
      * other thread, if available. Availability may be transient, so a
-     * <code>null</code> result does not necessarily imply quiecence
+     * {@code null} result does not necessarily imply quiecence
      * of the pool this task is operating in.  This method is designed
      * primarily to support extensions, and is unlikely to be useful
      * otherwise.  This method may be invoked only from within

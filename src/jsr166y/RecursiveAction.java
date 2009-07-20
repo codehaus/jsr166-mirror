@@ -8,13 +8,13 @@ package jsr166y;
 
 /**
  * Recursive resultless ForkJoinTasks. This class establishes
- * conventions to parameterize resultless actions as <tt>Void</tt>
- * ForkJoinTasks. Because <tt>null</tt> is the only valid value of
- * <tt>Void</tt>, methods such as join always return <tt>null</tt>
+ * conventions to parameterize resultless actions as {@code Void}
+ * ForkJoinTasks. Because {@code null} is the only valid value of
+ * {@code Void}, methods such as join always return {@code null}
  * upon completion.
  *
  * <p><b>Sample Usages.</b> Here is a sketch of a ForkJoin sort that
- * sorts a given <tt>long[]</tt> array:
+ * sorts a given {@code long[]} array:
  *
  * <pre>
  * class SortTask extends RecursiveAction {
@@ -35,8 +35,8 @@ package jsr166y;
  * }
  * </pre>
  *
- * You could then sort anArray by creating <tt>new SortTask(anArray, 0,
- * anArray.length-1) </tt> and invoking it in a ForkJoinPool.
+ * You could then sort anArray by creating {@code new SortTask(anArray, 0,
+ * anArray.length-1) } and invoking it in a ForkJoinPool.
  * As a more concrete simple example, the following task increments
  * each element of an array:
  * <pre>
@@ -66,8 +66,8 @@ package jsr166y;
  * divide-and-conquer approach. Here is a class that sums the squares
  * of each element of a double array, by subdividing out only the
  * right-hand-sides of repeated divisions by two, and keeping track of
- * them with a chain of <tt>next</tt> references. It uses a dynamic
- * threshold based on method <tt>surplus</tt>, but counterbalances
+ * them with a chain of {@code next} references. It uses a dynamic
+ * threshold based on method {@code surplus}, but counterbalances
  * potential excess partitioning by directly performing leaf actions
  * on unstolen tasks rather than further subdividing.
  *

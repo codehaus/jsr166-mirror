@@ -10,20 +10,19 @@ package jsr166y;
  * Recursive result-bearing ForkJoinTasks.
  * <p> For a classic example, here is a task computing Fibonacci numbers:
  *
- * <pre>
- * class Fibonacci extends RecursiveTask&lt;Integer&gt; {
+ *  <pre> {@code
+ * class Fibonacci extends RecursiveTask<Integer> {
  *   final int n;
  *   Fibonacci(int n) { this.n = n; }
  *   Integer compute() {
- *     if (n &lt;= 1)
+ *     if (n <= 1)
  *        return n;
  *     Fibonacci f1 = new Fibonacci(n - 1);
  *     f1.fork();
  *     Fibonacci f2 = new Fibonacci(n - 2);
  *     return f2.compute() + f1.join();
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * However, besides being a dumb way to compute Fibonacci functions
  * (there is a simple fast linear algorithm that you'd use in

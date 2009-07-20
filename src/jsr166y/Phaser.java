@@ -93,18 +93,18 @@ import java.lang.reflect.*;
  * idiom is for the method setting this up to first register, then
  * start the actions, then deregister, as in:
  *
- * <pre>
- *  void runTasks(List&lt;Runnable&gt; list) {
- *    final Phaser phaser = new Phaser(1); // "1" to register self
- *    for (Runnable r : list) {
- *      phaser.register();
- *      new Thread() {
- *        public void run() {
- *          phaser.arriveAndAwaitAdvance(); // await all creation
- *          r.run();
- *          phaser.arriveAndDeregister();   // signal completion
- *        }
- *      }.start();
+ *  <pre> {@code
+ * void runTasks(List<Runnable> list) {
+ *   final Phaser phaser = new Phaser(1); // "1" to register self
+ *   for (Runnable r : list) {
+ *     phaser.register();
+ *     new Thread() {
+ *       public void run() {
+ *         phaser.arriveAndAwaitAdvance(); // await all creation
+ *         r.run();
+ *         phaser.arriveAndDeregister();   // signal completion
+ *       }
+ *     }.start();
  *   }
  *
  *   doSomethingOnBehalfOfWorkers();
@@ -113,59 +113,55 @@ import java.lang.reflect.*;
  *   p = phaser.awaitAdvance(p); // ... and await arrival
  *   otherActions(); // do other things while tasks execute
  *   phaser.awaitAdvance(p); // await final completion
- * }
- * </pre>
+ * }}</pre>
  *
  * <p>One way to cause a set of threads to repeatedly perform actions
  * for a given number of iterations is to override {@code onAdvance}:
  *
- * <pre>
- *  void startTasks(List&lt;Runnable&gt; list, final int iterations) {
- *    final Phaser phaser = new Phaser() {
- *       public boolean onAdvance(int phase, int registeredParties) {
- *         return phase &gt;= iterations || registeredParties == 0;
+ *  <pre> {@code
+ * void startTasks(List<Runnable> list, final int iterations) {
+ *   final Phaser phaser = new Phaser() {
+ *     public boolean onAdvance(int phase, int registeredParties) {
+ *       return phase >= iterations || registeredParties == 0;
+ *     }
+ *   };
+ *   phaser.register();
+ *   for (Runnable r : list) {
+ *     phaser.register();
+ *     new Thread() {
+ *       public void run() {
+ *         do {
+ *           r.run();
+ *           phaser.arriveAndAwaitAdvance();
+ *         } while(!phaser.isTerminated();
  *       }
- *    };
- *    phaser.register();
- *    for (Runnable r : list) {
- *      phaser.register();
- *      new Thread() {
- *        public void run() {
- *           do {
- *             r.run();
- *             phaser.arriveAndAwaitAdvance();
- *           } while(!phaser.isTerminated();
- *        }
- *      }.start();
+ *     }.start();
  *   }
  *   phaser.arriveAndDeregister(); // deregister self, don't wait
- * }
- * </pre>
+ * }}</pre>
  *
  * <p> To create a set of tasks using a tree of Phasers,
  * you could use code of the following form, assuming a
  * Task class with a constructor accepting a Phaser that
  * it registers for upon construction:
- * <pre>
- *  void build(Task[] actions, int lo, int hi, Phaser b) {
- *    int step = (hi - lo) / TASKS_PER_PHASER;
- *    if (step &gt; 1) {
- *       int i = lo;
- *       while (i &lt; hi) {
- *         int r = Math.min(i + step, hi);
- *         build(actions, i, r, new Phaser(b));
- *         i = r;
- *       }
- *    }
- *    else {
- *      for (int i = lo; i &lt; hi; ++i)
- *        actions[i] = new Task(b);
- *        // assumes new Task(b) performs b.register()
- *    }
- *  }
- *  // .. initially called, for n tasks via
- *  build(new Task[n], 0, n, new Phaser());
- * </pre>
+ *  <pre> {@code
+ * void build(Task[] actions, int lo, int hi, Phaser b) {
+ *   int step = (hi - lo) / TASKS_PER_PHASER;
+ *   if (step > 1) {
+ *     int i = lo;
+ *     while (i < hi) {
+ *       int r = Math.min(i + step, hi);
+ *       build(actions, i, r, new Phaser(b));
+ *       i = r;
+ *     }
+ *   } else {
+ *     for (int i = lo; i < hi; ++i)
+ *       actions[i] = new Task(b);
+ *       // assumes new Task(b) performs b.register()
+ *   }
+ * }
+ * // .. initially called, for n tasks via
+ * build(new Task[n], 0, n, new Phaser());}</pre>
  *
  * The best value of {@code TASKS_PER_PHASER} depends mainly on
  * expected barrier synchronization rates. A value as low as four may

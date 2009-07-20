@@ -16,49 +16,46 @@ package jsr166y;
  * <p><b>Sample Usages.</b> Here is a sketch of a ForkJoin sort that
  * sorts a given {@code long[]} array:
  *
- * <pre>
+ *  <pre> {@code
  * class SortTask extends RecursiveAction {
  *   final long[] array; final int lo; final int hi;
  *   SortTask(long[] array, int lo, int hi) {
  *     this.array = array; this.lo = lo; this.hi = hi;
  *   }
  *   protected void compute() {
- *     if (hi - lo &lt; THRESHOLD)
+ *     if (hi - lo < THRESHOLD)
  *       sequentiallySort(array, lo, hi);
  *     else {
- *       int mid = (lo + hi) &gt;&gt;&gt; 1;
+ *       int mid = (lo + hi) >>> 1;
  *       invokeAll(new SortTask(array, lo, mid),
  *                 new SortTask(array, mid, hi));
  *       merge(array, lo, hi);
  *     }
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * You could then sort anArray by creating {@code new SortTask(anArray, 0,
  * anArray.length-1) } and invoking it in a ForkJoinPool.
  * As a more concrete simple example, the following task increments
  * each element of an array:
- * <pre>
+ *  <pre> {@code
  * class IncrementTask extends RecursiveAction {
  *   final long[] array; final int lo; final int hi;
  *   IncrementTask(long[] array, int lo, int hi) {
  *     this.array = array; this.lo = lo; this.hi = hi;
  *   }
  *   protected void compute() {
- *     if (hi - lo &lt; THRESHOLD) {
- *       for (int i = lo; i &lt; hi; ++i)
+ *     if (hi - lo < THRESHOLD) {
+ *       for (int i = lo; i < hi; ++i)
  *         array[i]++;
  *     }
  *     else {
- *       int mid = (lo + hi) &gt;&gt;&gt; 1;
+ *       int mid = (lo + hi) >>> 1;
  *       invokeAll(new IncrementTask(array, lo, mid),
  *                 new IncrementTask(array, mid, hi));
  *     }
  *   }
- * }
- * </pre>
- *
+ * }}</pre>
  *
  * <p>The following example illustrates some refinements and idioms
  * that may lead to better performance: RecursiveActions need not be
@@ -71,7 +68,7 @@ package jsr166y;
  * potential excess partitioning by directly performing leaf actions
  * on unstolen tasks rather than further subdividing.
  *
- * <pre>
+ *  <pre> {@code
  * double sumOfSquares(ForkJoinPool pool, double[] array) {
  *   int n = array.length;
  *   int seqSize = 1 + n / (8 * pool.getParallelism());
@@ -92,7 +89,7 @@ package jsr166y;
  *
  *   double atLeaf(int l, int r) {
  *     double sum = 0;
- *     for (int i = l; i &lt; h; ++i) // perform leftmost base step
+ *     for (int i = l; i < h; ++i) // perform leftmost base step
  *       sum += array[i] * array[i];
  *     return sum;
  *   }
@@ -101,9 +98,9 @@ package jsr166y;
  *     int l = lo;
  *     int h = hi;
  *     Applyer right = null;
- *     while (h - l &gt; 1 &amp;&amp;
- *        ForkJoinWorkerThread.getEstimatedSurplusTaskCount() &lt;= 3) {
- *        int mid = (l + h) &gt;&gt;&gt; 1;
+ *     while (h - l > 1 &&
+ *        ForkJoinWorkerThread.getEstimatedSurplusTaskCount() <= 3) {
+ *        int mid = (l + h) >>> 1;
  *        right = new Applyer(array, mid, h, seqSize, right);
  *        right.fork();
  *        h = mid;
@@ -120,8 +117,7 @@ package jsr166y;
  *      }
  *     result = sum;
  *   }
- * }
- * </pre>
+ * }}</pre>
  */
 public abstract class RecursiveAction extends ForkJoinTask<Void> {
 

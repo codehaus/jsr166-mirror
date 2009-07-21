@@ -24,6 +24,5 @@
  * available to other threads (normally one per CPU), that help
  * complete the tasks.  In general, the most efficient ForkJoinTasks
  * are those that directly implement this algorithmic design pattern.
- *
  */
 package jsr166y;

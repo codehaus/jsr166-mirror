@@ -205,6 +205,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Creates a ForkJoinWorkerThread operating in the given pool.
+     *
      * @param pool the pool this thread works in
      * @throws NullPointerException if pool is null
      */
@@ -218,7 +219,8 @@ public class ForkJoinWorkerThread extends Thread {
     // Public access methods
 
     /**
-     * Returns the pool hosting this thread
+     * Returns the pool hosting this thread.
+     *
      * @return the pool
      */
     public ForkJoinPool getPool() {
@@ -231,7 +233,8 @@ public class ForkJoinWorkerThread extends Thread {
      * threads (minus one) that have ever been created in the pool.
      * This method may be useful for applications that track status or
      * collect results per-worker rather than per-task.
-     * @return the index number.
+     *
+     * @return the index number
      */
     public int getPoolIndex() {
         return poolIndex;
@@ -240,6 +243,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Establishes local first-in-first-out scheduling mode for forked
      * tasks that are never joined.
+     *
      * @param async if true, use locally FIFO scheduling
      */
     void setAsyncMode(boolean async) {
@@ -261,8 +265,8 @@ public class ForkJoinWorkerThread extends Thread {
     final boolean shutdownNow()   { return transitionRunStateTo(TERMINATING); }
 
     /**
-     * Transition to at least the given state. Return true if not
-     * already at least given state.
+     * Transitions to at least the given state.  Returns true if not
+     * already at least at given state.
      */
     private boolean transitionRunStateTo(int state) {
         for (;;) {
@@ -275,7 +279,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Try to set status to active; fail on contention
+     * Tries to set status to active; fails on contention.
      */
     private boolean tryActivate() {
         if (!active) {
@@ -287,7 +291,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Try to set status to active; fail on contention
+     * Tries to set status to active; fails on contention.
      */
     private boolean tryInactivate() {
         if (active) {
@@ -299,9 +303,9 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Computes next value for random victim probe. Scans don't
+     * Computes next value for random victim probe.  Scans don't
      * require a very high quality generator, but also not a crummy
-     * one. Marsaglia xor-shift is cheap and works well.
+     * one.  Marsaglia xor-shift is cheap and works well.
      */
     private static int xorShift(int r) {
         r ^= r << 1;
@@ -331,7 +335,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Execute tasks until shut down.
+     * Executes tasks until shut down.
      */
     private void mainLoop() {
         while (!isShutdown()) {
@@ -363,12 +367,12 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Perform cleanup associated with termination of this worker
+     * Performs cleanup associated with termination of this worker
      * thread.  If you override this method, you must invoke
      * super.onTermination at the end of the overridden method.
      *
      * @param exception the exception causing this thread to abort due
-     * to an unrecoverable error, or null if completed normally.
+     * to an unrecoverable error, or null if completed normally
      */
     protected void onTermination(Throwable exception) {
         // Execute remaining local tasks unless aborting or terminating
@@ -428,6 +432,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Pushes a task. Called only by current thread.
+     *
      * @param t the task. Caller must ensure non-null.
      */
     final void pushTask(ForkJoinTask<?> t) {
@@ -445,7 +450,8 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Tries to take a task from the base of the queue, failing if
      * either empty or contended.
-     * @return a task, or null if none or contended.
+     *
+     * @return a task, or null if none or contended
      */
     final ForkJoinTask<?> deqTask() {
         ForkJoinTask<?> t;
@@ -487,7 +493,8 @@ public class ForkJoinWorkerThread extends Thread {
      * Specialized version of popTask to pop only if
      * topmost element is the given task. Called only
      * by current thread while active.
-     * @param t the task. Caller must ensure non-null
+     *
+     * @param t the task. Caller must ensure non-null.
      */
     final boolean unpushTask(ForkJoinTask<?> t) {
         ForkJoinTask<?>[] q = queue;
@@ -587,7 +594,8 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * gets and removes a local or stolen a task
+     * Gets and removes a local or stolen task.
+     *
      * @return a task, if available
      */
     final ForkJoinTask<?> pollTask() {
@@ -598,7 +606,8 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * gets a local task
+     * Gets a local task.
+     *
      * @return a task, if available
      */
     final ForkJoinTask<?> pollLocalTask() {
@@ -607,6 +616,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Returns a pool submission, if one exists, activating first.
+     *
      * @return a submission, if available
      */
     private ForkJoinTask<?> pollSubmission() {
@@ -632,7 +642,8 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Drains tasks to given collection c
+     * Drains tasks to given collection c.
+     *
      * @return the number of tasks drained
      */
     final int drainTasksTo(Collection<ForkJoinTask<?>> c) {
@@ -646,7 +657,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Get and clear steal count for accumulation by pool.  Called
+     * Gets and clears steal count for accumulation by pool.  Called
      * only when known to be idle (in pool.sync and termination).
      */
     final int getAndClearStealCount() {
@@ -694,7 +705,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Scan, returning early if joinMe done
+     * Scans, returning early if joinMe done
      */
     final ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
         ForkJoinTask<?> t = pollTask();
@@ -706,7 +717,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Runs tasks until pool isQuiescent
+     * Runs tasks until pool isQuiescent.
      */
     final void helpQuiescePool() {
         for (;;) {

@@ -765,6 +765,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Reconstitute the Queue instance from a stream (that is,
      * deserialize it).
+     *
      * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)

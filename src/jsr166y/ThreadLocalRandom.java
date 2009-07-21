@@ -73,7 +73,7 @@ public class ThreadLocalRandom extends Random {
     }
 
     /**
-     * Returns the current Thread's ThreadLocalRandom
+     * Returns the current Thread's ThreadLocalRandom.
      * @return the current Thread's ThreadLocalRandom
      */
     public static ThreadLocalRandom current() {

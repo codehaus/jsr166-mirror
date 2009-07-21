@@ -59,7 +59,7 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
      *
      * @param e the element to transfer
      * @throws InterruptedException if interrupted while waiting,
-     *         in which case the element is not enqueued.
+     *         in which case the element is not enqueued
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this queue
      * @throws NullPointerException if the specified element is null
@@ -81,9 +81,9 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
      *        {@code timeout} parameter
      * @return {@code true} if successful, or {@code false} if
      *         the specified waiting time elapses before completion,
-     *         in which case the element is not enqueued.
+     *         in which case the element is not enqueued
      * @throws InterruptedException if interrupted while waiting,
-     *         in which case the element is not enqueued.
+     *         in which case the element is not enqueued
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this queue
      * @throws NullPointerException if the specified element is null

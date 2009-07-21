@@ -234,7 +234,7 @@ public class Phaser {
     }
 
     /**
-     * Returns message string for bad bounds exceptions
+     * Returns message string for bad bounds exceptions.
      */
     private static String badBounds(int parties, int unarrived) {
         return ("Attempt to set " + unarrived +
@@ -309,9 +309,10 @@ public class Phaser {
     /**
      * Creates a new Phaser with the given numbers of registered
      * unarrived parties, initial phase number 0, and no parent.
-     * @param parties the number of parties required to trip barrier.
+     *
+     * @param parties the number of parties required to trip barrier
      * @throws IllegalArgumentException if parties less than zero
-     * or greater than the maximum number of parties supported.
+     * or greater than the maximum number of parties supported
      */
     public Phaser(int parties) {
         this(null, parties);
@@ -322,7 +323,8 @@ public class Phaser {
      * initially registered parties. If parent is non-null this phaser
      * is registered with the parent and its initial phase number is
      * the same as that of parent phaser.
-     * @param parent the parent phaser.
+     *
+     * @param parent the parent phaser
      */
     public Phaser(Phaser parent) {
         int phase = 0;
@@ -338,13 +340,14 @@ public class Phaser {
 
     /**
      * Creates a new Phaser with the given parent and numbers of
-     * registered unarrived parties. If parent is non-null this phaser
+     * registered unarrived parties. If parent is non-null, this phaser
      * is registered with the parent and its initial phase number is
      * the same as that of parent phaser.
-     * @param parent the parent phaser.
-     * @param parties the number of parties required to trip barrier.
+     *
+     * @param parent the parent phaser
+     * @param parties the number of parties required to trip barrier
      * @throws IllegalArgumentException if parties less than zero
-     * or greater than the maximum number of parties supported.
+     * or greater than the maximum number of parties supported
      */
     public Phaser(Phaser parent, int parties) {
         if (parties < 0 || parties > ushortMask)
@@ -362,9 +365,10 @@ public class Phaser {
 
     /**
      * Adds a new unarrived party to this phaser.
+     *
      * @return the current barrier phase number upon registration
      * @throws IllegalStateException if attempting to register more
-     * than the maximum supported number of parties.
+     * than the maximum supported number of parties
      */
     public int register() {
         return doRegister(1);
@@ -372,10 +376,11 @@ public class Phaser {
 
     /**
      * Adds the given number of new unarrived parties to this phaser.
-     * @param parties the number of parties required to trip barrier.
+     *
+     * @param parties the number of parties required to trip barrier
      * @return the current barrier phase number upon registration
      * @throws IllegalStateException if attempting to register more
-     * than the maximum supported number of parties.
+     * than the maximum supported number of parties
      */
     public int bulkRegister(int parties) {
         if (parties < 0)
@@ -411,9 +416,9 @@ public class Phaser {
      * in turn wait for others via {@link #awaitAdvance}).
      *
      * @return the barrier phase number upon entry to this method, or a
-     * negative value if terminated;
+     * negative value if terminated
      * @throws IllegalStateException if not terminated and the number
-     * of unarrived parties would become negative.
+     * of unarrived parties would become negative
      */
     public int arrive() {
         int phase;
@@ -463,9 +468,9 @@ public class Phaser {
      * zero parties, this phaser is also deregistered from its parent.
      *
      * @return the current barrier phase number upon entry to
-     * this method, or a negative value if terminated;
+     * this method, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
-     * of registered or unarrived parties would become negative.
+     * of registered or unarrived parties would become negative
      */
     public int arriveAndDeregister() {
         // similar code to arrive, but too different to merge
@@ -516,9 +521,10 @@ public class Phaser {
      * to {@code awaitAdvance(arrive())}.  If you instead need to
      * await with interruption of timeout, and/or deregister upon
      * arrival, you can arrange them using analogous constructions.
+     *
      * @return the phase on entry to this method
      * @throws IllegalStateException if not terminated and the number
-     * of unarrived parties would become negative.
+     * of unarrived parties would become negative
      */
     public int arriveAndAwaitAdvance() {
         return awaitAdvance(arrive());
@@ -528,6 +534,7 @@ public class Phaser {
      * Awaits the phase of the barrier to advance from the given
      * value, or returns immediately if argument is negative or this
      * barrier is terminated.
+     *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
      */
@@ -549,6 +556,7 @@ public class Phaser {
      * value, or returns immediately if argument is negative or this
      * barrier is terminated, or throws InterruptedException if
      * interrupted while waiting.
+     *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
      * @throws InterruptedException if thread interrupted while waiting
@@ -570,6 +578,7 @@ public class Phaser {
      * Awaits the phase of the barrier to advance from the given value
      * or the given timeout elapses, or returns immediately if
      * argument is negative or this barrier is terminated.
+     *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
      * @throws InterruptedException if thread interrupted while waiting
@@ -616,6 +625,7 @@ public class Phaser {
      * Returns the current phase number. The maximum phase number is
      * {@code Integer.MAX_VALUE}, after which it restarts at
      * zero. Upon termination, the phase number is negative.
+     *
      * @return the phase number, or a negative value if terminated
      */
     public final int getPhase() {
@@ -624,6 +634,7 @@ public class Phaser {
 
     /**
      * Returns {@code true} if the current phase number equals the given phase.
+     *
      * @param phase the phase
      * @return {@code true} if the current phase number equals the given phase
      */
@@ -633,6 +644,7 @@ public class Phaser {
 
     /**
      * Returns the number of parties registered at this barrier.
+     *
      * @return the number of parties
      */
     public int getRegisteredParties() {
@@ -642,6 +654,7 @@ public class Phaser {
     /**
      * Returns the number of parties that have arrived at the current
      * phase of this barrier.
+     *
      * @return the number of arrived parties
      */
     public int getArrivedParties() {
@@ -651,6 +664,7 @@ public class Phaser {
     /**
      * Returns the number of registered parties that have not yet
      * arrived at the current phase of this barrier.
+     *
      * @return the number of unarrived parties
      */
     public int getUnarrivedParties() {
@@ -659,6 +673,7 @@ public class Phaser {
 
     /**
      * Returns the parent of this phaser, or null if none.
+     *
      * @return the parent of this phaser, or null if none
      */
     public Phaser getParent() {
@@ -668,6 +683,7 @@ public class Phaser {
     /**
      * Returns the root ancestor of this phaser, which is the same as
      * this phaser if it has no parent.
+     *
      * @return the root ancestor of this phaser
      */
     public Phaser getRoot() {
@@ -676,6 +692,7 @@ public class Phaser {
 
     /**
      * Returns {@code true} if this barrier has been terminated.
+     *
      * @return {@code true} if this barrier has been terminated
      */
     public boolean isTerminated() {
@@ -799,7 +816,7 @@ public class Phaser {
     }
 
     /**
-     * Removes and signals waiting threads from wait queue
+     * Removes and signals waiting threads from wait queue.
      */
     private void releaseWaiters(int phase) {
         AtomicReference<QNode> head = queueFor(phase);
@@ -811,7 +828,8 @@ public class Phaser {
     }
 
     /**
-     * Tries to enqueue given node in the appropriate wait queue
+     * Tries to enqueue given node in the appropriate wait queue.
+     *
      * @return true if successful
      */
     private boolean tryEnqueue(QNode node) {
@@ -821,6 +839,7 @@ public class Phaser {
 
     /**
      * Enqueues node and waits unless aborted or signalled.
+     *
      * @return current phase
      */
     private int untimedWait(int phase) {

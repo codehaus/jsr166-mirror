@@ -81,7 +81,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * Returns a new worker thread operating in the given pool.
          *
          * @param pool the pool this thread works in
-         * @throws NullPointerException if pool is null;
+         * @throws NullPointerException if pool is null
          */
         public ForkJoinWorkerThread newThread(ForkJoinPool pool);
     }
@@ -273,7 +273,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Try incrementing active count; fail on contention. Called by
      * workers before/during executing tasks.
-     * @return true on success;
+     * @return true on success
      */
     final boolean tryIncrementActiveCount() {
         int c = runControl;
@@ -376,7 +376,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param parallelism the targeted number of worker threads
      * @param factory the factory for creating new threads
      * @throws IllegalArgumentException if parallelism less than or
-     * equal to zero, or greater than implementation limit.
+     * equal to zero, or greater than implementation limit
      * @throws NullPointerException if factory is null
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
@@ -719,7 +719,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Sets the target parallelism level of this pool.
      * @param parallelism the target parallelism
      * @throws IllegalArgumentException if parallelism less than or
-     * equal to zero or greater than maximum size bounds.
+     * equal to zero or greater than maximum size bounds
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
@@ -782,7 +782,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Setting this value has no effect on current pool size. It
      * controls construction of new threads.
      * @throws IllegalArgumentException if negative or greater then
-     * internal implementation limit.
+     * internal implementation limit
      */
     public void setMaximumPoolSize(int newMax) {
         if (newMax < 0 || newMax > MAX_THREADS)
@@ -822,7 +822,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * invocations at other times may be unpredictable.
      *
      * @param async if true, use locally FIFO scheduling
-     * @return the previous mode.
+     * @return the previous mode
      */
     public boolean setAsyncMode(boolean async) {
         boolean oldMode = locallyFifo;
@@ -842,7 +842,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Returns true if this pool uses local first-in-first-out
      * scheduling mode for forked tasks that are never joined.
      *
-     * @return true if this pool uses async mode.
+     * @return true if this pool uses async mode
      */
     public boolean getAsyncMode() {
         return locallyFifo;
@@ -863,7 +863,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Returns an estimate of the number of threads that are currently
      * stealing or executing tasks. This method may overestimate the
      * number of active threads.
-     * @return the number of active threads.
+     * @return the number of active threads
      */
     public int getActiveThreadCount() {
         return activeCountOf(runControl);
@@ -873,7 +873,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Returns an estimate of the number of threads that are currently
      * idle waiting for tasks. This method may underestimate the
      * number of idle threads.
-     * @return the number of idle threads.
+     * @return the number of idle threads
      */
     final int getIdleThreadCount() {
         int c = runningCountOf(workerCounts) - activeCountOf(runControl);
@@ -902,7 +902,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * tuning fork/join programs: In general, steal counts should be
      * high enough to keep threads busy, but low enough to avoid
      * overhead and contention across threads.
-     * @return the number of steals.
+     * @return the number of steals
      */
     public long getStealCount() {
         return stealCount.get();
@@ -925,7 +925,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * an approximation, obtained by iterating across all threads in
      * the pool. This method may be useful for tuning task
      * granularities.
-     * @return the number of queued tasks.
+     * @return the number of queued tasks
      */
     public long getQueuedTaskCount() {
         long count = 0;
@@ -944,7 +944,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Returns an estimate of the number tasks submitted to this pool
      * that have not yet begun executing. This method takes time
      * proportional to the number of submissions.
-     * @return the number of queued submissions.
+     * @return the number of queued submissions
      */
     public int getQueuedSubmissionCount() {
         return submissionQueue.size();
@@ -953,7 +953,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns true if there are any tasks submitted to this pool
      * that have not yet begun executing.
-     * @return {@code true} if there are any queued submissions.
+     * @return {@code true} if there are any queued submissions
      */
     public boolean hasQueuedSubmissions() {
         return !submissionQueue.isEmpty();
@@ -1717,7 +1717,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * Possibly blocks the current thread, for example waiting for
          * a lock or condition.
          * @return true if no additional blocking is necessary (i.e.,
-         * if isReleasable would return true).
+         * if isReleasable would return true)
          * @throws InterruptedException if interrupted while waiting
          * (the method is not required to do so, but is allowed to).
          */
@@ -1756,7 +1756,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * attempt to maintain the pool's nominal parallelism; otherwise
      * activate a thread only if necessary to avoid complete
      * starvation.
-     * @throws InterruptedException if blocker.block did so.
+     * @throws InterruptedException if blocker.block did so
      */
     public static void managedBlock(ManagedBlocker blocker,
                                     boolean maintainParallelism)

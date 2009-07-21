@@ -953,16 +953,16 @@ public class Phaser {
 
     private static long fieldOffset(String fieldName)
             throws NoSuchFieldException {
-        return _unsafe.objectFieldOffset
+        return UNSAFE.objectFieldOffset
             (Phaser.class.getDeclaredField(fieldName));
     }
 
-    static final Unsafe _unsafe;
+    static final Unsafe UNSAFE;
     static final long stateOffset;
 
     static {
         try {
-            _unsafe = getUnsafe();
+            UNSAFE = getUnsafe();
             stateOffset = fieldOffset("state");
         } catch (Throwable e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
@@ -970,6 +970,6 @@ public class Phaser {
     }
 
     final boolean casState(long cmp, long val) {
-        return _unsafe.compareAndSwapLong(this, stateOffset, cmp, val);
+        return UNSAFE.compareAndSwapLong(this, stateOffset, cmp, val);
     }
 }

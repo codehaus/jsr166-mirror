@@ -785,11 +785,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     // Support for resetting head/tail while deserializing
     private void resetHeadAndTail() {
         QNode dummy = new QNode(null, false);
-        _unsafe.putObjectVolatile(this, headOffset,
+        UNSAFE.putObjectVolatile(this, headOffset,
                                   new PaddedAtomicReference<QNode>(dummy));
-        _unsafe.putObjectVolatile(this, tailOffset,
+        UNSAFE.putObjectVolatile(this, tailOffset,
                                   new PaddedAtomicReference<QNode>(dummy));
-        _unsafe.putObjectVolatile(this, cleanMeOffset,
+        UNSAFE.putObjectVolatile(this, cleanMeOffset,
                                   new PaddedAtomicReference<QNode>(null));
     }
 
@@ -819,17 +819,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     private static long fieldOffset(String fieldName)
             throws NoSuchFieldException {
-        return _unsafe.objectFieldOffset
+        return UNSAFE.objectFieldOffset
             (LinkedTransferQueue.class.getDeclaredField(fieldName));
     }
 
-    private static final Unsafe _unsafe;
+    private static final Unsafe UNSAFE;
     private static final long headOffset;
     private static final long tailOffset;
     private static final long cleanMeOffset;
     static {
         try {
-            _unsafe = getUnsafe();
+            UNSAFE = getUnsafe();
             headOffset = fieldOffset("head");
             tailOffset = fieldOffset("tail");
             cleanMeOffset = fieldOffset("cleanMe");

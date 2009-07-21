@@ -273,7 +273,7 @@ public class ForkJoinWorkerThread extends Thread {
             int s = runState;
             if (s >= state)
                 return false;
-            if (_unsafe.compareAndSwapInt(this, runStateOffset, s, state))
+            if (UNSAFE.compareAndSwapInt(this, runStateOffset, s, state))
                 return true;
         }
     }
@@ -409,7 +409,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private static void setSlot(ForkJoinTask<?>[] q, int i,
                                 ForkJoinTask<?> t){
-        _unsafe.putOrderedObject(q, (i << qShift) + qBase, t);
+        UNSAFE.putOrderedObject(q, (i << qShift) + qBase, t);
     }
 
     /**
@@ -418,14 +418,14 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private static boolean casSlotNull(ForkJoinTask<?>[] q, int i,
                                        ForkJoinTask<?> t) {
-        return _unsafe.compareAndSwapObject(q, (i << qShift) + qBase, t, null);
+        return UNSAFE.compareAndSwapObject(q, (i << qShift) + qBase, t, null);
     }
 
     /**
      * Sets sp in store-order.
      */
     private void storeSp(int s) {
-        _unsafe.putOrderedInt(this, spOffset, s);
+        UNSAFE.putOrderedInt(this, spOffset, s);
     }
 
     // Main queue methods
@@ -756,11 +756,11 @@ public class ForkJoinWorkerThread extends Thread {
 
     private static long fieldOffset(String fieldName)
             throws NoSuchFieldException {
-        return _unsafe.objectFieldOffset
+        return UNSAFE.objectFieldOffset
             (ForkJoinWorkerThread.class.getDeclaredField(fieldName));
     }
 
-    static final Unsafe _unsafe;
+    static final Unsafe UNSAFE;
     static final long baseOffset;
     static final long spOffset;
     static final long runStateOffset;
@@ -768,12 +768,12 @@ public class ForkJoinWorkerThread extends Thread {
     static final int qShift;
     static {
         try {
-            _unsafe = getUnsafe();
+            UNSAFE = getUnsafe();
             baseOffset = fieldOffset("base");
             spOffset = fieldOffset("sp");
             runStateOffset = fieldOffset("runState");
-            qBase = _unsafe.arrayBaseOffset(ForkJoinTask[].class);
-            int s = _unsafe.arrayIndexScale(ForkJoinTask[].class);
+            qBase = UNSAFE.arrayBaseOffset(ForkJoinTask[].class);
+            int s = UNSAFE.arrayIndexScale(ForkJoinTask[].class);
             if ((s & (s-1)) != 0)
                 throw new Error("data type scale not a power of two");
             qShift = 31 - Integer.numberOfLeadingZeros(s);

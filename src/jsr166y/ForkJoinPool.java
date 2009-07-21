@@ -1818,11 +1818,11 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     private static long fieldOffset(String fieldName)
             throws NoSuchFieldException {
-        return _unsafe.objectFieldOffset
+        return UNSAFE.objectFieldOffset
             (ForkJoinPool.class.getDeclaredField(fieldName));
     }
 
-    static final Unsafe _unsafe;
+    static final Unsafe UNSAFE;
     static final long eventCountOffset;
     static final long workerCountsOffset;
     static final long runControlOffset;
@@ -1831,7 +1831,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     static {
         try {
-            _unsafe = getUnsafe();
+            UNSAFE = getUnsafe();
             eventCountOffset = fieldOffset("eventCount");
             workerCountsOffset = fieldOffset("workerCounts");
             runControlOffset = fieldOffset("runControl");
@@ -1843,18 +1843,18 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     private boolean casEventCount(long cmp, long val) {
-        return _unsafe.compareAndSwapLong(this, eventCountOffset, cmp, val);
+        return UNSAFE.compareAndSwapLong(this, eventCountOffset, cmp, val);
     }
     private boolean casWorkerCounts(int cmp, int val) {
-        return _unsafe.compareAndSwapInt(this, workerCountsOffset, cmp, val);
+        return UNSAFE.compareAndSwapInt(this, workerCountsOffset, cmp, val);
     }
     private boolean casRunControl(int cmp, int val) {
-        return _unsafe.compareAndSwapInt(this, runControlOffset, cmp, val);
+        return UNSAFE.compareAndSwapInt(this, runControlOffset, cmp, val);
     }
     private boolean casSpareStack(WaitQueueNode cmp, WaitQueueNode val) {
-        return _unsafe.compareAndSwapObject(this, spareStackOffset, cmp, val);
+        return UNSAFE.compareAndSwapObject(this, spareStackOffset, cmp, val);
     }
     private boolean casBarrierStack(WaitQueueNode cmp, WaitQueueNode val) {
-        return _unsafe.compareAndSwapObject(this, syncStackOffset, cmp, val);
+        return UNSAFE.compareAndSwapObject(this, syncStackOffset, cmp, val);
     }
 }

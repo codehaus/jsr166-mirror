@@ -162,7 +162,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     final boolean casStatus(int cmp, int val) {
-        return _unsafe.compareAndSwapInt(this, statusOffset, cmp, val);
+        return UNSAFE.compareAndSwapInt(this, statusOffset, cmp, val);
     }
 
     /**
@@ -170,7 +170,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     static void rethrowException(Throwable ex) {
         if (ex != null)
-            _unsafe.throwException(ex);
+            UNSAFE.throwException(ex);
     }
 
     // Setting completion status
@@ -213,7 +213,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     final void setNormalCompletion() {
         // Try typical fast case -- single CAS, no signal, not already done.
         // Manually expand casStatus to improve chances of inlining it
-        if (!_unsafe.compareAndSwapInt(this, statusOffset, 0, NORMAL))
+        if (!UNSAFE.compareAndSwapInt(this, statusOffset, 0, NORMAL))
             setCompletion(NORMAL);
     }
 
@@ -1053,16 +1053,16 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     private static long fieldOffset(String fieldName)
             throws NoSuchFieldException {
-        return _unsafe.objectFieldOffset
+        return UNSAFE.objectFieldOffset
             (ForkJoinTask.class.getDeclaredField(fieldName));
     }
 
-    static final Unsafe _unsafe;
+    static final Unsafe UNSAFE;
     static final long statusOffset;
 
     static {
         try {
-            _unsafe = getUnsafe();
+            UNSAFE = getUnsafe();
             statusOffset = fieldOffset("status");
         } catch (Throwable e) {
             throw new RuntimeException("Could not initialize intrinsics", e);

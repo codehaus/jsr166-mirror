@@ -44,7 +44,6 @@ import java.lang.reflect.*;
  * @since 1.7
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
- *
  */
 public class LinkedTransferQueue<E> extends AbstractQueue<E>
     implements TransferQueue<E>, java.io.Serializable {

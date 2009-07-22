@@ -56,6 +56,9 @@ import java.lang.reflect.*;
  * maximum number of running threads to 32767. Attempts to create
  * pools with greater than the maximum result in
  * IllegalArgumentExceptions.
+ *
+ * @since 1.7
+ * @author Doug Lea
  */
 public class ForkJoinPool extends AbstractExecutorService {
 

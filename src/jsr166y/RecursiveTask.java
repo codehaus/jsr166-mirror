@@ -32,6 +32,8 @@ package jsr166y;
  * minimum granularity size (for example 10 here) for which you always
  * sequentially solve rather than subdividing.
  *
+ * @since 1.7
+ * @author Doug Lea
  */
 public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
 

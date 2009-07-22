@@ -118,6 +118,9 @@ package jsr166y;
  *     result = sum;
  *   }
  * }}</pre>
+ *
+ * @since 1.7
+ * @author Doug Lea
  */
 public abstract class RecursiveAction extends ForkJoinTask<Void> {
 

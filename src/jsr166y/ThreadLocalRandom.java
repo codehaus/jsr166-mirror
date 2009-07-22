@@ -27,6 +27,9 @@ import java.util.*;
  *
  * <p>This class also provides additional commonly used bounded random
  * generation methods.
+ *
+ * @since 1.7
+ * @author Doug Lea
  */
 public class ThreadLocalRandom extends Random {
     // same constants as Random, but must be redeclared because private

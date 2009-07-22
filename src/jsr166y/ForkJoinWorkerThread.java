@@ -21,6 +21,8 @@ import java.lang.reflect.*;
  * create such a subclass, you will also need to supply a custom
  * ForkJoinWorkerThreadFactory to use it in a ForkJoinPool.
  *
+ * @since 1.7
+ * @author Doug Lea
  */
 public class ForkJoinWorkerThread extends Thread {
     /*

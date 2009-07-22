@@ -175,6 +175,9 @@ import java.lang.reflect.*;
  * parties result in IllegalStateExceptions. However, you can and
  * should create tiered phasers to accommodate arbitrarily large sets
  * of participants.
+ *
+ * @since 1.7
+ * @author Doug Lea
  */
 public class Phaser {
     /*

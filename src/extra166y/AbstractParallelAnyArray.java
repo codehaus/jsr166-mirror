@@ -2383,7 +2383,7 @@ public abstract class AbstractParallelAnyArray {
         }
 
         public ParallelDoubleArrayWithDoubleMapping withMapping
-            (ObjectToDouble<? super U> op){
+            (ObjectToDouble<? super U> op) {
             return new DUDMPap(ex, origin, fence, array,
                                CommonOps.compoundOp(this.op, op));
         }

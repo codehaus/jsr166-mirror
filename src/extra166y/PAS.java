@@ -1875,7 +1875,7 @@ class PAS {
         final RecursiveAction right;
         final RecursiveAction merger;
         FJSubSorter(RecursiveAction left, RecursiveAction right,
-                    RecursiveAction merger){
+                    RecursiveAction merger) {
             this.left = left; this.right = right; this.merger = merger;
         }
         public void compute() {

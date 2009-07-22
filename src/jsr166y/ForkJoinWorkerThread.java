@@ -410,7 +410,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Caller must ensure q is non-null and index is in range.
      */
     private static void setSlot(ForkJoinTask<?>[] q, int i,
-                                ForkJoinTask<?> t){
+                                ForkJoinTask<?> t) {
         UNSAFE.putOrderedObject(q, (i << qShift) + qBase, t);
     }
 

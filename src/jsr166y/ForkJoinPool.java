@@ -1507,7 +1507,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Same idea as preJoin
      */
-    final boolean preBlock(ManagedBlocker blocker, boolean maintainParallelism){
+    final boolean preBlock(ManagedBlocker blocker,
+                           boolean maintainParallelism) {
         maintainParallelism &= maintainsParallelism;
         boolean dec = false;
         while (spareStack == null || !tryResumeSpare(dec)) {

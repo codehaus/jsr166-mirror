@@ -38,12 +38,6 @@ package jsr166y;
 public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
 
     /**
-     * Empty constructor for use by subclasses.
-     */
-    protected RecursiveTask() {
-    }
-
-    /**
      * The result returned by compute method.
      */
     V result;

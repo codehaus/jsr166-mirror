@@ -2351,7 +2351,7 @@ class PAS {
             if (left - lo <= hi - right) {
                 oquickSort(a, cmp, lo, left);
                 lo = left + 1;
-            }               
+            }
             else {
                 oquickSort(a, cmp, right, hi);
                 hi = left;
@@ -2455,7 +2455,7 @@ class PAS {
             if (left - lo <= hi - right) {
                 dquickSort(a, cmp, lo, left);
                 lo = left + 1;
-            }               
+            }
             else {
                 dquickSort(a, cmp, right, hi);
                 hi = left;
@@ -2559,7 +2559,7 @@ class PAS {
             if (left - lo <= hi - right) {
                 lquickSort(a, cmp, lo, left);
                 lo = left + 1;
-            }               
+            }
             else {
                 lquickSort(a, cmp, right, hi);
                 hi = left;
@@ -2709,7 +2709,7 @@ class PAS {
                 int cb;
                 for (;;) { // Establish action: sum, cumulate, or both
                     int b = phase;
-                    if ((b & FINISHED) != 0) // already done 
+                    if ((b & FINISHED) != 0) // already done
                         return false;
                     if ((b & CUMULATE) != 0)
                         cb = FINISHED;

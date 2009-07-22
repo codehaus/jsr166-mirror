@@ -52,8 +52,8 @@ public class LongCumulateDemo {
         fjp.shutdown();
     }
 
-    static void oneRun(ForkJoinPool fjp, 
-                       long[] array, int nthreads, 
+    static void oneRun(ForkJoinPool fjp,
+                       long[] array, int nthreads,
                        int reps, int tests) throws Exception {
         ParallelLongArray pa = ParallelLongArray.createUsingHandoff(array, fjp);
         long last, now;

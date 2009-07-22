@@ -37,7 +37,7 @@ class SortDemo {
         }
         fjpool.shutdown();
     }
-    
+
     static void seqSort(Long[] a) {
         long last = System.nanoTime();
         java.util.Arrays.sort(a);
@@ -51,7 +51,7 @@ class SortDemo {
         double elapsed = (double)(System.nanoTime() - last) / NPS;
         System.out.printf("ParallelArray.sort time:     %7.3f\n", elapsed);
     }
-    
+
     static void checkSorted (Long[] a)  {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
@@ -60,7 +60,7 @@ class SortDemo {
             }
         }
     }
-    
+
     static final class RandomLongGenerator implements Ops.Generator<Long> {
         public Long op() {
             return new Long(ForkJoinWorkerThread.nextRandomLong());

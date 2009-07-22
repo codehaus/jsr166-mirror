@@ -21,16 +21,16 @@ public class MapReduceDemo {
                                  U base) {
         int n = array.length;
         U x = base;
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             x = reducer.op(x, mapper.op(array[i]));
         return x;
     }
 
-    
+
 
     // sample functions
     static final class GetNext implements Ops.Op<Rand, Long> {
-        public Long op(Rand x) { 
+        public Long op(Rand x) {
             return x.next();
         }
     }
@@ -50,7 +50,7 @@ public class MapReduceDemo {
         int n = 1 << 18;
         int reps = 1 << 8;
         Rand[] array = new Rand[n];
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             array[i] = new Rand(i+1);
         ForkJoinPool fjp = new ForkJoinPool(1);
         ParallelArray<Rand> pa = ParallelArray.createUsingHandoff(array, fjp);
@@ -129,8 +129,8 @@ public class MapReduceDemo {
         }
         public long next() {
             long x = seed;
-            x ^= x << 13; 
-            x ^= x >>> 7; 
+            x ^= x << 13;
+            x ^= x >>> 7;
             x ^= (x << 17);
             seed = x;
             return x;

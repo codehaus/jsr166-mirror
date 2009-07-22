@@ -465,7 +465,7 @@ public class ScheduledThreadPoolExecutor
     private static long nextTriggerTime(long delay, TimeUnit unit) {
         long triggerTime;
         long now = now();
-        if (delay <= 0) 
+        if (delay <= 0)
             return now;            // avoid negative trigger times
         else if ((triggerTime = now + unit.toNanos(delay)) < 0)
             return Long.MAX_VALUE; // avoid numerical overflow
@@ -488,7 +488,7 @@ public class ScheduledThreadPoolExecutor
         delayedExecute(t);
         return t;
     }
-    
+
     /**
      * @throws RejectedExecutionException {@inheritDoc}
      * @throws NullPointerException       {@inheritDoc}
